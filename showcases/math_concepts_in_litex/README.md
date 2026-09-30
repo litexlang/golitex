@@ -1,14 +1,21 @@
 # Math Concepts in Litex
 
-This collection contains sixteen independent, executable showcases ordered as
-a reader path from school mathematics to foundational and early undergraduate
-topics.
+This collection follows a reader path from school mathematics to foundational
+and early undergraduate topics.
 The numeric prefixes are editorial order only: the projects do not import one
 another.
 
-Every directory publishes the same five artifacts:
+Migration status (2026-09-30): original mathematical content has been restored
+against the pinned upstream snapshot in `scripts/math_concepts_in_litex_upstream`.
+The active `.lit` sources contain no direct `trust`, but the complete modules
+still have verification failures or exceed the bounded verification time.
+Retained failing proofs are migration work, not checked theorems. See
+[`和showcase有关.md`](../../plan/迁移的plan/和showcase有关.md) for attempts,
+actual diagnostics, passing slices, and dependency blockers.
 
-- `main.lit`: a checked mathematical spine;
+The usual project artifacts are:
+
+- `main.lit`: the mathematical spine, including retained migration blockers;
 - `litex.config`: the standalone module entry;
 - `README.md`: scope, run command, and trust boundary;
 - `math_collections.md`: the concept/interface inventory; and
@@ -18,6 +25,7 @@ Every directory publishes the same five artifacts:
 | ---: | --- | --- |
 | 1 | `1_middle_school_math_in_nutshell` | equations, AM-GM, geometry, probability, statistics |
 | 2 | `2_sets_functions_and_relations_in_nutshell` | finite sets, a callable function, a relation, and injectivity |
+| 2 | `2_euclidean_geometry` | the equilateral-triangle construction from Euclid I.1 |
 | 3 | `3_number_theory` | gcd/Bezout and linear Diophantine solvability |
 | 4 | `4_discrete_mathematics_in_nutshell` | finite counting and direct Pascal recurrence |
 | 5 | `5_linear_algebra` | fields, vector spaces, and kernel-zero iff injective |
@@ -30,31 +38,34 @@ Every directory publishes the same five artifacts:
 | 12 | `12_ordinary_differential_equations_in_nutshell` | quadratic family and the IVP `y' = 2x, y(0)=1` |
 | 13 | `13_numerical_analysis_in_nutshell` | Newton iteration with a proved gap bound |
 | 14 | `14_tarski_geometry_from_axioms` | GeoCoq-aligned SST Chapters 2–11, Euclid I.5, and exact angle-based SAS |
-| 15 | `15_category_theory_in_set_theory` | categories, functors, natural transformations, and checked finite instances |
-| 16 | `16_probability_theory` | Borel events, event limits/Borel--Cantelli, and concrete probability constructions |
+| 15 | `15_coordinate_geometry_case_study` | coordinate geometry library and individual problem modules |
+| 16 | `16_category_theory_in_set_theory` | categories, functors, natural transformations, and finite instances |
+| 17 | `17_probability_theory` | draft probability-theory work; no active `main.lit` |
 
 Run any project from the repository root:
 
 ```bash
-target/release/litex -graph -r showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell
+target/release/litex -strict -r showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell
 lean showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/same_math_in_lean.lean
 ```
 
 ## Modeling and publication rules
 
 Use a Builtin object or theorem first, then `std`, and declare a local concept
-only when neither layer expresses the intended mathematics. Settings are the
-default theorem-facing form; structs are for values that must be constructed,
+only when neither layer expresses the intended mathematics. Original setting
+contexts are expressed as predicates with explicit theorem premises during
+this migration; structs are for values that must be constructed,
 stored, passed, compared, or returned.
 
 Published files contain no direct `trust`, local axiom, Lean `axiom`,
 `sorry`, or `admit`. Lean analogies state missing mathematics as explicit
 structure fields or theorem hypotheses; analytic comparisons may use the
 repository's Mathlib environment for standard objects such as real series.
-Proof journals and other iteration records belong under
-each project's `.drafts/` directory and are Git-ignored.
+The restoration journals are under `plan/迁移的plan/proof_journals/` and the
+passing restoration examples are under
+`scripts/math_concepts_in_litex_upstream/experience/problem_notes/`.
 
-## What “complete enough” means here
+## Intended completion boundary
 
 A subject is complete for this showcase collection when it has one checked
 vertical slice:
@@ -68,8 +79,8 @@ ambient setting / structure
   -> STOP
 ```
 
-This is a publication boundary, not a claim to encyclopedic coverage. The
-current stopping lines are:
+These are acceptance targets, not a statement that the current migration
+passes its gates. The subject stopping lines are:
 
 - linear algebra: fields, vector spaces, linear maps, kernels, and the
   zero-kernel/injectivity criterion; no basis, dimension, rank-nullity, or

@@ -28,8 +28,9 @@ litex
 ```
 
 The REPL mounts `cwd/litex.config` when that file exists (otherwise an empty
-project), then accepts interactive blocks. End a block with a blank line. Use
-Ctrl+D to exit (on Windows PowerShell, Ctrl+Z then Enter). Each block prints
+project), then accepts interactive blocks. A single line without a trailing
+colon runs immediately; finish an indented block with a blank line. Use
+`exit`, `quit`, `:quit`, or end-of-input to exit. Each block prints
 a short status line (`success` or `error`), not a full JSON document.
 
 Run a `.lit` file:
@@ -63,7 +64,7 @@ litex [-strict] [-session] [-lang <en|zh>] <command>
 
 With no command, `litex` starts the interactive REPL described above.
 
-Shared flags may appear before the command token:
+Shared flags are collected from argv and may appear before or after the command:
 
 | Flag | Meaning |
 |------|---------|
@@ -81,8 +82,17 @@ litex -f examples/tmp.lit
 ```
 
 The parser is a small whitelist. Unsupported options and trailing tokens are
-rejected. Put flags before the command (`-strict -e "..."`), not after the
-source value.
+rejected. Both `-strict -e "1 = 1"` and `-e "1 = 1" -strict` work.
+Keep the source string quoted as one argument.
+
+The current whitelist does not include `-compact`, `-detailed`, `-runner`,
+`-before`, `-isolated`, graph flags, or `-lean`. Those older command recipes
+are not entrypoints for this build. Rust projection APIs are separate from CLI flags.
+
+`-strict` rejects `trust`, `trust have`, and `abstract_prop` when executed.
+It still accepts `axiom` and named set-theoretic releases; imported cache hits
+are not rerun as a fresh strict audit. See the
+[trust boundary](Manual.md#trust-and-strict-mode).
 
 ## Commands
 
@@ -137,10 +147,14 @@ fix a domain obligation, or repair the statement.
 
 ## JSON Output Contract
 
-`-e`, `-f`, and `-r` emit one Normal `run` document on stdout. The projection
+`-e`, `-f`, and `-r` batch outcomes emit one Normal `run` document on stdout.
+Launch, tokenization/parsing, or early I/O errors can instead produce text on
+stderr with no JSON document. A successful `-session` enters the text REPL
+before the batch JSON is printed, so its stdout is not one standalone JSON value.
+The projection
 is defined in [`src/json_output/README.md`](../src/json_output/README.md).
 It does **not** dump the full verify/exec IR; that tree remains available for
-Lean replay and detailed tooling.
+the Rust Detailed projection and other tooling.
 
 ### Run envelope
 
@@ -161,16 +175,55 @@ Lean replay and detailed tooling.
 |-------|---------|
 | `kind` | Always `"run"` for verifier batch commands |
 | `success` | `true` iff every statement succeeded and `session_error` is null |
-| `target` | `"eval"`, `"file"`, or `"repository"` |
+| `target` | `"eval"`, `"file"`, or `"repo"` |
 | `path` | `null` for `-e`; requested path for `-f` / `-r` |
 | `detail` | `"normal"` for the default CLI projection |
-| `language` | `"en"` or `"zh"` from `-lang` (default `"en"`); statement labels still English in this pass |
-| `statement_results` | One Normal object per executed statement, in order |
+| `language` | `"en"` or `"zh"` from `-lang` (default `"en"`); Chinese output localizes the keys too |
+| `statement_results` | `-e` / target `-f` statements in order; the current `-r` summary leaves this array empty |
 | `session_error` | Hard stop payload, or `null` |
 
 Programs should read `success`, `statement_results`, and `session_error`. Exit
-status `0` means success; `1` means a Failed statement or SessionError; `2`
-means invalid arguments.
+status `0` means batch success; `1` means a failed run or a parse/I/O error;
+`2` means an invalid-argument error returned to the launcher. An invalid
+statement captured as a session error is a failed run and exits `1`.
+For machine consumers, use `-lang en`, require exit `0`, parse the JSON, and
+require `kind == "run"`, `success == true`, and `session_error == null`.
+The current envelope has no `ok` field. `-r` computes overall success from
+its files but does not serialize their statement arrays into this summary.
+Use `-f` on a target file when you need its statement explanations.
+
+### Chinese output
+
+`litex -lang zh -e "1 = 1"` localizes the envelope and statement keys as well
+as proof explanations. Enum-like envelope values such as `run`, `eval`, and
+`normal` remain English:
+
+```json
+{
+  "种类": "run",
+  "成功": true,
+  "目标": "eval",
+  "路径": null,
+  "详细度": "normal",
+  "语言": "zh",
+  "语句结果": [
+    {
+      "成功": true,
+      "语句": "1 = 1",
+      "证明方法": {
+        "类型": "内置规则",
+        "规则名": "由内部表示相等",
+        "说明": "两边具有相同的内部表示"
+      },
+      "存储": [
+        "1 = 1"
+      ],
+      "推断": []
+    }
+  ],
+  "会话错误": null
+}
+```
 
 ### Normal statement shape
 
@@ -208,6 +261,7 @@ Rules:
 
 - `success` is a bool (not an `outcome` string).
 - `stores`, `infers`, `cite`, `statement`, and `goal` use readable Litex text.
+- Builtin explanations use `rule_name` and `message`, not the old `rule` tag.
 - Normal skips well-definedness subtrees; look at `why_failed.phase` when a
   statement did not succeed.
 
@@ -230,8 +284,9 @@ Successful inline run:
       "stores": ["1 = 1"],
       "success": true,
       "proof_method": {
-        "rule": "EqualityBuiltin",
-        "type": "builtin_rule"
+        "type": "builtin_rule",
+        "rule_name": "Equal by IR",
+        "message": "Both sides share the same internal representation"
       }
     }
   ],
@@ -312,7 +367,10 @@ Use `litex.config` to organize a module:
 
 `[export]` is an explicit selection list, not a directory inventory. Unlisted
 files are sidecars: discovery does not parse or execute them. Source-level
-`import` is rejected; project source uses its manifest.
+`import` is rejected in files and in the REPL; project source uses its manifest.
+Imported modules may load a matching `__litex_knowledge_base__/` cache; on a
+miss, Litex executes their exports and attempts a cache write-back. This applies
+to strict runs too. Root exports follow the execution order below.
 
 ### Mount behavior
 
@@ -326,16 +384,14 @@ files are sidecars: discovery does not parse or execute them. Source-level
 Mount soft Failed → session `FailToImport`. For `-f`, soft Failed on the
 **target** file itself is a normal file failure, not `FailToImport`.
 
-## Lean compiler
+## Lean compiler boundary
 
-The Litex-to-Lean path is a separate toolchain. Prefer the wrapper under
-[`lean/`](../lean/README.md), for example:
-
-```bash
-./lean/stmt_result_to_lean_compiler.sh compile lean/examples/1_SetSystem.lit
-```
-
-Coverage and fail-closed boundaries live in that README, not in this CLI page.
+The current Cargo build registers only the `litex` binary and does not include
+the earlier `stmt_result_to_lean_compiler` Rust module. There is no working
+Lean compilation command in this CLI. The wrapper and generated examples in
+[`lean/`](../lean/) are retained experimental artifacts; the wrapper refers
+to a binary target that is absent from the current build. They are not
+acceptance evidence for a current `src/` verification run.
 
 ## Practical Recipes
 

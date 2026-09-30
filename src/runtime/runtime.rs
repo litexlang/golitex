@@ -296,17 +296,11 @@ impl Runtime {
     }
 
     // Allocate a new IdentifierId and occupy `name` in the current scope.
-    // Nested binder scopes may shadow a live file-root obtain binding so
-    // `exist k` / `obtain k from exist k` can parse after an earlier `obtain k`.
     pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<BoundName> {
         if self.plain_atom_is_visible(&name) {
-            let shadow_obtain = self.parse_scope_stack.len() > 1
-                && self.is_rebindable_file_root_obtain_name(&name);
-            if !shadow_obtain {
-                return Err(RuntimeError::InternalBug(format!(
-                    "name `{name}` is already bound in an enclosing parse scope"
-                )));
-            }
+            return Err(RuntimeError::InternalBug(format!(
+                "name `{name}` is already bound in an enclosing parse scope"
+            )));
         }
         let id = self.global_ids.allocate_identifier_id();
         let scope = self

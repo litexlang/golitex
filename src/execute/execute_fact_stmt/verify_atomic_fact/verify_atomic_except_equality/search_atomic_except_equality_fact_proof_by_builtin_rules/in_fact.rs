@@ -51,6 +51,10 @@ pub enum InFactSearchProofByBuiltinRule {
     // Mathematical property: after child WD, `+ - * / abs …` over R-carriers stay in R.
     // Example: prove `(x + y) $in R`, `abs(x) $in R`.
     RealArithmeticClosure(RealArithmeticClosureBuiltinRuleProof),
+    // Native scalar codomains, after the enclosing fact's object WD succeeds:
+    // sign: R → Z; gcd: (Z × Z) \ {(0, 0)} → N+; lcm: Z × Z → N;
+    // exp: R → R+; factorial: N → N+. Standard-set supertypes also follow.
+    NativeScalarCodomain(NativeScalarCodomainBuiltinRuleProof),
     // Membership lifts along the standard-set inclusion chain.
     // Mathematical property: if `x $in S` and `S $subset T` among standard sets,
     // then `x $in T`.
@@ -163,6 +167,12 @@ pub struct ComplexCoordinateInRealBuiltinRuleProof {}
 pub struct ComplexCoordinateInComplexBuiltinRuleProof {}
 
 pub struct RealArithmeticClosureBuiltinRuleProof {}
+
+// Input-domain evidence lives in the enclosing atomic fact's WD proof.
+// Record the native codomain even when the requested set is a proper superset.
+pub struct NativeScalarCodomainBuiltinRuleProof {
+    pub codomain: StandardSet,
+}
 
 // Subset-lift certificate: verify membership in a proper subset, then lift.
 // Example: source_set `R`, prove `f(a) $in R` (e.g. by FnApplicationInCodomain), goal `f(a) $in C`.
@@ -406,8 +416,7 @@ impl Runtime {
             | Obj::IntegerOperator(IntegerOperator::Quot(_))
             | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
             | Obj::ExpLogOperator(ExpLogOperator::Log(_))
-            | Obj::ExpLogOperator(ExpLogOperator::Ln(_))
-            | Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => {
+            | Obj::ExpLogOperator(ExpLogOperator::Ln(_)) => {
                 if matches!(set, StandardSet::C) {
                     if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
                         return Ok(Some(proof));
@@ -429,6 +438,15 @@ impl Runtime {
                     if let Some(proof) = self.mul_in_natural_proof(fact, verify_state.clone())? {
                         return Ok(Some(proof));
                     }
+                }
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Sign(_))
+            | Obj::IntegerOperator(IntegerOperator::Gcd(_))
+            | Obj::IntegerOperator(IntegerOperator::Lcm(_))
+            | Obj::IntegerOperator(IntegerOperator::Factorial(_))
+            | Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => {
+                if let Some(proof) = native_scalar_codomain_proof(&fact.element, set) {
+                    return Ok(Some(proof));
                 }
             }
             Obj::TrigOperator(TrigOperator::Sin(_))
@@ -1525,6 +1543,28 @@ pub(super) fn normalized_decimal_inhabits_standard_set(v: &str, set: &StandardSe
     }
 }
 
+// The normal verify pipeline has already checked the constructor's domain.
+// This leaf uses only that WD evidence and standard-set inclusion, never a
+// speculative membership search (which would cycle back to the same goal).
+fn native_scalar_codomain_proof(
+    element: &Obj,
+    target: &StandardSet,
+) -> Option<InFactSearchProofByBuiltinRule> {
+    let codomain = match element {
+        Obj::ArithmeticOperator(ArithmeticOperator::Sign(_)) => StandardSet::Z,
+        Obj::IntegerOperator(IntegerOperator::Gcd(_))
+        | Obj::IntegerOperator(IntegerOperator::Factorial(_)) => StandardSet::NPos,
+        Obj::IntegerOperator(IntegerOperator::Lcm(_)) => StandardSet::N,
+        Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => StandardSet::RPos,
+        _ => return None,
+    };
+    standard_set_is_subset_eq(&codomain, target).then_some(
+        InFactSearchProofByBuiltinRule::NativeScalarCodomain(
+            NativeScalarCodomainBuiltinRuleProof { codomain },
+        ),
+    )
+}
+
 // WD already forces complex operand domains; Add/Sub/Mul/... are closed in C.
 // Example: prove `(x + 1) * (x - 1) $in C`.
 fn complex_arithmetic_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBuiltinRule> {
@@ -1544,7 +1584,6 @@ fn complex_arithmetic_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBui
         | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
         | Obj::ExpLogOperator(ExpLogOperator::Log(_))
         | Obj::ExpLogOperator(ExpLogOperator::Ln(_))
-        | Obj::ExpLogOperator(ExpLogOperator::Exp(_))
         | Obj::IteratedOperator(IteratedOperator::Sum(_))
         | Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_))
         | Obj::IteratedOperator(IteratedOperator::Product(_))
@@ -1574,7 +1613,6 @@ fn real_arithmetic_in_r_proof(fact: &InFact) -> Option<InFactSearchProofByBuilti
         | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
         | Obj::ExpLogOperator(ExpLogOperator::Log(_))
         | Obj::ExpLogOperator(ExpLogOperator::Ln(_))
-        | Obj::ExpLogOperator(ExpLogOperator::Exp(_))
         | Obj::IteratedOperator(IteratedOperator::Sum(_))
         | Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_))
         | Obj::IteratedOperator(IteratedOperator::Product(_))

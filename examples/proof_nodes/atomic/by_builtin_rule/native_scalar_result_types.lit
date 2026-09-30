@@ -1,0 +1,38 @@
+# Node: atomic.ByBuiltinRule.NativeScalarCodomain
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/native_scalar_result_types.lit
+# Before (src migration, B01–B04): the type fact below failed at search_proof,
+# and its negation identity failed WD without a stored sign carrier.
+# have a R
+# sign(a) $in R
+# sign(0 - a) = 0 - sign(a)
+# Now: native input WD establishes the result's codomain and standard supertypes.
+# Boundaries: gcd(0, 0) stays undefined; sign/lcm can be zero; only real exp
+# and natural factorial are supported. Executable rejection controls live in
+# tests/unit/execute/native_scalar_codomain/mod.rs.
+
+have a R
+sign(a) $in Z
+sign(a) $in R
+sign(0 - a) = 0 - sign(a)
+
+# No explicit result-type facts are needed for nested WD.
+have x R
+sign(x) * abs(x) = x
+ln(exp(x)) = x
+
+have u Z*
+have v Z*
+lcm(u, v) * gcd(u, v) = abs(u * v)
+u % gcd(u, v) = 0
+
+have n N
+(n + 1)! = (n + 1) * n!
+
+# Strong native codomains, including zero inputs where they are meaningful.
+gcd(u, 0) $in N+
+lcm(u, 0) $in N
+exp(x) $in R+
+n! $in N+
+0! $in N+
+lcm(0, 0) $in N
+sign(0) $in Z

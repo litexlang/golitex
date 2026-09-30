@@ -17,6 +17,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     ListSetElementMembershipBuiltinRuleProof,
     MulInNaturalBuiltinRuleProof,
     NativeConstantMembershipBuiltinRuleProof,
+    NativeScalarCodomainBuiltinRuleProof,
     OneSideInfinityIntervalMembershipBuiltinRuleProof,
     PowerSetMembershipBuiltinRuleProof,
     PredecessorInNaturalBuiltinRuleProof,
@@ -45,6 +46,7 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInReal(p) => p.rule_id_and_message(lang),
             Self::ComplexCoordinateInComplex(p) => p.rule_id_and_message(lang),
             Self::RealArithmeticClosure(p) => p.rule_id_and_message(lang),
+            Self::NativeScalarCodomain(p) => p.rule_id_and_message(lang),
             Self::StandardSetSubsetMembership(p) => p.rule_id_and_message(lang),
             Self::SetBuilderMembership(p) => p.rule_id_and_message(lang),
             Self::NativeConstantMembership(p) => p.rule_id_and_message(lang),
@@ -77,6 +79,7 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInReal(_) => None,
             Self::ComplexCoordinateInComplex(_) => None,
             Self::RealArithmeticClosure(_) => None,
+            Self::NativeScalarCodomain(_) => None,
             Self::StandardSetSubsetMembership(_) => None,
             Self::SetBuilderMembership(_) => None,
             Self::NativeConstantMembership(_) => None,
@@ -776,3 +779,33 @@ impl MulInNaturalBuiltinRuleProof {
     }
 }
 
+impl NativeScalarCodomainBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        BuiltinRuleText {
+            rule_id: "NativeScalarCodomain",
+            rule_name: "Native Scalar Codomain".to_string(),
+            message: format!(
+                "after input-domain WD, the native result belongs to {} and its standard-set supertypes",
+                self.codomain.ir().as_str(),
+            ),
+        }
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        BuiltinRuleText {
+            rule_id: "NativeScalarCodomain",
+            rule_name: "原生标量返回类型".to_string(),
+            message: format!(
+                "参数定义域已通过良定检查，原生运算结果属于 {} 及其标准集合超集",
+                self.codomain.ir().as_str(),
+            ),
+        }
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}

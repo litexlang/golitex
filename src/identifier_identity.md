@@ -37,11 +37,13 @@ indexing.
    (`let x = 1` stores equality; `have x R` stores type facts) use
    `identifier_obj_for_stored_mention`: outermost + promoting `CodeSource` →
    qualified LHS/mention, else plain.
-5. **No shadowing.** Same-name nested binders stay forbidden (occupy fence),
-   except a nested parse scope may shadow a live **file-root obtain** binding
-   (so `exist k` / `obtain k from exist k` works after an earlier `obtain k`).
-   A later `obtain k` may also replace an earlier file-root obtain binding
-   (new `IdentifierId` + `source_line` in `obtain_parse_ids`).
+5. **No shadowing.** Same-name nested binders stay forbidden (occupy fence).
+   Obtain-only exceptions (not general shadowing):
+   - before parsing `obtain k from exist k`, live file-root obtain bindings of
+     the equal_tos names are stashed so **that** exist binder can occupy;
+   - a later `obtain k` may replace an earlier file-root obtain binding
+     (new `IdentifierId` + `source_line` in `obtain_parse_ids`).
+   A later standalone `exist k` / `forall k` after `obtain k` still collides.
 6. **Letter reuse.** After a scope ends, a later `have x` gets a **new** id.
 7. **IR.** Plain → `#<id.value>#<name>` (e.g. `#3#x`). Display → `x` only.
    Qualified → `f0::x` / `m0::f1::x` style placeholders.

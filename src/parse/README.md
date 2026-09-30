@@ -375,6 +375,12 @@ Body entries are QF (atomic / and / chain / or / leading `not` on arms). Empty `
 
 `not exist …` is allowed; **`not exist!` is not**.
 
+Complete facts reject unconsumed header tokens, including nested existential
+facts in `forall`, `prop`, and `trust` bodies. For example,
+`exist y R st {y = x} and 0 = 1` is rejected, not shortened to its existential
+prefix. Prefix parsing is reserved for an enclosing syntax such as
+`witness exist ... from ...`.
+
 Tracer: `examples/wd/fact/exist.lit`
 
 ### Forall

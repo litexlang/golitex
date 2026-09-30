@@ -34,6 +34,7 @@ struct Field<K nonempty_set>:
 
 # A vector space over one fixed scalar field stores its vector operations and
 # compatibility laws as one first-class object.
+
 struct VectorSpace<K nonempty_set, field &Field<K>, V nonempty_set>:
     zero V
     add fn(x, y V) V
@@ -55,6 +56,7 @@ struct VectorSpace<K nonempty_set, field &Field<K>, V nonempty_set>:
             smul(field.one, x) = x
 
 # Any element acting as a left additive identity must equal the stored zero.
+
 thm additive_identity_unique:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, identity_candidate V:
         forall x V:
@@ -66,6 +68,7 @@ thm additive_identity_unique:
 
 # Existence comes from the vector-space law; associativity and commutativity
 # show that any two additive inverses coincide.
+
 thm additive_inverse_exists_unique:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, x V:
         exist! y V st {space.add(x, y) = space.zero}
@@ -91,6 +94,7 @@ template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, 
     have fn vector_sub(u, v V) V = space.add(u, \vector_neg<K, field, V, space>(v))
 
 # Add the inverse of the common left operand to both sides.
+
 thm add_left_cancel:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, x, y, z V:
         space.add(x, y) = space.add(x, z)
@@ -106,6 +110,7 @@ thm add_left_cancel:
     y = space.add(neg(x), space.add(x, y)) = space.add(neg(x), space.add(x, z)) = z
 
 # Compare 0*x with 0*x + 0*x and cancel to derive the zero-scalar law.
+
 thm vector_space_scalar_constants_in_carrier:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>:
         field.zero $in K
@@ -128,6 +133,7 @@ thm zero_scalar_times_vector:
     p = space.zero
 
 # Distribute a scalar over 0+0, then cancel the repeated term.
+
 thm scalar_times_zero_vector:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, a K:
         space.smul(a, space.zero) = space.zero
@@ -147,6 +153,7 @@ prop is_linear_map(K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_s
         T(source.smul(a, v)) = target.smul(a, T(v))
 
 # A subspace contains zero and is closed under vector addition and scalar action.
+
 prop is_subspace(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, U power_set(V)):
     space.zero $in U
     forall u, v V:
@@ -166,9 +173,12 @@ template<V set, zeroV V>:
     have zero_subspace power_set(V) = {zeroV}
 
 # Additivity forces the image of zero to be the target zero vector.
+
 thm linear_map_sends_zero_to_zero:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W:
-        T(source.zero) = target.zero
+        $is_linear_map(K, field, V, W, source, target, T)
+        =>:
+            T(source.zero) = target.zero
     source.add(source.zero, source.zero) = source.zero
     T(source.add(source.zero, source.zero)) = target.add(T(source.zero), T(source.zero))
     target.add(T(source.zero), T(source.zero)) = T(source.add(source.zero, source.zero)) = T(source.zero)
@@ -177,9 +187,12 @@ thm linear_map_sends_zero_to_zero:
     by thm add_left_cancel(K, field, W, target, T(source.zero), T(source.zero), target.zero) => T(source.zero) = target.zero
 
 # Apply the map to x + (-x) and use uniqueness of the target inverse.
+
 thm linear_map_sends_neg_to_neg:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W, x V:
-        T(\vector_neg<K, field, V, source>(x)) = \vector_neg<K, field, W, target>(T(x))
+        $is_linear_map(K, field, V, W, source, target, T)
+        =>:
+            T(\vector_neg<K, field, V, source>(x)) = \vector_neg<K, field, W, target>(T(x))
     let source_neg = \vector_neg<K, field, V, source>
     let target_neg = \vector_neg<K, field, W, target>
     by thm vector_neg_spec(K, field, V, source, x) => source.add(x, source_neg(x)) = source.zero
@@ -195,9 +208,12 @@ thm linear_map_sends_neg_to_neg:
 
 # Verify zero membership and closure under addition and scalar multiplication
 # for the native set-builder kernel.
+
 thm linear_map_kernel_is_subspace:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W:
-        $is_subspace(K, field, V, source, \linear_kernel<V, W, target.zero, T>)
+        $is_linear_map(K, field, V, W, source, target, T)
+        =>:
+            $is_subspace(K, field, V, source, \linear_kernel<V, W, target.zero, T>)
     let kernel = \linear_kernel<V, W, target.zero, T>
     by thm linear_map_sends_zero_to_zero(K, field, V, W, source, target, T) => T(source.zero) = target.zero
     kernel = {x V: T(x) = target.zero}
@@ -230,8 +246,10 @@ thm linear_map_kernel_is_subspace:
     by def $is_subspace(K, field, V, source, \linear_kernel<V, W, target.zero, T>)
 
 # Injectivity turns T(x)=0=T(0) into x=0, proving kernel(T)={0}.
+
 thm injective_linear_map_has_trivial_kernel:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W:
+        $is_linear_map(K, field, V, W, source, target, T)
         $injective(V, W, T)
         =>:
             \linear_kernel<V, W, target.zero, T> = \zero_subspace<V, source.zero>
@@ -255,8 +273,10 @@ thm injective_linear_map_has_trivial_kernel:
             x $in kernel
 
 # If T(u)=T(v), then u-v lies in the trivial kernel; cancellation gives u=v.
+
 thm trivial_kernel_implies_injective:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W:
+        $is_linear_map(K, field, V, W, source, target, T)
         \linear_kernel<V, W, target.zero, T> = \zero_subspace<V, source.zero>
         =>:
             $injective(V, W, T)
@@ -291,15 +311,19 @@ thm trivial_kernel_implies_injective:
         ? $injective(V, W, T)
 
 # The real numbers are the first concrete field instance.
+
 have fn real_inv(x R) R by cases:
     case x = 0: 0
     case x != 0: 1 / x
 
 have fn real_add(x, y R) R = x + y
+
 have fn real_neg(x R) R = -x
+
 have fn real_mul(x, y R) R = x * y
 
 # Verify the nonzero inverse law for the case-defined reciprocal.
+
 claim:
     ? forall x R:
         x != 0
@@ -309,6 +333,7 @@ claim:
     real_mul(x, real_inv(x)) = x * real_inv(x) = x * (1 / x) = 1
 
 # Verify associativity and distributivity of the concrete real operations.
+
 claim:
     ? forall x, y, z R:
         real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
@@ -326,6 +351,7 @@ claim:
     real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
 
 # Verify commutativity of real addition and multiplication.
+
 claim:
     ? forall x, y R:
         real_add(x, y) = real_add(y, x)
@@ -334,6 +360,7 @@ claim:
     real_mul(x, y) = x * y = y * x = real_mul(y, x)
 
 # Verify the two identities and additive inverse law for the real operations.
+
 claim:
     ? forall x R:
         real_add(0, x) = x
@@ -345,10 +372,12 @@ claim:
     real_mul(1, x) = 1 * x = x
 
 by thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Field<R>) => (0, 1, real_add, real_neg, real_mul, real_inv) $in &Field<R>
+
 have real_field &Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
 
 # Expose the concrete coordinates of the first-class real field for later
 # vector-space calculations.
+
 thm real_field_adapter_values:
     ? forall x, y R:
         real_field.zero = 0
@@ -368,9 +397,11 @@ thm real_field_adapter_values:
     real_field.mul(x, y) = real_mul(x, y) = x * y
 
 have fn plane_add(u, v cart(R, R)) cart(R, R) = (u[1] + v[1], u[2] + v[2])
+
 have fn plane_smul(a R, v cart(R, R)) cart(R, R) = (a * v[1], a * v[2])
 
 # Coordinatewise addition is associative.
+
 claim:
     ? forall x, y, z cart(R, R):
         plane_add(plane_add(x, y), z) = plane_add(x, plane_add(y, z))
@@ -385,12 +416,14 @@ claim:
     plane_add(plane_add(x, y), z) = ((x[1] + y[1]) + z[1], (x[2] + y[2]) + z[2]) = (x[1] + (y[1] + z[1]), x[2] + (y[2] + z[2])) = plane_add(x, plane_add(y, z))
 
 # Coordinatewise addition is commutative.
+
 claim:
     ? forall x, y cart(R, R):
         plane_add(x, y) = plane_add(y, x)
     plane_add(x, y) = (x[1] + y[1], x[2] + y[2]) = (y[1] + x[1], y[2] + x[2]) = plane_add(y, x)
 
 # The zero pair is an identity and coordinatewise negation supplies inverses.
+
 claim:
     ? forall x cart(R, R):
         plane_add((0, 0), x) = x
@@ -404,6 +437,7 @@ claim:
     witness exist inverse_x2 cart(R, R) st {plane_add(x, inverse_x2) = (0, 0)} from inverse_x
 
 # Coordinatewise scalar multiplication respects scalar products and sums.
+
 claim:
     ? forall a, b R, x cart(R, R):
         plane_smul(real_field.mul(a, b), x) = plane_smul(a, plane_smul(b, x))
@@ -422,6 +456,7 @@ claim:
     plane_smul(real_field.add(a, b), x) = ((a + b) * x[1], (a + b) * x[2]) = (a * x[1] + b * x[1], a * x[2] + b * x[2]) = plane_add(plane_smul(a, x), plane_smul(b, x))
 
 # Scalar multiplication distributes over vector addition coordinatewise.
+
 claim:
     ? forall a R, x, y cart(R, R):
         plane_smul(a, plane_add(x, y)) = plane_add(plane_smul(a, x), plane_smul(a, y))
@@ -439,6 +474,7 @@ claim:
     plane_smul(a, plane_add(x, y)) = (a * (x[1] + y[1]), a * (x[2] + y[2])) = (a * x[1] + a * y[1], a * x[2] + a * y[2]) = plane_add(plane_smul(a, x), plane_smul(a, y))
 
 # Multiplication by the scalar-field identity fixes every vector.
+
 claim:
     ? forall x cart(R, R):
         plane_smul(real_field.one, x) = x
@@ -447,11 +483,13 @@ claim:
     plane_smul(real_field.one, x) = (x[1], x[2]) = x
 
 release thm struct_member(((0, 0), plane_add, plane_smul), &VectorSpace<R, real_field, cart(R, R)>)
+
 have real_plane &VectorSpace<R, real_field, cart(R, R)> = ((0, 0), plane_add, plane_smul)
 
 have fn projection_x_axis(v cart(R, R)) cart(R, R) = (v[1], 0)
 
 # Check additivity and scalar compatibility of (x,y) |-> (x,0).
+
 thm projection_x_axis_is_linear:
     ? forall:
         $is_linear_map(R, real_field, cart(R, R), cart(R, R), real_plane, real_plane, projection_x_axis)
@@ -479,14 +517,18 @@ thm projection_x_axis_is_linear:
         ? $is_linear_map(R, real_field, cart(R, R), cart(R, R), real_plane, real_plane, projection_x_axis)
 
 release thm projection_x_axis_is_linear()
+
 release thm linear_map_kernel_is_subspace(R, real_field, cart(R, R), cart(R, R), real_plane, real_plane, projection_x_axis)
 
 projection_x_axis((0, 7)) = (0, 0) = real_plane.zero
+
 by thm set_builder_member((0, 7), {v cart(R, R): projection_x_axis(v) = real_plane.zero}) => (0, 7) $in {v cart(R, R): projection_x_axis(v) = real_plane.zero}
+
 (0, 7) $in \linear_kernel<cart(R, R), cart(R, R), real_plane.zero, projection_x_axis>
 
 # Two vectors with the same x-coordinate but different y-coordinates give a
 # concrete failure of injectivity.
+
 thm projection_x_axis_is_not_injective:
     ? forall:
         not $injective(cart(R, R), cart(R, R), projection_x_axis)

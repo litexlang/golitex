@@ -25,17 +25,18 @@ goals, named theorems, case splits, induction, and other structured proof
 forms. The Lean proofs below are intentionally explicit enough to expose the
 comparison, not claims about the shortest Lean proof.
 
-Every Litex code block on this page is self-contained and checked by the
-repository documentation test. The Lean blocks use Mathlib directly and do not
+Unskipped Litex blocks are self-contained and checked by the repository
+documentation test. Blocks explicitly labeled as migration examples retain
+unresolved current-kernel boundaries; they are not passing examples. The Lean blocks use Mathlib directly and do not
 depend on the *Mathematics in Lean* book package. Syntax and automation in
 either project may continue to evolve.
 
 For the larger design argument, see the [Litex
 Blueprint](https://litexlang.com/doc/Litex_Blueprint). For language details,
-see the [Manual](https://litexlang.com/doc/Manual) and [System
-Map](https://litexlang.com/doc/Litex_System_Map). The current Litex-to-Lean
-experiment has a deliberately narrow boundary documented in the
-[Lean ABI README](../lean/README.md).
+see the [Manual](Manual.md) and [CLI reference](cli.md). The current
+`src/` build has no Lean compiler entrypoint. The [Lean artifacts](../lean/)
+and the semantic discussion below describe an earlier experiment and design
+target; this page does not certify current compiler coverage.
 
 The complete `Group` comparison is kept in the Blueprint rather than repeated
 here. This page concentrates on examples that add distinct evidence.
@@ -53,7 +54,7 @@ Thus `x = y` requires both terms to inhabit the same Lean type. It says that
 they are the same value in that carrier and supports substitution, rewriting,
 and dependent transport.
 
-Litex source equality compiles to `Litex.Same`, a heterogeneous semantic
+The retained Lean ABI represents Litex source equality with `Litex.Same`, a heterogeneous semantic
 equality across representations. For example:
 
 ```lean
@@ -295,6 +296,8 @@ theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ)
 The Litex proof chooses `epsilon / (abs(c) + 1)`. Since the denominator is
 always positive, one estimate covers both `c = 0` and `c != 0`.
 
+> **Migration example:** Current `src/` checking stops at `def_thm` (`thm`). This retained block is not a verified result.
+
 <!-- litex:skip-test -->
 ```litex
 prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
@@ -348,6 +351,8 @@ same elementary analysis proof.
 Litex treats a chain as one factual statement. For a two-equation system, the
 intermediate expressions can be written in the same order as a handwritten
 calculation:
+
+> **Migration example:** Current `src/` checking stops at `search_proof` (`forall x, y R:`). This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -420,7 +425,6 @@ belong to `N+` and satisfy the substituted equation.
 The next example uses abstract predicates so that only the logical shape is
 at issue:
 
-<!-- litex:skip-test -->
 ```litex
 abstract_prop p0(x, y)
 abstract_prop q0(x, y)
@@ -459,6 +463,8 @@ logical argument.
 
 To show that the multiples of `4` are not the even natural numbers, `2` is the
 decisive counterexample:
+
+> **Migration example:** Current `src/` checking stops at `by_contra` (`by contradiction`). This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -508,11 +514,11 @@ keeps the set object representation-polymorphic and retains its source proof:
 ∀ {αA : Type 1} (A : αA) (hA : Litex.IsSet A), ...
 ```
 
-Whenever the theorem later uses `A` as a domain, generated Lean obtains the
+In that proposed interface, whenever a theorem uses `A` as a domain, Lean would obtain the
 exact set through `Litex.IsSet.rep A hA` and states membership against that
-representative. This target differs intentionally from the current v2 emitter,
-which narrows `A` to `Litex.Set` and erases its `IsSetFact` as `True`; the
-compiler migration is still pending.
+representative. This target differs from the earlier v2 emitter described
+in the retained Lean notes, which narrowed `A` to `Litex.Set`. Neither that
+emitter nor this proposed migration is an active compiler in the current build.
 
 Nested sets, power-set membership, and subset transport can all be written as
 ordinary mathematical facts in Litex:
@@ -616,6 +622,8 @@ Both systems can express Euclid's argument in the following form:
 The Litex claim places the background lemmas in its premise and keeps the main
 argument as a direct proof spine:
 
+> **Migration example:** Current `src/` checking stops at `claim` (`claim`). This retained block is not a verified result.
+
 <!-- litex:skip-test -->
 ```litex
 # `$prime(a)` is native. Its symbolic contract is `2 <= a` together with
@@ -716,6 +724,12 @@ this anonymous recursive form is not Litex syntax:
 A closed compound fact can instead receive a predicate name. Its call is
 atomic and can occupy the outer branch position:
 
+The current parser requires a nonempty `prop` parameter list. The closed,
+zero-argument predicate below is retained as an intended interface, not
+working syntax. Use a predicate with real mathematical parameters in current code.
+
+> **Migration example:** Current `src/` checking stops at `parse_error: expected at least one parameter inside (...)`. This retained block is not a verified result.
+
 <!-- litex:skip-test -->
 ```litex
 prop all_reals_reflexive():
@@ -727,8 +741,8 @@ by def $all_reals_reflexive()
 $all_reals_reflexive() or 1 = 1 and 2 = 2
 ```
 
-The `prop` definition makes `$all_reals_reflexive()` definitionally
-equivalent to its body; the definition alone does not assert the call. The `by
+In that intended interface, the `prop` definition would make
+`$all_reals_reflexive()` definitionally equivalent to its body; the definition alone does not assert the call. The `by
 def` line verifies the body and stores the atomic fact. If a compound subclaim
 has free mathematical objects, those objects should be parameters of the
 named predicate.
@@ -772,8 +786,7 @@ example collection:
 - [Litex Blueprint](https://litexlang.com/doc/Litex_Blueprint): design goals
   and the complete `Group` comparison;
 - [Manual](https://litexlang.com/doc/Manual): syntax and proof forms;
-- [System Map](https://litexlang.com/doc/Litex_System_Map): parser, verifier,
-  runtime, and trust boundaries;
+- [CLI reference](cli.md): current entrypoints, output, sessions, and modules;
 - [Litex-to-Lean compiler
   README](../lean/README.md):
-  the exact supported compilation subset and current limitations.
+  retained experimental ABI notes; see the [current build boundary](cli.md#lean-compiler-boundary).

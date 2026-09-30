@@ -1,0 +1,20 @@
+# Tracer: complete nested existential facts consume their entire input.
+#
+# Before (incorrectly accepted with the final condition discarded):
+# forall x R:
+#     exist y R st {y = x} and 0 = 1
+# This input is now a parse error, covered by
+# parser_input_integrity_rejects_nested_exist_suffixes.
+#
+# Now: valid complete facts and the enclosing witness syntax still work.
+# Evidence: target/release/litex -strict -f examples/wd/fact/exist_complete_input.lit
+# Boundary: a trailing conjunction outside st braces is not supported.
+
+forall x R:
+    exist y R st {y = x}
+
+prop has_same_value(a R):
+    exist b R st {b = a}
+
+witness $has_same_value(0) from 0
+witness exist k R st {k = 0} from 0

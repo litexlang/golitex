@@ -17,20 +17,18 @@ use crate::tokenize::TokenBlock;
 impl Runtime {
     pub(super) fn parse_fact_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
-        let fact = self.parse_fact(&mut tb)?;
-        match &fact {
-            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {}
-            _ if !tb.exceed_end_of_head() => {
-                return Err(RuntimeParseError::new(
-                    format!("trailing tokens after fact: `{}`", tb.peek().unwrap_or("")),
-                    tb.line,
-                    tb.source_path.clone(),
-                )
-                .into());
-            }
-            _ => {}
-        }
+        let fact = self.parse_complete_fact(&mut tb)?;
         Ok(Stmt::Fact(fact))
+    }
+
+    pub(super) fn parse_complete_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<Fact> {
+        let fact = self.parse_fact(tb)?;
+        if !tb.exceed_end_of_head() {
+            return Err(tb.parse_error(format!(
+                "trailing tokens after fact: `{}`", tb.peek().unwrap_or("")
+            )));
+        }
+        Ok(fact)
     }
 
     pub(super) fn parse_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<Fact> {
@@ -242,18 +240,18 @@ impl Runtime {
                 }
                 for block in tb.body.iter().take(n - 2) {
                     let mut child = block.clone();
-                    dom_facts.push(self.parse_fact(&mut child)?);
+                    dom_facts.push(self.parse_complete_fact(&mut child)?);
                 }
                 let mut then_block = tb.body[n - 2].clone();
                 then_block.expect(RIGHT_ARROW)?;
-                then_block.expect(super::keywords::COLON)?;
+                then_block.expect_colon_end_of_header()?;
                 for block in &then_block.body {
                     let mut child = block.clone();
                     then_facts.push(self.parse_exist_or_and_chain_atomic_fact(&mut child)?);
                 }
                 let mut iff_block = tb.body[n - 1].clone();
                 iff_block.expect(EQUIVALENT_SIGN)?;
-                iff_block.expect(super::keywords::COLON)?;
+                iff_block.expect_colon_end_of_header()?;
                 let mut iff_facts = Vec::new();
                 for block in &iff_block.body {
                     let mut child = block.clone();
@@ -286,7 +284,7 @@ impl Runtime {
                 let n = tb.body.len();
                 for block in tb.body.iter().take(n - 1) {
                     let mut child = block.clone();
-                    dom_facts.push(self.parse_fact(&mut child)?);
+                    dom_facts.push(self.parse_complete_fact(&mut child)?);
                 }
                 let mut then_block = tb.body[n - 1].clone();
                 then_block.expect(RIGHT_ARROW)?;
@@ -469,7 +467,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<ExistOrAndChainAtomicFact> {
-        match tb.peek() {
+        let fact: RuntimeResult<ExistOrAndChainAtomicFact> = match tb.peek() {
             Some(EXIST) | Some(EXIST_BANG) => {
                 match self.parse_exist_fact(tb)? {
                     ExistShapedFact::Exist(p) => Ok(ExistOrAndChainAtomicFact::ExistFact(p)),
@@ -513,7 +511,14 @@ impl Runtime {
             )
             .into()),
             _ => Ok(self.parse_quantifier_free_fact_top(tb)?.into_exist_or_and()),
+        };
+        let fact = fact?;
+        if !tb.exceed_end_of_head() {
+            return Err(tb.parse_error(format!(
+                "trailing tokens after fact: `{}`", tb.peek().unwrap_or("")
+            )));
         }
+        Ok(fact)
     }
 
     pub(super) fn parse_quantifier_free_fact_top(

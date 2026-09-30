@@ -10,6 +10,8 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 > **Litex is an experimental hobby project in beta; expect rough edges.** The author of Litex is not a so-called expert. Views in this blueprint carry no authority. Discussion is welcome.
 
+> **Implementation boundary (2026-09-30):** This blueprint distinguishes design goals from current `src/`. The current build has no Lean compiler entrypoint; Section 6 preserves an earlier experiment and target interface. Blocks labeled “Migration example” are not currently checked examples. See the [CLI reference](cli.md) for current commands and output.
+
 <!-- Blueprint spine: reasoning abundance from AI → scientific object → design hypothesis → measurable costs → potential capacity impact → dual bottlenecks of verification and understanding → two participation barriers → four language design choices → knowledge record left by each statement → Human–AI–Litex skill and knowledge-production protocol (including definition and verification) → replay, reuse, and Lean/Mathlib handoff of the record → ecosystem role → from AI for Math toward trustworthy, efficient reasoning in the AI era → success criterion -->
 
 <!--
@@ -43,7 +45,7 @@ Writing boundary: the first three layers are Litex's scientific core; the fourth
 
 ## 0. Litex Blueprint Overview
 
-*Litex (begun in 2024) is a set-theoretic formal language designed to be easy to learn and use. Litex source follows ordinary mathematical writing: users state objects and facts directly—what they want to prove; the system verifies bottom-up and returns the grounds for each step, or where checking stops. It is also designed to compile to Lean (full coverage expected by the end of 2026). Together with humans and AI, Litex hopes to form a collaboration loop that can accumulate checkable verification work for Math for AI.*
+*Litex (begun in 2024) is a set-theoretic formal language designed to be easy to learn and use. Litex source follows ordinary mathematical writing: users state objects and facts directly—what they want to prove; the system verifies bottom-up and returns the grounds for each step, or where checking stops. Lean interoperability is a design goal; the current build does not expose that compiler. Together with humans and AI, Litex hopes to form a collaboration loop that can accumulate checkable verification work for Math for AI.*
 
 Behind that sits a mathematical question: can a formal language be both easy to write and read, and strictly checkable—with source close to ordinary mathematical expression, and a verification process that lays out what each step does and which mathematical dependencies it rests on? Natural language is easy to understand but hard to verify rigorously; formal code can be verified but is often hard to understand. Litex aims to be a bridge between the two.
 
@@ -61,7 +63,7 @@ The following are not mutually exclusive user classes, but four entry points for
 
 Why another formal language?
 
-First, the author of Litex has always taken Lean as a model to learn from. Lean has greatly accelerated mathematics entering the AI for Math era. That is why I designed a Litex-to-Lean compiler. Any Litex code can compile to Lean (the full engineering effort is expected to finish by the end of 2026), so “wasting time on a language incompatible with Lean” should not be a reason not to try Litex. You can first think of Litex as a more approachable Lean frontend for ordinary users.
+Lean is a major reference point for Litex. An earlier compiler experiment explored translating Litex evidence to Lean, and the retained artifacts illustrate the intended connection. The current `src/` and Cargo targets do not build that compiler. Treat a readable Lean frontend as a research direction, not as a promise that current Litex programs already compile to Lean.
 
 Lean is hard often not only because “type theory is hard.” A more common friction is this: everyday mathematics talks about sets, elements, functions, and relations; many proof assistants’ default interface first places people in a world of goals and tactics. People care about *what is true*; the system’s default first asks *how do I attack the goal*.
 
@@ -273,7 +275,7 @@ The document unfolds along five connected questions: what the user sees, what th
 2. **Fact-centered**: the source records “what holds”; the verifier matches builtin rules, known facts, and definitions by shape, performs constrained matching and replacement, and checks well-definedness.
 3. **Bottom-up accumulation**: every verified fact enters the context for later reasoning; this is the default direction of reasoning.
 4. **Traceable proof flow**: the system organizes and outputs the mathematical grounds for each statement, together with the forward and backward dependencies from definitions and premises to conclusions, so that the proof process becomes structured information that is readable, checkable, and reusable—beyond reading the source, you can also read the principles behind it; on failure, it points to where the failure occurred.
-5. **Lean rechecking**: from the start, Litex was designed to compile to Lean proof objects and hand them to the Lean kernel for independent checking; it already covers some mathematical settings, with broader coverage expected by the end of 2026.
+5. **Lean rechecking**: the intended independent checking path. Earlier experimental artifacts remain in `lean/`; the current build does not expose their compiler.
 
 <a id="overview-gallery"></a>
 
@@ -307,10 +309,10 @@ Nonnegative numbers stay nonnegative under addition:
 
 ```litex
 forall x, y R:
-    x >= 0
-    y >= 0
+    0 <= x
+    0 <= y
     =>:
-        x + y >= 0
+        0 <= x + y
 ```
 
 A well-defined call when the domain condition is already known:
@@ -337,7 +339,6 @@ forall a, b R:
 
 A known `forall` fact used to prove a concrete atomic fact:
 
-<!-- litex:skip-test -->
 ```litex
 prop is_positive(n R):
     exist a R+ st {n > a}
@@ -366,7 +367,6 @@ zero = 0
 
 A theorem—name a reusable conclusion, then cite it (transitivity of divisibility):
 
-<!-- litex:skip-test -->
 ```litex
 prop divides_by(d, n Z):
     exist k Z st {n = d * k}
@@ -391,7 +391,6 @@ by thm divides_transitive(2, 6, 30) => $divides_by(2, 30)
 
 A named function:
 
-<!-- litex:skip-test -->
 ```litex
 have fn reciprocal(x R: x != 0) R = 1 / x
 reciprocal(2) = 1 / 2
@@ -406,10 +405,12 @@ claim:
         g = f
         =>:
             a * (b * g) = c * (d * f)
-    c * (d * f) = (c * d) * f = (a * b) * f = a * (b * f) = a * (b * g)
+    a * (b * g) = (a * b) * g = (c * d) * g = (c * d) * f = c * (d * f)
 ```
 
 Proof by contradiction—show that “every real satisfies `x^2 >= x`” fails:
+
+> **Migration example:** Current `src/` checking stops at `by_contra` (`by contradiction`). This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -437,6 +438,8 @@ by cases:
 ```
 
 Proof by induction—the sum of the first `n` odd positives is `n^2`:
+
+> **Migration example:** Current `src/` checking stops at `internal_bug: name n is already bound in an enclosing parse scope`. This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -484,6 +487,8 @@ forall s nonempty_set, G &Group<s>, identity s:
 
 A `template`—a parameterized definition family, then `\name<args>` to materialize:
 
+> **Migration example:** Current `src/` checking stops at `search_proof` (`p.first = 1`). This retained block is not a verified result.
+
 <!-- litex:skip-test -->
 ```litex
 struct Triple<X set>:
@@ -500,14 +505,13 @@ have p &Triple<R> = \triple<R>(1, 2, 3)
 p.first = 1
 ```
 
-A simple word problem—identifiers may be written in Chinese:
+A simple word problem—use ASCII identifiers in the current parser; comments may be written in Chinese:
 
-<!-- litex:skip-test -->
 ```litex
 # Mom's age is 3 times Xiao Ming's age plus 4; Xiao Ming is 15. How old is Mom?
-have 小明年龄 R = 15
-have 妈妈年龄 R = 3 * 小明年龄 + 4
-妈妈年龄 = 3 * 15 + 4 = 49
+have xiaoming_age R = 15
+let mom_age = 3 * xiaoming_age + 4
+mom_age = 3 * 15 + 4 = 49
 ```
 
 You supply the mathematical move; Litex checks each connection and keeps what passed.
@@ -562,7 +566,6 @@ Choosing set theory as the foundation is often heard as two claims—really two 
 **Misreading 1: If I am not fluent in set theory, I cannot express ordinary notions such as groups, topological spaces, or open sets with ∈ and ∪.**  
 This is first a **dictionary problem**, not a prerequisite course in set theory. How everyday mathematics says it should have a readable Litex counterpart. Groups and topological spaces (with their open-set families) can be written as working-layer interfaces, without first hand-coding a low-level encoding:
 
-<!-- litex:skip-test -->
 ```litex
 # Group: carrier set, operation, identity, inverse, and the usual laws
 struct Group<s nonempty_set>:
@@ -578,7 +581,7 @@ struct Group<s nonempty_set>:
             mul(inv(x), x) = one
 
 # Topology: a space is its carrier together with a family of open sets
-setting TopologicalSpaceSetting(X set, open_sets power_set(power_set(X))):
+prop is_topological_space(X set, open_sets power_set(power_set(X))):
     {} $in open_sets
     X $in open_sets
     forall U, V open_sets:
@@ -589,7 +592,7 @@ setting TopologicalSpaceSetting(X set, open_sets power_set(power_set(X))):
             family_union(family) $in open_sets
 ```
 
-An open set is simply a member of that family: once `TopologicalSpaceSetting` is bound, writing `U open_sets` means that `U` is open. The group–Lean comparison below is a fuller interface contrast; here the point is only what the “dictionary” looks like. Coverage is still expanding; this is not a claim that every common notion is already catalogued.
+An open set is simply a member of that family: under the explicit assumption `$is_topological_space(X, open_sets)`, writing `U open_sets` means that `U` is open. The group–Lean comparison below is a fuller interface contrast; here the point is only what the “dictionary” looks like. Coverage is still expanding; this is not a claim that every common notion is already catalogued.
 
 **Misreading 2: If the foundation is set theory, must every development rebuild analysis, algebra, and topology from the ZFC axioms—and would that not be too hard?**  
 This is an **entry-height problem**. Litex does expose set-theoretic / ZFC-side axiom and constructor interfaces for foundational work or when one needs to dig downward. Ordinary use does not force unfolding the concrete set-theoretic constructions of common concepts: for objects and structures familiar in everyday mathematical writing, the system supplies checkable relations and usage surfaces so you can operate at the abstraction layer you want, rather than first building up to that layer from the axioms. The low-level interfaces are an exit and escape hatch, not the staircase you must climb every day.
@@ -609,7 +612,7 @@ Litex organizes mathematics as objects and a gradually growing fact context. `e 
 
 This does not cancel static constraints or inference. Before accepting an expression, Litex still checks domains, return sets, structure fields, and other well-definedness obligations, and derives membership and carrier facts in proofs through dedicated rules. The difference is that such inference adds facts such as `e $in S` to the context, rather than inferring a privileged type `e : T` that decides the object's identity.
 
-Lean's technical route chooses Dependent Type Theory as its foundation. Litex's technical route chooses set theory as its foundation. Both can express the same mathematics, but they differ fundamentally in default interface, source style, and understanding cost. Lean chose a more abstract mathematical axiomatic system, which gives it general programming power and a smaller kernel that is easier to audit. Litex’s trusted implementation surface (verification and rule system) can be dozens of times Lean’s small kernel, so there is a dedicated LitexToLean compiler that translates Litex code into Lean code for Lean to check. There is no ranking of superiority—only different technical-route choices.
+Lean's technical route chooses Dependent Type Theory as its foundation. Litex's technical route chooses set theory as its foundation. Both can express the same mathematics, but they differ fundamentally in default interface, source style, and understanding cost. Lean chose a more abstract mathematical axiomatic system, which gives it general programming power and a smaller kernel that is easier to audit. Litex’s trusted implementation surface (verification and rule system) can be dozens of times Lean’s small kernel, so independent Lean replay is an intended additional check. The earlier compiler experiment is not wired into the current build. There is no ranking of superiority—only different technical-route choices.
 
 </details>
 
@@ -731,10 +734,10 @@ prop is_positive(a R):
 
 # 1) Match a builtin rule
 forall x, y R:
-    x >= 0
-    y >= 0
+    0 <= x
+    0 <= y
     =>:
-        x + y >= 0
+        0 <= x + y
 
 # 2) Match a known fact, then rewrite by equality
 forall a, b R:
@@ -819,13 +822,13 @@ hy : y ≥ 0
 
 ```litex
 forall x, y R:
-    x >= 0
-    y >= 0
+    0 <= x
+    0 <= y
     =>:
-        x + y >= 0
+        0 <= x + y
 ```
 
-This source does not name a rule. The goal `x + y >= 0` can be split into the predicate `>=` and the arguments `x + y`, `0`; the kernel filters candidates accordingly, matches the two nonnegative premises, and continues to check types and conditions.
+This source does not name a rule. The goal `0 <= x + y` can be split into the predicate `<=` and the arguments `0`, `x + y`; the kernel filters candidates accordingly, matches the two nonnegative premises, and continues to check types and conditions.
 
 **Litex output｜explains how**
 
@@ -838,7 +841,7 @@ This source does not name a rule. The goal `x + y >= 0` can be split into the pr
   "statement_results": [
     {
       "success": true,
-      "statement": "forall x, y R: /     x >= 0 /     y >= 0 /     =>: /         x + y >= 0",
+      "statement": "forall x, y R: /     0 <= x /     0 <= y /     =>: /         0 <= x + y",
       "proof_method": { "type": "..." },
       "stores": ["..."],
       "infers": []
@@ -885,7 +888,6 @@ ha : a > 10
 
 **Litex source｜writes what directly**
 
-<!-- litex:skip-test -->
 ```litex
 prop is_positive(n R):
     exist a R+ st {n > a}
@@ -1048,7 +1050,7 @@ example (a b c d g f : ℝ) (h : a * b = c * d) (h' : g = f) :
   rw [mul_assoc]
 ```
 
-Litex rewrites the four rewrites in reverse as an equality chain, from the right-hand end `c * (d * f)` through intermediate results to the left-hand end `a * (b * g)`:
+Litex writes an equality chain from `a * (b * g)` to `c * (d * f)`. This left-to-right orientation verifies in the current kernel:
 
 ```litex
 claim:
@@ -1057,10 +1059,10 @@ claim:
         g = f
         =>:
             a * (b * g) = c * (d * f)
-    c * (d * f) = (c * d) * f = (a * b) * f = a * (b * f) = a * (b * g)
+    a * (b * g) = (a * b) * g = (c * d) * g = (c * d) * f = c * (d * f)
 ```
 
-The four equality signs correspond in turn to `rw [mul_assoc]`, `rw [h]`, `rw [← mul_assoc]`, and `rw [h']`, in reverse order of Lean's instructions. Lean specifies how to rewrite the goal next; Litex writes the facts that should hold along the way, and the kernel searches for grounds of adjacent equalities.
+The chain reassociates the product, substitutes `a * b = c * d`, substitutes `g = f`, and reassociates again. Lean specifies how to rewrite the goal next; Litex writes the facts that should hold along the way, and the kernel searches for grounds of adjacent equalities.
 
 </details>
 
@@ -1116,7 +1118,8 @@ Below is the execution result of this fragment.
       "statement": "a + 1 = 2",
       "proof_method": {
         "type": "builtin_rule",
-        "rule": "EqualityBuiltin"
+        "rule_name": "Calculation",
+        "message": "Both sides evaluate to the same number"
       },
       "stores": ["a + 1 = 2"],
       "infers": []
@@ -1218,7 +1221,7 @@ Litex source
   → let humans and AI see accepted paths, context changes, and repair boundaries
   → retain a checkable knowledge record for tools and interactive views
   → provide machine-readable or structured views such as JSON and relation graphs when needed
-  → within supported scope, hand off to the Litex-to-Lean compiler and Lean
+  → future integration: hand supported evidence to a Lean compiler and kernel
 ```
 
 A checkable knowledge record is the structured form of this visible execution path, not a log pieced together after the fact from terminal text. JSON is one machine-readable representation used when tools need it; users need not read JSON to follow and repair the execution. Relation graphs are an optional view of connections; Lean is an independent rechecking endpoint for supported routes. Implementation scale can grow, but these responsibilities need not inflate with the number of rules.
@@ -1292,7 +1295,6 @@ For this problem, AI might first split it into, for example:
 
 AI first submits two definitions; Litex returns success. That leaves this source, together with a record of how Litex ran it. The accepted context grows, and later theorem fragments can unfold by definition.
 
-<!-- litex:skip-test -->
 ```litex
 # "Eventually close enough": from N0 onward, every term lies within error epsilon.
 prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
@@ -1333,6 +1335,8 @@ AI first tries to obtain convergence of the new sequence by `by def` without con
 ```
 
 The accepted context is unchanged. The record explains: the definition supplies the shape to prove, not a ready-made conclusion; one must first obtain and deliver a suitable `N0` for each `epsilon`. AI repairs only this fragment:
+
+> **Migration example:** Current `src/` checking stops at `def_thm` (`thm`). This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -1383,9 +1387,9 @@ Litex can work independently; it has syntax, a runtime, and a verification kerne
 
 But for large mathematical systems, Lean has unmatched advantages: a mature Lean/Mathlib ecosystem, rich reusable mathematical objects and theorem libraries, and a small, auditable kernel. Litex hopes to connect to Lean's ecosystem so that the Lean community can also benefit from Litex, and so that Litex can provide Lean with a more readable, more writable mathematical interface in some mathematical directions.
 
-*At the same time, the Litex-to-Lean compiler also provides a guarantee for Litex's rigor. Litex's Rust source is currently on the order of a few hundred thousand lines and contains hundreds of rules; its trusted implementation surface is far larger than Lean's small kernel (about 5–8 thousand lines of C++) and cannot truly be audited the way Lean's small kernel can. If every Litex statement can be compiled into corresponding Lean code, then Litex's rigor is guaranteed.*
+Independent Lean checking could reduce reliance on Litex’s verifier implementation for supported proofs, provided the translation preserves the original statement and the emitted proof is checked by Lean without proof holes. This is a verification goal, not a guarantee supplied by the current build.
 
-> The Litex-to-Lean compiler is still experimental. In principle, Litex's objects of processing and verification mechanisms can all correspond to Lean/Mathlib code (Litex is based on set theory, and Mathlib has set-theory packages; each Litex verification mechanism can correspond to a combination of several Lean tactics). This engineering work is expected to be completed by the end of 2026.
+> **Current build:** `Cargo.toml` registers the `litex` binary, and `src/lib.rs` has no compiler module. The retained `lean/stmt_result_to_lean_compiler.sh` wrapper names a missing Cargo binary. The example below records an earlier experiment; it has not been regenerated or Lean-checked against current `src/`.
 
 <details>
 <summary><strong>Example: how Litex code compiles to Lean</strong></summary>
@@ -1397,6 +1401,8 @@ Compiling Litex to Lean and connecting to Mathlib-style Lean code goes through t
 > Compiling Litex to Lean is much like compiling C to assembly. We know assembly looks like gibberish because the source writes many memory addresses; both allocating a new address and using it require writing the address explicitly. Lean code names every fact, and calling a corresponding fact also requires attaching the name explicitly. When the Litex kernel processes Litex code, it maintains such a fact table for the user and, during verification, searches that table by the predicate name of each atomic fact as key, to help prove what is currently to be proved (why this works, and why Lean cannot easily copy the same default mechanism, see Section 2). That search branches widely (Litex has hundreds of builtin verification rules) but is not deep (each verification rule is straightforward; any builtin rule can be compiled into several Lean tactics).
 
 Example: we want to prove that the sum of the first `n` positive odd numbers is `n^2`. We first write Litex source:
+
+> **Migration example:** Current `src/` checking stops at `internal_bug: name n is already bound in an enclosing parse scope`. This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -1600,6 +1606,8 @@ This route is deliberately narrow and experimental. It is not a whole-Litex-to-P
 
 The same Litex proof used for scientific computing can become executable code. For example, one Newton step toward √2:
 
+> **Migration example:** Current `src/` checking stops at `parse_error: undefined name newton_sqrt_two_step`. This retained block is not a verified result.
+
 <!-- litex:skip-test -->
 ```litex
 have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
@@ -1659,7 +1667,7 @@ Earlier sections showed that this role is not a simple sum of several features. 
 | --- | --- |
 | Front end for readable reasoning | Mathematical objects, conditions, intermediate facts, and conclusions that humans can audit directly |
 | Production layer for trustworthy reasoning data | Machine-checked facts and verification sources, clear stopping boundaries, and explicitly marked trust boundaries |
-| Access layer to the existing ecosystem | Designed from the start for Lean compilation and rechecking (Section 6, experimental); Lean proof objects for some mathematical scenarios already covered, with broader coverage expected by the end of 2026; plus newly written Lean/Mathlib adapters, cleanly separated and authored by AI or humans |
+| Access layer to the existing ecosystem | Designed from the start for Lean compilation and rechecking (Section 6, experimental); earlier Lean proof artifacts preserve experimental coverage, but the current build has no compiler entrypoint; plus newly written Lean/Mathlib adapters, cleanly separated and authored by AI or humans |
 | Proofs → executable code (experimental) | Turn checked computational fragments into runnable Python / C (Section 7) |
 
 Of course, Litex at this stage is more like a `proof of an idea`. Even though it already has hundreds of thousands of lines of code, exploration of its place in industry upstream and downstream remains scarce. That is what Litex's next stage will focus on: how to turn zero-to-one original innovation into one-to-ten early value realization. Friends interested in Litex can contact litexlang@outlook.com .
@@ -1685,7 +1693,7 @@ What Litex seeks is precisely the next scene that the AI era is incubating and t
 
 In the starlit history of science, new perspectives and new answers to the same problem have often greatly driven the development of the original field, and even given birth to entirely new disciplines. In an AI era that prizes efficiency above all, even in a discipline as known for long-termism as mathematics, we can still easily get lost in local optima of racing to publish and climbing leaderboard publicity, and overlook rethinking first principles and original innovation.
 
-This does not mean denying Lean's enormous success. With its elegant type theory, reliable kernel, and rich Mathlib ecosystem, Lean has shown that mathematics can be engineered with rigor. Litex wants to ask a different question: under the premise that it was designed from the start to compile to Lean for kernel rechecking—with some mathematical scenarios already covered and broader coverage expected by the end of 2026—can a formal language adopt an interface closer to natural mathematics, so that source, verification process, and mathematical dependencies are easier for people to understand, write, and join? This is not an attempt to find an answer that replaces Lean, but to add a direction worth testing to the design space of formal languages.
+This does not mean denying Lean's enormous success. With its elegant type theory, reliable kernel, and rich Mathlib ecosystem, Lean has shown that mathematics can be engineered with rigor. Litex wants to ask a different question: under the premise that it was designed from the start to compile to Lean for kernel rechecking—with earlier experimental artifacts retained and current compiler integration still absent—can a formal language adopt an interface closer to natural mathematics, so that source, verification process, and mathematical dependencies are easier for people to understand, write, and join? This is not an attempt to find an answer that replaces Lean, but to add a direction worth testing to the design space of formal languages.
 
 Of course, Litex may not become the only path, and it need not become the only path. Litex hopes the world will be better because of mathematics, and that the mathematical world will be better because of formal languages. I believe that such “nonstandard solutions” as Litex have long-term value—again as a personal judgment, not as an authoritative claim.
 

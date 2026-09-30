@@ -139,10 +139,10 @@ Nonnegative numbers stay nonnegative under addition:
 
 ```litex
 forall x, y R:
-    x >= 0
-    y >= 0
+    0 <= x
+    0 <= y
     =>:
-        x + y >= 0
+        0 <= x + y
 ```
 
 A well-defined call when the domain condition is already known:
@@ -238,7 +238,7 @@ claim:
         g = f
         =>:
             a * (b * g) = c * (d * f)
-    c * (d * f) = (c * d) * f = (a * b) * f = a * (b * f) = a * (b * g)
+    a * (b * g) = (a * b) * g = (c * d) * g = (c * d) * f = c * (d * f)
 ```
 
 Proof by contradiction—show that “every real satisfies `x^2 >= x`” fails:

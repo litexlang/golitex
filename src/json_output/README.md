@@ -17,6 +17,12 @@ Default CLI / test emit uses **Normal**. **Compact** and **Detailed** are
 implemented under `project_compact` / `project_detailed`
 (`project_stmt_*` / `project_run_*` / `emit_run_*`).
 
+The native scalar result-type leaf is `InFact.NativeScalarCodomain`.
+Normal output explains the checked native codomain (for example `Z` for
+`sign(a) $in R`); Detailed output records `rule: "NativeScalarCodomain"` and
+`codomain: "Z"`. The enclosing atomic result retains the input WD proof.
+Closed numeric expressions keep the existing calculation-membership route.
+
 ## Compact statement shape
 
 Success — only disposition + source text:

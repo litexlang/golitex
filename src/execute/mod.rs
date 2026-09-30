@@ -38,6 +38,9 @@ mod release_one_struct_layer;
 mod exec_stmt_transaction_tests;
 #[cfg(test)]
 mod order_stage_a_remainder_tests;
+#[cfg(test)]
+#[path = "../../tests/unit/execute/native_scalar_codomain/mod.rs"]
+mod native_scalar_codomain_tests;
 
 pub use exec_stmt_result::{
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,

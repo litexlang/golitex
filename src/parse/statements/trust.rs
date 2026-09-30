@@ -24,7 +24,7 @@ impl Runtime {
             })));
         }
 
-        let fact = self.parse_fact(&mut tb)?;
+        let fact = self.parse_complete_fact(&mut tb)?;
         if !tb.body.is_empty() {
             return Err(tb.parse_error("inline `trust` cannot have an indented body; use `trust:`"));
         }

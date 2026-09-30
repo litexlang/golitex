@@ -61,7 +61,7 @@ excerpt):
     {
       "success": true,
       "statement": "1 + 1 = 2",
-      "proof_method": { "type": "builtin_rule", "rule": "EqualityBuiltin" },
+      "proof_method": { "type": "builtin_rule", "rule_name": "Calculation", "message": "Both sides evaluate to the same number" },
       "stores": ["1 + 1 = 2"],
       "infers": []
     }
@@ -99,6 +99,8 @@ Read the first line as one statement with two effects: it introduces the object
 checked from the current context and become available after they succeed.
 
 Names may depend on earlier names:
+
+> **Migration example:** Current `src/` checking stops at `search_proof` (`y = 3`). This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -146,6 +148,8 @@ shift(2) = 3
 
 Use <code>let</code> when the name is only a local abbreviation:
 
+> **Migration example:** Current `src/` checking stops at `search_proof` (`successor(2) = 3`). This retained block is not a verified result.
+
 <!-- litex:skip-test -->
 ```litex
 have fn shift(t R) R = t + 1
@@ -172,7 +176,7 @@ Start with the mathematical shape, then use the corresponding Litex spelling.
 | Disjunction | <code>branch or branch</code> |
 | Existence | <code>exist x S st {facts}</code> |
 | Unique existence | <code>exist! x S st {facts}</code> |
-| Universal fact | <code>forall x S: assumptions =&gt; conclusion</code> |
+| Universal fact | <code>forall x S:</code> with indented assumptions and <code>=&gt;:</code> conclusions |
 | Negated quantifier | <code>not exist ...</code>, <code>not forall ...</code> |
 
 <code>and</code> is a flat conjunction of facts. <code>or</code> joins completed
@@ -181,10 +185,10 @@ quantified parameters in one <code>forall</code> header:
 
 ```litex
 forall x, y R:
-    x >= 0
-    y >= 0
+    0 <= x
+    0 <= y
     =>:
-        x + y >= 0
+        0 <= x + y
 ```
 
 Do not put a second <code>forall</code> inside the conclusion when it can be
@@ -254,6 +258,8 @@ The standard sets are <code>N</code>, <code>Z</code>, <code>Q</code>, <code>R</c
 and <code>C</code>, with common subsets such as <code>N+</code>, <code>R-</code>,
 and <code>C*</code>. A set builder is bounded by an existing set:
 
+> **Migration example:** Current `src/` checking stops at `release_thm` (`release thm …`). This retained block is not a verified result.
+
 <!-- litex:skip-test -->
 ```litex
 release thm set_builder_member(1, {x R: x > 0})
@@ -304,7 +310,6 @@ block.
 
 An existential proof gives its witness explicitly:
 
-<!-- litex:skip-test -->
 ```litex
 witness exist x R st {x^2 = 4} from 2:
     2^2 = 4
@@ -338,6 +343,8 @@ extra echo.
 
 Induction is explicit when the invariant is not a direct builtin fact:
 
+> **Migration example:** Current `src/` checking stops at `internal_bug: name n is already bound in an enclosing parse scope`. This retained block is not a verified result.
+
 <!-- litex:skip-test -->
 ```litex
 claim:
@@ -363,7 +370,6 @@ conclusion; proof-control commands belong in a proof block.
 This small divisibility development shows how a definition, witnesses, a
 reusable theorem, and ordinary fact reuse fit together:
 
-<!-- litex:skip-test -->
 ```litex
 prop divides_by(d, n Z):
     exist k Z st {n = d * k}
@@ -405,7 +411,7 @@ mathematics.
 | Well-definedness soft miss | An object is not legal yet | Prove membership, bounds, nonzero divisors, or a typed construction |
 | Search soft miss | The fact is meaningful but current evidence is insufficient | Add the smallest equality, membership fact, theorem call, or witness |
 | Later use fails | The earlier statement stored a different interface than expected | Inspect <code>stores</code>/<code>infers</code>; distinguish an object, fact, predicate, and function |
-| <code>trust</code> or <code>axiom</code> appears | The route includes an explicit assumption | Mark the debt; this is not fully checkable under strict mode |
+| <code>trust</code> or <code>axiom</code> appears | The route includes an explicit assumption | Mark the assumption; current strict mode rejects executed <code>trust</code>, but still accepts <code>axiom</code> |
 
 A soft miss is not a proof that the proposition is false:
 
@@ -511,6 +517,8 @@ by cases:
 
 A <code>struct</code> creates a reusable carrier and field vocabulary:
 
+> **Migration example:** Current `src/` checking stops at `release_thm` (`release thm …`). This retained block is not a verified result.
+
 <!-- litex:skip-test -->
 ```litex
 struct Point:
@@ -597,9 +605,11 @@ Before each new line or block, ask:
 Litex is an experimental language in beta. A successful check is relative to
 the checker, its builtin and inference rules, imported facts, and any explicit
 trusted inputs. <code>trust</code>, <code>trust have</code>, and <code>axiom</code>
-are visible assumptions; strict mode rejects them. The Litex-to-Lean compiler
-provides an additional checking path only for the supported subset, and it must
-fail closed when a construct is outside that subset.
+are visible assumptions. Current strict mode rejects executed <code>trust</code>,
+<code>trust have</code>, and <code>abstract_prop</code>; it still accepts
+<code>axiom</code> and named foundation releases. Imports may reuse cached
+environments. The current Cargo build has no Lean compiler entrypoint; see
+the [CLI boundary](cli.md#lean-compiler-boundary).
 
 ### Where to go next
 

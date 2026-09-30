@@ -81,13 +81,13 @@ quotient; `abs_*` negation/product/square; `log_*` base_self/of_one/of_power/
 arg_power/product/quotient/reciprocal/change_of_base; `zero_mod`, `mod_one`,
 `one_mod_at_least_two`, `nested_same_mod_absorption`.
 Quotient positivity, sqrt-denominator, log-nonzero, and mod-result examples
-now use checked facts. Eight legacy equality tracers still contain documented
-carrier debt for `sign`, `gcd`/`lcm`, `exp`, or factorial; these are not
-trust-free acceptance. See [the migration blockers](../../plan/迁移的plan/和example有关.md)
-(B01–B04) for the attempted proofs and remaining obligations.
+now use checked facts. Native scalar codomains now discharge the eight equality tracers for `sign`,
+`gcd`/`lcm`, `exp`, and factorial without trust or preceding carrier assertions.
+See [the result-type tracer](atomic/by_builtin_rule/native_scalar_result_types.lit)
+and [B01–B04 acceptance](../../plan/迁移的plan/experience/problem_notes/native-scalar-result-types.md).
 Equality BuiltinRule identities (Stage B wave 3):
 `min`/`max` idempotent + commutative; `abs(abs(a))=abs(a)`;
-`exp(ln(x))=x` (`R+`); `ln(exp(x))=x` (narrow `trust exp(x) $in R+` for ln WD);
+`exp(ln(x))=x` (`R+`); `ln(exp(x))=x` (`x` in `R`, with native `exp` codomain `R+`);
 `floor(n)=n` / `ceil(n)=n` (`Z`); `a % a = 0` (`a != 0`) — see `min_*.lit`,
 `max_*.lit`, `abs_abs_absorption.lit`, `exp_of_ln.lit`, `ln_of_exp.lit`,
 `floor_of_integer.lit`, `ceil_of_integer.lit`, `mod_self_zero.lit`.
@@ -97,9 +97,8 @@ Equality BuiltinRule identities (Stage B wave 4):
 `sqrt_of_square_equals_abs.lit`.
 Equality BuiltinRule identities (Stage B wave 5):
 `quot(a,1)=a`; `quot(a,a)=1` (`N+`); `lcm` commutative / idempotent-abs;
-`gcd` commutative / idempotent-abs / left-right zero-abs (narrow `trust a != 0`
-for current gcd WD); `(n+1)!=(n+1)*n!` (narrow `trust n! $in N` for factorial
-carrier / mul WD) — see `quot_*.lit`, `lcm_*.lit`, `gcd_*.lit`,
+`gcd` commutative / idempotent-abs / left-right zero-abs (`Z*` binders for
+nonzero inputs); `(n+1)!=(n+1)*n!` (native factorial codomain `N+`) — see `quot_*.lit`, `lcm_*.lit`, `gcd_*.lit`,
 `factorial_successor.lit`.
 Equality BuiltinRule identities (Stage B wave 6):
 `abs(a)=a` (`0 <= a`); `abs(a)=0-a` (`a <= 0`); `sign(a)=1` (`0 < a`);
@@ -107,10 +106,10 @@ Equality BuiltinRule identities (Stage B wave 6):
 `abs_nonpos_equals_negation.lit`, `sign_of_*.lit`, `max_*_when_less_equal.lit`,
 `min_*_when_less_equal.lit`.
 Equality BuiltinRule identities (Stage B wave 7):
-`a % gcd(a,b)=0` / `(a*b)%a=0` (nonzero divisor; gcd uses narrow trust for WD);
+`a % gcd(a,b)=0` / `(a*b)%a=0` (nonzero divisor; native gcd codomain `N+`);
 `a=b` from two-sided `<=`; `a-b=0` from `a=b`; zero-product cancel;
 `sign(0-a)=0-sign(a)`; `sign(a)*abs(a)=a`; `abs(a)=sign(a)*a`;
-`sign(a*b)=sign(a)*sign(b)` (sign nodes use narrow `trust sign(_) $in R`);
+`sign(a*b)=sign(a)*sign(b)` (native sign codomain `Z` supplies arithmetic WD);
 `a=c-b` from known `a+b=c` — see `gcd_divides_argument.lit`,
 `product_mod_factor_zero.lit`, `equality_from_two_sided_weak_order.lit`,
 `diff_zero_from_equal_operands.lit`, `zero_product_cancel.lit`,
