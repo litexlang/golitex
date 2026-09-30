@@ -54,7 +54,7 @@ pub enum InFactSearchProofByBuiltinRule {
     // Membership lifts along the standard-set inclusion chain.
     // Mathematical property: if `x $in S` and `S $subset T` among standard sets,
     // then `x $in T`.
-    // Example: known `x $in R` proves `x $in C`.
+    // Example: prove `f(a) $in R` then lift to `f(a) $in C`.
     StandardSetSubsetMembership(StandardSetSubsetMembershipBuiltinRuleProof),
     // Set-builder membership from base membership plus defining facts.
     // Example: prove `x $in {t R: t > 0}` from `x $in R` and `x > 0`.
@@ -164,11 +164,11 @@ pub struct ComplexCoordinateInComplexBuiltinRuleProof {}
 
 pub struct RealArithmeticClosureBuiltinRuleProof {}
 
-// Subset-lift certificate: cite a known smaller-set membership.
-// Example: source_set `R`, cite `x $in R`, goal `x $in C`.
+// Subset-lift certificate: verify membership in a proper subset, then lift.
+// Example: source_set `R`, prove `f(a) $in R` (e.g. by FnApplicationInCodomain), goal `f(a) $in C`.
 pub struct StandardSetSubsetMembershipBuiltinRuleProof {
     pub source_set: StandardSet,
-    pub cite_fact_id: FactId,
+    pub source_membership_proof: VerifyFactResult,
 }
 
 pub struct SetBuilderMembershipBuiltinRuleProof {
@@ -500,7 +500,7 @@ impl Runtime {
             _ => {}
         }
 
-        // B1 — non-shape cite: known membership in a proper subset
+        // B1 — verify membership in a proper subset, then lift along inclusion
         if let Some(proof) = self.standard_set_subset_membership_proof(fact, verify_state)? {
             return Ok(Some(proof));
         }
@@ -836,8 +836,12 @@ impl Runtime {
         ))
     }
 
-    // Prove `element $in target` from a known `element $in source` with source ⊂ target.
-    // Example: known `x $in R` proves `x $in C`.
+    // Prove `element $in target` from `element $in source` with source ⊂ target.
+    // Source membership is verified under the same builtin / known flags as
+    // `verify_state` (so FnApplicationInCodomain can prove `$in R` when lifting
+    // to `$in C`). Deep forall / rewrite / WD-store stay off to avoid search
+    // blow-up across every proper subset.
+    // Example: `distance_sq(q, p) $in C` via proving `distance_sq(q, p) $in R`.
     fn standard_set_subset_membership_proof(
         &mut self,
         fact: &InFact,
@@ -846,28 +850,29 @@ impl Runtime {
         let Obj::StandardSet(target) = &fact.set else {
             return Ok(None);
         };
+        let mut source_state = verify_state.clone();
+        source_state.can_use_def_and_known_forall_and_known_strategy = false;
+        source_state.can_use_rewrite = false;
+        source_state.store_well_defined_fact = false;
         for source in proper_subsets_in_membership_proof_order(target) {
-            let probe = AtomicFact::InFact(InFact {
+            let probe = Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: self.global_ids.allocate_fact_id(),
                 element: fact.element.clone(),
                 set: Obj::StandardSet(source.clone()),
                 line_file: None,
-            });
-            if let Some(known) = self
-                .search_atomic_except_equality_fact_proof_by_known_atomic_fact(
-                    &probe,
-                    verify_state.clone(),
-                )?
-            {
-                return Ok(Some(
-                    InFactSearchProofByBuiltinRule::StandardSetSubsetMembership(
-                        StandardSetSubsetMembershipBuiltinRuleProof {
-                            source_set: source,
-                            cite_fact_id: known.cite_fact_id,
-                        },
-                    ),
-                ));
+            }));
+            let source_membership_proof = self.verify_fact(&probe, source_state.clone())?;
+            if source_membership_proof.is_failed() {
+                continue;
             }
+            return Ok(Some(
+                InFactSearchProofByBuiltinRule::StandardSetSubsetMembership(
+                    StandardSetSubsetMembershipBuiltinRuleProof {
+                        source_set: source,
+                        source_membership_proof,
+                    },
+                ),
+            ));
         }
         Ok(None)
     }
@@ -1661,20 +1666,21 @@ fn complex_coordinate_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBui
 }
 
 fn proper_subsets_in_membership_proof_order(target: &StandardSet) -> Vec<StandardSet> {
+    // Larger / nearer carriers first so verify-based lift hits soon (e.g. R before N for C).
     [
-        StandardSet::N,
-        StandardSet::Z,
-        StandardSet::Q,
         StandardSet::R,
-        StandardSet::NPos,
-        StandardSet::ZNeg,
-        StandardSet::ZStar,
-        StandardSet::QPos,
-        StandardSet::QNeg,
-        StandardSet::QStar,
+        StandardSet::Q,
+        StandardSet::Z,
+        StandardSet::N,
+        StandardSet::RStar,
         StandardSet::RPos,
         StandardSet::RNeg,
-        StandardSet::RStar,
+        StandardSet::QStar,
+        StandardSet::QPos,
+        StandardSet::QNeg,
+        StandardSet::ZStar,
+        StandardSet::ZNeg,
+        StandardSet::NPos,
         StandardSet::CStar,
     ]
     .into_iter()

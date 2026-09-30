@@ -17,12 +17,12 @@ struct GroupSetting:
     inv fn(x A) A
     <=>:
         forall u, v, w A:
-        mul(mul(u, v), w) = mul(u, mul(v, w))
+            mul(mul(u, v), w) = mul(u, mul(v, w))
         forall u A:
-        mul(one, u) = u
-        mul(u, one) = u
-        mul(inv(u), u) = one
-        mul(u, inv(u)) = one
+            mul(one, u) = u
+            mul(u, one) = u
+            mul(inv(u), u) = one
+            mul(u, inv(u)) = one
 
 prop is_group([GroupSetting])
 
@@ -66,7 +66,7 @@ struct GroupHomomorphismSetting:
     _todo_placeholder set
     <=>:
         forall x, y A:
-        f(mul_A(x, y)) = mul_B(f(x), f(y))
+            f(mul_A(x, y)) = mul_B(f(x), f(y))
 
 thm homomorphism_maps_identity:
     ? forall [GroupHomomorphismSetting]:
@@ -144,23 +144,23 @@ struct CommutativeRingSetting:
     one A
     <=>:
         forall x, y, z A:
-        add(add(x, y), z) = add(x, add(y, z))
-        mul(mul(x, y), z) = mul(x, mul(y, z))
-        mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
-        mul(add(x, y), z) = add(mul(x, z), mul(y, z))
+            add(add(x, y), z) = add(x, add(y, z))
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+            mul(add(x, y), z) = add(mul(x, z), mul(y, z))
         forall x, y A:
-        add(x, y) = add(y, x)
-        mul(x, y) = mul(y, x)
+            add(x, y) = add(y, x)
+            mul(x, y) = mul(y, x)
         forall x A:
-        add(zero, x) = x
-        add(x, zero) = x
-        add(x, neg(x)) = zero
-        add(neg(x), x) = zero
-        mul(one, x) = x
-        mul(x, one) = x
-        mul(zero, x) = zero
-        mul(x, zero) = zero
-        neg(zero) = zero
+            add(zero, x) = x
+            add(x, zero) = x
+            add(x, neg(x)) = zero
+            add(neg(x), x) = zero
+            mul(one, x) = x
+            mul(x, one) = x
+            mul(zero, x) = zero
+            mul(x, zero) = zero
+            neg(zero) = zero
 
 prop is_commutative_ring([CommutativeRingSetting])
 
@@ -173,12 +173,12 @@ struct RingHomomorphismSetting:
     _todo_placeholder set
     <=>:
         forall x, y A:
-        map(add_A(x, y)) = add_B(map(x), map(y))
-        map(mul_A(x, y)) = mul_B(map(x), map(y))
+            map(add_A(x, y)) = add_B(map(x), map(y))
+            map(mul_A(x, y)) = mul_B(map(x), map(y))
         forall x A:
-        map(neg_A(x)) = neg_B(map(x))
-        map(zero_A) = zero_B
-        map(one_A) = one_B
+            map(neg_A(x)) = neg_B(map(x))
+            map(zero_A) = zero_B
+            map(one_A) = one_B
 
 prop is_ring_homomorphism([RingHomomorphismSetting])
 
@@ -224,13 +224,13 @@ struct QuotientRingPresentationSetting:
     <=>:
         $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
         forall kernel_element I:
-        map(kernel_element) = zero_B
+            map(kernel_element) = zero_B
         forall x A:
-        map(x) = zero_B
-        =>:
-        x $in I
+            map(x) = zero_B
+            =>:
+                x $in I
         forall quotient_element B:
-        exist representative A st {map(representative) = quotient_element}
+            exist representative A st {map(representative) = quotient_element}
 
 prop is_quotient_ring_presentation([QuotientRingPresentationSetting])
 

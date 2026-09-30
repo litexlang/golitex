@@ -117,7 +117,7 @@ thm derivative_value_unique:
 
 # Existence from differentiability and the uniqueness theorem define a callable
 # derivative value on differentiable function-point pairs.
-have fn derivative_at by exist!:
+claim:
     ? forall f fn(t R) R, x0 R:
         $is_differentiable_at(f, x0)
         =>:
@@ -131,6 +131,12 @@ have fn derivative_at by exist!:
                 slope1 = slope2
         release thm derivative_value_unique(f, x0, slope1, slope2)
     exist! slope R st {$has_derivative_at(f, x0, slope)}
+
+have fn derivative_at by exist!:
+    ? forall f fn(t R) R, x0 R:
+        $is_differentiable_at(f, x0)
+        =>:
+            exist! slope R st {$has_derivative_at(f, x0, slope)}
 
 # Bridge the relational derivative predicate to the uniquely selected value.
 thm has_derivative_at_to_derivative_value:

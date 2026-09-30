@@ -112,7 +112,6 @@ template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, 
     have fn vector_neg by exist!:
         ? forall x V:
             exist! y V st {space.add(x, y) = space.zero}
-        release thm additive_inverse_exists_unique(K, field, V, space, x)
 
 thm vector_neg_spec:
     ? forall [VectorSpaceSetting], x V:

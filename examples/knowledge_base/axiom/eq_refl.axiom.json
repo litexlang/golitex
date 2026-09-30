@@ -1,61 +1,61 @@
 {
+  "kind": "axiom",
+  "name": "eq_refl",
   "forall_fact": {
-    "dom_facts": [],
     "fact_id": 20,
-    "line_file": null,
-    "then_facts": [
-      {
-        "atomic": {
-          "fact_id": 21,
-          "left": {
-            "identifier": {
-              "id": 11,
-              "name": "x",
-              "tag": "Plain"
-            },
-            "tag": "Identifier"
-          },
-          "line_file": null,
-          "right": {
-            "identifier": {
-              "id": 11,
-              "name": "x",
-              "tag": "Plain"
-            },
-            "tag": "Identifier"
-          },
-          "tag": "EqualFact"
-        },
-        "tag": "AtomicFact"
-      }
-    ],
     "typed_parameters": {
       "groups": [
         {
-          "param_type": {
-            "obj": {
-              "set": "R",
-              "tag": "StandardSet"
-            },
-            "tag": "Obj"
-          },
           "params": [
             {
               "id": 11,
               "name": "x"
             }
-          ]
+          ],
+          "param_type": {
+            "tag": "Obj",
+            "obj": {
+              "tag": "StandardSet",
+              "set": "R"
+            }
+          }
         }
       ]
-    }
+    },
+    "dom_facts": [],
+    "then_facts": [
+      {
+        "tag": "AtomicFact",
+        "atomic": {
+          "tag": "EqualFact",
+          "fact_id": 21,
+          "left": {
+            "tag": "Identifier",
+            "identifier": {
+              "tag": "Plain",
+              "id": 11,
+              "name": "x"
+            }
+          },
+          "right": {
+            "tag": "Identifier",
+            "identifier": {
+              "tag": "Plain",
+              "id": 11,
+              "name": "x"
+            }
+          },
+          "line_file": null
+        }
+      }
+    ],
+    "line_file": null
   },
-  "kind": "axiom",
   "line_file": {
     "line": 1,
     "origin": {
-      "export_file_id": 0,
-      "tag": "RootExport"
+      "tag": "RootExport",
+      "export_file_id": 0
     }
-  },
-  "name": "eq_refl"
+  }
 }

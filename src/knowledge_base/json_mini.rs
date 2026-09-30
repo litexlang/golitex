@@ -1,7 +1,7 @@
 //! Minimal JSON Value + parse/stringify (no external crates).
 //! Enough for knowledge_base wire formats: object / array / string / number / bool / null.
+//! Object fields keep insertion order (human-facing Normal JSON care about key order).
 
-use std::collections::BTreeMap;
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -11,9 +11,77 @@ pub enum JsonValue {
     Number(f64),
     String(String),
     Array(Vec<JsonValue>),
-    Object(BTreeMap<String, JsonValue>),
+    Object(JsonObject),
 }
 
+/// Ordered JSON object. Iteration / stringify follow insertion order.
+/// Equality ignores key order (same keys and values).
+#[derive(Clone, Debug, Default)]
+pub struct JsonObject {
+    entries: Vec<(String, JsonValue)>,
+}
+
+impl PartialEq for JsonObject {
+    fn eq(&self, other: &Self) -> bool {
+        if self.entries.len() != other.entries.len() {
+            return false;
+        }
+        for (key, value) in &self.entries {
+            match other.get(key) {
+                Some(other_value) if other_value == value => {}
+                _ => return false,
+            }
+        }
+        true
+    }
+}
+
+impl JsonObject {
+    pub fn new() -> Self {
+        JsonObject {
+            entries: Vec::new(),
+        }
+    }
+
+    pub fn from_entries(entries: Vec<(String, JsonValue)>) -> Self {
+        let mut object = JsonObject::new();
+        for (key, value) in entries {
+            object.insert(key, value);
+        }
+        object
+    }
+
+    pub fn insert(&mut self, key: String, value: JsonValue) {
+        if let Some((_, existing)) = self.entries.iter_mut().find(|(k, _)| *k == key) {
+            *existing = value;
+            return;
+        }
+        self.entries.push((key, value));
+    }
+
+    pub fn get(&self, key: &str) -> Option<&JsonValue> {
+        self.entries
+            .iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, value)| value)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &JsonValue)> {
+        self.entries.iter().map(|(k, v)| (k, v))
+    }
+
+    pub fn keys_in_order(&self) -> Vec<&str> {
+        self.entries.iter().map(|(k, _)| k.as_str()).collect()
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct JsonError(pub String);
@@ -26,14 +94,10 @@ impl fmt::Display for JsonError {
 
 impl JsonValue {
     pub fn object_from(entries: Vec<(String, JsonValue)>) -> Self {
-        let mut map = BTreeMap::new();
-        for (key, value) in entries {
-            map.insert(key, value);
-        }
-        JsonValue::Object(map)
+        JsonValue::Object(JsonObject::from_entries(entries))
     }
 
-    pub fn as_object(&self) -> Result<&BTreeMap<String, JsonValue>, JsonError> {
+    pub fn as_object(&self) -> Result<&JsonObject, JsonError> {
         match self {
             JsonValue::Object(map) => Ok(map),
             _ => Err(JsonError("expected JSON object".to_string())),
@@ -59,14 +123,13 @@ impl JsonValue {
             JsonValue::Number(n) if n.is_finite() && *n >= 0.0 && n.fract() == 0.0 => {
                 Ok(*n as u64)
             }
-            _ => Err(JsonError("expected non-negative integer JSON number".to_string())),
+            _ => Err(JsonError(
+                "expected non-negative integer JSON number".to_string(),
+            )),
         }
     }
 
-    pub fn get<'a>(
-        map: &'a BTreeMap<String, JsonValue>,
-        key: &str,
-    ) -> Result<&'a JsonValue, JsonError> {
+    pub fn get<'a>(map: &'a JsonObject, key: &str) -> Result<&'a JsonValue, JsonError> {
         map.get(key)
             .ok_or_else(|| JsonError(format!("missing JSON field `{key}`")))
     }
@@ -311,10 +374,10 @@ impl<'a> Parser<'a> {
     fn parse_object(&mut self) -> Result<JsonValue, JsonError> {
         self.bump()?; // '{'
         self.skip_ws();
-        let mut map = BTreeMap::new();
+        let mut object = JsonObject::new();
         if self.peek() == Some(b'}') {
             self.bump()?;
-            return Ok(JsonValue::Object(map));
+            return Ok(JsonValue::Object(object));
         }
         loop {
             self.skip_ws();
@@ -325,7 +388,7 @@ impl<'a> Parser<'a> {
                 return Err(JsonError("expected `:` after object key".to_string()));
             }
             let value = self.parse_value()?;
-            map.insert(key, value);
+            object.insert(key, value);
             self.skip_ws();
             match self.bump()? {
                 b',' => continue,
@@ -338,7 +401,7 @@ impl<'a> Parser<'a> {
                 }
             }
         }
-        Ok(JsonValue::Object(map))
+        Ok(JsonValue::Object(object))
     }
 
     fn parse_string(&mut self) -> Result<String, JsonError> {

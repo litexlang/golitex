@@ -1,8 +1,8 @@
-//! Localized JSON field names for Normal output.
+//! Localized JSON field names for Normal / Compact output.
 //!
 //! Code always authors English keys; `localize_key` remaps them when
-//! `OutputLanguage::Chinese`. Type *values* (e.g. `builtin_rule`) stay English
-//! stable tokens unless a dedicated value map is added later.
+//! `OutputLanguage::Chinese`. Type / phase *values* are localized by explain
+//! / helper match arms (not here).
 
 use crate::launch_command::OutputLanguage;
 
@@ -27,8 +27,9 @@ fn chinese_key(english_key: &str) -> &str {
         "session_error" => "会话错误",
         // statement result
         "statement" => "语句",
-        "why_verified" => "证明方法",
+        "proof_method" => "证明方法",
         "why_failed" => "失败原因",
+        "fail_reason" => "失败原因",
         "stores" => "存储",
         "infers" => "推断",
         // why / cite

@@ -1380,10 +1380,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("rule", string("StandardSetSubsetMembership")),
             ];
             entries.push(("source_set", string(p.source_set.ir().as_str().to_string())));
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            let _ = (&p.source_membership_proof, runtime);
             object(entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::SetBuilderMembership(p)) => {

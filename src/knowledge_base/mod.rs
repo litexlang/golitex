@@ -12,7 +12,7 @@ mod definitions_memory_codec;
 mod fingerprint;
 mod import_cache;
 mod json_mini;
-pub use json_mini::{JsonError, JsonValue};
+pub use json_mini::{JsonError, JsonObject, JsonValue};
 mod manifest;
 mod mount;
 mod paths;

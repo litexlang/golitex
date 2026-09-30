@@ -1,0 +1,10 @@
+# Fact: parameterless `forall:` (no binders) wraps a bare conclusion.
+# Run: litex -f examples/proof_nodes/forall/parameterless_forall.lit
+
+forall:
+    1 + 1 = 2
+
+thm two_plus_two:
+    ? forall:
+        2 + 2 = 4
+    2 + 2 = 4

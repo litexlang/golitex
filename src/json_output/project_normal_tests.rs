@@ -57,9 +57,9 @@ fn normal_json_have_natural_then_nonnegative_by_builtin() {
     let goal = exec_one(&mut runtime, "k >= 0");
     let goal_json = project_stmt_normal(&goal, &runtime);
     assert_eq!(object_field(&goal_json, "success"), &JsonValue::Bool(true));
-    let why = object_field(&goal_json, "why_verified")
+    let why = object_field(&goal_json, "proof_method")
         .as_object()
-        .expect("why_verified");
+        .expect("proof_method");
     assert_eq!(
         why.get("type").and_then(|v| v.as_str().ok()),
         Some("builtin_rule")
@@ -87,9 +87,9 @@ fn normal_json_calculation_one_plus_two_english() {
     let goal = exec_one(&mut runtime, "1 + 2 = 3");
     let goal_json = project_stmt_normal(&goal, &runtime);
     assert_eq!(object_field(&goal_json, "success"), &JsonValue::Bool(true));
-    let why = object_field(&goal_json, "why_verified")
+    let why = object_field(&goal_json, "proof_method")
         .as_object()
-        .expect("why_verified");
+        .expect("proof_method");
     assert_eq!(
         why.get("type").and_then(|v| v.as_str().ok()),
         Some("builtin_rule")
@@ -123,7 +123,7 @@ fn normal_json_calculation_one_plus_two_chinese() {
         .expect("证明方法");
     assert_eq!(
         why.get("类型").and_then(|v| v.as_str().ok()),
-        Some("builtin_rule")
+        Some("内置规则")
     );
     assert_eq!(
         why.get("规则名").and_then(|v| v.as_str().ok()),
@@ -159,9 +159,9 @@ fn normal_json_let_obj_define_why() {
     let stmt = exec_one(&mut runtime, "let a = 1");
     let json = project_stmt_normal(&stmt, &runtime);
     assert_eq!(object_field(&json, "success"), &JsonValue::Bool(true));
-    let why = object_field(&json, "why_verified")
+    let why = object_field(&json, "proof_method")
         .as_object()
-        .expect("why_verified");
+        .expect("proof_method");
     assert_eq!(
         why.get("type").and_then(|v| v.as_str().ok()),
         Some("define_obj")

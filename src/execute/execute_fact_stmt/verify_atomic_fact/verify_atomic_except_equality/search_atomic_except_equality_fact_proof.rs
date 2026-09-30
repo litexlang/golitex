@@ -52,35 +52,31 @@ impl Runtime {
             )));
         }
 
-        if let Some(result) = self
-            .search_atomic_except_equality_fact_proof_by_known_forall_fact(
-                fact,
-                verify_state.clone(),
-            )?
-        {
+        if let Some(result) = self.search_atomic_except_equality_fact_proof_by_known_forall_fact(
+            fact,
+            verify_state.clone(),
+        )? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(result),
             ));
         }
 
         if verify_state.can_use_rewrite {
-            if let Some(result) = self
-                .search_atomic_except_equality_fact_proof_by_builtin_rewrite(
-                    fact,
-                    verify_state.clone(),
-                )?
-            {
+            if let Some(result) = self.search_atomic_except_equality_fact_proof_by_builtin_rewrite(
+                fact,
+                verify_state.clone(),
+            )? {
                 return Ok(Some(
                     AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(result),
                 ));
             }
 
-            if let Some(result) = self
-                .search_atomic_except_equality_fact_proof_by_known_rewrite(fact, verify_state)?
+            if let Some(result) =
+                self.search_atomic_except_equality_fact_proof_by_known_rewrite(fact, verify_state)?
             {
-                return Ok(Some(
-                    AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(result),
-                ));
+                return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(
+                    result,
+                )));
             }
         }
 

@@ -839,7 +839,7 @@ forall x, y R:
     {
       "success": true,
       "statement": "forall x, y R: /     x >= 0 /     y >= 0 /     =>: /         x + y >= 0",
-      "why_verified": { "type": "..." },
+      "proof_method": { "type": "..." },
       "stores": ["..."],
       "infers": []
     }
@@ -917,7 +917,7 @@ $is_positive(a)
     {
       "success": true,
       "statement": "$is_positive(a)",
-      "why_verified": { "type": "..." },
+      "proof_method": { "type": "..." },
       "stores": ["..."],
       "infers": []
     }
@@ -984,7 +984,7 @@ Litex 源码保存前提和结论，没有写 `simpa` 或指定等式改写方�
     {
       "success": true,
       "statement": "forall a, b R: /     $is_positive(a) /     a = b /     =>: /         $is_positiv",
-      "why_verified": { "type": "..." },
+      "proof_method": { "type": "..." },
       "stores": ["..."],
       "infers": []
     }
@@ -1107,14 +1107,14 @@ a + 1 = 2
     {
       "success": true,
       "statement": "let a = 1",
-      "why_verified": { "type": "define_obj" },
+      "proof_method": { "type": "define_obj" },
       "stores": ["a = 1"],
       "infers": []
     },
     {
       "success": true,
       "statement": "a + 1 = 2",
-      "why_verified": {
+      "proof_method": {
         "type": "builtin_rule",
         "rule": "EqualityBuiltin"
       },
@@ -1133,7 +1133,7 @@ a + 1 = 2
 | --- | --- |
 | 跑了哪一句 | `statement` |
 | 是否成功 | 语句的 `success`，以及整次运行的 `success` / `session_error` |
-| 为什么成立 | `why_verified`（规则名、引用、定义路径等） |
+| 为什么成立 | `proof_method`（规则名、引用、定义路径等） |
 | 为什么停下 | `why_failed.phase` 与 `why_failed.goal` |
 | 什么进入了后续上下文 | `stores` 与 `infers` |
 

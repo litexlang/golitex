@@ -45,7 +45,7 @@ For a factual statement, the user-facing outcomes are:
 
 | Result | Meaning | Next action |
 |---|---|---|
-| Success | Litex found a verification route and merged the statement. | Inspect `why_verified` when provenance matters. |
+| Success | Litex found a verification route and merged the statement. | Inspect `proof_method` when provenance matters. |
 | Failed (soft miss) | The statement did not succeed (search miss, well-definedness, …); the temporary env is discarded. | Add a smaller equality, membership, domain fact, or lemma; or fix the WD obligation. |
 | SessionError | Hard failure; the session must stop. | Fix the invariant / bug / unrecoverable condition before continuing. |
 
@@ -1543,7 +1543,8 @@ forall:
 
 `forall` introduces arbitrary parameters, optional assumptions, and
 conclusions. With no assumptions, write conclusions directly rather than an
-empty `=>:` block.
+empty `=>:` block. A parameterless `forall:` is allowed: it binds no names and
+just packages the body facts (useful as a bare `? forall:` theorem goal).
 
 ```litex
 forall x R:
@@ -1553,6 +1554,9 @@ forall x R:
     x = 2
     =>:
         x + 1 = 3
+
+forall:
+    1 + 1 = 2
 ```
 
 A universal whose parameter domain is a literal empty display, a concretely
@@ -3463,7 +3467,9 @@ This proof soft-fails; an exhaustive split does not make the unrelated goal
 ### Proof by contradiction
 
 `by contra` assumes the opposite form of its target. `impossible fact` closes
-the block when both that atomic fact and its opposite are available.
+the block when both that atomic fact and its opposite are available. The
+impossible fact may be a positive or negated atomic (`impossible not x $in S`,
+`impossible not $P(...)`, `impossible x != y`, …).
 
 <!-- litex:skip-test -->
 ```litex

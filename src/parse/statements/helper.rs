@@ -1,10 +1,9 @@
-use crate::ast::fact::{Fact, ForallFact};
+use super::super::keywords::{NOT, QUESTION_GOAL};
+use crate::ast::fact::{AtomicFact, Fact, ForallFact};
 use crate::ast::param::TypedParameterList;
 use crate::ast::stmt::Stmt;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
-
-use super::super::keywords::QUESTION_GOAL;
 
 impl Runtime {
     pub(in super::super) fn parse_body_stmts(
@@ -16,6 +15,19 @@ impl Runtime {
             stmts.push(self.parse_token_block(block)?);
         }
         Ok(stmts)
+    }
+
+    // `impossible <atomic>` / `impossible not <atomic>` — always one AtomicFact.
+    pub(in super::super) fn parse_impossible_atomic_fact(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> RuntimeResult<AtomicFact> {
+        if tb.peek() == Some(NOT) {
+            tb.advance()?;
+            self.parse_atomic_fact(tb, false)
+        } else {
+            self.parse_atomic_fact(tb, true)
+        }
     }
 
     // `? <fact>` goal block used inside claim / thm / by / …

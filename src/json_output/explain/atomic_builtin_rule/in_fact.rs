@@ -1,0 +1,778 @@
+//! Leaf explain for atomic family group `in_fact`.
+
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::{
+    AddInNaturalBuiltinRuleProof,
+    CartMembershipBuiltinRuleProof,
+    ClosedNumericMembershipBuiltinRuleProof,
+    ComplexArithmeticClosureBuiltinRuleProof,
+    ComplexCoordinateInComplexBuiltinRuleProof,
+    ComplexCoordinateInRealBuiltinRuleProof,
+    FamilyUnionMembershipFromMemberBuiltinRuleProof,
+    FnApplicationInCodomainBuiltinRuleProof,
+    FnApplicationInFnRangeBuiltinRuleProof,
+    InFactSearchProofByBuiltinRule,
+    IndexUnionMembershipFromIndexBuiltinRuleProof,
+    IntersectMembershipBuiltinRuleProof,
+    IntervalMembershipBuiltinRuleProof,
+    ListSetElementMembershipBuiltinRuleProof,
+    MulInNaturalBuiltinRuleProof,
+    NativeConstantMembershipBuiltinRuleProof,
+    OneSideInfinityIntervalMembershipBuiltinRuleProof,
+    PowerSetMembershipBuiltinRuleProof,
+    PredecessorInNaturalBuiltinRuleProof,
+    RealArithmeticClosureBuiltinRuleProof,
+    RealTrigClosureBuiltinRuleProof,
+    RealTrigInComplexBuiltinRuleProof,
+    SetBuilderMembershipBuiltinRuleProof,
+    SetMinusMembershipBuiltinRuleProof,
+    StandardSetSubsetMembershipBuiltinRuleProof,
+    StructObjMembershipBuiltinRuleProof,
+    UnionMembershipFromLeftBuiltinRuleProof,
+    UnionMembershipFromRightBuiltinRuleProof,
+};
+use crate::json_output::explain::fallback::BuiltinRuleText;
+use crate::launch_command::OutputLanguage;
+use crate::runtime::FactId;
+use super::text::text;
+
+impl InFactSearchProofByBuiltinRule {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match self {
+            Self::ClosedNumericMembership(p) => p.rule_id_and_message(lang),
+            Self::ComplexArithmeticClosure(p) => p.rule_id_and_message(lang),
+            Self::RealTrigClosure(p) => p.rule_id_and_message(lang),
+            Self::RealTrigInComplex(p) => p.rule_id_and_message(lang),
+            Self::ComplexCoordinateInReal(p) => p.rule_id_and_message(lang),
+            Self::ComplexCoordinateInComplex(p) => p.rule_id_and_message(lang),
+            Self::RealArithmeticClosure(p) => p.rule_id_and_message(lang),
+            Self::StandardSetSubsetMembership(p) => p.rule_id_and_message(lang),
+            Self::SetBuilderMembership(p) => p.rule_id_and_message(lang),
+            Self::NativeConstantMembership(p) => p.rule_id_and_message(lang),
+            Self::ListSetElementMembership(p) => p.rule_id_and_message(lang),
+            Self::CartMembership(p) => p.rule_id_and_message(lang),
+            Self::PowerSetMembership(p) => p.rule_id_and_message(lang),
+            Self::StructObjMembership(p) => p.rule_id_and_message(lang),
+            Self::PredecessorInNatural(p) => p.rule_id_and_message(lang),
+            Self::FnApplicationInCodomain(p) => p.rule_id_and_message(lang),
+            Self::FnApplicationInFnRange(p) => p.rule_id_and_message(lang),
+            Self::UnionMembershipFromLeft(p) => p.rule_id_and_message(lang),
+            Self::UnionMembershipFromRight(p) => p.rule_id_and_message(lang),
+            Self::IntersectMembership(p) => p.rule_id_and_message(lang),
+            Self::SetMinusMembership(p) => p.rule_id_and_message(lang),
+            Self::FamilyUnionMembershipFromMember(p) => p.rule_id_and_message(lang),
+            Self::IndexUnionMembershipFromIndex(p) => p.rule_id_and_message(lang),
+            Self::IntervalMembership(p) => p.rule_id_and_message(lang),
+            Self::OneSideInfinityIntervalMembership(p) => p.rule_id_and_message(lang),
+            Self::AddInNatural(p) => p.rule_id_and_message(lang),
+            Self::MulInNatural(p) => p.rule_id_and_message(lang),
+        }
+    }
+
+    pub fn cite_fact_id(&self) -> Option<FactId> {
+        match self {
+            Self::ClosedNumericMembership(_) => None,
+            Self::ComplexArithmeticClosure(_) => None,
+            Self::RealTrigClosure(_) => None,
+            Self::RealTrigInComplex(_) => None,
+            Self::ComplexCoordinateInReal(_) => None,
+            Self::ComplexCoordinateInComplex(_) => None,
+            Self::RealArithmeticClosure(_) => None,
+            Self::StandardSetSubsetMembership(_) => None,
+            Self::SetBuilderMembership(_) => None,
+            Self::NativeConstantMembership(_) => None,
+            Self::ListSetElementMembership(_) => None,
+            Self::CartMembership(_) => None,
+            Self::PowerSetMembership(_) => None,
+            Self::StructObjMembership(_) => None,
+            Self::PredecessorInNatural(p) => Some(p.cite_in_n_fact_id),
+            Self::FnApplicationInCodomain(p) => Some(p.cite_in_function_set_fact_id),
+            Self::FnApplicationInFnRange(_) => None,
+            Self::UnionMembershipFromLeft(_) => None,
+            Self::UnionMembershipFromRight(_) => None,
+            Self::IntersectMembership(_) => None,
+            Self::SetMinusMembership(_) => None,
+            Self::FamilyUnionMembershipFromMember(p) => Some(p.cite_member_set_in_family_fact_id),
+            Self::IndexUnionMembershipFromIndex(p) => Some(p.cite_index_in_index_set_fact_id),
+            Self::IntervalMembership(_) => None,
+            Self::OneSideInfinityIntervalMembership(_) => None,
+            Self::AddInNatural(_) => None,
+            Self::MulInNatural(_) => None,
+        }
+    }
+}
+
+impl ClosedNumericMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericMembership",
+            "Closed Numeric Membership",
+            "a closed expression that evaluates to a normalized",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericMembership",
+            "封闭数值成员",
+            "封闭表达式算出的值属于目标集合",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl ComplexArithmeticClosureBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "ComplexArithmeticClosure",
+            "Complex Arithmetic Closure",
+            "after child WD, `+ - * / …` over C-carriers stay in C",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "ComplexArithmeticClosure",
+            "复数运算封闭",
+            "良定的复数运算结果属于复数",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl RealTrigClosureBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "RealTrigClosure",
+            "Real Trig Closure",
+            "after child WD, `sin`/`cos`/`tan`/`cot` and their",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "RealTrigClosure",
+            "实三角运算封闭",
+            "良定的实三角运算结果属于实数",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl RealTrigInComplexBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "RealTrigInComplex",
+            "Real Trig In Complex",
+            "sin/cos/... : R → R ⊂ C",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "RealTrigInComplex",
+            "实三角值属于复数",
+            "实三角值经 R⊂C 属于复数",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl ComplexCoordinateInRealBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "ComplexCoordinateInReal",
+            "Complex Coordinate In Real",
+            "`C_abs(z)`, `re(z)`, `img(z)` are real after WD",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "ComplexCoordinateInReal",
+            "复坐标属于实数",
+            "模与实部虚部属于实数",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl ComplexCoordinateInComplexBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "ComplexCoordinateInComplex",
+            "Complex Coordinate In Complex",
+            "Complex modulus / coordinates also inhabit C via R ⊂ C",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "ComplexCoordinateInComplex",
+            "复坐标属于复数",
+            "模与实部虚部属于复数",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl RealArithmeticClosureBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "RealArithmeticClosure",
+            "Real Arithmetic Closure",
+            "after child WD, `+ - * / abs …` over R-carriers stay in R",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "RealArithmeticClosure",
+            "实数运算封闭",
+            "良定的实数运算结果属于实数",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl StandardSetSubsetMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "StandardSetSubsetMembership",
+            "Standard Set Subset Membership",
+            "if `x $in S` and `S $subset T` among standard sets,",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "StandardSetSubsetMembership",
+            "标准集链上传成员",
+            "沿标准集包含链提升成员关系",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl SetBuilderMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "SetBuilderMembership",
+            "Set Builder Membership",
+            "Set-builder membership from base membership plus defining facts",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "SetBuilderMembership",
+            "集合构造成员",
+            "由底集成员与定义事实得集合构造成员",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl NativeConstantMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "NativeConstantMembership",
+            "Native Constant Membership",
+            "Native mathematical constants inhabit fixed carriers",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "NativeConstantMembership",
+            "内置常数成员",
+            "内置数学常数属于固定载体",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl ListSetElementMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "ListSetElementMembership",
+            "List Set Element Membership",
+            "if `x = a_i` for some `a_i` in `{a_1, …, a_n}`,",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "ListSetElementMembership",
+            "列表集元素成员",
+            "等于某一列出元素则属于列表集",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl CartMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "CartMembership",
+            "Cart Membership",
+            "`e $in cart(A1,…,An)` (n≥2) from coordinate",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "CartMembership",
+            "笛卡尔积成员",
+            "各分量成员推出笛卡尔积成员",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl PowerSetMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "PowerSetMembership",
+            "Power Set Membership",
+            "if `A $subset B`, then `A $in power_set(B)`",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "PowerSetMembership",
+            "幂集成员",
+            "子集关系推出幂集成员",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl StructObjMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "StructObjMembership",
+            "Struct Obj Membership",
+            "`e` inhabits `&Struct` when it meets the field",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "StructObjMembership",
+            "结构对象成员",
+            "结构载体与等价律推出结构集成员",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl PredecessorInNaturalBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "PredecessorInNatural",
+            "Predecessor In Natural",
+            "`x $in N` and `x >= 1` ⇒ `x - 1 $in N`",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "PredecessorInNatural",
+            "前驱属于自然数",
+            "自然数且至少为 1 则前驱仍是自然数",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl FnApplicationInCodomainBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "FnApplicationInCodomain",
+            "Fn Application In Codomain",
+            "if `f $in fn(params) R` and `f(args)` matches that",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "FnApplicationInCodomain",
+            "函数应用落在陪域",
+            "良型函数应用落在声明返回集",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl FnApplicationInFnRangeBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "FnApplicationInFnRange",
+            "Fn Application In Fn Range",
+            "if `f(args)` is well-defined for a function with a",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "FnApplicationInFnRange",
+            "函数应用落在值域",
+            "良定函数应用落在函数值域",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl UnionMembershipFromLeftBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "UnionMembershipFromLeft",
+            "Union Membership From Left",
+            "`x $in A` ⇒ `x $in union(A, B)`",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "UnionMembershipFromLeft",
+            "由左因子得并成员",
+            "属于左因子则属于并",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl UnionMembershipFromRightBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "UnionMembershipFromRight",
+            "Union Membership From Right",
+            "`x $in B` ⇒ `x $in union(A, B)`",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "UnionMembershipFromRight",
+            "由右因子得并成员",
+            "属于右因子则属于并",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl IntersectMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "IntersectMembership",
+            "Intersect Membership",
+            "`x $in A` and `x $in B` ⇒ `x $in intersect(A, B)`",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "IntersectMembership",
+            "交成员",
+            "同时属于两边则属于交",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl SetMinusMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "SetMinusMembership",
+            "Set Minus Membership",
+            "`x $in A` and `not x $in B` ⇒ `x $in set_minus(A, B)`",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "SetMinusMembership",
+            "差集成员",
+            "属于左且不属于右则属于差集",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl FamilyUnionMembershipFromMemberBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "FamilyUnionMembershipFromMember",
+            "Family Union Membership From Member",
+            "`A $in F` and `x $in A` ⇒ `x $in family_union(F)`",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "FamilyUnionMembershipFromMember",
+            "由成员集得族并成员",
+            "属于族中某集则属于族并",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl IndexUnionMembershipFromIndexBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "IndexUnionMembershipFromIndex",
+            "Index Union Membership From Index",
+            "`i $in I` and `x $in A(i)` ⇒ `x $in index_union(I, X, A)`",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "IndexUnionMembershipFromIndex",
+            "由指标得指标并成员",
+            "属于某指标纤维则属于指标并",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl IntervalMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "IntervalMembership",
+            "Interval Membership",
+            "`x $in R` plus the matching open/closed endpoint inequalities",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "IntervalMembership",
+            "区间成员",
+            "由载体与端点界推出区间成员",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl OneSideInfinityIntervalMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "OneSideInfinityIntervalMembership",
+            "One Side Infinity Interval Membership",
+            "One-sided real ray membership from carrier and the finite endpoint bound",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "OneSideInfinityIntervalMembership",
+            "单侧无穷区间成员",
+            "由载体与有限端点界推出射线成员",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl AddInNaturalBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "AddInNatural",
+            "Add In Natural",
+            "Natural addition closure: `a $in N` and `b $in N` ⇒ `a + b $in N`",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "AddInNatural",
+            "自然数加法封闭",
+            "自然数加法封闭",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl MulInNaturalBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "MulInNatural",
+            "Mul In Natural",
+            "Natural multiplication closure: `a $in N` and `b $in N` ⇒ `a * b $in N`",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "MulInNatural",
+            "自然数乘法封闭",
+            "自然数乘法封闭",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+

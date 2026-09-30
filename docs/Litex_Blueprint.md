@@ -839,7 +839,7 @@ This source does not name a rule. The goal `x + y >= 0` can be split into the pr
     {
       "success": true,
       "statement": "forall x, y R: /     x >= 0 /     y >= 0 /     =>: /         x + y >= 0",
-      "why_verified": { "type": "..." },
+      "proof_method": { "type": "..." },
       "stores": ["..."],
       "infers": []
     }
@@ -917,7 +917,7 @@ Here `prop` gives a reusable interface; `claim` establishes an instantiable univ
     {
       "success": true,
       "statement": "$is_positive(a)",
-      "why_verified": { "type": "..." },
+      "proof_method": { "type": "..." },
       "stores": ["..."],
       "infers": []
     }
@@ -984,7 +984,7 @@ The Litex source preserves premises and conclusion; it does not write `simpa` or
     {
       "success": true,
       "statement": "forall a, b R: /     $is_positive(a) /     a = b /     =>: /         $is_positiv",
-      "why_verified": { "type": "..." },
+      "proof_method": { "type": "..." },
       "stores": ["..."],
       "infers": []
     }
@@ -1107,14 +1107,14 @@ Below is the execution result of this fragment.
     {
       "success": true,
       "statement": "let a = 1",
-      "why_verified": { "type": "define_obj" },
+      "proof_method": { "type": "define_obj" },
       "stores": ["a = 1"],
       "infers": []
     },
     {
       "success": true,
       "statement": "a + 1 = 2",
-      "why_verified": {
+      "proof_method": {
         "type": "builtin_rule",
         "rule": "EqualityBuiltin"
       },
@@ -1133,7 +1133,7 @@ This record splits “why this sentence can be written down” into traceable lo
 | --- | --- |
 | Which statement ran | `statement` |
 | Whether it succeeded | statement `success`, and run `success` / `session_error` |
-| Why it holds | `why_verified` (rule name, cite, definition route, …) |
+| Why it holds | `proof_method` (rule name, cite, definition route, …) |
 | Why it stopped | `why_failed.phase` and `why_failed.goal` |
 | What entered the later context | `stores` and `infers` |
 

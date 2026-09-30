@@ -1,5 +1,6 @@
 //! Why-text for non-builtin searched-proof routes (Normal JSON).
-//! Call sites pass a stable kind tag; this module owns EN/ZH copy.
+//! Call sites pass a stable English kind; this module owns EN/ZH copy including
+//! the emitted `type` value (no English tokens under Chinese).
 
 use crate::launch_command::OutputLanguage;
 
@@ -17,23 +18,21 @@ pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedP
             "Verified by a builtin multi-step strategy",
         ),
         ("builtin_strategy", OutputLanguage::Chinese) => {
-            ("builtin_strategy", "内置策略", "由内置多步策略验证")
+            ("内置策略", "内置策略", "由内置多步策略验证")
         }
         ("by_definition", OutputLanguage::English) => (
             "by_definition",
             "By definition",
             "Verified by unfolding a definition",
         ),
-        ("by_definition", OutputLanguage::Chinese) => {
-            ("by_definition", "按定义", "通过展开定义验证")
-        }
+        ("by_definition", OutputLanguage::Chinese) => ("按定义", "按定义", "通过展开定义验证"),
         ("known_strategy", OutputLanguage::English) => (
             "known_strategy",
             "Known strategy",
             "Verified by applying a known strategy fact",
         ),
         ("known_strategy", OutputLanguage::Chinese) => {
-            ("known_strategy", "已知策略", "应用已知策略事实验证")
+            ("已知策略", "已知策略", "应用已知策略事实验证")
         }
         ("builtin_rewrite", OutputLanguage::English) => (
             "builtin_rewrite",
@@ -41,7 +40,7 @@ pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedP
             "Verified by a builtin equality rewrite",
         ),
         ("builtin_rewrite", OutputLanguage::Chinese) => {
-            ("builtin_rewrite", "内置改写", "由内置等式改写验证")
+            ("内置改写", "内置改写", "由内置等式改写验证")
         }
         ("known_rewrite", OutputLanguage::English) => (
             "known_rewrite",
@@ -49,7 +48,7 @@ pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedP
             "Verified by rewriting with a known equality",
         ),
         ("known_rewrite", OutputLanguage::Chinese) => {
-            ("known_rewrite", "已知改写", "用已知等式改写验证")
+            ("已知改写", "已知改写", "用已知等式改写验证")
         }
         ("equivalence_class", OutputLanguage::English) => (
             "equivalence_class",
@@ -57,7 +56,7 @@ pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedP
             "Both sides are in the same equality class",
         ),
         ("equivalence_class", OutputLanguage::Chinese) => {
-            ("equivalence_class", "等价类", "两边属于同一个相等类")
+            ("等价类", "等价类", "两边属于同一个相等类")
         }
         ("object_definition", OutputLanguage::English) => (
             "object_definition",
@@ -65,7 +64,7 @@ pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedP
             "Equality follows from an object definition",
         ),
         ("object_definition", OutputLanguage::Chinese) => {
-            ("object_definition", "对象定义", "等式由对象定义得出")
+            ("对象定义", "对象定义", "等式由对象定义得出")
         }
         ("matching_one_arg_by_one", OutputLanguage::English) => (
             "matching_one_arg_by_one",
@@ -73,7 +72,7 @@ pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedP
             "Function / constructor arguments match pairwise",
         ),
         ("matching_one_arg_by_one", OutputLanguage::Chinese) => {
-            ("matching_one_arg_by_one", "逐个匹配参数", "函数或构造子参数逐一匹配")
+            ("逐个匹配参数", "逐个匹配参数", "函数或构造子参数逐一匹配")
         }
         ("known_forall_via_symmetry", OutputLanguage::English) => (
             "known_forall_via_symmetry",
@@ -81,18 +80,18 @@ pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedP
             "Verified by a known forall fact after symmetry",
         ),
         ("known_forall_via_symmetry", OutputLanguage::Chinese) => (
-            "known_forall_via_symmetry",
+            "对称后的全称",
             "对称后的全称",
             "对已知全称事实取对称后验证",
         ),
         ("failed", OutputLanguage::English) => ("failed", "Failed", "Verification did not succeed"),
-        ("failed", OutputLanguage::Chinese) => ("failed", "失败", "验证未成功"),
+        ("failed", OutputLanguage::Chinese) => ("失败", "失败", "验证未成功"),
         (_, OutputLanguage::English) => (
             "searched_proof",
             "Searched proof",
             "Verified by a searched proof route",
         ),
-        (_, OutputLanguage::Chinese) => ("searched_proof", "搜索证明", "由搜索到的证明路径验证"),
+        (_, OutputLanguage::Chinese) => ("搜索证明", "搜索证明", "由搜索到的证明路径验证"),
     };
     SearchedProofWhyText {
         type_tag,

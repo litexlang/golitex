@@ -1,5 +1,5 @@
 //! Exhaustive Normal projection for every non-Fact ExecStmtResult branch.
-//! Fact stays in `project_normal.rs` (richer why_verified).
+//! Fact stays in `project_normal.rs` (richer proof_method).
 
 use super::explain::explain_stmt_kind;
 use super::helper::{
@@ -561,7 +561,7 @@ fn success_parts(
         ("success", bool_value(true)),
         ("statement", string(statement)),
         (
-            "why_verified",
+            "proof_method",
             object(lang, vec![
                 ("type", string(text.type_tag)),
                 ("rule_name", string(text.rule_name)),

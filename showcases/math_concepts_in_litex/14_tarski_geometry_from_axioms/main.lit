@@ -45,28 +45,28 @@ struct TarskiNeutralDimensionlessSetting:
     lower_c Point
     <=>:
         forall p1, p2 Point:
-        (p1, p2, p2, p1) $in Cong
+            (p1, p2, p2, p1) $in Cong
         forall p1, p2, p3, p4, p5, p6 Point:
-        (p1, p2, p3, p4) $in Cong
-        (p1, p2, p5, p6) $in Cong
-        =>:
-        (p3, p4, p5, p6) $in Cong
+            (p1, p2, p3, p4) $in Cong
+            (p1, p2, p5, p6) $in Cong
+            =>:
+                (p3, p4, p5, p6) $in Cong
         forall p1, p2, p3 Point:
-        (p1, p2, p3, p3) $in Cong
-        =>:
-        p1 = p2
+            (p1, p2, p3, p3) $in Cong
+            =>:
+                p1 = p2
         forall p1, p2, p3, p4 Point:
-        exist x Point st {(p1, p2, x) $in Bet, (p2, x, p3, p4) $in Cong}
-        $satisfies_five_segment(Point, Bet, Cong)
+            exist x Point st {(p1, p2, x) $in Bet, (p2, x, p3, p4) $in Cong}
+            $satisfies_five_segment(Point, Bet, Cong)
         forall p1, p2 Point:
-        (p1, p2, p1) $in Bet
-        =>:
-        p1 = p2
+            (p1, p2, p1) $in Bet
+            =>:
+                p1 = p2
         forall p1, p2, p3, p4, p5 Point:
-        (p1, p4, p3) $in Bet
-        (p2, p5, p3) $in Bet
-        =>:
-        $inner_pasch_witness_exists(Point, Bet, p4, p2, p5, p1)
+            (p1, p4, p3) $in Bet
+            (p2, p5, p3) $in Bet
+            =>:
+                $inner_pasch_witness_exists(Point, Bet, p4, p2, p5, p1)
         not (lower_a, lower_b, lower_c) $in Bet
         not (lower_b, lower_c, lower_a) $in Bet
         not (lower_c, lower_a, lower_b) $in Bet
@@ -589,7 +589,7 @@ struct TarskiNeutralWithDecidableEqualitySetting:
     _todo_b set
     <=>:
         forall p1, p2 Point:
-        p1 = p2 or p1 != p2
+            p1 = p2 or p1 != p2
 
 # GeoCoq l2_11: congruent adjacent pieces have congruent unions. The
 # degenerate first-piece case is separated by decidable point equality.
@@ -891,12 +891,12 @@ struct Tarski2DSetting:
     _todo_b set
     <=>:
         forall p1, p2, p3, p4, p5 Point:
-        p4 != p5
-        $are_segments_congruent(Point, Cong, p1, p4, p1, p5)
-        $are_segments_congruent(Point, Cong, p2, p4, p2, p5)
-        $are_segments_congruent(Point, Cong, p3, p4, p3, p5)
-        =>:
-        $are_collinear(Point, Bet, p1, p2, p3)
+            p4 != p5
+            $are_segments_congruent(Point, Cong, p1, p4, p1, p5)
+            $are_segments_congruent(Point, Cong, p2, p4, p2, p5)
+            $are_segments_congruent(Point, Cong, p3, p4, p3, p5)
+            =>:
+                $are_collinear(Point, Bet, p1, p2, p3)
 
 # Litex consumes universal axioms with existential conclusions most reliably
 # through a named atomic result predicate; this is propositionally the same
@@ -914,11 +914,11 @@ struct TarskiEuclidean2DSetting:
     _todo_b set
     <=>:
         forall p1, p2, p3, p4, p5 Point:
-        $is_between(Point, Bet, p1, p4, p5)
-        $is_between(Point, Bet, p2, p4, p3)
-        p1 != p4
-        =>:
-        $euclid_intersection_witness_exists(Point, Bet, p1, p2, p3, p5)
+            $is_between(Point, Bet, p1, p4, p5)
+            $is_between(Point, Bet, p2, p4, p3)
+            p1 != p4
+            =>:
+                $euclid_intersection_witness_exists(Point, Bet, p1, p2, p3, p5)
 
 # Chapter 12 (Par_strict and Par). The intersection existential is named so
 # the no-common-point clause remains an atomic, reusable proposition.

@@ -1,5 +1,7 @@
 {
-  "equivalent_facts": [],
+  "kind": "def_struct",
+  "name": "Point",
+  "param_def_with_dom": null,
   "fields": [
     {
       "binding": {
@@ -7,8 +9,8 @@
         "name": "x"
       },
       "field_type": {
-        "set": "R",
-        "tag": "StandardSet"
+        "tag": "StandardSet",
+        "set": "R"
       }
     },
     {
@@ -17,19 +19,17 @@
         "name": "y"
       },
       "field_type": {
-        "set": "R",
-        "tag": "StandardSet"
+        "tag": "StandardSet",
+        "set": "R"
       }
     }
   ],
-  "kind": "def_struct",
+  "equivalent_facts": [],
   "line_file": {
     "line": 1,
     "origin": {
-      "export_file_id": 0,
-      "tag": "RootExport"
+      "tag": "RootExport",
+      "export_file_id": 0
     }
-  },
-  "name": "Point",
-  "param_def_with_dom": null
+  }
 }

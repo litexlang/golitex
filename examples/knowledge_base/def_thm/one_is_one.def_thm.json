@@ -1,34 +1,34 @@
 {
+  "kind": "def_thm",
+  "name": "one_is_one",
   "fact": {
+    "tag": "AtomicFact",
     "atomic": {
+      "tag": "EqualFact",
       "fact_id": 10,
       "left": {
+        "tag": "Literal",
         "literal": {
           "tag": "Number",
           "text": "1"
-        },
-        "tag": "Literal"
+        }
       },
-      "line_file": null,
       "right": {
+        "tag": "Literal",
         "literal": {
           "tag": "Number",
           "text": "1"
-        },
-        "tag": "Literal"
+        }
       },
-      "tag": "EqualFact"
-    },
-    "tag": "AtomicFact"
+      "line_file": null
+    }
   },
-  "kind": "def_thm",
+  "prove_process": [],
   "line_file": {
     "line": 1,
     "origin": {
-      "export_file_id": 0,
-      "tag": "RootExport"
+      "tag": "RootExport",
+      "export_file_id": 0
     }
-  },
-  "name": "one_is_one",
-  "prove_process": []
+  }
 }

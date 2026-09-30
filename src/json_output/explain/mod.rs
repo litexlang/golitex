@@ -3,8 +3,8 @@
 //! Keep all Chinese/English copy here. Verify/exec IR types stay language-free;
 //! projection calls into this module with `OutputLanguage` from LaunchCommand.
 //!
-//! Policy: every Normal surface should have English and Chinese `rule_name` /
-//! `message`. Family-level stubs stay until leaf modules are wired.
+//! Policy: every Normal surface has English and Chinese `rule_name` / `message`,
+//! including every atomic builtin leaf (no family-level stubs).
 
 pub mod atomic_builtin_rule;
 pub mod bilingual;
