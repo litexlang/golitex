@@ -615,7 +615,7 @@ impl Runtime {
     }
 }
 
-pub(super) fn standard_set_is_subset_eq(left: &StandardSet, right: &StandardSet) -> bool {
+pub(crate) fn standard_set_is_subset_eq(left: &StandardSet, right: &StandardSet) -> bool {
     matches!(
         (left, right),
         (_, StandardSet::C)

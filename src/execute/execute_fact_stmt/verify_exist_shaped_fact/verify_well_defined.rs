@@ -9,6 +9,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::{
     VerifyObjWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -61,7 +62,13 @@ impl Runtime {
         let mut succeeded_body = Vec::with_capacity(plain.facts.len());
         for (failed_index, qf) in plain.facts.iter().enumerate() {
             match self.verify_quantifier_free_fact_well_definedness(qf, verify_state.clone())? {
-                VerifyFactWellDefinedResult::Success(proof) => succeeded_body.push(proof),
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    // Assume each body fact before later ones (same as forall dom
+                    // and prop body): e.g. `a != 0 or b != 0` before `l = line(a,b,c)`.
+                    let as_fact = quantifier_free_fact_to_fact(qf.clone());
+                    let _ = self.store_fact_and_infer(&as_fact)?;
+                    succeeded_body.push(proof);
+                }
                 VerifyFactWellDefinedResult::Failed(failed_body) => {
                     return Ok(Err(FailToVerifyExistShapedFactWellDefinedResult::BodyFact {
                         failed_index,

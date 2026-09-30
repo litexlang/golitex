@@ -1,6 +1,7 @@
 # Node: atomic.ByBuiltinRule.Less.EvenPowPositiveFromNonzero
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_even_pow_positive_from_nonzero.lit
 
-have a R
-trust a != 0
-0 < a^2
+forall a R:
+    a != 0
+    =>:
+        0 < a^2

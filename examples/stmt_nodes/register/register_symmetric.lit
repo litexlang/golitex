@@ -11,6 +11,7 @@ register symmetric:
         =>:
             $same(y, x)
 
-have a set, b set
-trust $same(a, b)
-$same(b, a)
+forall a, b set:
+    $same(a, b)
+    =>:
+        $same(b, a)

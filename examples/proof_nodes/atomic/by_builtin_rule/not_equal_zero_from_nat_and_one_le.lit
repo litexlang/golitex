@@ -1,6 +1,7 @@
 # Node: atomic.ByBuiltinRule.ZeroFromNatAndOneLe
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_equal_zero_from_nat_and_one_le.lit
 
-have n N
-trust 1 <= n
-n != 0
+forall n N:
+    1 <= n
+    =>:
+        n != 0

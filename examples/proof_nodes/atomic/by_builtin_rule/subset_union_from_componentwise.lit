@@ -1,10 +1,8 @@
 # Node: atomic.ByBuiltinRule.UnionSubsetFromComponentwise
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/subset_union_from_componentwise.lit
 
-have A set
-have B set
-have C set
-have D set
-trust A $subset C
-trust B $subset D
-union(A, B) $subset union(C, D)
+forall A set, B set, C set, D set:
+    A $subset C
+    B $subset D
+    =>:
+        union(A, B) $subset union(C, D)

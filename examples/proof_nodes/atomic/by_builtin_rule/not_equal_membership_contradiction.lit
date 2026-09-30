@@ -1,9 +1,8 @@
 # Node: atomic.ByBuiltinRule.MembershipContradiction
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_equal_membership_contradiction.lit
 
-have x R
-have y R
-have A set
-trust x $in A
-trust not y $in A
-x != y
+forall x R, y R, A set:
+    x $in A
+    not y $in A
+    =>:
+        x != y

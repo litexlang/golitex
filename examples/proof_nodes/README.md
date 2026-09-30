@@ -67,9 +67,10 @@ transitivity, div monotone/shrink (pos and neg divisor), div↔product bridges,
 literal numeric bound chase, integer successor/adjacency/predecessor, positive
 even `1 < i`, finite-set max/min member bounds, union card `<=` sum, surjection
 codomain card `<=` domain, and basic `finite_set_size` card bounds.
-B1 reformulation (verify-time only; see `order/` and `equality/`):
-`FromKnownInNatural` / signed / nonzero standard-set; order-sign from literal
-bound; `OrderFlipMulMinusOne`; `EqualFromKnownDifferenceZero`.
+B1 leftovers (verify-time only; see `order/` and `equality/`):
+order-sign from literal bound; `OrderFlipMulMinusOne`;
+`EqualFromKnownDifferenceZero`. Carrier → sign (`N` / `R+` / `R-` / `R*`)
+moved to eager infer under `examples/infer/atomic/in_signed_standard_set_*.lit`.
 Equality BuiltinRule power laws (Stage B wave 1): `a^m * a^n = a^(m+n)`,
 `(a^m)^n = a^(m*n)`, `(a*b)^n = a^n * b^n`, `1/a = a^(-1)`, `a/b = a * b^(-1)`
 under `examples/proof_nodes/equal/by_builtin_rule/power_*.lit` and
@@ -79,8 +80,11 @@ Equality BuiltinRule identities (Stage B wave 2):
 quotient; `abs_*` negation/product/square; `log_*` base_self/of_one/of_power/
 arg_power/product/quotient/reciprocal/change_of_base; `zero_mod`, `mod_one`,
 `one_mod_at_least_two`, `nested_same_mod_absorption`.
-Four files use narrow `trust` only for current WD holes (quotient positivity /
-sqrt-denom / log-nonzero / mod-result in `Z`); remove when WD catches up.
+Quotient positivity, sqrt-denominator, log-nonzero, and mod-result examples
+now use checked facts. Eight legacy equality tracers still contain documented
+carrier debt for `sign`, `gcd`/`lcm`, `exp`, or factorial; these are not
+trust-free acceptance. See [the migration blockers](../../plan/迁移的plan/和example有关.md)
+(B01–B04) for the attempted proofs and remaining obligations.
 Equality BuiltinRule identities (Stage B wave 3):
 `min`/`max` idempotent + commutative; `abs(abs(a))=abs(a)`;
 `exp(ln(x))=x` (`R+`); `ln(exp(x))=x` (narrow `trust exp(x) $in R+` for ln WD);

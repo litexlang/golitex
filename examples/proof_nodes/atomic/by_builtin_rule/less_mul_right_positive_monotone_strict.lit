@@ -1,8 +1,7 @@
 # Node: atomic.ByBuiltinRule.MulRightPositiveMonotoneStrict
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_mul_right_positive_monotone_strict.lit
 
-have a R
-have b R
-have c R+
-trust a < b
-a * c < b * c
+forall a R, b R, c R+:
+    a < b
+    =>:
+        a * c < b * c

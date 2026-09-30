@@ -10,7 +10,7 @@ axiom background_at_zero:
         =>:
             $background(x)
 
-trust have a R:
+have a R:
     a = 0
 
 # forall is ambient after axiom — no release / by thm required

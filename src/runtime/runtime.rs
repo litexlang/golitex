@@ -296,11 +296,17 @@ impl Runtime {
     }
 
     // Allocate a new IdentifierId and occupy `name` in the current scope.
+    // Nested binder scopes may shadow a live file-root obtain binding so
+    // `exist k` / `obtain k from exist k` can parse after an earlier `obtain k`.
     pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<BoundName> {
         if self.plain_atom_is_visible(&name) {
-            return Err(RuntimeError::InternalBug(format!(
-                "name `{name}` is already bound in an enclosing parse scope"
-            )));
+            let shadow_obtain = self.parse_scope_stack.len() > 1
+                && self.is_rebindable_file_root_obtain_name(&name);
+            if !shadow_obtain {
+                return Err(RuntimeError::InternalBug(format!(
+                    "name `{name}` is already bound in an enclosing parse scope"
+                )));
+            }
         }
         let id = self.global_ids.allocate_identifier_id();
         let scope = self
@@ -320,15 +326,23 @@ impl Runtime {
     // of thm/claim/sketch/strategy so later statements may reuse the same surface
     // name (e.g. `witness exist k`). The allocated id is kept in `obtain_parse_ids`
     // keyed by `(source_line, name)` for exec.
+    //
+    // Rebind: a later `obtain k` in the same claim/by-cases may replace an earlier
+    // file-root obtain binding of `k` (new id + source_line). Non-obtain binders
+    // still collide.
     pub fn define_plain_atom_for_obtain(
         &mut self,
         name: String,
         source_line: usize,
     ) -> RuntimeResult<BoundName> {
         if self.plain_atom_is_visible(&name) {
-            return Err(RuntimeError::InternalBug(format!(
-                "name `{name}` is already bound in an enclosing parse scope"
-            )));
+            if self.is_rebindable_file_root_obtain_name(&name) {
+                self.remove_plain_atom_from_file_root_scope(&name);
+            } else {
+                return Err(RuntimeError::InternalBug(format!(
+                    "name `{name}` is already bound in an enclosing parse scope"
+                )));
+            }
         }
         let id = self.global_ids.allocate_identifier_id();
         let scope_index = if self.parse_scope_stack.len() > 1 {
@@ -347,6 +361,43 @@ impl Runtime {
         self.obtain_parse_ids
             .insert((source_line, name.clone()), id);
         Ok(BoundName::new(id, name))
+    }
+
+    // True when `name` is bound only at file-root and that live binding came from
+    // some earlier `obtain` (recorded in `obtain_parse_ids`).
+    pub fn is_rebindable_file_root_obtain_name(&self, name: &str) -> bool {
+        if !self.is_bound_in_file_root_parse_scope(name) {
+            return false;
+        }
+        for (scope_index, scope) in self.parse_scope_stack.iter().enumerate() {
+            if scope_index == 0 {
+                continue;
+            }
+            if scope.plain.contains_key(name) {
+                return false;
+            }
+        }
+        let Some(live_id) = self
+            .parse_scope_stack
+            .first()
+            .and_then(|scope| scope.plain.get(name).copied())
+        else {
+            return false;
+        };
+        self.obtain_parse_ids
+            .iter()
+            .any(|((_, n), id)| n == name && *id == live_id)
+    }
+
+    // Drop live file-root obtain bindings that collide with `names` so a later
+    // `obtain k from exist k` can parse its exist binders (no-shadowing fence).
+    // Ids stay in `obtain_parse_ids` for the earlier obtain's exec.
+    pub fn stash_file_root_obtain_bindings_for_names(&mut self, names: &[String]) {
+        for name in names {
+            if self.is_rebindable_file_root_obtain_name(name) {
+                self.remove_plain_atom_from_file_root_scope(name);
+            }
+        }
     }
 
     pub fn remove_plain_atom_from_file_root_scope(&mut self, name: &str) {

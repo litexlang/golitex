@@ -1,7 +1,7 @@
 # Node: equal.ByBuiltinRule.MinRightWhenLessEqual
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/min_right_when_less_equal.lit
 
-have a R
-have b R
-trust b <= a
-min(a, b) = b
+forall a R, b R:
+    b <= a
+    =>:
+        min(a, b) = b

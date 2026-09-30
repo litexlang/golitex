@@ -1,8 +1,8 @@
 # Node: atomic.ByBuiltinRule.Less.SumBothPositive
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_sum_both_positive.lit
 
-have a R
-have b R
-trust 0 < a
-trust 0 < b
-0 < a + b
+forall a R, b R:
+    0 < a
+    0 < b
+    =>:
+        0 < a + b

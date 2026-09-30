@@ -1,3 +1,4 @@
+# Migration blocker B06: see plan/迁移的plan/和example有关.md.
 # Nonempty finite sets have an index function.
 # Induction on finite_set_size(s): base |s| = 1, then extend after removing a least element.
 
@@ -25,17 +26,15 @@ prop finite_set_size_has_index(n N+):
         =>:
             exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
 
-# The induction prototype needs these finite-cardinality identities. They are
-# kept as local debt until finite-cardinality algebra has a dedicated design.
-trust:
-    forall A, B finite_set:
-        $is_finite_set(intersect(A, B))
-        =>:
-            finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
-    forall A finite_set:
-        finite_set_size(A) = 0
-        =>:
-            A = {}
+# Finite-cardinality identities used by the induction prototype.
+forall A, B finite_set:
+    $is_finite_set(intersect(A, B))
+    =>:
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+forall A finite_set:
+    finite_set_size(A) = 0
+    =>:
+        A = {}
 
 thm intersect_with_singleton:
     ? forall s set, a set:

@@ -1,0 +1,13 @@
+# Nested have-fn returning R: Mul WD still asks `$in C`.
+# Strategy: FnApplicationInCodomain for `$in R`, then StandardSetSubset to `$in C`.
+
+have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])
+have fn dot(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
+
+have p, q, r cart(R, R)
+2 * dot(vec(q, p), vec(q, r)) = 2 * dot(vec(q, p), vec(q, r))
+dot(vec(q, p), vec(q, r)) + 0 = dot(vec(q, p), vec(q, r))
+-(dot(vec(q, p), vec(q, r))) = -(dot(vec(q, p), vec(q, r)))
+
+dot(vec(q, p), vec(q, r)) $in C
+dot(vec(q, p), vec(q, r)) $in R

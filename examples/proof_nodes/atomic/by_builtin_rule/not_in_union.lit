@@ -1,4 +1,6 @@
 # Node: atomic.ByBuiltinRule.NotInFact.NonMembershipOfUnion
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_in_union.lit
 
+not 0 $in {1}
+not 0 $in {2}
 not 0 $in union({1}, {2})

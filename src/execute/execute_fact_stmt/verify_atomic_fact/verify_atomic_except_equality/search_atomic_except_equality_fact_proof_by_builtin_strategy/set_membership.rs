@@ -1,10 +1,16 @@
 use super::result::*;
-use crate::ast::fact::{AtomicFact, InFact};
+use crate::ast::fact::{AtomicFact, Fact, InFact};
 use crate::ast::obj::{
-    IntervalObj, Obj, ProductShape, SetFormer, SetOperator, StandardSet,
+    FnObj, FnObjHead, FunctionSpace, IntervalObj, Obj, ProductShape, SetFormer, SetOperator,
+    StandardSet,
 };
+use crate::ast::param::SetBoundParameterList;
 use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::standard_set_is_subset_eq;
+use crate::instantiate::quantifier_free_fact_to_fact;
+use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
+use std::collections::HashMap;
 
 impl Runtime {
     pub(super) fn search_cart_membership_strategy(
@@ -203,6 +209,115 @@ impl Runtime {
             SetBuilderMembershipStrategySingleStep { requirement_facts, proof_of_requirement_facts }
         })
     }
+
+    // Prove `x $in T` from `x $in S` (S ⊂ T among standard sets) as one strategy
+    // step: known / nested strategy only for the source membership (e.g. `$in R`),
+    // then ⊂-lift. Example: `dot(vec(a,b), vec(a,c)) $in C` via `$in R`.
+    pub(super) fn search_standard_set_subset_membership_strategy(
+        &mut self,
+        fact: &AtomicFact,
+        ctx: StrategySearch,
+    ) -> RuntimeResult<Option<StandardSetSubsetMembershipStrategySingleStep>> {
+        let Some(inf) = as_in(fact) else { return Ok(None); };
+        let Obj::StandardSet(target) = &inf.set else { return Ok(None); };
+        let mut alternatives = Vec::new();
+        for source in proper_subsets_in_membership_proof_order(target) {
+            alternatives.push(vec![self.strategy_in_fact(
+                inf.element.clone(),
+                Obj::StandardSet(source),
+                inf.line_file.clone(),
+            )]);
+        }
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.try_strategy_requirement_alternatives(alternatives, ctx)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(StandardSetSubsetMembershipStrategySingleStep {
+            requirement_facts,
+            proof_of_requirement_facts,
+        }))
+    }
+
+    // Prove `f(args) $in Ret` from domain memberships under strategy depth.
+    // Example: `dot(vec(q,p), vec(q,r)) $in R` with nested `vec(...) $in cart(R,R)`.
+    pub(super) fn search_fn_application_in_codomain_strategy(
+        &mut self,
+        fact: &AtomicFact,
+        ctx: StrategySearch,
+    ) -> RuntimeResult<Option<FnApplicationInCodomainStrategySingleStep>> {
+        let Some(inf) = as_in(fact) else { return Ok(None); };
+        let Obj::FnObj(fn_obj) = &inf.element else { return Ok(None); };
+        let FnObjHead::Identifier(head) = fn_obj.head.as_ref() else { return Ok(None); };
+        let head_obj = Obj::Identifier(head.clone());
+        let candidates = self.collect_in_function_set_candidates(&head_obj);
+        for (fn_set, _cite_id) in candidates {
+            let Some(applied_ret) = self.applied_fn_set_return_set(fn_obj, &fn_set) else {
+                continue;
+            };
+            if applied_ret.ir() != inf.set.ir() {
+                continue;
+            }
+            let Some(requirements) =
+                self.fn_app_domain_strategy_requirements(fn_obj, &fn_set, inf.line_file.clone())
+            else {
+                continue;
+            };
+            if let Some((requirement_facts, proof_of_requirement_facts)) =
+                self.verify_strategy_requirements(requirements, ctx)?
+            {
+                return Ok(Some(FnApplicationInCodomainStrategySingleStep {
+                    requirement_facts,
+                    proof_of_requirement_facts,
+                }));
+            }
+        }
+        Ok(None)
+    }
+
+    fn fn_app_domain_strategy_requirements(
+        &mut self,
+        value: &FnObj,
+        fn_set: &crate::ast::obj::FnSet,
+        line_file: Option<crate::ast::line_file::SourceLine>,
+    ) -> Option<Vec<Fact>> {
+        let mut requirements = Vec::new();
+        let mut space = fn_set.clone();
+        let last = value.body.len().checked_sub(1)?;
+        for (layer_index, layer) in value.body.iter().enumerate() {
+            let args: Vec<Obj> = layer.iter().map(|a| a.as_ref().clone()).collect();
+            let expected = set_bound_parameter_count(&space.set_bound_parameters);
+            if args.len() != expected {
+                return None;
+            }
+            let mut arg_index = 0;
+            for group in &space.set_bound_parameters.groups {
+                let param_type = group.param_type.as_ref();
+                for _param in &group.params {
+                    requirements.push(self.strategy_in_fact(
+                        args[arg_index].clone(),
+                        param_type.clone(),
+                        line_file.clone(),
+                    ));
+                    arg_index += 1;
+                }
+            }
+            let subst = set_bound_params_to_arg_map(&space.set_bound_parameters, &args);
+            for dom in &space.dom_facts {
+                let instantiated = self.inst_quantifier_free_fact(dom, &subst).ok()?;
+                requirements.push(quantifier_free_fact_to_fact(instantiated));
+            }
+            if layer_index < last {
+                let next_ret = self.inst_obj(space.ret_set.as_ref(), &subst).ok()?;
+                space = match next_ret {
+                    Obj::FunctionSpace(FunctionSpace::FnSet(next)) => next,
+                    Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => anon.body,
+                    _ => return None,
+                };
+            }
+        }
+        Some(requirements)
+    }
 }
 
 fn as_in(fact: &AtomicFact) -> Option<&InFact> {
@@ -221,15 +336,62 @@ fn interval_bounds(interval: &IntervalObj) -> (Obj, Obj, bool, bool) {
     }
 }
 
+fn proper_subsets_in_membership_proof_order(target: &StandardSet) -> Vec<StandardSet> {
+    [
+        StandardSet::R,
+        StandardSet::Q,
+        StandardSet::Z,
+        StandardSet::N,
+        StandardSet::RStar,
+        StandardSet::RPos,
+        StandardSet::RNeg,
+        StandardSet::QStar,
+        StandardSet::QPos,
+        StandardSet::QNeg,
+        StandardSet::ZStar,
+        StandardSet::ZNeg,
+        StandardSet::NPos,
+        StandardSet::CStar,
+    ]
+    .into_iter()
+    .filter(|source| source != target && standard_set_is_subset_eq(source, target))
+    .collect()
+}
+
+fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {
+    let mut n = 0;
+    for group in &list.groups {
+        n += group.params.len();
+    }
+    n
+}
+
+fn set_bound_params_to_arg_map(
+    list: &SetBoundParameterList,
+    args: &[Obj],
+) -> HashMap<IdentifierId, Obj> {
+    let mut map = HashMap::new();
+    let mut i = 0;
+    for group in &list.groups {
+        for param in &group.params {
+            if i < args.len() {
+                map.insert(param.id, args[i].clone());
+            }
+            i += 1;
+        }
+    }
+    map
+}
+
 fn finish<T, F>(
     runtime: &mut Runtime,
-    requirements: Vec<crate::ast::fact::Fact>,
+    requirements: Vec<Fact>,
     ctx: StrategySearch,
     build: F,
 ) -> RuntimeResult<Option<T>>
 where
     F: FnOnce(
-        Vec<crate::ast::fact::Fact>,
+        Vec<Fact>,
         Vec<crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult>,
     ) -> T,
 {

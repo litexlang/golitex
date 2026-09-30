@@ -3,5 +3,7 @@
 
 abstract_prop marked(x)
 
-trust $marked(1)
-$marked(1)
+forall x R:
+    $marked(x)
+    =>:
+        $marked(x)

@@ -1,27 +1,26 @@
+
+
 sketch:
     have s set = '(2, 12]
     have t set = '(12, 102]
     have u set = union('(2, 12], '(12, 102])
 
-sketch:
-    have x R
-    trust:
-        2 < x
-        x < 12
-    x $in '(2, 12]
-    x $in union('(2, 12], '(12, 102])
+forall x R:
+    2 < x
+    x < 12
+    =>:
+        x $in '(2, 12]
+        x $in union('(2, 12], '(12, 102])
 
-sketch:
-    have y R
-    trust:
-        y < 3
-    y $in '(,3)
+forall y R:
+    y < 3
+    =>:
+        y $in '(,3)
 
-sketch:
-    have z R
-    trust:
-        z > 3
-    z $in '(3,)
+forall z R:
+    z > 3
+    =>:
+        z $in '(3,)
 
 sketch:
     '(2, 12] = '(2, 12]

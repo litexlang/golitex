@@ -1,36 +1,35 @@
-# Draft: excluded from the published showcase gate until it verifies again.
 # Topology — open sets and continuity, setting-first.
 #
 # All set constructions below are native Litex objects.  In particular,
 # arbitrary unions use family_union and preimages use set builders.
-# Included: topology laws, finite unions, continuity and composition, the
-# closed-preimage characterization, compactness, and continuous compact images.
 
-# A topology is represented by its family of open subsets, closed under finite
-# intersections and arbitrary unions.
-struct TopologicalSpace<X set>:
-    open_sets power_set(power_set(X))
-    _pad R
-    <=>:
-        {} $in open_sets
-        X $in open_sets
-        forall U, V open_sets:
-            intersect(U, V) $in open_sets
-        forall family power_set(power_set(X)):
-            family $subset open_sets
-            =>:
-                family_union(family) $in open_sets
+prop TopologicalSpaceSetting(X set, open_sets power_set(power_set(X))):
+    {} $in open_sets
+    X $in open_sets
+    forall U, V open_sets:
+        intersect(U, V) $in open_sets
+    forall family power_set(power_set(X)):
+        family $subset open_sets
+        =>:
+            family_union(family) $in open_sets
+
+prop is_topology_on(X set, open_sets power_set(power_set(X))):
+    $TopologicalSpaceSetting(X, open_sets)
 
 thm topology_triple_intersection:
-    ? forall X set, open_sets power_set(power_set(X)), A, B, open_C open_sets:
-        intersect(intersect(A, B), open_C) $in open_sets
+    ? forall X set, open_sets power_set(power_set(X)), A open_sets, B open_sets, open_C open_sets:
+        $TopologicalSpaceSetting(X, open_sets)
+        =>:
+            intersect(intersect(A, B), open_C) $in open_sets
     intersect(A, B) $in open_sets
 
 # A set-builder family remains well-defined even when A = B; a
 # two-element set literal would incorrectly require them to be distinct.
 thm topology_binary_union:
-    ? forall X set, open_sets power_set(power_set(X)), A, B open_sets:
-        union(A, B) $in open_sets
+    ? forall X set, open_sets power_set(power_set(X)), A open_sets, B open_sets:
+        $TopologicalSpaceSetting(X, open_sets)
+        =>:
+            union(A, B) $in open_sets
     have family power_set(power_set(X)) = {candidate power_set(X): candidate = A or candidate = B}
     claim:
         ? family $subset open_sets
@@ -53,7 +52,7 @@ thm topology_binary_union:
         claim:
             ? forall point family_union(family):
                 point $in union(A, B)
-            obtain candidate from exist candidate family st {point $in candidate}
+            obtain candidate from exist source_candidate family st {point $in source_candidate}
             candidate $in {choice power_set(X): choice = A or choice = B}
             candidate = A or candidate = B
             by cases:
@@ -81,15 +80,34 @@ thm topology_binary_union:
                     B $in family
                     point $in family_union(family)
 
-# Continuity: open preimages of open sets.
-prop is_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
+prop TopologicalMapSetting(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
+    $TopologicalSpaceSetting(X, open_sets_X)
+    $TopologicalSpaceSetting(Y, open_sets_Y)
+
+prop ContinuousMapSetting(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
+    $TopologicalMapSetting(X, open_sets_X, Y, open_sets_Y, f)
     forall open_Y open_sets_Y:
         {x X: f(x) $in open_Y} $in open_sets_X
 
-# Tracer theorem: continuous maps compose.
+prop is_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
+    $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
+
+prop ContinuousCompositionSetting(A set, open_sets_A power_set(power_set(A)), B set, open_sets_B power_set(power_set(B)), CarrierC set, open_sets_C power_set(power_set(CarrierC)), f fn(x A) B, g fn(y B) CarrierC):
+    $TopologicalSpaceSetting(A, open_sets_A)
+    $TopologicalSpaceSetting(B, open_sets_B)
+    $TopologicalSpaceSetting(CarrierC, open_sets_C)
+    forall open_B open_sets_B:
+        {x A: f(x) $in open_B} $in open_sets_A
+    forall open_C open_sets_C:
+        {y B: g(y) $in open_C} $in open_sets_B
+
+# Tracer theorem: settings carry the ambient hypotheses; the proof works with
+# the native preimage set builders directly.
 thm continuous_composition:
     ? forall A set, open_sets_A power_set(power_set(A)), B set, open_sets_B power_set(power_set(B)), CarrierC set, open_sets_C power_set(power_set(CarrierC)), f fn(x A) B, g fn(y B) CarrierC:
-        $is_continuous(A, open_sets_A, CarrierC, open_sets_C, fn(x A) CarrierC {g(f(x))})
+        $ContinuousCompositionSetting(A, open_sets_A, B, open_sets_B, CarrierC, open_sets_C, f, g)
+        =>:
+            $is_continuous(A, open_sets_A, CarrierC, open_sets_C, fn(x A) CarrierC {g(f(x))})
     claim:
         ? forall target_open open_sets_C:
             {x A: g(f(x)) $in target_open} $in open_sets_A
@@ -155,16 +173,16 @@ thm continuous_composition:
         ? $is_continuous(A, open_sets_A, CarrierC, open_sets_C, fn(x A) CarrierC {g(f(x))})
 
 prop is_closed(X set, open_sets power_set(power_set(X)), F power_set(X)):
+    $TopologicalSpaceSetting(X, open_sets)
     set_minus(X, F) $in open_sets
 
 prop has_closed_preimages(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
+    $TopologicalMapSetting(X, open_sets_X, Y, open_sets_Y, f)
     forall F power_set(Y):
         $is_closed(Y, open_sets_Y, F)
         =>:
             $is_closed(X, open_sets_X, {x X: f(x) $in F})
 
-# Preimages commute with relative complements; extensionality proves the set
-# identity element by element.
 thm preimage_of_relative_complement:
     ? forall X, Y set, f fn(x X) Y, F power_set(Y):
         {x X: f(x) $in set_minus(Y, F)} = set_minus(X, {x X: f(x) $in F})
@@ -204,7 +222,9 @@ thm preimage_of_relative_complement:
 # characterization of continuity.
 thm continuous_map_has_closed_preimages:
     ? forall X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y:
-        $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
+        $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
+        =>:
+            $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
     claim:
         ? forall F power_set(Y):
             $is_closed(Y, open_sets_Y, F)
@@ -217,10 +237,9 @@ thm continuous_map_has_closed_preimages:
         by def $is_closed(X, open_sets_X, {x X: f(x) $in F})
     by def $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
 
-# Conversely, apply the closed-preimage hypothesis to the complement of an
-# open set and use the double-complement identity.
 thm closed_preimages_imply_continuous:
     ? forall X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y:
+        $TopologicalMapSetting(X, open_sets_X, Y, open_sets_Y, f)
         $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
         =>:
             $is_continuous(X, open_sets_X, Y, open_sets_Y, f)
@@ -271,19 +290,18 @@ thm closed_preimages_imply_continuous:
     by def $is_continuous(X, open_sets_X, Y, open_sets_Y, f)
 
 prop is_compact_subset(X set, open_sets power_set(power_set(X)), K power_set(X)):
+    $TopologicalSpaceSetting(X, open_sets)
     forall Index set, cover fn(index Index) open_sets:
         K $subset family_union(fn_range(cover))
         =>:
             exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(fn(index J) open_sets {cover(index)}))}
 
-# Pull an open cover of f(K) back to K, choose a finite subcover there, and
-# push those finitely many open sets forward to cover the image.
 thm continuous_image_of_compact_is_compact:
     ? forall X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y, K power_set(X):
+        $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
         $is_compact_subset(X, open_sets_X, K)
         =>:
             $is_compact_subset(Y, open_sets_Y, fn_range(fn(x K) Y {f(x)}))
-    let image_map = fn(source K) Y {f(source)}
     claim:
         ? forall Index set, cover fn(index Index) open_sets_Y:
             fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(cover))
@@ -295,36 +313,35 @@ thm continuous_image_of_compact_is_compact:
             claim:
                 ? forall point K:
                     point $in family_union(fn_range(pullback_cover))
-                image_map(point) $in fn_range(image_map)
-                image_map(point) = f(point)
-                f(point) $in fn_range(image_map)
+                fn(x K) Y {f(x)}(point) $in fn_range(fn(x K) Y {f(x)})
+                fn(x K) Y {f(x)}(point) = f(point)
+                f(point) $in fn_range(fn(x K) Y {f(x)})
                 f(point) $in family_union(fn_range(cover))
-                obtain target_open from exist target_open fn_range(cover) st {f(point) $in target_open}
+                obtain target_open from exist source_target_open fn_range(cover) st {f(point) $in source_target_open}
                 have by fn_preimage: selected_index from target_open $in fn_range(cover)
                 target_open = cover(selected_index)
                 f(point) $in cover(selected_index)
                 by thm set_builder_member(point, {x X: f(x) $in cover(selected_index)}) => point $in {x X: f(x) $in cover(selected_index)}
-                pullback_cover(selected_index) = {x X: f(x) $in cover(selected_index)}
                 point $in pullback_cover(selected_index)
                 pullback_cover(selected_index) $in fn_range(pullback_cover)
                 point $in family_union(fn_range(pullback_cover))
             by def:
                 ? K $subset family_union(fn_range(pullback_cover))
         exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))}
-        obtain J from exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))}
+        obtain J from exist source_J power_set(Index) st {$is_finite_set(source_J), K $subset family_union(fn_range(fn(index source_J) open_sets_X {pullback_cover(index)}))}
         witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(fn(index finite_indices) open_sets_Y {cover(index)}))} from J:
             $is_finite_set(J)
             claim:
-                ? fn_range(image_map) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                ? fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
                 claim:
-                    ? forall image_point fn_range(image_map):
+                    ? forall image_point fn_range(fn(x K) Y {f(x)}):
                         image_point $in family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
-                    have by fn_preimage: source_point from image_point $in fn_range(image_map)
+                    have by fn_preimage: source_point from image_point $in fn_range(fn(x K) Y {f(x)})
                     source_point $in K
-                    image_point = image_map(source_point)
-                    image_map(source_point) = f(source_point)
+                    image_point = fn(x K) Y {f(x)}(source_point)
+                    fn(x K) Y {f(x)}(source_point) = f(source_point)
                     source_point $in family_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))
-                    obtain source_open from exist source_open fn_range(fn(index J) open_sets_X {pullback_cover(index)}) st {source_point $in source_open}
+                    obtain source_open from exist source_source_open fn_range(fn(index J) open_sets_X {pullback_cover(index)}) st {source_point $in source_source_open}
                     have by fn_preimage: selected_index from source_open $in fn_range(fn(index J) open_sets_X {pullback_cover(index)})
                     selected_index $in J
                     source_open = fn(index J) open_sets_X {pullback_cover(index)}(selected_index)
@@ -341,5 +358,5 @@ thm continuous_image_of_compact_is_compact:
                         image_point $in cover(selected_index)
                     image_point $in family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
                 by def:
-                    ? fn_range(image_map) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                    ? fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
     by def $is_compact_subset(Y, open_sets_Y, fn_range(fn(x K) Y {f(x)}))

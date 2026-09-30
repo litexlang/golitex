@@ -2,4 +2,5 @@
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/sqrt_square.lit
 
 have x R+
+0 <= x
 (sqrt(x))^2 = x

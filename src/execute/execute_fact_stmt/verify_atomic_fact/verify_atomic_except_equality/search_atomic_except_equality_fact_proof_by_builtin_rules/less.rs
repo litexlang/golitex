@@ -1,8 +1,5 @@
 use crate::ast::fact::{AtomicFact, Fact, LessFact};
 use crate::ast::obj::{Add, ArithmeticOperator, Mul, Obj, Sub, TrigOperator};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::from_known_in_signed_standard_set::{
-    FromKnownInNegativeStandardSetBuiltinRuleProof, FromKnownInPositiveStandardSetBuiltinRuleProof,
-};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::{is_zero_obj, zero_obj};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_flip_mul_minus_one::OrderFlipMulMinusOneToLessBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_sign_from_literal_bound::OrderSignFromPositiveLiteralBoundBuiltinRuleProof;
@@ -117,12 +114,6 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Right multiplication by a positive factor preserves strict order.
     // Example: known `0 < c` and `a < b` prove `a * c < b * c`.
     MulRightPositiveMonotoneStrict(MulRightPositiveMonotoneStrictBuiltinRuleProof),
-    // Positive standard-set membership implies `0 < x`.
-    // Example: after `have a R+`, prove `0 < a`.
-    FromKnownInPositiveStandardSet(FromKnownInPositiveStandardSetBuiltinRuleProof),
-    // Negative standard-set membership implies `x < 0`.
-    // Example: after `have a R-`, prove `a < 0`.
-    FromKnownInNegativeStandardSet(FromKnownInNegativeStandardSetBuiltinRuleProof),
     // Sign from a known positive literal lower bound.
     // Example: known `a >= 1` proves `0 < a`.
     OrderSignFromPositiveLiteralBound(OrderSignFromPositiveLiteralBoundBuiltinRuleProof),
@@ -284,16 +275,6 @@ impl Runtime {
         fact: &LessFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
-        if let Some(proof) = self.try_from_known_in_positive_standard_set(fact) {
-            return Ok(Some(
-                LessFactSearchProofByBuiltinRule::FromKnownInPositiveStandardSet(proof),
-            ));
-        }
-        if let Some(proof) = self.try_from_known_in_negative_standard_set(fact) {
-            return Ok(Some(
-                LessFactSearchProofByBuiltinRule::FromKnownInNegativeStandardSet(proof),
-            ));
-        }
         if let Some(proof) = self.try_order_sign_from_positive_literal_bound(fact) {
             return Ok(Some(
                 LessFactSearchProofByBuiltinRule::OrderSignFromPositiveLiteralBound(proof),

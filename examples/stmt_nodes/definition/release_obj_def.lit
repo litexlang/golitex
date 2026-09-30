@@ -10,7 +10,7 @@ release obj def a
 a $in R
 a = 2
 
-trust have b R:
+have b R:
     b > 0
 release obj def b
 b $in R

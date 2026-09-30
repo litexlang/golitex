@@ -1,4 +1,3 @@
-# Draft: excluded from the published showcase gate until it verifies again.
 # Single-variable calculus in Litex.
 #
 # Included: epsilon-delta derivatives, exact difference quotients for square
@@ -6,14 +5,14 @@
 # The derivative relation does not select a value for every differentiable
 # function.
 
-prop derivative_delta_controlled(f fn(x R) R, x0, L R, epsilon, delta R+):
+prop derivative_delta_controlled(f fn(u R) R, x0, L R, epsilon, delta R+):
     forall x R:
         x != x0
         abs(x - x0) < delta
         =>:
             abs((f(x) - f(x0)) / (x - x0) - L) < epsilon
 
-prop has_derivative_at_R(f fn(x R) R, x0, L R):
+prop has_derivative_at_R(f fn(u R) R, x0, L R):
     forall epsilon R+:
         exist delta R+ st {$derivative_delta_controlled(f, x0, L, epsilon, delta)}
 
@@ -49,14 +48,14 @@ thm square_function_has_derivative_at:
                 by thm square_difference_quotient(x0, x) => (square_function(x) - square_function(x0)) / (x - x0) = x + x0
                 (square_function(x) - square_function(x0)) / (x - x0) - 2 * x0 = (x + x0) - 2 * x0 = x - x0
                 abs((square_function(x) - square_function(x0)) / (x - x0) - 2 * x0) = abs(x - x0) < epsilon
-            by def $derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, delta)
+            by def $derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, epsilon)
     by def $has_derivative_at_R(square_function, x0, 2 * x0)
 
 release thm square_function_has_derivative_at(3)
 
 # Differentiability records existence of a candidate. This first version keeps
 # the derivative relational; it does not assume a trusted global selector.
-prop is_differentiable_at_R(f fn(x R) R, x0 R):
+prop is_differentiable_at_R(f fn(u R) R, x0 R):
     exist L R st {$has_derivative_at_R(f, x0, L)}
 
 template<a, b R>:
@@ -91,13 +90,11 @@ thm affine_function_has_derivative_at:
                 by thm affine_difference_quotient(a, b, x0, x) => (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) = a
                 (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a = 0
                 abs((\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a) = abs(0) = 0 < epsilon
-            by def:
-                ? $derivative_delta_controlled(\affine_function<a, b>, x0, a, epsilon, delta)
-    by def:
-        ? $has_derivative_at_R(\affine_function<a, b>, x0, a)
+            by def $derivative_delta_controlled(\affine_function<a, b>, x0, a, epsilon, 1)
+    by def $has_derivative_at_R(\affine_function<a, b>, x0, a)
 
 thm derivative_candidate_implies_differentiable:
-    ? forall f fn(x R) R, x0, L R:
+    ? forall f fn(u R) R, x0, L R:
         $has_derivative_at_R(f, x0, L)
         =>:
             $is_differentiable_at_R(f, x0)

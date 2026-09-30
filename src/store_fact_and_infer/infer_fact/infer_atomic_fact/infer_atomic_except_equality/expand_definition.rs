@@ -30,7 +30,11 @@ impl Runtime {
     }
 
     // When: stored `$P(args)` and `P` is a concrete prop.
-    // Infers: each argument's type obligation (`x $in S`, `$is_set(A)`, …).
+    // Infers: each argument's type obligation (`x $in S`, `$is_set(A)`, …),
+    // with `S` instantiated by the call-site args (not the prop binder names).
+    // Example:
+    //   prop P(A nonempty_set, one A): …
+    //   $P(Carrier, one)  ⇒  infer `one $in Carrier` (not `one $in A`)
     fn infer_normal_atomic_param_types(
         &mut self,
         normal: &NormalAtomicFact,
@@ -47,9 +51,18 @@ impl Runtime {
         if flat.len() != normal.body.len() {
             return Ok(None);
         }
+        let mut subst = std::collections::HashMap::new();
+        for ((param, _), arg) in flat.iter().zip(normal.body.iter()) {
+            subst.insert(param.id, arg.clone());
+        }
         let mut derived = Vec::new();
         for ((_param, param_type), arg) in flat.iter().zip(normal.body.iter()) {
-            let Some(obligation) = type_obligation_fact(arg, param_type, &mut self.global_ids) else {
+            let Ok(inst_type) = self.inst_param_type(param_type, &subst) else {
+                continue;
+            };
+            let Some(obligation) =
+                type_obligation_fact(arg, &inst_type, &mut self.global_ids)
+            else {
                 continue;
             };
             derived.push(self.store_inferred_fact_and_infer(&obligation)?);

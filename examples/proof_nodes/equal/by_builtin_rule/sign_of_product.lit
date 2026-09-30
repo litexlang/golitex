@@ -1,3 +1,4 @@
+# Migration blocker B01: see plan/迁移的plan/和example有关.md.
 # Node: equal.ByBuiltinRule.SignOfProduct
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/sign_of_product.lit
 

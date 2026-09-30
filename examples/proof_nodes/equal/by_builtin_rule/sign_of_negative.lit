@@ -1,6 +1,7 @@
 # Node: equal.ByBuiltinRule.SignOfNegative
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/sign_of_negative.lit
 
-have a R
-trust a < 0
-sign(a) = 0 - 1
+forall a R:
+    a < 0
+    =>:
+        sign(a) = 0 - 1

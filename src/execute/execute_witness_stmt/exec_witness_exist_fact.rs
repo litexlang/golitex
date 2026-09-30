@@ -192,6 +192,8 @@ impl Runtime {
 
         let need_uniqueness = matches!(exist_fact, ExistShapedFact::ExistUnique(_));
         let (local_outcome, local_env) = self.run_in_local_env_and_take_env(|rt| {
+            // Nested local may bind the same surface names as an ambient obtain;
+            // define_typed_parameters checks the top env only.
             match rt.introduce_typed_parameters(&plain.typed_parameters, verify_state.clone())? {
                 Ok(_) => {}
                 Err(failed) => {

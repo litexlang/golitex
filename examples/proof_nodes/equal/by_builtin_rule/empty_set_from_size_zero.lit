@@ -1,6 +1,7 @@
 # Node: equal.ByBuiltinRule.EmptySetFromSizeZero
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/empty_set_from_size_zero.lit
 
-have A finite_set
-trust finite_set_size(A) = 0
-A = {}
+forall A finite_set:
+    finite_set_size(A) = 0
+    =>:
+        A = {}

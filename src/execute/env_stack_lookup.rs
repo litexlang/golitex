@@ -17,6 +17,17 @@ impl Runtime {
             .any(|env| env.definitions.identifiers.contains_key(name))
     }
 
+    // Drop a surface-name identifier definition from the first env (inner-first)
+    // that owns it. Used when `obtain` rebinds a name already introduced earlier
+    // in the same proof.
+    pub(in crate::execute) fn remove_identifier_definition_from_stack(&mut self, name: &str) {
+        for env in self.execution_environments_stack.iter_mut().rev() {
+            if env.definitions.identifiers.remove(name).is_some() {
+                return;
+            }
+        }
+    }
+
     pub(crate) fn def_prop_visible_in_stack(&self, name: &str) -> Option<&DefPropStmt> {
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(def) = env.lookup_def_prop(name) {

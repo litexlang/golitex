@@ -3,6 +3,5 @@
 # Infers: `y $in A or y $in B`.
 # Run: litex -f examples/infer/atomic/in_union_or.lit
 
-have y set
-trust y $in union({1}, {2})
-y $in {1} or y $in {2}
+forall y union({1}, {2}):
+    y $in {1} or y $in {2}

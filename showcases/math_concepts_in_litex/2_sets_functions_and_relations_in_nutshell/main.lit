@@ -12,6 +12,11 @@
 have first_set finite_set = {1, 2, 3}
 have second_set finite_set = {2, 3, 4}
 
+1 $in {1, 2, 3}
+2 $in {1, 2, 3}
+3 $in {1, 2, 3}
+4 $in {2, 3, 4}
+
 # Set equality means having the same elements. The forward direction contrasts
 # finite enumeration on the first operand with ordinary case analysis on the
 # second; the reverse direction exhausts the four displayed target elements.

@@ -179,13 +179,12 @@ Success:
 ```json
 {
   "success": true,
-  "statement": "k >= 0",
+  "statement": "0 <= k",
   "proof_method": {
-    "type": "builtin_rule",
-    "rule": "FromKnownInNatural",
-    "cite": "k $in N"
+    "type": "known_atomic_fact",
+    "cite": "0 <= k"
   },
-  "stores": ["k >= 0"],
+  "stores": ["0 <= k"],
   "infers": []
 }
 ```

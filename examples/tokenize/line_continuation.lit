@@ -9,9 +9,9 @@
 1 + 1 \\
   = 2
 
-have a R, b R, c R
-trust a = b
-trust b = c
+have a R = 1
+have b R = 1
+have c R = 1
 
 a = b \\  # note on this break
    = c

@@ -1,3 +1,4 @@
+# Migration blocker B11: see plan/迁移的plan/和example有关.md.
 # A theorem instantiated with an anonymous function may introduce a beta-expanded
 # body.  The stored fact must still match the handwritten rationally equal body.
 abstract_prop is_probe_integrable(f)

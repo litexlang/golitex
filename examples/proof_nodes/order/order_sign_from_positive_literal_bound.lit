@@ -3,6 +3,7 @@
 # Proves: `0 < a` at verify time (no eager infer).
 # Run: litex -f examples/proof_nodes/order/order_sign_from_positive_literal_bound.lit
 
-have a R
-trust a >= 1
-0 < a
+forall a R:
+    a >= 1
+    =>:
+        0 < a

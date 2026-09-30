@@ -12,6 +12,7 @@ struct TaggedPoint:
     point &Coordinates
     tag N
 
-trust have p &TaggedPoint
-release struct def p.point
-p.point.x = 0
+claim:
+    ? forall p &TaggedPoint:
+        p.point.x = 0
+    release struct def p.point

@@ -4,12 +4,16 @@
 # Names mirror `InferEqualityResult` / `InferAtomicExceptEqualityResult` variants.
 #
 # These are **not** proof-search ByBuiltinRule tracers (those live under
-# `examples/proof_nodes/`). Here the seed fact is stored first
-# (`have` / `let` / occasionally `trust` when the carrier is only introducible
-# that way), then a consequence that only appears after infer is checked.
+# `examples/proof_nodes/`). Here the seed fact is stored first through
+# `have`, `let`, or a typed `forall` binder, then its inferred consequence
+# is checked.
 #
-# Prefer `have` / `let`. Use `trust` only when typed `have x S` cannot WD the
-# carrier yet (same pragmatic escape as some existing proof-node files).
+# Do not use `trust` to bypass carrier WD. The three legacy indexed-family
+# tracers still blocked on WD are tracked in
+# `plan/迁移的plan/和example有关.md` (B05); they are not passing acceptance.
+#
+# Param-type projection under a renamed carrier (prop binder `A`, call-site
+# `Carrier`): `atomic/normal_atomic_param_types_renamed_carrier.lit`.
 #
 # Kernel overview: `src/store_fact_and_infer/README.md`.
 
@@ -28,9 +32,11 @@ equal/    InferEqualityResult (PositiveRealPower, CartTupleShape, …)
 atomic/   InferAtomicExceptEqualityResult (InFact shape expose, subset, …)
 ```
 
-B1 reformulation (carrier→sign, order flip, `u-v=0`⇒`u=v`) lives under
-`examples/proof_nodes/order/` and `proof_nodes/equality/` as
-verify-time builtins, not here.
+B1 leftovers that stay verify-time builtins live under
+`examples/proof_nodes/order/` and `proof_nodes/equality/`:
+order-sign from literal bound, `OrderFlipMulMinusOne`, and
+`EqualFromKnownDifferenceZero`. Carrier → sign (`N` / `R+` / `R-` / `R*`)
+is eager infer again — see `atomic/in_signed_standard_set_*.lit`.
 
 ## Run all
 

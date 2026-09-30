@@ -1,5 +1,7 @@
 # Node: atomic.ByBuiltinRule.NotSupersetFromKnownNotSubset
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_superset_from_known_not_subset.lit
 
-trust not {1} $subset {2}
-not {2} $superset {1}
+forall A, B set:
+    not A $subset B
+    =>:
+        not B $superset A

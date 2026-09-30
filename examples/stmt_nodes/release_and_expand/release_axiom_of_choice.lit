@@ -1,10 +1,12 @@
 # Stmt: ReleaseAndExpand.ReleaseAxiomOfChoiceStmt → exec_release_axiom_of_choice_stmt
 # Run: litex -f examples/stmt_nodes/release_and_expand/release_axiom_of_choice.lit
 
-have F set
-trust:
-    forall A F:
-        $is_nonempty_set(A)
-release axiom_of_choice: set F:
-    forall A F:
-        $is_nonempty_set(A)
+claim:
+    ? forall F set:
+        forall A F:
+            $is_nonempty_set(A)
+        =>:
+            exist f fn(A F) family_union(F) st {$is_choice_function_for(F, F, fn(B F) F {B}, f)}
+    release axiom_of_choice: set F:
+        forall A F:
+            $is_nonempty_set(A)

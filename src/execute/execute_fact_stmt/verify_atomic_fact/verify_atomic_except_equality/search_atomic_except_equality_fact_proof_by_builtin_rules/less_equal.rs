@@ -22,21 +22,6 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `a < b` ⇒ `a <= b`.
     // Example: known `x < 0` proves `x <= 0`.
     FromKnownLess(FromKnownLessBuiltinRuleProof),
-    // Order dual cite: known `b >= a` proves `a <= b`.
-    // Example: known `t >= 10` proves `10 <= t` without rewrite.
-    FromKnownGreaterEqualDual(FromKnownGreaterEqualDualBuiltinRuleProof),
-    // Natural membership implies non-negative.
-    // Mathematical property: `n $in N` ⇒ `0 <= n`.
-    // Example: after `have n N`, prove `0 <= n`.
-    FromKnownInNatural(FromKnownInNaturalBuiltinRuleProof),
-    // Positive standard-set membership implies non-negative.
-    // Mathematical property: `x $in R+` / `Q+` / `N+` ⇒ `0 <= x`.
-    // Example: after `have a R+`, prove `0 <= a` (needed by `sqrt` WD / `abs(a) = a`).
-    FromKnownInPositiveStandardSet(FromKnownInPositiveStandardSetForLessEqualBuiltinRuleProof),
-    // Negative standard-set membership implies non-positive.
-    // Mathematical property: `x $in R-` / `Q-` / `Z-` ⇒ `x <= 0`.
-    // Example: after `have a R-`, prove `a <= 0` (needed by `abs(a) = 0 - a`).
-    FromKnownInNegativeStandardSet(FromKnownInNegativeStandardSetForLessEqualBuiltinRuleProof),
     // Arcsin principal lower bound: `-pi/2 <= arcsin(x)` on the arcsin domain.
     // Example: after `(-1) <= x <= 1`, prove `-pi / 2 <= arcsin(x)`.
     ArcsinPrincipalLowerBound(ArcsinPrincipalLowerBoundBuiltinRuleProof),
@@ -220,22 +205,6 @@ pub struct OrderReflexivityBuiltinRuleProof {
 }
 
 pub struct FromKnownLessBuiltinRuleProof {
-    pub cite_fact_id: FactId,
-}
-
-pub struct FromKnownGreaterEqualDualBuiltinRuleProof {
-    pub cite_fact_id: FactId,
-}
-
-pub struct FromKnownInNaturalBuiltinRuleProof {
-    pub cite_fact_id: FactId,
-}
-
-pub struct FromKnownInPositiveStandardSetForLessEqualBuiltinRuleProof {
-    pub cite_fact_id: FactId,
-}
-
-pub struct FromKnownInNegativeStandardSetForLessEqualBuiltinRuleProof {
     pub cite_fact_id: FactId,
 }
 
@@ -476,20 +445,6 @@ impl Runtime {
                 FromKnownLessBuiltinRuleProof { cite_fact_id },
             )));
         }
-        if let Some(cite_fact_id) = self.try_less_equal_from_known_in_positive_standard_set(fact) {
-            return Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveStandardSet(
-                    FromKnownInPositiveStandardSetForLessEqualBuiltinRuleProof { cite_fact_id },
-                ),
-            ));
-        }
-        if let Some(cite_fact_id) = self.try_less_equal_from_known_in_negative_standard_set(fact) {
-            return Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::FromKnownInNegativeStandardSet(
-                    FromKnownInNegativeStandardSetForLessEqualBuiltinRuleProof { cite_fact_id },
-                ),
-            ));
-        }
         if let Some(proof) = self.try_order_flip_mul_minus_one_to_less_equal(fact) {
             return Ok(Some(LessEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(
                 proof,
@@ -521,22 +476,6 @@ impl Runtime {
                     ),
                 ));
             }
-        }
-
-        // Even power ≥ 0 is zero-premise; keep it available at round 0 so nested
-        // premises of AddLeft/RightNonnegative can use it.
-        if let Some(proof) = self.try_even_pow_nonnegative_zero_premise(fact) {
-            return Ok(Some(proof));
-        }
-
-        // Cite known `b >= a` as `a <= b` (order dual). Zero-premise; needed when
-        // nested under a premise-producing builtin (rewrite OrderDual is off).
-        if let Some(cite_fact_id) = self.known_greater_equal_fact_id(&fact.right, &fact.left) {
-            return Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::FromKnownGreaterEqualDual(
-                    FromKnownGreaterEqualDualBuiltinRuleProof { cite_fact_id },
-                ),
-            ));
         }
 
         // Premise-producing / shape rules consume the builtin-rule budget.

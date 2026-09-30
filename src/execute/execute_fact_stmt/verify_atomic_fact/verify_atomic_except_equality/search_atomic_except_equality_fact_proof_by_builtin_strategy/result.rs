@@ -92,6 +92,8 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     ClosedRangeMembership(ClosedRangeMembershipStrategySingleStep),
     IntervalMembership(IntervalMembershipStrategySingleStep),
     SetBuilderMembership(SetBuilderMembershipStrategySingleStep),
+    StandardSetSubsetMembership(StandardSetSubsetMembershipStrategySingleStep),
+    FnApplicationInCodomain(FnApplicationInCodomainStrategySingleStep),
     ListSetSubsetFromMembers(ListSetSubsetFromMembersStrategySingleStep),
     UnionSubsetFromBothOperands(UnionSubsetFromBothOperandsStrategySingleStep),
     IntersectSubsetFromLeftOperand(IntersectSubsetFromLeftOperandStrategySingleStep),
@@ -1013,6 +1015,26 @@ pub struct IntervalMembershipStrategySingleStep {
 // Example:
 //   a $in {x R: x > 0}
 pub struct SetBuilderMembershipStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Strategy: lift along N⊆Z⊆Q⊆R⊆C (one source membership per layer)
+// Mathematical property: x $in S and S ⊂ T ⇒ x $in T among standard sets
+//
+// Example:
+//   dot(vec(a,b), vec(a,c)) $in C  via proving  … $in R then ⊂-lift
+pub struct StandardSetSubsetMembershipStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Strategy: well-typed fn application lands in declared return set
+// Mathematical property: f $in fn(params) Ret and args in domain ⇒ f(args) $in Ret
+//
+// Example:
+//   dot(u, v) $in R after domain memberships of u,v under strategy depth
+pub struct FnApplicationInCodomainStrategySingleStep {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

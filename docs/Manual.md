@@ -356,6 +356,18 @@ Arithmetic does not erase narrower information: an operation whose operands
 are known integers or reals keeps the existing narrow result whenever that
 rule applies, and falls back to `C` only when a complex carrier is needed.
 
+Preview: proving `e $in C` / `e $in R` under **builtin strategy** is ordinary
+strategy recursion (known, then the next strategy step) — not a premise-producing
+builtin-rule budget. Two complementary steps:
+
+1. **FnApplicationInCodomain**: `f(args) $in Ret` from domain memberships of the
+   arguments (nested strategy / known).
+2. **StandardSetSubsetMembership**: `e $in T` from `e $in S` for a proper
+   standard-set inclusion `S ⊂ T` (try `R`, then `Q`, `Z`, `N`, … for `C`).
+
+So `dot(vec(a, b), vec(a, c)) $in C` goes `$in R` by (1) then ⊂-lift by (2), and
+`2 * dot(...)` keeps Mul WD as `$in C` without accepting narrower carriers in WD.
+
 The native imaginary unit and coordinate interface are symbolic builtin
 objects:
 
@@ -2955,7 +2967,7 @@ introductions.
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
 | `have fn ... by induc` | Integer measure/lower bound and strictly decreasing in-domain recursive calls. | A callable recursive function and checked case equations. |
 | `have fn ... by exist!` | Preview: proved `forall … exist!` goal; FnSet well-defined. | `f $in FnSet`, property forall, uniqueness forall (no equality unfold); def-table + `release obj def`; `template` instance releases the same three facts. |
-| `prop`, `abstract_prop` | Parameter definitions; concrete `prop` clauses must be well-defined. | A foldable concrete definition or an uninterpreted predicate interface. |
+| `prop`, `abstract_prop` | Parameter definitions; concrete `prop` clauses must be well-defined. Earlier body facts are assumed when checking later ones (so a domain guard can license a later fn application). | A foldable concrete definition or an uninterpreted predicate interface. |
 | `struct`, `setting`, `template` | Field/setting/template parameters and body contracts. | A named view, reusable binder prefix, or one parameterized definition family. |
 | `algo … by cases` / `by induc` (preview) | Preview: defines the fn (same checks as `have fn … by cases` / `by induc`) and stores executable algo. | Callable fn facts plus an executable presentation for `eval`. |
 | `claim` | One target is proved in a lexical child scope. | Only the target; helper statements do not escape. |
@@ -3306,7 +3318,11 @@ This is an `error` because an abstract predicate has no definition to unfold.
 > `$is_nonempty_set(S)` after verifying `o $in S` — there is **no**
 > FnSet/codomain shortcut. `obtain … from exist` / `exist!` / `$P` is also
 > wired at top level and as a `template` body (still no indented body on
-> `obtain`).
+> `obtain`). Within one claim, a later `obtain k` may rebind an earlier obtain
+> of the same surface name, and nested `exist k` may shadow a live file-root
+> obtain binding (so `obtain k from exist k` works after a prior `obtain k`).
+> Nested witness/WD locals may bind the same surface name as an ambient obtain
+> (e.g. `obtain k from $odd(n)` then `witness $odd(n) from k`).
 
 
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
@@ -4233,8 +4249,9 @@ forall a, b R+:
 > positive even `1 < i`; `finite_set_max` / `finite_set_min` member bounds;
 > union cardinality `<=` sum; and surjection codomain cardinality `<=` domain.
 > Also `finite_set_size` nonnegative / at-least-one / subset comparison.
-> B1 reformulation (verify-time, not eager infer): `x $in N` ⇒ `x >= 0`;
-> `x $in R+/R-/R*` ⇒ `0 < x` / `x < 0` / `x != 0`; bound → sign spelling
+> Carrier → sign is eager infer again: `x $in N` ⇒ `0 <= x`;
+> `x $in R+/R-/R*` ⇒ `0 < x` (+ `0 <= x`) / `x < 0` (+ `x <= 0`) / `x != 0`.
+> Still verify-time (not eager infer): bound → sign spelling
 > (`a >= 1` ⇒ `0 < a`, `a <= -1` ⇒ `a <= 0`); mul-by-`(-1)` order flip;
 > and `u - v = 0` ⇒ `u = v` (`EqualFromKnownDifferenceZero`).
 > Equality power laws (preview): `a^m * a^n = a^(m+n)`, `(a^m)^n = a^(m*n)`,
@@ -4779,8 +4796,8 @@ have n N
 0 <= n
 ```
 
-The `have` statement stores `n $in N`. The second line is proved at verify
-time by `FromKnownInNatural` (carrier → nonnegativity is not eager infer).
+The `have` statement stores `n $in N` and eagerly infers `0 <= n`, so the
+second line succeeds as a known fact.
 
 Inference does not prove an arbitrary desired consequence:
 
@@ -4878,8 +4895,10 @@ Main families are:
 
 | Membership | Inferred information |
 |---|---|
-| `x $in N` | *(verify)* `0 <= x` / `x >= 0` via `FromKnownInNatural` — not eager infer |
-| Positive, negative, or nonzero numeric subsets | *(verify)* Corresponding sign or disequality via `FromKnownInPositive/Negative/NonzeroStandardSet` — not eager infer |
+| `x $in N` | `0 <= x` (and `x >= 0` via OrderDual) |
+| Positive numeric subsets `N+` / `Q+` / `R+` | `0 < x` and `0 <= x` |
+| Negative numeric subsets `Q-` / `Z-` / `R-` | `x < 0` and `x <= 0` |
+| Nonzero numeric subsets `Q*` / `Z*` / `R*` / `C*` | `x != 0` |
 | `x $in {a}` / `x $in {a, b, ...}` | Atomic equality for a singleton; otherwise the finite equality disjunction. Empty display adds nothing. |
 | `x $in union(A,B)` | `x $in A or x $in B` |
 | `x $in intersect(A,B)` | Both component memberships |

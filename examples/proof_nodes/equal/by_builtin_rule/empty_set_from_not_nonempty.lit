@@ -1,6 +1,7 @@
 # Node: equal.ByBuiltinRule.EmptySetFromNotNonempty
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/empty_set_from_not_nonempty.lit
 
-have A set
-trust not $is_nonempty_set(A)
-A = {}
+forall A set:
+    not $is_nonempty_set(A)
+    =>:
+        A = {}

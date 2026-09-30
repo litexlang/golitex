@@ -3,6 +3,6 @@
 #
 # From exist!, obtain also stores the uniqueness forall.
 
-trust exist! z R st {z = 1}
+witness exist! z R st {z = 1} from 1
 obtain uniq from exist! z R st {z = 1}
 uniq = 1

@@ -460,6 +460,16 @@ pub(super) fn project_atomic_builtin_strategy(
             ("strategy", string("SetBuilderMembership")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StandardSetSubsetMembership(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("StandardSetSubsetMembership")),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnApplicationInCodomain(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("FnApplicationInCodomain")),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetSubsetFromMembers(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("ListSetSubsetFromMembers")),

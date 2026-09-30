@@ -21,7 +21,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     SquareSumNonzeroFromComponentBuiltinRuleProof,
     ZeroFromNatAndOneLeBuiltinRuleProof
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::from_known_in_signed_standard_set::FromKnownInNonzeroStandardSetBuiltinRuleProof;
 use crate::json_output::explain::fallback::BuiltinRuleText;
 use crate::launch_command::OutputLanguage;
 use crate::runtime::FactId;
@@ -34,7 +33,6 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::NotEqualSymmetry(p) => p.rule_id_and_message(lang),
             Self::ListSetDifferentLength(p) => p.rule_id_and_message(lang),
             Self::FromKnownStrictOrder(p) => p.rule_id_and_message(lang),
-            Self::FromKnownInNonzeroStandardSet(p) => p.rule_id_and_message(lang),
             Self::CosNonzeroOnOpenHalfPi(p) => p.rule_id_and_message(lang),
             Self::CosNonzeroAtZero(p) => p.rule_id_and_message(lang),
             Self::SinNonzeroOnOpenPi(p) => p.rule_id_and_message(lang),
@@ -56,7 +54,6 @@ impl NotEqualFactSearchProofByBuiltinRule {
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
             Self::FromKnownStrictOrder(p) => Some(p.cite_fact_id),
-            Self::FromKnownInNonzeroStandardSet(p) => Some(p.cite_fact_id),
             _ => None,
         }
     }
@@ -162,30 +159,6 @@ impl FromKnownStrictOrderBuiltinRuleProof {
     }
 }
 
-impl FromKnownInNonzeroStandardSetBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInNonzeroStandardSet",
-            "From known nonzero",
-            "Inequality follows from known nonzero / nonzero-set membership",
-        )
-    }
-
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInNonzeroStandardSet",
-            "已知非零",
-            "不等关系由已知非零（或非零集成员）推出",
-        )
-    }
-
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-        }
-    }
-}
 
 impl CosNonzeroOnOpenHalfPiBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {

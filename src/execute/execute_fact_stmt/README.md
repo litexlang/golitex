@@ -144,6 +144,11 @@ Success, and projects then-clauses into
 `KnownFactMemory.known_forall_conclusions` (`=` → `equal_conclusions`; other
 atomics including `≠` → `by_atomic_prop`; whole `or` thens → `by_or`).
 
+The same assume-after-WD pattern applies when *checking* WD of:
+`prop` body facts, `exist`/`exist!` body facts, and binder lists (FnSet /
+AnonymousFn `dom_facts`, SetBuilder facts) — earlier facts are stored in the
+local binder env before later WD so domain-restricted applications can pass.
+
 Atomic / equality / or / exist search may then use `ByKnownForallFact` via
 `SearchProofByKnownForallFact` (`cite: ForallConclusionCite` = FactId +
 location into then / and-component / exist-then). Equality also tries the

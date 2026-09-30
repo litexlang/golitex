@@ -25,10 +25,6 @@ pub enum GreaterEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `a > b` ⇒ `a >= b`.
     // Example: known `x > 0` proves `x >= 0`.
     FromKnownGreater(FromKnownGreaterBuiltinRuleProof),
-    // Natural membership implies non-negative.
-    // Mathematical property: `n $in N` ⇒ `n >= 0`.
-    // Example: after `have n N`, prove `n >= 0`.
-    FromKnownInNatural(FromKnownInNaturalBuiltinRuleProof),
     // Positive-natural membership implies at least one: `n $in N+` ⇒ `n >= 1`.
     // Example: after `have n N+`, prove `n >= 1`.
     FromKnownInPositiveNatural(FromKnownInPositiveNaturalBuiltinRuleProof),
@@ -59,10 +55,6 @@ pub struct OrderReflexivityBuiltinRuleProof {
 }
 
 pub struct FromKnownGreaterBuiltinRuleProof {
-    pub cite_fact_id: FactId,
-}
-
-pub struct FromKnownInNaturalBuiltinRuleProof {
     pub cite_fact_id: FactId,
 }
 
@@ -133,15 +125,6 @@ impl Runtime {
                             PredecessorNonNegFromAtLeastOneBuiltinRuleProof {
                                 cite_at_least_one_fact_id,
                             },
-                        ),
-                    ));
-                }
-            }
-            (left, zero) if is_number_value(zero, "0") => {
-                if let Some(cite_fact_id) = self.known_in_natural_fact_id(left) {
-                    return Ok(Some(
-                        GreaterEqualFactSearchProofByBuiltinRule::FromKnownInNatural(
-                            FromKnownInNaturalBuiltinRuleProof { cite_fact_id },
                         ),
                     ));
                 }

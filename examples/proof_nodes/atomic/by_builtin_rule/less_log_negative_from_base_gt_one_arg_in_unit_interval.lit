@@ -1,8 +1,10 @@
 # Node: atomic.ByBuiltinRule.Less.LogNegativeFromBaseGtOneArgInUnitInterval
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_log_negative_from_base_gt_one_arg_in_unit_interval.lit
 
-have z R
-trust 1 < 2
-trust 0 < z
-trust z < 1
-log(2, z) < 0
+claim:
+    ? forall z R:
+        0 < z
+        z < 1
+        =>:
+            log(2, z) < 0
+    1 < 2

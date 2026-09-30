@@ -2,9 +2,8 @@
 # Rule struct: SubsetTransitivityBuiltinRuleProof
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/subset_transitivity.lit
 
-have A set
-have B set
-have C set
-trust A $subset B
-trust B $subset C
-A $subset C
+forall A set, B set, C set:
+    A $subset B
+    B $subset C
+    =>:
+        A $subset C

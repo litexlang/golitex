@@ -4,6 +4,5 @@
 # Run: litex -f examples/infer/atomic/in_fn_range.lit
 
 have fn g(t R) R = t
-have z R
-trust z $in fn_range(g)
-z $in R
+forall z fn_range(g):
+    z $in R

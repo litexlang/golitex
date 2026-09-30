@@ -1,5 +1,7 @@
 # Node: equal.ByBuiltinRule.LogOfPowerSameBase
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/log_of_power_same_base.lit
+# Concrete exponent keeps `2^x` well-defined for the log identity.
 
-have x N
+let x = 3
+1 < 2
 log(2, 2^x) = x

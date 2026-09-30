@@ -309,6 +309,13 @@ impl Runtime {
         if let Some(proof) = self.search_set_builder_membership_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetBuilderMembership(proof)));
         }
+        // `$in R` / `$in cart(...)` from have-fn return, then ⊂-lift to `$in C`.
+        if let Some(proof) = self.search_fn_application_in_codomain_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnApplicationInCodomain(proof)));
+        }
+        if let Some(proof) = self.search_standard_set_subset_membership_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StandardSetSubsetMembership(proof)));
+        }
 
         // subset / flipped superset
         if let Some(proof) = self.search_list_set_subset_from_members_strategy(fact, ctx)? {

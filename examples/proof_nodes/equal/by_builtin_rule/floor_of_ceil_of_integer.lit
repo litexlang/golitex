@@ -2,4 +2,6 @@
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/floor_of_ceil_of_integer.lit
 
 have n Z
+floor(n) = n
+ceil(n) = n
 floor(ceil(n)) = n

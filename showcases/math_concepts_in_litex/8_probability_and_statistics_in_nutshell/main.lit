@@ -73,14 +73,10 @@ thm expectation2_affine:
     a * expectation2(X, probs) + b * expectation2(Y, probs) = a * (X(1) * probs(1) + X(2) * probs(2)) + b * (Y(1) * probs(1) + Y(2) * probs(2))
 
 # Former `[0, 1]` / `[1/2, 1/2]` list literals removed; define as finite_seq via fn cases.
-have fn fair_coin_values(k N+: k <= 2) R by cases:
-    case k = 1: 0
-    case k = 2: 1
-have fn fair_coin_probs(k N+: k <= 2) R by cases:
-    case k = 1: 1 / 2
-    case k = 2: 1 / 2
+have fn fair_coin_values(k N+: k <= 2) R = k - 1
+have fn fair_coin_probs(k N+: k <= 2) R = 1 / 2
 
-$is_probability_vector2(fair_coin_probs)
+by def $is_probability_vector2(fair_coin_probs)
 expectation2(fair_coin_values, fair_coin_probs) = 1 / 2
 variance2(fair_coin_values, fair_coin_probs) = 1 / 4
 

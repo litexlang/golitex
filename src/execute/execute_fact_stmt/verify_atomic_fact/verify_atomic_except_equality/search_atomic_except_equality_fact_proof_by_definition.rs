@@ -66,11 +66,22 @@ impl Runtime {
         if flat.len() != normal.body.len() {
             return Ok(None);
         }
+        // Build full subst first, then instantiate Obj domains in param types
+        // (`one A`, `H power_set(A)`, `mul fn(...) A`) so obligations use call-site
+        // args. Name coincidence with prop binders must not be required.
+        // Example: `$P(Carrier, one)` requires `one $in Carrier`, not `one $in A`.
         let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
-        let mut requirement_facts = Vec::new();
-        for ((param, param_type), arg) in flat.iter().zip(normal.body.iter()) {
+        for ((param, _), arg) in flat.iter().zip(normal.body.iter()) {
             subst.insert(param.id, arg.clone());
-            let Some(type_fact) = type_obligation_fact(arg, param_type, &mut self.global_ids) else {
+        }
+        let mut requirement_facts = Vec::new();
+        for ((_param, param_type), arg) in flat.iter().zip(normal.body.iter()) {
+            let Ok(inst_type) = self.inst_param_type(param_type, &subst) else {
+                return Ok(None);
+            };
+            let Some(type_fact) =
+                type_obligation_fact(arg, &inst_type, &mut self.global_ids)
+            else {
                 return Ok(None);
             };
             requirement_facts.push(type_fact);
