@@ -50,13 +50,23 @@ pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedP
         ("known_rewrite", OutputLanguage::Chinese) => {
             ("已知改写", "已知改写", "用已知等式改写验证")
         }
+        ("they_are_the_same", OutputLanguage::English) => (
+            "they_are_the_same",
+            "Same object",
+            "Both sides have identical IR or alpha-equivalent binder structure",
+        ),
+        ("they_are_the_same", OutputLanguage::Chinese) => (
+            "同一对象",
+            "同一对象",
+            "两边内部表示相同，或绑定参数改名后结构相同",
+        ),
         ("equivalence_class", OutputLanguage::English) => (
             "equivalence_class",
             "Equivalence class",
-            "Both sides are in the same equality class",
+            "Equality follows from stored paths, possibly joined by a checked peer proof",
         ),
         ("equivalence_class", OutputLanguage::Chinese) => {
-            ("等价类", "等价类", "两边属于同一个相等类")
+            ("等价类", "等价类", "由已知等式链证明，必要时用已验证的类成员比较连接两条链")
         }
         ("object_definition", OutputLanguage::English) => (
             "object_definition",

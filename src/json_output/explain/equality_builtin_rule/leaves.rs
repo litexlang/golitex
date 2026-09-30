@@ -1,9 +1,5 @@
 //! Leaf proof structs: rule_id_and_message_en / _zh / (lang).
 
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_anonymous_fn_alpha_equal::ByAnonymousFnAlphaEqualBuiltinRuleProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equal_ir::ByEqualIrBuiltinRuleProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equal_to_obj_with_free_params_lookup::ByEqualToObjWithFreeParamsLookupBuiltinRuleProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_fn_set_alpha_equal::ByFnSetAlphaEqualBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_inverse_trig::{
     ArccosCosRightInverseBuiltinRuleProof, ArccosExactNegOneBuiltinRuleProof,
     ArccosExactOneBuiltinRuleProof, ArccosExactZeroBuiltinRuleProof,
@@ -130,95 +126,14 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
     PowerProductSameBaseBuiltinRuleProof, QuotientAsMulNegOnePowerBuiltinRuleProof,
     ReciprocalAsNegOnePowerBuiltinRuleProof
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_set_builder_alpha_equal::BySetBuilderAlphaEqualBuiltinRuleProof;
 use crate::json_output::explain::fallback::BuiltinRuleText;
 use crate::launch_command::OutputLanguage;
 use super::text::text;
 
-impl ByEqualIrBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text("ByEqualIr", "Equal by IR", "Both sides share the same internal representation")
-    }
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("ByEqualIr", "由内部表示相等", "两边具有相同的内部表示")
-    }
 
 
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh()
-        }
-    }
-}
-
-impl ByEqualToObjWithFreeParamsLookupBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text("ByEqualToObjWithFreeParamsLookup", "Equal via free-param object", "Equality follows from a looked-up object with free parameters")
-    }
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("ByEqualToObjWithFreeParamsLookup", "由自由参数对象相等", "等式由查找带自由参数的对象得到")
-    }
 
 
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh()
-        }
-    }
-}
-
-impl ByFnSetAlphaEqualBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text("ByFnSetAlphaEqual", "FnSet α-equal", "Function sets are equal up to renaming bound variables")
-    }
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("ByFnSetAlphaEqual", "函数集 α 相等", "函数集在重命名约束变量后相等")
-    }
-
-
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh()
-        }
-    }
-}
-
-impl ByAnonymousFnAlphaEqualBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text("ByAnonymousFnAlphaEqual", "Anonymous fn α-equal", "Anonymous functions are equal up to renaming bound variables")
-    }
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("ByAnonymousFnAlphaEqual", "匿名函数 α 相等", "匿名函数在重命名约束变量后相等")
-    }
-
-
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh()
-        }
-    }
-}
-
-impl BySetBuilderAlphaEqualBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text("BySetBuilderAlphaEqual", "Set-builder α-equal", "Set builders are equal up to renaming bound variables")
-    }
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("BySetBuilderAlphaEqual", "集合构造器 α 相等", "集合构造器在重命名约束变量后相等")
-    }
-
-
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh()
-        }
-    }
-}
 
 impl SinArcsinLeftInverseBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {

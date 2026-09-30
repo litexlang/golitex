@@ -11,7 +11,7 @@ use crate::ast::obj::{
     ListSet, Literal, Log, Number, Obj, ObjAtIndex, Pow, Product, ProductShape, Proj, Reduce,
     SetFormer, SetMinus, SetOperator, Sub, Sum, SumOfFiniteSet, Tuple, Union,
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::alpha_equal_helper::anonymous_fns_alpha_equal;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::anonymous_fns_alpha_equal;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};

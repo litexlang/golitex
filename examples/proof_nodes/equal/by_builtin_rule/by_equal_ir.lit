@@ -1,5 +1,0 @@
-# Node: equal.ByBuiltinRule.ByEqualIr
-# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/by_equal_ir.lit
-
-forall x R:
-    x = x

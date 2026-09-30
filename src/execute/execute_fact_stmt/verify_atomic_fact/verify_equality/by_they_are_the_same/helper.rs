@@ -8,7 +8,6 @@ use crate::ast::fact::{
 use crate::ast::names::BoundName;
 use crate::ast::obj::{AnonymousFn, FnObj, FnObjHead, FnSet, IdentifierObj, IntervalObj, Obj, OneSideInfinityIntervalObj, SetBuilder, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator};
 use crate::ast::param::SetBoundParameterList;
-use crate::exec_env::KnownEqualToObjWithFreeParamsShape;
 use crate::runtime::runtime_ids::IdentifierId;
 
 // Structural alpha-equality for FnSet / SetBuilder (and nested objs/facts).
@@ -524,26 +523,5 @@ fn atomic_facts_alpha_equal(
             .iter()
             .zip(right_args.iter())
             .all(|(l, r)| objs_alpha_equal(l, r, map))
-}
-
-pub fn free_params_shapes_alpha_equal(
-    left: &KnownEqualToObjWithFreeParamsShape,
-    right: &KnownEqualToObjWithFreeParamsShape,
-) -> bool {
-    match (left, right) {
-        (
-            KnownEqualToObjWithFreeParamsShape::FnSet(l),
-            KnownEqualToObjWithFreeParamsShape::FnSet(r),
-        ) => fn_sets_alpha_equal(l, r),
-        (
-            KnownEqualToObjWithFreeParamsShape::AnonymousFn(l),
-            KnownEqualToObjWithFreeParamsShape::AnonymousFn(r),
-        ) => anonymous_fns_alpha_equal_under(l, r, &HashMap::new()),
-        (
-            KnownEqualToObjWithFreeParamsShape::SetBuilder(l),
-            KnownEqualToObjWithFreeParamsShape::SetBuilder(r),
-        ) => set_builders_alpha_equal(l, r),
-        _ => false,
-    }
 }
 

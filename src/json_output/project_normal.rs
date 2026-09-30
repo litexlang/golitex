@@ -349,6 +349,9 @@ fn why_from_atomic_except_searched(
 
 fn why_from_equal_searched(searched: &EqualFactSearchedProof, runtime: &Runtime) -> JsonValue {
     match searched {
+        EqualFactSearchedProof::ByTheyAreTheSame(_) => {
+            searched_proof_why_json(runtime, "they_are_the_same")
+        }
         EqualFactSearchedProof::ByBuiltinRule(r) => why_from_equal_builtin_rule(r, runtime),
         EqualFactSearchedProof::ByKnownForallFact(p) => {
             cite_forall_from_fact_id(runtime, p.cite.fact_id)

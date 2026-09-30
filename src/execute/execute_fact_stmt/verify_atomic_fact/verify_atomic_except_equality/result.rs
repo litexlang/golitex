@@ -67,7 +67,7 @@ pub struct SearchProofByKnownStrategy {
 pub struct AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
     pub cite_fact_id: FactId,
     // Per argument: prove known_arg = goal_arg via equality search
-    // (forall/rewrite off). Same ObjIR usually lands on ByEqualIr.
+    // (forall/rewrite off). Same ObjIR lands on ByTheyAreTheSame::SameIr.
     pub why_parameters_of_known_fact_are_equal_to_givens: Vec<EqualFactSearchedProof>,
 }
 

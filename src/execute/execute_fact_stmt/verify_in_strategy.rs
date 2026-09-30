@@ -22,6 +22,7 @@ use crate::execute::execute_fact_stmt::{
     VerifyAtomicFactWellDefinedResult, VerifyEqualFactWellDefinedResult, VerifyState,
 };
 use crate::runtime::{Runtime, RuntimeResult};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
 
 impl Runtime {
     // Top-level entry: builtin strategy first, then user-defined strategy.
@@ -187,6 +188,11 @@ impl Runtime {
         fact: &crate::ast::fact::EqualFact,
         ctx: StrategySearch,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
+        // Same-object evidence is available independently of strategy depth
+        // and builtin fuel, just as at the ordinary equality entry.
+        if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(fact) {
+            return Ok(Some(proof.into()));
+        }
         let cite_state = VerifyState::strategy_wd();
         // Cite-only / calculation equality arms under can_use_builtin_rule_round=0.
         if let Some(result) = self.search_equal_fact_builtin_rule(fact, cite_state.clone())? {

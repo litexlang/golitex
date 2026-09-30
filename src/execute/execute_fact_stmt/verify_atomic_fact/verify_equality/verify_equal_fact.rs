@@ -11,8 +11,11 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 use super::EqualitySearchProofByBuiltinStrategy;
+use super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
 
 impl Runtime {
+    // Verify both objects first, then select one successful truth-search route.
+    // Identity does not bypass WD; a search miss is a soft failure, not an error.
     pub fn verify_equal_fact(
         &mut self,
         fact: &EqualFact,
@@ -35,7 +38,8 @@ impl Runtime {
         }
     }
 
-    // Cheap phase: builtin rule → equivalence class.
+    // Cheap phase: same object → builtin rule → unified equivalence class.
+    // Class search tries stored paths before one restricted peer bridge.
     // Deep phase (can_use_def_and_known_forall_and_known_strategy, round > 0):
     //   with_one_less_round() once, then
     //   object definition → verify_by_strategy → matching one arg → known forall →
@@ -47,6 +51,9 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
+        if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(fact) {
+            return Ok(Some(proof.into()));
+        }
         // Enter builtin only when round > 0; pass round - 1 into the search.
         if verify_state.can_use_builtin_rule_round > 0 {
             if let Some(result) =

@@ -39,7 +39,7 @@ pub use verify_or_fact::{
     OrFactSearchedProof, VerifyOrFactFailed, VerifyOrFactResult, VerifyOrFactSuccess,
 };
 pub use strategy_search::StrategySearch;
-pub use verify_state::VerifyState;
+pub use verify_state::{EqualityClassSearchMode, VerifyState};
 pub use well_defined_results::{
     fail_to_verify_obj_well_defined_others, AtomicFactWellDefinedProof, EqualFactWellDefinedProof,
     ExistShapedFactWellDefinedProof, FactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
@@ -50,4 +50,4 @@ pub use well_defined_results::{
     VerifyEqualFactWellDefinedResult, VerifyExistShapedFactWellDefinedResult,
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyOrFactWellDefinedResult,
 };
-pub use verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::alpha_equal_helper::fn_sets_alpha_equal;
+pub use verify_atomic_fact::verify_equality::by_they_are_the_same::helper::fn_sets_alpha_equal;

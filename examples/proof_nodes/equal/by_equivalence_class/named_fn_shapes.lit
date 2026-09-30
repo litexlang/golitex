@@ -1,0 +1,12 @@
+# Node: equal.ByEquivalenceClass.ViaPeers
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/named_fn_shapes.lit
+# Let/have-fn equalities supply stored paths to binder shapes. A restricted
+# TheyAreTheSame alpha bridge compares those shapes; every stored step is cited.
+
+let g = fn(x R) R
+have fn f(x R) R = x
+f $in g
+
+let h = fn(x R) R {x}
+have fn k(x R) R = x
+k = h

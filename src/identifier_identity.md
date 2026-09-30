@@ -55,7 +55,9 @@ indexing.
     instantiate / other paths, not whole-fact IR equality.
 11. **known-atomic (non-equality).** Bucket by `(prop, polarity)`, scan same
     arity; each arg justified by proving `known_arg = goal_arg` via equality
-    search with forall/rewrite off (includes MatchingOneArgByOne peel).
+    search with builtin/forall/rewrite off (includes identity and MatchingOneArgByOne peel).
+    Unified class search may connect stored paths using an alpha peer comparison;
+    the bridge and its descendants cannot expand another class.
 12. **known_equivalence_classes** stays a graph + equivalence classes keyed by `ObjIR`.
 13. **`StructFieldDef.binding`** is `BoundName` (allocated when the field line is
     parsed). `<=>:` free refs reuse that id; exec must not allocate a second
@@ -75,10 +77,11 @@ files uses `file::x` / `mod::file::x`.
 ## Deferred
 
 - Full `alpha_normalize` rewrite of binder objs is still absent (single body
-  only). **Structural alpha equality** for `FnSet` / `SetBuilder` is wired as
-  equality builtins (`ByFnSetAlphaEqual` / `ByAnonymousFnAlphaEqual` /
-  `BySetBuilderAlphaEqual` / `ByEqualToObjWithFreeParamsLookup`): binders
-  may differ; free structure must match. Example: `R -> R = R -> R`,
+  only). **Structural alpha equality** for `FnSet`, `AnonymousFn` and
+  `SetBuilder` is the equality-specific `ByTheyAreTheSame` stage. It is
+  independent of builtin fuel: binders may differ; free structure must match.
+  Named shapes are reached through `ByEquivalenceClass` stored paths and one
+  restricted peer proof. See [the equality structure](execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md). Example: `R -> R = R -> R`,
   `{x R: x > 0} = {y R: y > 0}`. Membership reuse goes through known `$in` +
   arg equality (no dedicated `$in` alpha rule).
 - Some stmt-only binder slots (induction / `for`) may still be bare `String`;
@@ -105,6 +108,6 @@ files uses `file::x` / `mod::file::x`.
 - [ ] Nested same-name binders remain parse-forbidden.
 - [ ] `inst_*` uses `HashMap<IdentifierId, Obj>` only.
 - [ ] No `surface`/`alpha` dual fields on binder objs.
-- [ ] Non-equality known-atomic stays linear + class filter; equality graph untouched.
+- [ ] Non-equality known-atomic stays a linear candidate scan with argument equality; equality storage is unchanged.
 - [ ] Obj WD ByKnown still keys by `ObjIR` (which now includes plain ids).
 - [ ] Def table keys remain plain; stored mentions of file-root symbols qualify.

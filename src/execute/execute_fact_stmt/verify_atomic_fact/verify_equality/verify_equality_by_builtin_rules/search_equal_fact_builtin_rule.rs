@@ -11,42 +11,6 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinRule>> {
-        if let Some(proof) =
-            self.search_equal_fact_builtin_rule_equal_ir(fact, verify_state.clone())?
-        {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ByEqualIr(proof)));
-        }
-        if let Some(proof) = self
-            .search_equal_fact_builtin_rule_by_equal_to_obj_with_free_params_lookup(
-                fact,
-                verify_state.clone(),
-            )?
-        {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinRule::ByEqualToObjWithFreeParamsLookup(proof),
-            ));
-        }
-        if let Some(proof) =
-            self.search_equal_fact_builtin_rule_fn_set_alpha_equal(fact, verify_state.clone())?
-        {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ByFnSetAlphaEqual(
-                proof,
-            )));
-        }
-        if let Some(proof) = self
-            .search_equal_fact_builtin_rule_anonymous_fn_alpha_equal(fact, verify_state.clone())?
-        {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinRule::ByAnonymousFnAlphaEqual(proof),
-            ));
-        }
-        if let Some(proof) =
-            self.search_equal_fact_builtin_rule_set_builder_alpha_equal(fact, verify_state.clone())?
-        {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinRule::BySetBuilderAlphaEqual(proof),
-            ));
-        }
         if let Some(proof) = self.search_equal_fact_by_calculation(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::Calculation(proof)));
         }

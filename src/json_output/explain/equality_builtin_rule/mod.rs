@@ -14,11 +14,6 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
-            Self::ByEqualIr(p) => p.rule_id_and_message(lang),
-            Self::ByEqualToObjWithFreeParamsLookup(p) => p.rule_id_and_message(lang),
-            Self::ByFnSetAlphaEqual(p) => p.rule_id_and_message(lang),
-            Self::ByAnonymousFnAlphaEqual(p) => p.rule_id_and_message(lang),
-            Self::BySetBuilderAlphaEqual(p) => p.rule_id_and_message(lang),
             Self::Calculation(p) => p.rule_id_and_message(lang),
             Self::SinArcsinLeftInverse(p) => p.rule_id_and_message(lang),
             Self::CosArccosLeftInverse(p) => p.rule_id_and_message(lang),

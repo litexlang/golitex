@@ -2,10 +2,6 @@
 
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculation;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_anonymous_fn_alpha_equal::ByAnonymousFnAlphaEqualBuiltinRuleProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equal_ir::ByEqualIrBuiltinRuleProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equal_to_obj_with_free_params_lookup::ByEqualToObjWithFreeParamsLookupBuiltinRuleProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_fn_set_alpha_equal::ByFnSetAlphaEqualBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_inverse_trig::{
     ArccosCosRightInverseBuiltinRuleProof, ArccosExactNegOneBuiltinRuleProof,
     ArccosExactOneBuiltinRuleProof, ArccosExactZeroBuiltinRuleProof,
@@ -132,7 +128,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
     PowerProductSameBaseBuiltinRuleProof, QuotientAsMulNegOnePowerBuiltinRuleProof,
     ReciprocalAsNegOnePowerBuiltinRuleProof
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_set_builder_alpha_equal::BySetBuilderAlphaEqualBuiltinRuleProof;
 use crate::json_output::explain::{
     explain_compound_fact_why, explain_searched_proof_why, explain_stmt_kind,
 };
@@ -183,11 +178,6 @@ fn assert_builtin_text_ok(rule_id: &str, lang: OutputLanguage, name: &str, messa
 
 fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
     vec![
-        EqualitySearchProofByBuiltinRule::ByEqualIr(ByEqualIrBuiltinRuleProof {}),
-        EqualitySearchProofByBuiltinRule::ByEqualToObjWithFreeParamsLookup(ByEqualToObjWithFreeParamsLookupBuiltinRuleProof { cite_index_fact_id: FactId::new(1) }),
-        EqualitySearchProofByBuiltinRule::ByFnSetAlphaEqual(ByFnSetAlphaEqualBuiltinRuleProof {}),
-        EqualitySearchProofByBuiltinRule::ByAnonymousFnAlphaEqual(ByAnonymousFnAlphaEqualBuiltinRuleProof {}),
-        EqualitySearchProofByBuiltinRule::BySetBuilderAlphaEqual(BySetBuilderAlphaEqualBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::Calculation(EqualitySearchProofByCalculation::Rational {}),
         EqualitySearchProofByBuiltinRule::SinArcsinLeftInverse(SinArcsinLeftInverseBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::CosArccosLeftInverse(CosArccosLeftInverseBuiltinRuleProof {}),
@@ -382,7 +372,8 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
 #[test]
 fn acceptance_equality_builtin_all_variants_bilingual() {
     let rules = all_equality_rules();
-    assert_eq!(rules.len(), 193);
+    // Four identity leaves moved to TheyAreTheSame; indexed lookup is now a class proof.
+    assert_eq!(rules.len(), 188);
     for rule in &rules {
         let en = rule.rule_id_and_message(OutputLanguage::English);
         let zh = rule.rule_id_and_message(OutputLanguage::Chinese);
