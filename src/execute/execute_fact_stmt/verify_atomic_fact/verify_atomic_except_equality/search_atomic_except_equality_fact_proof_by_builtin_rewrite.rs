@@ -192,6 +192,7 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
+            equality_class_search: verify_state.equality_class_search,
 };
         let proof_of_rewritten_fact = self.verify_atomic_fact(&rewritten, residual_state)?;
         if proof_of_rewritten_fact.is_failed() {
@@ -227,6 +228,7 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
+            equality_class_search: verify_state.equality_class_search,
 };
 
         for (arg_index, arg) in args.iter().enumerate() {
@@ -294,6 +296,7 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: false,
             store_well_defined_fact: false,
+            equality_class_search: verify_state.equality_class_search,
 };
         let residual_state = VerifyState {
             can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
@@ -301,6 +304,7 @@ impl Runtime {
                 .can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
+            equality_class_search: verify_state.equality_class_search,
 };
 
         let mut rewritten_args = args.clone();
@@ -364,6 +368,7 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
+            equality_class_search: verify_state.equality_class_search,
 };
         let proof_of_alternate_fact = self.verify_atomic_fact(&alternate, residual_state)?;
         if proof_of_alternate_fact.is_failed() {

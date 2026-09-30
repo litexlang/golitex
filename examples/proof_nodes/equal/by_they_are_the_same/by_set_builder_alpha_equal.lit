@@ -1,0 +1,5 @@
+# Node: equal.ByTheyAreTheSame.SameFreeParamShape.SetBuilder
+# Run: target/release/litex -f examples/proof_nodes/equal/by_they_are_the_same/by_set_builder_alpha_equal.lit
+
+# Bound letters may differ; parameter set and body must agree under renaming.
+{x R: x > 0} = {y R: y > 0}

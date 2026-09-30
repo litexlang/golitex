@@ -1767,12 +1767,21 @@ by def {1, 2} $superset {1}
 > listed element (used by bodyless `by enumerate finite_set`). One-line
 > `forall x Dom => P` (no `:`) is accepted alongside the block `forall` form.
 >
-> **Preview:** FnSet and SetBuilder equality is structural
-> alpha-equality (binders may differ; free structure must match). So
-> `R -> R = R -> R` and `{x R: x > 0} = {y R: y > 0}` succeed as equality
-> builtins; known `$in` then bridges via the existing arg-equality path
-> (e.g. `forall f R -> R: f $in R -> R`). Different return sets / bodies still
-> fail.
+> **Preview:** FnSet, AnonymousFn and SetBuilder structural alpha equality
+> belongs to the equality-specific `ByTheyAreTheSame` stage, after WD and before
+> builtin rules. Bound names may differ; free identifiers, types and bodies
+> must correspond. This stage also runs with zero builtin fuel.
+> Known `$in` reuses the same argument-equality pipeline. Its unified
+> `ByEquivalenceClass` stage can cite stored paths and compare peers once using
+> identity, permitted builtin rules, or restricted constructor matching. Peer
+> comparison cannot recursively expand another class or replenish builtin fuel.
+> See the [equality pipeline](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md).
+
+```litex
+let g = fn(x R) R
+have fn f(t R) R = t
+f $in g
+```
 
 | Positive form | Negative form | Meaning |
 |---|---|---|

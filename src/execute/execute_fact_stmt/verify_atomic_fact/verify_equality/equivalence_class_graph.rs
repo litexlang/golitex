@@ -105,3 +105,35 @@ fn orient_equality_step(
         None
     }
 }
+
+// Deterministic BFS in stored-edge order, with one path per exact IR key.
+// These local candidates do not merge classes or create facts. The original
+// object is always first, with an empty path; each later path starts there.
+pub fn equivalence_class_members_with_paths_in_adjacency(
+    adjacency: &EquivalenceClassAdjacency,
+    obj: &Obj,
+) -> Vec<(Obj, Vec<(Obj, Obj, FactId)>)> {
+    let mut visited = HashSet::new();
+    visited.insert(obj.ir());
+    let mut members = vec![(obj.clone(), Vec::new())];
+    let mut index = 0;
+    while index < members.len() {
+        let key = members[index].0.ir();
+        if let Some(edges) = adjacency.get(&key) {
+            for (peer_key, equal_fact) in edges {
+                if visited.contains(peer_key) {
+                    continue;
+                }
+                if let Some(step) = orient_equality_step(&key, peer_key, equal_fact) {
+                    visited.insert(peer_key.clone());
+                    let peer = step.1.clone();
+                    let mut path = members[index].1.clone();
+                    path.push(step);
+                    members.push((peer, path));
+                }
+            }
+        }
+        index += 1;
+    }
+    members
+}

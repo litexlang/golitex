@@ -180,7 +180,7 @@ Euclidean `a=d*quot(a,d)+(a%d)`; `(a-(a%b))%b=0` (narrow nonzero-divisor trust);
 `lcm_gcd_product_abs.lit`.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
 atomic KnownEqualObjSubstitution.
-No equality KnownRewrite slot (dead; = uses EqualIr / known_equivalence_classes graph).
+No equality KnownRewrite slot (dead; = uses TheyAreTheSame / unified equivalence-class search).
 OrderDual rewrite: `atomic/by_builtin_rewrite/order_dual*.lit`.
 KnownRewrite: `atomic/by_known_rewrite/reflexivity.lit`, `symmetry.lit`.
 WD negatives (must fail): `examples/wd_negative/`
@@ -197,9 +197,10 @@ or/           ByBuiltinRule (trichotomy ×3, NaturalZeroOrAtLeastOne,
               IntegerSuccessorTail, SquareSumComponentNonzero,
               ClassicalImplication, IntegerDiscreteSplit),
               SelectedBranch, KnownOr, KnownForall
-equal/        ByBuiltinRule (FnSet / AnonymousFn / SetBuilder alpha-equal,
-              EqualToObjWithFreeParamsLookup, Calculation closed decimal +
-              arithmetic_ops + integer_sqrt_log + complex_nested), EquivalenceClass, ObjectDefinition
+equal/        ByTheyAreTheSame (SameIr / FnSet / AnonymousFn / SetBuilder alpha),
+              ByBuiltinRule (Calculation closed decimal + arithmetic_ops +
+              integer_sqrt_log + complex_nested), EquivalenceClass
+              (KnownPath / ViaPeers), ObjectDefinition
               (identifier / fn / template), BuiltinStrategy, MatchingOneArgByOne,
               KnownForall (+ViaSymmetry), BuiltinRewrite
               (ClosedNumericEqualSubstitution + arithmetic_ops)
@@ -243,3 +244,5 @@ while IFS= read -r f; do
 done < <(find examples/proof_nodes -name '*.lit' | sort)
 exit $fail
 ```
+
+Equality pipeline and evidence: [step-by-step README](../../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md).

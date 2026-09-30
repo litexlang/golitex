@@ -51,6 +51,17 @@ records that route. When the context and rules cannot establish a fact, it
 stops instead of silently accepting it. Accepted conclusions enter the context
 for later reasoning—bottom-up, like an ordinary mathematical draft.
 
+## Equality verification structure
+
+Equality verification checks both objects first, then tries structural identity,
+mathematical builtin rules, and one unified known-equality-class search. Class
+search first cites stored equality paths; if necessary, it compares class
+members with a restricted proof and retains both citation paths. Existing
+object-definition, strategy, matching, forall and rewrite stages follow under
+their original search permissions. See the
+[step-by-step equality design](src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md)
+for the interfaces, result tree, recursion limits, and a membership example.
+
 ## The human–AI–Litex loop
 
 ```text

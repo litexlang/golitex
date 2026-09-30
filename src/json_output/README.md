@@ -23,6 +23,19 @@ Normal output explains the checked native codomain (for example `Z` for
 `codomain: "Z"`. The enclosing atomic result retains the input WD proof.
 Closed numeric expressions keep the existing calculation-membership route.
 
+## Equality provenance
+
+Structural identity is `they_are_the_same` in Normal output. Detailed output
+uses `by_they_are_the_same`, `kind: same_ir | same_free_param_shape`, and a
+shape name for alpha evidence. A single `by_equivalence_class` route has either
+`kind: known_path` with generating-edge citations, or `kind: via_peers` with
+`left_path`, `bridge`, and `right_path`. The bridge includes its equality,
+well-definedness proof, and restricted searched proof. No class handle replaces
+a FactId citation. Known-atomic Detailed output includes
+`why_parameters_of_known_fact_are_equal_to_givens`, exposing these equality
+subproofs for membership and other parameter transports. See the
+[equality result tree](../execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md).
+
 ## Compact statement shape
 
 Success — only disposition + source text:

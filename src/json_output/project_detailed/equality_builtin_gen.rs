@@ -8,32 +8,6 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
-        EqualitySearchProofByBuiltinRule::ByEqualIr(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("ByEqualIr"))];
-            let _ = p;
-            object_for(runtime, entries)
-        },
-        EqualitySearchProofByBuiltinRule::ByEqualToObjWithFreeParamsLookup(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("ByEqualToObjWithFreeParamsLookup"))];
-            entries.push(("cite_fact_id", string(p.cite_index_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_index_fact_id) { entries.push(("cite", string(fact.readable_string()))); }
-            object_for(runtime, entries)
-        },
-        EqualitySearchProofByBuiltinRule::ByFnSetAlphaEqual(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("ByFnSetAlphaEqual"))];
-            let _ = p;
-            object_for(runtime, entries)
-        },
-        EqualitySearchProofByBuiltinRule::ByAnonymousFnAlphaEqual(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("ByAnonymousFnAlphaEqual"))];
-            let _ = p;
-            object_for(runtime, entries)
-        },
-        EqualitySearchProofByBuiltinRule::BySetBuilderAlphaEqual(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("BySetBuilderAlphaEqual"))];
-            let _ = p;
-            object_for(runtime, entries)
-        },
         EqualitySearchProofByBuiltinRule::Calculation(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("Calculation"))];
             let _ = p;

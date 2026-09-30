@@ -21,6 +21,19 @@ Litex source stays the same across natural languages. Batch Normal JSON carries
 a language selection from `-lang` (default `en`); Chinese output localizes
 field names and proof explanations, including `"语言": "zh"`. See [`docs/cli.md`](cli.md).
 
+## How does equality reuse known equal objects?
+
+After well-definedness, equality first checks exact IR or structural alpha
+identity, then permitted mathematical builtin rules. Its single class-search
+stage first follows stored equality paths. If needed, it compares members of
+the two endpoint classes using identity, budgeted builtin rules, or constructor
+matching, and records the left path, new proof, and right path. This also lets
+known membership cross alpha-equivalent named function sets. The peer proof
+cannot recursively expand more classes or obtain fresh builtin fuel. Larger
+classes still mean more candidate comparisons. The
+[equality README](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md)
+shows the complete call and result structure.
+
 ## Why is Litex called Litex?
 
 Litex = Lisp + LaTeX. 

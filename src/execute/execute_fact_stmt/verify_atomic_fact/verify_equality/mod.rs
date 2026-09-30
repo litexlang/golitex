@@ -1,3 +1,4 @@
+pub mod by_they_are_the_same;
 pub mod result;
 pub mod by_builtin_rewrite_result;
 pub mod by_builtin_strategy_result;
@@ -32,3 +33,7 @@ pub use result::{
     VerifyEqualityFailed, VerifyEqualityResult,
 };
 pub use search_equal_fact_proof_by_matching_one_arg_by_one::EqualFactSearchedProofByMatchingOneArgByOne;
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/equality_search/tests.rs"]
+mod equality_search_tests;

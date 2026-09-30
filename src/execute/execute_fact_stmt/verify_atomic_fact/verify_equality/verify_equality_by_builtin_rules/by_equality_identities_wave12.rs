@@ -9,7 +9,7 @@ use crate::ast::obj::{
     Number, Obj, Product, ProductOfFiniteSet, RealPart, SetFormer, SetMinus, SetOperator, Sum,
     SumOfFiniteSet, Union,
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::alpha_equal_helper::anonymous_fns_alpha_equal;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::anonymous_fns_alpha_equal;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};

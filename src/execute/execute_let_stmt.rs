@@ -38,6 +38,7 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
+            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
 };
         let value_well_defined = self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
         if value_well_defined.is_failed() {

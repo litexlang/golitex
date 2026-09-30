@@ -17,6 +17,11 @@ fn chinese_key(english_key: &str) -> &str {
     match english_key {
         // run envelope
         "kind" => "种类",
+        "shape" => "形状",
+        "left_path" => "左侧路径",
+        "bridge" => "连接证明",
+        "right_path" => "右侧路径",
+        "why_parameters_of_known_fact_are_equal_to_givens" => "已知事实参数与目标参数相等的证明",
         "success" => "成功",
         "ok" => "成功",
         "target" => "目标",

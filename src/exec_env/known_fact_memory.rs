@@ -29,8 +29,8 @@ pub struct KnownFactMemory {
     pub known_closed_numeric_equal: HashMap<ObjIR, Vec<(Obj, FactId)>>,
 
     // Non-literal side → binder-carrying obj (FnSet / AnonymousFn / SetBuilder) + FactId.
-    // Example: `trust R_TO_R = fn(x R) R`, `have x fn(y R) R`, then `x $in R_TO_R`
-    // via lookup on `R_TO_R` + alpha-equal FnSet (ByEqualToObjWithFreeParamsLookup).
+    // Retained store/merge index. Equality truth search now reaches these
+    // shapes through generating edges and a TheyAreTheSame peer bridge.
     pub known_equal_to_obj_with_free_params: KnownEqualToObjWithFreeParamsMemory,
 
     // Non-equality atomics bucketed by (prop name, positive polarity).

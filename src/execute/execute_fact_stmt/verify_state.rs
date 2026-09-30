@@ -22,6 +22,18 @@ pub struct VerifyState {
     // mostly unused records. Only top-level exec_fact (and similar stmt
     // entries) pass true; exploratory search keeps this false.
     pub store_well_defined_fact: bool,
+
+    // Peer comparison is independent of builtin fuel. Verifier calls carrying
+    // this state may cite stored paths without expanding another class. This
+    // is not a global inference policy: binder WD keeps its existing local
+    // store/infer entry, whose inferred obligations construct their own state.
+    pub equality_class_search: EqualityClassSearchMode,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EqualityClassSearchMode {
+    StoredPathsOnly,
+    AllowPeerComparison,
 }
 
 impl VerifyState {
@@ -34,6 +46,7 @@ impl VerifyState {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
+            equality_class_search: EqualityClassSearchMode::AllowPeerComparison,
         }
     }
 
@@ -52,6 +65,7 @@ impl VerifyState {
             can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,
+            equality_class_search: self.equality_class_search,
         }
     }
 
@@ -69,6 +83,7 @@ impl VerifyState {
             can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,
+            equality_class_search: self.equality_class_search,
         }
     }
 
@@ -80,6 +95,17 @@ impl VerifyState {
             can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,
+            equality_class_search: EqualityClassSearchMode::AllowPeerComparison,
         }
+    }
+
+    // Keep the caller's fuel; disable deep search, rewrites, WD storage and
+    // peer expansion in child verifier calls, including direct WD obligations.
+    pub fn for_equality_peer_comparison(&self) -> Self {
+        let mut child = self.without_well_defined_storage();
+        child.can_use_def_and_known_forall_and_known_strategy = false;
+        child.can_use_rewrite = false;
+        child.equality_class_search = EqualityClassSearchMode::StoredPathsOnly;
+        child
     }
 }

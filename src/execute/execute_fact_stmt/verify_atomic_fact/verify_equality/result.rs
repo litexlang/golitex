@@ -10,6 +10,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::runtime::runtime_ids::{FactId, IdentifierId};
+use super::by_they_are_the_same::TheyAreTheSameProof;
 
 // Shared known-forall application certificate.
 // Field order mirrors successful apply stages:
@@ -86,6 +87,7 @@ pub struct StrictEqualWithFact {
 
 // Equal search routes allowed when matching forall conclusion args.
 pub enum StrictEqualArgProof {
+    ByTheyAreTheSame(TheyAreTheSameProof),
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByEquivalenceClass(EqualFactSearchedProofByEquivalenceClass),
     ByObjectDefinition(EqualitySearchProofByObjectDefinition),
@@ -122,6 +124,7 @@ impl VerifyEqualityResult {
 // MatchingOneArgByOne = constructor peel (not rewrite).
 // Rewrite stages replace legacy opaque resolve_obj (ClosedNumeric only).
 pub enum EqualFactSearchedProof {
+    ByTheyAreTheSame(TheyAreTheSameProof),
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByEquivalenceClass(EqualFactSearchedProofByEquivalenceClass),
     ByObjectDefinition(EqualitySearchProofByObjectDefinition),
@@ -140,12 +143,87 @@ pub struct EqualFactSearchedProofByKnownForallViaSymmetry {
     pub known_forall: SearchProofByKnownForallFact,
 }
 
-// Oriented cite chain from goal.left to goal.right over generating equality
-// edges only. Each entry: (from, to, cited_equal_fact_id). Empty <=> reflexive.
-// FactIds must come from KnownEquivalenceClassMemory.generating_edges, never from a
-// class-id handle alone.
-pub struct EqualFactSearchedProofByEquivalenceClass {
+// One search stage, two successful evidence shapes: a stored chain, or two
+// stored chains connected by a restricted proof. Never cite a class handle.
+pub enum EqualFactSearchedProofByEquivalenceClass {
+    KnownPath(KnownEqualityPathProof),
+    ViaPeers(EqualityViaPeersProof),
+}
+
+// Oriented generating edges, each (from, to, cited equality FactId).
+// An empty path is identity at the corresponding goal/bridge endpoint.
+pub struct KnownEqualityPathProof {
     pub path: Vec<(Obj, Obj, FactId)>,
+}
+
+pub struct EqualityViaPeersProof {
+    pub left_path: KnownEqualityPathProof,
+    pub bridge: PeerEqualitySuccess,
+    pub right_path: KnownEqualityPathProof,
+}
+
+// Bridge WD precedes its truth proof. The enclosing paths connect the bridge's
+// explicit endpoints back to the original goal; failures never enter evidence.
+pub struct PeerEqualitySuccess {
+    pub fact: EqualFact,
+    pub well_defined_proof: EqualFactWellDefinedProof,
+    pub searched_proof: PeerEqualitySearchedProof,
+}
+
+pub enum PeerEqualitySearchedProof {
+    ByTheyAreTheSame(TheyAreTheSameProof),
+    ByBuiltinRule(EqualitySearchProofByBuiltinRule),
+    ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
+}
+
+impl KnownEqualityPathProof {
+    pub fn new(path: Vec<(Obj, Obj, FactId)>) -> Self {
+        Self { path }
+    }
+}
+
+impl EqualityViaPeersProof {
+    pub fn new(
+        left_path: KnownEqualityPathProof,
+        bridge: PeerEqualitySuccess,
+        right_path: KnownEqualityPathProof,
+    ) -> Self {
+        Self { left_path, bridge, right_path }
+    }
+}
+
+impl PeerEqualitySuccess {
+    pub fn new(
+        fact: EqualFact,
+        well_defined_proof: EqualFactWellDefinedProof,
+        searched_proof: PeerEqualitySearchedProof,
+    ) -> Self {
+        Self { fact, well_defined_proof, searched_proof }
+    }
+}
+
+impl From<KnownEqualityPathProof> for EqualFactSearchedProofByEquivalenceClass {
+    fn from(proof: KnownEqualityPathProof) -> Self { Self::KnownPath(proof) }
+}
+
+impl From<EqualityViaPeersProof> for EqualFactSearchedProofByEquivalenceClass {
+    fn from(proof: EqualityViaPeersProof) -> Self { Self::ViaPeers(proof) }
+}
+
+impl From<TheyAreTheSameProof> for EqualFactSearchedProof {
+    fn from(proof: TheyAreTheSameProof) -> Self { Self::ByTheyAreTheSame(proof) }
+}
+
+impl From<TheyAreTheSameProof> for PeerEqualitySearchedProof {
+    fn from(proof: TheyAreTheSameProof) -> Self { Self::ByTheyAreTheSame(proof) }
+}
+
+impl From<EqualitySearchProofByBuiltinRule> for PeerEqualitySearchedProof {
+    fn from(proof: EqualitySearchProofByBuiltinRule) -> Self { Self::ByBuiltinRule(proof) }
+}
+
+impl From<EqualFactSearchedProofByMatchingOneArgByOne> for PeerEqualitySearchedProof {
+    fn from(proof: EqualFactSearchedProofByMatchingOneArgByOne) -> Self { Self::ByMatchingOneArgByOne(proof) }
 }
 
 pub fn equal_fact_result_from_wd_fail(
@@ -186,6 +264,7 @@ pub fn strict_equal_arg_proof_from_searched(
     proof: EqualFactSearchedProof,
 ) -> Option<StrictEqualArgProof> {
     match proof {
+        EqualFactSearchedProof::ByTheyAreTheSame(p) => Some(StrictEqualArgProof::ByTheyAreTheSame(p)),
         EqualFactSearchedProof::ByBuiltinRule(p) => Some(StrictEqualArgProof::ByBuiltinRule(p)),
         EqualFactSearchedProof::ByEquivalenceClass(p) => {
             Some(StrictEqualArgProof::ByEquivalenceClass(p))

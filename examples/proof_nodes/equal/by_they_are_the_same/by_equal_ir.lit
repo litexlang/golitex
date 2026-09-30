@@ -1,0 +1,5 @@
+# Node: equal.ByTheyAreTheSame.SameIr
+# Run: litex -f examples/proof_nodes/equal/by_they_are_the_same/by_equal_ir.lit
+
+forall x R:
+    x = x

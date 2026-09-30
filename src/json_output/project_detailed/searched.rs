@@ -7,6 +7,9 @@ use super::builtin_atomic_gen::project_atomic_builtin_rule;
 use super::store::{project_verify_facts};
 use super::strategy_gen::project_atomic_builtin_strategy;
 use super::verify::project_verify_fact;
+use super::wd::project_equal_wd_proof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::{TheyAreTheSameProof, SameFreeParamShapeProof};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{KnownEqualityPathProof, PeerEqualitySearchedProof};
 use crate::ast::fact::Fact;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
@@ -65,6 +68,7 @@ pub(super) fn project_equal_searched(
     runtime: &Runtime,
 ) -> JsonValue {
     match searched {
+        EqualFactSearchedProof::ByTheyAreTheSame(p) => project_they_are_the_same(p, runtime),
         EqualFactSearchedProof::ByBuiltinRule(r) => project_equality_builtin_rule(r, runtime),
         EqualFactSearchedProof::ByKnownForallFact(p) => project_known_forall(p, runtime),
         EqualFactSearchedProof::ByEquivalenceClass(p) => project_equivalence_class(p, runtime),
@@ -82,29 +86,64 @@ pub(super) fn project_equal_searched(
     }
 }
 
+fn project_they_are_the_same(proof: &TheyAreTheSameProof, runtime: &Runtime) -> JsonValue {
+    let mut fields = vec![("type", string("by_they_are_the_same"))];
+    match proof {
+        TheyAreTheSameProof::SameIr(_) => fields.push(("kind", string("same_ir"))),
+        TheyAreTheSameProof::SameFreeParamShape(shape) => {
+            fields.push(("kind", string("same_free_param_shape")));
+            let name = match shape {
+                SameFreeParamShapeProof::FnSet(_) => "fn_set",
+                SameFreeParamShapeProof::AnonymousFn(_) => "anonymous_fn",
+                SameFreeParamShapeProof::SetBuilder(_) => "set_builder",
+            };
+            fields.push(("shape", string(name)));
+        }
+    }
+    object_for(runtime, fields)
+}
+
 fn project_equivalence_class(
     proof: &EqualFactSearchedProofByEquivalenceClass,
     runtime: &Runtime,
 ) -> JsonValue {
-    let path: Vec<JsonValue> = proof
-        .path
-        .iter()
-        .map(|(from, to, fact_id)| {
-            let mut entries = vec![
-                ("from", string(from.readable_string())),
-                ("to", string(to.readable_string())),
-                ("cite_fact_id", string(fact_id.to_string())),
-            ];
-            if let Some(fact) = runtime.fact_by_id_in_stack(*fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
-            object_for(runtime, entries)
-        })
-        .collect();
-    object_for(runtime, vec![
-        ("type", string("by_equivalence_class")),
-        ("path", JsonValue::Array(path)),
-    ])
+    let mut fields = vec![("type", string("by_equivalence_class"))];
+    match proof {
+        EqualFactSearchedProofByEquivalenceClass::KnownPath(path) => {
+            fields.push(("kind", string("known_path")));
+            fields.push(("path", project_known_equality_path(path, runtime)));
+        }
+        EqualFactSearchedProofByEquivalenceClass::ViaPeers(p) => {
+            let searched = match &p.bridge.searched_proof {
+                PeerEqualitySearchedProof::ByTheyAreTheSame(same) => project_they_are_the_same(same, runtime),
+                PeerEqualitySearchedProof::ByBuiltinRule(rule) => project_equality_builtin_rule(rule, runtime),
+                PeerEqualitySearchedProof::ByMatchingOneArgByOne(matching) => project_matching_one_arg(matching, runtime),
+            };
+            fields.push(("kind", string("via_peers")));
+            fields.push(("left_path", project_known_equality_path(&p.left_path, runtime)));
+            fields.push(("bridge", object_for(runtime, vec![
+                ("fact", string(crate::ast::fact::AtomicFact::EqualFact(p.bridge.fact.clone()).readable_string())),
+                ("well_defined", project_equal_wd_proof(&p.bridge.well_defined_proof, runtime)),
+                ("searched_proof", searched),
+            ])));
+            fields.push(("right_path", project_known_equality_path(&p.right_path, runtime)));
+        }
+    }
+    object_for(runtime, fields)
+}
+
+fn project_known_equality_path(proof: &KnownEqualityPathProof, runtime: &Runtime) -> JsonValue {
+    JsonValue::Array(proof.path.iter().map(|(from, to, fact_id)| {
+        let mut entries = vec![
+            ("from", string(from.readable_string())),
+            ("to", string(to.readable_string())),
+            ("cite_fact_id", string(fact_id.to_string())),
+        ];
+        if let Some(fact) = runtime.fact_by_id_in_stack(*fact_id) {
+            entries.push(("cite", string(fact.readable_string())));
+        }
+        object_for(runtime, entries)
+    }).collect())
 }
 
 fn project_object_definition(
@@ -349,6 +388,13 @@ fn project_known_atomic(
     if let Some(fact) = runtime.fact_by_id_in_stack(proof.cite_fact_id) {
         entries.push(("cite", string(fact.readable_string())));
     }
+    // Each known argument is transported to the goal argument by its own
+    // equality proof. Keep these children visible, including peer bridges.
+    entries.push((
+        "why_parameters_of_known_fact_are_equal_to_givens",
+        JsonValue::Array(proof.why_parameters_of_known_fact_are_equal_to_givens
+            .iter().map(|p| project_equal_searched(p, runtime)).collect()),
+    ));
     object_for(runtime, entries)
 }
 

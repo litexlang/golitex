@@ -68,6 +68,7 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
+            equality_class_search: verify_state.equality_class_search,
 };
         let residual_equal = self.verify_equal_fact(&residual, child_state)?;
         if residual_equal.is_failed() {
