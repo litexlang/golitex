@@ -1,0 +1,23 @@
+# Infer: NormalAtomicParamTypes with call-site carrier ≠ prop binder name.
+# Storing `$P(Carrier, one)` must project `one $in Carrier` (not ghost `one $in A`).
+# Run: litex -f examples/infer/atomic/normal_atomic_param_types_renamed_carrier.lit
+
+prop P(A nonempty_set, one A):
+    one = one
+
+have Carrier nonempty_set
+have one Carrier
+
+# Assumption store → param-type projection must WD under renamed carrier.
+forall:
+    $P(Carrier, one)
+    =>:
+        one = one
+
+# Extract via thm + by def must also be name-independent.
+thm extract_under_renamed_carrier:
+    ? forall:
+        $P(Carrier, one)
+        =>:
+            one = one
+    by def $P(Carrier, one)

@@ -418,7 +418,12 @@ impl Runtime {
         for (failed_index, fact) in facts.iter().enumerate() {
             let as_fact = quantifier_free_fact_to_fact(fact.clone());
             match self.verify_fact_well_definedness(&as_fact, verify_state.clone())? {
-                VerifyFactWellDefinedResult::Success(proof) => succeeded.push(proof),
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    // Assume earlier facts in binder scopes (FnSet/AnonymousFn dom,
+                    // SetBuilder facts) before later WD checks.
+                    let _ = self.store_fact_and_infer(&as_fact)?;
+                    succeeded.push(proof);
+                }
                 VerifyFactWellDefinedResult::Failed(failed) => {
                     return Ok(Err((failed_index, succeeded, failed)));
                 }

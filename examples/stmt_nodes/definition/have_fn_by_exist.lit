@@ -2,13 +2,16 @@
 # Run: litex -f examples/stmt_nodes/definition/have_fn_by_exist.lit
 # Also see examples/tmp_have_fn_by_exist.lit for release + template def-check boundaries.
 
-abstract_prop F(x, y)
-have A set
-have B set
+prop F(x, y R):
+    y = x
+have A set = R
+have B set = R
 
-trust:
-    forall x A:
+claim:
+    ? forall x A:
         exist! y B st {$F(x, y)}
+    witness exist! y B st {$F(x, y)} from x:
+        by def $F(x, x)
 
 have fn f by exist!:
     ? forall x A:

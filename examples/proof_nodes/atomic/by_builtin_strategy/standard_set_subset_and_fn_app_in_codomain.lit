@@ -1,0 +1,10 @@
+# Standard-set ⊂ lift + nested fn-app codomain under builtin strategy.
+
+have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])
+have fn dot(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
+
+have p, q, r cart(R, R)
+
+dot(vec(q, p), vec(q, r)) $in R
+dot(vec(q, p), vec(q, r)) $in C
+vec(q, p) $in cart(R, R)

@@ -1,7 +1,7 @@
 # Node: equal.ByBuiltinRule.UnionAbsorptionFromSubset
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/union_absorption_from_subset.lit
 
-have A set
-have B set
-trust A $subset B
-union(A, B) = B
+forall A set, B set:
+    A $subset B
+    =>:
+        union(A, B) = B

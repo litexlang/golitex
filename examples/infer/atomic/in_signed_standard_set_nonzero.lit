@@ -1,0 +1,7 @@
+# Infer: InFact.SignedStandardSetSign (nonzero)
+# When: store `a $in R*` / `Q*` / `Z*` / `C*`.
+# Infers: `a != 0`.
+# Run: litex -f examples/infer/atomic/in_signed_standard_set_nonzero.lit
+
+have a R*
+a != 0

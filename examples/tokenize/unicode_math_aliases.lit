@@ -91,7 +91,7 @@ claim:
     ? {0, 1} ⊋ {0}
     by def {0, 1} ⊋ {0}
 
-1 ∉ ∅
+not 1 ∈ ∅
 {0} ∩ {0, 1} ∪ ∅ = union(intersect({0}, {0, 1}), {})
 
 claim:

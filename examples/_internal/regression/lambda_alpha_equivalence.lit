@@ -1,3 +1,4 @@
+# Migration blocker B10: see plan/迁移的plan/和example有关.md.
 # Anonymous-function binders are alpha-equivalent in known-fact lookup and
 # `forall`/theorem instantiation.
 abstract_prop alpha_assumption(f)

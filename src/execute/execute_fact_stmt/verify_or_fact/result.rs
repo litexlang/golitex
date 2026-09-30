@@ -43,48 +43,52 @@ pub enum OrFactSearchedProof {
     ByKnownForallFact(SearchProofByKnownForallFact),
 }
 
-// Or-fact builtin search evidence. One variant per rule (branch order is rigid).
+// Or-fact builtin search evidence. One variant per rule.
+// Rigid multi-predicate surfaces (trichotomy permutations, fixed `n = 0 or n >= 1`)
+// get separate variants. Swap-symmetric binary ors keep one evidence struct; the
+// matcher may accept either branch order without a second rule.
 pub enum OrFactSearchProofByBuiltinRule {
-    // Exact order: `a = b or a < b or a > b`.
+    // Rigid surface: `a = b or a < b or a > b`.
     // Property: any two reals are comparable by =, <, or >.
     // Example: after `have a, b R`, prove `a = b or a < b or a > b`.
     RealLineTrichotomyEqLessGreater(OrBuiltinRealLineTrichotomyEqLessGreater),
-    // Exact order: `a < b or a = b or a > b`.
+    // Rigid surface: `a < b or a = b or a > b`.
     // Example: after `have a, b R`, prove `a < b or a = b or a > b`.
     RealLineTrichotomyLessEqGreater(OrBuiltinRealLineTrichotomyLessEqGreater),
-    // Exact order: `a > b or a = b or a < b`.
+    // Rigid surface: `a > b or a = b or a < b`.
     // Example: after `have a, b R`, prove `a > b or a = b or a < b`.
     RealLineTrichotomyGreaterEqLess(OrBuiltinRealLineTrichotomyGreaterEqLess),
-    // Exact order: `n = 0 or n >= 1` for `n $in N`.
+    // Rigid surface: `n = 0 or n >= 1` for `n $in N`.
     // Property: every natural is zero or at least one.
     // Example: after `have n N`, prove `n = 0 or n >= 1`.
     NaturalZeroOrAtLeastOne(OrBuiltinNaturalZeroOrAtLeastOne),
-    // Either branch order: `P or not P` for complementary atomics.
+    // Swap-symmetric binary or: `P or not P` (either branch order).
     // Property: classical excluded middle on a pair of complementary atomic facts.
     // Example: `1 = 1 or 1 != 1`.
     ComplementaryAtomic(OrBuiltinComplementaryAtomic),
-    // Either branch order: `abs(x) = x or abs(x) = (-x)`.
+    // Swap-symmetric binary or: `abs(x) = x or abs(x) = (-x)` (either branch order).
     // Property: absolute value equals the number or its additive inverse.
     // Example: after `have x R`, prove `abs(x) = x or abs(x) = (-x)`.
     AbsSignSplit(OrBuiltinAbsSignSplit),
-    // Either branch order: `a = 0 or b = 0` when `a * b = 0` (or `b * a = 0`) is known.
+    // Swap-symmetric binary or: `a = 0 or b = 0` (either branch order) when
+    // `a * b = 0` (or `b * a = 0`) is known.
     // Property: a real product is zero only if a factor is zero.
     // Example: after `have a, b R` and `trust a * b = 0`, prove `a = 0 or b = 0`.
     ZeroProductSplit(OrBuiltinZeroProductSplit),
-    // Either branch order: `a < b or a >= b` on the same real terms.
+    // Swap-symmetric binary or: `a < b or a >= b` (either branch order).
     // Property: strict < and weak >= are complementary on R.
     // Example: after `have a, b R`, prove `a < b or a >= b`.
     LessOrGreaterEqual(OrBuiltinLessOrGreaterEqual),
-    // Either branch order: `a > b or a <= b` on the same real terms.
+    // Swap-symmetric binary or: `a > b or a <= b` (either branch order).
     // Property: strict > and weak <= are complementary on R.
     // Example: after `have a, b R`, prove `a > b or a <= b`.
     GreaterOrLessEqual(OrBuiltinGreaterOrLessEqual),
-    // Either branch order: `a <= b or a >= b` on the same real terms.
+    // Swap-symmetric binary or: `a <= b or a >= b` (either branch order).
     // Property: weak order on R is total (comparability).
     // Example: after `have a, b R`, prove `a <= b or a >= b`.
     WeakOrderLeOrGe(OrBuiltinWeakOrderLeOrGe),
-    // Either branch order: `a = b or a < b` when `a <= b` is known
-    // (dual: `a = b or a > b` when `a >= b` is known).
+    // Swap-symmetric / dual surfaces for one rule: `a = b or a < b` when `a <= b`
+    // is known (dual: `a = b or a > b` when `a >= b` is known).
     // Property: equality plus the matching strict order covers a known weak bound.
     // Example: after `have a, b R` and `trust a <= b`, prove `a = b or a < b`.
     EqualityPlusStrictCoversWeak(OrBuiltinEqualityPlusStrictCoversWeak),
@@ -96,7 +100,8 @@ pub enum OrFactSearchProofByBuiltinRule {
     // Property: if `x >= base` in Z, then x equals one of finitely many successors or exceeds the last.
     // Example: after `have x Z` and `trust x >= 1`, prove `x = 1 or x = 2 or x = 3 or x > 3`.
     IntegerSuccessorTail(OrBuiltinIntegerSuccessorTail),
-    // Either branch order: `a != 0 or b != 0` from known `a^2 + b^2 != 0` (or `a*a + b*b`).
+    // Swap-symmetric binary or: `a != 0 or b != 0` (either branch order) from known
+    // `a^2 + b^2 != 0` (or `a*a + b*b`).
     // Property: a nonzero square sum forces a nonzero component.
     // Example: after `have a, b R` and `trust a^2 + b^2 != 0`, prove `a != 0 or b != 0`.
     SquareSumComponentNonzero(OrBuiltinSquareSumComponentNonzero),
@@ -105,7 +110,8 @@ pub enum OrFactSearchProofByBuiltinRule {
     // Example: after `trust forall x R: $p(x) =>: $q(x)` and `have a R`,
     // prove `not $p(a) or $q(a)`.
     ClassicalImplication(OrBuiltinClassicalImplication),
-    // Either branch order: `x <= n or x >= n + 1` (or predecessor dual) for integers.
+    // Swap-symmetric / dual surfaces for one rule: `x <= n or x >= n + 1`
+    // (either branch order; predecessor dual also matches).
     // Property: consecutive integers leave no gap on Z.
     // Example: after `have x, n Z`, prove `x <= n or x >= n + 1`.
     IntegerDiscreteSplit(OrBuiltinIntegerDiscreteSplit),
@@ -141,18 +147,18 @@ pub struct OrBuiltinNaturalZeroOrAtLeastOne {
     pub n_in_n: VerifyFactResult,
 }
 
-// Evidence for `P or not P` (either branch order) via complementary atomics.
+// Evidence for swap-symmetric `P or not P` (matcher accepts either branch order).
 pub struct OrBuiltinComplementaryAtomic {
     pub left: AtomicFact,
     pub right: AtomicFact,
 }
 
-// Evidence for `abs(x) = x or abs(x) = (-x)` (either branch order).
+// Evidence for swap-symmetric `abs(x) = x or abs(x) = (-x)`.
 pub struct OrBuiltinAbsSignSplit {
     pub arg: Obj,
 }
 
-// Evidence for `a = 0 or b = 0` after `a, b $in R` and known `a * b = 0`.
+// Evidence for swap-symmetric `a = 0 or b = 0` after `a, b $in R` and known `a * b = 0`.
 pub struct OrBuiltinZeroProductSplit {
     pub left: Obj,
     pub right: Obj,
@@ -161,7 +167,7 @@ pub struct OrBuiltinZeroProductSplit {
     pub product_zero: VerifyFactResult,
 }
 
-// Evidence for `a < b or a >= b` (either branch order) after both sides in R.
+// Evidence for swap-symmetric `a < b or a >= b` after both sides in R.
 pub struct OrBuiltinLessOrGreaterEqual {
     pub left: Obj,
     pub right: Obj,
@@ -169,7 +175,7 @@ pub struct OrBuiltinLessOrGreaterEqual {
     pub right_in_r: VerifyFactResult,
 }
 
-// Evidence for `a > b or a <= b` (either branch order) after both sides in R.
+// Evidence for swap-symmetric `a > b or a <= b` after both sides in R.
 pub struct OrBuiltinGreaterOrLessEqual {
     pub left: Obj,
     pub right: Obj,
@@ -177,7 +183,7 @@ pub struct OrBuiltinGreaterOrLessEqual {
     pub right_in_r: VerifyFactResult,
 }
 
-// Evidence for `a <= b or a >= b` (either branch order) after both sides in R.
+// Evidence for swap-symmetric `a <= b or a >= b` after both sides in R.
 pub struct OrBuiltinWeakOrderLeOrGe {
     pub left: Obj,
     pub right: Obj,

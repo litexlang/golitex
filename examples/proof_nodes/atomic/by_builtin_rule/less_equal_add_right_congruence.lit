@@ -1,7 +1,7 @@
 # Node: atomic.ByBuiltinRule.LessEqualFact.AddRightCongruence
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_add_right_congruence.lit
 
-have x R
-have y R
-trust x <= y
-x + 1 <= y + 1
+forall x R, y R:
+    x <= y
+    =>:
+        x + 1 <= y + 1

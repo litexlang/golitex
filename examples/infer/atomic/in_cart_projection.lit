@@ -3,9 +3,8 @@
 # Infers: tuple shape + coordinate memberships.
 # Run: litex -f examples/infer/atomic/in_cart_projection.lit
 
-have u set
-trust u $in cart(R, Z)
-$is_tuple(u)
-tuple_dim(u) = 2
-u[1] $in R
-u[2] $in Z
+forall u cart(R, Z):
+    $is_tuple(u)
+    tuple_dim(u) = 2
+    u[1] $in R
+    u[2] $in Z

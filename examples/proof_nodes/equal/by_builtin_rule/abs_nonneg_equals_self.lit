@@ -1,8 +1,9 @@
 # Node: equal.ByBuiltinRule.AbsNonnegEqualsSelf
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/abs_nonneg_equals_self.lit
 #
-# When: `have a R+` (so `0 <= a`).
+# When: `have a R+` and the weak order fact `0 <= a` is known.
 # After: `abs(a) = a`.
 
 have a R+
+0 <= a
 abs(a) = a

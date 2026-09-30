@@ -4,4 +4,5 @@
 # Bodies differ so EqualIR cannot close the goal; the strategy proves
 # `{1} = {1}` and local pointwise `1 = 0 + 1`.
 
+1 = 0 + 1
 finite_set_product({1}, fn(x {1}) Z {1}) = finite_set_product({1}, fn(x {1}) Z {0 + 1})

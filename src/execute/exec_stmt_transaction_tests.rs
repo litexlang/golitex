@@ -433,42 +433,46 @@ fn order_flip_mul_minus_one_from_less_zero_by_builtin() {
 }
 
 #[test]
-fn natural_membership_proves_nonnegative_by_builtin() {
+fn natural_membership_infers_nonnegative() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have k N").is_failed());
     assert!(
         !exec_one(&mut runtime, "k >= 0").is_failed(),
-        "k $in N must prove k >= 0 via FromKnownInNatural"
+        "k $in N must infer 0 <= k (then OrderDual gives k >= 0)"
     );
 }
 
 #[test]
-fn positive_standard_set_membership_proves_positive_by_builtin() {
+fn positive_standard_set_membership_infers_positive() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R+").is_failed());
     assert!(
         !exec_one(&mut runtime, "0 < a").is_failed(),
-        "a $in R+ must prove 0 < a via FromKnownInPositiveStandardSet"
+        "a $in R+ must infer 0 < a"
+    );
+    assert!(
+        !exec_one(&mut runtime, "0 <= a").is_failed(),
+        "a $in R+ must also infer 0 <= a"
     );
 }
 
 #[test]
-fn negative_standard_set_membership_proves_negative_by_builtin() {
+fn negative_standard_set_membership_infers_negative() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R-").is_failed());
     assert!(
         !exec_one(&mut runtime, "a < 0").is_failed(),
-        "a $in R- must prove a < 0 via FromKnownInNegativeStandardSet"
+        "a $in R- must infer a < 0"
     );
 }
 
 #[test]
-fn nonzero_standard_set_membership_proves_not_equal_zero_by_builtin() {
+fn nonzero_standard_set_membership_infers_not_equal_zero() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R*").is_failed());
     assert!(
         !exec_one(&mut runtime, "a != 0").is_failed(),
-        "a $in R* must prove a != 0 via FromKnownInNonzeroStandardSet"
+        "a $in R* must infer a != 0"
     );
 }
 
@@ -3132,6 +3136,41 @@ claim:
             "claim[{i}] should succeed after obtain-under-forall fix"
         );
     }
+}
+
+#[test]
+fn prop_and_exist_body_assume_earlier_facts_for_later_wd() {
+    // Earlier body / exist facts are assumed when checking later WD
+    // (same pattern as forall dom). Example: `a != b` licenses
+    // `line_through_points(a, b)`; `a != 0 or b != 0` licenses `line(...)`.
+    let mut runtime = runtime_with_file_env();
+    for code in [
+        "have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])",
+        "have fn det(u, v cart(R, R)) R = u[1] * v[2] - u[2] * v[1]",
+        "have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R): a * p[1] + b * p[2] + c = 0}",
+        "have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}",
+    ] {
+        assert!(
+            !exec_one(&mut runtime, code).is_failed(),
+            "setup failed:\n{code}"
+        );
+    }
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "prop is_on_line(p, a, b cart(R, R)):\n    a != b\n    p $in line_through_points(a, b)"
+        )
+        .is_failed(),
+        "prop body should assume a != b for line_through_points WD"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "prop is_line(l power_set(cart(R, R))):\n    exist a, b, c R st {a != 0 or b != 0, l = line(a, b, c)}"
+        )
+        .is_failed(),
+        "exist body should assume domain or before line(...) WD"
+    );
 }
 
 

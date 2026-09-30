@@ -3,6 +3,5 @@
 
 have a Z
 have b N+
-# Narrow trust: mod WD currently needs an explicit nonzero divisor witness.
-trust b != 0
+b != 0
 (a - (a % b)) % b = 0

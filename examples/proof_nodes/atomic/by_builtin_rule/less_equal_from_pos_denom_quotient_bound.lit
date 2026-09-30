@@ -1,10 +1,9 @@
 # Node: atomic.ByBuiltinRule.LessEqual.LessEqualFromPosDenomQuotientBound
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_from_pos_denom_quotient_bound.lit
 
-have a R
-have b R
-have c R
-trust 0 < c
-trust c != 0
-trust a / c <= b
-a <= b * c
+claim:
+    ? forall a R, b R, c R+:
+        a / c <= b
+        =>:
+            a <= b * c
+    c != 0

@@ -1,8 +1,9 @@
 //! Proof search inside a strategy subtree.
 //!
-//! Allowed: cite-only / zero-premise builtin, known, nested strategy.
-//! Forbidden: premise-producing builtin, by-def, known forall, rewrite.
-//! WD uses `VerifyState::strategy_wd()`.
+//! Truth search: known, cite-only / zero-premise builtin, nested strategy.
+//! Forbidden for truth: premise-producing builtin, by-def, known forall, rewrite.
+//! WD of a strategy premise uses top-level WD without store (expression must be
+//! meaningful); that is separate from the strategy truth steps.
 
 use crate::ast::fact::{AtomicFact, Fact};
 use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
@@ -89,7 +90,9 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: StrategySearch,
     ) -> RuntimeResult<VerifyFactResult> {
-        let wd_state = VerifyState::strategy_wd();
+        // WD only (nested fn apps need domain checks). Truth search stays
+        // known / cite-only / nested strategy — not premise-producing bt rules.
+        let wd_state = VerifyState::top_level().without_well_defined_storage();
         let well_defined_proof = match self
             .verify_atomic_fact_well_definedness(fact, wd_state)?
         {
@@ -161,7 +164,7 @@ impl Runtime {
         fact: &crate::ast::fact::EqualFact,
         ctx: StrategySearch,
     ) -> RuntimeResult<VerifyFactResult> {
-        let wd_state = VerifyState::strategy_wd();
+        let wd_state = VerifyState::top_level().without_well_defined_storage();
         let well_defined_proof =
             match self.verify_equal_fact_well_definedness(fact, wd_state)? {
                 VerifyEqualFactWellDefinedResult::Success(proof) => proof,

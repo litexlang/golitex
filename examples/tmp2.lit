@@ -1,0 +1,6 @@
+
+prop P(A nonempty_set, one A):
+    one = one
+have Carrier nonempty_set
+have one Carrier
+$P(Carrier, one)

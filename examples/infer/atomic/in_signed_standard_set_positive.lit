@@ -1,0 +1,8 @@
+# Infer: InFact.SignedStandardSetSign (positive)
+# When: store `a $in R+` / `Q+` / `N+`.
+# Infers: `0 < a` and `0 <= a`.
+# Run: litex -f examples/infer/atomic/in_signed_standard_set_positive.lit
+
+have a R+
+0 < a
+0 <= a

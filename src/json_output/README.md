@@ -180,22 +180,20 @@ Fact success sketch:
 {
   "success": true,
   "kind": "fact",
-  "statement": "k >= 0",
+  "statement": "0 <= k",
   "verify": {
     "type": "atomic_except_equality",
     "success": true,
-    "fact": "k >= 0",
+    "fact": "0 <= k",
     "well_defined": { "...": "..." },
     "searched_proof": {
-      "type": "builtin_rule",
-      "family": "GreaterEqualFact",
-      "rule": "FromKnownInNatural",
+      "type": "known_atomic_fact",
       "cite_fact_id": "f1",
-      "cite": "k $in N"
+      "cite": "0 <= k"
     }
   },
   "store_and_infer": {
-    "stores": [{ "fact_id": "f2", "fact": "k >= 0" }],
+    "stores": [{ "fact_id": "f2", "fact": "0 <= k" }],
     "infers": []
   }
 }

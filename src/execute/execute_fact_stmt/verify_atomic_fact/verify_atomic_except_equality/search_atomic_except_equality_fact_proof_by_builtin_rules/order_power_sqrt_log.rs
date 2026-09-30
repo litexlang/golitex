@@ -29,37 +29,6 @@ use crate::parse::keywords::IN;
 use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 impl Runtime {
-    // Zero-premise even-power nonnegativity: `0 <= x^2` / `0 <= x*x` / `0 <= x^(2k)`.
-    // Runs before the builtin-rule budget gate so nested premises such as
-    // `n <= m^2 + n` (needs `0 <= m^2`) can still use it.
-    // Example: prove `0 <= a^2` with no extra known facts.
-    pub(super) fn try_even_pow_nonnegative_zero_premise(
-        &self,
-        fact: &LessEqualFact,
-    ) -> Option<LessEqualFactSearchProofByBuiltinRule> {
-        if !is_zero_obj(&fact.left) {
-            return None;
-        }
-        match &fact.right {
-            Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right }))
-                if left.as_ref().ir() == right.as_ref().ir() =>
-            {
-                Some(LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(
-                    EvenPowNonnegativeBuiltinRuleProof {},
-                ))
-            }
-            Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
-                base: _,
-                exponent,
-            })) if is_even_integer_literal(exponent.as_ref()) => {
-                Some(LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(
-                    EvenPowNonnegativeBuiltinRuleProof {},
-                ))
-            }
-            _ => None,
-        }
-    }
-
     // Shape / premise search for power, sqrt, and log weak-order builtins.
     // Example goals: `0 <= x^2`, `0 <= sqrt(x)`, `1 <= n`, `log(2,x) <= log(2,y)`.
     pub(super) fn search_order_power_sqrt_log_less_equal_proof(
@@ -67,10 +36,6 @@ impl Runtime {
         fact: &LessEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
-        if let Some(proof) = self.try_even_pow_nonnegative_zero_premise(fact) {
-            return Ok(Some(proof));
-        }
-
         if is_one_obj(&fact.left) {
             if let Some(cite_fact_id) = self.known_in_positive_natural_fact_id(&fact.right) {
                 return Ok(Some(
@@ -119,6 +84,24 @@ impl Runtime {
         }
 
         match &fact.right {
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right }))
+                if left.as_ref().ir() == right.as_ref().ir() =>
+            {
+                Ok(Some(
+                    LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(
+                        EvenPowNonnegativeBuiltinRuleProof {},
+                    ),
+                ))
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base: _, exponent }))
+                if is_even_integer_literal(exponent.as_ref()) =>
+            {
+                Ok(Some(
+                    LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(
+                        EvenPowNonnegativeBuiltinRuleProof {},
+                    ),
+                ))
+            }
             Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base, exponent })) => {
                 if let Some(proof) = self
                     .pow_nonneg_from_positive_base_proof(base.as_ref(), verify_state.clone())?

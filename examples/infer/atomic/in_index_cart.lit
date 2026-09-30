@@ -1,3 +1,4 @@
+# Migration blocker B05: see plan/迁移的plan/和example有关.md.
 # Infer: InFact.IndexCart
 # When: store `f $in index_cart(I, S, g)`.
 # Infers: `f $in fn(alpha I) family_union(S)` and `$is_choice_function_for(I, S, g, f)`.

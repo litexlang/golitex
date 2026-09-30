@@ -1,7 +1,7 @@
 # Node: atomic.ByBuiltinRule.LessEqual.IntegerAdjacencyLe
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_integer_adjacency.lit
 
-have a Z
-have b Z
-trust a < b + 1
-a <= b
+forall a Z, b Z:
+    a < b + 1
+    =>:
+        a <= b

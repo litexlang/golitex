@@ -3,6 +3,5 @@
 
 have a Z
 have d N+
-# Narrow trust: quot / mod WD currently needs an explicit nonzero divisor witness.
-trust d != 0
+d != 0
 a = d * quot(a, d) + (a % d)

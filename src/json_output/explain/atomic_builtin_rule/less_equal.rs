@@ -29,12 +29,8 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     FiniteSetSizeSubsetLeBuiltinRuleProof,
     FiniteSetSizeSurjectionCodomainLeDomainBuiltinRuleProof,
     FiniteSetSizeUnionLeSumBuiltinRuleProof,
-    FromKnownInNaturalBuiltinRuleProof,
-    FromKnownInNegativeStandardSetForLessEqualBuiltinRuleProof,
     FromKnownInPositiveNaturalBuiltinRuleProof,
-    FromKnownInPositiveStandardSetForLessEqualBuiltinRuleProof,
     FromKnownLessBuiltinRuleProof,
-    FromKnownGreaterEqualDualBuiltinRuleProof,
     IntegerAdjacencyLeBuiltinRuleProof,
     IntegerDiffAtLeastOneLeBuiltinRuleProof,
     IntegerPredecessorLeBuiltinRuleProof,
@@ -75,10 +71,6 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::ClosedNumericComparison(p) => p.rule_id_and_message(lang),
             Self::OrderReflexivity(p) => p.rule_id_and_message(lang),
             Self::FromKnownLess(p) => p.rule_id_and_message(lang),
-            Self::FromKnownGreaterEqualDual(p) => p.rule_id_and_message(lang),
-            Self::FromKnownInNatural(p) => p.rule_id_and_message(lang),
-            Self::FromKnownInPositiveStandardSet(p) => p.rule_id_and_message(lang),
-            Self::FromKnownInNegativeStandardSet(p) => p.rule_id_and_message(lang),
             Self::ArcsinPrincipalLowerBound(p) => p.rule_id_and_message(lang),
             Self::ArcsinPrincipalUpperBound(p) => p.rule_id_and_message(lang),
             Self::ArccosPrincipalLowerBound(p) => p.rule_id_and_message(lang),
@@ -140,10 +132,6 @@ impl LessEqualFactSearchProofByBuiltinRule {
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
             Self::FromKnownLess(p) => Some(p.cite_fact_id),
-            Self::FromKnownGreaterEqualDual(p) => Some(p.cite_fact_id),
-            Self::FromKnownInNatural(p) => Some(p.cite_fact_id),
-            Self::FromKnownInPositiveStandardSet(p) => Some(p.cite_fact_id),
-            Self::FromKnownInNegativeStandardSet(p) => Some(p.cite_fact_id),
             Self::AbsLeImpliesUpper(p) => Some(p.cite_fact_id),
             Self::AbsLeImpliesNegUpper(p) => Some(p.cite_fact_id),
             Self::FromKnownInPositiveNatural(p) => Some(p.cite_fact_id),
@@ -235,105 +223,8 @@ impl FromKnownLessBuiltinRuleProof {
     }
 }
 
-impl FromKnownGreaterEqualDualBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownGreaterEqualDual",
-            "From known greater-or-equal (dual)",
-            "The weak less-or-equal follows by flipping a known greater-or-equal fact",
-        )
-    }
 
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownGreaterEqualDual",
-            "已知大于等于（对偶）",
-            "弱小于等于目标由已知的大于等于对偶推出",
-        )
-    }
 
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-        }
-    }
-}
-
-impl FromKnownInNaturalBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInNatural",
-            "From known in N",
-            "The goal follows from a known natural-number membership",
-        )
-    }
-
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInNatural",
-            "已知属于自然数",
-            "目标由已知的自然数成员关系推出",
-        )
-    }
-
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-        }
-    }
-}
-
-impl FromKnownInPositiveStandardSetForLessEqualBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInPositiveStandardSet",
-            "From known in positive set",
-            "The goal follows from membership in a positive standard set",
-        )
-    }
-
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInPositiveStandardSet",
-            "已知属于正标准集",
-            "目标由正标准集上的成员关系推出",
-        )
-    }
-
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-        }
-    }
-}
-
-impl FromKnownInNegativeStandardSetForLessEqualBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInNegativeStandardSet",
-            "From known in negative set",
-            "The goal follows from membership in a negative standard set",
-        )
-    }
-
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInNegativeStandardSet",
-            "已知属于负标准集",
-            "目标由负标准集上的成员关系推出",
-        )
-    }
-
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-        }
-    }
-}
 
 impl ArcsinPrincipalLowerBoundBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {

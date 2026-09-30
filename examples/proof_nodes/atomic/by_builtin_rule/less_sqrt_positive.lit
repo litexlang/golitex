@@ -1,6 +1,7 @@
 # Node: atomic.ByBuiltinRule.Less.SqrtPositive
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_sqrt_positive.lit
 
-have x R
-trust 0 < x
-0 < sqrt(x)
+forall x R:
+    0 < x
+    =>:
+        0 < sqrt(x)

@@ -1,3 +1,4 @@
+# Migration blocker B03: see plan/迁移的plan/和example有关.md.
 # Node: equal.ByBuiltinRule.LnOfExp
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/ln_of_exp.lit
 # trust: WD of ln(exp(x)) needs exp(x) known in R+ until exp-range WD is stronger.

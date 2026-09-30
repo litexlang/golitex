@@ -1,0 +1,83 @@
+# Scratch tracer: a 3-4-5 segment is checked inside an analytic plane model.
+
+have points set = cart(R, R)
+have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])
+have fn dot(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
+have fn distance_sq(A, B cart(R, R)) R = dot(vec(A, B), vec(A, B))
+
+thm distance_sq_coordinate_formula:
+    ? forall a, b cart(R, R):
+        distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(a, b)[1] = b[1] - a[1]
+    vec(a, b)[2] = b[2] - a[2]
+    distance_sq(a, b) = dot(vec(a, b), vec(a, b))
+    dot(vec(a, b), vec(a, b)) = vec(a, b)[1] * vec(a, b)[1] + vec(a, b)[2] * vec(a, b)[2] = (b[1] - a[1])^2 + (b[2] - a[2])^2
+
+(0, 0) $in cart(R, R)
+(0, 0) $in points
+(3, 4) $in cart(R, R)
+(3, 4) $in points
+by thm distance_sq_coordinate_formula((0, 0), (3, 4)) => distance_sq((0, 0), (3, 4)) = (3 - 0)^2 + (4 - 0)^2
+distance_sq((0, 0), (3, 4)) = (3 - 0)^2 + (4 - 0)^2 = 25
+
+prop are_segments_congruent(a, b, c, d cart(R, R)):
+    distance_sq(a, b) = distance_sq(c, d)
+
+prop is_equilateral_triangle(a, b, c cart(R, R)):
+    a != b
+    $are_segments_congruent(a, b, a, c)
+    $are_segments_congruent(a, b, b, c)
+
+# Select the counterclockwise apex obtained by rotating the base vector by
+# sixty degrees. The square-root coordinate is visible in the construction.
+have fn equilateral_vertex(a, b cart(R, R)) cart(R, R) = ((a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2, (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)
+
+thm equilateral_rotation_norm:
+    ? forall x, y R:
+        (x / 2 - sqrt(3) * y / 2)^2 + (y / 2 + sqrt(3) * x / 2)^2 = x^2 + y^2
+    (x - sqrt(3) * y)^2 + (y + sqrt(3) * x)^2 = x^2 - 2 * x * sqrt(3) * y + sqrt(3)^2 * y^2 + y^2 + 2 * y * sqrt(3) * x + sqrt(3)^2 * x^2 = 4 * x^2 + 4 * y^2
+    (x / 2 - sqrt(3) * y / 2)^2 + (y / 2 + sqrt(3) * x / 2)^2 = ((x - sqrt(3) * y)^2 + (y + sqrt(3) * x)^2) / 4 = (4 * x^2 + 4 * y^2) / 4 = x^2 + y^2
+
+thm equilateral_vertex_distance_lemma:
+    ? forall a, b cart(R, R):
+        distance_sq(a, equilateral_vertex(a, b)) = distance_sq(a, b)
+        distance_sq(b, equilateral_vertex(a, b)) = distance_sq(a, b)
+    equilateral_vertex(a, b) = ((a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2, (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)
+    equilateral_vertex(a, b)[1] = (a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
+    equilateral_vertex(a, b)[2] = (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2
+    equilateral_vertex(a, b)[1] - a[1] = (b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
+    equilateral_vertex(a, b)[2] - a[2] = (b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2
+    by thm distance_sq_coordinate_formula(a, equilateral_vertex(a, b)) => distance_sq(a, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - a[1])^2 + (equilateral_vertex(a, b)[2] - a[2])^2
+    by thm distance_sq_coordinate_formula(a, b) => distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    by thm equilateral_rotation_norm(b[1] - a[1], b[2] - a[2]) => ((b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    distance_sq(a, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - a[1])^2 + (equilateral_vertex(a, b)[2] - a[2])^2 = ((b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2 = distance_sq(a, b)
+    equilateral_vertex(a, b)[1] - b[1] = (a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
+    equilateral_vertex(a, b)[2] - b[2] = -((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)
+    by thm distance_sq_coordinate_formula(b, equilateral_vertex(a, b)) => distance_sq(b, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - b[1])^2 + (equilateral_vertex(a, b)[2] - b[2])^2
+    by thm equilateral_rotation_norm(a[1] - b[1], b[2] - a[2]) => ((a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)^2 = (a[1] - b[1])^2 + (b[2] - a[2])^2
+    distance_sq(b, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - b[1])^2 + (equilateral_vertex(a, b)[2] - b[2])^2 = ((a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)^2 = (a[1] - b[1])^2 + (b[2] - a[2])^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2 = distance_sq(a, b)
+
+# Euclid I.1: construct an equilateral triangle on a nondegenerate segment.
+thm euclid_book1_proposition_1:
+    ? forall a, b cart(R, R):
+        a != b
+        =>:
+            exist c cart(R, R) st {$is_equilateral_triangle(a, b, c)}
+    by thm equilateral_vertex_distance_lemma(a, b) => distance_sq(a, equilateral_vertex(a, b)) = distance_sq(a, b)
+    by thm equilateral_vertex_distance_lemma(a, b) => distance_sq(b, equilateral_vertex(a, b)) = distance_sq(a, b)
+    $are_segments_congruent(a, b, a, equilateral_vertex(a, b))
+    $are_segments_congruent(a, b, b, equilateral_vertex(a, b))
+    $is_equilateral_triangle(a, b, equilateral_vertex(a, b))
+    witness exist c cart(R, R) st {$is_equilateral_triangle(a, b, c)} from equilateral_vertex(a, b)
+
+by contra:
+    ? (0, 0) != (2, 0)
+    (0, 0) = (2, 0)
+    (0, 0)[1] = (2, 0)[1]
+    (0, 0)[1] = 0
+    (2, 0)[1] = 2
+    0 = (0, 0)[1] = (2, 0)[1] = 2
+    impossible 0 != 2
+equilateral_vertex((0, 0), (2, 0)) = (1, sqrt(3))
+exist c cart(R, R) st {$is_equilateral_triangle((0, 0), (2, 0), c)}

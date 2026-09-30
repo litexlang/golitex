@@ -1,6 +1,5 @@
 pub mod greater;
 pub mod greater_equal;
-pub mod from_known_in_signed_standard_set;
 pub mod in_fact;
 pub mod is_cart;
 pub mod is_finite_set;

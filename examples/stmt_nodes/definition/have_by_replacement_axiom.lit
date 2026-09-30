@@ -5,14 +5,14 @@
 # do not belong in ordinary parenthesized obj arguments).
 # Needs: binary prop + known uniqueness forall over the source set.
 
-abstract_prop image_rel(x, y)
+prop image_rel(x, y set):
+    y = x
 
-trust:
-    forall x {1, 2}, y, y2 set:
-        $image_rel(x, y)
-        $image_rel(x, y2)
-        =>:
-            y = y2
+forall x {1, 2}, y, y2 set:
+    $image_rel(x, y)
+    $image_rel(x, y2)
+    =>:
+        y = y2
 
 have by replacement_axiom: Img from prop image_rel, set {1, 2}
 

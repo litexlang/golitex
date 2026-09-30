@@ -1,4 +1,3 @@
-# Draft: excluded from the published showcase gate until it verifies again.
 # Real analysis in Litex, setting-first.
 #
 # Included: epsilon tails, sequence limits and convergence, constant-sequence
@@ -101,4 +100,4 @@ have fn lim by exist!:
 forall a seq(R):
     $is_convergent_sequence(a)
     =>:
-        $main::has_limit(a, main::lim(a))
+        $has_limit(a, lim(a))

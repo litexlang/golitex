@@ -129,6 +129,12 @@ impl Runtime {
         let (renamed_params, subst) =
             self.build_obtain_renamed_params_and_subst(plain, equal_tos, source_line)?;
 
+        // Rebind: drop ambient definitions of the obtain names so a second
+        // `obtain k` in the same claim can merge (parent would otherwise clash).
+        for name in equal_tos {
+            self.remove_identifier_definition_from_stack(name);
+        }
+
         let mut store_and_infer_result =
             self.define_typed_parameters_in_current_env(&renamed_params, None)?;
 

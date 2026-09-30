@@ -53,6 +53,33 @@ square_root_two_residual(1) = -1
 square_root_two_residual(3 / 2) = 1 / 4
 square_root_two_residual(17 / 12) = (17 / 12)^2 - 2 = 1 / 144
 
+thm sqrt_two_newton_iterate_step:
+    ? forall n N:
+        sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
+
+thm newton_sqrt_two_residual_identity:
+    ? forall x R+:
+        4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2
+    square_root_two_residual(newton_sqrt_two(x)) = newton_sqrt_two(x)^2 - 2
+    square_root_two_residual(x) = x^2 - 2
+    newton_sqrt_two(x) = (x + 2 / x) / 2
+    newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
+    square_root_two_residual(newton_sqrt_two(x)) = newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
+    square_root_two_residual(x)^2 = (x^2 - 2)^2
+    4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2
+    4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = 4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2 = square_root_two_residual(x)^2
+
+thm newton_sqrt_two_residual_nonnegative:
+    ? forall x R+:
+        square_root_two_residual(newton_sqrt_two(x)) >= 0
+    by thm newton_sqrt_two_residual_identity(x) => 4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2
+    4 * x^2 > 0
+    4 * x^2 != 0
+    square_root_two_residual(x)^2 >= 0
+    4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) >= 0
+    (4 * x^2 * square_root_two_residual(newton_sqrt_two(x))) / (4 * x^2) >= 0
+    square_root_two_residual(newton_sqrt_two(x)) = (4 * x^2 * square_root_two_residual(newton_sqrt_two(x))) / (4 * x^2) >= 0
+
 # Step 1: start with an arbitrary positive x and calculate one update.
 # The new residual is nonnegative, so the exact algebraic identity also gives
 # an exact identity for the absolute residual gap.
@@ -95,13 +122,13 @@ thm newton_sqrt_two_greater_than_one:
 thm sqrt_two_newton_iterate_at_least_one:
     ? forall n N:
         sqrt_two_newton_iterate(n) >= 1
-    by induc n from 0:
-        ? sqrt_two_newton_iterate(n) >= 1
-        ? from n = 0:
+    by induc k from 0:
+        ? sqrt_two_newton_iterate(k) >= 1
+        ? from k = 0:
             sqrt_two_newton_iterate(0) = 1
         ? induc:
-            sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
-            by thm newton_sqrt_two_greater_than_one(sqrt_two_newton_iterate(n)) => newton_sqrt_two(sqrt_two_newton_iterate(n)) > 1
+            sqrt_two_newton_iterate(k + 1) = newton_sqrt_two(sqrt_two_newton_iterate(k))
+            by thm newton_sqrt_two_greater_than_one(sqrt_two_newton_iterate(k)) => newton_sqrt_two(sqrt_two_newton_iterate(k)) > 1
 
 # Step 3: substitute x = x_n into the one-step calculation.
 thm sqrt_two_newton_gap_step_identity:
@@ -149,26 +176,26 @@ thm sqrt_two_newton_gap_bound_step:
 thm sqrt_two_newton_gap_is_bounded:
     ? forall n N:
         sqrt_two_newton_gap(n) <= sqrt_two_newton_gap_bound(n)
-    by induc n from 0:
-        ? sqrt_two_newton_gap(n) <= sqrt_two_newton_gap_bound(n)
-        ? from n = 0:
+    by induc k from 0:
+        ? sqrt_two_newton_gap(k) <= sqrt_two_newton_gap_bound(k)
+        ? from k = 0:
             sqrt_two_newton_iterate(0) = 1
             sqrt_two_newton_gap(0) = abs(square_root_two_residual(sqrt_two_newton_iterate(0))) = abs(-1) = 1
             sqrt_two_newton_gap_bound(0) = 4 * (1 / 4)^(2^0) = 4 * (1 / 4) = 1
         ? induc:
-            sqrt_two_newton_gap(n) = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
-            abs(square_root_two_residual(sqrt_two_newton_iterate(n))) >= 0
-            sqrt_two_newton_gap(n) >= 0
-            sqrt_two_newton_gap_bound(n) > 0
-            sqrt_two_newton_gap_bound(n) - sqrt_two_newton_gap(n) >= 0
-            sqrt_two_newton_gap_bound(n) + sqrt_two_newton_gap(n) >= 0
-            (sqrt_two_newton_gap_bound(n) - sqrt_two_newton_gap(n)) * (sqrt_two_newton_gap_bound(n) + sqrt_two_newton_gap(n)) >= 0
-            sqrt_two_newton_gap_bound(n)^2 - sqrt_two_newton_gap(n)^2 = (sqrt_two_newton_gap_bound(n) - sqrt_two_newton_gap(n)) * (sqrt_two_newton_gap_bound(n) + sqrt_two_newton_gap(n)) >= 0
-            sqrt_two_newton_gap(n)^2 <= sqrt_two_newton_gap_bound(n)^2
-            sqrt_two_newton_gap(n)^2 / 4 <= sqrt_two_newton_gap_bound(n)^2 / 4
-            by thm sqrt_two_newton_gap_contracts_quadratically(n) => sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2 / 4
-            by thm sqrt_two_newton_gap_bound_step(n) => sqrt_two_newton_gap_bound(n + 1) = sqrt_two_newton_gap_bound(n)^2 / 4
-            sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2 / 4 <= sqrt_two_newton_gap_bound(n)^2 / 4 = sqrt_two_newton_gap_bound(n + 1)
+            sqrt_two_newton_gap(k) = abs(square_root_two_residual(sqrt_two_newton_iterate(k)))
+            abs(square_root_two_residual(sqrt_two_newton_iterate(k))) >= 0
+            sqrt_two_newton_gap(k) >= 0
+            sqrt_two_newton_gap_bound(k) > 0
+            sqrt_two_newton_gap_bound(k) - sqrt_two_newton_gap(k) >= 0
+            sqrt_two_newton_gap_bound(k) + sqrt_two_newton_gap(k) >= 0
+            (sqrt_two_newton_gap_bound(k) - sqrt_two_newton_gap(k)) * (sqrt_two_newton_gap_bound(k) + sqrt_two_newton_gap(k)) >= 0
+            sqrt_two_newton_gap_bound(k)^2 - sqrt_two_newton_gap(k)^2 = (sqrt_two_newton_gap_bound(k) - sqrt_two_newton_gap(k)) * (sqrt_two_newton_gap_bound(k) + sqrt_two_newton_gap(k)) >= 0
+            sqrt_two_newton_gap(k)^2 <= sqrt_two_newton_gap_bound(k)^2
+            sqrt_two_newton_gap(k)^2 / 4 <= sqrt_two_newton_gap_bound(k)^2 / 4
+            by thm sqrt_two_newton_gap_contracts_quadratically(k) => sqrt_two_newton_gap(k + 1) <= sqrt_two_newton_gap(k)^2 / 4
+            by thm sqrt_two_newton_gap_bound_step(k) => sqrt_two_newton_gap_bound(k + 1) = sqrt_two_newton_gap_bound(k)^2 / 4
+            sqrt_two_newton_gap(k + 1) <= sqrt_two_newton_gap(k)^2 / 4 <= sqrt_two_newton_gap_bound(k)^2 / 4 = sqrt_two_newton_gap_bound(k + 1)
 
 # Numerical checkpoint from the closed-form bound.
 by thm sqrt_two_newton_gap_is_bounded(2) => sqrt_two_newton_gap(2) <= sqrt_two_newton_gap_bound(2)

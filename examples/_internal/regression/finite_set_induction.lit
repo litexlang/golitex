@@ -1,3 +1,4 @@
+# Migration blocker B09: see plan/迁移的plan/和example有关.md.
 """
 Finite-set induction has an explicit empty case and a fresh-element insertion
 case. It stores the resulting universal fact over `finite_set`.

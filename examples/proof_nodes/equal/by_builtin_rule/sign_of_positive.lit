@@ -2,4 +2,5 @@
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/sign_of_positive.lit
 
 have a R+
+0 < a
 sign(a) = 1

@@ -40,6 +40,10 @@ impl Runtime {
         }
         tb.expect(FROM)?;
 
+        // Earlier `obtain k` left `k` at file-root; clear those live bindings so
+        // `obtain k from exist k` can occupy the exist binder (no-shadowing).
+        self.stash_file_root_obtain_bindings_for_names(&equal_tos);
+
         let line_file = SourceLine::new(block.line, self.code_source.clone());
         let stmt = if tb.peek() == Some(EXIST) || tb.peek() == Some(EXIST_BANG) {
             let fact = self.parse_exist_fact(&mut tb)?;

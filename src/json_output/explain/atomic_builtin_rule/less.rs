@@ -18,9 +18,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     SqrtPositiveBuiltinRuleProof, SubtractOneLessBuiltinRuleProof, SumBothPositiveBuiltinRuleProof,
     SumLeftNonnegativeRightStrictBuiltinRuleProof, SumLeftStrictRightNonnegativeBuiltinRuleProof,
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::from_known_in_signed_standard_set::{
-    FromKnownInNegativeStandardSetBuiltinRuleProof, FromKnownInPositiveStandardSetBuiltinRuleProof,
-};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_flip_mul_minus_one::OrderFlipMulMinusOneToLessBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_sign_from_literal_bound::OrderSignFromPositiveLiteralBoundBuiltinRuleProof;
 use crate::json_output::explain::fallback::BuiltinRuleText;
@@ -62,8 +59,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::AddLeftCongruenceStrict(p) => p.rule_id_and_message(lang),
             Self::MulLeftPositiveMonotoneStrict(p) => p.rule_id_and_message(lang),
             Self::MulRightPositiveMonotoneStrict(p) => p.rule_id_and_message(lang),
-            Self::FromKnownInPositiveStandardSet(p) => p.rule_id_and_message(lang),
-            Self::FromKnownInNegativeStandardSet(p) => p.rule_id_and_message(lang),
             Self::OrderSignFromPositiveLiteralBound(p) => p.rule_id_and_message(lang),
             Self::OrderFlipMulMinusOne(p) => p.rule_id_and_message(lang),
         }
@@ -76,8 +71,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::PosDifferenceFromLess(p) => Some(p.cite_fact_id),
             Self::NumericLowerBoundWeakenLt(p) => Some(p.cite_fact_id),
             Self::NumericUpperBoundWeakenLt(p) => Some(p.cite_fact_id),
-            Self::FromKnownInPositiveStandardSet(p) => Some(p.cite_fact_id),
-            Self::FromKnownInNegativeStandardSet(p) => Some(p.cite_fact_id),
             Self::OrderSignFromPositiveLiteralBound(p) => Some(p.cite_fact_id),
             Self::OrderFlipMulMinusOne(p) => Some(p.cite_fact_id),
             _ => None,
@@ -860,55 +853,7 @@ impl MulRightPositiveMonotoneStrictBuiltinRuleProof {
     }
 }
 
-impl FromKnownInPositiveStandardSetBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInPositiveStandardSet",
-            "From known in positive set",
-            "The goal follows from membership in a positive standard set",
-        )
-    }
 
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInPositiveStandardSet",
-            "已知属于正标准集",
-            "目标由正标准集上的成员关系推出",
-        )
-    }
-
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-        }
-    }
-}
-
-impl FromKnownInNegativeStandardSetBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInNegativeStandardSet",
-            "From known in negative set",
-            "The goal follows from membership in a negative standard set",
-        )
-    }
-
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "FromKnownInNegativeStandardSet",
-            "已知属于负标准集",
-            "目标由负标准集上的成员关系推出",
-        )
-    }
-
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-        }
-    }
-}
 
 impl OrderSignFromPositiveLiteralBoundBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {

@@ -1,3 +1,4 @@
+# Migration blocker B01: see plan/迁移的plan/和example有关.md.
 # Node: equal.ByBuiltinRule.AbsEqualsSignTimesArg
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/abs_equals_sign_times_arg.lit
 

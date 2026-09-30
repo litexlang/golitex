@@ -2,7 +2,8 @@
 //!
 //! Pipeline stages (field order matches):
 //! 1–2. introduce typed params in local env (param-type WD + define)
-//! 3. iff-fact WD under those params
+//! 3. iff-fact WD under those params; each successful body fact is assumed
+//!    (store) before later body facts so domain-restricted apps can pass WD
 //! 4. close local env into the result
 //! 5. store the prop definition in the parent ExecEnv
 
@@ -123,6 +124,10 @@ impl Runtime {
         for fact in &def_prop.iff_facts {
             match self.verify_fact_well_definedness(fact, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => {
+                    // Assume each body fact before later ones so domain-restricted
+                    // applications (e.g. `line_through_points(a, b)` under `a != b`)
+                    // can pass WD. Local env is not merged to the parent.
+                    let _ = self.store_fact_and_infer(fact)?;
                     iff_fact_well_defined.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(reason) => {

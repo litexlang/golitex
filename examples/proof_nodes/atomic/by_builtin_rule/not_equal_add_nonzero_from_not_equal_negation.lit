@@ -1,7 +1,7 @@
 # Node: atomic.ByBuiltinRule.AddNonzeroFromNotEqualNegation
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_equal_add_nonzero_from_not_equal_negation.lit
 
-have a R
-have b R
-trust a != 0 - b
-a + b != 0
+forall a R, b R:
+    a != 0 - b
+    =>:
+        a + b != 0

@@ -166,13 +166,10 @@ forall r, s R:
     r + 2 * s = -1
     s = 3
     =>:
-        r = (r + 2 * s) - 2 * s = -7
+        r = (r + 2 * s) - 2 * s = -1 - 2 * 3 = -1 - 6 = -7
 
-# The last step is intentionally compressed. You could write
-# `(r + 2 * s) - 2 * s = -1 - 2 * 3 = -7`, but Litex can already see from the
-# assumptions that `r + 2 * s` has value `-1` and `s` has value `3`. Once those
-# subexpressions are resolved to numbers, the remaining step is ordinary
-# algebraic simplification and arithmetic.
+# Expand the numeric substitution in the chain. Once `r + 2 * s` and `s` are
+# replaced by `-1` and `3`, the remaining arithmetic is ordinary calculation.
 
 # 1.1.3
 
@@ -364,13 +361,10 @@ forall a, b Z:
 forall x Z:
     x + 4 = 2
     =>:
-        x = -2
+        x = (x + 4) - 4 = 2 - 4 = -2
 
-# You do not have to write the longer chain `x = 2 - 4 = -2`. When Litex sees a
-# previous equality with a simple shape such as `x + NUMBER = NUMBER`, it keeps
-# the solved value of `x` and can use it later. The same idea works for similar
-# linear simplifications using `+`, `-`, `*`, and `/`; writing the equation as
-# `4 + x = 2` is also fine.
+# Write the rearrangement as an equality chain. Litex checks each link, so the
+# solved value appears explicitly instead of being assumed from `x + 4 = 2`.
 
 # 1.3.3
 
@@ -472,7 +466,21 @@ forall x, y Z:
     x + 3 <= 2
     y + 2 * x >= 3
     =>:
-        y = (y + 2 * x) - 2 * x >= 3 - 2 * x = 9 - 2 * (x + 3) >= 9 - 2 * 2 > 3
+        x = (x + 3) - 3 <= 2 - 3 = -1
+        x <= -1
+        2 * x <= 2 * (-1) = -2
+        3 <= y + 2 * x
+        0 - 2 * x >= 0 - (-2) = 2
+        2 <= 0 - 2 * x
+        3 - 2 * x <= y + 2 * x - 2 * x
+        y + 2 * x - 2 * x = y
+        3 - 2 * x <= y
+        3 + 2 = 5
+        3 - 2 * x = 3 + (0 - 2 * x)
+        3 + 2 <= 3 + (0 - 2 * x)
+        5 <= 3 - 2 * x
+        5 <= y
+        y >= 5 > 3
 
 # Two common built-in rule families appear in this proof.
 
@@ -515,6 +523,7 @@ forall r, s Q:
     s + 3 >= r
     s + r <= 3
     =>:
+        r <= s + 3
         r = (s + r + r - s) / 2 <= (3 + (s + 3) - s) / 2 = 3
 
 # This example adds two useful order rules to the previous pattern.
@@ -569,7 +578,15 @@ forall u, v, x, y, A, B R:
     u < A
     v < A
     =>:
-        u * y + v * x + u * v <= u * B + v * B + u * v <= A * B + A * B + A * v <= A * B + A * B + 1 * v <= A * B + A * B + B * v < A * B + A * B + B * A = 3 * A * B
+        0 <= B
+        u <= A
+        v <= A
+        u * y + v * x + u * v <= u * B + v * B + u * v
+        u * B + v * B + u * v <= A * B + A * B + A * v
+        A * B + A * B + A * v <= A * B + A * B + 1 * v
+        A * B + A * B + 1 * v <= A * B + A * B + B * v
+        A * B + A * B + B * v < A * B + A * B + B * A
+        A * B + A * B + B * A = 3 * A * B
 
 # New rules worth noticing here:
 
@@ -591,6 +608,8 @@ forall u, v, x, y, A, B R:
 forall t R:
     t >= 10
     =>:
+        10 <= t
+        0 <= t
         t^2 - 3 * t + 17 = t * t - 3 * t + 17 >= 10 * t - 3 * t + 17 = 7 * t + 17 >= 7 * 10 + 17 >= 5
 
 # New rules worth noticing here:
@@ -610,6 +629,8 @@ forall t R:
 forall n Z:
     n >= 5
     =>:
+        5 <= n
+        0 <= n
         n^2 = n * n >= 5 * n = 2 * n + 3 * n >= 2 * n + 3 * 5 = 2 * n + 11 + 4 > 2 * n + 11
 
 # New rule worth noticing here:
@@ -625,6 +646,7 @@ forall n Z:
 forall m, n Z:
     m^2 + n <= 2
     =>:
+        0 <= m^2
         n <= m^2 + n <= 2
 
 # New rules worth noticing here:
@@ -642,6 +664,7 @@ forall m, n Z:
 forall x, y R:
     x^2 + y^2 <= 1
     =>:
+        0 <= (x - y)^2
         (x + y)^2 <= (x + y)^2 + (x - y)^2 = 2 * (x^2 + y^2) <= 2 * 1 < 3
 
 # 1.4.9
@@ -654,6 +677,10 @@ forall a, b Q:
     b >= 0
     a + b <= 8
     =>:
+        0 <= a
+        0 <= b
+        0 <= a^2
+        0 <= b^2
         3 * a * b + a <= 2 * b^2 + a^2 + (3 * a * b + a) = 2 * ((a + b) * b) + (a + b) * a + a <= 2 * (8 * b) + 8 * a + a = 7 * b + 9 * (a + b) <= 7 * b + 9 * 8 = 7 * b + 72
 
 # New rule worth noticing here:
@@ -668,6 +695,9 @@ forall a, b Q:
 # `a^2 * (a^6 + 8 * b^3 * c^3) <= (a^4 + b^4 + c^4)^2`.
 
 forall a, b, c R:
+    0 <= (a^2 * (b^2 - c^2))^2
+    0 <= (b^4 - c^4)^2
+    0 <= (a^2 * b * c - b^2 * c^2)^2
     a^2 * (a^6 + 8 * b^3 * c^3) <= 2 * (a^2 * (b^2 - c^2))^2 + (b^4 - c^4)^2 + 4 * (a^2 * b * c - b^2 * c^2)^2 + a^2 * (a^6 + 8 * b^3 * c^3) = (a^4 + b^4 + c^4)^2
 
 # 1.5 How Litex verifies: matching and substitution
@@ -832,9 +862,9 @@ sketch:
 #    `(r + 2 * s) - 2 * s = -7` can be checked without explicitly writing
 #    `= -1 - 2 * 3`.
 
-# 4. **Simple equation solving.** Equalities such as `x + 4 = 2`, `4 + x = 2`,
-#    and similar one-variable forms using `+`, `-`, `*`, and `/` can give Litex a
-#    stored value for the variable.
+# 4. **Simple equation solving.** Equalities such as `x + 4 = 2` are usually
+#    rewritten as an equality chain that exhibits the solved value, for example
+#    `x = (x + 4) - 4 = 2 - 4 = -2`.
 
 # 5. **Equality chains.** A chain such as `A = B = C` is checked one link at a
 #    time, and the whole chain proves the equality from the first expression to
@@ -845,7 +875,7 @@ sketch:
 forall x Z:
     x + 4 = 2
     =>:
-        x = -2
+        x = (x + 4) - 4 = 2 - 4 = -2
 
 # Comparison rules
 

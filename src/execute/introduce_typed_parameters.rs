@@ -172,6 +172,11 @@ impl Runtime {
     // Stage 2: bind each identifier and store its type fact into KnownFactMemory.
     // Example: `have x R` stores `x $in R`.
     //
+    // Duplicate check is top-env only so a nested WD/witness local may bind
+    // `k` when an ambient `obtain k` already owns that surface name in a parent.
+    // Callers that forbid parent clashes (`have` / `let` / …) check the stack
+    // themselves before calling.
+    //
     // `shared_have`:
     // - `None` → each name is a scoped `ParamType` binder
     // - `Some(...)` → every name gets that have/trust-have stmt with its own name
@@ -183,7 +188,12 @@ impl Runtime {
         let mut stored_fact_ids = Vec::new();
         for group in &typed_parameters.groups {
             for identifier in &group.params {
-                if self.identifier_defined_in_stack(&identifier.name) {
+                if self
+                    .top_exec_env()
+                    .definitions
+                    .identifiers
+                    .contains_key(&identifier.name)
+                {
                     return Err(RuntimeError::InternalBug(format!(
                         "identifier `{}` is already defined in this ExecEnv",
                         identifier.name

@@ -60,11 +60,13 @@ store_fact_and_infer/
 **Other atomics**
 
 - NormalAtomic: param-type projection + one-layer def expand
+  (Obj domains in the prop signature are instantiated by call-site args;
+  binder names need not match — see
+  `examples/infer/atomic/normal_atomic_param_types_renamed_carrier.lit`)
 - InFact: list/union/intersect/set_minus, cart, ranges/intervals,
   set-builder, power_set, equal-FnSet / fn_range / finite_seq / seq,
-  family_union / index_union / index_intersect / **index_cart**
-- Carrier → sign / nonnegativity / nonzero is **verify-time** only:
-  `FromKnownInNatural`, `FromKnownInPositive/Negative/NonzeroStandardSet`
+  family_union / index_union / index_intersect / **index_cart**,
+  signed/nonzero standard-set sign (`N` / `R+` / `R-` / `R*` …)
 - Order bound → sign spelling and mul-by-(−1) flip are **verify-time** only:
   `OrderSignFromPositive/NegativeLiteralBound`, `OrderFlipMulMinusOne`
 - `$is_cart` → dim ≥ 2; Subset / Superset → elementwise forall

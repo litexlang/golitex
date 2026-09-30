@@ -3,4 +3,6 @@
 
 have a R+
 have b R+
+0 < a
+0 < b
 sqrt(a * b) = sqrt(a) * sqrt(b)

@@ -1,8 +1,9 @@
 # Node: equal.ByBuiltinRule.AbsNonposEqualsNegation
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/abs_nonpos_equals_negation.lit
 #
-# When: `have a R-` (so `a <= 0`).
+# When: `have a R-` and the weak order fact `a <= 0` is known.
 # After: `abs(a) = 0 - a`.
 
 have a R-
+a <= 0
 abs(a) = 0 - a

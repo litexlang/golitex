@@ -21,7 +21,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     AddLeftNonnegativeBuiltinRuleProof, AddRightCongruenceBuiltinRuleProof,
     AddRightNonnegativeBuiltinRuleProof, ArccosPrincipalLowerBoundBuiltinRuleProof,
     ArccosPrincipalUpperBoundBuiltinRuleProof, ArcsinPrincipalLowerBoundBuiltinRuleProof,
-    ArcsinPrincipalUpperBoundBuiltinRuleProof, FromKnownInNaturalBuiltinRuleProof,
+    ArcsinPrincipalUpperBoundBuiltinRuleProof,
     LessEqualFactSearchProofByBuiltinRule, MulLeftNonnegativeMonotoneBuiltinRuleProof,
     MulRightNonnegativeMonotoneBuiltinRuleProof, ProductOfNonnegativesBuiltinRuleProof,
     SubNonnegativeBuiltinRuleProof, SumOfNonnegativesBuiltinRuleProof,
@@ -209,13 +209,6 @@ impl Runtime {
                 })) = right
                 {
                     return self.product_of_nonnegatives_proof(a.as_ref(), b.as_ref(), verify_state);
-                }
-                if let Some(cite_fact_id) = self.known_in_natural_fact_id(right) {
-                    return Ok(Some(
-                        LessEqualFactSearchProofByBuiltinRule::FromKnownInNatural(
-                            FromKnownInNaturalBuiltinRuleProof { cite_fact_id },
-                        ),
-                    ));
                 }
                 Ok(None)
             }

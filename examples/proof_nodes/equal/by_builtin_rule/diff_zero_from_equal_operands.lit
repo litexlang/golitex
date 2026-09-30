@@ -1,7 +1,7 @@
 # Node: equal.ByBuiltinRule.DiffZeroFromEqualOperands
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/diff_zero_from_equal_operands.lit
 
-have a R
-have b R
-trust a = b
-a - b = 0
+forall a R, b R:
+    a = b
+    =>:
+        a - b = 0

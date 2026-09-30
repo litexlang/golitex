@@ -2,8 +2,8 @@
 # Status: acceptance
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/in_interval_membership.lit
 
-have x R
-trust x $in R
-trust 0 <= x
-trust x < 1
-x $in '[0, 1)
+forall x R:
+    0 <= x
+    x < 1
+    =>:
+        x $in '[0, 1)

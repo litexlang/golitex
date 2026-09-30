@@ -2,7 +2,7 @@
 # Run: litex -f examples/stmt_nodes/release_and_expand/release_zorn_lemma.lit
 #
 # Trusted Zorn step after nonempty + partial-order + chain-upper-bound obligations.
-# Proof body is fact-only (trust lives outside, same pattern as release axiom_of_choice).
+# The theorem makes the nonempty poset and chain-upper-bound hypotheses explicit.
 
 have S set
 abstract_prop leq(x, y)
@@ -15,44 +15,44 @@ prop maximal(m S):
         =>:
             x = m
 
-trust $is_nonempty_set(S)
-trust:
-    forall x S:
-        $leq(x, x)
-    forall x, y, z S:
-        $leq(x, y)
-        $leq(y, z)
+claim:
+    ? forall:
+        $is_nonempty_set(S)
+        forall x S:
+            $leq(x, x)
+        forall x, y, z S:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y S:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall c power_set(S):
+            forall x, y c:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u S st {$upper_bound(c, u)}
         =>:
-            $leq(x, z)
-    forall x, y S:
-        $leq(x, y)
-        $leq(y, x)
-        =>:
-            x = y
-    forall c power_set(S):
-        forall x, y c:
-            $leq(x, y) or $leq(y, x)
-        =>:
-            exist u S st {$upper_bound(c, u)}
-
-release zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
-    $is_nonempty_set(S)
-    forall x S:
-        $leq(x, x)
-    forall x, y, z S:
-        $leq(x, y)
-        $leq(y, z)
-        =>:
-            $leq(x, z)
-    forall x, y S:
-        $leq(x, y)
-        $leq(y, x)
-        =>:
-            x = y
-    forall c power_set(S):
-        forall x, y c:
-            $leq(x, y) or $leq(y, x)
-        =>:
-            exist u S st {$upper_bound(c, u)}
-
-obtain m from exist m S st {$maximal(m)}
+            exist m S st {$maximal(m)}
+    release zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
+        $is_nonempty_set(S)
+        forall x S:
+            $leq(x, x)
+        forall x, y, z S:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y S:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall c power_set(S):
+            forall x, y c:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u S st {$upper_bound(c, u)}

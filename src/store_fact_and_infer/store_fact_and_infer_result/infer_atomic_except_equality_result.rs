@@ -34,6 +34,8 @@ pub enum InferAtomicExceptEqualityResult {
     InFactRealInterval(InferInFactRealIntervalResult),
     // `x $in '[a,)` etc. → `x $in R` + one bound.
     InFactOneSideRealInterval(InferInFactOneSideRealIntervalResult),
+    // `x $in N` / `R+` / `R-` / `R*` (and siblings) → sign / nonneg / nonzero.
+    InFactSignedStandardSetSign(InferInFactSignedStandardSetSignResult),
     // `x $in S` with `S = fn(...)` → `x $in fn(...)`.
     InFactEqualFnSetExpand(InferInFactEqualFnSetExpandResult),
     // `z $in fn_range(f)` → `z $in ret` (+ optional preimage exist).
@@ -56,9 +58,6 @@ pub enum InferAtomicExceptEqualityResult {
     SubsetElementwiseMembership(InferSubsetElementwiseMembershipResult),
     // `A $superset B` → `forall x B: x $in A`.
     SupersetElementwiseMembership(InferSupersetElementwiseMembershipResult),
-    // Order dual / nonnegative lower bound from a closed numeric bound.
-    // Example: store `t >= 10` ⇒ `10 <= t` and `0 <= t`.
-    OrderDualAndNonnegLowerBound(InferOrderDualAndNonnegLowerBoundResult),
 }
 
 pub struct InferNormalAtomicParamTypesProjectedResult {
@@ -117,6 +116,10 @@ pub struct InferInFactOneSideRealIntervalResult {
     pub derived: Vec<StoreFactAndInferResult>,
 }
 
+pub struct InferInFactSignedStandardSetSignResult {
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
 pub struct InferInFactEqualFnSetExpandResult {
     pub derived: Vec<StoreFactAndInferResult>,
 }
@@ -159,10 +162,6 @@ pub struct InferSubsetElementwiseMembershipResult {
 
 pub struct InferSupersetElementwiseMembershipResult {
     pub derived: Box<StoreFactAndInferResult>,
-}
-
-pub struct InferOrderDualAndNonnegLowerBoundResult {
-    pub derived: Vec<StoreFactAndInferResult>,
 }
 
 impl InferAtomicExceptEqualityResult {
@@ -242,6 +241,13 @@ impl InferAtomicExceptEqualityResult {
                 }
                 ids
             }
+            Self::InFactSignedStandardSetSign(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
             Self::InFactEqualFnSetExpand(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
@@ -283,13 +289,6 @@ impl InferAtomicExceptEqualityResult {
             Self::IsCartDimensionLowerBound(r) => r.derived.stored_fact_ids(),
             Self::SubsetElementwiseMembership(r) => r.derived.stored_fact_ids(),
             Self::SupersetElementwiseMembership(r) => r.derived.stored_fact_ids(),
-            Self::OrderDualAndNonnegLowerBound(r) => {
-                let mut ids = Vec::new();
-                for d in &r.derived {
-                    ids.extend(d.stored_fact_ids());
-                }
-                ids
-            }
         }
     }
 }

@@ -1,3 +1,4 @@
+# Migration blocker B05: see plan/迁移的plan/和example有关.md.
 # Infer: InFact.IndexUnion
 # When: store `x $in index_union(I, X, A)`.
 # Infers: ambient `x $in X` (and an exist fiber; checked via ambient here).

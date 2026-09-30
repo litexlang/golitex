@@ -1,6 +1,6 @@
 # Stmt + known_strategy peel: binary package → 4-fold sum without intermediate facts.
 # abstract_prop so by-definition cannot short-circuit to builtin PosAddPosIsPos.
-# trust only seeds the four atomic $is_pos facts (no intermediate sums).
+# Quantified premises seed only the four atomic facts (no intermediate sums).
 # Run: litex -f examples/stmt_nodes/definition/def_strategy_peel_sum.lit
 
 abstract_prop is_pos(x)
@@ -20,10 +20,10 @@ strategy peel_pos_add:
             $is_pos(a + b)
     $is_pos(a + b)
 
-trust have a, b, c, d R:
+forall a, b, c, d R:
     $is_pos(a)
     $is_pos(b)
     $is_pos(c)
     $is_pos(d)
-
-$is_pos(a + b + c + d)
+    =>:
+        $is_pos(a + b + c + d)

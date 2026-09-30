@@ -2,25 +2,149 @@
 # Carriers live in struct angle brackets; theorems take &Group / &CommutativeRing.
 # Flat props keep the by-def ABI used by concrete consumers.
 
-know:
-    forall x, y, z Z:
-        (x + y) + z = x + (y + z)
-        (x * y) * z = x * (y * z)
-        x * (y + z) = x * y + x * z
-        (x + y) * z = x * z + y * z
-        x + y = y + x
-        x * y = y * x
-        0 + x = x
-        x + 0 = x
-        x + (-x) = 0
-        (-x) + x = 0
-        1 * x = x
-        x * 1 = x
-        0 * x = 0
-        x * 0 = 0
-        -0 = 0
+forall x, y, z Z:
+    (x + y) + z = x + (y + z)
+    (x * y) * z = x * (y * z)
+    x * (y + z) = x * y + x * z
+    (x + y) * z = x * z + y * z
+    x + y = y + x
+    x * y = y * x
+    0 + x = x
+    x + 0 = x
+    x + (-x) = 0
+    (-x) + x = 0
+    1 * x = x
+    x * 1 = x
+    0 * x = 0
+    x * 0 = 0
+    -0 = 0
 
-# Group: carrier A in the header; operations are fields.
+# Abstract algebra — groups and homomorphisms, setting-first.
+#
+# Named settings are the reusable source of parameter bundles and laws.
+# Concrete propositions elaborate those bundles to their existing flat ABI;
+# theorem-writing uses the same settings directly.
+
+prop GroupSetting(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
+    forall u, v, w A:
+        mul(mul(u, v), w) = mul(u, mul(v, w))
+    forall u A:
+        mul(one, u) = u
+        mul(u, one) = u
+        mul(inv(u), u) = one
+        mul(u, inv(u)) = one
+
+prop is_group(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
+    $GroupSetting(A, mul, one, inv)
+
+thm group_left_cancel:
+    ? forall A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, a A, b A, c A:
+        $GroupSetting(A, mul, one, inv)
+        mul(a, b) = mul(a, c)
+        =>:
+            b = c
+    mul(inv(a), a) = one
+    b = mul(one, b) = mul(mul(inv(a), a), b) = mul(inv(a), mul(a, b)) = mul(inv(a), mul(a, c)) = mul(mul(inv(a), a), c) = mul(one, c) = c
+
+thm group_identity_unique:
+    ? forall A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, identity A:
+        $GroupSetting(A, mul, one, inv)
+        forall a A:
+            mul(identity, a) = a
+            mul(a, identity) = a
+        =>:
+            identity = one
+    identity = mul(one, identity) = one
+
+thm group_inverse_unique:
+    ? forall A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, a A, b A:
+        $GroupSetting(A, mul, one, inv)
+        mul(b, a) = one
+        =>:
+            b = inv(a)
+    mul(a, inv(a)) = one
+    b = mul(b, one) = mul(b, mul(a, inv(a))) = mul(mul(b, a), inv(a)) = mul(one, inv(a)) = inv(a)
+
+prop is_group_homomorphism(A nonempty_set, mul_A fn(x, y A) A, one_A A, inv_A fn(x A) A, B nonempty_set, mul_B fn(x, y B) B, one_B B, inv_B fn(x B) B, f fn(x A) B):
+    $GroupSetting(A, mul_A, one_A, inv_A)
+    $GroupSetting(B, mul_B, one_B, inv_B)
+    forall x, y A:
+        f(mul_A(x, y)) = mul_B(f(x), f(y))
+
+prop GroupHomomorphismSetting(A nonempty_set, mul_A fn(x, y A) A, one_A A, inv_A fn(x A) A, B nonempty_set, mul_B fn(x, y B) B, one_B B, inv_B fn(x B) B, f fn(x A) B):
+    $GroupSetting(A, mul_A, one_A, inv_A)
+    $GroupSetting(B, mul_B, one_B, inv_B)
+    forall x, y A:
+        f(mul_A(x, y)) = mul_B(f(x), f(y))
+
+thm homomorphism_maps_identity:
+    ? forall A nonempty_set, mul_A fn(x, y A) A, one_A A, inv_A fn(x A) A, B nonempty_set, mul_B fn(x, y B) B, one_B B, inv_B fn(x B) B, f fn(x A) B:
+        $GroupHomomorphismSetting(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
+        =>:
+            f(one_A) = one_B
+    mul_A(one_A, one_A) = one_A
+    mul_B(f(one_A), f(one_A)) = f(mul_A(one_A, one_A)) = f(one_A) = mul_B(f(one_A), one_B)
+    by thm group_left_cancel(B, mul_B, one_B, inv_B, f(one_A), f(one_A), one_B) => f(one_A) = one_B
+
+# Tracer theorem: the setting keeps the ambient groups readable while the
+# proof works directly with the map and the two multiplications.
+thm homomorphism_maps_inverse:
+    ? forall A nonempty_set, mul_A fn(x, y A) A, one_A A, inv_A fn(x A) A, B nonempty_set, mul_B fn(x, y B) B, one_B B, inv_B fn(x B) B, f fn(x A) B, a A:
+        $GroupHomomorphismSetting(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
+        =>:
+            f(inv_A(a)) = inv_B(f(a))
+    by thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f) => f(one_A) = one_B
+    mul_A(inv_A(a), a) = one_A
+    mul_B(f(inv_A(a)), f(a)) = f(mul_A(inv_A(a), a)) = f(one_A) = one_B
+    by thm group_inverse_unique(B, mul_B, one_B, inv_B, f(a), f(inv_A(a))) => f(inv_A(a)) = inv_B(f(a))
+
+prop is_subgroup(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, H power_set(A)):
+    $GroupSetting(A, mul, one, inv)
+    one $in H
+    forall x, y H:
+        mul(x, y) $in H
+    forall x H:
+        inv(x) $in H
+
+prop is_normal_subgroup(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, H power_set(A)):
+    $GroupSetting(A, mul, one, inv)
+    $is_subgroup(A, mul, one, inv, H)
+    forall a A, h H:
+        mul(mul(a, h), inv(a)) $in H
+
+# Flagship theorem: the kernel uses the native set-builder representation.
+thm kernel_is_normal_subgroup:
+    ? forall A nonempty_set, mul_A fn(x, y A) A, one_A A, inv_A fn(x A) A, B nonempty_set, mul_B fn(x, y B) B, one_B B, inv_B fn(x B) B, f fn(x A) B:
+        $GroupHomomorphismSetting(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
+        =>:
+            $is_normal_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
+    claim:
+        ? $is_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
+        by thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f) => f(one_A) = one_B
+        by thm set_builder_member(one_A, {candidate A: f(candidate) = one_B}) => one_A $in {candidate A: f(candidate) = one_B}
+        claim:
+            ? forall kernel_x, kernel_y {candidate A: f(candidate) = one_B}:
+                mul_A(kernel_x, kernel_y) $in {candidate A: f(candidate) = one_B}
+            f(mul_A(kernel_x, kernel_y)) = mul_B(f(kernel_x), f(kernel_y)) = mul_B(one_B, one_B) = one_B
+            by thm set_builder_member(mul_A(kernel_x, kernel_y), {candidate A: f(candidate) = one_B}) => mul_A(kernel_x, kernel_y) $in {candidate A: f(candidate) = one_B}
+        claim:
+            ? forall kernel_x {candidate A: f(candidate) = one_B}:
+                inv_A(kernel_x) $in {candidate A: f(candidate) = one_B}
+            by thm homomorphism_maps_inverse(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f, kernel_x) => f(inv_A(kernel_x)) = inv_B(f(kernel_x))
+            by thm group_inverse_unique(B, mul_B, one_B, inv_B, one_B, one_B) => inv_B(one_B) = one_B
+            f(inv_A(kernel_x)) = inv_B(f(kernel_x)) = inv_B(one_B) = one_B
+            by thm set_builder_member(inv_A(kernel_x), {candidate A: f(candidate) = one_B}) => inv_A(kernel_x) $in {candidate A: f(candidate) = one_B}
+        by def $is_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
+    claim:
+        ? forall conjugator A, kernel_h {candidate A: f(candidate) = one_B}:
+            mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)) $in {candidate A: f(candidate) = one_B}
+        f(mul_A(conjugator, kernel_h)) = mul_B(f(conjugator), f(kernel_h))
+        by thm homomorphism_maps_inverse(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f, conjugator) => f(inv_A(conjugator)) = inv_B(f(conjugator))
+        mul_B(f(conjugator), one_B) = f(conjugator)
+        f(mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator))) = mul_B(f(mul_A(conjugator, kernel_h)), f(inv_A(conjugator))) = mul_B(mul_B(f(conjugator), f(kernel_h)), inv_B(f(conjugator))) = mul_B(mul_B(f(conjugator), one_B), inv_B(f(conjugator))) = mul_B(f(conjugator), inv_B(f(conjugator))) = one_B
+        by thm set_builder_member(mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)), {candidate A: f(candidate) = one_B}) => mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)) $in {candidate A: f(candidate) = one_B}
+    by def $is_normal_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
+
 struct Group<A nonempty_set>:
     mul fn(x, y A) A
     one A
@@ -34,17 +158,6 @@ struct Group<A nonempty_set>:
             mul(x, inv(x)) = one
             mul(inv(x), x) = one
 
-# Subgroup and homomorphism stay flat so by def can expand them.
-prop is_subgroup(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, H power_set(A)):
-    one $in H
-    forall x, y H:
-        mul(x, y) $in H
-    forall x H:
-        inv(x) $in H
-
-prop is_group_homomorphism(A nonempty_set, mul_A fn(x, y A) A, one_A A, inv_A fn(x A) A, B nonempty_set, mul_B fn(x, y B) B, one_B B, inv_B fn(x B) B, map fn(x A) B):
-    forall x, y A:
-        map(mul_A(x, y)) = mul_B(map(x), map(y))
 
 # Unital commutative ring.
 struct CommutativeRing<A nonempty_set>:
@@ -151,19 +264,16 @@ prop is_quotient_ring_presentation(A nonempty_set, add_A fn(x, y A) A, zero_A A,
 thm group_associativity:
     ? forall A nonempty_set, G &Group<A>, a, b, c A:
         G.mul(G.mul(a, b), c) = G.mul(a, G.mul(b, c))
-    by def G &Group<A>
 
 thm group_identity_laws:
     ? forall A nonempty_set, G &Group<A>, a A:
         G.mul(G.one, a) = a
         G.mul(a, G.one) = a
-    by def G &Group<A>
 
 thm group_inverse_laws:
     ? forall A nonempty_set, G &Group<A>, a A:
         G.mul(a, G.inv(a)) = G.one
         G.mul(G.inv(a), a) = G.one
-    by def G &Group<A>
 
 thm subgroup_contains_identity:
     ? forall A nonempty_set, G &Group<A>, H power_set(A):

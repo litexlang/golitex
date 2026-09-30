@@ -34,11 +34,6 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `a > b` or `a < b` ⇒ `a != b`.
     // Example: known `x > 0` proves `x != 0`.
     FromKnownStrictOrder(FromKnownStrictOrderBuiltinRuleProof),
-    // Nonzero standard-set membership implies `x != 0`.
-    // Example: after `have a R*`, prove `a != 0`.
-    FromKnownInNonzeroStandardSet(
-        crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::from_known_in_signed_standard_set::FromKnownInNonzeroStandardSetBuiltinRuleProof,
-    ),
     // Cosine is nonzero on the open principal tangent interval.
     // Mathematical property: `-pi/2 < y < pi/2` ⇒ `cos(y) != 0`.
     // Example: after those bounds, prove `cos(y) != 0` for `tan(y)` WD.
@@ -195,11 +190,6 @@ impl Runtime {
                 NotEqualFactSearchProofByBuiltinRule::FromKnownStrictOrder(
                     FromKnownStrictOrderBuiltinRuleProof { cite_fact_id },
                 ),
-            ));
-        }
-        if let Some(proof) = self.try_from_known_in_nonzero_standard_set(fact) {
-            return Ok(Some(
-                NotEqualFactSearchProofByBuiltinRule::FromKnownInNonzeroStandardSet(proof),
             ));
         }
         // Prove `a != b` from a known / already-proved `b != a` (no recursive flip).

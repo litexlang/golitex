@@ -1,0 +1,8 @@
+# Infer: InFact.SignedStandardSetSign (natural)
+# When: store `k $in N`.
+# Infers: `0 <= k` (and `k >= 0` via OrderDual).
+# Run: litex -f examples/infer/atomic/in_signed_standard_set_natural.lit
+
+have k N
+0 <= k
+k >= 0
