@@ -1,6 +1,6 @@
 # Node: equal.ByTheyAreTheSame.SameFreeParamShape.AnonymousFn
-# Run: target/release/litex -f examples/proof_nodes/equal/by_they_are_the_same/by_anonymous_fn_alpha_equal.lit
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_they_are_the_same/by_anonymous_fn_alpha_equal.lit
+# Rename x to y consistently in the bound parameter and the function body.
+# The parameter set, return set and body agree under that correspondence.
 
-# Two separately parsed anonymous functions share no ObjIR (binder ids differ)
-# but are alpha-equal.
 fn(x R) R {x} = fn(y R) R {y}

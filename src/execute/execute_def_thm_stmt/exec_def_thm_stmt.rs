@@ -1,6 +1,6 @@
 use crate::ast::fact::{Fact, ForallFact};
 use crate::ast::stmt::{
-    ByStmt, ClaimStmt, DefThmStmt, DefineObjStmt, DefinitionStmt, ProofBlockStmt, SketchStmt, Stmt,
+    DefThmStmt, Stmt,
 };
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::exec_stmt_result::ExecStmtResult;
@@ -66,7 +66,6 @@ pub fn exec_def_thm_stmt(
     let goal_wd =
         runtime.verify_fact_well_definedness(&stmt.fact, proof_verify_state())?;
     if goal_wd.is_failed() {
-        runtime.release_obtain_parse_bindings_in_stmts(&stmt.prove_process);
         return Ok(ExecDefThmStmtResult::Failed(ExecDefThmStmtFailed::GoalWd(
             goal_wd,
         )));
@@ -94,7 +93,6 @@ pub fn exec_def_thm_stmt(
         }
     })?;
 
-    runtime.release_obtain_parse_bindings_in_stmts(&stmt.prove_process);
 
     let (proof_steps, conclusion_proofs) = match local_outcome {
         Ok(v) => v,
@@ -162,113 +160,4 @@ fn exec_def_thm_forall_body(
     }
 
     Ok(Ok((proof_steps, conclusion_proofs)))
-}
-
-impl Runtime {
-    // Nested obtain binds witnesses at file-root parse scope so ids survive
-    // temporary forall/by scopes; drop them after the enclosing proof finishes.
-    pub(crate) fn release_obtain_parse_bindings_in_stmts(&mut self, stmts: &[Stmt]) {
-        for name in collect_obtain_equal_tos(stmts) {
-            self.remove_plain_atom_from_file_root_scope(&name);
-        }
-    }
-}
-
-fn collect_obtain_equal_tos(stmts: &[Stmt]) -> Vec<String> {
-    let mut out = Vec::new();
-    for stmt in stmts {
-        collect_obtain_equal_tos_in_stmt(stmt, &mut out);
-    }
-    out
-}
-
-fn collect_obtain_equal_tos_in_stmt(stmt: &Stmt, out: &mut Vec<String>) {
-    match stmt {
-        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromExistFact(s))) => {
-            out.extend(s.equal_tos.iter().cloned());
-        }
-        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromAtomicFact(s))) => {
-            out.extend(s.equal_tos.iter().cloned());
-        }
-        Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(ClaimStmt { proof, .. })) => {
-            for child in proof {
-                collect_obtain_equal_tos_in_stmt(child, out);
-            }
-        }
-        Stmt::ProofBlock(ProofBlockStmt::SketchStmt(SketchStmt { proof, .. })) => {
-            for child in proof {
-                collect_obtain_equal_tos_in_stmt(child, out);
-            }
-        }
-        Stmt::By(ByStmt::ByContraStmt(s)) => {
-            for child in &s.proof {
-                collect_obtain_equal_tos_in_stmt(child, out);
-            }
-        }
-        Stmt::By(ByStmt::ByCasesStmt(s)) => {
-            for proof in &s.proofs {
-                for child in proof {
-                    collect_obtain_equal_tos_in_stmt(child, out);
-                }
-            }
-        }
-        Stmt::By(ByStmt::ByInducStmt(s)) => {
-            for child in &s.proof {
-                collect_obtain_equal_tos_in_stmt(child, out);
-            }
-            if let Some(base) = &s.base_proof {
-                for child in base {
-                    collect_obtain_equal_tos_in_stmt(child, out);
-                }
-            }
-            if let Some(step) = &s.step_proof {
-                for child in step {
-                    collect_obtain_equal_tos_in_stmt(child, out);
-                }
-            }
-        }
-        Stmt::By(ByStmt::ByStrongInducStmt(s)) => {
-            for child in &s.proof {
-                collect_obtain_equal_tos_in_stmt(child, out);
-            }
-            if let Some(base) = &s.base_proof {
-                for child in base {
-                    collect_obtain_equal_tos_in_stmt(child, out);
-                }
-            }
-            if let Some(step) = &s.step_proof {
-                for child in step {
-                    collect_obtain_equal_tos_in_stmt(child, out);
-                }
-            }
-        }
-        Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(s)) => {
-            for child in &s.proof {
-                collect_obtain_equal_tos_in_stmt(child, out);
-            }
-        }
-        Stmt::By(ByStmt::ByForStmt(s)) => {
-            for child in &s.proof {
-                collect_obtain_equal_tos_in_stmt(child, out);
-            }
-        }
-        Stmt::By(ByStmt::ByExtensionStmt(s)) => {
-            for child in &s.proof {
-                collect_obtain_equal_tos_in_stmt(child, out);
-            }
-        }
-        Stmt::By(ByStmt::ByFnExtensionStmt(s)) => {
-            for child in &s.proof {
-                collect_obtain_equal_tos_in_stmt(child, out);
-            }
-        }
-        Stmt::By(ByStmt::ByDefStmt(_)) | Stmt::By(ByStmt::ByThmStmt(_)) => {}
-        Stmt::Fact(_)
-        | Stmt::Trust(_)
-        | Stmt::Definition(_)
-        | Stmt::ReleaseAndExpand(_)
-        | Stmt::Register(_)
-        | Stmt::Witness(_)
-        | Stmt::Command(_) => {}
-    }
 }

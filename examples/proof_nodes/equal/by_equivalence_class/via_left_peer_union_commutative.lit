@@ -1,0 +1,12 @@
+# Node: equal.ByEquivalenceClass.ViaPeers, bridge ByBuiltinRule.UnionCommutative
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/via_left_peer_union_commutative.lit
+# a = union(X, Y) is stored. Swap the union operands to reach union(Y, X).
+# The bridge uses a symbolic set identity, with no numeric calculation.
+
+have X set
+
+have Y set
+
+let a = union(X, Y)
+
+a = union(Y, X)

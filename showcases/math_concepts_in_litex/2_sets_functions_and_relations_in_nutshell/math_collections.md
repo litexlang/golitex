@@ -35,6 +35,12 @@ membership and extensionality
 No local replacement is introduced for a builtin set, Cartesian product,
 function carrier, or unique-existence form.
 
+Current migration boundary: `by enumerate finite_set` requires a displayed
+finite domain; it does not resolve a named set before enumerating it. The
+ambient natural-number membership is proved directly from `first_set $subset N`.
+The successor mapping theorem and its downstream function definitions remain
+blocked; the dependency diagram below describes the intended mathematical chain.
+
 ## Interface cards
 
 ### `first_set` and `second_set`

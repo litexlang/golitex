@@ -1,0 +1,14 @@
+# Node: equal.ByEquivalenceClass.ViaPeers (two stored edges on each side)
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/via_both_peers_multi_edge.lit
+# a -> b -> fn(x R) R; rename x to y; fn(y R) R -> d -> c.
+# Both endpoint classes contribute a shape; the right path is traversed backward.
+
+let b = fn(x R) R
+
+let a = b
+
+let d = fn(y R) R
+
+let c = d
+
+a = c

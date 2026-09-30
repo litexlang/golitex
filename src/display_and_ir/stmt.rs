@@ -333,7 +333,7 @@ impl ObtainObjFromExistFact {
         StmtIR(format!(
             "{} {} {} {}",
             OBTAIN,
-            self.equal_tos.join(", "),
+            self.equal_tos.iter().map(|bound| bound.ir_string()).collect::<Vec<_>>().join(", "),
             FROM,
             self.fact.ir()
         ))
@@ -346,7 +346,7 @@ impl ObtainObjFromAtomicFact {
         StmtIR(format!(
             "{} {} {} {}",
             OBTAIN,
-            self.equal_tos.join(", "),
+            self.equal_tos.iter().map(|bound| bound.ir_string()).collect::<Vec<_>>().join(", "),
             FROM,
             self.fact.ir()
         ))

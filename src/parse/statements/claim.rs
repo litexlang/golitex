@@ -26,11 +26,11 @@ impl Runtime {
                 this.parse_body_stmts(proof_blocks)
             })?
         } else {
-            self.parse_body_stmts(proof_blocks)?
+            self.push_parse_scope();
+            let proof = self.parse_body_stmts(proof_blocks);
+            self.pop_parse_scope();
+            proof?
         };
-        // Nested obtain names were bound at file-root for id stability; drop the
-        // visible binding so later top-level stmts may reuse the same names.
-        self.release_obtain_parse_bindings_in_stmts(&proof);
         Ok(Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(ClaimStmt {
             fact,
             proof,

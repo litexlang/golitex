@@ -203,7 +203,7 @@ pub struct HaveObjByExistFactsStmt {
 // Stores: opaque witness names, their types, and the exist body facts.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObtainObjFromExistFact {
-    pub equal_tos: Vec<PlainName>,
+    pub equal_tos: Vec<BoundName>,
     pub fact: ExistShapedFact,
     pub line_file: SourceLine,
 }
@@ -213,7 +213,7 @@ pub struct ObtainObjFromExistFact {
 // Stores: opaque witness names after projecting the prop definition to exist.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObtainObjFromAtomicFact {
-    pub equal_tos: Vec<PlainName>,
+    pub equal_tos: Vec<BoundName>,
     pub fact: NormalAtomicFact,
     pub line_file: SourceLine,
 }

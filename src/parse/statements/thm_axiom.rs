@@ -35,9 +35,11 @@ impl Runtime {
                 this.parse_body_stmts(proof_blocks)
             })?
         } else {
-            self.parse_body_stmts(proof_blocks)?
+            self.push_parse_scope();
+            let proof = self.parse_body_stmts(proof_blocks);
+            self.pop_parse_scope();
+            proof?
         };
-        self.release_obtain_parse_bindings_in_stmts(&prove_process);
         self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefThmStmt(DefThmStmt {
             name,

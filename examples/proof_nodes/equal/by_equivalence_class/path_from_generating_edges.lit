@@ -1,5 +1,6 @@
-# Node: equal.ByEquivalenceClass
-# Run: litex -f examples/proof_nodes/equal/by_equivalence_class/path_from_generating_edges.lit
+# Node: equal.ByEquivalenceClass.KnownPath
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/path_from_generating_edges.lit
+# The declarations already supply a = b and b = c; cite those stored edges.
 
 have a R = 1
 have b R = a
