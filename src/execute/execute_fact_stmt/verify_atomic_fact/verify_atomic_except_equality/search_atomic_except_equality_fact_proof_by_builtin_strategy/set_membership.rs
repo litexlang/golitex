@@ -2,7 +2,7 @@ use super::result::*;
 use crate::ast::fact::{AtomicFact, Fact, InFact};
 use crate::ast::obj::{
     FnObj, FnObjHead, FunctionSpace, IntervalObj, Obj, ProductShape, SetFormer, SetOperator,
-    StandardSet,
+    StandardSet, StructAndFieldAccessObj,
 };
 use crate::ast::param::SetBoundParameterList;
 use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
@@ -248,8 +248,15 @@ impl Runtime {
     ) -> RuntimeResult<Option<FnApplicationInCodomainStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::FnObj(fn_obj) = &inf.element else { return Ok(None); };
-        let FnObjHead::Identifier(head) = fn_obj.head.as_ref() else { return Ok(None); };
-        let head_obj = Obj::Identifier(head.clone());
+        // Field applications use the same signature evidence and domain
+        // obligations as named functions, including equality-class candidates.
+        let head_obj = match fn_obj.head.as_ref() {
+            FnObjHead::Identifier(head) => Obj::Identifier(head.clone()),
+            FnObjHead::FieldAccess(access) => {
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access.clone()))
+            }
+            _ => return Ok(None),
+        };
         let candidates = self.collect_in_function_set_candidates(&head_obj);
         for (fn_set, cite_signature_fact_id) in candidates {
             let Some(applied_ret) = self.applied_fn_set_return_set(fn_obj, &fn_set) else {

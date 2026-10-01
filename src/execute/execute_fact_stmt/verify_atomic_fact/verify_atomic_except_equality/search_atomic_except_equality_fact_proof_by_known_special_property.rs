@@ -146,6 +146,12 @@ impl Runtime {
                 let signature_obj = Obj::FunctionSpace(FunctionSpace::FnSet(signature));
                 let mut matches = Vec::new();
                 for (candidate, id) in self.collect_in_function_set_candidates(&head) {
+                    if self
+                        .applied_fn_set_return_set(application, &candidate)
+                        .is_none()
+                    {
+                        continue;
+                    }
                     let candidate_obj = Obj::FunctionSpace(FunctionSpace::FnSet(candidate));
                     let Some(proof) =
                         self.lookup_known_obj_equality(&candidate_obj, &signature_obj)
@@ -166,7 +172,9 @@ impl Runtime {
                     ),
                 );
             }
-            let applied_return = self.applied_fn_set_return_set(application, &signature)?;
+            let Some(applied_return) = self.applied_fn_set_return_set(application, &signature) else {
+                continue;
+            };
             self.lookup_known_obj_equality(&applied_return, &fact.set)?;
             // Cached WD cites the application, not its selected signature. All
             // signatures that could supply that WD must have the target return.

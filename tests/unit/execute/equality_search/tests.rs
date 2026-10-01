@@ -350,6 +350,75 @@ fn strategy_entry_keeps_zero_depth_identity_calculation_and_named_alpha() {
     }
 }
 
+#[test]
+fn have_obj_equal_residual_inherits_rewrite_and_retains_its_proof() {
+    use super::by_object_definition::{
+        by_identifier::EqualitySearchProofByIdentifierObjectDefinition,
+        EqualitySearchProofByObjectDefinition,
+    };
+
+    for goal in ["y = 3", "3 = y"] {
+        let mut runtime = runtime();
+        exec_ok(&mut runtime, "have x R = 2");
+        exec_ok(&mut runtime, "have y R = x + 1");
+        let before = store_sizes(&runtime);
+        let mut state = VerifyState::top_level().without_well_defined_storage();
+        // Definition, rewrite and final calculation currently each need an entry.
+        state.can_use_builtin_rule_round = 3;
+        let VerifyEqualityResult::Success(success) = verify(&mut runtime, goal, state) else {
+            panic!("definition residual must be allowed to rewrite: {goal}");
+        };
+        let EqualFactSearchedProof::ByObjectDefinition(
+            EqualitySearchProofByObjectDefinition::ByIdentifier(
+                EqualitySearchProofByIdentifierObjectDefinition::HaveObjEqual(proof),
+            ),
+        ) = success.searched_proof else {
+            panic!("definition must own the proof");
+        };
+        let VerifyFactResult::Equality(residual) = proof.residual_equal else {
+            panic!("residual equality");
+        };
+        let VerifyEqualityResult::Success(residual) = *residual else {
+            panic!("residual must be proved");
+        };
+        assert!(matches!(
+            residual.searched_proof,
+            EqualFactSearchedProof::ByBuiltinRewrite(_)
+        ));
+        assert_eq!(store_sizes(&runtime), before, "search must not store facts or WD");
+    }
+}
+
+#[test]
+fn have_obj_equal_residual_keeps_rewrite_and_fuel_restrictions() {
+    for (rewrite, rounds) in [(false, 3), (true, 0), (true, 1), (true, 2)] {
+        let mut runtime = runtime();
+        exec_ok(&mut runtime, "have x R = 2");
+        exec_ok(&mut runtime, "have y R = x + 1");
+        let mut state = VerifyState::top_level().without_well_defined_storage();
+        state.can_use_rewrite = rewrite;
+        state.can_use_builtin_rule_round = rounds;
+        assert!(verify(&mut runtime, "y = 3", state).is_failed(),
+            "must preserve caller restriction: rewrite={rewrite}, rounds={rounds}");
+    }
+}
+
+#[test]
+fn have_obj_equal_residual_rejects_false_missing_and_undefined_goals() {
+    for (setup, goal) in [
+        ("have x R = 2", "y = 4"),
+        ("have x R", "y = 3"),
+        ("have x R = 2", "y = 1 / 0"),
+    ] {
+        let mut runtime = runtime();
+        exec_ok(&mut runtime, setup);
+        exec_ok(&mut runtime, "have y R = x + 1");
+        let mut state = VerifyState::top_level();
+        state.can_use_builtin_rule_round = 3;
+        assert!(verify(&mut runtime, goal, state).is_failed(), "must reject {goal}");
+    }
+}
+
 fn runtime() -> Runtime {
     Runtime::new(LaunchCommand::Eval {
         code: String::new(),

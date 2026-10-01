@@ -1,0 +1,28 @@
+# Node: atomic.ByBuiltinStrategy.FnApplicationInCodomain, FieldAccess head.
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_strategy/struct_field_function_codomain.lit
+# Before: the strategy accepted only Identifier heads, so this valid conclusion
+# failed at search_proof despite both signatures being available:
+# forall b &Bundle, narrow fn(x N) N, n N:
+#     b.f = narrow
+#     =>:
+#         b.f(n) $in N
+# Now: use the field object's existing signatures and prove the selected domain.
+# Boundary: the R signature alone does not give N; an N argument or a positive
+# guard is required by the selected alternative signature. Executable rejection
+# cases live in field_function_codomain_rejects_inapplicable_signatures.
+
+struct Bundle:
+    f fn(x R) R
+    tag N
+
+forall b &Bundle, narrow fn(x N) N, n N:
+    b.f = narrow
+    =>:
+        b.f(n) $in N
+        b.f(b.f(n)) $in N
+
+forall b &Bundle, narrow fn(x R: x > 0) N, a R:
+    b.f = narrow
+    a > 0
+    =>:
+        b.f(a) $in N

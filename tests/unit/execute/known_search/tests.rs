@@ -49,6 +49,54 @@ fn cached_literal_application_uses_definition_without_reproving_the_domain() {
 }
 
 #[test]
+fn structurally_inapplicable_signature_does_not_hide_a_later_definition() {
+    use crate::exec_env::SpecialObjectPropertyByDefinition;
+
+    let mut rt = runtime();
+    exec_ok(&mut rt, "have fn id(x R) R = x");
+    exec_ok(&mut rt, "have fn pair(x, y R) R = x");
+    exec_ok(&mut rt, "have a R");
+    exec_ok(&mut rt, "id(a) = id(a)");
+    exec_ok(&mut rt, "fn_range(id) = fn_range(id)");
+    let targets = ["id(a) $in R", "id(a) $in fn_range(id)"]
+        .map(|code| atomic(&mut rt, code));
+    let AtomicFact::InFact(id_signature) = atomic(&mut rt, "id $in fn(x R) R") else {
+        panic!("id signature")
+    };
+    let AtomicFact::InFact(pair_signature) = atomic(&mut rt, "pair $in fn(x, y R) R") else {
+        panic!("pair signature")
+    };
+    let id_key = id_signature.element.ir();
+    let pair_key = pair_signature.element.ir();
+    let env = rt.top_exec_env_mut();
+    let candidate = env.special_object_properties_by_def[&pair_key]
+        .iter()
+        .find(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_)))
+        .unwrap()
+        .clone();
+    // Inject an arity-mismatched candidate ahead of the real definition to
+    // isolate candidate iteration from the definition-registration policy.
+    // This candidate must be skipped and must never become the cited source.
+    env.special_object_properties_by_def
+        .get_mut(&id_key)
+        .unwrap()
+        .insert(0, candidate);
+    let before = memory_sizes(&rt);
+    for target in targets {
+        let proof = rt
+            .search_atomic_except_equality_fact_proof_by_known_special_property(&target)
+            .expect("later applicable definition must still be considered");
+        let source = rt.fact_by_id_in_stack(proof.cite_definition_fact_id()).unwrap();
+        assert!(source.readable_string().contains("id $in fn"));
+        assert_special(
+            rt.verify_fact(&Fact::AtomicFact(target), zero_fuel()).unwrap(),
+            "later applicable definition",
+        );
+    }
+    assert_eq!(before, memory_sizes(&rt));
+}
+
+#[test]
 fn stored_fact_wins_over_definition_property_in_both_entries() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn id(x R) R = x");
@@ -319,6 +367,77 @@ fn bounded_codomain_fallback_retains_its_selected_signature_citation() {
     let stmt_result = exec_ok(&mut rt, "alias(a) $in R");
     let json = project_stmt_detailed(&stmt_result, &rt).stringify();
     assert!(json.contains("cite_signature_fact_id"), "{json}");
+}
+
+#[test]
+fn field_function_codomain_strategy_retains_signature_and_domain_evidence() {
+    use crate::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactResult;
+    use super::search_atomic_except_equality_fact_proof_by_builtin_strategy::AtomicExceptEqualityFactSearchProofByBuiltinStrategy;
+
+    let mut rt = runtime();
+    exec_ok(&mut rt, "struct Bundle:\n    f fn(x R) R\n    tag N");
+    // The field's R-returning signature establishes WD, but only the equal
+    // function's guarded signature can justify membership in N.
+    let Stmt::Fact(fact) = parse(&mut rt, "forall b &Bundle, narrow fn(x R: x > 0) N, a R:\n    b.f = narrow\n    a > 0\n    =>:\n        b.f(a) $in N") else {
+        panic!("forall fact")
+    };
+    let VerifyFactResult::ForallFact(result) = rt.verify_fact(&fact, VerifyState::top_level()).unwrap() else {
+        panic!("forall result")
+    };
+    let VerifyForallFactResult::Success(mut result) = *result else {
+        panic!("field application must use the applicable signature")
+    };
+    let VerifyFactResult::AtomicExceptEquality(conclusion) = result.proved_then_facts.remove(0).verify_result else {
+        panic!("membership")
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(conclusion) = *conclusion else {
+        panic!("membership success")
+    };
+    let AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnApplicationInCodomain(proof),
+    ) = conclusion.searched_proof else {
+        panic!("bounded codomain strategy")
+    };
+    let signature = result.local_env.facts.facts_by_id.get(&proof.cite_signature_fact_id).unwrap();
+    let signature_text = signature.readable_string();
+    assert!(signature_text.contains("narrow $in fn"), "{signature_text}");
+    assert!(signature_text.contains(" > 0"), "{signature_text}");
+    assert_eq!(proof.requirement_facts.len(), 2);
+    assert_eq!(proof.proof_of_requirement_facts.len(), 2);
+    assert!(proof.proof_of_requirement_facts.iter().all(|p| !p.is_failed()));
+    assert!(matches!(&proof.requirement_facts[0], Fact::AtomicFact(AtomicFact::InFact(_))));
+    assert!(matches!(&proof.requirement_facts[1], Fact::AtomicFact(AtomicFact::GreaterFact(_))));
+}
+
+#[test]
+fn field_function_codomain_rejects_inapplicable_signatures() {
+    let cases = [
+        // No signature with return N.
+        "forall b &Bundle, n N:\n    b.f(n) $in N",
+        // Arity remains checked before using a signature.
+        "forall b &Bundle, narrow fn(x N) N, n N:\n    b.f = narrow\n    =>:\n        b.f(n, n) $in N",
+        // The R signature permits this argument; the N signature does not.
+        "forall b &Bundle, narrow fn(x N) N:\n    b.f = narrow\n    =>:\n        b.f(0 - 1) $in N",
+        // Reflexivity caches WD through the R signature, without establishing
+        // the guarded signature's premise. Neither an absent nor a violated
+        // guard may be inferred from cached WD.
+        "forall b &Bundle, narrow fn(x R: x > 0) N, a R:\n    b.f = narrow\n    b.f(a) = b.f(a)\n    =>:\n        b.f(a) $in N",
+        "forall b &Bundle, narrow fn(x R: x > 0) N:\n    b.f = narrow\n    b.f(0) = b.f(0)\n    =>:\n        b.f(0) $in N",
+    ];
+    for code in cases {
+        let mut rt = runtime();
+        exec_ok(&mut rt, "struct Bundle:\n    f fn(x R) R\n    tag N");
+        let stmt = parse(&mut rt, code);
+        let result = rt.exec_stmt(&stmt).expect("invalid membership must fail normally");
+        assert!(result.is_failed(), "accepted an inapplicable signature: {code}");
+    }
+}
+
+#[test]
+fn field_function_codomain_group_closure_nested_calls_and_associativity() {
+    let mut rt = runtime();
+    exec_ok(&mut rt, "struct Group<A nonempty_set>:\n    mul fn(p, q A) A\n    one A\n    inv fn(r A) A\n    <=>:\n        forall a, b, c A:\n            mul(mul(a, b), c) = mul(a, mul(b, c))");
+    exec_ok(&mut rt, "forall A nonempty_set, G &Group<A>, a, b, c A:\n    G.mul(a, b) $in A\n    G.mul(G.mul(a, b), c) = G.mul(G.mul(a, b), c)\n    G.mul(G.mul(a, b), c) = G.mul(a, G.mul(b, c))");
 }
 
 #[test]
