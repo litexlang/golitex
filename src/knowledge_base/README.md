@@ -56,6 +56,13 @@ by thm only need the goal interface.
 ```
 
 `KB_ABI` (`paths.rs`) bumps when wire/manifest layout is incompatible.
+ABI 2 stores the `HaveFnEqual` statement name as a `BoundName` (`id`, `name`)
+and remaps that ID together with the function's parameter/body IDs. ABI 1
+module products are cache misses and are rebuilt from source. A standalone
+legacy `HaveFnEqual` record with a string name is rejected because it contains
+no declaration ID to restore.
+JSON string decoding preserves UTF-8 bytes, so module paths and identifier
+names containing non-ASCII characters round-trip without changing identity.
 
 ### 4. Import hook (always on)
 

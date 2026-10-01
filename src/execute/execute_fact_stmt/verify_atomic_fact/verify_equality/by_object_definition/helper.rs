@@ -3,31 +3,15 @@ use crate::ast::param::SetBoundParameterList;
 use crate::runtime::runtime_ids::IdentifierId;
 use std::collections::HashMap;
 
-pub(super) fn identifier_plain_name(obj: &Obj) -> Option<&str> {
-    let Obj::Identifier(identifier) = obj else {
-        return None;
-    };
-    match identifier {
-        IdentifierObj::Plain { name, .. }
-        | IdentifierObj::WithExportFileId { name, .. }
-        | IdentifierObj::WithModAndExportFileId { name, .. } => Some(name.as_str()),
-    }
-}
-
-pub(super) fn fn_app_name_and_args(fn_obj: &FnObj) -> Option<(String, Vec<Obj>)> {
+pub(super) fn fn_app_identifier_and_args(fn_obj: &FnObj) -> Option<(IdentifierObj, Vec<Obj>)> {
     if fn_obj.body.len() != 1 {
         return None;
     }
     let FnObjHead::Identifier(head) = fn_obj.head.as_ref() else {
         return None;
     };
-    let name = match head {
-        IdentifierObj::Plain { name, .. }
-        | IdentifierObj::WithExportFileId { name, .. }
-        | IdentifierObj::WithModAndExportFileId { name, .. } => name.as_str().to_string(),
-    };
     let args: Vec<Obj> = fn_obj.body[0].iter().map(|a| a.as_ref().clone()).collect();
-    Some((name, args))
+    Some((head.clone(), args))
 }
 
 pub(super) fn fn_app_args(fn_obj: &FnObj) -> Option<Vec<Obj>> {

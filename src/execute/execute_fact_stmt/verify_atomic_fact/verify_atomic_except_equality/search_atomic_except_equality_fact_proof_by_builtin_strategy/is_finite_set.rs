@@ -1,10 +1,66 @@
 use super::result::*;
-use crate::ast::fact::{AtomicFact, IsFiniteSetFact};
+use crate::ast::fact::{AtomicFact, EqualFact, IsFiniteSetFact};
+use crate::ast::names::AtomicName;
 use crate::ast::obj::{FunctionSpace, Obj, ProductShape, SetFormer, SetOperator};
 use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
 use crate::runtime::{Runtime, RuntimeResult};
+use crate::parse::keywords::{PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET};
 
 impl Runtime {
+    // A subset of a finite upper set is finite. Candidate inclusions are read
+    // from visible facts; their truth and the upper set's finiteness are checked
+    // in the existing bounded strategy context. No forward-store order matters.
+    // Example: `A $subset B`, finite B => `$is_finite_set(A)`.
+    pub(super) fn search_subset_of_finite_set_strategy(
+        &mut self,
+        fact: &AtomicFact,
+        ctx: StrategySearch,
+    ) -> RuntimeResult<Option<SubsetOfFiniteSetStrategySingleStep>> {
+        let Some(set) = as_finite_set(fact) else { return Ok(None); };
+        let mut candidates = Vec::new();
+        for env in self.execution_environments_stack.iter().rev() {
+            for name in [SUBSET, SUPERSET, PROPER_SUBSET, PROPER_SUPERSET] {
+                let key = (AtomicName::Plain { name: name.into() }, true);
+                let Some(knowns) = env.facts.known_atomic_except_equality_facts.by_prop.get(&key) else {
+                    continue;
+                };
+                for known in knowns {
+                    let (lower, upper) = match known {
+                        AtomicFact::SubsetFact(f) => (&f.left, &f.right),
+                        AtomicFact::SupersetFact(f) => (&f.right, &f.left),
+                        AtomicFact::ProperSubsetFact(f) => (&f.left, &f.right),
+                        AtomicFact::ProperSupersetFact(f) => (&f.right, &f.left),
+                        _ => continue,
+                    };
+                    candidates.push((lower.clone(), upper.clone(), known.clone()));
+                }
+            }
+        }
+        for (lower, upper, inclusion) in candidates {
+            let mut requirements = Vec::new();
+            // Aliases must be proved equal, never accepted from similar text.
+            if lower.ir() != set.ir() {
+                requirements.push(EqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: set.clone(),
+                    right: lower,
+                    line_file: line_file(fact),
+                }.into());
+            }
+            requirements.push(inclusion.into());
+            requirements.push(self.strategy_is_finite_set_fact(upper, line_file(fact)));
+            if let Some((requirement_facts, proof_of_requirement_facts)) =
+                self.verify_strategy_requirements(requirements, ctx)?
+            {
+                return Ok(Some(SubsetOfFiniteSetStrategySingleStep {
+                    requirement_facts,
+                    proof_of_requirement_facts,
+                }));
+            }
+        }
+        Ok(None)
+    }
+
     pub(super) fn search_fn_range_finite_from_domain_strategy(
         &mut self,
         fact: &AtomicFact,

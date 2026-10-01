@@ -1,0 +1,21 @@
+# Run: target/release/litex -strict -f examples/module_manager/declaration_bindings/local.lit
+# Before: local have fn panicked or lost its identity; local fn_preimage
+# tried to resolve a name from an already-ended parse scope.
+# sketch:
+#     have fn ident(x R) R = x
+#     ident(2) $in fn_range(ident)
+#     have by fn_preimage: source from ident(2) $in fn_range(ident)
+#     ident(2) = ident(source)
+
+sketch:
+    have fn ident(x R) R = x
+    ident(2) $in fn_range(ident)
+    have by fn_preimage: source from ident(2) $in fn_range(ident)
+    source $in R
+    ident(2) = ident(source)
+
+# Later root names must not capture the earlier local bindings.
+have fn ident(x R) R = x + 1
+let source = 0
+ident(2) = 3
+source = 0

@@ -1,0 +1,6 @@
+# Run: target/release/litex -strict -f examples/module_manager/declaration_bindings/main.lit
+# Published functions with the same name retain their respective owners.
+release obj def local::ident
+local::ident(2) = 3
+release obj def Functions::functions::ident
+Functions::functions::ident(2) = 2

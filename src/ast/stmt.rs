@@ -251,7 +251,7 @@ pub struct TheoremCall {
 // Replacement images use `have by replacement_axiom: Img from prop P, set A`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveByPreimageStmt {
-    pub preimage_names: Vec<PlainName>,
+    pub preimage_names: Vec<BoundName>,
     // Must be `… $in fn_range(…)`.
     pub range_membership: InFact,
     pub line_file: SourceLine,
@@ -294,7 +294,7 @@ pub struct HaveByReplacementAxiomStmt {
 // Stores: `f`, `f $in fn(…)`, and `f = anon_fn` (plus ordinary infer).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveFnEqualStmt {
-    pub name: PlainName,
+    pub name: BoundName,
     pub equal_to_anonymous_fn: AnonymousFn,
     pub line_file: SourceLine,
 }

@@ -69,12 +69,16 @@ indexing.
 
 The definition table stores definitions under the **surface plain name**.
 Stmt payload fields that are definition / store keys (`Def*Stmt.name`,
-`HaveFn*Stmt.name`, `DefTemplateStmt.template_name`,
-`HaveByPreimageStmt.preimage_names`, …) are typed as `PlainName`.
+the case/induction/unique-existence `HaveFn*Stmt.name` fields,
+`DefTemplateStmt.template_name`, …) are typed as `PlainName`.
 Binding-carrying payloads such as `LetObjStmt.name`, have parameters, and
-obtain `equal_tos` preserve `BoundName`; their `.name` remains the definition
+obtain `equal_tos`, `HaveFnEqualStmt.name`, and
+`HaveByPreimageStmt.preimage_names` preserve `BoundName`; their `.name` remains the definition
 table key. Stored mentions are promoted only when the file-root binding has
 the same ID, so a later top-level name cannot capture an earlier local one.
+Local function/preimage execution must use these saved IDs after parse scopes
+have ended. Function definition cache records also encode and remap the
+function's BoundName; KB ABI 2 rejects older records lacking this identity.
 Occurrence identity for objects/facts uses `IdentifierId` on plain AST/IR,
 or qualified indices+name after file-root promotion.
 Looking up “what is `x` defined as?” is by plain name; citing it across

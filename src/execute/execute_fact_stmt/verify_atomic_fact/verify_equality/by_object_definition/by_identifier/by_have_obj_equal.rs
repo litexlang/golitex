@@ -9,13 +9,12 @@
 //! reduces to proving `1 + 1 = 2` after unfolding `a`.
 
 use crate::ast::fact::EqualFact;
-use crate::ast::obj::Obj;
+use crate::ast::obj::{IdentifierObj, Obj};
 use crate::ast::stmt::HaveObjEqualStmt;
 use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
-use super::super::helper::identifier_plain_name;
 
 pub struct ByHaveObjEqualObjectDefinitionProof {
     pub expanded_rhs: Obj,
@@ -54,15 +53,20 @@ impl Runtime {
         parent_fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ByHaveObjEqualObjectDefinitionProof>> {
-        let Some(name) = identifier_plain_name(def_side) else {
+        let Obj::Identifier(identifier) = def_side else {
             return Ok(None);
         };
         let Some(StoredIdentifierDefinition::HaveObjEqual((_, stmt))) =
-            self.stored_identifier_definition_visible_in_stack(name)
+            self.stored_identifier_definition_visible(identifier)
         else {
             return Ok(None);
         };
         let stmt = stmt.clone();
+        let name = match identifier {
+            IdentifierObj::Plain { name, .. }
+            | IdentifierObj::WithExportFileId { name, .. }
+            | IdentifierObj::WithModAndExportFileId { name, .. } => name.as_str(),
+        };
         let Some(expanded_rhs) = rhs_of_have_obj_equal_for_name(name, &stmt) else {
             return Ok(None);
         };

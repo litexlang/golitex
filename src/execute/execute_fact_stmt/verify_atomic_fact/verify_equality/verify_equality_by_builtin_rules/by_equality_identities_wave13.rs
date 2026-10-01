@@ -342,15 +342,8 @@ impl Runtime {
         head: &crate::ast::obj::IdentifierObj,
     ) -> Option<AnonymousFn> {
         use crate::exec_env::StoredIdentifierDefinition;
-        let name = match head {
-            crate::ast::obj::IdentifierObj::Plain { name, .. }
-            | crate::ast::obj::IdentifierObj::WithExportFileId { name, .. }
-            | crate::ast::obj::IdentifierObj::WithModAndExportFileId { name, .. } => {
-                name.as_str()
-            }
-        };
         let StoredIdentifierDefinition::HaveFnEqual((_, stmt)) =
-            self.stored_identifier_definition_visible_in_stack(name)?
+            self.stored_identifier_definition_visible(head)?
         else {
             return None;
         };

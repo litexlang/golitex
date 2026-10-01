@@ -408,17 +408,17 @@ impl<'a> Parser<'a> {
         if self.bump()? != b'"' {
             return Err(JsonError("expected string opening quote".to_string()));
         }
-        let mut out = String::new();
+        let mut out = Vec::new();
         loop {
             match self.bump()? {
                 b'"' => break,
                 b'\\' => match self.bump()? {
-                    b'"' => out.push('"'),
-                    b'\\' => out.push('\\'),
-                    b'/' => out.push('/'),
-                    b'n' => out.push('\n'),
-                    b'r' => out.push('\r'),
-                    b't' => out.push('\t'),
+                    b'"' => out.push(b'"'),
+                    b'\\' => out.push(b'\\'),
+                    b'/' => out.push(b'/'),
+                    b'n' => out.push(b'\n'),
+                    b'r' => out.push(b'\r'),
+                    b't' => out.push(b'\t'),
                     b'u' => {
                         let mut code = 0u32;
                         for _ in 0..4 {
@@ -428,10 +428,10 @@ impl<'a> Parser<'a> {
                                     JsonError("invalid \\u escape in JSON string".to_string())
                                 })?;
                         }
-                        out.push(
-                            char::from_u32(code)
-                                .ok_or_else(|| JsonError("invalid unicode escape".to_string()))?,
-                        );
+                        let ch = char::from_u32(code)
+                            .ok_or_else(|| JsonError("invalid unicode escape".to_string()))?;
+                        let mut encoded = [0; 4];
+                        out.extend_from_slice(ch.encode_utf8(&mut encoded).as_bytes());
                     }
                     b => {
                         return Err(JsonError(format!(
@@ -440,10 +440,11 @@ impl<'a> Parser<'a> {
                         )))
                     }
                 },
-                b => out.push(b as char),
+                b => out.push(b),
             }
         }
-        Ok(out)
+        String::from_utf8(out)
+            .map_err(|_| JsonError("invalid UTF-8 in JSON string".to_string()))
     }
 
     fn parse_number(&mut self) -> Result<JsonValue, JsonError> {

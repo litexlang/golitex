@@ -359,6 +359,9 @@ impl Runtime {
         if let Some(proof) = self.search_cart_finite_from_factors_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartFiniteFromFactors(proof)));
         }
+        if let Some(proof) = self.search_subset_of_finite_set_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubsetOfFiniteSet(proof)));
+        }
 
         // is_nonempty_set
         if let Some(proof) = self.search_closed_range_nonempty_from_endpoint_order_strategy(fact, ctx)? {

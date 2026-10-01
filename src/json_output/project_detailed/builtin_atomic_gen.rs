@@ -35,6 +35,15 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("right_resolved", string(p.right_resolved.clone())));
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")),
+            ("family", string("LessFact")),
+            ("rule", string("FiniteSetSizeProperSubsetLt")),
+            ("left_finite_proof", project_verify_fact(&p.left_finite_proof, runtime)),
+            ("right_finite_proof", project_verify_fact(&p.right_finite_proof, runtime)),
+            ("subset_proof", project_verify_fact(&p.subset_proof, runtime)),
+            ("not_equal_proof", project_verify_fact(&p.not_equal_proof, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ClosedNumericComparison(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),

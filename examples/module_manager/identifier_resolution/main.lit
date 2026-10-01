@@ -1,0 +1,24 @@
+# Before: local k supplied the definition for the unrelated base::k.
+# have k R = 1
+# base::k = 1
+# Former behavior: accepted the false equality, strict success true.
+#
+# Now: same terminal names retain their export owner.
+have k R = 1
+let item = 1
+have fn shift(x R) R = x + 1
+base::k = 0
+Values::base::k = 2
+base::item = 0
+Values::base::item = 2
+release obj def base::shift
+release obj def Values::base::shift
+base::shift(3) = 3
+Values::base::shift(3) = 5
+main::k = 1
+shift(3) = 4
+let pair = (base::k, Values::base::k)
+tuple_dim(pair) = 2
+# Boundary: base::k = 1 and undeclared base::ghost must be rejected.
+# Evidence: target/release/litex -strict -f examples/module_manager/identifier_resolution/main.lit
+# Negative regressions: tests/unit/execute/identifier_resolution/tests.rs

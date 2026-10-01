@@ -535,6 +535,11 @@ pub(super) fn project_atomic_builtin_strategy(
             ("strategy", string("CartFiniteFromFactors")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubsetOfFiniteSet(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("SubsetOfFiniteSet")),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ClosedRangeNonemptyFromEndpointOrder(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("ClosedRangeNonemptyFromEndpointOrder")),

@@ -54,10 +54,17 @@ impl GlobalModuleManager {
             }),
             2 => {
                 let export_file_id = self.file_id_in_current(&parts[0])?;
-                Ok(AtomicName::WithExportFileId {
-                    export_file_id,
-                    name: parts[1].clone(),
-                })
+                match self.current_mod_id {
+                    Some(global_mod_id) => Ok(AtomicName::WithModAndExportFileId {
+                        global_mod_id,
+                        export_file_id,
+                        name: parts[1].clone(),
+                    }),
+                    None => Ok(AtomicName::WithExportFileId {
+                        export_file_id,
+                        name: parts[1].clone(),
+                    }),
+                }
             }
             3 => {
                 let global_mod_id = self.mod_id_for_local_alias(&parts[0])?;

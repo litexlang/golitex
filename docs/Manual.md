@@ -3992,19 +3992,46 @@ premise needed by the corresponding reduction rule.
 
 #### Finite-set cardinality tracer
 
-Finite-set constructors feed a second layer of custom cardinality rules. The
-intersection, difference, and union facts appear before the equality because
-they are the exact known premises consumed by later one-layer rules:
+`finite_set_size(A)` requires a finite set and has a natural-number carrier.
+Zero cardinality implies equality with the empty set. Inclusion gives a weak
+cardinality bound; strict inclusion is a separate obligation:
 
-> **Migration example:** Current `src/` checking stops at `search_proof` (`forall A, B finite_set:`). This retained block is not a verified result.
+```litex
+forall A finite_set:
+    finite_set_size(A) $in N
+forall A finite_set:
+    finite_set_size(A) >= 0
 
-<!-- litex:skip-test -->
+forall A finite_set:
+    finite_set_size(A) = 0
+    =>:
+        A = {}
+
+forall A, B finite_set:
+    A $subset B
+    =>:
+        finite_set_size(A) <= finite_set_size(B)
+
+forall A finite_set:
+    $is_nonempty_set(A)
+    =>:
+        finite_set_size(A) >= 1
+```
+
+Finite-set constructors also support difference and union cardinality rules.
+The decomposition below explicitly lifts the difference identity into the
+sum before applying arithmetic cancellation. The subset case explicitly
+lifts `intersect(A, B) = B` through `finite_set_size`:
+
 ```litex
 forall A, B finite_set:
     $is_finite_set(intersect(A, B))
     $is_finite_set(set_minus(A, B))
     $is_finite_set(union(A, B))
     finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+    finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+    finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B)) = finite_set_size(intersect(A, B)) + (finite_set_size(A) - finite_set_size(intersect(A, B)))
+    finite_set_size(intersect(A, B)) + (finite_set_size(A) - finite_set_size(intersect(A, B))) = finite_set_size(A)
     finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
     intersect(A, B) $subset A
     finite_set_size(intersect(A, B)) <= finite_set_size(A)
@@ -4013,8 +4040,20 @@ forall A, B finite_set:
 forall A, B finite_set:
     B $subset A
     =>:
+        intersect(A, B) = B
+        finite_set_size(intersect(A, B)) = finite_set_size(B)
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
         finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)
+```
 
+The runnable [cardinality regression](../examples/_internal/regression/finite_set_cardinality.lit)
+also proves the converse empty-set implication, nonemptiness from positive or
+nonzero size, and disjoint-union additivity with explicit proof steps.
+
+> **Migration gap:** The following formulas for symbolic range endpoints still fail current `src/` proof search, including after explicit finiteness checks. They are retained as unsupported examples.
+
+<!-- litex:skip-test -->
+```litex
 forall a, b N:
     a <= b
     =>:
@@ -4065,7 +4104,7 @@ aggregate, and remainder rows.
 | Absolute value and square root | A known sign selects `abs(x)=x` or `abs(x)=(-x)`; `abs(x)=0` gives `x=0`; even powers may replace a real base by its absolute value. Square-root rules include the principal-root square, special values, product/quotient laws under their domains, and `sqrt(a^2)=a` when `a>=0`. |
 | Powers and logarithms | Zero/one, exponent addition, iterated power, product power, negative exponent, roots, and inverse logarithm/power shapes are supported only in the carrier branches listed below. |
 | Remainder and divisibility | Special residues, Euclidean-remainder uniqueness, compatible nested moduli, and congruence under matching `+`, `-`, and `*` operands. `gcd(a,b)` divides both inputs, and `(a*b)%a=(a*b)%b=0` when the objects are well-defined. |
-| Set and cardinality objects | Union/intersection/difference algebra, intersection reduction from a known subset, cardinality of products, differences, unions and power sets, and empty-set equality from emptiness or zero finite cardinality. |
+| Set and cardinality objects | Union/intersection/difference algebra, intersection reduction from a known subset, cardinality of differences, unions and power sets, concrete product cardinality by expansion, and empty-set equality from emptiness or zero finite cardinality. The general symbolic Cartesian-product cardinality formula remains a migration gap. |
 | Tuples and Cartesian products | Tuple reconstruction from Cartesian membership; tuple/cart equality from equal dimensions and projections; canonical `index_cart` expansion. |
 | Functions and materialized definitions | Application equations, alpha-equivalent anonymous functions, `by fn_extension` / pointwise forall, same-signature function-set equality, and equality of materialized template or struct values when their resolved objects agree. |
 | Finite aggregates and reductions | Empty, singleton, endpoint, split, insertion/removal, distribution, congruence, and supported reindexing rules described under [Powers, logarithms, sums, products, and remainder](#powers-logarithms-sums-products-and-remainder). |
@@ -4482,7 +4521,7 @@ The type-predicate layer classifies set structure separately:
 
 | Predicate | Automatic positive cases | Automatic negative/boundary cases |
 |---|---|---|
-| `$is_nonempty_set(S)` | Standard numeric sets; nonempty displays; every power set; ordered nonempty ranges; a union with a nonempty side; Cartesian/function/sequence sets with the required nonempty factors or codomain; an equal known-nonempty structural set; positive finite cardinality. | Equality with `{}` and finite cardinality zero imply not nonempty. Nonemptiness is never inferred for an arbitrary defined `set`. |
+| `$is_nonempty_set(S)` | Standard numeric sets; nonempty displays; every power set; ordered nonempty ranges; a union with a nonempty side; Cartesian/function/sequence sets with the required nonempty factors or codomain; an equal known-nonempty structural set. Positive finite cardinality can be proved to imply nonemptiness using explicit contradiction and cardinality equality steps in the [cardinality regression](../examples/_internal/regression/finite_set_cardinality.lit); direct automatic search currently fails. | Equality with `{}` and finite cardinality zero imply not nonempty. Nonemptiness is never inferred for an arbitrary defined `set`. |
 | `$is_finite_set(S)` | Displays, integer ranges, builders over finite bases, finite-domain function ranges, finite unions/intersections/differences/power sets, and Cartesian products of finite factors. | An infinite set minus a finite set remains infinite. No rule makes an arbitrary set finite from its use in another expression. |
 | Empty structure | Empty display; `closed_range(a,b)` when `b<a`; `range(a,b)` when `b<=a`; equality with `{}`; finite cardinality zero. | Ordered endpoints in the opposite direction establish the matching nonempty range. |
 | `$is_tuple` / `$is_cart` | Tuple syntax and known tuple objects; `cart(...)` and `cart_dim(...)` syntax. | A similarly printed ordinary set does not become a tuple or Cartesian object without the structural fact. |

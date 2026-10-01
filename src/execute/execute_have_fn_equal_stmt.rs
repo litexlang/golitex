@@ -92,22 +92,22 @@ impl Runtime {
         stmt: &HaveFnEqualStmt,
         fn_set: &FnSet,
     ) -> RuntimeResult<StoreHaveFnEqualAndInferResult> {
-        if self.identifier_defined_in_stack(&stmt.name) {
+        if self.identifier_defined_in_stack(&stmt.name.name) {
             return Err(RuntimeError::InternalBug(format!(
                 "identifier `{}` is already defined in this ExecEnv",
-                stmt.name
+                stmt.name.name
             )));
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
-            stmt.name.clone(),
+            stmt.name.name.clone(),
             StoredIdentifierDefinition::HaveFnEqual((
-                stmt.name.clone(),
+                stmt.name.name.clone(),
                 Rc::new(stmt.clone()),
             )),
         );
 
-        // HaveFnEqualStmt carries `name: String`; file-root mention uses qualified form.
-        let function_obj = Obj::Identifier(self.identifier_obj_for_file_root_symbol(stmt.name.clone()));
+        // Preserve the parsed binding; only actual file-root names are qualified.
+        let function_obj = Obj::Identifier(self.identifier_obj_for_stored_mention(&stmt.name));
 
         let membership_fact_id = self.global_ids.allocate_fact_id();
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {

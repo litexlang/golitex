@@ -1,10 +1,9 @@
-# Migration blocker B05: see plan/迁移的plan/和example有关.md.
 # Infer: InFact.IndexCart
 # When: store `f $in index_cart(I, S, g)`.
 # Infers: `f $in fn(alpha I) family_union(S)` and `$is_choice_function_for(I, S, g, f)`.
 # Run: litex -f examples/infer/atomic/in_index_cart.lit
 
-let g = fn(alpha {1}) R {alpha}
-have f set
-trust f $in index_cart({1}, R, g)
-$is_choice_function_for({1}, R, g, f)
+have fn g(k {1}) {{1}} = {1}
+forall f index_cart({1}, {{1}}, g):
+    f $in fn(alpha {1}) family_union({{1}})
+    $is_choice_function_for({1}, {{1}}, g, f)

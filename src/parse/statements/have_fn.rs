@@ -43,7 +43,7 @@ impl Runtime {
         }
 
         // Occupy at enclosing scope before param binders.
-        let _bound = self.define_plain_atom_as_parse(&tb, name.clone())?;
+        let bound = self.define_plain_atom_as_parse(&tb, name.clone())?;
 
         // `have fn name by exist!:` has no signature paren list.
         if tb.peek() == Some(BY) {
@@ -106,7 +106,7 @@ impl Runtime {
             };
             Ok(Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(
                 HaveFnEqualStmt {
-                    name,
+                    name: bound,
                     equal_to_anonymous_fn,
                     line_file: SourceLine::new(block.line, self.code_source.clone()),
                 },

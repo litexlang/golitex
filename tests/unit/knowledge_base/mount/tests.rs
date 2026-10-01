@@ -8,8 +8,8 @@ use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::ast::stmt::DefPropStmt;
 use crate::exec_env::exec_env::DefinitionMemory;
 use crate::knowledge_base::{
-    compute_fingerprint, store_definition_memory, try_mount_module, write_module_kb,
-    ExportKbWrite, FingerprintInputs, GlobalIdsSnapshot, KbMountMiss,
+    compute_fingerprint, store_definition_memory, try_mount_module, write_module_kb, ExportKbWrite,
+    FingerprintInputs, GlobalIdsSnapshot, KbMountMiss,
 };
 use crate::runtime::runtime_ids::{FactId, IdentifierId};
 use crate::runtime::CodeSource;
@@ -39,10 +39,7 @@ fn sample_prop(id: u64, fact_id: u64) -> DefPropStmt {
         },
         iff_facts: vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: FactId::new(fact_id),
-            left: Obj::Identifier(IdentifierObj::plain(
-                IdentifierId::new(id),
-                "x".to_string(),
-            )),
+            left: Obj::Identifier(IdentifierObj::plain(IdentifierId::new(id), "x".to_string())),
             right: Obj::Literal(Literal::Number(Number {
                 normalized_value: "0".to_string(),
             })),
@@ -55,8 +52,7 @@ fn sample_prop(id: u64, fact_id: u64) -> DefPropStmt {
 fn sample_defs(id: u64, fact_id: u64) -> DefinitionMemory {
     let mut defs = DefinitionMemory::new();
     let prop = sample_prop(id, fact_id);
-    defs.predicate_definitions
-        .insert(prop.name.clone(), prop);
+    defs.predicate_definitions.insert(prop.name.clone(), prop);
     defs
 }
 
@@ -177,8 +173,32 @@ fn definition_memory_round_trip_string() {
     let defs = sample_defs(7, 42);
     let text = store_definition_memory(&defs).expect("store");
     let back = crate::knowledge_base::load_definition_memory(&text).expect("load");
-    assert_eq!(
-        store_definition_memory(&back).expect("re-store"),
-        text
+    assert_eq!(store_definition_memory(&back).expect("re-store"), text);
+}
+
+#[test]
+fn old_module_abi_is_a_cache_miss() {
+    let root = temp_module_root();
+    let fingerprint = "aaaaaaaaaaaaaaaa";
+    write_module_kb(&root, fingerprint, 0, &BTreeMap::new(), &[]).expect("write current cache");
+    let manifest = crate::knowledge_base::manifest_path(&root);
+    let current = fs::read_to_string(&manifest).unwrap();
+    let old = current.replace(
+        &format!("\"abi\": \"{}\"", crate::knowledge_base::KB_ABI),
+        "\"abi\": \"1\"",
     );
+    assert_ne!(current, old);
+    fs::write(&manifest, old).unwrap();
+    let mounted = try_mount_module(
+        &root,
+        fingerprint,
+        &GlobalIdsSnapshot::new(1, 1, 1, 1),
+        &HashMap::new(),
+    );
+    assert!(matches!(
+        mounted,
+        Err(KbMountMiss::Corrupt(crate::knowledge_base::KbCodecError::Shape(message)))
+            if message.contains("kb abi mismatch: file `1`")
+    ));
+    fs::remove_dir_all(&root).unwrap();
 }

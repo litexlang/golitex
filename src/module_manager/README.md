@@ -26,7 +26,7 @@ run. This package owns **tables + parse + mount APIs + name elaborate** only.
 | Form | Meaning after elaborate |
 |------|-------------------------|
 | `x` | local / current-module plain name |
-| `a::b` | current module export file `a`, symbol `b` → `WithExportFileId` |
+| `a::b` | current module export file `a`, symbol `b` → `WithExportFileId` at root; `WithModAndExportFileId` inside an import |
 | `a::b::c` | import alias `a` → global module, export `b`, symbol `c` → `WithModAndExportFileId` |
 | `a:::b` | flatten sugar only → sole export `F` → same as `a::F::b` |
 
@@ -34,6 +34,9 @@ run. This package owns **tables + parse + mount APIs + name elaborate** only.
 - Export name may equal an import alias; forms disambiguate.
 - Import aliases within one config must not collide with each other.
 - Imports before exports. Deps of a module must already be on global before it runs.
+- Object well-definedness, definition unfolding, and `release obj def` select
+  the declaration by the complete file/module owner. A known export name does
+  not make an undeclared member such as `base::ghost` a well-defined object.
 
 ---
 

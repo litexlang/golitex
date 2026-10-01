@@ -1,4 +1,5 @@
 pub mod by_equal_from_known_difference_zero;
+pub mod by_finite_subset_size;
 pub mod by_inverse_trig;
 pub mod by_power_laws;
 pub mod by_equality_identities_wave2;
