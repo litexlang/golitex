@@ -272,6 +272,8 @@ pub struct ExecByDefStmtSuccess {
 }
 
 pub enum ExecByDefStmtFailed {
+    // No supported definition, or its defining obligations did not verify.
+    DefinitionUnavailable,
     GoalWd(VerifyFactWellDefinedResult),
     Proof(VerifyFactResult),
     Store(String),

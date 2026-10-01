@@ -8,6 +8,7 @@ use crate::ast::obj::{
     Sub,
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -24,7 +25,8 @@ pub struct ProductModFactorZeroBuiltinRuleProof {}
 // Builtin EqualityFromTwoSidedWeakOrder: a = b from a <= b and b <= a.
 // Example: have a R; have b R; trust a <= b; trust b <= a; a = b.
 pub struct EqualityFromTwoSidedWeakOrderBuiltinRuleProof {
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub left_le_right_proof: AtomicExceptEqualityFactKnownProof,
+    pub right_le_left_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 // Builtin DiffZeroFromEqualOperands: a - b = 0 (or 0 = a - b) from a = b.
@@ -256,15 +258,15 @@ impl Runtime {
     ) -> RuntimeResult<Option<EqualityFromTwoSidedWeakOrderBuiltinRuleProof>> {
         // Only cite already-known weak orders. Full verify_fact here re-enters
         // equality search and can stack-overflow on goals like min(a,a)=a.
-        let Some(cite_ab) = self.known_less_equal_fact_id(&fact.left, &fact.right) else {
+        let Some(left_le_right_proof) = self.known_less_equal_proof(&fact.left, &fact.right) else {
             return Ok(None);
         };
-        let Some(cite_ba) = self.known_less_equal_fact_id(&fact.right, &fact.left) else {
+        let Some(right_le_left_proof) = self.known_less_equal_proof(&fact.right, &fact.left) else {
             return Ok(None);
         };
-        let _ = (cite_ab, cite_ba);
         Ok(Some(EqualityFromTwoSidedWeakOrderBuiltinRuleProof {
-            proof_of_requirement_facts: Vec::new(),
+            left_le_right_proof,
+            right_le_left_proof,
         }))
     }
 

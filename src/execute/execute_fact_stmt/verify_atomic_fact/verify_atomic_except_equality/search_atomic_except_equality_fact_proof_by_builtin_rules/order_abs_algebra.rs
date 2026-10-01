@@ -4,7 +4,6 @@
 //! Subgoals are proved via `verify_fact` (known facts, closed numeric, earlier rules).
 
 use crate::ast::fact::{AtomicFact, Fact, LessEqualFact};
-use crate::ast::names::AtomicName;
 use crate::ast::obj::{
     Abs, Add, ArithmeticOperator, Mul, Obj, Sub, TrigOperator,
 };
@@ -28,7 +27,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     UnitCircleLowerBoundBuiltinRuleProof, UnitCircleUpperBoundBuiltinRuleProof,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::parse::keywords::LESS_EQUAL;
 use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 impl Runtime {
@@ -446,26 +444,26 @@ impl Runtime {
 
     // Known `abs(x) <= a` ⇒ goal `x <= a`.
     pub(super) fn abs_le_implies_upper_proof(
-        &self,
+        &mut self,
         fact: &LessEqualFact,
     ) -> Option<LessEqualFactSearchProofByBuiltinRule> {
         let abs_x = abs_obj(&fact.left);
-        let cite_fact_id = self.known_less_equal_fact_id(&abs_x, &fact.right)?;
+        let premise_proof = self.known_less_equal_proof(&abs_x, &fact.right)?;
         Some(LessEqualFactSearchProofByBuiltinRule::AbsLeImpliesUpper(
-            AbsLeImpliesUpperBuiltinRuleProof { cite_fact_id },
+            AbsLeImpliesUpperBuiltinRuleProof { premise_proof },
         ))
     }
 
     // Known `abs(x) <= a` ⇒ goal `-x <= a`.
     pub(super) fn abs_le_implies_neg_upper_proof(
-        &self,
+        &mut self,
         fact: &LessEqualFact,
     ) -> Option<LessEqualFactSearchProofByBuiltinRule> {
         let x = match_negation(&fact.left)?;
         let abs_x = abs_obj(x);
-        let cite_fact_id = self.known_less_equal_fact_id(&abs_x, &fact.right)?;
+        let premise_proof = self.known_less_equal_proof(&abs_x, &fact.right)?;
         Some(LessEqualFactSearchProofByBuiltinRule::AbsLeImpliesNegUpper(
-            AbsLeImpliesNegUpperBuiltinRuleProof { cite_fact_id },
+            AbsLeImpliesNegUpperBuiltinRuleProof { premise_proof },
         ))
     }
 
@@ -529,31 +527,7 @@ impl Runtime {
         self.verify_fact(&goal, verify_state)
     }
 
-    pub(crate) fn known_less_equal_fact_id(&self, left: &Obj, right: &Obj) -> Option<FactId> {
-        let key = (AtomicName::Plain {
-            name: LESS_EQUAL.into(),
-        }, true);
-        let left_ir = left.ir();
-        let right_ir = right.ir();
-        for env in self.execution_environments_stack.iter().rev() {
-            let Some(knowns) = env
-                .facts
-                .known_atomic_except_equality_facts
-                .by_prop
-                .get(&key)
-            else {
-                continue;
-            };
-            for known in knowns {
-                if let AtomicFact::LessEqualFact(f) = known {
-                    if f.left.ir() == left_ir && f.right.ir() == right_ir {
-                        return Some(f.fact_id);
-                    }
-                }
-            }
-        }
-        None
-    }
+
 }
 
 fn less_equal_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact {

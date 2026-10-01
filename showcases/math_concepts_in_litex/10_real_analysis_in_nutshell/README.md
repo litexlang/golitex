@@ -3,8 +3,8 @@
 This standalone showcase expresses epsilon-tail convergence, includes proofs
 of constant-sequence convergence and uniqueness of sequence limits, and uses
 that existence-and-uniqueness result to define a canonical `lim` selector.
-Those proofs remain blocked by the current migration; they are not yet a
-verified complete module.
+The complete Litex file and registered module passed strict release
+verification on 2026-10-01.
 
 ```bash
 target/release/litex -strict -r showcases/math_concepts_in_litex/10_real_analysis_in_nutshell
@@ -16,10 +16,13 @@ The Lean comparison defines closeness as the actual real inequality
 `|a n - L| < ε` and derives uniqueness with `Nat.max` and the triangle
 inequality. The published Litex file contains no direct trust or local axiom.
 
-The equality-bridge recheck still reports five failed Litex statements in the
-constant-limit, uniqueness, and selector chain. See
-[`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md) for the attempted
-proofs and current diagnostics. The Lean comparison was not rerun in this cleanup.
+The sequence carrier is written explicitly as `fn(index N+) R`, preserving
+the original one-based indexing. The constant proof establishes the tail
+before choosing its witness. Uniqueness uses `n1 + n2` as a common tail index,
+then explicit absolute-value and triangle-inequality steps. All five formerly
+failing statements now pass; see
+[`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md) for evidence.
+The Lean comparison was not rerun.
 
 This module itself stops at sequence-limit existence, uniqueness, and safe
 selection. The broader calculus/real-analysis direction may later grow through

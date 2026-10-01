@@ -12,6 +12,13 @@ pub struct SearchedProofWhyText {
 
 pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedProofWhyText {
     let (type_tag, rule_name, message) = match (kind, lang) {
+        ("known_special_property", OutputLanguage::English) => (
+            "known_special_property", "Known special property",
+            "Verified by matching a definition-time object property and existing evidence",
+        ),
+        ("known_special_property", OutputLanguage::Chinese) => (
+            "已知特殊属性", "已知特殊属性", "匹配对象定义时记录的属性与已有证据",
+        ),
         ("builtin_strategy", OutputLanguage::English) => (
             "builtin_strategy",
             "Builtin strategy",

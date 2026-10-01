@@ -323,6 +323,19 @@ fn why_from_atomic_except_searched(
         AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
             cite_from_fact_id(runtime, p.cite_fact_id)
         }
+        AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(p) => {
+            let lang = output_language(runtime);
+            let text = explain_searched_proof_why("known_special_property", lang);
+            let mut fields = vec![
+                ("type", string(text.type_tag)),
+                ("rule_name", string(text.rule_name)),
+                ("message", string(text.message)),
+            ];
+            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_definition_fact_id()) {
+                fields.push(("cite", string(fact.readable_string())));
+            }
+            object(lang, fields)
+        }
         AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(p) => {
             cite_forall_from_fact_id(runtime, p.cite.fact_id)
         }

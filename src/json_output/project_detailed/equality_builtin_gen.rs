@@ -400,7 +400,8 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
         },
         EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("EqualityFromTwoSidedWeakOrder"))];
-            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
+            entries.push(("left_le_right_proof", super::searched::project_known_premise(&p.left_le_right_proof, runtime)));
+            entries.push(("right_le_left_proof", super::searched::project_known_premise(&p.right_le_left_proof, runtime)));
             object_for(runtime, entries)
         },
         EqualitySearchProofByBuiltinRule::DiffZeroFromEqualOperands(p) => {
@@ -617,10 +618,8 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
         EqualitySearchProofByBuiltinRule::FiniteSetEqualFromSubsetSize(p) => object_for(runtime, vec![
             ("type", string("builtin_rule")),
             ("rule", string("FiniteSetEqualFromSubsetSize")),
-            ("left_finite_proof", project_verify_fact(&p.left_finite_proof, runtime)),
-            ("right_finite_proof", project_verify_fact(&p.right_finite_proof, runtime)),
-            ("subset_proof", project_verify_fact(&p.subset_proof, runtime)),
             ("size_equal_proof", project_verify_fact(&p.size_equal_proof, runtime)),
+            ("subset_proof", project_verify_fact(&p.subset_proof, runtime)),
         ]),
         EqualitySearchProofByBuiltinRule::CartProjFactor(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("CartProjFactor"))];

@@ -35,12 +35,13 @@ existence into primitive existential and universal propositions, then uses
 `Classical.choose`; this makes the comparison with Litex's `have fn ... by
 exist!` explicit.
 
-The Litex source contains no trusted steps, but its complete verification is
-still blocked by the current migration. The finite-domain membership proof
-now uses the proved `first_set $subset N` directly; enumeration of a named
-domain is unsupported. Remaining failures are recorded in
-[`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md).
-The Lean comparison was not reverified during this cleanup.
+The complete Litex file and registered module passed strict release
+verification on 2026-10-01, with no trusted steps. The finite domain remains
+exactly `{1, 2, 3}`: its proved numeric carrier is written explicitly in the
+function signatures. Enumeration uses the displayed set, and extensionality
+uses two previously proved subset relations. See
+[`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md) for the proof
+journals and file/module gates. The Lean comparison was not rerun.
 
 More advanced material—axiomatic set theory, inverse images,
 equivalence relations, quotients, cardinal comparison, and

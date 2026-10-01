@@ -1,13 +1,12 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::GreaterEqualFact;
-use crate::ast::names::AtomicName;
-use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, StandardSet, Sub};
+use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, Sub};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::is_number_value;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::parse::keywords::IN;
 use crate::rational_expression::{
     compare_closed_objs_by_normalized_decimal, NumberCompareResult,
 };
-use crate::runtime::{FactId, Runtime, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeResult};
 use crate::execute::execute_fact_stmt::VerifyFactResult;
 
 // Builtin rules for `a >= b`.
@@ -55,15 +54,15 @@ pub struct OrderReflexivityBuiltinRuleProof {
 }
 
 pub struct FromKnownGreaterBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct FromKnownInPositiveNaturalBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct PredecessorNonNegFromAtLeastOneBuiltinRuleProof {
-    pub cite_at_least_one_fact_id: FactId,
+    pub at_least_one_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct FiniteSetSizeNonnegativeBuiltinRuleProof {
@@ -95,10 +94,10 @@ impl Runtime {
                 ),
             ));
         }
-        if let Some(cite_fact_id) = self.known_greater_fact_id(&fact.left, &fact.right) {
+        if let Some(premise_proof) = self.known_greater_proof(&fact.left, &fact.right) {
             return Ok(Some(
                 GreaterEqualFactSearchProofByBuiltinRule::FromKnownGreater(
-                    FromKnownGreaterBuiltinRuleProof { cite_fact_id },
+                    FromKnownGreaterBuiltinRuleProof { premise_proof },
                 ),
             ));
         }
@@ -117,23 +116,23 @@ impl Runtime {
                 let one = Obj::Literal(Literal::Number(Number {
                     normalized_value: "1".to_string(),
                 }));
-                if let Some(cite_at_least_one_fact_id) =
-                    self.known_greater_equal_fact_id(left.as_ref(), &one)
+                if let Some(at_least_one_proof) =
+                    self.known_greater_equal_proof(left.as_ref(), &one)
                 {
                     return Ok(Some(
                         GreaterEqualFactSearchProofByBuiltinRule::PredecessorNonNegFromAtLeastOne(
                             PredecessorNonNegFromAtLeastOneBuiltinRuleProof {
-                                cite_at_least_one_fact_id,
+                                at_least_one_proof,
                             },
                         ),
                     ));
                 }
             }
             (left, right) if is_one_obj(right) => {
-                if let Some(cite_fact_id) = self.known_in_positive_natural_fact_id(left) {
+                if let Some(premise_proof) = self.known_in_positive_natural_proof(left) {
                     return Ok(Some(
                         GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(
-                            FromKnownInPositiveNaturalBuiltinRuleProof { cite_fact_id },
+                            FromKnownInPositiveNaturalBuiltinRuleProof { premise_proof },
                         ),
                     ));
                 }
@@ -168,29 +167,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn known_in_natural_fact_id(&self, element: &Obj) -> Option<FactId> {
-        let key = (AtomicName::Plain { name: IN.into() }, true);
-        let element_ir = element.ir();
-        let n_ir = Obj::StandardSet(StandardSet::N).ir();
-        for env in self.execution_environments_stack.iter().rev() {
-            let Some(knowns) = env
-                .facts
-                .known_atomic_except_equality_facts
-                .by_prop
-                .get(&key)
-            else {
-                continue;
-            };
-            for known in knowns {
-                if let crate::ast::fact::AtomicFact::InFact(f) = known {
-                    if f.element.ir() == element_ir && f.set.ir() == n_ir {
-                        return Some(f.fact_id);
-                    }
-                }
-            }
-        }
-        None
-    }
+
 }
 
 fn is_one_obj(obj: &Obj) -> bool {

@@ -4,7 +4,7 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    // Cheap phase: builtin rule → known atomic.
+    // Cheap phase: known atomic → known special property → builtin rule.
     // Deep phase (can_use_def_and_known_forall_and_known_strategy, round > 0):
     //   with_one_less_round() once, then
     //   verify_by_strategy → by definition → known forall →
@@ -20,13 +20,10 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchedProof>> {
-        if let Some(result) = self.search_atomic_except_equality_fact_proof_by_known_atomic_fact(
-            fact,
-            verify_state.clone(),
+        if let Some(proof) = self.search_atomic_except_equality_fact_proof_by_known(
+            fact, verify_state.clone(),
         )? {
-            return Ok(Some(
-                AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(result),
-            ));
+            return Ok(Some(proof));
         }
 
         if verify_state.can_use_builtin_rule_round > 0 {

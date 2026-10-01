@@ -1,0 +1,4 @@
+have a R = 1
+release obj def Shapes::base::id
+Shapes::base::id(a) $in R
+Shapes::base::id(a) $in fn_range(Shapes::base::id)

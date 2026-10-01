@@ -5,7 +5,6 @@
 use crate::ast::fact::{
     AtomicFact, Fact, InFact, LessEqualFact, LessFact, NotEqualFact,
 };
-use crate::ast::names::AtomicName;
 use crate::ast::obj::{
     ArithmeticOperator, ExpLogOperator, Literal, Log, Mul, Number, Obj, Pow, Sqrt, StandardSet,
 };
@@ -25,8 +24,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::parse::keywords::IN;
-use crate::runtime::{FactId, Runtime, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Shape / premise search for power, sqrt, and log weak-order builtins.
@@ -37,10 +35,10 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         if is_one_obj(&fact.left) {
-            if let Some(cite_fact_id) = self.known_in_positive_natural_fact_id(&fact.right) {
+            if let Some(premise_proof) = self.known_in_positive_natural_proof(&fact.right) {
                 return Ok(Some(
                     LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(
-                        FromKnownInPositiveNaturalBuiltinRuleProof { cite_fact_id },
+                        FromKnownInPositiveNaturalBuiltinRuleProof { premise_proof },
                     ),
                 ));
             }
@@ -584,29 +582,7 @@ impl Runtime {
         self.verify_fact(&goal, verify_state)
     }
 
-    pub(crate) fn known_in_positive_natural_fact_id(&self, element: &Obj) -> Option<FactId> {
-        let key = (AtomicName::Plain { name: IN.into() }, true);
-        let element_ir = element.ir();
-        let n_pos_ir = Obj::StandardSet(StandardSet::NPos).ir();
-        for env in self.execution_environments_stack.iter().rev() {
-            let Some(knowns) = env
-                .facts
-                .known_atomic_except_equality_facts
-                .by_prop
-                .get(&key)
-            else {
-                continue;
-            };
-            for known in knowns {
-                if let AtomicFact::InFact(f) = known {
-                    if f.element.ir() == element_ir && f.set.ir() == n_pos_ir {
-                        return Some(f.fact_id);
-                    }
-                }
-            }
-        }
-        None
-    }
+
 }
 
 fn make_less_equal_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact {

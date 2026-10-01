@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::LessEqualFact;
 use crate::ast::obj::{Literal, Number, Obj};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -205,7 +206,7 @@ pub struct OrderReflexivityBuiltinRuleProof {
 }
 
 pub struct FromKnownLessBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct ArcsinPrincipalLowerBoundBuiltinRuleProof {}
@@ -252,11 +253,11 @@ pub struct AbsLeFromSymmetricBoundsBuiltinRuleProof {
 }
 
 pub struct AbsLeImpliesUpperBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct AbsLeImpliesNegUpperBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct AbsSelfUpperBuiltinRuleProof {}
@@ -297,7 +298,7 @@ pub struct SqrtMonotoneNondecreasingBuiltinRuleProof {
 }
 
 pub struct FromKnownInPositiveNaturalBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct LogOrderPreservingWeakBuiltinRuleProof {
@@ -313,11 +314,11 @@ pub struct LessEqualTransitivityBuiltinRuleProof {
 }
 
 pub struct LessEqualFromNonnegDifferenceBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct NonnegDifferenceFromLessEqualBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct ModRemainderNonnegativeBuiltinRuleProof {
@@ -340,8 +341,6 @@ pub struct FiniteSetSizeAtLeastOneLeBuiltinRuleProof {
 }
 
 pub struct FiniteSetSizeSubsetLeBuiltinRuleProof {
-    pub left_finite_proof: VerifyFactResult,
-    pub right_finite_proof: VerifyFactResult,
     pub subset_proof: VerifyFactResult,
 }
 
@@ -440,9 +439,9 @@ impl Runtime {
                 ),
             ));
         }
-        if let Some(cite_fact_id) = self.known_less_fact_id(&fact.left, &fact.right) {
+        if let Some(premise_proof) = self.known_less_proof(&fact.left, &fact.right) {
             return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FromKnownLess(
-                FromKnownLessBuiltinRuleProof { cite_fact_id },
+                FromKnownLessBuiltinRuleProof { premise_proof },
             )));
         }
         if let Some(proof) = self.try_order_flip_mul_minus_one_to_less_equal(fact) {

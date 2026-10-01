@@ -68,12 +68,12 @@ impl LessFactSearchProofByBuiltinRule {
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
             Self::LessTransitivity(_) => None,
-            Self::LessFromPosDifference(p) => Some(p.cite_fact_id),
-            Self::PosDifferenceFromLess(p) => Some(p.cite_fact_id),
+            Self::LessFromPosDifference(p) => p.premise_proof.cite_fact_id(),
+            Self::PosDifferenceFromLess(p) => p.premise_proof.cite_fact_id(),
             Self::NumericLowerBoundWeakenLt(p) => Some(p.cite_fact_id),
             Self::NumericUpperBoundWeakenLt(p) => Some(p.cite_fact_id),
             Self::OrderSignFromPositiveLiteralBound(p) => Some(p.cite_fact_id),
-            Self::OrderFlipMulMinusOne(p) => Some(p.cite_fact_id),
+            Self::OrderFlipMulMinusOne(p) => p.premise_proof.cite_fact_id(),
             _ => None,
         }
     }

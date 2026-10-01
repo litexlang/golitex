@@ -21,7 +21,7 @@ impl NotLessFactSearchProofByBuiltinRule {
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
             Self::ClosedNumericComparison(_) => None,
-            Self::FromKnownGreater(p) => Some(p.cite_fact_id),
+            Self::FromKnownGreater(p) => p.premise_proof.cite_fact_id(),
         }
     }
 }

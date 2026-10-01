@@ -131,17 +131,17 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
-            Self::FromKnownLess(p) => Some(p.cite_fact_id),
-            Self::AbsLeImpliesUpper(p) => Some(p.cite_fact_id),
-            Self::AbsLeImpliesNegUpper(p) => Some(p.cite_fact_id),
-            Self::FromKnownInPositiveNatural(p) => Some(p.cite_fact_id),
+            Self::FromKnownLess(p) => p.premise_proof.cite_fact_id(),
+            Self::AbsLeImpliesUpper(p) => p.premise_proof.cite_fact_id(),
+            Self::AbsLeImpliesNegUpper(p) => p.premise_proof.cite_fact_id(),
+            Self::FromKnownInPositiveNatural(p) => p.premise_proof.cite_fact_id(),
             Self::LessEqualTransitivity(_) => None,
-            Self::LessEqualFromNonnegDifference(p) => Some(p.cite_fact_id),
-            Self::NonnegDifferenceFromLessEqual(p) => Some(p.cite_fact_id),
+            Self::LessEqualFromNonnegDifference(p) => p.premise_proof.cite_fact_id(),
+            Self::NonnegDifferenceFromLessEqual(p) => p.premise_proof.cite_fact_id(),
             Self::NumericLowerBoundWeakenLe(p) => Some(p.cite_fact_id),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => Some(p.cite_fact_id),
             Self::NumericUpperBoundWeakenLe(p) => Some(p.cite_fact_id),
-            Self::OrderFlipMulMinusOne(p) => Some(p.cite_fact_id),
+            Self::OrderFlipMulMinusOne(p) => p.premise_proof.cite_fact_id(),
             Self::OrderSignFromNegativeLiteralBound(p) => Some(p.cite_fact_id),
             _ => None,
         }

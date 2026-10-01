@@ -18,7 +18,7 @@ impl NotSupersetFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
-            Self::FromKnownNotSubset(p) => Some(p.cite_fact_id),
+            Self::FromKnownNotSubset(p) => p.premise_proof.cite_fact_id(),
         }
     }
 }

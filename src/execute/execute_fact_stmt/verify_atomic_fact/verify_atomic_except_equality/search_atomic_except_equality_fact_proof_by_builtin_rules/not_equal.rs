@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{
     AtomicFact, Fact, InFact, IsNonemptySetFact, LessEqualFact, LessFact, NotEqualFact, NotInFact,
 };
@@ -15,7 +16,7 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::{
     evaluate_obj_to_normalized_decimal_number, objs_equal_by_rational_expression_evaluation,
 };
-use crate::runtime::{FactId, Runtime, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
@@ -101,19 +102,24 @@ pub struct ClosedDecimalNotEqualBuiltinRuleProof {
 }
 
 pub struct NotEqualSymmetryBuiltinRuleProof {
-    pub alternate_fact: Fact,
-    pub proof_of_alternate_fact: VerifyFactResult,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct ListSetDifferentLengthBuiltinRuleProof {}
 
 pub struct FromKnownStrictOrderBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
-pub struct CosNonzeroOnOpenHalfPiBuiltinRuleProof {}
+pub struct CosNonzeroOnOpenHalfPiBuiltinRuleProof {
+    pub lower_bound_proof: AtomicExceptEqualityFactKnownProof,
+    pub upper_bound_proof: AtomicExceptEqualityFactKnownProof,
+}
 pub struct CosNonzeroAtZeroBuiltinRuleProof {}
-pub struct SinNonzeroOnOpenPiBuiltinRuleProof {}
+pub struct SinNonzeroOnOpenPiBuiltinRuleProof {
+    pub lower_bound_proof: AtomicExceptEqualityFactKnownProof,
+    pub upper_bound_proof: AtomicExceptEqualityFactKnownProof,
+}
 pub struct SinNonzeroAtHalfPiBuiltinRuleProof {}
 
 pub struct AbsNonzeroFromArgBuiltinRuleProof {
@@ -182,18 +188,18 @@ impl Runtime {
                 )));
             }
         }
-        if let Some(cite_fact_id) = self
-            .known_greater_fact_id(&fact.left, &fact.right)
-            .or_else(|| self.known_less_fact_id(&fact.left, &fact.right))
+        if let Some(premise_proof) = self
+            .known_greater_proof(&fact.left, &fact.right)
+            .or_else(|| self.known_less_proof(&fact.left, &fact.right))
         {
             return Ok(Some(
                 NotEqualFactSearchProofByBuiltinRule::FromKnownStrictOrder(
-                    FromKnownStrictOrderBuiltinRuleProof { cite_fact_id },
+                    FromKnownStrictOrderBuiltinRuleProof { premise_proof },
                 ),
             ));
         }
         // Prove `a != b` from a known / already-proved `b != a` (no recursive flip).
-        if let Some(proof) = self.try_not_equal_symmetry(fact, verify_state.clone())? {
+        if let Some(proof) = self.try_not_equal_symmetry(fact) {
             return Ok(Some(proof));
         }
 
@@ -439,30 +445,11 @@ impl Runtime {
     fn try_not_equal_symmetry(
         &mut self,
         fact: &NotEqualFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
-        if self
-            .known_not_equal_fact_id(&fact.right, &fact.left)
-            .is_none()
-        {
-            return Ok(None);
-        }
-        let alternate_fact = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: fact.right.clone(),
-            right: fact.left.clone(),
-            line_file: None,
-        }));
-        let proof_of_alternate_fact = self.verify_fact(&alternate_fact, verify_state)?;
-        if proof_of_alternate_fact.is_failed() {
-            return Ok(None);
-        }
-        Ok(Some(NotEqualFactSearchProofByBuiltinRule::NotEqualSymmetry(
-            NotEqualSymmetryBuiltinRuleProof {
-                alternate_fact,
-                proof_of_alternate_fact,
-            },
-        )))
+    ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
+        let premise_proof = self.known_not_equal_proof(&fact.right, &fact.left)?;
+        Some(NotEqualFactSearchProofByBuiltinRule::NotEqualSymmetry(
+            NotEqualSymmetryBuiltinRuleProof { premise_proof },
+        ))
     }
 
     fn abs_nonzero_from_arg_proof(
@@ -511,36 +498,28 @@ impl Runtime {
     }
 
     fn cos_nonzero_on_open_half_pi_for_arg(
-        &self,
+        &mut self,
         arg: &Obj,
     ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
         let lower = negative_half_pi();
         let upper = half_pi();
-        if self.known_less_fact_id(&lower, arg).is_none() {
-            return None;
-        }
-        if self.known_less_fact_id(arg, &upper).is_none() {
-            return None;
-        }
+        let lower_bound_proof = self.known_less_proof(&lower, arg)?;
+        let upper_bound_proof = self.known_less_proof(arg, &upper)?;
         Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOpenHalfPi(
-            CosNonzeroOnOpenHalfPiBuiltinRuleProof {},
+            CosNonzeroOnOpenHalfPiBuiltinRuleProof { lower_bound_proof, upper_bound_proof },
         ))
     }
 
     fn sin_nonzero_on_open_pi_for_arg(
-        &self,
+        &mut self,
         arg: &Obj,
     ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
         let lower = zero_obj();
         let upper = pi_obj();
-        if self.known_less_fact_id(&lower, arg).is_none() {
-            return None;
-        }
-        if self.known_less_fact_id(arg, &upper).is_none() {
-            return None;
-        }
+        let lower_bound_proof = self.known_less_proof(&lower, arg)?;
+        let upper_bound_proof = self.known_less_proof(arg, &upper)?;
         Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOpenPi(
-            SinNonzeroOnOpenPiBuiltinRuleProof {},
+            SinNonzeroOnOpenPiBuiltinRuleProof { lower_bound_proof, upper_bound_proof },
         ))
     }
 

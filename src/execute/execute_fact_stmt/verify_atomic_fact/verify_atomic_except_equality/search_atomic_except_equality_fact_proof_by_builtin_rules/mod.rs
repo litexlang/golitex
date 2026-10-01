@@ -6,7 +6,6 @@ pub mod is_finite_set;
 pub mod is_nonempty_set;
 pub mod is_set;
 pub mod is_tuple;
-pub mod known_strict_order;
 pub mod less;
 pub mod less_equal;
 pub mod normal_atomic;

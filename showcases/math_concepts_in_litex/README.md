@@ -5,10 +5,12 @@ and early undergraduate topics.
 The numeric prefixes are editorial order only: the projects do not import one
 another.
 
-Migration status (2026-09-30): original mathematical content has been restored
+Migration status (2026-10-01): original mathematical content has been restored
 against the pinned upstream snapshot in `scripts/math_concepts_in_litex_upstream`.
-The active `.lit` sources contain no direct `trust`, but the complete modules
-still have verification failures or exceed the bounded verification time.
+The active `.lit` sources contain no direct `trust`. The complete
+sets/functions/relations, probability/statistics, and real-analysis modules
+now pass both strict release file and module verification. Other modules
+retain verification failures or bounded-time results from the earlier audit.
 Retained failing proofs are migration work, not checked theorems. See
 [`和showcase有关.md`](../../plan/迁移的plan/和showcase有关.md) for attempts,
 actual diagnostics, passing slices, and dependency blockers.

@@ -3174,3 +3174,51 @@ fn prop_and_exist_body_assume_earlier_facts_for_later_wd() {
 }
 
 
+
+#[test]
+fn by_def_requires_definition_route() {
+    use crate::execute::execute_by_stmt::{ExecByDefStmtResult, ExecByStmtResult};
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
+        AtomicExceptEqualityFactSearchedProof, VerifyAtomicExceptEqualityFactResult,
+    };
+    use crate::execute::execute_fact_stmt::VerifyFactResult;
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "prop above_zero(x R):\n    x > 0").is_failed());
+    // Store the target first: explicit requests must still select definition evidence.
+    assert!(!exec_one(&mut runtime, "$above_zero(1)").is_failed());
+    for code in ["by def $above_zero(1)", "by def:\n    ? $above_zero(1)",
+                 "by def $coprime(14, 25)", "by def N $subset R"] {
+        let result = exec_one(&mut runtime, code);
+        let ExecStmtResult::By(ExecByStmtResult::Def(ExecByDefStmtResult::Success(success))) = result else {
+            panic!("definition request failed: {code}");
+        };
+        let VerifyFactResult::AtomicExceptEquality(proof) = success.proof else {
+            panic!("expected atomic definition evidence");
+        };
+        let VerifyAtomicExceptEqualityFactResult::Success(proof) = *proof else {
+            panic!("expected successful proof");
+        };
+        assert!(matches!(proof.searched_proof, AtomicExceptEqualityFactSearchedProof::ByDefinition(_)));
+    }
+    for code in ["by def 1 > 0", "by def 1 = 1",
+                 "by def 1 $in {x R: x > 0}", "by def:\n    ? 1 > 0",
+                 "by def $above_zero(0)"] {
+        assert!(exec_one(&mut runtime, code).is_failed(), "must reject: {code}");
+    }
+    // Rejected requests leave ordinary verification available.
+    assert!(!exec_one(&mut runtime, "1 $in {x R: x > 0}").is_failed());
+    assert!(!exec_one(&mut runtime, "1 > 0").is_failed());
+}
+
+#[test]
+fn by_def_rechecks_known_predicate_obligations() {
+    let mut runtime = runtime_with_file_env();
+    // Computation can prove the target, but cannot replace its trial forall.
+    assert!(!exec_one(&mut runtime, "$prime(5)").is_failed());
+    assert!(exec_one(&mut runtime, "by def $prime(5)").is_failed());
+    // Even a known abstract predicate has no definition.
+    assert!(!exec_one(&mut runtime, "abstract_prop opaque(x R)").is_failed());
+    assert!(!exec_one(&mut runtime, "trust $opaque(1)").is_failed());
+    assert!(exec_one(&mut runtime, "by def $opaque(1)").is_failed());
+}

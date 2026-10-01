@@ -1,0 +1,21 @@
+# Tracer: explicit by def selects definition expansion.
+# Before: these requests were accepted by ordinary search:
+# by def 1 > 0
+# by def 1 $in {x R: x > 0}
+# Now: concrete predicates recheck their definitions and retain ByDefinition.
+prop above_zero(x R):
+    x > 0
+
+$above_zero(1)
+by def $above_zero(1)
+by def:
+    ? $above_zero(1)
+by def $coprime(14, 25)
+by def N $subset R
+1 $in {x R: x > 0}
+# Boundary: raw arithmetic, equality, SetBuilder membership, abstract predicates,
+# and unproved definition obligations are rejected by explicit by def.
+# Negative gates: by_def_requires_definition_route,
+# by_def_rechecks_known_predicate_obligations.
+# Evidence: target/release/litex -f examples/stmt_nodes/by/by_def_definition_route.lit
+# Implementation: src/execute/execute_by_stmt/exec_by_def_stmt.rs

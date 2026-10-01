@@ -1,9 +1,10 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::NotLessFact;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::{
     compare_closed_objs_by_normalized_decimal, NumberCompareResult,
 };
-use crate::runtime::{FactId, Runtime, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `not a < b` (i.e. a >= b on numbers).
 pub enum NotLessFactSearchProofByBuiltinRule {
@@ -23,7 +24,7 @@ pub struct ClosedNumericComparisonBuiltinRuleProof {
 }
 
 pub struct FromKnownGreaterBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 impl Runtime {
@@ -33,10 +34,10 @@ impl Runtime {
         fact: &NotLessFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotLessFactSearchProofByBuiltinRule>> {
-        if let Some(cite_fact_id) = self.known_greater_fact_id(&fact.left, &fact.right) {
+        if let Some(premise_proof) = self.known_greater_proof(&fact.left, &fact.right) {
             return Ok(Some(
                 NotLessFactSearchProofByBuiltinRule::FromKnownGreater(
-                    FromKnownGreaterBuiltinRuleProof { cite_fact_id },
+                    FromKnownGreaterBuiltinRuleProof { premise_proof },
                 ),
             ));
         }

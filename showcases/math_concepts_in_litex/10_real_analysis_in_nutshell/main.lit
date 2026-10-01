@@ -4,78 +4,115 @@
 # convergence, uniqueness of limits, and a uniquely defined limit selector.
 #
 # Main line: epsilon tails -> convergence -> uniqueness of a sequence limit.
+# Sequences here are functions on N+, retaining the original one-based domain.
+# Write that carrier explicitly instead of relying on the migrating seq alias.
 
-prop is_tail_close_to(a seq(R), L R, epsilon R+, n0 N+):
+prop is_tail_close_to(a fn(index N+) R, L R, epsilon R+, n0 N+):
     forall n N+:
         n >= n0
         =>:
             abs(a(n) - L) < epsilon
 
-prop has_eventual_closeness_to(a seq(R), L R, epsilon R+):
+prop has_eventual_closeness_to(a fn(index N+) R, L R, epsilon R+):
     exist n0 N+ st {$is_tail_close_to(a, L, epsilon, n0)}
 
-prop has_limit(a seq(R), L R):
+prop has_limit(a fn(index N+) R, L R):
     forall epsilon R+:
         $has_eventual_closeness_to(a, L, epsilon)
 
-prop is_convergent_sequence(a seq(R)):
+prop is_convergent_sequence(a fn(index N+) R):
     exist L R st {$has_limit(a, L)}
 
 # A constant sequence is eventually epsilon-close immediately, with n0 = 1.
+
 thm constant_sequence_has_limit:
     ? forall c R:
         $has_limit(fn(n N+) R {c}, c)
+    have fn constant(n N+) R = c
     claim:
         ? forall epsilon R+:
-            $has_eventual_closeness_to(fn(n N+) R {c}, c, epsilon)
-        witness $has_eventual_closeness_to(fn(n N+) R {c}, c, epsilon) from 1:
-            forall n N+:
-                n >= 1
-                =>:
-                    fn(k N+) R {c}(n) = c
-                    c - c = 0
-                    abs(c - c) = abs(0) = 0
-                    0 < epsilon
-                    abs(fn(k N+) R {c}(n) - c) = abs(c - c) = 0 < epsilon
-            by def $is_tail_close_to(fn(n N+) R {c}, c, epsilon, 1)
-    by def $has_limit(fn(n N+) R {c}, c)
+            $has_eventual_closeness_to(constant, c, epsilon)
+        forall n N+:
+            n >= 1
+            =>:
+                constant(n) = c
+                constant(n) - c = 0
+                abs(constant(n) - c) = 0
+                0 < epsilon
+                abs(constant(n) - c) < epsilon
+        by def $is_tail_close_to(constant, c, epsilon, 1)
+        witness $has_eventual_closeness_to(constant, c, epsilon) from 1
+    by def $has_limit(constant, c)
+    constant = fn(n N+) R {c}
+    $has_limit(fn(n N+) R {c}, c)
 
-# If two limits differed, epsilon = abs(L1-L2)/3 and a common tail index would
-# violate the triangle inequality.
+# Keep witness construction in a claim, then close the contradiction with facts.
+# The common tail index n1 + n2 is at least each positive starting index.
 thm sequence_limit_unique:
-    ? forall a seq(R), L1, L2 R:
+    ? forall a fn(index N+) R, L1, L2 R:
         $has_limit(a, L1)
         $has_limit(a, L2)
         =>:
             L1 = L2
-    by contra:
-        ? L1 = L2
+    claim:
+        ? forall:
+            L1 != L2
+            =>:
+                L1 = L2
         L1 - L2 != 0
-        abs(L1 - L2) > 0
-        abs(L1 - L2) / 3 > 0
+        0 <= abs(L1 - L2)
+        abs(L1 - L2) != 0
+        0 = abs(L1 - L2) or 0 < abs(L1 - L2)
+        by cases:
+            ? 0 < abs(L1 - L2)
+            case 0 = abs(L1 - L2):
+                impossible abs(L1 - L2) != 0
+            case 0 < abs(L1 - L2):
+                0 < abs(L1 - L2)
+        0 < abs(L1 - L2) / 3
         abs(L1 - L2) / 3 $in R+
         $has_eventual_closeness_to(a, L1, abs(L1 - L2) / 3)
         $has_eventual_closeness_to(a, L2, abs(L1 - L2) / 3)
         obtain n1 from $has_eventual_closeness_to(a, L1, abs(L1 - L2) / 3)
         obtain n2 from $has_eventual_closeness_to(a, L2, abs(L1 - L2) / 3)
-        have n0 N+ = finite_set_max(union({n1}, {n2}))
+        let n0 = n1 + n2
+        n0 $in N+
+        0 <= n1
+        0 <= n2
+        n1 <= n1 + n2
+        n2 <= n1 + n2
+        n1 <= n0
+        n2 <= n0
         n0 >= n1
         n0 >= n2
         abs(a(n0) - L1) < abs(L1 - L2) / 3
         abs(a(n0) - L2) < abs(L1 - L2) / 3
+        L1 - a(n0) = (0 - (a(n0) - L1))
+        abs(L1 - a(n0)) = abs((0 - (a(n0) - L1)))
+        abs((0 - (a(n0) - L1))) = abs(a(n0) - L1)
         abs(L1 - a(n0)) = abs(a(n0) - L1)
         L1 - L2 = (L1 - a(n0)) + (a(n0) - L2)
-        abs(L1 - L2) = abs((L1 - a(n0)) + (a(n0) - L2)) <= abs(L1 - a(n0)) + abs(a(n0) - L2)
+        abs((L1 - a(n0)) + (a(n0) - L2)) <= abs(L1 - a(n0)) + abs(a(n0) - L2)
+        abs(L1 - L2) = abs((L1 - a(n0)) + (a(n0) - L2))
+        abs(L1 - L2) <= abs(L1 - a(n0)) + abs(a(n0) - L2)
+        abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2) / 3 + abs(L1 - L2) / 3
         2 * abs(L1 - L2) < 3 * abs(L1 - L2)
-        abs(L1 - L2) / 3 + abs(L1 - L2) / 3 = 2 * abs(L1 - L2) / 3 < 3 * abs(L1 - L2) / 3 = abs(L1 - L2)
-        abs(L1 - a(n0)) + abs(a(n0) - L2) = abs(a(n0) - L1) + abs(a(n0) - L2) < abs(L1 - L2) / 3 + abs(L1 - L2) / 3 < abs(L1 - L2)
+        2 * abs(L1 - L2) / 3 < 3 * abs(L1 - L2) / 3
+        abs(L1 - L2) / 3 + abs(L1 - L2) / 3 = 2 * abs(L1 - L2) / 3
+        3 * abs(L1 - L2) / 3 = abs(L1 - L2)
+        abs(L1 - L2) / 3 + abs(L1 - L2) / 3 < abs(L1 - L2)
+        abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2)
         abs(L1 - L2) <= abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2)
-        impossible abs(L1 - L2) = abs(L1 - L2)
+        by contra:
+            ? L1 = L2
+            impossible abs(L1 - L2) = abs(L1 - L2)
+    by contra:
+        ? L1 = L2
+        L1 = L2
+        impossible L1 != L2
 
-# Convergence plus uniqueness turns the relational limit into a callable
-# selector on the set of convergent real sequences.
 claim:
-    ? forall a seq(R):
+    ? forall a fn(index N+) R:
         $is_convergent_sequence(a)
         =>:
             exist! L R st {$has_limit(a, L)}
@@ -92,12 +129,12 @@ claim:
             by thm sequence_limit_unique(a, L1, L2) => L1 = L2
 
 have fn lim by exist!:
-    ? forall a seq(R):
+    ? forall a fn(index N+) R:
         $is_convergent_sequence(a)
         =>:
             exist! L R st {$has_limit(a, L)}
 
-forall a seq(R):
+forall a fn(index N+) R:
     $is_convergent_sequence(a)
     =>:
         $has_limit(a, lim(a))

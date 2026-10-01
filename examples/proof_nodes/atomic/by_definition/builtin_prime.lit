@@ -1,8 +1,8 @@
-# Node: atomic.ByDefinition.BuiltinProp.Prime
-# Run: litex -f examples/proof_nodes/atomic/by_definition/builtin_prime.lit
-#
-# Obligations: 2 <= 5 and forall d range(2, 5): 5 % d != 0
-# Closed small prime: ambient search discharges both (no trust).
-# Computation path remains at atomic/by_builtin_rule/prime_by_computation.lit.
-
-by def $prime(5)
+# Definition boundary: Prime needs a verified trial-divisor forall.
+# Run: target/release/litex -f examples/proof_nodes/atomic/by_definition/builtin_prime.lit
+# Before: ordinary computation bypassed the definition obligations:
+# by def $prime(5)
+# Now: the explicit request is rejected without a verified trial forall.
+# $prime(5) remains supported by ordinary closed-numeric computation.
+# Negative regression: by_def_rechecks_known_predicate_obligations.
+$prime(5)
