@@ -1,11 +1,12 @@
 use crate::ast::names::AtomicName;
-use crate::ast::obj::Obj;
+use crate::ast::obj::{IdentifierObj, Obj};
 use crate::ast::stmt::{
     AxiomStmt, DefAbstractPropStmt, DefPropStmt, DefStrategyStmt, DefStructStmt, DefTemplateStmt,
     DefThmStmt,
 };
 use crate::exec_env::ExecEnv;
-use crate::runtime::runtime_ids::WellDefinednessId;
+use crate::exec_env::StoredIdentifierDefinition;
+use crate::runtime::runtime_ids::{IdentifierId, WellDefinednessId};
 use crate::runtime::Runtime;
 
 impl Runtime {
@@ -116,16 +117,46 @@ impl Runtime {
         None
     }
 
-    pub(crate) fn stored_identifier_definition_visible_in_stack(
+    pub(crate) fn stored_identifier_definition_visible(
         &self,
-        name: &str,
+        identifier: &IdentifierObj,
     ) -> Option<&crate::exec_env::StoredIdentifierDefinition> {
-        for env in self.execution_environments_stack.iter().rev() {
-            if let Some(def) = env.definitions.identifiers.get(name) {
-                return Some(def);
+        let name = match identifier {
+            IdentifierObj::Plain { name, .. } => AtomicName::Plain { name: name.clone() },
+            IdentifierObj::WithExportFileId { export_file_id, name } => {
+                AtomicName::WithExportFileId {
+                    export_file_id: *export_file_id,
+                    name: name.clone(),
+                }
+            }
+            IdentifierObj::WithModAndExportFileId { global_mod_id, export_file_id, name } => {
+                AtomicName::WithModAndExportFileId {
+                    global_mod_id: *global_mod_id,
+                    export_file_id: *export_file_id,
+                    name: name.clone(),
+                }
+            }
+        };
+        let definition = self.lookup_named_definition(&name, |env, plain| env.definitions.identifiers.get(plain))?;
+        if let Some(stored_id) = stored_identifier_binding_id(definition, name.local_name()) {
+            match identifier {
+                IdentifierObj::Plain { id, .. } if *id != stored_id => return None,
+                IdentifierObj::WithExportFileId { export_file_id, .. }
+                    if self.code_source.is_live_root_export(*export_file_id) => {
+                    if self.parse_scope_stack.first()?.plain.get(name.local_name()) != Some(&stored_id) {
+                        return None;
+                    }
+                }
+                IdentifierObj::WithModAndExportFileId { global_mod_id, export_file_id, .. }
+                    if self.code_source.is_live_imported_export(*global_mod_id, *export_file_id) => {
+                    if self.parse_scope_stack.first()?.plain.get(name.local_name()) != Some(&stored_id) {
+                        return None;
+                    }
+                }
+                _ => {}
             }
         }
-        None
+        Some(definition)
     }
 
     // Finished export file Env after that file recorded; None while still loading.
@@ -209,4 +240,22 @@ impl Runtime {
                 }),
         }
     }
+}
+
+fn stored_identifier_binding_id(definition: &StoredIdentifierDefinition, name: &str) -> Option<IdentifierId> {
+    let params = match definition {
+        StoredIdentifierDefinition::ParamType((bound, _)) => return Some(bound.id),
+        StoredIdentifierDefinition::LetObj((_, stmt)) => return Some(stmt.name.id),
+        StoredIdentifierDefinition::HaveFnEqual((_, stmt)) => return Some(stmt.name.id),
+        StoredIdentifierDefinition::HaveByReplacementAxiom((_, stmt)) => return Some(stmt.name.id),
+        StoredIdentifierDefinition::HaveObjEqual((_, stmt)) => &stmt.param_def,
+        StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((_, stmt)) => &stmt.param_def,
+        StoredIdentifierDefinition::HaveObjByExistFacts((_, stmt)) => &stmt.param_def,
+        StoredIdentifierDefinition::TrustHave((_, stmt)) => &stmt.param_def,
+        StoredIdentifierDefinition::HaveFnEqualCaseByCase(_)
+        | StoredIdentifierDefinition::HaveFnByForallExistUnique(_)
+        | StoredIdentifierDefinition::HaveFnByInduc(_) => return None,
+    };
+    params.groups.iter().flat_map(|group| &group.params)
+        .find(|bound| bound.name == name).map(|bound| bound.id)
 }

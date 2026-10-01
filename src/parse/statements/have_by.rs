@@ -149,9 +149,10 @@ impl Runtime {
                 "`have by fn_preimage` cannot have an indented body",
             ));
         }
-        for name in &preimage_names {
-            self.define_plain_atom_as_parse(tb, name.clone())?;
-        }
+        let preimage_names = preimage_names
+            .into_iter()
+            .map(|name| self.define_plain_atom_as_parse(tb, name))
+            .collect::<RuntimeResult<Vec<_>>>()?;
         Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByPreimageStmt(
             HaveByPreimageStmt {
                 preimage_names,

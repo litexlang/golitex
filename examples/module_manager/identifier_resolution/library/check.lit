@@ -1,0 +1,4 @@
+# A sibling export inside an import retains that imported module's owner.
+base::k = 2
+release obj def base::shift
+base::shift(3) = 5

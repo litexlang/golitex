@@ -3,7 +3,10 @@
   "tag": "HaveFnEqual",
   "plain_name": "id",
   "stmt": {
-    "name": "id",
+    "name": {
+      "id": 14,
+      "name": "id"
+    },
     "equal_to_anonymous_fn": {
       "body": {
         "set_bound_parameters": {

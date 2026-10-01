@@ -8,7 +8,7 @@ pub const EXPORTS_DIR_NAME: &str = "exports";
 pub const DEFINITIONS_FILE_NAME: &str = "definitions.json";
 
 /// Litex KB on-disk ABI. Bump when wire/manifest layout changes incompatibly.
-pub const KB_ABI: &str = "1";
+pub const KB_ABI: &str = "2";
 
 pub fn kb_dir(module_root: &Path) -> PathBuf {
     module_root.join(KB_DIR_NAME)

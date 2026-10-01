@@ -1,0 +1,33 @@
+# Tracer: local declarations preserve their own binding identities.
+# Run: target/release/litex -strict -f examples/stmt_nodes/definition/local_function_and_preimage_bindings.lit
+#
+# Before: this local function panicked in standalone mode; a registered file failed.
+# sketch:
+#     have fn ident(x R) R = x
+#     ident(1) = 1
+#
+# Before: this local preimage raised InternalBug("undefined name source").
+# have fn shift(x R) R = x + 1
+# shift(2) $in fn_range(shift)
+# sketch:
+#     have by fn_preimage: source from shift(2) $in fn_range(shift)
+#     source $in R
+#     shift(2) = shift(source)
+#
+# Verified behavior: local function and preimage remain usable together,
+# even when later file-root declarations reuse their surface names.
+sketch:
+    have fn ident(x R) R = x
+    ident(1) = 1
+    ident(2) $in fn_range(ident)
+    have by fn_preimage: source from ident(2) $in fn_range(ident)
+    source $in R
+    ident(2) = ident(source)
+
+let ident = 0
+let source = 1
+ident = 0
+source = 1
+
+# Boundary: local bindings cannot escape; duplicate visible declarations and
+# false equations remain rejected by declaration_bindings Rust regressions.

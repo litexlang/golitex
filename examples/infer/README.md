@@ -8,9 +8,10 @@
 # `have`, `let`, or a typed `forall` binder, then its inferred consequence
 # is checked.
 #
-# Do not use `trust` to bypass carrier WD. The three legacy indexed-family
-# tracers still blocked on WD are tracked in
-# `plan/迁移的plan/和example有关.md` (B05); they are not passing acceptance.
+# Do not use `trust` to bypass carrier WD. The three indexed-family tracers
+# now use typed `forall` binders and pass strict verification after the FnSet
+# alpha-equality migration. See the B05 acceptance record at
+# `plan/迁移的plan/experience/problem_notes/b05-equality-recheck.md`.
 #
 # Param-type projection under a renamed carrier (prop binder `A`, call-site
 # `Carrier`): `atomic/normal_atomic_param_types_renamed_carrier.lit`.
@@ -23,7 +24,7 @@
 target/release/litex -f <this-file>
 ```
 
-Exit 0 is enough.
+Require exit code 0 and top-level JSON `success: true`.
 
 ## Layout
 

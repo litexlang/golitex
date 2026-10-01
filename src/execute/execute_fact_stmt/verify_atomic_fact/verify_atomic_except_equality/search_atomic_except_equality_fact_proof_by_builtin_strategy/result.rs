@@ -107,6 +107,7 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     IntersectFiniteFromBoth(IntersectFiniteFromBothStrategySingleStep),
     SetMinusFiniteFromLeft(SetMinusFiniteFromLeftStrategySingleStep),
     CartFiniteFromFactors(CartFiniteFromFactorsStrategySingleStep),
+    SubsetOfFiniteSet(SubsetOfFiniteSetStrategySingleStep),
     ClosedRangeNonemptyFromEndpointOrder(ClosedRangeNonemptyFromEndpointOrderStrategySingleStep),
     RangeNonemptyFromEndpointOrder(RangeNonemptyFromEndpointOrderStrategySingleStep),
     IntervalNonemptyFromEndpointOrder(IntervalNonemptyFromEndpointOrderStrategySingleStep),
@@ -1165,6 +1166,12 @@ pub struct SetMinusFiniteFromLeftStrategySingleStep {
 // Example:
 //   $is_finite_set(cart(A,B))
 pub struct CartFiniteFromFactorsStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// A checked finite upper-set witness makes its subset finite.
+pub struct SubsetOfFiniteSetStrategySingleStep {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

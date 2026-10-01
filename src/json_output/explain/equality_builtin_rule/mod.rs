@@ -3,6 +3,7 @@
 //! Call site: `rule.rule_id_and_message(lang)` on `EqualitySearchProofByBuiltinRule`.
 
 mod calculation;
+mod finite_subset_size;
 mod leaves;
 mod text;
 
@@ -135,6 +136,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::UnionAbsorptionFromSubset(p) => p.rule_id_and_message(lang),
             Self::SetMinusRecoversSubset(p) => p.rule_id_and_message(lang),
             Self::EmptySetFromSizeZero(p) => p.rule_id_and_message(lang),
+            Self::FiniteSetEqualFromSubsetSize(p) => p.rule_id_and_message(lang),
             Self::CartProjFactor(p) => p.rule_id_and_message(lang),
             Self::TupleComponentAtIndex(p) => p.rule_id_and_message(lang),
             Self::FiniteSetSizeSetMinus(p) => p.rule_id_and_message(lang),

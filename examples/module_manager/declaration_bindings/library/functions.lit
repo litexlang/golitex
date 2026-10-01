@@ -1,0 +1,11 @@
+# Local bindings in an imported file stay local despite later root reuse.
+claim:
+    ? 1 = 1
+    have fn ident(x R) R = x
+    ident(2) $in fn_range(ident)
+    have by fn_preimage: source from ident(2) $in fn_range(ident)
+    source $in R
+    ident(2) = ident(source)
+
+have fn ident(x R) R = x
+ident(2) = 2

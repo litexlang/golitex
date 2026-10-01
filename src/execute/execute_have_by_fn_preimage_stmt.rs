@@ -13,7 +13,6 @@
 use std::collections::HashMap;
 
 use crate::ast::fact::{AtomicFact, EqualFact, Fact};
-use crate::ast::names::BoundName;
 use crate::ast::obj::{
     FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj,
 };
@@ -174,10 +173,8 @@ impl Runtime {
                 })?;
             let mut params = Vec::new();
             for old in &group.params {
-                let name = stmt.preimage_names[name_index].clone();
+                let bound = stmt.preimage_names[name_index].clone();
                 name_index += 1;
-                let id = self.resolve_plain_atom(&name)?;
-                let bound = BoundName::new(id, name);
                 let obj = Obj::Identifier(self.identifier_obj_for_stored_mention(&bound));
                 subst.insert(old.id, obj.clone());
                 preimage_objs.push(obj);

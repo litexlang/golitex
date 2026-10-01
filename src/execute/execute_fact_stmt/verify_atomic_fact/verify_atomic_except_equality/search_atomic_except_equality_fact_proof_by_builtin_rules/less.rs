@@ -120,12 +120,21 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Order flip: `(-1)*x < 0` from known `x > 0`.
     // Example: trust a > 0; (-1) * a < 0.
     OrderFlipMulMinusOne(OrderFlipMulMinusOneToLessBuiltinRuleProof),
+    // Finite A ⊊ B implies |A| < |B|.
+    FiniteSetSizeProperSubsetLt(FiniteSetSizeProperSubsetLtBuiltinRuleProof),
 }
 
 // Payload: both evaluated normals with left_normal < right_normal.
 pub struct ClosedNumericComparisonBuiltinRuleProof {
     pub left_normal: String,
     pub right_normal: String,
+}
+
+pub struct FiniteSetSizeProperSubsetLtBuiltinRuleProof {
+    pub left_finite_proof: VerifyFactResult,
+    pub right_finite_proof: VerifyFactResult,
+    pub subset_proof: VerifyFactResult,
+    pub not_equal_proof: VerifyFactResult,
 }
 
 // Payload: the minuend `x` in the goal `x - 1 < x`.

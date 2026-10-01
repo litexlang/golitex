@@ -210,7 +210,7 @@ fn decode_have_obj_in(
 
 fn encode_have_fn_equal(stmt: &HaveFnEqualStmt) -> Result<JsonValue, KbCodecError> {
     Ok(JsonValue::object_from(vec![
-        ("name".into(), JsonValue::String(stmt.name.clone())),
+        ("name".into(), encode_bound_name(&stmt.name)?),
         (
             "equal_to_anonymous_fn".into(),
             encode_anonymous_fn(&stmt.equal_to_anonymous_fn)?,
@@ -222,7 +222,7 @@ fn encode_have_fn_equal(stmt: &HaveFnEqualStmt) -> Result<JsonValue, KbCodecErro
 fn decode_have_fn_equal(value: &JsonValue) -> Result<HaveFnEqualStmt, KbCodecError> {
     let map = value.as_object()?;
     Ok(HaveFnEqualStmt {
-        name: JsonValue::get(map, "name")?.as_str()?.to_string(),
+        name: decode_bound_name(JsonValue::get(map, "name")?)?,
         equal_to_anonymous_fn: decode_anonymous_fn(JsonValue::get(
             map,
             "equal_to_anonymous_fn",

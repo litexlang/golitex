@@ -49,6 +49,7 @@ use super::by_equality_identities_wave7::{
     SubtractionFromKnownAdditionBuiltinRuleProof, ZeroProductCancelBuiltinRuleProof,
 };
 use super::by_equal_from_known_difference_zero::EqualFromKnownDifferenceZeroBuiltinRuleProof;
+use super::by_finite_subset_size::FiniteSetEqualFromSubsetSizeBuiltinRuleProof;
 use super::by_equality_identities_wave8::{
     LcmGcdProductAbsBuiltinRuleProof, MinusOneOddNaturalPowerBuiltinRuleProof,
     ModDividendMinusRemainderZeroBuiltinRuleProof, QuotEuclideanDecompositionBuiltinRuleProof,
@@ -249,6 +250,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     UnionAbsorptionFromSubset(UnionAbsorptionFromSubsetBuiltinRuleProof),
     SetMinusRecoversSubset(SetMinusRecoversSubsetBuiltinRuleProof),
     EmptySetFromSizeZero(EmptySetFromSizeZeroBuiltinRuleProof),
+    FiniteSetEqualFromSubsetSize(FiniteSetEqualFromSubsetSizeBuiltinRuleProof),
     CartProjFactor(CartProjFactorBuiltinRuleProof),
     TupleComponentAtIndex(TupleComponentAtIndexBuiltinRuleProof),
     FiniteSetSizeSetMinus(FiniteSetSizeSetMinusBuiltinRuleProof),

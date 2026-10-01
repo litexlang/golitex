@@ -132,6 +132,7 @@ fn remap_have_obj_in(
 }
 
 fn remap_have_fn_equal(stmt: &mut HaveFnEqualStmt, plan: &RemapPlan) -> Result<(), KbCodecError> {
+    remap_bound_name(&mut stmt.name, plan);
     remap_anonymous_fn(&mut stmt.equal_to_anonymous_fn, plan)?;
     Ok(())
 }

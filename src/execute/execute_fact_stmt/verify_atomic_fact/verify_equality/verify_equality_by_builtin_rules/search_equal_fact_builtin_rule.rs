@@ -147,9 +147,12 @@ impl Runtime {
             return Ok(Some(map_closed_trig_proof(proof)));
         }
         if let Some(proof) =
-            self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state)?
+            self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state.clone())?
         {
             return Ok(Some(map_inverse_trig_proof(proof)));
+        }
+        if let Some(proof) = self.search_equal_fact_builtin_rule_finite_subset_size(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteSetEqualFromSubsetSize(proof)));
         }
         Ok(None)
     }

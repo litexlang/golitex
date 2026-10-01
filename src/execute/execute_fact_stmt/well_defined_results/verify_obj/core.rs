@@ -24,15 +24,7 @@ impl Runtime {
         value: &IdentifierObj,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
-        let name = match value {
-            IdentifierObj::Plain { name, .. } => name.clone(),
-            // Qualified names are treated as already resolved references.
-            IdentifierObj::WithExportFileId { .. }
-            | IdentifierObj::WithModAndExportFileId { .. } => {
-                return self.finish_leaf_obj_success(Obj::Identifier(value.clone()), verify_state);
-            }
-        };
-        if !self.identifier_defined_in_stack(&name) {
+        if self.stored_identifier_definition_visible(value).is_none() {
             let obj = Obj::Identifier(value.clone());
             return Ok(VerifyObjWellDefinedResult::Failed {
                 obj: obj.clone(),

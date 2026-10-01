@@ -18,6 +18,7 @@ lib_pkg/              external module imported by repo/
 export_order_repo/    -r ordered exports + submodule A (former 08_*)
 trusted_template_prefix/  -r trusted prefix then instantiate template (former 09_*)
 import_alias_qualified_arithmetic/  -f main with gf import alias
+identifier_resolution/  -strict -f main; distinct same-named exports and unknown-name regressions
 
 file_prefix/          -f a.lit  (listed export; later export must not run)
   litex.config

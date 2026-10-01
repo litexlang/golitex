@@ -84,7 +84,7 @@ impl Runtime {
         &mut self,
         stmt: &ReleaseObjDefStmt,
     ) -> RuntimeResult<ExecReleaseObjDefStmtResult> {
-        let Some(looked_up) = self.lookup_stored_identifier_definition_for_release(&stmt.name)
+        let Some(looked_up) = self.stored_identifier_definition_visible(&stmt.name).cloned()
         else {
             return Ok(ExecReleaseObjDefStmtResult::Failed(
                 ExecReleaseObjDefStmtFailed::DefinitionNotFound {

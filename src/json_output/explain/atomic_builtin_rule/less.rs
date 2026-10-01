@@ -1,7 +1,7 @@
 //! Explain + cite for `LessFactSearchProofByBuiltinRule`.
 
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::{
-    LessFactSearchProofByBuiltinRule, AddLeftCongruenceStrictBuiltinRuleProof,
+    LessFactSearchProofByBuiltinRule, FiniteSetSizeProperSubsetLtBuiltinRuleProof, AddLeftCongruenceStrictBuiltinRuleProof,
     AddRightCongruenceStrictBuiltinRuleProof, ArccotPrincipalLowerBoundBuiltinRuleProof,
     ArccotPrincipalUpperBoundBuiltinRuleProof, ArctanPrincipalLowerBoundBuiltinRuleProof,
     ArctanPrincipalUpperBoundBuiltinRuleProof, ClosedNumericComparisonBuiltinRuleProof,
@@ -61,6 +61,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::MulRightPositiveMonotoneStrict(p) => p.rule_id_and_message(lang),
             Self::OrderSignFromPositiveLiteralBound(p) => p.rule_id_and_message(lang),
             Self::OrderFlipMulMinusOne(p) => p.rule_id_and_message(lang),
+            Self::FiniteSetSizeProperSubsetLt(p) => p.rule_id_and_message(lang),
         }
     }
 
@@ -74,6 +75,23 @@ impl LessFactSearchProofByBuiltinRule {
             Self::OrderSignFromPositiveLiteralBound(p) => Some(p.cite_fact_id),
             Self::OrderFlipMulMinusOne(p) => Some(p.cite_fact_id),
             _ => None,
+        }
+    }
+}
+
+impl FiniteSetSizeProperSubsetLtBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text(
+                "FiniteSetSizeProperSubsetLt",
+                "Proper finite subset cardinality",
+                "A proper subset of a finite set has strictly smaller cardinality",
+            ),
+            OutputLanguage::Chinese => text(
+                "FiniteSetSizeProperSubsetLt",
+                "有限真子集的基数严格更小",
+                "有限集合的真子集具有严格更小的基数",
+            ),
         }
     }
 }
@@ -904,4 +922,3 @@ impl OrderFlipMulMinusOneToLessBuiltinRuleProof {
         }
     }
 }
-

@@ -361,7 +361,7 @@ impl HaveByPreimageStmt {
             HAVE,
             BY,
             FN_PREIMAGE,
-            self.preimage_names.join(", "),
+            self.preimage_names.iter().map(|bound| bound.ir_string()).collect::<Vec<_>>().join(", "),
             FROM,
             self.range_membership.ir()
         ))
@@ -434,7 +434,7 @@ impl HaveFnEqualStmt {
             .iter()
             .map(|d| d.ir())
             .collect();
-        let mut out = format!("{} {} {}", HAVE, FN, self.name);
+        let mut out = format!("{} {} {}", HAVE, FN, self.name.ir_string());
         out.push_str(LEFT_PAREN);
         if !params.is_empty() && !dom.is_empty() {
             out.push_str(&params.join(", "));
@@ -467,7 +467,7 @@ impl HaveFnEqualStmt {
             .iter()
             .map(|d| d.display_string())
             .collect();
-        let mut out = format!("{} {} {}", HAVE, FN, self.name);
+        let mut out = format!("{} {} {}", HAVE, FN, self.name.name);
         out.push_str(LEFT_PAREN);
         if !params.is_empty() && !dom.is_empty() {
             out.push_str(&params.join(", "));
@@ -1794,5 +1794,4 @@ impl ByStrongInducStmt {
     }
     impl_display_pair!();
 }
-
 

@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use super::super::helper::{
-    fn_app_name_and_args, set_bound_parameter_count, set_bound_params_to_arg_map,
+    fn_app_identifier_and_args, set_bound_parameter_count, set_bound_params_to_arg_map,
 };
 
 pub struct ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof {
@@ -44,11 +44,11 @@ impl Runtime {
         let Obj::FnObj(fn_obj) = app_side else {
             return Ok(None);
         };
-        let Some((name, args)) = fn_app_name_and_args(fn_obj) else {
+        let Some((identifier, args)) = fn_app_identifier_and_args(fn_obj) else {
             return Ok(None);
         };
         let Some(StoredIdentifierDefinition::HaveFnEqualCaseByCase((_, stmt))) =
-            self.stored_identifier_definition_visible_in_stack(&name)
+            self.stored_identifier_definition_visible(&identifier)
         else {
             return Ok(None);
         };

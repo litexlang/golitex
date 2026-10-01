@@ -307,7 +307,7 @@ fn template_def_enum_name(body: &TemplateDefEnum) -> Option<String> {
         TemplateDefEnum::TrustHaveStmt(stmt) => first_typed_param_name(&stmt.param_def),
         TemplateDefEnum::ObtainObjFromExistFact(stmt) => stmt.equal_tos.first().map(|bound| bound.name.clone()),
         TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => stmt.equal_tos.first().map(|bound| bound.name.clone()),
-        TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name.clone()),
+        TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name.name.clone()),
         TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name.clone()),
         TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name.clone()),
         TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.name.clone())

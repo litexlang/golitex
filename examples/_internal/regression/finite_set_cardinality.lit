@@ -1,0 +1,79 @@
+# Finite-set cardinality: primitive rules and explicit derived proofs.
+# Run: target/release/litex -strict -f examples/_internal/regression/finite_set_cardinality.lit
+# Direct positive-size/nonempty search currently fails:
+# forall A finite_set:
+#     finite_set_size(A) > 0
+#     =>:
+#         $is_nonempty_set(A)
+# The active proof below uses contradiction and cardinality congruence.
+
+forall A finite_set:
+    finite_set_size(A) $in N
+forall A finite_set:
+    finite_set_size(A) >= 0
+forall A finite_set:
+    finite_set_size(A) = 0
+    =>:
+        A = {}
+forall A, B finite_set:
+    A $subset B
+    =>:
+        finite_set_size(A) <= finite_set_size(B)
+forall A finite_set:
+    $is_nonempty_set(A)
+    =>:
+        finite_set_size(A) >= 1
+forall A finite_set:
+    A = {}
+    =>:
+        finite_set_size({}) = 0
+        finite_set_size(A) = finite_set_size({})
+        finite_set_size(A) = 0
+claim:
+    ? forall A finite_set:
+        finite_set_size(A) > 0
+        =>:
+            $is_nonempty_set(A)
+    by contra:
+        ? $is_nonempty_set(A)
+        A = {}
+        finite_set_size({}) = 0
+        finite_set_size(A) = finite_set_size({})
+        finite_set_size(A) = 0
+        impossible finite_set_size(A) > 0
+claim:
+    ? forall A finite_set:
+        finite_set_size(A) != 0
+        =>:
+            $is_nonempty_set(A)
+    by contra:
+        ? $is_nonempty_set(A)
+        A = {}
+        finite_set_size({}) = 0
+        finite_set_size(A) = finite_set_size({})
+        finite_set_size(A) = 0
+        impossible finite_set_size(A) != 0
+forall A, B finite_set:
+    B $subset A
+    =>:
+        intersect(A, B) = B
+        finite_set_size(intersect(A, B)) = finite_set_size(B)
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)
+forall A, B finite_set:
+    intersect(A, B) = {}
+    =>:
+        finite_set_size(intersect(A, B)) = finite_set_size({})
+        finite_set_size({}) = 0
+        finite_set_size(intersect(A, B)) = 0
+        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+        finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B)) = finite_set_size(A) + finite_set_size(B) - 0
+        finite_set_size(A) + finite_set_size(B) - 0 = finite_set_size(A) + finite_set_size(B)
+        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B)
+forall A, B finite_set:
+    finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+    finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B)) = finite_set_size(intersect(A, B)) + (finite_set_size(A) - finite_set_size(intersect(A, B)))
+    finite_set_size(intersect(A, B)) + (finite_set_size(A) - finite_set_size(intersect(A, B))) = finite_set_size(A)
+    finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
+forall A finite_set:
+    finite_set_size(power_set(A)) = 2^finite_set_size(A)

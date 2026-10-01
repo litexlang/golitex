@@ -14,7 +14,6 @@ use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
-use super::super::helper::identifier_plain_name;
 
 pub struct ByLetObjObjectDefinitionProof {
     pub expanded_rhs: Obj,
@@ -47,11 +46,11 @@ impl Runtime {
         parent_fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ByLetObjObjectDefinitionProof>> {
-        let Some(name) = identifier_plain_name(def_side) else {
+        let Obj::Identifier(identifier) = def_side else {
             return Ok(None);
         };
         let Some(StoredIdentifierDefinition::LetObj((_, stmt))) =
-            self.stored_identifier_definition_visible_in_stack(name)
+            self.stored_identifier_definition_visible(identifier)
         else {
             return Ok(None);
         };
@@ -80,4 +79,3 @@ impl Runtime {
         }))
     }
 }
-

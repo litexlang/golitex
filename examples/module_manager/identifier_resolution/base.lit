@@ -1,0 +1,3 @@
+have k R = 0
+let item = 0
+have fn shift(x R) R = x

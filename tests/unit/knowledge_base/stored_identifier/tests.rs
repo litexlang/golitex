@@ -1,8 +1,6 @@
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::BoundName;
-use crate::ast::obj::{
-    AnonymousFn, FnSet, IdentifierObj, Literal, Number, Obj, StandardSet,
-};
+use crate::ast::obj::{AnonymousFn, FnSet, IdentifierObj, Literal, Number, Obj, StandardSet};
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::ast::stmt::{HaveFnEqualStmt, LetObjStmt};
 use crate::exec_env::StoredIdentifierDefinition;
@@ -39,7 +37,7 @@ fn sample_have_fn_id() -> StoredIdentifierDefinition {
     StoredIdentifierDefinition::HaveFnEqual((
         "id".to_string(),
         Rc::new(HaveFnEqualStmt {
-            name: "id".to_string(),
+            name: BoundName::new(IdentifierId::new(14), "id".to_string()),
             equal_to_anonymous_fn: AnonymousFn {
                 body: FnSet {
                     set_bound_parameters: SetBoundParameterList {
@@ -62,15 +60,13 @@ fn sample_have_fn_id() -> StoredIdentifierDefinition {
 }
 
 fn let_a_fixture_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join(
-        "examples/knowledge_base/stored_identifier/let_a.stored_identifier.json",
-    )
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("examples/knowledge_base/stored_identifier/let_a.stored_identifier.json")
 }
 
 fn have_fn_id_fixture_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join(
-        "examples/knowledge_base/stored_identifier/have_fn_id.stored_identifier.json",
-    )
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("examples/knowledge_base/stored_identifier/have_fn_id.stored_identifier.json")
 }
 
 #[test]
@@ -119,6 +115,54 @@ fn store_matches_golden_have_fn_id() {
         text.trim_end_matches(['\n', '\r']),
         HAVE_FN_ID_FIXTURE.trim_end_matches(['\n', '\r'])
     );
+}
+
+#[test]
+fn function_binding_and_body_ids_survive_cache_remapping() {
+    let mut defs = crate::exec_env::exec_env::DefinitionMemory::new();
+    defs.identifiers.insert("id".into(), sample_have_fn_id());
+    let text = crate::knowledge_base::store_definition_memory(&defs).expect("store");
+    let mut loaded = crate::knowledge_base::load_definition_memory(&text).expect("load");
+    let plan = crate::knowledge_base::RemapPlan::new(
+        crate::knowledge_base::GlobalIdsDeltas {
+            fact_delta: 0,
+            wd_delta: 0,
+            prop_rewrite_delta: 0,
+            identifier_delta: 100,
+        },
+        std::collections::HashMap::new(),
+    );
+    crate::knowledge_base::remap_definition_memory(&mut loaded, &plan).expect("remap");
+    let StoredIdentifierDefinition::HaveFnEqual((key, stmt)) =
+        loaded.identifiers.get("id").expect("function")
+    else {
+        panic!("function definition");
+    };
+    assert_eq!(key, "id");
+    assert_eq!(stmt.name.name, "id");
+    assert_eq!(stmt.name.id.value(), 114);
+    assert_eq!(
+        stmt.equal_to_anonymous_fn.body.set_bound_parameters.groups[0].params[0]
+            .id
+            .value(),
+        115
+    );
+    let Obj::Identifier(IdentifierObj::Plain { id, .. }) =
+        stmt.equal_to_anonymous_fn.equal_to.as_ref()
+    else {
+        panic!("function body parameter");
+    };
+    assert_eq!(id.value(), 115);
+}
+
+#[test]
+fn legacy_function_record_without_declaration_id_is_rejected() {
+    let old = HAVE_FN_ID_FIXTURE.replace(
+        "{\n      \"id\": 14,\n      \"name\": \"id\"\n    }",
+        "\"id\"",
+    );
+    assert_ne!(old, HAVE_FN_ID_FIXTURE);
+    assert!(load_stored_identifier(&old).is_err());
 }
 
 #[test]

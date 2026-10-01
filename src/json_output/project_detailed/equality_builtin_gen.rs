@@ -614,6 +614,14 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
             object_for(runtime, entries)
         },
+        EqualitySearchProofByBuiltinRule::FiniteSetEqualFromSubsetSize(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")),
+            ("rule", string("FiniteSetEqualFromSubsetSize")),
+            ("left_finite_proof", project_verify_fact(&p.left_finite_proof, runtime)),
+            ("right_finite_proof", project_verify_fact(&p.right_finite_proof, runtime)),
+            ("subset_proof", project_verify_fact(&p.subset_proof, runtime)),
+            ("size_equal_proof", project_verify_fact(&p.size_equal_proof, runtime)),
+        ]),
         EqualitySearchProofByBuiltinRule::CartProjFactor(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("CartProjFactor"))];
             let _ = p;

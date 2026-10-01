@@ -37,8 +37,14 @@ mod release_one_struct_layer;
 #[cfg(test)]
 mod exec_stmt_transaction_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/execute/identifier_resolution/tests.rs"]
+mod identifier_resolution_tests;
+#[cfg(test)]
 #[path = "../../tests/unit/execute/obtain_binding/mod.rs"]
 mod obtain_binding_tests;
+#[cfg(test)]
+#[path = "../../tests/unit/execute/declaration_bindings/tests.rs"]
+mod declaration_binding_tests;
 #[cfg(test)]
 mod order_stage_a_remainder_tests;
 #[cfg(test)]

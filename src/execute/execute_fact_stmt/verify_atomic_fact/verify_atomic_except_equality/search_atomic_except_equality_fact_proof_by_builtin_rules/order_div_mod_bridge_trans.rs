@@ -4,7 +4,7 @@
 
 use crate::ast::fact::{
     AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, LessEqualFact, LessFact,
-    SubsetFact,
+    NotEqualFact, SubsetFact,
 };
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
@@ -19,7 +19,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     DivByGtOneLessSelfBuiltinRuleProof, DivMonotoneStrictSamePosDivisorBuiltinRuleProof,
     LessFactSearchProofByBuiltinRule, LessFromPosDifferenceBuiltinRuleProof,
     LessTransitivityBuiltinRuleProof, ModRemainderStrictUpperBoundBuiltinRuleProof,
-    PosDifferenceFromLessBuiltinRuleProof,
+    PosDifferenceFromLessBuiltinRuleProof, FiniteSetSizeProperSubsetLtBuiltinRuleProof,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::{
     is_zero_obj, zero_obj, DivMonotoneWeakSamePosDivisorBuiltinRuleProof,
@@ -102,7 +102,10 @@ impl Runtime {
         {
             return Ok(Some(proof));
         }
-        self.div_by_gt_one_less_self_proof(fact, verify_state)
+        if let Some(proof) = self.div_by_gt_one_less_self_proof(fact, verify_state.clone())? {
+            return Ok(Some(proof));
+        }
+        self.finite_set_size_proper_subset_lt_proof(fact, verify_state)
     }
 
     // Weak cardinality bounds on `>=`.
@@ -567,6 +570,39 @@ impl Runtime {
                 },
             ),
         ))
+    }
+
+    // A proper finite subset has strictly smaller cardinality.
+    // Example: finite A,B; A $subset B; A != B => |A| < |B|.
+    fn finite_set_size_proper_subset_lt_proof(
+        &mut self,
+        fact: &LessFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+        let Some(left_set) = match_finite_set_size(&fact.left) else { return Ok(None); };
+        let Some(right_set) = match_finite_set_size(&fact.right) else { return Ok(None); };
+        let left_finite_proof = self.verify_is_finite_set(left_set, verify_state.clone())?;
+        if left_finite_proof.is_failed() { return Ok(None); }
+        let right_finite_proof = self.verify_is_finite_set(right_set, verify_state.clone())?;
+        if right_finite_proof.is_failed() { return Ok(None); }
+        let subset_proof = self.verify_subset(left_set, right_set, verify_state.clone())?;
+        if subset_proof.is_failed() { return Ok(None); }
+        let not_equal: Fact = NotEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: left_set.clone(),
+            right: right_set.clone(),
+            line_file: fact.line_file.clone(),
+        }.into();
+        let not_equal_proof = self.verify_fact(&not_equal, verify_state)?;
+        if not_equal_proof.is_failed() { return Ok(None); }
+        Ok(Some(LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(
+            FiniteSetSizeProperSubsetLtBuiltinRuleProof {
+                left_finite_proof,
+                right_finite_proof,
+                subset_proof,
+                not_equal_proof,
+            },
+        )))
     }
 
     pub(crate) fn verify_in_integer(
