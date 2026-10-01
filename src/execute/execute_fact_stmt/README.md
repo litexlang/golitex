@@ -199,13 +199,15 @@ membership after caller-owned WD. Return sets are structurally substituted
 and matched by identity or stored equality paths. Cached WD does not identify
 its selected signature, so the leaf declines when visible signatures that
 could supply application WD disagree on the required return; bounded strategy
-remains available to prove additional domain premises. Source rows are never
+remains available to prove additional domain premises and records its selected
+signature citation alongside those premise proofs. Source rows are never
 borrowed from an equal function's object key.
 
 The legacy generic `store_atomic_fact` currently also registers function and
 sequence shape rows from stored memberships/equalities, contrary to the table's
-"definition-time only" comment. Tightening those writers changes existing
-`trust f $in fn(...)` application behavior and awaits a compatibility decision.
+"definition-time only" comment. Tightening those writers requires separating ordinary known signature facts
+from definition metadata in the WD and fallback readers. That wider migration
+awaits a scope decision; it need not change WD result/cache fields.
 This query refactor leaves the writers unchanged.
 
 Fixed cite-only builtin premises use
