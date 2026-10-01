@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, InFact, IsTupleFact, LessEqualFact, LessFact, NotInFact, SubsetFact,
 };
@@ -91,17 +92,11 @@ pub enum InFactSearchProofByBuiltinRule {
     // Mathematical property: `x $in N` and `x >= 1` ⇒ `x - 1 $in N`.
     // Example: known `n $in N` and `n >= 1` prove `n - 1 $in N`.
     PredecessorInNatural(PredecessorInNaturalBuiltinRuleProof),
-    // Well-typed function application lands in the declared return set.
-    // Mathematical property: if `f $in fn(params) R` and `f(args)` matches that
-    // signature's domain, then `f(args) $in subst(R)`.
-    // Example: after restricted `countdown $in fn(_n N: …) N`, prove
-    // `countdown(n - 1) $in N`.
-    FnApplicationInCodomain(FnApplicationInCodomainBuiltinRuleProof),
     // Well-defined function application lands in the function's range.
     // Mathematical property: if `f(args)` is well-defined for a function with a
     // known FnSet body, then `f(args) $in fn_range(f)`.
-    // Example: after `have fn g(t R) R = t`, prove `g(1) $in fn_range(g)`.
-    FnApplicationInFnRange(FnApplicationInFnRangeBuiltinRuleProof),
+    // Example: a literal anonymous application belongs to that literal's range.
+    AnonymousFnApplicationInFnRange(AnonymousFnApplicationInFnRangeBuiltinRuleProof),
     // Union membership from the left factor.
     // Mathematical property: `x $in A` ⇒ `x $in union(A, B)`.
     // Example: `1 $in {1}` proves `1 $in union({1}, {2})`.
@@ -228,17 +223,13 @@ pub struct StructObjMembershipBuiltinRuleProof {
 }
 
 pub struct PredecessorInNaturalBuiltinRuleProof {
-    pub cite_in_n_fact_id: FactId,
-    pub cite_at_least_one_fact_id: FactId,
-}
-
-pub struct FnApplicationInCodomainBuiltinRuleProof {
-    pub cite_in_function_set_fact_id: FactId,
+    pub in_natural_proof: AtomicExceptEqualityFactKnownProof,
+    pub at_least_one_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 // Zero-premise certificate: sides live on the InFact; WD already checked.
 // Example: `g(1) $in fn_range(g)`.
-pub struct FnApplicationInFnRangeBuiltinRuleProof {}
+pub struct AnonymousFnApplicationInFnRangeBuiltinRuleProof {}
 
 pub struct UnionMembershipFromLeftBuiltinRuleProof {
     pub left_membership_proof: VerifyFactResult,
@@ -306,53 +297,18 @@ impl Runtime {
                 self.search_in_fact_standard_set_builtin_rule(fact, set, verify_state)
             }
             Obj::SetFormer(SetFormer::SetBuilder(_)) => {
-                if matches!(&fact.element, Obj::FnObj(_)) {
-                    if let Some(proof) =
-                        self.fn_application_in_codomain_proof(fact, verify_state.clone())?
-                    {
-                        return Ok(Some(proof));
-                    }
-                }
                 self.set_builder_membership_proof(fact, verify_state)
             }
             Obj::ProductShape(ProductShape::Cart(_)) => {
-                if matches!(&fact.element, Obj::FnObj(_)) {
-                    if let Some(proof) =
-                        self.fn_application_in_codomain_proof(fact, verify_state.clone())?
-                    {
-                        return Ok(Some(proof));
-                    }
-                }
                 self.cart_membership_proof(fact, verify_state)
             }
             Obj::SetOperator(SetOperator::PowerSet(_)) => {
-                if matches!(&fact.element, Obj::FnObj(_)) {
-                    if let Some(proof) =
-                        self.fn_application_in_codomain_proof(fact, verify_state.clone())?
-                    {
-                        return Ok(Some(proof));
-                    }
-                }
                 self.power_set_membership_proof(fact, verify_state)
             }
             Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(_)) => {
-                if matches!(&fact.element, Obj::FnObj(_)) {
-                    if let Some(proof) =
-                        self.fn_application_in_codomain_proof(fact, verify_state.clone())?
-                    {
-                        return Ok(Some(proof));
-                    }
-                }
                 self.struct_obj_membership_proof(fact, verify_state)
             }
             Obj::SetFormer(SetFormer::ListSet(_)) => {
-                if matches!(&fact.element, Obj::FnObj(_)) {
-                    if let Some(proof) =
-                        self.fn_application_in_codomain_proof(fact, verify_state.clone())?
-                    {
-                        return Ok(Some(proof));
-                    }
-                }
                 self.list_set_element_membership_proof(fact, verify_state)
             }
             Obj::SetOperator(SetOperator::Union(_)) => {
@@ -379,12 +335,7 @@ impl Runtime {
             Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_)) => {
                 self.one_side_infinity_interval_membership_proof(fact, verify_state)
             }
-            _ => {
-                if matches!(&fact.element, Obj::FnObj(_)) {
-                    return self.fn_application_in_codomain_proof(fact, verify_state);
-                }
-                Ok(None)
-            }
+            _ => Ok(None)
         }
     }
 
@@ -508,13 +459,6 @@ impl Runtime {
                     ));
                 }
             }
-            Obj::FnObj(_) => {
-                if let Some(proof) =
-                    self.fn_application_in_codomain_proof(fact, verify_state.clone())?
-                {
-                    return Ok(Some(proof));
-                }
-            }
             _ => {}
         }
 
@@ -538,19 +482,19 @@ impl Runtime {
         let Some(base) = match_sub_one(&fact.element) else {
             return Ok(None);
         };
-        let Some(cite_in_n_fact_id) = self.known_in_natural_fact_id(base) else {
+        let Some(in_natural_proof) = self.known_in_natural_proof(base) else {
             return Ok(None);
         };
         let one = Obj::Literal(Literal::Number(Number {
             normalized_value: "1".to_string(),
         }));
-        let Some(cite_at_least_one_fact_id) = self.known_greater_equal_fact_id(base, &one) else {
+        let Some(at_least_one_proof) = self.known_greater_equal_proof(base, &one) else {
             return Ok(None);
         };
         Ok(Some(InFactSearchProofByBuiltinRule::PredecessorInNatural(
             PredecessorInNaturalBuiltinRuleProof {
-                cite_in_n_fact_id,
-                cite_at_least_one_fact_id,
+                in_natural_proof,
+                at_least_one_proof,
             },
         )))
     }
@@ -781,47 +725,9 @@ impl Runtime {
     }
 
 
-    // Prove `f(args) $in R` from a matching InFunctionSet whose applied return is `R`.
-    // Example: restricted `countdown $in fn(_n N: …) N` proves `countdown(n - 1) $in N`.
-    fn fn_application_in_codomain_proof(
-        &mut self,
-        fact: &InFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
-        let Obj::FnObj(fn_obj) = &fact.element else {
-            return Ok(None);
-        };
-        let FnObjHead::Identifier(head) = fn_obj.head.as_ref() else {
-            return Ok(None);
-        };
-        let head_obj = Obj::Identifier(head.clone());
-        let candidates = self.collect_in_function_set_candidates(&head_obj);
-        for (fn_set, cite_in_function_set_fact_id) in candidates {
-            match self.try_verify_fn_obj_against_fn_set(fn_obj, &fn_set, verify_state.clone())? {
-                Ok(_) => {
-                    let Some(applied_ret) = self.applied_fn_set_return_set(fn_obj, &fn_set) else {
-                        continue;
-                    };
-                    if applied_ret.ir() != fact.set.ir() {
-                        continue;
-                    }
-                    return Ok(Some(
-                        InFactSearchProofByBuiltinRule::FnApplicationInCodomain(
-                            FnApplicationInCodomainBuiltinRuleProof {
-                                cite_in_function_set_fact_id,
-                            },
-                        ),
-                    ));
-                }
-                Err(_) => continue,
-            }
-        }
-        Ok(None)
-    }
-
     // Prove `f(args) $in fn_range(f)` when the application is already WD.
     // Mathematical property: a well-defined application of `f` is a point of the image.
-    // Example: after `have fn g(t R) R = t`, prove `g(1) $in fn_range(g)`.
+    // Example: a literal anonymous application belongs to that literal's range.
     fn fn_application_in_fn_range_proof(
         &mut self,
         fact: &InFact,
@@ -836,9 +742,10 @@ impl Runtime {
         if head_obj.ir() != fn_range.function.ir() {
             return Ok(None);
         }
-        let Some(body) = resolve_fn_set_body_for_fn_range(self, fn_range.function.as_ref()) else {
+        let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = fn_range.function.as_ref() else {
             return Ok(None);
         };
+        let body = &anon.body;
         if fn_obj.body.len() != 1 {
             return Ok(None);
         }
@@ -848,15 +755,15 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            InFactSearchProofByBuiltinRule::FnApplicationInFnRange(
-                FnApplicationInFnRangeBuiltinRuleProof {},
+            InFactSearchProofByBuiltinRule::AnonymousFnApplicationInFnRange(
+                AnonymousFnApplicationInFnRangeBuiltinRuleProof {},
             ),
         ))
     }
 
     // Prove `element $in target` from `element $in source` with source ⊂ target.
     // Source membership is verified under the same builtin / known flags as
-    // `verify_state` (so FnApplicationInCodomain can prove `$in R` when lifting
+    // `verify_state` (so by_known can prove the declared `$in R` when lifting
     // to `$in C`). Deep forall / rewrite / WD-store stay off to avoid search
     // blow-up across every proper subset.
     // Example: `distance_sq(q, p) $in C` via proving `distance_sq(q, p) $in R`.
@@ -1453,17 +1360,6 @@ fn fn_obj_head_as_obj(head: &FnObjHead) -> Obj {
         }
         FnObjHead::InstantiatedTemplateObj(v) => Obj::InstantiatedTemplateObj(v.clone()),
     }
-}
-
-fn resolve_fn_set_body_for_fn_range(runtime: &Runtime, function: &Obj) -> Option<FnSet> {
-    if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = function {
-        return Some(anon.body.clone());
-    }
-    runtime
-        .collect_in_function_set_candidates(function)
-        .into_iter()
-        .next()
-        .map(|(fn_set, _)| fn_set)
 }
 
 fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {

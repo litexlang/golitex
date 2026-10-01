@@ -4,7 +4,7 @@
 
 use crate::ast::fact::{
     AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, LessEqualFact, LessFact,
-    NotEqualFact, SubsetFact,
+    NotEqualFact, ProperSubsetFact, SubsetFact,
 };
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
@@ -20,6 +20,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     LessFactSearchProofByBuiltinRule, LessFromPosDifferenceBuiltinRuleProof,
     LessTransitivityBuiltinRuleProof, ModRemainderStrictUpperBoundBuiltinRuleProof,
     PosDifferenceFromLessBuiltinRuleProof, FiniteSetSizeProperSubsetLtBuiltinRuleProof,
+    FiniteProperInclusionProof,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::{
     is_zero_obj, zero_obj, DivMonotoneWeakSamePosDivisorBuiltinRuleProof,
@@ -202,12 +203,12 @@ impl Runtime {
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         let difference = sub_obj(&fact.right, &fact.left);
-        let Some(cite_fact_id) = self.known_less_equal_fact_id(&zero_obj(), &difference) else {
+        let Some(premise_proof) = self.known_less_equal_proof(&zero_obj(), &difference) else {
             return Ok(None);
         };
         Ok(Some(
             LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference(
-                LessEqualFromNonnegDifferenceBuiltinRuleProof { cite_fact_id },
+                LessEqualFromNonnegDifferenceBuiltinRuleProof { premise_proof },
             ),
         ))
     }
@@ -226,12 +227,12 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let Some(cite_fact_id) = self.known_less_equal_fact_id(right.as_ref(), left.as_ref()) else {
+        let Some(premise_proof) = self.known_less_equal_proof(right.as_ref(), left.as_ref()) else {
             return Ok(None);
         };
         Ok(Some(
             LessEqualFactSearchProofByBuiltinRule::NonnegDifferenceFromLessEqual(
-                NonnegDifferenceFromLessEqualBuiltinRuleProof { cite_fact_id },
+                NonnegDifferenceFromLessEqualBuiltinRuleProof { premise_proof },
             ),
         ))
     }
@@ -244,11 +245,11 @@ impl Runtime {
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
         let difference = sub_obj(&fact.right, &fact.left);
-        let Some(cite_fact_id) = self.known_less_fact_id(&zero_obj(), &difference) else {
+        let Some(premise_proof) = self.known_less_proof(&zero_obj(), &difference) else {
             return Ok(None);
         };
         Ok(Some(LessFactSearchProofByBuiltinRule::LessFromPosDifference(
-            LessFromPosDifferenceBuiltinRuleProof { cite_fact_id },
+            LessFromPosDifferenceBuiltinRuleProof { premise_proof },
         )))
     }
 
@@ -266,11 +267,11 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let Some(cite_fact_id) = self.known_less_fact_id(right.as_ref(), left.as_ref()) else {
+        let Some(premise_proof) = self.known_less_proof(right.as_ref(), left.as_ref()) else {
             return Ok(None);
         };
         Ok(Some(LessFactSearchProofByBuiltinRule::PosDifferenceFromLess(
-            PosDifferenceFromLessBuiltinRuleProof { cite_fact_id },
+            PosDifferenceFromLessBuiltinRuleProof { premise_proof },
         )))
     }
 
@@ -549,14 +550,9 @@ impl Runtime {
         let Some(right_set) = match_finite_set_size(&fact.right) else {
             return Ok(None);
         };
-        let left_finite_proof = self.verify_is_finite_set(left_set, verify_state.clone())?;
-        if left_finite_proof.is_failed() {
-            return Ok(None);
-        }
-        let right_finite_proof = self.verify_is_finite_set(right_set, verify_state.clone())?;
-        if right_finite_proof.is_failed() {
-            return Ok(None);
-        }
+        // Both cardinality objects carry finite-set evidence in the enclosing
+        // goal's WD. Requiring a second stored finite fact would reject subsets
+        // whose finiteness was proved only in that WD stage.
         let subset_proof = self.verify_subset(left_set, right_set, verify_state)?;
         if subset_proof.is_failed() {
             return Ok(None);
@@ -564,8 +560,6 @@ impl Runtime {
         Ok(Some(
             LessEqualFactSearchProofByBuiltinRule::FiniteSetSizeSubsetLe(
                 FiniteSetSizeSubsetLeBuiltinRuleProof {
-                    left_finite_proof,
-                    right_finite_proof,
                     subset_proof,
                 },
             ),
@@ -581,11 +575,33 @@ impl Runtime {
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
         let Some(left_set) = match_finite_set_size(&fact.left) else { return Ok(None); };
         let Some(right_set) = match_finite_set_size(&fact.right) else { return Ok(None); };
-        let left_finite_proof = self.verify_is_finite_set(left_set, verify_state.clone())?;
-        if left_finite_proof.is_failed() { return Ok(None); }
-        let right_finite_proof = self.verify_is_finite_set(right_set, verify_state.clone())?;
-        if right_finite_proof.is_failed() { return Ok(None); }
-        let subset_proof = self.verify_subset(left_set, right_set, verify_state.clone())?;
+        // The enclosing LessFact verifier has already proved both size objects
+        // well-defined, including finiteness. At the bounded builtin depth,
+        // by-definition search may be disabled: retain the actual winning route
+        // for either a named proper inclusion or two separately checked facts.
+        let proper_subset: Fact = ProperSubsetFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: left_set.clone(),
+            right: right_set.clone(),
+            line_file: fact.line_file.clone(),
+        }.into();
+        let proper_subset_proof = self.verify_fact(&proper_subset, verify_state.clone())?;
+        if !proper_subset_proof.is_failed() {
+            return Ok(Some(LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(
+                FiniteSetSizeProperSubsetLtBuiltinRuleProof {
+                    inclusion_proof: FiniteProperInclusionProof::ByProperSubset {
+                        proper_subset_proof,
+                    },
+                },
+            )));
+        }
+        let subset: Fact = SubsetFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: left_set.clone(),
+            right: right_set.clone(),
+            line_file: fact.line_file.clone(),
+        }.into();
+        let subset_proof = self.verify_fact(&subset, verify_state.clone())?;
         if subset_proof.is_failed() { return Ok(None); }
         let not_equal: Fact = NotEqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -597,10 +613,10 @@ impl Runtime {
         if not_equal_proof.is_failed() { return Ok(None); }
         Ok(Some(LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(
             FiniteSetSizeProperSubsetLtBuiltinRuleProof {
-                left_finite_proof,
-                right_finite_proof,
-                subset_proof,
-                not_equal_proof,
+                inclusion_proof: FiniteProperInclusionProof::BySubsetAndNotEqual {
+                    subset_proof,
+                    not_equal_proof,
+                },
             },
         )))
     }

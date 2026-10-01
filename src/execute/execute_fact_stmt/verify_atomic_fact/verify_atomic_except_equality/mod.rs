@@ -1,4 +1,8 @@
 pub mod result;
+pub mod lookup_known_atomic_fact;
+mod known_premises;
+pub mod search_atomic_except_equality_fact_proof_by_known;
+pub mod search_atomic_except_equality_fact_proof_by_known_special_property;
 pub mod helper;
 pub mod builtin_prop_definition;
 pub mod search_atomic_except_equality_fact_proof;
@@ -23,3 +27,9 @@ pub use result::{
     BuiltinPropDefinitionProof, SearchProofByKnownStrategy, UserDefinedPropDefinitionProof,
     VerifyAtomicExceptEqualityFactFailed, VerifyAtomicExceptEqualityFactResult,
 };
+
+pub use search_atomic_except_equality_fact_proof_by_known_special_property::AtomicExceptEqualityFactSearchProofByKnownSpecialProperty;
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/known_search/tests.rs"]
+mod known_search_tests;

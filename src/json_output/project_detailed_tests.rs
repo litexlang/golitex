@@ -118,3 +118,25 @@ fn detailed_let_has_kind_no_local_env() {
     assert_eq!(obj_field(&json, "kind").as_str().ok(), Some("let_obj"));
     assert!(json_has_no_local_env(&json));
 }
+
+#[test]
+fn detailed_by_def_preserves_definition_route() {
+    let mut rt = runtime_en();
+    assert!(!exec_one(&mut rt, "prop above_zero(x R):\n    x > 0").is_failed());
+    assert!(!exec_one(&mut rt, "$above_zero(1)").is_failed());
+    let result = exec_one(&mut rt, "by def $above_zero(1)");
+    let detailed = project_stmt_detailed(&result, &rt);
+    assert_eq!(obj_field(&detailed, "success"), &JsonValue::Bool(true));
+    let proof = obj_field(&detailed, "proof");
+    let searched = obj_field(proof, "searched_proof");
+    assert_eq!(obj_field(searched, "type").as_str().ok(), Some("by_definition"));
+    assert_eq!(obj_field(searched, "requirement_facts").as_array().unwrap().len(), 2);
+    assert_eq!(obj_field(searched, "proof_of_requirement_facts").as_array().unwrap().len(), 2);
+    assert!(json_has_no_local_env(&detailed));
+
+    let result = exec_one(&mut rt, "by def 1 $in {x R: x > 0}");
+    let normal = super::project_stmt_normal(&result, &rt);
+    assert_eq!(obj_field(&normal, "success"), &JsonValue::Bool(false));
+    assert!(obj_field(&normal, "stores").as_array().unwrap().is_empty());
+    assert!(obj_field(&normal, "infers").as_array().unwrap().is_empty());
+}

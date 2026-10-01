@@ -1,5 +1,6 @@
 //! Searched-proof route projection for Detailed output.
 
+use super::known_special_property::project_known_special_property;
 use super::equality_builtin_gen::project_equality_builtin_rule;
 use super::exist_builtin_gen::project_exist_builtin_rule;
 use super::or_builtin_gen::project_or_builtin_rule;
@@ -31,6 +32,16 @@ use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
+pub(super) fn project_known_premise(
+    proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
+    runtime: &Runtime,
+) -> JsonValue {
+    object_for(runtime, vec![
+        ("fact", string(proof.fact.readable_string())),
+        ("searched_proof", project_atomic_except_searched(&proof.searched_proof, runtime)),
+    ])
+}
+
 pub(super) fn project_atomic_except_searched(
     searched: &AtomicExceptEqualityFactSearchedProof,
     runtime: &Runtime,
@@ -41,6 +52,9 @@ pub(super) fn project_atomic_except_searched(
         }
         AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
             project_known_atomic(p, runtime)
+        }
+        AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(p) => {
+            project_known_special_property(p, runtime)
         }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(s) => {
             project_atomic_builtin_strategy(s, runtime)

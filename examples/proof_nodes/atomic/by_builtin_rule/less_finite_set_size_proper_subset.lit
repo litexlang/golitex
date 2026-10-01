@@ -1,0 +1,21 @@
+# Node: atomic.ByBuiltinRule.LessFact.FiniteSetSizeProperSubsetLt
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/less_finite_set_size_proper_subset.lit
+
+# Before this rule, the following symbolic proof was rejected:
+# forall A, B finite_set:
+#     A $subset B
+#     A != B
+#     =>:
+#         finite_set_size(A) < finite_set_size(B)
+
+# Active acceptance; all premises are checked.
+forall A, B finite_set:
+    A $subset B
+    A != B
+    =>:
+        finite_set_size(A) < finite_set_size(B)
+
+forall A set, B finite_set:
+    A $proper_subset B
+    =>:
+        finite_set_size(A) < finite_set_size(B)

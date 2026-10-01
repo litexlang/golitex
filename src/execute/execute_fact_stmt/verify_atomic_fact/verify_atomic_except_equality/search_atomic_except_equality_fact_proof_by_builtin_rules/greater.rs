@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{AtomicFact, Fact, GreaterFact, InFact};
 use crate::ast::obj::{
     Add, ArithmeticOperator, Literal, Mul, Number, Obj, StandardSet,
@@ -7,7 +8,7 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::{
     compare_closed_objs_by_normalized_decimal, NumberCompareResult,
 };
-use crate::runtime::{FactId, Runtime, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `a > b`.
 pub enum GreaterFactSearchProofByBuiltinRule {
@@ -49,7 +50,7 @@ pub struct ClosedNumericComparisonBuiltinRuleProof {
 }
 
 pub struct FromKnownLessBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct AddRightCongruenceStrictBuiltinRuleProof {
@@ -86,9 +87,9 @@ impl Runtime {
         fact: &GreaterFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<GreaterFactSearchProofByBuiltinRule>> {
-        if let Some(cite_fact_id) = self.known_less_fact_id(&fact.right, &fact.left) {
+        if let Some(premise_proof) = self.known_less_proof(&fact.right, &fact.left) {
             return Ok(Some(GreaterFactSearchProofByBuiltinRule::FromKnownLess(
-                FromKnownLessBuiltinRuleProof { cite_fact_id },
+                FromKnownLessBuiltinRuleProof { premise_proof },
             )));
         }
         if is_zero_obj(&fact.right) {

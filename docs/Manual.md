@@ -397,6 +397,22 @@ Arithmetic does not erase narrower information: an operation whose operands
 are known integers or reals keeps the existing narrow result whenever that
 rule applies, and falls back to `C` only when a complex carrier is needed.
 
+Before builtin or strategy search, non-equality atomic goals use the shared
+`by_known` entry: stored atomic facts first, then `known_special_property`.
+For a well-defined function application, an exact-object definition-time
+signature can establish membership in its substituted return set or in
+`fn_range(f)`, without proving a new premise or using builtin/strategy fuel.
+Normal output identifies this route as `known_special_property`; Detailed
+output carries the definition citation and stored equality matches. Fixed
+builtin premises can retain the same evidence as nested proofs.
+
+```litex
+have fn positive(x R) N+ = 1
+have a R
+positive(a) $in N+
+positive(a) >= 1
+```
+
 Preview: proving `e $in C` / `e $in R` under **builtin strategy** is ordinary
 strategy recursion (known, then the next strategy step) — not a premise-producing
 builtin-rule budget. Two complementary steps:
@@ -3204,17 +3220,26 @@ by def $P(args)
 > user-defined `$prop(...)`. User `prop` and builtin predicates share one fork:
 > builtin first, then user `prop`. Design note:
 > `src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/by_definition_design.md`.
-> Finite list-set inclusions such as `{1} $subset {1, 2}` are **not** a by-def
-> goal; use `by enumerate finite_set`.
+> Finite list-set inclusions such as `{1} $subset {1, 2}` use the same
+> forall definition; every resulting membership obligation must verify.
 
 Unlike ordinary atomic verification, explicit `by def` rechecks the definition
 even if the target predicate is already known. It accepts exactly one positive
-atomic target. The older `by def:` goal block remains accepted for compatibility.
+atomic target with a supported concrete or official builtin definition. The
+execution entry calls definition expansion directly; known facts, computation,
+strategies, and rewriting cannot replace this first step. Defining clauses use
+the full ordinary verifier. Arithmetic comparisons, equalities, and SetBuilder
+membership have no entry in this definition interface, so requests such as
+`by def 1 > 0` and `by def 1 $in {x R: x > 0}` fail even though the ordinary
+facts verify. The older `by def:` goal block remains accepted for compatibility.
 
 `by def` also names the mathematical-definition route for these builtin
 positive forms: subset, superset, proper subset, proper superset,
 `$prime`, `$coprime`, `$dvd`, `$injective`, `$surjective`, `$bijective`,
 `$is_choice_function_for`.
+The prime definition currently requires a separately verified trial-divisor
+`forall`; bare `by def $prime(5)` fails. Ordinary `$prime(5)` remains supported
+by closed-numeric computation.
 `$fn_eq` and `$fn_eq_in` are removed.
 
 When a grouped universal law binds shared convenience variables, a conclusion
@@ -3244,7 +3269,7 @@ abstract_prop P(x)
 by def $P(1)
 ```
 
-This is an `error` because an abstract predicate has no definition to unfold.
+This request fails because an abstract predicate has no definition to unfold.
 
 ### Witnesses, `obtain`, and preimages
 
@@ -4018,6 +4043,47 @@ forall A finite_set:
         finite_set_size(A) >= 1
 ```
 
+Any subset of a finite set is finite, even when declared only as `set`.
+Equal cardinalities imply equality when one set is contained in the other;
+proper inclusion gives a strict cardinality bound:
+
+```litex
+forall A set, B finite_set:
+    A $subset B
+    =>:
+        $is_finite_set(A)
+
+forall A set, B finite_set:
+    A $subset B
+    =>:
+        finite_set_size(A) <= finite_set_size(B)
+
+forall A set, B finite_set:
+    A $subset B
+    finite_set_size(A) = finite_set_size(B)
+    =>:
+        A = B
+
+forall A set, B finite_set:
+    A $subset B
+    A != B
+    =>:
+        finite_set_size(A) < finite_set_size(B)
+
+forall A set, B finite_set:
+    A $proper_subset B
+    =>:
+        finite_set_size(A) < finite_set_size(B)
+```
+
+These rules retain the checked inclusion and cardinality premises. Equal
+cardinalities alone do not identify sets, and ordinary inclusion alone gives
+only the weak bound. Their runnable tracers are
+[subset finiteness](../examples/proof_nodes/atomic/by_builtin_strategy/subset_of_finite_set.lit),
+[weak comparison through WD](../examples/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_size_subset_wd.lit),
+[equality from equal sizes](../examples/proof_nodes/equal/by_builtin_rule/finite_set_equal_from_subset_size.lit),
+and [strict inclusion](../examples/proof_nodes/atomic/by_builtin_rule/less_finite_set_size_proper_subset.lit).
+
 Finite-set constructors also support difference and union cardinality rules.
 The decomposition below explicitly lifts the difference identity into the
 sum before applying arithmetic cancellation. The subset case explicitly
@@ -4061,9 +4127,10 @@ forall a, b N:
         finite_set_size(range(a, b)) = b - a
 ```
 
-The boundary is semantic: replacing `finite_set` by arbitrary `set` makes
-`finite_set_size(...)` ill-defined. The rule does not attempt to prove an
-unknown set finite merely because it appears in a cardinality expression.
+`finite_set_size(...)` still requires a checked finiteness proof. An arbitrary
+`set` without that proof is ill-defined as its argument; inclusion in a finite
+upper set can now supply the proof. Appearing in a cardinality expression
+alone does not prove a set finite.
 
 Runnable examples for these families are indexed in the
 [examples directory](../examples/README.md). Keeping that evidence map there

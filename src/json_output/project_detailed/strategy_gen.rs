@@ -468,6 +468,7 @@ pub(super) fn project_atomic_builtin_strategy(
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnApplicationInCodomain(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FnApplicationInCodomain")),
+            ("cite_signature_fact_id", string(p.cite_signature_fact_id.to_string())),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetSubsetFromMembers(p) => object_for(runtime, vec![

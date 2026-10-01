@@ -7,16 +7,22 @@
 # Main line: finite distributions -> expectation and variance -> least squares
 # -> Bayes' rule.
 
-prop is_probability_vector2(p finite_seq(R, 2)):
+# Two coordinates indexed by 1 and 2, retaining the original domain.
+# Write the function carrier explicitly while finite_seq is being migrated.
+let two_point_vector = fn(index N+: index <= 2) R
+
+prop is_probability_vector2(p two_point_vector):
     p(1) >= 0
     p(2) >= 0
     p(1) + p(2) = 1
 
-have fn expectation2(values, probs finite_seq(R, 2)) R = values(1) * probs(1) + values(2) * probs(2)
-have fn variance2(values, probs finite_seq(R, 2)) R = (values(1) - expectation2(values, probs))^2 * probs(1) + (values(2) - expectation2(values, probs))^2 * probs(2)
+have fn expectation2(values, probs two_point_vector) R = values(1) * probs(1) + values(2) * probs(2)
+
+have fn variance2(values, probs two_point_vector) R = (values(1) - expectation2(values, probs))^2 * probs(1) + (values(2) - expectation2(values, probs))^2 * probs(2)
 
 # For three real observations, a least-squares center is a point whose
 # squared-error sum is no larger than the sum at any real candidate.
+
 prop is_least_squares_center(center, a, b, c R):
     forall candidate R:
         (a - center)^2 + (b - center)^2 + (c - center)^2 <= (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
@@ -25,6 +31,7 @@ have fn mean3(a, b, c R) R = (a + b + c) / 3
 
 # The key identity leaves the nonnegative remainder visible:
 # SSE(candidate) = SSE(mean) + 3 * (candidate - mean)^2.
+
 thm three_point_sse_decomposition:
     ? forall a, b, c, candidate R:
         (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 + 3 * (candidate - (a + b + c) / 3)^2 = (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
@@ -49,42 +56,77 @@ thm mean3_is_least_squares_center:
 
 # Tracer example: for 1, 2, 5 the mean is 8/3.  The candidate 2 has a
 # larger squared-error sum, and the difference is exactly 3*(2 - 8/3)^2.
+
 mean3(1, 2, 5) = 8 / 3
+
 by thm mean3_is_least_squares_center(1, 2, 5) => $is_least_squares_center(mean3(1, 2, 5), 1, 2, 5)
+
 by def $is_least_squares_center(mean3(1, 2, 5), 1, 2, 5)
+
 (1 - mean3(1, 2, 5))^2 + (2 - mean3(1, 2, 5))^2 + (5 - mean3(1, 2, 5))^2 = 26 / 3
+
 (1 - 2)^2 + (2 - 2)^2 + (5 - 2)^2 = 10
+
 3 * (2 - mean3(1, 2, 5))^2 = 4 / 3
+
 26 / 3 + 4 / 3 = 10
+
 26 / 3 <= 10
 
-have fn affine_combine2(X, Y finite_seq(R, 2), a, b R) finite_seq(R, 2) = fn(k N+: k <= 2) R {a * X(k) + b * Y(k)}
+# Construct the coordinate function with the existing template interface.
+template<X, Y two_point_vector, a, b R>:
+    have fn affine_coordinates(k N+: k <= 2) R = a * X(k) + b * Y(k)
 
-# Expanding the two coordinates proves linearity of expectation directly.
+have fn affine_combine2(X, Y two_point_vector, a, b R) two_point_vector = \affine_coordinates<X, Y, a, b>
+
+# Expand each weighted sum before substituting the affine coordinates.
+# This identity holds for arbitrary real weights; no probability premise is needed.
 thm expectation2_affine:
-    ? forall X, Y finite_seq(R, 2), probs finite_seq(R, 2), a, b R:
+    ? forall X, Y two_point_vector, probs two_point_vector, a, b R:
         expectation2(affine_combine2(X, Y, a, b), probs) = a * expectation2(X, probs) + b * expectation2(Y, probs)
-    affine_combine2(X, Y, a, b)(1) = a * X(1) + b * Y(1)
-    affine_combine2(X, Y, a, b)(2) = a * X(2) + b * Y(2)
     expectation2(X, probs) = X(1) * probs(1) + X(2) * probs(2)
     expectation2(Y, probs) = Y(1) * probs(1) + Y(2) * probs(2)
-    expectation2(affine_combine2(X, Y, a, b), probs) = (a * X(1) + b * Y(1)) * probs(1) + (a * X(2) + b * Y(2)) * probs(2)
-    expectation2(affine_combine2(X, Y, a, b), probs) = a * (X(1) * probs(1) + X(2) * probs(2)) + b * (Y(1) * probs(1) + Y(2) * probs(2))
-    a * expectation2(X, probs) + b * expectation2(Y, probs) = a * (X(1) * probs(1) + X(2) * probs(2)) + b * (Y(1) * probs(1) + Y(2) * probs(2))
+    let combined = \affine_coordinates<X, Y, a, b>
+    expectation2(combined, probs) = combined(1) * probs(1) + combined(2) * probs(2)
+    \affine_coordinates<X, Y, a, b>(1) = a * X(1) + b * Y(1)
+    \affine_coordinates<X, Y, a, b>(2) = a * X(2) + b * Y(2)
+    combined(1) = a * X(1) + b * Y(1)
+    combined(2) = a * X(2) + b * Y(2)
+    affine_combine2(X, Y, a, b) = combined
+    combined(1) * probs(1) + combined(2) * probs(2) = (a * X(1) + b * Y(1)) * probs(1) + (a * X(2) + b * Y(2)) * probs(2)
+    (a * X(1) + b * Y(1)) * probs(1) + (a * X(2) + b * Y(2)) * probs(2) = a * (X(1) * probs(1) + X(2) * probs(2)) + b * (Y(1) * probs(1) + Y(2) * probs(2))
+    a * (X(1) * probs(1) + X(2) * probs(2)) + b * (Y(1) * probs(1) + Y(2) * probs(2)) = a * expectation2(X, probs) + b * expectation2(Y, probs)
+    expectation2(combined, probs) = a * expectation2(X, probs) + b * expectation2(Y, probs)
 
-# Former `[0, 1]` / `[1/2, 1/2]` list literals removed; define as finite_seq via fn cases.
+# The two outcomes are 0 and 1, each with probability 1/2.
 have fn fair_coin_values(k N+: k <= 2) R = k - 1
+
 have fn fair_coin_probs(k N+: k <= 2) R = 1 / 2
 
+fair_coin_probs $in two_point_vector
+fair_coin_values $in two_point_vector
+fair_coin_probs(1) = 1 / 2
+fair_coin_probs(2) = 1 / 2
+fair_coin_values(1) = 0
+fair_coin_values(2) = 1
 by def $is_probability_vector2(fair_coin_probs)
+
+expectation2(fair_coin_values, fair_coin_probs) = fair_coin_values(1) * fair_coin_probs(1) + fair_coin_values(2) * fair_coin_probs(2)
+fair_coin_values(1) * fair_coin_probs(1) + fair_coin_values(2) * fair_coin_probs(2) = 0 * (1 / 2) + 1 * (1 / 2) = 1 / 2
 expectation2(fair_coin_values, fair_coin_probs) = 1 / 2
+
+variance2(fair_coin_values, fair_coin_probs) = (fair_coin_values(1) - expectation2(fair_coin_values, fair_coin_probs))^2 * fair_coin_probs(1) + (fair_coin_values(2) - expectation2(fair_coin_values, fair_coin_probs))^2 * fair_coin_probs(2)
+(fair_coin_values(1) - expectation2(fair_coin_values, fair_coin_probs))^2 * fair_coin_probs(1) + (fair_coin_values(2) - expectation2(fair_coin_values, fair_coin_probs))^2 * fair_coin_probs(2) = (0 - 1 / 2)^2 * (1 / 2) + (1 - 1 / 2)^2 * (1 / 2)
+(0 - 1 / 2)^2 * (1 / 2) + (1 - 1 / 2)^2 * (1 / 2) = 1 / 4
 variance2(fair_coin_values, fair_coin_probs) = 1 / 4
 
 have fn conditional_probability(joint, evidence R: evidence > 0) R = joint / evidence
+
 have fn bayes_posterior(prior, likelihood, evidence R: evidence > 0) R = likelihood * prior / evidence
 
 # Bayes' rule here is the substitution joint = likelihood * prior into the
 # definition of conditional probability.
+
 thm bayes_rule:
     ? forall prior, likelihood, evidence, joint R:
         evidence > 0
@@ -96,6 +138,9 @@ thm bayes_rule:
     joint / evidence = likelihood * prior / evidence
 
 1 / 4 = (3 / 4) * (1 / 3)
+
 by thm bayes_rule(1 / 3, 3 / 4, 1 / 2, 1 / 4) => conditional_probability(1 / 4, 1 / 2) = bayes_posterior(1 / 3, 3 / 4, 1 / 2)
+
 conditional_probability(1 / 4, 1 / 2) = 1 / 2
+
 bayes_posterior(1 / 3, 3 / 4, 1 / 2) = 1 / 2

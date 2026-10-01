@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{AtomicFact, Fact, LessFact};
 use crate::ast::obj::{Add, ArithmeticOperator, Mul, Obj, Sub, TrigOperator};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::{is_zero_obj, zero_obj};
@@ -131,10 +132,17 @@ pub struct ClosedNumericComparisonBuiltinRuleProof {
 }
 
 pub struct FiniteSetSizeProperSubsetLtBuiltinRuleProof {
-    pub left_finite_proof: VerifyFactResult,
-    pub right_finite_proof: VerifyFactResult,
-    pub subset_proof: VerifyFactResult,
-    pub not_equal_proof: VerifyFactResult,
+    pub inclusion_proof: FiniteProperInclusionProof,
+}
+
+pub enum FiniteProperInclusionProof {
+    ByProperSubset {
+        proper_subset_proof: VerifyFactResult,
+    },
+    BySubsetAndNotEqual {
+        subset_proof: VerifyFactResult,
+        not_equal_proof: VerifyFactResult,
+    },
 }
 
 // Payload: the minuend `x` in the goal `x - 1 < x`.
@@ -211,11 +219,11 @@ pub struct LessTransitivityBuiltinRuleProof {
 }
 
 pub struct LessFromPosDifferenceBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct PosDifferenceFromLessBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 pub struct ModRemainderStrictUpperBoundBuiltinRuleProof {

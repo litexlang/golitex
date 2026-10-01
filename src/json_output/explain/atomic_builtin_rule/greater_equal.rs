@@ -30,10 +30,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
-            Self::FromKnownInPositiveNatural(p) => Some(p.cite_fact_id),
-            Self::FromKnownGreater(p) => Some(p.cite_fact_id),
-            Self::OrderFlipMulMinusOne(p) => Some(p.cite_fact_id),
-            Self::PredecessorNonNegFromAtLeastOne(p) => Some(p.cite_at_least_one_fact_id),
+            Self::FromKnownInPositiveNatural(p) => p.premise_proof.cite_fact_id(),
+            Self::FromKnownGreater(p) => p.premise_proof.cite_fact_id(),
+            Self::OrderFlipMulMinusOne(p) => p.premise_proof.cite_fact_id(),
+            Self::PredecessorNonNegFromAtLeastOne(p) => p.at_least_one_proof.cite_fact_id(),
             Self::OrderReflexivity(_)
             | Self::ClosedNumericComparison(_)
             | Self::FiniteSetSizeNonnegative(_)

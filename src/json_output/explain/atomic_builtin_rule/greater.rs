@@ -35,7 +35,7 @@ impl GreaterFactSearchProofByBuiltinRule {
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
             Self::ClosedNumericComparison(_) => None,
-            Self::FromKnownLess(p) => Some(p.cite_fact_id),
+            Self::FromKnownLess(p) => p.premise_proof.cite_fact_id(),
             Self::AddRightCongruenceStrict(_) => None,
             Self::AddLeftCongruenceStrict(_) => None,
             Self::MulLeftPositiveMonotoneStrict(_) => None,

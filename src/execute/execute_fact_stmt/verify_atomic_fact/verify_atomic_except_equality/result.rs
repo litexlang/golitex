@@ -2,7 +2,7 @@ use crate::ast::fact::{AtomicFact, Fact};
 use crate::ast::names::PlainName;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
-    AtomicExceptEqualityFactSearchProofByBuiltinRewrite,
+    AtomicExceptEqualityFactSearchProofByKnownSpecialProperty, AtomicExceptEqualityFactSearchProofByBuiltinRewrite,
     AtomicExceptEqualityFactSearchProofByBuiltinRule, AtomicExceptEqualityFactSearchProofByBuiltinStrategy,
     AtomicExceptEqualityFactSearchProofByKnownRewrite,
 };
@@ -44,11 +44,12 @@ impl VerifyAtomicExceptEqualityFactResult {
 
 // Mirrors search_atomic_except_equality_fact_proof stage order.
 pub enum AtomicExceptEqualityFactSearchedProof {
-    ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule),
     ByKnownAtomicFact(AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
+    ByKnownSpecialProperty(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty),
+    ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule),
     ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy),
-    ByDefinition(AtomicExceptEqualityFactSearchProofByDefinition),
     ByKnownStrategy(SearchProofByKnownStrategy),
+    ByDefinition(AtomicExceptEqualityFactSearchProofByDefinition),
     ByKnownForallFact(SearchProofByKnownForallFact),
     ByBuiltinRewrite(AtomicExceptEqualityFactSearchProofByBuiltinRewrite),
     ByKnownRewrite(AtomicExceptEqualityFactSearchProofByKnownRewrite),
@@ -69,6 +70,29 @@ pub struct AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
     // Per argument: prove known_arg = goal_arg via equality search
     // (forall/rewrite off). Same ObjIR lands on ByTheyAreTheSame::SameIr.
     pub why_parameters_of_known_fact_are_equal_to_givens: Vec<EqualFactSearchedProof>,
+}
+
+// A fixed premise established by read-only known lookup. The fact retains the
+// queried sides; the proof retains either its citation or definition evidence.
+pub struct AtomicExceptEqualityFactKnownProof {
+    pub fact: AtomicFact,
+    pub searched_proof: Box<AtomicExceptEqualityFactSearchedProof>,
+}
+
+impl AtomicExceptEqualityFactKnownProof {
+    pub fn cite_fact_id(&self) -> Option<FactId> {
+        match self.searched_proof.as_ref() {
+            AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof) => Some(proof.cite_fact_id),
+            AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(_)
+            | AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(_)
+            | AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(_)
+            | AtomicExceptEqualityFactSearchedProof::ByKnownStrategy(_)
+            | AtomicExceptEqualityFactSearchedProof::ByDefinition(_)
+            | AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(_)
+            | AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(_)
+            | AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(_) => None,
+        }
+    }
 }
 
 

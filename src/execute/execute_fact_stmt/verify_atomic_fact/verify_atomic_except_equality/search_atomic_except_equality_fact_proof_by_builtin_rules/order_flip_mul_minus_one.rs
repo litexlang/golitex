@@ -6,31 +6,32 @@
 //! When known `x > 0`, prove `(-1)*x < 0`.
 //! When known `x >= 0` / `x > 0`, prove `(-1)*x <= 0`.
 
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{GreaterEqualFact, LessEqualFact, LessFact};
 use crate::ast::obj::{ArithmeticOperator, Literal, Mul, Number, Obj};
-use crate::runtime::{FactId, Runtime};
+use crate::runtime::Runtime;
 
 // Builtin: `(-1)*x >= 0` from known `x < 0` or `x <= 0`.
 // Example: trust a < 0; (-1) * a >= 0.
 pub struct OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 // Builtin: `(-1)*x < 0` from known `x > 0`.
 // Example: trust a > 0; (-1) * a < 0.
 pub struct OrderFlipMulMinusOneToLessBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 // Builtin: `(-1)*x <= 0` from known `x >= 0` or `x > 0`.
 // Example: trust a >= 0; (-1) * a <= 0.
 pub struct OrderFlipMulMinusOneToLessEqualBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 impl Runtime {
     pub(crate) fn try_order_flip_mul_minus_one_to_greater_equal(
-        &self,
+        &mut self,
         fact: &GreaterEqualFact,
     ) -> Option<OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof> {
         let x = peel_mul_by_literal_neg_one(self, &fact.left)?;
@@ -38,14 +39,14 @@ impl Runtime {
             return None;
         }
         let zero = literal_zero();
-        let cite_fact_id = self
-            .known_less_fact_id(&x, &zero)
-            .or_else(|| self.known_less_equal_fact_id(&x, &zero))?;
-        Some(OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof { cite_fact_id })
+        let premise_proof = self
+            .known_less_proof(&x, &zero)
+            .or_else(|| self.known_less_equal_proof(&x, &zero))?;
+        Some(OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof { premise_proof })
     }
 
     pub(crate) fn try_order_flip_mul_minus_one_to_less(
-        &self,
+        &mut self,
         fact: &LessFact,
     ) -> Option<OrderFlipMulMinusOneToLessBuiltinRuleProof> {
         let x = peel_mul_by_literal_neg_one(self, &fact.left)?;
@@ -53,12 +54,12 @@ impl Runtime {
             return None;
         }
         let zero = literal_zero();
-        let cite_fact_id = self.known_greater_fact_id(&x, &zero)?;
-        Some(OrderFlipMulMinusOneToLessBuiltinRuleProof { cite_fact_id })
+        let premise_proof = self.known_greater_proof(&x, &zero)?;
+        Some(OrderFlipMulMinusOneToLessBuiltinRuleProof { premise_proof })
     }
 
     pub(crate) fn try_order_flip_mul_minus_one_to_less_equal(
-        &self,
+        &mut self,
         fact: &LessEqualFact,
     ) -> Option<OrderFlipMulMinusOneToLessEqualBuiltinRuleProof> {
         let x = peel_mul_by_literal_neg_one(self, &fact.left)?;
@@ -66,10 +67,10 @@ impl Runtime {
             return None;
         }
         let zero = literal_zero();
-        let cite_fact_id = self
-            .known_greater_equal_fact_id(&x, &zero)
-            .or_else(|| self.known_greater_fact_id(&x, &zero))?;
-        Some(OrderFlipMulMinusOneToLessEqualBuiltinRuleProof { cite_fact_id })
+        let premise_proof = self
+            .known_greater_equal_proof(&x, &zero)
+            .or_else(|| self.known_greater_proof(&x, &zero))?;
+        Some(OrderFlipMulMinusOneToLessEqualBuiltinRuleProof { premise_proof })
     }
 }
 

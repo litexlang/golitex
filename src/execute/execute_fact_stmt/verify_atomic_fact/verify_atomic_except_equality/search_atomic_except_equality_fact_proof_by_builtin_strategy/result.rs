@@ -1,5 +1,6 @@
 use crate::ast::fact::Fact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::runtime::FactId;
 
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     PosAddPosIsPos(PosAddPosIsPosStrategySingleStep),
@@ -1036,6 +1037,7 @@ pub struct StandardSetSubsetMembershipStrategySingleStep {
 // Example:
 //   dot(u, v) $in R after domain memberships of u,v under strategy depth
 pub struct FnApplicationInCodomainStrategySingleStep {
+    pub cite_signature_fact_id: FactId,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

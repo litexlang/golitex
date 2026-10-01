@@ -10,74 +10,66 @@
 
 # Two overlapping finite sets will serve as domain and codomain throughout.
 have first_set finite_set = {1, 2, 3}
+
 have second_set finite_set = {2, 3, 4}
 
 1 $in {1, 2, 3}
+
 2 $in {1, 2, 3}
+
 3 $in {1, 2, 3}
+
 4 $in {2, 3, 4}
 
-# Set equality means having the same elements. The forward direction contrasts
-# finite enumeration on the first operand with ordinary case analysis on the
-# second; the reverse direction exhausts the four displayed target elements.
+# Prove both subset directions before applying set extensionality.
+
 thm first_union_second:
     ? forall:
         union(first_set, second_set) = {1, 2, 3, 4}
+    first_set $subset {1, 2, 3, 4}
+    second_set $subset {1, 2, 3, 4}
+    union(first_set, second_set) $subset {1, 2, 3, 4}
+    1 $in union(first_set, second_set)
+    2 $in union(first_set, second_set)
+    3 $in union(first_set, second_set)
+    4 $in union(first_set, second_set)
+    {1, 2, 3, 4} $subset union(first_set, second_set)
     by extension:
-        ? union({1, 2, 3}, {2, 3, 4}) = {1, 2, 3, 4}
-        claim:
-            ? forall element union({1, 2, 3}, {2, 3, 4}):
-                element $in {1, 2, 3, 4}
-            element $in {1, 2, 3} or element $in {2, 3, 4}
-            by cases:
-                ? element $in {1, 2, 3, 4}
-                case element $in {1, 2, 3}:
-                    by enumerate finite_set:
-                        ? forall first_element {1, 2, 3}:
-                            first_element $in {1, 2, 3, 4}
-                case element $in {2, 3, 4}:
-                    element = 2 or element = 3 or element = 4
-                    by cases:
-                        ? element $in {1, 2, 3, 4}
-                        case element = 2:
-                            2 $in {1, 2, 3, 4}
-                        case element = 3:
-                            3 $in {1, 2, 3, 4}
-                        case element = 4:
-                            4 $in {1, 2, 3, 4}
-        by enumerate finite_set:
-            ? forall target_element {1, 2, 3, 4}:
-                target_element $in union({1, 2, 3}, {2, 3, 4})
-    union(first_set, second_set) = union({1, 2, 3}, {2, 3, 4}) = {1, 2, 3, 4}
+        ? union(first_set, second_set) = {1, 2, 3, 4}
 
-# This is the finite-enumeration example: Litex checks x = 1, 2, and 3, then
-# one bridge transports the displayed codomain back to its name.
+# The displayed finite domain is a subset of the numeric carrier.
+first_set $subset R
+forall x first_set:
+    x $in R
+
+# Enumerate the three displayed inputs. The numeric carrier plus membership
+# describes exactly first_set, since the subset fact above is already proved.
 thm successor_moves_first_set_to_second_set:
-    ? forall x first_set:
-        x + 1 $in second_set
+    ? forall x R:
+        x $in first_set
+        =>:
+            x + 1 $in second_set
     by enumerate finite_set:
-        ? forall element first_set:
-            element + 1 $in {2, 3, 4}
-    claim:
-        ? forall input first_set:
-            input + 1 $in second_set
-        input + 1 $in {2, 3, 4}
-        input + 1 $in second_set
+        ? forall element {1, 2, 3}:
+            element $in R
+            =>:
+                element + 1 $in {2, 3, 4}
+    x $in {1, 2, 3}
+    x + 1 $in {2, 3, 4}
+    x + 1 $in second_set
 
-# First presentation: define a named function directly by a formula. The
-# preceding theorem supplies the required codomain fact.
-have fn successor_on_first(x first_set) second_set = x + 1
+# First presentation: a named function defined by its formula.
+have fn successor_on_first(x R: x $in first_set) second_set = x + 1
 
-# Second presentation: construct the same map as an anonymous first-class
-# function value, which can be stored or passed as an ordinary object.
-have successor_as_value fn(x first_set) second_set = fn(input first_set) second_set {input + 1}
+# Second presentation: the same map as an anonymous function value.
+have successor_as_value fn(x R: x $in first_set) second_set = fn(input R: input $in first_set) second_set {input + 1}
 
-# Set-theoretically, a binary relation from N to N is a subset of N x N. This
-# relation is the graph of the successor rule.
+# A binary relation on N, represented as a set of ordered pairs.
 have successor_graph power_set(cart(N, N)) = {pair cart(N, N): pair[2] = pair[1] + 1}
 
 # Third presentation: prove that the relation y = x + 1 has exactly one output
 # for each input, then let `have fn by exist!` select the callable function.
+
 claim:
     ? forall x N:
         exist! y N st {y = x + 1}
@@ -95,23 +87,31 @@ have fn successor_from_unique_output by exist!:
         exist! y N st {y = x + 1}
 
 # The selected output satisfies the original set-theoretic graph relation.
+
 thm selected_successor_lies_on_graph:
     ? forall x N:
         (x, successor_from_unique_output(x)) $in successor_graph
     successor_from_unique_output(x) = x + 1
-    (x, successor_from_unique_output(x))[2] = successor_from_unique_output(x) = x + 1 = (x, successor_from_unique_output(x))[1] + 1
-    by thm set_builder_member((x, successor_from_unique_output(x)), {pair cart(N, N): pair[2] = pair[1] + 1}) => (x, successor_from_unique_output(x)) $in {pair cart(N, N): pair[2] = pair[1] + 1}
+    (x, successor_from_unique_output(x)) $in cart(N, N)
+    (x, successor_from_unique_output(x))[2] = successor_from_unique_output(x)
+    (x, successor_from_unique_output(x))[1] = x
+    (x, successor_from_unique_output(x))[2] = (x, successor_from_unique_output(x))[1] + 1
+    (x, successor_from_unique_output(x)) $in {pair cart(N, N): pair[2] = pair[1] + 1}
     (x, successor_from_unique_output(x)) $in successor_graph
 
-# Before comparing a function on first_set with one on all naturals, expose
-# the finite domain's ambient carrier once.
-by def first_set $subset N
+# Prove the finite domain lies in N before comparing with the total successor.
+first_set $subset N
+
 forall element first_set:
     element $in N
 
 # All three definitions now agree on the common finite domain.
+
 thm three_successor_presentations_agree:
-    ? forall x first_set:
-        successor_on_first(x) = successor_as_value(x) = successor_from_unique_output(x)
-    successor_on_first(x) = x + 1 = successor_as_value(x)
-    successor_as_value(x) = x + 1 = successor_from_unique_output(x)
+    ? forall x N:
+        x $in first_set
+        =>:
+            successor_on_first(x) = successor_as_value(x) = successor_from_unique_output(x)
+    successor_on_first(x) = x + 1
+    successor_as_value(x) = x + 1
+    successor_from_unique_output(x) = x + 1

@@ -172,22 +172,58 @@ no deep phase, no rewrite, no WD store; certificate type
 bound during that structural recursion. Exist apply also instantiates the
 conclusion and alpha-compares to the goal before instantiation requirements.
 
-`VerifyState` search phases (atomic / equal):
+`VerifyState` non-equality atomic search phases (after WD):
 
-1. **Builtin rule** (enter only if `can_use_builtin_rule_round > 0`, then pass
-   `with_one_less_round()` / round - 1; premise-producing arms may
-   `after_builtin_rule()` again for children; cite-only still runs at the
-   decremented round including 0. Strategy cite-only calls by_builtin_rule
-   directly and does not use this entry gate).
-2. **Known** (equivalence class / known atomic; does not consume round).
-3. **Deep** (`can_use_def_and_known_forall_and_known_strategy` and
-   `can_use_builtin_rule_round > 0`): enter once via `with_one_less_round()`
-   (round - 1 for the whole phase), then `verify_by_strategy` (enters
-   `StrategySearch` with depth 16; nested requirements may only use cite-only
-   builtin, known, and further strategy — no by-def / forall / rewrite;
-   carrier closures like `(a - (a % b)) $in Z` nest via strategy depth), then
-   by definition / object definition, known forall, then (`can_use_rewrite`)
-   rewrite. Top-level round starts at 2.
+1. **By known**: `search_atomic_except_equality_fact_proof_by_known` first
+   tries stored atomic facts, then definition-time shape memory. It returns
+   the existing `AtomicExceptEqualityFactSearchedProof` variants directly:
+   `ByKnownAtomicFact` or `ByKnownSpecialProperty`. Both ordinary truth search
+   and strategy known-first use this entry; neither consumes builtin rounds
+   or strategy depth.
+2. **Builtin rule**: enter when `can_use_builtin_rule_round > 0`, passing
+   `with_one_less_round()`. Premise-producing arms may decrement again;
+   cite-only arms still run at the decremented round, including zero.
+3. **Deep**: when enabled, try bounded builtin/user strategies, prop
+   definition, known forall, then enabled builtin/known rewrites. Top-level
+   builtin round starts at 2. Strategy children use their own depth budget
+   and cannot enter definition, forall or rewrite search.
+
+Equality retains its own identity / builtin / equality-class / constructor /
+deep pipeline; this change concerns non-equality atomics only.
+
+`ByKnownSpecialProperty` reads only exact-object rows from
+`special_object_properties_by_def`, across visible environments. It never
+writes that table, verifies a premise, or invokes general equality search.
+The supported leaves establish function-application codomain or `fn_range`
+membership after caller-owned WD. Return sets are structurally substituted
+and matched by identity or stored equality paths. Cached WD does not identify
+its selected signature, so the leaf declines when visible signatures that
+could supply application WD disagree on the required return; bounded strategy
+remains available to prove additional domain premises. Source rows are never
+borrowed from an equal function's object key.
+
+The legacy generic `store_atomic_fact` currently also registers function and
+sequence shape rows from stored memberships/equalities, contrary to the table's
+"definition-time only" comment. Tightening those writers changes existing
+`trust f $in fn(...)` application behavior and awaits a compatibility decision.
+This query refactor leaves the writers unchanged.
+
+Fixed cite-only builtin premises use
+`lookup_atomic_except_equality_fact_proof_by_known`: stored atomic facts first,
+then the same special-property leaf. Its stored matching uses identity and
+stored equality paths only; it cannot enter WD, constructor congruence, peer
+comparison, or truth search. `AtomicExceptEqualityFactKnownProof` retains the
+queried fact and selected existing searched-proof variant. Detailed output
+preserves this nested evidence instead of fabricating a FactId for a property
+match. Ordinary known-atomic search retains its existing equality argument
+matching and candidate order.
+
+Candidate discovery still owns family/index-union witnesses, subset
+intermediates, order edges, and forall parameter completion. Exact source-ID
+and history access remain separate. WD, equality unfolding and explicit
+commands retain their existing definition-memory readers. The builtin
+anonymous-function `fn_range` rule remains a structural rule; the two
+named-function definition-memory builtin leaves have been removed.
 
 `or` search order is:
 

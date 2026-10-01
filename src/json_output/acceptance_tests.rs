@@ -256,7 +256,7 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         EqualitySearchProofByBuiltinRule::MinRightWhenLessEqual(MinRightWhenLessEqualBuiltinRuleProof { proof_of_requirement_facts: Vec::new() }),
         EqualitySearchProofByBuiltinRule::GcdDividesArgument(GcdDividesArgumentBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::ProductModFactorZero(ProductModFactorZeroBuiltinRuleProof {}),
-        EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(EqualityFromTwoSidedWeakOrderBuiltinRuleProof { proof_of_requirement_facts: Vec::new() }),
+        EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(EqualityFromTwoSidedWeakOrderBuiltinRuleProof { left_le_right_proof: sample_known_atomic_premise("0 <= 0"), right_le_left_proof: sample_known_atomic_premise("0 <= 0") }),
         EqualitySearchProofByBuiltinRule::DiffZeroFromEqualOperands(DiffZeroFromEqualOperandsBuiltinRuleProof { proof_of_requirement_facts: Vec::new() }),
         EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(EqualFromKnownDifferenceZeroBuiltinRuleProof { cite_fact_id: FactId::new(1) }),
         EqualitySearchProofByBuiltinRule::ZeroProductCancel(ZeroProductCancelBuiltinRuleProof { proof_of_requirement_facts: Vec::new() }),
@@ -792,14 +792,14 @@ fn acceptance_previously_stubbed_atomic_families_bilingual() {
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSubsetFact(
             NotSubsetFactSearchProofByBuiltinRule::FromKnownNotSuperset(
                 FromKnownNotSupersetBuiltinRuleProof {
-                    cite_fact_id: FactId::new(1),
+                    premise_proof: sample_known_atomic_premise("not {2} $superset {1}"),
                 },
             ),
         ),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSupersetFact(
             NotSupersetFactSearchProofByBuiltinRule::FromKnownNotSubset(
                 FromKnownNotSubsetBuiltinRuleProof {
-                    cite_fact_id: FactId::new(1),
+                    premise_proof: sample_known_atomic_premise("not {1} $subset {2}"),
                 },
             ),
         ),
@@ -819,5 +819,25 @@ fn acceptance_previously_stubbed_atomic_families_bilingual() {
         assert_eq!(zh.rule_id, en.rule_id);
         assert_builtin_text_ok(&zh.rule_id, OutputLanguage::Chinese, &zh.rule_name, &zh.message);
         assert!(has_cjk(&zh.rule_name) || has_cjk(&zh.message), "{} zh", zh.rule_id);
+    }
+}
+
+fn sample_known_atomic_premise(code: &str) -> crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof {
+    // These fixtures test explanation text, using actual stored premise proofs.
+    let mut runtime = runtime_en();
+    assert!(!exec_one(&mut runtime, &format!("trust {code}")).is_failed());
+    let tokens = Tokenizer::new().tokenize(code, runtime.current_file.clone()).unwrap();
+    let mut stmts = runtime.parse(&tokens).unwrap();
+    let crate::ast::stmt::Stmt::Fact(crate::ast::fact::Fact::AtomicFact(fact)) = stmts.remove(0) else {
+        panic!("atomic fixture");
+    };
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{VerifyAtomicExceptEqualityFactResult, AtomicExceptEqualityFactSearchedProof};
+    use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
+    let result = runtime.verify_fact(&crate::ast::fact::Fact::AtomicFact(fact), VerifyState::top_level()).unwrap();
+    let VerifyFactResult::AtomicExceptEquality(result) = result else { panic!("atomic result") };
+    let VerifyAtomicExceptEqualityFactResult::Success(result) = *result else { panic!("known fixture") };
+    assert!(matches!(result.searched_proof, AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(_)));
+    crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof {
+        fact: result.fact, searched_proof: Box::new(result.searched_proof),
     }
 }

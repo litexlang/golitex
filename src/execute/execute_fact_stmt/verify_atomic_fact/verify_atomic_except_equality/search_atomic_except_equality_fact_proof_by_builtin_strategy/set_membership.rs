@@ -251,7 +251,7 @@ impl Runtime {
         let FnObjHead::Identifier(head) = fn_obj.head.as_ref() else { return Ok(None); };
         let head_obj = Obj::Identifier(head.clone());
         let candidates = self.collect_in_function_set_candidates(&head_obj);
-        for (fn_set, _cite_id) in candidates {
+        for (fn_set, cite_signature_fact_id) in candidates {
             let Some(applied_ret) = self.applied_fn_set_return_set(fn_obj, &fn_set) else {
                 continue;
             };
@@ -267,6 +267,7 @@ impl Runtime {
                 self.verify_strategy_requirements(requirements, ctx)?
             {
                 return Ok(Some(FnApplicationInCodomainStrategySingleStep {
+                    cite_signature_fact_id,
                     requirement_facts,
                     proof_of_requirement_facts,
                 }));

@@ -227,6 +227,10 @@ forall x R:
 
 ### Concrete properties
 
+Explicit <code>by def</code> must unfold a supported concrete or builtin
+predicate definition; its clauses may use ordinary verification. A true raw
+comparison or SetBuilder membership is checked by writing the fact directly.
+
 A <code>prop</code> gives a mathematical property a name. Use <code>by def</code>
 when you want to fold the definition at a concrete argument:
 

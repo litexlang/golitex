@@ -61,13 +61,10 @@ Each struct carries `requirement_facts` and `proof_of_requirement_facts`.
 
 ## Explicit non-goals
 
-### Finite list-set inclusion is not a by-def job
+### Finite list-set inclusion uses the forall definition
 
-`{1} $subset {1, 2}` expands to `forall x {1}: x $in {1, 2}`. Failing that
-forall for lack of “singleton list member ⇒ equality” lifting is **expected**.
-
-That inclusion belongs to **`by enumerate finite_set`**, not ByDefinition and
-not a missing singleton-lifting patch on the forall route.
+`{1} $subset {1, 2}` expands to `forall x {1}: x $in {1, 2}`. The request succeeds when the ordinary verifier proves that forall.
+`by enumerate finite_set` remains an alternative explicit finite proof.
 
 ### Mapping / prime / choice may need prior facts
 
@@ -86,7 +83,9 @@ Positive tracers (no trust), under `atomic/by_definition/`:
 - `builtin_injective.lit` — singleton identity
 - `builtin_surjective.lit` / `builtin_bijective.lit` — singleton identity plus
   finite membership exist seed `exist x {1} st {x = 1}`
-- `builtin_prime.lit` — `by def $prime(5)` (trial obligations close ambiently)
+- `builtin_prime.lit` — documents the unsupported trial-forall boundary;
+  ordinary `$prime(5)` uses computation, and explicit `by def $prime(5)`
+  is rejected without verified definition obligations
 - `builtin_is_choice_function_for.lit` — finite index + constant choice fn
   (closes via FnApplicationUnfold rewrite on the forall body; see
   `search_atomic_except_equality_fact_proof_by_builtin_rewrite.rs`)
@@ -98,5 +97,13 @@ families, not `NormalAtomicFact`) remains under
 `not_prime_by_computation.lit`, `coprime_by_computation.lit`,
 `not_coprime_by_computation.lit`.
 
-Unit tests also cover `$proper_*` with trusted obligations, and assert that
-`by def {1} $subset {1, 2}` soft-fails.
+Unit tests also cover `$proper_*` with trusted obligations and finite list-set
+subset definition expansion. `by_def_requires_definition_route` asserts the
+explicit ByDefinition evidence and rejects arithmetic/equality/SetBuilder
+requests; `by_def_rechecks_known_predicate_obligations` rejects unsupported
+known abstract predicates and known computed prime targets with unproved definition obligations.
+
+The explicit statement entry calls this definition dispatcher directly, without
+ordinary target search. Definition obligations retain full ordinary verification;
+the target itself cannot fall back to known facts, builtin rules, or strategies.
+The entry retains its local proof Env in the successful result.

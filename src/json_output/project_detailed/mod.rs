@@ -6,6 +6,7 @@ mod equality_builtin_gen;
 mod exist_builtin_gen;
 mod or_builtin_gen;
 mod searched;
+mod known_special_property;
 mod stmt;
 mod store;
 mod strategy_gen;

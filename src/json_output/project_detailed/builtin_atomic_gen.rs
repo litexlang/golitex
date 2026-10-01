@@ -35,15 +35,25 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("right_resolved", string(p.right_resolved.clone())));
             object_for(runtime, entries)
         },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(p)) => object_for(runtime, vec![
-            ("type", string("builtin_rule")),
-            ("family", string("LessFact")),
-            ("rule", string("FiniteSetSizeProperSubsetLt")),
-            ("left_finite_proof", project_verify_fact(&p.left_finite_proof, runtime)),
-            ("right_finite_proof", project_verify_fact(&p.right_finite_proof, runtime)),
-            ("subset_proof", project_verify_fact(&p.subset_proof, runtime)),
-            ("not_equal_proof", project_verify_fact(&p.not_equal_proof, runtime)),
-        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(p)) => {
+            let mut entries = vec![
+                ("type", string("builtin_rule")),
+                ("family", string("LessFact")),
+                ("rule", string("FiniteSetSizeProperSubsetLt")),
+            ];
+            match &p.inclusion_proof {
+                br::less::FiniteProperInclusionProof::ByProperSubset { proper_subset_proof } => {
+                    entries.push(("route", string("ByProperSubset")));
+                    entries.push(("proper_subset_proof", project_verify_fact(proper_subset_proof, runtime)));
+                },
+                br::less::FiniteProperInclusionProof::BySubsetAndNotEqual { subset_proof, not_equal_proof } => {
+                    entries.push(("route", string("BySubsetAndNotEqual")));
+                    entries.push(("subset_proof", project_verify_fact(subset_proof, runtime)));
+                    entries.push(("not_equal_proof", project_verify_fact(not_equal_proof, runtime)));
+                },
+            }
+            object_for(runtime, entries)
+        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ClosedNumericComparison(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -234,10 +244,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessFact")),
                 ("rule", string("LessFromPosDifference")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::PosDifferenceFromLess(p)) => {
@@ -246,10 +253,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessFact")),
                 ("rule", string("PosDifferenceFromLess")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ModRemainderStrictUpperBound(p)) => {
@@ -382,10 +386,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessFact")),
                 ("rule", string("OrderFlipMulMinusOne")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::ClosedNumericComparison(p)) => {
@@ -404,10 +405,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("GreaterFact")),
                 ("rule", string("FromKnownLess")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::AddRightCongruenceStrict(p)) => {
@@ -500,10 +498,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessEqualFact")),
                 ("rule", string("FromKnownLess")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalLowerBound(p)) => {
@@ -650,10 +645,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessEqualFact")),
                 ("rule", string("AbsLeImpliesUpper")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsLeImpliesNegUpper(p)) => {
@@ -662,10 +654,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessEqualFact")),
                 ("rule", string("AbsLeImpliesNegUpper")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsSelfUpper(p)) => {
@@ -787,10 +776,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessEqualFact")),
                 ("rule", string("FromKnownInPositiveNatural")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LogOrderPreservingWeak(p)) => {
@@ -827,10 +813,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessEqualFact")),
                 ("rule", string("LessEqualFromNonnegDifference")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::NonnegDifferenceFromLessEqual(p)) => {
@@ -839,10 +822,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessEqualFact")),
                 ("rule", string("NonnegDifferenceFromLessEqual")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ModRemainderNonnegative(p)) => {
@@ -890,8 +870,6 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessEqualFact")),
                 ("rule", string("FiniteSetSizeSubsetLe")),
             ];
-            entries.push(("left_finite_proof", project_verify_fact(&p.left_finite_proof, runtime)));
-            entries.push(("right_finite_proof", project_verify_fact(&p.right_finite_proof, runtime)));
             entries.push(("subset_proof", project_verify_fact(&p.subset_proof, runtime)));
             object_for(runtime, entries)
         },
@@ -1053,10 +1031,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessEqualFact")),
                 ("rule", string("OrderFlipMulMinusOne")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::OrderSignFromNegativeLiteralBound(p)) => {
@@ -1096,10 +1071,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("GreaterEqualFact")),
                 ("rule", string("FromKnownGreater")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(p)) => {
@@ -1108,10 +1080,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("GreaterEqualFact")),
                 ("rule", string("FromKnownInPositiveNatural")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::PredecessorNonNegFromAtLeastOne(p)) => {
@@ -1120,10 +1089,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("GreaterEqualFact")),
                 ("rule", string("PredecessorNonNegFromAtLeastOne")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_at_least_one_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_at_least_one_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("at_least_one_proof", super::searched::project_known_premise(&p.at_least_one_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FiniteSetSizeNonnegative(p)) => {
@@ -1151,10 +1117,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("GreaterEqualFact")),
                 ("rule", string("OrderFlipMulMinusOne")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsSetFact(br::is_set::IsSetFactSearchProofByBuiltinRule::AlwaysTrue(p)) => {
@@ -1395,33 +1358,15 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("InFact")),
                 ("rule", string("PredecessorInNatural")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_in_n_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_in_n_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
-            entries.push(("cite_fact_id", string(p.cite_at_least_one_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_at_least_one_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("in_natural_proof", super::searched::project_known_premise(&p.in_natural_proof, runtime)));
+            entries.push(("at_least_one_proof", super::searched::project_known_premise(&p.at_least_one_proof, runtime)));
             object_for(runtime, entries)
         },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::FnApplicationInCodomain(p)) => {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::AnonymousFnApplicationInFnRange(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("InFact")),
-                ("rule", string("FnApplicationInCodomain")),
-            ];
-            entries.push(("cite_fact_id", string(p.cite_in_function_set_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_in_function_set_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
-            object_for(runtime, entries)
-        },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::FnApplicationInFnRange(p)) => {
-            let mut entries = vec![
-                ("type", string("builtin_rule")),
-                ("family", string("InFact")),
-                ("rule", string("FnApplicationInFnRange")),
+                ("rule", string("AnonymousFnApplicationInFnRange")),
             ];
             let _ = p;
             object_for(runtime, entries)
@@ -1777,8 +1722,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("NotEqualFact")),
                 ("rule", string("NotEqualSymmetry")),
             ];
-            entries.push(("alternate_fact", string(p.alternate_fact.readable_string())));
-            entries.push(("proof_of_alternate_fact", project_verify_fact(&p.proof_of_alternate_fact, runtime)));
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ListSetDifferentLength(p)) => {
@@ -1796,10 +1740,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("NotEqualFact")),
                 ("rule", string("FromKnownStrictOrder")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOpenHalfPi(p)) => {
@@ -1808,7 +1749,8 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("NotEqualFact")),
                 ("rule", string("CosNonzeroOnOpenHalfPi")),
             ];
-            let _ = p;
+            entries.push(("lower_bound_proof", super::searched::project_known_premise(&p.lower_bound_proof, runtime)));
+            entries.push(("upper_bound_proof", super::searched::project_known_premise(&p.upper_bound_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroAtZero(p)) => {
@@ -1826,7 +1768,8 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("NotEqualFact")),
                 ("rule", string("SinNonzeroOnOpenPi")),
             ];
-            let _ = p;
+            entries.push(("lower_bound_proof", super::searched::project_known_premise(&p.lower_bound_proof, runtime)));
+            entries.push(("upper_bound_proof", super::searched::project_known_premise(&p.upper_bound_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SinNonzeroAtHalfPi(p)) => {
@@ -1954,10 +1897,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("NotLessFact")),
                 ("rule", string("FromKnownGreater")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterFact(br::not_greater::NotGreaterFactSearchProofByBuiltinRule::ClosedNumericComparison(p)) => {
@@ -1976,10 +1916,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("NotGreaterFact")),
                 ("rule", string("FromKnownLess")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessEqualFact(br::not_less_equal::NotLessEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(p)) => {
@@ -2127,10 +2064,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("NotSubsetFact")),
                 ("rule", string("FromKnownNotSuperset")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSupersetFact(br::not_superset::NotSupersetFactSearchProofByBuiltinRule::FromKnownNotSubset(p)) => {
@@ -2139,10 +2073,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("NotSupersetFact")),
                 ("rule", string("FromKnownNotSubset")),
             ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NormalAtomicFact(_) => object_for(runtime, vec![

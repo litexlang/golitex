@@ -1,0 +1,62 @@
+{
+  "kind": "definition_memory",
+  "identifiers": [
+    {
+      "kind": "stored_identifier",
+      "tag": "HaveFnEqual",
+      "plain_name": "id",
+      "stmt": {
+        "name": {
+          "id": 1,
+          "name": "id"
+        },
+        "equal_to_anonymous_fn": {
+          "body": {
+            "set_bound_parameters": {
+              "groups": [
+                {
+                  "params": [
+                    {
+                      "id": 2,
+                      "name": "x"
+                    }
+                  ],
+                  "param_type": {
+                    "tag": "StandardSet",
+                    "set": "R"
+                  }
+                }
+              ]
+            },
+            "dom_facts": [],
+            "ret_set": {
+              "tag": "StandardSet",
+              "set": "R"
+            }
+          },
+          "equal_to": {
+            "tag": "Identifier",
+            "identifier": {
+              "tag": "Plain",
+              "id": 2,
+              "name": "x"
+            }
+          }
+        },
+        "line_file": {
+          "line": 1,
+          "origin": {
+            "tag": "ImportedExport",
+            "global_mod_id": 0,
+            "export_file_id": 0
+          }
+        }
+      }
+    }
+  ],
+  "predicate_definitions": [],
+  "abstract_predicate_definitions": [],
+  "structure_definitions": [],
+  "theorem_definitions": [],
+  "axiom_definitions": []
+}

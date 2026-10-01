@@ -1,8 +1,7 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{AtomicFact, NotSubsetFact};
-use crate::ast::names::AtomicName;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::parse::keywords::SUPERSET;
-use crate::runtime::{FactId, Runtime, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `not A $subset B`.
 pub enum NotSubsetFactSearchProofByBuiltinRule {
@@ -12,7 +11,7 @@ pub enum NotSubsetFactSearchProofByBuiltinRule {
 }
 
 pub struct FromKnownNotSupersetBuiltinRuleProof {
-    pub cite_fact_id: FactId,
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
 impl Runtime {
@@ -21,42 +20,15 @@ impl Runtime {
         fact: &NotSubsetFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotSubsetFactSearchProofByBuiltinRule>> {
-        if let Some(cite_fact_id) = self.known_not_superset_fact_id(&fact.right, &fact.left) {
+        if let Some(premise_proof) = self.known_not_superset_proof(&fact.right, &fact.left) {
             return Ok(Some(
                 NotSubsetFactSearchProofByBuiltinRule::FromKnownNotSuperset(
-                    FromKnownNotSupersetBuiltinRuleProof { cite_fact_id },
+                    FromKnownNotSupersetBuiltinRuleProof { premise_proof },
                 ),
             ));
         }
         Ok(None)
     }
 
-    pub(crate) fn known_not_superset_fact_id(
-        &self,
-        left: &crate::ast::obj::Obj,
-        right: &crate::ast::obj::Obj,
-    ) -> Option<FactId> {
-        let key = (
-            AtomicName::Plain {
-                name: SUPERSET.into(),
-            },
-            false,
-        );
-        let left_ir = left.ir();
-        let right_ir = right.ir();
-        for env in self.execution_environments_stack.iter().rev() {
-            let Some(knowns) = env.facts.known_atomic_except_equality_facts.by_prop.get(&key)
-            else {
-                continue;
-            };
-            for known in knowns {
-                if let AtomicFact::NotSupersetFact(f) = known {
-                    if f.left.ir() == left_ir && f.right.ir() == right_ir {
-                        return Some(f.fact_id);
-                    }
-                }
-            }
-        }
-        None
-    }
+
 }

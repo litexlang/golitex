@@ -53,7 +53,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
-            Self::FromKnownStrictOrder(p) => Some(p.cite_fact_id),
+            Self::FromKnownStrictOrder(p) => p.premise_proof.cite_fact_id(),
             _ => None,
         }
     }

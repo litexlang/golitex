@@ -1,0 +1,30 @@
+# Node: equal.ByBuiltinRule.FiniteSetEqualFromSubsetSize
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/finite_set_equal_from_subset_size.lit
+
+# Before this rule, the following symbolic proof was rejected:
+# forall A, B finite_set:
+#     A $subset B
+#     finite_set_size(A) = finite_set_size(B)
+#     =>:
+#         A = B
+
+# Active acceptance; all premises are checked.
+forall A, B finite_set:
+    A $subset B
+    finite_set_size(A) = finite_set_size(B)
+    =>:
+        A = B
+
+forall A set, B finite_set:
+    A $subset B
+    finite_set_size(A) = finite_set_size(B)
+    =>:
+        B = A
+
+forall A finite_set, a A:
+    finite_set_size(A) = 1
+    =>:
+        {a} $subset A
+        finite_set_size({a}) = 1
+        finite_set_size({a}) = finite_set_size(A)
+        A = {a}

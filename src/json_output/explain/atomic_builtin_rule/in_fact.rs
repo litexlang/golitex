@@ -8,8 +8,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     ComplexCoordinateInComplexBuiltinRuleProof,
     ComplexCoordinateInRealBuiltinRuleProof,
     FamilyUnionMembershipFromMemberBuiltinRuleProof,
-    FnApplicationInCodomainBuiltinRuleProof,
-    FnApplicationInFnRangeBuiltinRuleProof,
+    AnonymousFnApplicationInFnRangeBuiltinRuleProof,
     InFactSearchProofByBuiltinRule,
     IndexUnionMembershipFromIndexBuiltinRuleProof,
     IntersectMembershipBuiltinRuleProof,
@@ -55,8 +54,7 @@ impl InFactSearchProofByBuiltinRule {
             Self::PowerSetMembership(p) => p.rule_id_and_message(lang),
             Self::StructObjMembership(p) => p.rule_id_and_message(lang),
             Self::PredecessorInNatural(p) => p.rule_id_and_message(lang),
-            Self::FnApplicationInCodomain(p) => p.rule_id_and_message(lang),
-            Self::FnApplicationInFnRange(p) => p.rule_id_and_message(lang),
+            Self::AnonymousFnApplicationInFnRange(p) => p.rule_id_and_message(lang),
             Self::UnionMembershipFromLeft(p) => p.rule_id_and_message(lang),
             Self::UnionMembershipFromRight(p) => p.rule_id_and_message(lang),
             Self::IntersectMembership(p) => p.rule_id_and_message(lang),
@@ -87,9 +85,8 @@ impl InFactSearchProofByBuiltinRule {
             Self::CartMembership(_) => None,
             Self::PowerSetMembership(_) => None,
             Self::StructObjMembership(_) => None,
-            Self::PredecessorInNatural(p) => Some(p.cite_in_n_fact_id),
-            Self::FnApplicationInCodomain(p) => Some(p.cite_in_function_set_fact_id),
-            Self::FnApplicationInFnRange(_) => None,
+            Self::PredecessorInNatural(p) => p.in_natural_proof.cite_fact_id(),
+            Self::AnonymousFnApplicationInFnRange(_) => None,
             Self::UnionMembershipFromLeft(_) => None,
             Self::UnionMembershipFromRight(_) => None,
             Self::IntersectMembership(_) => None,
@@ -479,45 +476,20 @@ impl PredecessorInNaturalBuiltinRuleProof {
     }
 }
 
-impl FnApplicationInCodomainBuiltinRuleProof {
+impl AnonymousFnApplicationInFnRangeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
         text(
-            "FnApplicationInCodomain",
-            "Fn Application In Codomain",
-            "if `f $in fn(params) R` and `f(args)` matches that",
+            "AnonymousFnApplicationInFnRange",
+            "Anonymous function application in range",
+            "A well-defined application of an anonymous function belongs to its range",
         )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
         text(
-            "FnApplicationInCodomain",
-            "函数应用落在陪域",
-            "良型函数应用落在声明返回集",
-        )
-    }
-
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-        }
-    }
-}
-
-impl FnApplicationInFnRangeBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "FnApplicationInFnRange",
-            "Fn Application In Fn Range",
-            "if `f(args)` is well-defined for a function with a",
-        )
-    }
-
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "FnApplicationInFnRange",
-            "函数应用落在值域",
-            "良定函数应用落在函数值域",
+            "AnonymousFnApplicationInFnRange",
+            "匿名函数应用落在值域",
+            "良定的匿名函数应用落在该函数值域",
         )
     }
 

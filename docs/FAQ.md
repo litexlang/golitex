@@ -34,6 +34,21 @@ classes still mean more candidate comparisons. The
 [equality README](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md)
 shows the complete call and result structure.
 
+## Can definition-time properties be used without builtin search fuel?
+
+Yes. After an atomic goal passes well-definedness, the shared `by_known`
+entry tries stored atomic facts first, then `known_special_property`.
+For a well-defined application, the latter can match its function's recorded
+signature to establish codomain or `fn_range` membership. It only reads
+exact-object definition-time shape memory, substitutes arguments, and cites
+identity or stored equalities. It generates no proof subgoals and consumes
+neither builtin rounds nor strategy depth. Invalid applications still fail WD.
+
+Fixed builtin premises also use the read-only form of this entry. Their
+results retain the stored-fact or definition-property evidence. Candidate
+enumeration and explicit FactId/history retrieval keep their own interfaces.
+See the [verification pipeline](../src/execute/execute_fact_stmt/README.md).
+
 ## Why is Litex called Litex?
 
 Litex = Lisp + LaTeX. 
@@ -321,8 +336,8 @@ forall x, y R:
 ```
 
 The last proof uses the one-premise `not-equality symmetry` builtin. Its output
-keeps `x != y` as a checked child; the rule cannot invent inequality when no
-orientation is known.
+keeps the known proof of `x != y` as a child; the read-only lookup cannot
+invent inequality when no orientation is known.
 
 Builtin verification rules also cover calculation-style facts:
 
@@ -498,7 +513,11 @@ spelling; the older `by def:` plus one `? fact` goal remains accepted for
 compatibility. At the outer verification round, a
 bare positive concrete predicate can also be proved from its defining clauses
 before known `forall` matching and user strategies. `by def` remains useful
-when that proof route and its output should be explicit.
+when that proof route and its output should be explicit. Its execution entry
+requires definition expansion even for an already known target. Only the
+expanded obligations use ordinary proof search. A true arithmetic comparison
+or SetBuilder membership therefore does not become a supported `by def` target;
+write those facts directly.
 
 This convenience is also part of the trust boundary. Builtin objects, builtin
 facts, builtin statement behavior, and builtin verification rules all deserve

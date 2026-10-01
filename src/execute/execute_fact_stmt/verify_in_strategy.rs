@@ -121,22 +121,16 @@ impl Runtime {
         ctx: StrategySearch,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchedProof>> {
         let cite_state = VerifyState::strategy_wd();
-        // Cite-only / zero-premise builtin arms (can_use_builtin_rule_round=0).
-        // E.g. N+ membership lifts to Z without opening a premise-producing rule.
-        if let Some(result) = self
-            .search_atomic_except_equality_fact_proof_by_builtin_rule(fact, cite_state.clone())?
-        {
-            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
-                result,
-            )));
-        }
-        if let Some(result) = self.search_atomic_except_equality_fact_proof_by_known_atomic_fact(
-            fact,
-            cite_state,
+        if let Some(proof) = self.search_atomic_except_equality_fact_proof_by_known(
+            fact, cite_state.clone(),
         )? {
-            return Ok(Some(
-                AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(result),
-            ));
+            return Ok(Some(proof));
+        }
+        // Only the remaining zero-premise builtin leaves run at this depth.
+        if let Some(proof) = self.search_atomic_except_equality_fact_proof_by_builtin_rule(
+            fact, cite_state,
+        )? {
+            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(proof)));
         }
         // Depth already accounts for this layer via verify_strategy_requirements'
         // after_layer. At 0, only known (+ cite-only builtin) is allowed.

@@ -26,9 +26,10 @@ The published Litex file contains no direct trust or local axiom. The Lean
 comparison uses real-valued probabilities, expectations, variance, and
 conditional probability; it does not replace them with integer pairs.
 
-Migration status: the complete Litex file still has five failed statements
-around the finite-sequence function carrier, affine expectation, and fair-coin
-consumers. The equality-bridge update did not close those failures. See
-[`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md) for current
-evidence. The passing least-squares and Bayes excerpts do not establish that
-the full module passes.
+The complete Litex file and registered module passed strict release
+verification on 2026-10-01. The explicit `two_point_vector` function carrier
+retains coordinates 1 and 2. An existing template constructs the affine
+coordinate function; expanding its coordinates and the weighted sums proves
+linearity. The fair-coin expectation and variance are checked as `1/2` and
+`1/4`. See [`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md)
+for the proof journals and file/module gates. The Lean comparison was not rerun.
