@@ -484,3 +484,40 @@ fn check_path(
     }
     assert_eq!(cursor, to.ir());
 }
+
+#[test]
+fn compound_alpha_identity_preserves_ranges_bodies_and_free_ids_at_zero_fuel() {
+    let mut rt = runtime();
+    let state = VerifyState { can_use_builtin_rule_round: 0, ..VerifyState::top_level().known_only_no_wd() };
+    let fact = equal(&mut rt, "sum(1, 2, fn(x Z) R {x}) = sum(1, 2, fn(y Z) R {y})");
+    assert!(rt.search_equal_fact_proof(&fact, state.clone()).unwrap().is_some());
+    exec_ok(&mut rt, "have a R, b R");
+    for code in [
+        "sum(1, 2, fn(x Z) R {x}) = sum(1, 3, fn(y Z) R {y})",
+        "sum(1, 2, fn(x Z) R {x}) = sum(1, 2, fn(y Z) R {y + 1})",
+        "sum(1, 2, fn(x Z) R {x}) = sum(1, 2, fn(y N) R {y})",
+        "sum(1, 2, fn(x Z) R {x + a}) = sum(1, 2, fn(y Z) R {y + b})",
+    ] {
+        let fact = equal(&mut rt, code);
+        assert!(rt.search_equal_fact_proof(&fact, state.clone()).unwrap().is_none(), "{code}");
+    }
+}
+
+#[test]
+fn stored_sum_equality_is_reused_with_alpha_renamed_endpoints() {
+    let mut rt = runtime();
+    exec_ok(&mut rt, "have a R, b R");
+    exec_ok(&mut rt, "axiom stored:\n    ? forall u, v R:\n        sum(1, 2, fn(x Z) R {x + u}) = sum(1, 2, fn(y Z) R {y + v})");
+    exec_ok(&mut rt, "release thm stored(a, b)");
+    let goal = "sum(1, 2, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + b})";
+    let VerifyEqualityResult::Success(success) = verify(&mut rt, goal, VerifyState::top_level()) else { panic!("stored alpha endpoints"); };
+    let EqualFactSearchedProof::ByEquivalenceClass(EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(p)) = success.searched_proof else { panic!("must cite checked equality"); };
+    assert!(rt.fact_by_id_in_stack(p.cited.fact_id).is_some());
+    assert!(!verify(&mut rt, "sum(1, 2, fn(k Z) R {k + b}) = sum(1, 2, fn(t Z) R {t + a})", VerifyState::top_level()).is_failed());
+    for goal in [
+        "sum(1, 3, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + b})",
+        "sum(1, 2, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + a + 1})",
+    ] {
+        assert!(verify(&mut rt, goal, VerifyState::top_level()).is_failed(), "{goal}");
+    }
+}

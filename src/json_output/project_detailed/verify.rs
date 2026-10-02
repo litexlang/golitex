@@ -75,11 +75,12 @@ fn project_atomic_except(
             ),
         ]),
         VerifyAtomicExceptEqualityFactResult::Failed(
-            VerifyAtomicExceptEqualityFactFailed::FailToVerifyWellDefined(_),
+            VerifyAtomicExceptEqualityFactFailed::FailToVerifyWellDefined(f),
         ) => object_for(runtime, vec![
             ("type", string("atomic_except_equality")),
             ("success", bool_value(false)),
             ("phase", string("well_defined")),
+            ("failure", super::wd_failure::project_obj_wd_failure(&f.reason, runtime)),
         ]),
         VerifyAtomicExceptEqualityFactResult::Failed(
             VerifyAtomicExceptEqualityFactFailed::FailToSearchProof {
@@ -117,11 +118,12 @@ fn project_equality(result: &VerifyEqualityResult, runtime: &Runtime) -> JsonVal
                 project_equal_searched(&s.searched_proof, runtime),
             ),
         ]),
-        VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(_)) => {
+        VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(f)) => {
             object_for(runtime, vec![
                 ("type", string("equality")),
                 ("success", bool_value(false)),
                 ("phase", string("well_defined")),
+            ("failure", super::wd_failure::project_obj_wd_failure(&f.reason, runtime)),
             ])
         }
         VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof {

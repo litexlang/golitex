@@ -1,0 +1,2 @@
+# Must reject: cart_dim N02
+cart_dim(cart(R, Z)) = 3

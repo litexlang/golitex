@@ -1,0 +1,2 @@
+# Must reject: closed_range N01
+let A = closed_range(0, 1 / 2)

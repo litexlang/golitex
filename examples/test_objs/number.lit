@@ -1,0 +1,27 @@
+# AST: Obj::Literal::Number
+# Run: target/release/litex -f examples/test_objs/number.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 0 $in N
+sketch:
+    0 $in N
+
+# P02: 42 $in N+
+sketch:
+    42 $in N+
+
+# P04: 0.1 + 0.2 = 0.3
+sketch:
+    0.1 + 0.2 = 0.3
+
+# P05: 12345678901234567890 + 1 = 12345678901234567891
+sketch:
+    12345678901234567890 + 1 = 12345678901234567891
+
+# P06: (-2.5) $in Q
+sketch:
+    (-2.5) $in Q
+
+# P07: 0.0001 = 1 / 10000
+sketch:
+    0.0001 = 1 / 10000

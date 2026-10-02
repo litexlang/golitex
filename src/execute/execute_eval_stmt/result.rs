@@ -2,6 +2,7 @@
 
 use crate::ast::obj::Obj;
 use crate::ast::stmt::EvalStmt;
+use crate::execute::execute_fact_stmt::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use crate::runtime::runtime_ids::FactId;
 
 pub enum ExecCommandStmtResult {
@@ -14,16 +15,18 @@ pub enum ExecEvalStmtResult {
 }
 
 // Success fields follow exec_eval_stmt stage order:
-// statement → rewrite → evaluate.
+// statement → source WD → rewrite → evaluate.
 pub struct ExecEvalStmtSuccess {
     pub statement: EvalStmt,
     pub source_object: Obj,
+    pub source_well_defined: ObjWellDefinedProof,
     pub rewritten_object: Obj,
     pub cited_equal_fact_ids: Vec<FactId>,
     pub evaluated_object: Obj,
 }
 
 pub enum ExecEvalStmtFailed {
+    WellDefined(Box<VerifyObjWellDefinedResult>),
     // Residual shape is not a closed-numeric tree and not an algo call we can run.
     UnsupportedExpression,
     // Closed-numeric residual that still fails exact/decimal evaluation (e.g. /0).

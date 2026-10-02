@@ -1,0 +1,11 @@
+# AST: Obj::TrigOperator::Tan
+# Run: target/release/litex -f examples/test_objs/tan.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: tan(0) = 0
+sketch:
+    tan(0) = 0
+
+# P05: tan(arctan(2)) = 2
+sketch:
+    tan(arctan(2)) = 2

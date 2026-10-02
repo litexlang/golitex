@@ -1,0 +1,3 @@
+# Must reject: fn_obj N02
+have fn f(x R) R = x
+f() = 0

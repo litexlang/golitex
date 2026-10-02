@@ -1,0 +1,12 @@
+# Before: index_cart_nonempty_by_choice_from_pointwise was absent from native release thm.
+# release thm index_cart_nonempty_by_choice_from_pointwise(index_cart(...))
+# Now: verified nonemptiness premises and explicit axiom-of-choice provenance.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/index_cart_nonempty_by_choice_from_pointwise.lit
+thm choice_from_pointwise:
+    ? forall g fn(k {1}) {{1}}:
+        forall alpha {1}:
+            $is_nonempty_set(g(alpha))
+        =>:
+            $is_nonempty_set(index_cart({1}, {{1}}, g))
+    release thm index_cart_nonempty_by_choice_from_pointwise(index_cart({1}, {{1}}, g))
+# Boundary: empty factors or empty indices remain rejected.

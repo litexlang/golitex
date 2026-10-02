@@ -1,0 +1,7 @@
+# Before: named builtin was not found.
+# release thm real_least_upper_bound_exists({0}, 1)
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/real_least_upper_bound_exists.lit
+release thm real_least_upper_bound_exists({0}, 1)
+exist L R st {$is_real_least_upper_bound({0}, L)}
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

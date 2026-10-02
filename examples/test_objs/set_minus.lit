@@ -1,0 +1,23 @@
+# AST: Obj::SetOperator::SetMinus
+# Run: target/release/litex -f examples/test_objs/set_minus.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P02: set_minus({1}, {}) = {1}
+sketch:
+    set_minus({1}, {}) = {1}
+
+# P03: set_minus({}, {1}) = {}
+sketch:
+    set_minus({}, {1}) = {}
+
+# P04: set_minus({1}, {1}) = {}
+sketch:
+    set_minus({1}, {1}) = {}
+
+# P05: 1 $in set_minus({1, 2}, {2})
+sketch:
+    1 $in set_minus({1, 2}, {2})
+
+# P06: not 2 $in set_minus({1, 2}, {2})
+sketch:
+    not 2 $in set_minus({1, 2}, {2})

@@ -6,7 +6,7 @@
 mod binder;
 mod core;
 mod entry;
-mod fail_to_verify_obj_well_defined;
+pub(crate) mod fail_to_verify_obj_well_defined;
 mod helper;
 mod iterated;
 mod obj_well_defined_by_def_common;

@@ -1,0 +1,4 @@
+# Intended valid regression: index_cart P01
+let A = fn(k {1}) power_set(N) {{1}}
+let P = index_cart({1}, power_set(N), A)
+P = P

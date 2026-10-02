@@ -1,0 +1,3 @@
+# Must reject: identifier_plain N02
+have x R = 3
+x = 4

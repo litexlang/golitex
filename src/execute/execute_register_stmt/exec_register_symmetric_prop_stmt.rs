@@ -25,7 +25,7 @@ pub fn exec_register_symmetric_prop_stmt(
         }
     };
     let name = plain_prop_name(&prop);
-    let Some(definition) = runtime.def_prop_visible_in_stack(name) else {
+    let Some(definition) = runtime.def_prop_visible(&prop) else {
         return Ok(ExecRegisterStmtResult::SymmetricProp(
             ExecRegisterSymmetricPropStmtResult::Failed(
                 ExecRegisterSymmetricPropStmtFailed::PropNotDefined(name.to_string()),

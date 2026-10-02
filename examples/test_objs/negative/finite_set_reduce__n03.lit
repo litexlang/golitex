@@ -1,0 +1,2 @@
+# Must reject: finite_set_reduce N03
+finite_set_reduce({}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 7) = 0

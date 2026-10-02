@@ -1,0 +1,19 @@
+# AST: Obj::TrigOperator::Arccos
+# Run: target/release/litex -f examples/test_objs/arccos.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: arccos(1) = 0
+sketch:
+    arccos(1) = 0
+
+# P02: arccos(0) = pi / 2
+sketch:
+    arccos(0) = pi / 2
+
+# P03: arccos(-1) = pi
+sketch:
+    arccos(-1) = pi
+
+# P04: cos(arccos(1 / 2)) = 1 / 2
+sketch:
+    cos(arccos(1 / 2)) = 1 / 2

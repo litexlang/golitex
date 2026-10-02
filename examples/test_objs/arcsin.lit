@@ -1,0 +1,19 @@
+# AST: Obj::TrigOperator::Arcsin
+# Run: target/release/litex -f examples/test_objs/arcsin.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: arcsin(0) = 0
+sketch:
+    arcsin(0) = 0
+
+# P02: arcsin(1) = pi / 2
+sketch:
+    arcsin(1) = pi / 2
+
+# P03: arcsin(-1) = -pi / 2
+sketch:
+    arcsin(-1) = -pi / 2
+
+# P04: sin(arcsin(1 / 2)) = 1 / 2
+sketch:
+    sin(arcsin(1 / 2)) = 1 / 2

@@ -1,0 +1,21 @@
+# Run: target/release/litex -strict -f examples/module_manager/function_family_bindings/main.lit
+# Before: terminal-name matching rewrote the imported step into this template.
+# The executable negative counterpart is template_self_rewrite_preserves_foreign_same_name_calls.
+release obj def Other::functions::step
+
+template<t R>:
+    have fn step(n N) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: Other::functions::step(n - 1)
+
+\step<0>(1) = Other::functions::step(1 - 1)
+Other::functions::step(1 - 1) = 1
+\step<0>(1) = 1
+
+# A local same-name predicate does not change a qualified source predicate.
+prop get(a R):
+    exist x R st {x = 1}
+release thm Other::functions::ready
+obtain k from $Other::functions::get(0)
+k = 0
+witness $Other::functions::get(2) from 0

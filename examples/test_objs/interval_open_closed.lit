@@ -1,0 +1,31 @@
+# AST: Obj::SetFormer::IntervalObj::LeftOpenRightClosed
+# Run: target/release/litex -f examples/test_objs/interval_open_closed.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 1 $in '(0, 2]
+sketch:
+    1 $in '(0, 2]
+
+# P02: '(0, 2] $subset R
+sketch:
+    '(0, 2] $subset R
+
+# P03: not -1 $in '(0, 2]
+sketch:
+    not -1 $in '(0, 2]
+
+# P04: not 3 $in '(0, 2]
+sketch:
+    not 3 $in '(0, 2]
+
+# P05: not 0 $in '(0, 2]
+sketch:
+    not 0 $in '(0, 2]
+
+# P06: 2 $in '(0, 2]
+sketch:
+    2 $in '(0, 2]
+
+# P07: not 0 $in '(0, 0]
+sketch:
+    not 0 $in '(0, 0]

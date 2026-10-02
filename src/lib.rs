@@ -4,6 +4,7 @@
 pub const LITEX: &str = "Litex";
 
 pub mod ast;
+pub mod builtin_theorem;
 pub mod launch_command;
 #[cfg(test)]
 mod launch_command_tests;

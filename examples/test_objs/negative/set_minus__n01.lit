@@ -1,0 +1,2 @@
+# Must reject: set_minus N01
+2 $in set_minus({1, 2}, {2})

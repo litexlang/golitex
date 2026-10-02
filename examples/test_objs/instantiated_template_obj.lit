@@ -1,0 +1,28 @@
+# AST: Obj::InstantiatedTemplateObj
+# Run: target/release/litex -f examples/test_objs/instantiated_template_obj.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: \carrier_copy<R> = R
+sketch:
+    template<S set>:
+        have carrier_copy set = S
+    \carrier_copy<R> = R
+
+# P02: \carrier_copy<N> = N
+sketch:
+    template<S set>:
+        have carrier_copy set = S
+    \carrier_copy<N> = N
+
+# P03: \identity<R>(2) = 2
+sketch:
+    template<S set>:
+        have fn identity(x S) S = x
+    \identity<R>(2) = 2
+
+# P04: Callable alias of a template instance
+sketch:
+    template<S set>:
+        have fn identity(x S) S = x
+    let f = \identity<R>
+    f(2) = 2

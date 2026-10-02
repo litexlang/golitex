@@ -1,14 +1,17 @@
 use super::evaluate_obj::evaluate_obj;
 use super::helper::ActiveAlgoCalls;
-use super::result::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
+use super::result::{ExecCommandStmtResult, ExecEvalStmtFailed, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::ast::stmt::EvalStmt;
+use crate::execute::execute_by_stmt::proof_verify_state;
+use crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult;
 use crate::runtime::{Runtime, RuntimeResult};
 
 // eval expr: display evaluation (no proof fact stored).
 //
 // Stages:
-//   1. Substitute known_closed_numeric_equal representatives.
-//   2. Recursively evaluate: closed-numeric simplify, and Identifier FnObj → algo.
+//   1. Check the source expression's WD, including callable domains.
+//   2. Substitute known_closed_numeric_equal representatives.
+//   3. Recursively evaluate: closed-numeric simplify, and Identifier FnObj → algo.
 //
 // Example:
 //   have a R = 10
@@ -22,6 +25,16 @@ pub fn exec_eval_stmt(
     runtime: &mut Runtime,
     stmt: &EvalStmt,
 ) -> RuntimeResult<ExecCommandStmtResult> {
+    let source_well_defined = match runtime
+        .verify_obj_well_definedness(&stmt.obj_to_eval, proof_verify_state())?
+    {
+        VerifyObjWellDefinedResult::Success(proof) => proof,
+        failed => {
+            return Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
+                ExecEvalStmtFailed::WellDefined(Box::new(failed)),
+            )));
+        }
+    };
     let (rewritten_object, cited_equal_fact_ids) =
         runtime.rewrite_obj_by_known_closed_numeric_equal(&stmt.obj_to_eval);
 
@@ -37,6 +50,7 @@ pub fn exec_eval_stmt(
         ExecEvalStmtSuccess {
             statement: stmt.clone(),
             source_object: stmt.obj_to_eval.clone(),
+            source_well_defined,
             rewritten_object,
             cited_equal_fact_ids,
             evaluated_object,

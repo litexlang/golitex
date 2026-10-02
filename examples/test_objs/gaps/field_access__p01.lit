@@ -1,0 +1,7 @@
+# Intended valid regression: field_access P01
+struct Point:
+    x R
+    y R
+have p &Point = (1, 2)
+p.x = 1
+p.y = 2

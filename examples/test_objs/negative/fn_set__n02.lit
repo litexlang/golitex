@@ -1,0 +1,2 @@
+# Must reject: fn_set N02
+let F = fn(x R: 1 / 0 = x) R

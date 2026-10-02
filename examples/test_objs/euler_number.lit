@@ -1,0 +1,23 @@
+# AST: Obj::Literal::EulerNumber
+# Run: target/release/litex -f examples/test_objs/euler_number.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: e $in R
+sketch:
+    e $in R
+
+# P02: e > 0
+sketch:
+    e > 0
+
+# P03: ln(e) = 1
+sketch:
+    ln(e) = 1
+
+# P04: exp(1) = e
+sketch:
+    exp(1) = e
+
+# P05: e + 0 = e
+sketch:
+    e + 0 = e

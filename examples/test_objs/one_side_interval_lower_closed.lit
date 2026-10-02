@@ -1,0 +1,20 @@
+# AST: Obj::SetFormer::OneSideInfinityIntervalObj::LowerClosed
+# Run: target/release/litex -f examples/test_objs/one_side_interval_lower_closed.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 0 $in '[0,)
+sketch:
+    0 $in '[0,)
+
+# P02: not -1 $in '[0,)
+sketch:
+    not -1 $in '[0,)
+
+# P03: '[0,) $subset R
+sketch:
+    '[0,) $subset R
+
+# P04: $is_set(A)
+sketch:
+    let A = '[0,)
+    $is_set(A)

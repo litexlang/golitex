@@ -1,0 +1,2 @@
+# Must reject: fn_set N03
+fn(x R) R {x} $in fn(x R) N

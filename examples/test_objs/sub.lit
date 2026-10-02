@@ -1,0 +1,33 @@
+# AST: Obj::ArithmeticOperator::Sub
+# Run: target/release/litex -f examples/test_objs/sub.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 7 - 2 = 5
+sketch:
+    7 - 2 = 5
+
+# P02: 2 - 7 = -5
+sketch:
+    2 - 7 = -5
+
+# P03: 5 - 3 - 1 = 1
+sketch:
+    5 - 3 - 1 = 1
+
+# P04: 5 - (3 - 1) = 3
+sketch:
+    5 - (3 - 1) = 3
+
+# P05: 1 / 2 - 1 / 3 = 1 / 6
+sketch:
+    1 / 2 - 1 / 3 = 1 / 6
+
+# P06: x - x = 0
+sketch:
+    forall x C:
+        x - x = 0
+
+# P07: (x + y) - y = x
+sketch:
+    forall x, y R:
+        (x + y) - y = x

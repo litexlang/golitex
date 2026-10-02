@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "task": "Organize statement-suite bugs",
+  "captured_at": "2026-10-02T08:27:04+08:00",
+  "issue_id": "K002",
+  "statement_leaf": "DefTemplateStmt",
+  "reproduction": "bugs/def_template_stmt/K002-template-member-carrier/repro.lit",
+  "desired_success": true,
+  "current_expectation": {
+    "success": false,
+    "statement_success": [
+      true,
+      false
+    ],
+    "failed_phase": [
+      "search_proof"
+    ]
+  },
+  "verification_record": {
+    "name": "known-gap/K002",
+    "command": [
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+      "-lang",
+      "en",
+      "-strict",
+      "-f",
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/def_template_stmt/K002-template-member-carrier/repro.lit"
+    ],
+    "exit_code": 1,
+    "matches": true,
+    "errors": [],
+    "output": {
+      "kind": "run",
+      "success": false,
+      "target": "file",
+      "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/def_template_stmt/K002-template-member-carrier/repro.lit",
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "template<S nonempty_set>:\n    have member S",
+          "proof_method": {
+            "type": "definition",
+            "rule_name": "Define template",
+            "message": "Define a reusable template"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "\\member<R> $in R",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "\\member<R> $in R"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "stderr": "",
+    "known_gap": true,
+    "desired_success": true,
+    "issue_file": "bugs/def_template_stmt/K002-template-member-carrier/README.md"
+  }
+}

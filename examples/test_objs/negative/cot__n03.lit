@@ -1,0 +1,2 @@
+# Must reject: cot N03
+let x = cot(0)

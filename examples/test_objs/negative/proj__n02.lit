@@ -1,0 +1,2 @@
+# Must reject: proj N02
+let P = proj(cart(R, Z), 3)

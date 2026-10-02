@@ -1,0 +1,25 @@
+# AST: Obj::Identifier::WithModAndExportFileId
+# Run: target/release/litex -f examples/test_objs/identifier_with_mod_and_export_file_id/main.lit
+
+have k R = 1
+
+# P01: Values::base::k = 2
+sketch:
+    Values::base::k = 2
+
+# P02: Values::other::k = 9
+sketch:
+    Values::other::k = 9
+
+# P03: k = 1
+sketch:
+    k = 1
+
+# P06: Values::base::shift(3) = 5
+sketch:
+    release obj def Values::base::shift
+    Values::base::shift(3) = 5
+
+# P07: main::k = 1
+sketch:
+    main::k = 1

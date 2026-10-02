@@ -1,0 +1,2 @@
+# Must reject: index_cart N01
+let P = index_cart({1}, N, 1)

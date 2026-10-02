@@ -1,0 +1,2 @@
+# Must reject: gcd N03
+let g = gcd(0, 0)

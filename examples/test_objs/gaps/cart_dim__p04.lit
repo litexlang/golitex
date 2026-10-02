@@ -1,0 +1,3 @@
+# Intended valid regression: cart_dim P04
+let C = cart(R, Z)
+cart_dim(C) = 2

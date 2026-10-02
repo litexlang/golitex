@@ -119,3 +119,48 @@ Err → merge/invariant bugs (SessionError)
 
 - Success does not carry the closed temp env.
 - Binder locals (forall / prop params) are inner scopes inside the temp shell.
+
+## Induction scope and evidence
+
+`execute_by_stmt/exec_by_induc_stmt.rs` checks the integer base, then goal WD
+under `n in Z` and `n >= from` without IH. It runs base and successor in
+separate locals using the existing `run_proof_body_stmts` helper used by claims
+and witnesses. The base gets `n = from`; the step gets the lower bound and
+ordinary or bounded strong IH. Only the final universal is stored in the
+parent. Success retains the WD, base, and step local environments and their
+ordered evidence; failed results distinguish base from successor and carry
+the failed goal or ordinary statement with its index.
+
+`recover_induction_param.rs` finds the parsed free ID in all target object
+shapes and proof actions. It skips nested binders and qualified identifiers;
+only a genuinely unused binder receives a fresh identity. AST fields and
+runtime allocation/storage contracts are unchanged by this traversal.
+
+`execute_have_fn_by_induc_stmt.rs` validates each sibling list for coverage,
+disjointness, and return WD/type before publication. Nested lists use the
+parent's guard and preserve their own local evidence. Chain guards are
+expanded to adjacent atomic facts, including when leaf equations are stored.
+Template replay uses ordinary ID-based object instantiation for self calls,
+so calls beneath arithmetic or other constructors retain the exact instance.
+The existing equality budget is unchanged; a smaller-call equality can still
+be needed as an explicit proof step for recursive arithmetic.
+
+Acceptance: `tests/unit/execute/induction_repairs/tests.rs` executes positive
+examples, rejects overlap/holes and false base/step, checks rollback and strict
+proof actions, and checks Normal/Detailed producers against these result trees.
+
+## Native reserved theorem calls
+
+`execute_by_stmt/builtin_thm/` prepares the 25 legacy named contracts using
+current AST constructors and verification owners. Pure name/arity metadata
+lives in `builtin_theorem.rs` so parsing can reject reserved-name rebinding
+without depending on execution. `exec_by_thm_stmt.rs` verifies parameter
+types, premises and every conclusion's WD before publication; `by thm`
+stores only its verified selected fact. No legacy runtime is called.
+
+Complex identities containing the actual imaginary-unit AST node enter
+`search_equal_fact_by_calculation.rs`. Symbolic denominator obligations
+remain with the existing premise-checking strategy. Indexed union,
+intersection and product explicitly require a nonempty index set in WD,
+for named and anonymous families alike. Definition-unfold residuals keep
+`can_use_rewrite: false`; explicit chains retain their checked endpoints.

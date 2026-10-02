@@ -1,0 +1,2 @@
+# Must reject: sin N01
+let x = sin(i)

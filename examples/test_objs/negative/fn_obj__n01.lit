@@ -1,0 +1,3 @@
+# Must reject: fn_obj N01
+have f R = 1
+f(0) = 0

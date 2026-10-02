@@ -110,6 +110,7 @@ fn project_they_are_the_same(proof: &TheyAreTheSameProof, runtime: &Runtime) -> 
                 SameFreeParamShapeProof::FnSet(_) => "fn_set",
                 SameFreeParamShapeProof::AnonymousFn(_) => "anonymous_fn",
                 SameFreeParamShapeProof::SetBuilder(_) => "set_builder",
+                SameFreeParamShapeProof::Compound(_) => "compound_obj",
             };
             fields.push(("shape", string(name)));
         }
@@ -126,6 +127,14 @@ fn project_equivalence_class(
         EqualFactSearchedProofByEquivalenceClass::KnownPath(path) => {
             fields.push(("kind", string("known_path")));
             fields.push(("path", project_known_equality_path(path, runtime)));
+        }
+        EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(p) => {
+            fields.push(("kind", string("alpha_endpoints")));
+            fields.push(("cite_fact_id", string(p.cited.fact_id.to_string())));
+            fields.push(("cite", string(crate::ast::fact::AtomicFact::EqualFact(p.cited.clone()).readable_string())));
+            fields.push(("reversed", JsonValue::Bool(p.reversed)));
+            fields.push(("left_identity", project_they_are_the_same(&p.left_identity, runtime)));
+            fields.push(("right_identity", project_they_are_the_same(&p.right_identity, runtime)));
         }
         EqualFactSearchedProofByEquivalenceClass::ViaPeers(p) => {
             let searched = match &p.bridge.searched_proof {
@@ -146,7 +155,7 @@ fn project_equivalence_class(
     object_for(runtime, fields)
 }
 
-fn project_known_equality_path(proof: &KnownEqualityPathProof, runtime: &Runtime) -> JsonValue {
+pub(super) fn project_known_equality_path(proof: &KnownEqualityPathProof, runtime: &Runtime) -> JsonValue {
     JsonValue::Array(proof.path.iter().map(|(from, to, fact_id)| {
         let mut entries = vec![
             ("from", string(from.readable_string())),
@@ -194,6 +203,7 @@ fn project_object_definition(
             EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(p) => object_for(runtime, vec![
                 ("type", string("by_object_definition")),
                 ("kind", string("fn_application_have_fn_equal")),
+                ("function_equal", project_known_equality_path(&p.function_equal, runtime)),
                 ("expanded_body", string(p.expanded_body.readable_string())),
                 (
                     "residual_equal",

@@ -1,0 +1,2 @@
+# Must reject: fn_range N02
+fn_range(fn(x R) R {1}) = {2}

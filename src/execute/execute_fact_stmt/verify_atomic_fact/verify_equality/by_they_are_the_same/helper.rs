@@ -115,6 +115,11 @@ fn plain_ids_alpha_equal(
     left == right && map.values().all(|id| *id != right)
 }
 
+// Same structural comparison at a compound root; no rewrite or proof search.
+pub fn compound_objs_alpha_equal(left: &Obj, right: &Obj) -> bool {
+    objs_alpha_equal(left, right, &HashMap::new())
+}
+
 fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, IdentifierId>) -> bool {
     match (left, right) {
         (Obj::Identifier(l), Obj::Identifier(r)) => identifier_objs_alpha_equal(l, r, map),

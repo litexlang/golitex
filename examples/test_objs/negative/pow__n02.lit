@@ -1,0 +1,2 @@
+# Must reject: pow N02
+let x = i^(1 / 2)

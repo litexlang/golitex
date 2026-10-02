@@ -1,0 +1,2 @@
+# Must reject: arccot N01
+let x = arccot(i)

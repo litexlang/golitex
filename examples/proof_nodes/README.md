@@ -200,7 +200,7 @@ Equality BuiltinRule identities (Stage B wave 14 / Obj P0–P2):
 `index_union/intersect/cart` empty-index + singleton union; `finite_seq(S,0)`;
 obviously-empty set-builder; `cot(pi/2)`; `C_abs(a+b*i)^2`; `exp(a+b)`;
 `log(a^b,c)`; `re/img` of product; trig angle-add; reduce single-term with
-add/0 — see `index_*_empty_index.lit`, `cot_of_half_pi.lit`,
+add/0 — empty-index identities are retired by WD (see `examples/wd_negative/index_*_empty_named_family.lit`); see `cot_of_half_pi.lit`,
 `complex_abs_squared_of_rect_form.lit`, `exp_of_sum.lit`, `sin_of_sum.lit`,
 `reduce_single_term_with_add_zero.lit`. Atomic: finite_seq finiteness —
 `is_finite_set_finite_seq_zero.lit`, `is_finite_set_finite_seq_from_finite_codomain.lit`.
@@ -244,7 +244,7 @@ or/           ByBuiltinRule (trichotomy ×3, NaturalZeroOrAtLeastOne,
               IntegerSuccessorTail, SquareSumComponentNonzero,
               ClassicalImplication, IntegerDiscreteSplit),
               SelectedBranch, KnownOr, KnownForall
-equal/        ByTheyAreTheSame (SameIr / FnSet / AnonymousFn / SetBuilder alpha),
+equal/        ByTheyAreTheSame (SameIr / FnSet / AnonymousFn / SetBuilder / compound alpha),
               ByBuiltinRule (Calculation closed decimal + arithmetic_ops +
               integer_sqrt_log + complex_nested), EquivalenceClass
               (KnownPath / ViaPeers), ObjectDefinition
@@ -314,3 +314,11 @@ or unknown denominator sign cannot justify division by a potentially zero value.
 
 - [Mixed equality/order chains](chain/mixed_equality_order.lit): checked `a >= b = c >= d` stores `a >= d`; an all-equality subpath keeps equality. Opposite directions do not imply an endpoint comparison.
 - [Original AM-GM proof](order/am_gm.lit): quotient sign, real-order complement, and square comparison close the original contradiction proof without trust.
+
+Compound alpha identity is traced by
+[equal/by_they_are_the_same/compound_alpha.lit](equal/by_they_are_the_same/compound_alpha.lit).
+Imaginary-unit calculation is traced by
+[equal/by_builtin_rule/calculation_imaginary_unit.lit](equal/by_builtin_rule/calculation_imaginary_unit.lit).
+Both are strict runnable examples. Named finite-enumeration release also
+checks reuse of a stored equality whose nested anonymous binder IDs differ
+from the goal, retaining the original equality citation.

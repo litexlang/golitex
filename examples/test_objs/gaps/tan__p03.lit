@@ -1,0 +1,2 @@
+# Intended valid regression: tan P03
+tan(pi / 4) = 1

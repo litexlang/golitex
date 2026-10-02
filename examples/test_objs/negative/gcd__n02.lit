@@ -1,0 +1,2 @@
+# Must reject: gcd N02
+gcd(6, 4) = 3

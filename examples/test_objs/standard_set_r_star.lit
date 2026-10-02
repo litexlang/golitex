@@ -1,0 +1,19 @@
+# AST: Obj::StandardSet::RStar
+# Run: target/release/litex -f examples/test_objs/standard_set_r_star.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 1 $in R*
+sketch:
+    1 $in R*
+
+# P02: -1 $in R*
+sketch:
+    -1 $in R*
+
+# P04: $is_set(R*)
+sketch:
+    $is_set(R*)
+
+# P05: R* $subset R
+sketch:
+    R* $subset R

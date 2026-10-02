@@ -1,0 +1,23 @@
+# AST: Obj::StandardSet::NPos
+# Run: target/release/litex -f examples/test_objs/standard_set_n_pos.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 1 $in N+
+sketch:
+    1 $in N+
+
+# P02: 3 $in N+
+sketch:
+    3 $in N+
+
+# P03: 2 + 1 $in N+
+sketch:
+    2 + 1 $in N+
+
+# P04: $is_set(N+)
+sketch:
+    $is_set(N+)
+
+# P05: N+ $subset N
+sketch:
+    N+ $subset N

@@ -1,0 +1,2 @@
+# Must reject: sum N01
+let x = sum(3, 1, fn(k Z) Z {k})

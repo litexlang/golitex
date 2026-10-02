@@ -16,6 +16,11 @@ impl EqualitySearchProofByCalculation {
                 rule_id: "Calculation",
                 rule_name: "Calculation".to_string(),
                 message: "Both sides are the same rational expression".to_string()
+            },
+            Self::Complex {} => BuiltinRuleText {
+                rule_id: "Calculation",
+                rule_name: "Calculation".to_string(),
+                message: "Both sides are the same complex expression using i² = -1".to_string()
             }
         }
     }
@@ -31,6 +36,11 @@ impl EqualitySearchProofByCalculation {
                 rule_id: "Calculation",
                 rule_name: "计算".to_string(),
                 message: "两边是同一个有理式".to_string()
+            },
+            Self::Complex {} => BuiltinRuleText {
+                rule_id: "Calculation",
+                rule_name: "计算".to_string(),
+                message: "按 i² = -1 计算，两边是同一个复数表达式".to_string()
             }
         }
     }

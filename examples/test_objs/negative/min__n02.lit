@@ -1,0 +1,2 @@
+# Must reject: min N02
+min(2, 3) = 4

@@ -36,10 +36,11 @@ pub(super) fn project_verify_obj_wd(
             ("success", JsonValue::Bool(true)),
             ("proof", project_obj_wd_proof(proof, runtime)),
         ]),
-        VerifyObjWellDefinedResult::Failed { obj, reason: _ } => object_for(runtime, vec![
+        VerifyObjWellDefinedResult::Failed { obj, reason: f } => object_for(runtime, vec![
             ("success", JsonValue::Bool(false)),
             ("obj", string(obj.readable_string())),
             ("phase", string("well_defined")),
+            ("failure", super::wd_failure::project_obj_wd_failure(f, runtime)),
         ]),
     }
 }
@@ -96,9 +97,10 @@ pub(super) fn project_verify_fact_wd_result(
                 ("proof", project_fact_wd_proof(proof, runtime)),
             ])
         }
-        crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Failed(_) => object_for(runtime, vec![
+        crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Failed(f) => object_for(runtime, vec![
             ("success", JsonValue::Bool(false)),
             ("phase", string("well_defined")),
+            ("failure", super::wd_failure::project_fact_wd_failure(f, runtime)),
         ]),
     }
 }

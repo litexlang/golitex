@@ -1,0 +1,15 @@
+# AST: Obj::ProductShape::Tuple
+# Run: target/release/litex -f examples/test_objs/tuple.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: (1, 2)[1] = 1
+sketch:
+    (1, 2)[1] = 1
+
+# P02: (1, 2)[2] = 2
+sketch:
+    (1, 2)[2] = 2
+
+# P03: tuple_dim((1, 2, 3)) = 3
+sketch:
+    tuple_dim((1, 2, 3)) = 3

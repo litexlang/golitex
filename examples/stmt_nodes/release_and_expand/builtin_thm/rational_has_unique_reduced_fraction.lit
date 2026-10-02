@@ -1,0 +1,7 @@
+# Before: named builtin was not found.
+# release thm rational_has_unique_reduced_fraction(0.5)
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/rational_has_unique_reduced_fraction.lit
+release thm rational_has_unique_reduced_fraction(0.5)
+exist! p Z, d N+ st {0.5 = p / d, gcd(p, d) = 1}
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

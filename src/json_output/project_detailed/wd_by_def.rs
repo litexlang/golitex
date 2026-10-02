@@ -1,6 +1,7 @@
 //! Generated Obj WD by-def projection. Prefer regenerating via scripts if shapes change.
 use super::store::{project_verify_facts};
 use super::wd::{project_fact_wd_proof, project_obj_wd_proof};
+use super::searched::project_known_equality_path;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
     ObjWellDefinedProof, ObjWellDefinedProofByDef, *,
@@ -64,10 +65,11 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
             ];
             if let Some(domain) = &p.domain_fn_set {
                 let d = match domain {
-                    FnObjDomainFnSetEvidence::InFunctionSet { fn_set, fact_id } => object_for(runtime, vec![
+                    FnObjDomainFnSetEvidence::InFunctionSet { fn_set, fact_id, function_equal } => object_for(runtime, vec![
                         ("type", string("in_function_set")),
                         ("fn_set", string(crate::display_and_ir::readable_string_from_ir_text(fn_set.ir().as_str()))),
                         ("fact_id", string(fact_id.to_string())),
+                        ("function_equal", project_known_equality_path(function_equal, runtime)),
                     ]),
                     FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => object_for(runtime, vec![
                         ("type", string("anonymous_literal")),

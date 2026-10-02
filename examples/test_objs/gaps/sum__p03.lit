@@ -1,0 +1,2 @@
+# Intended valid regression: sum P03
+sum(1, 3, fn(x Z) Z {x}) = 6

@@ -1,0 +1,5 @@
+# Must reject: struct_obj N02
+struct Point:
+    x R
+    y R
+have p &Point = (1, i)

@@ -1,0 +1,2 @@
+# Must reject: obj_at_index N05
+(1, 2)[1] = 2

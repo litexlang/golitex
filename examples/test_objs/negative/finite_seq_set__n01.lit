@@ -1,0 +1,2 @@
+# Must reject: finite_seq_set N01
+let S = finite_seq(R, -1)

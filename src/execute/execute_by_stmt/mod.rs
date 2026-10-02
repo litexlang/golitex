@@ -1,7 +1,9 @@
+mod builtin_thm;
 mod exec_by_cases_stmt;
 mod exec_by_contra_stmt;
 mod exec_by_def_stmt;
 mod exec_by_induc_stmt;
+mod recover_induction_param;
 mod exec_by_extension_stmt;
 mod exec_by_fn_extension_stmt;
 mod exec_by_enumerate_finite_set_stmt;
@@ -30,12 +32,13 @@ pub use exec_by_regularity_axiom_stmt::exec_release_regularity_axiom_stmt;
 pub use exec_by_axiom_of_choice_stmt::exec_release_axiom_of_choice_stmt;
 pub use exec_by_zorn_lemma_stmt::exec_release_zorn_lemma_stmt;
 pub use result::{
-    ByInducCaseFailed, ByProofBodyFailed, ByProofStepResult, ExecByCasesStmtResult, ExecByContraStmtResult,
+    EnumerateAssignmentSuccess, EnumerateAssignmentOutcome,
+    ByInducBodySuccess, ByInducCaseFailed, ByInducCaseSuccess, ByProofBodyFailed, ByProofStepResult, ExecByCasesStmtResult, ExecByContraStmtResult,
     ExecByDefStmtResult, ExecByEnumerateFiniteSetStmtResult, ExecByExtensionStmtResult,
     ExecByFnExtensionStmtResult, ExecByForStmtResult, ExecByInducStmtFailed, ExecByInducStmtResult, ExecByStmtResult,
-    ExecByStrongInducStmtResult, ExecByThmStmtResult, ExecExpandRangeStmtResult,
+    ExecByStrongInducStmtFailed, ExecByStrongInducStmtResult, ExecByThmStmtResult, ExecExpandRangeStmtResult,
     ExecReleaseAxiomOfChoiceStmtResult, ExecReleaseRegularityAxiomStmtResult,
-    ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseZornLemmaStmtResult,
+    BuiltinThmApplication, ExecByThmStmtFailed, ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseZornLemmaStmtResult,
 };
 pub(crate) use exec_by_thm_stmt::{prepare_release_conclusions, PreparedRelease};
 pub(crate) use helper::{

@@ -1,0 +1,5 @@
+# Must reject: struct_obj N03
+struct Pair<S set>:
+    first S
+    second S
+let T = &Pair<R, N>

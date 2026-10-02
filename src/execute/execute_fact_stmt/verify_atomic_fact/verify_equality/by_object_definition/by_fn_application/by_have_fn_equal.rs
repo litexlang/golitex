@@ -1,8 +1,8 @@
 //! Equality by object definition: unfold `f(args)` when `f = fn(...) { body }` is known.
 //!
 //! Mathematical property:
-//!   If `have fn f(params) T = body` (or `let f = fn(...) { body }`) stores
-//!   `f = AnonymousFn`, then `f(args) = subst(body)`.
+//!   A stored equality path `f = ... = AnonymousFn` supplies the body,
+//!   regardless of how `f` was introduced; then `f(args) = subst(body)`.
 //!
 //! Example:
 //!   have fn id(x R) R = x
@@ -11,8 +11,8 @@
 
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::{FnObj, FnObjHead, FunctionSpace, Obj};
-use crate::exec_env::exec_env::SpecialObjectPropertyByDefinition;
-use crate::exec_env::StoredIdentifierDefinition;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -20,8 +20,14 @@ use crate::runtime::{Runtime, RuntimeResult};
 use super::super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
 
 pub struct ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof {
+    pub function_equal: KnownEqualityPathProof,
     pub expanded_body: Obj,
     pub residual_equal: VerifyFactResult,
+}
+
+pub struct AnonFnApplicationBodyProof {
+    pub function_equal: KnownEqualityPathProof,
+    pub expanded_body: Obj,
 }
 
 impl Runtime {
@@ -35,7 +41,7 @@ impl Runtime {
         let Obj::FnObj(fn_obj) = app_side else {
             return Ok(None);
         };
-        let Some(expanded_body) =
+        let Some(expansion) =
             self.expanded_named_or_literal_anon_fn_application_body(fn_obj)?
         else {
             return Ok(None);
@@ -43,7 +49,7 @@ impl Runtime {
 
         let residual = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            left: expanded_body.clone(),
+            left: expansion.expanded_body.clone(),
             right: other_side.clone(),
             line_file: parent_fact.line_file.clone(),
         };
@@ -60,7 +66,8 @@ impl Runtime {
         }
         Ok(Some(
             ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof {
-                expanded_body,
+                function_equal: expansion.function_equal,
+                expanded_body: expansion.expanded_body,
                 residual_equal,
             },
         ))
@@ -69,65 +76,37 @@ impl Runtime {
     pub(crate) fn expanded_named_or_literal_anon_fn_application_body(
         &mut self,
         fn_obj: &FnObj,
-    ) -> RuntimeResult<Option<Obj>> {
+    ) -> RuntimeResult<Option<AnonFnApplicationBodyProof>> {
         if fn_obj.body.len() != 1 {
             return Ok(None);
         }
         let fn_args: Vec<Obj> = fn_obj.body[0].iter().map(|a| a.as_ref().clone()).collect();
 
-        let anon = match fn_obj.head.as_ref() {
-            FnObjHead::AnonymousFnLiteral(anon) => anon.as_ref().clone(),
-            FnObjHead::Identifier(head) => {
-                if let Some(anon) = self.anonymous_fn_from_have_fn_equal_definition(head) {
-                    anon
-                } else {
-                    let head_obj = Obj::Identifier(head.clone());
-                    let Some(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon))) =
-                        self.visible_equal_to_function_obj(&head_obj)
-                    else {
-                        return Ok(None);
-                    };
-                    anon
-                }
-            }
+        let head_obj = match fn_obj.head.as_ref() {
+            FnObjHead::AnonymousFnLiteral(anon) => Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.as_ref().clone())),
+            FnObjHead::Identifier(head) => Obj::Identifier(head.clone()),
             _ => return Ok(None),
         };
-
-        let expected = set_bound_parameter_count(&anon.body.set_bound_parameters);
-        if fn_args.len() != expected {
-            return Ok(None);
-        }
-        let fn_subst = set_bound_params_to_arg_map(&anon.body.set_bound_parameters, &fn_args);
-        match self.inst_obj(anon.equal_to.as_ref(), &fn_subst) {
-            Ok(body) => Ok(Some(body)),
-            Err(_) => Ok(None),
-        }
-    }
-
-    fn anonymous_fn_from_have_fn_equal_definition(
-        &self,
-        head: &crate::ast::obj::IdentifierObj,
-    ) -> Option<crate::ast::obj::AnonymousFn> {
-        let StoredIdentifierDefinition::HaveFnEqual((_, stmt)) =
-            self.stored_identifier_definition_visible(head)?
-        else {
-            return None;
-        };
-        Some(stmt.equal_to_anonymous_fn.clone())
-    }
-
-    fn visible_equal_to_function_obj(&self, obj: &Obj) -> Option<Obj> {
-        let key = obj.ir();
-        for env in self.execution_environments_stack.iter().rev() {
-            let Some(props) = env.special_object_properties_by_def.get(&key) else {
+        // Stored equalities transport the function body, independently of how
+        // the head was introduced. Example: g=f and f=anon justify g(4)=5.
+        let members = equivalence_class_members_with_paths_in_adjacency(
+            &self.visible_equivalence_class_adjacency(),
+            &head_obj,
+        );
+        for (candidate, path) in members {
+            let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = &candidate else {
                 continue;
             };
-            for prop in props {
-                if let SpecialObjectPropertyByDefinition::EqualToFunction((fun, _)) = prop {
-                    return Some(fun.clone());
-                }
+            if fn_args.len() != set_bound_parameter_count(&anon.body.set_bound_parameters) {
+                continue;
             }
+            let fn_subst = set_bound_params_to_arg_map(&anon.body.set_bound_parameters, &fn_args);
+            let Ok(expanded_body) = self.inst_obj(anon.equal_to.as_ref(), &fn_subst) else {
+                continue;
+            };
+            let function_equal = KnownEqualityPathProof::new(path);
+            return Ok(Some(AnonFnApplicationBodyProof { function_equal, expanded_body }));
         }
-        None
+        Ok(None)
     }
 }

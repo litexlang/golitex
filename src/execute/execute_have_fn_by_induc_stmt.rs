@@ -17,7 +17,7 @@ use crate::ast::fact::{
     and_chain_as_fact, negate_atomic_fact, AndChainAtomicFact, AndFact, AtomicFact, Fact,
     GreaterEqualFact, InFact, LessFact, OrFact, QuantifierFreeFact,
 };
-use crate::ast::obj::{FnObjHead, FnSet, IdentifierObj, Obj, StandardSet, FunctionSpace};
+use crate::ast::obj::{FnSet, FunctionSpace, IdentifierObj, Obj, StandardSet};
 use crate::ast::param::{ParamType, SetBoundParameterGroup, TypedParameterList};
 use crate::ast::stmt::{
     FnSetClause, HaveFnByInducCase, HaveFnByInducCaseBody, HaveFnByInducStmt,
@@ -30,6 +30,7 @@ use crate::execute::execute_fact_stmt::{
 use crate::execute::execute_have_fn_equal_case_by_case_stmt::StoreHaveFnCaseByCaseAndInferResult;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::store_fact_and_infer::StoreFactAndInferResult;
 use std::rc::Rc;
 
 pub enum ExecHaveFnByInducStmtFailed {
@@ -41,9 +42,16 @@ pub enum ExecHaveFnByInducStmtFailed {
     LowerBoundNotInteger(VerifyFactResult),
     MeasureBelowLower(VerifyFactResult),
     Coverage(VerifyFactResult),
-    Disjoint { i: usize, j: usize },
+    Disjoint {
+        i: usize,
+        j: usize,
+    },
     CaseBodyWellDefined(usize, VerifyObjWellDefinedResult),
     CaseBodyInRetSet(usize, VerifyFactResult),
+    NestedCase {
+        index: usize,
+        failed: Box<ExecHaveFnByInducStmtFailed>,
+    },
     Shape(String),
 }
 
@@ -53,9 +61,37 @@ pub struct ExecHaveFnByInducStmtSuccessResult {
     pub measure_in_z: VerifyFactResult,
     pub lower_in_z: VerifyFactResult,
     pub measure_ge_lower: VerifyFactResult,
-    pub coverage: VerifyFactResult,
+    pub case_checks: InducCaseListSuccess,
     pub store_and_infer_result: StoreHaveFnCaseByCaseAndInferResult,
     pub local_env: Box<ExecEnv>,
+}
+
+pub struct InducCaseListSuccess {
+    pub coverage: VerifyFactResult,
+    pub disjoint: Vec<InducCasesDisjointSuccess>,
+    pub cases: Vec<InducCaseSuccess>,
+}
+
+pub struct InducCasesDisjointSuccess {
+    pub i: usize,
+    pub j: usize,
+    pub assumption_stored: StoreFactAndInferResult,
+    pub negated_component: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub struct InducCaseSuccess {
+    pub assumption_stored: StoreFactAndInferResult,
+    pub body: InducCaseBodySuccess,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub enum InducCaseBodySuccess {
+    EqualTo {
+        well_defined: VerifyObjWellDefinedResult,
+        in_ret_set: VerifyFactResult,
+    },
+    NestedCases(InducCaseListSuccess),
 }
 
 pub enum ExecHaveFnByInducStmtResult {
@@ -79,8 +115,9 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-};
+            equality_class_search:
+                crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
+        };
 
         if stmt.cases.is_empty() {
             return Ok(ExecHaveFnByInducStmtResult::Failed(
@@ -89,8 +126,10 @@ impl Runtime {
         }
 
         let fn_set = fn_set_from_clause(&stmt.fn_set_clause);
-        let fn_set_well_defined =
-            self.verify_obj_well_definedness(&Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())), verify_state.clone())?;
+        let fn_set_well_defined = self.verify_obj_well_definedness(
+            &Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
+            verify_state.clone(),
+        )?;
         if fn_set_well_defined.is_failed() {
             return Ok(ExecHaveFnByInducStmtResult::Failed(
                 ExecHaveFnByInducStmtFailed::FnSetWellDefined(fn_set_well_defined),
@@ -100,8 +139,7 @@ impl Runtime {
         let (inner, local_env) = self.run_in_local_env_and_take_env(|rt| {
             rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause)?;
 
-            let measure_wd =
-                rt.verify_obj_well_definedness(&stmt.measure, verify_state.clone())?;
+            let measure_wd = rt.verify_obj_well_definedness(&stmt.measure, verify_state.clone())?;
             if measure_wd.is_failed() {
                 return Ok(Err(ExecHaveFnByInducStmtFailed::MeasureWellDefined(
                     measure_wd,
@@ -115,7 +153,8 @@ impl Runtime {
                 )));
             }
 
-            let measure_in_z = rt.verify_in_z(&stmt.measure, &stmt.line_file, verify_state.clone())?;
+            let measure_in_z =
+                rt.verify_in_z(&stmt.measure, &stmt.line_file, verify_state.clone())?;
             if measure_in_z.is_failed() {
                 return Ok(Err(ExecHaveFnByInducStmtFailed::MeasureNotInteger(
                     measure_in_z,
@@ -146,39 +185,21 @@ impl Runtime {
                 return Ok(Err(ExecHaveFnByInducStmtFailed::Shape(msg)));
             }
 
-            let top_cases: Vec<AndChainAtomicFact> =
-                stmt.cases.iter().map(|c| c.case_fact.clone()).collect();
-            let coverage_fact = Fact::OrFact(OrFact {
-                fact_id: rt.global_ids.allocate_fact_id(),
-                facts: top_cases,
-                line_file: Some(stmt.line_file.clone()),
-            });
-            let coverage = rt.verify_fact(&coverage_fact, verify_state.clone())?;
-            if coverage.is_failed() {
-                return Ok(Err(ExecHaveFnByInducStmtFailed::Coverage(coverage)));
-            }
-
-            if let Some((i, j)) =
-                rt.verify_induc_cases_disjoint(stmt, &stmt.cases, verify_state.clone())?
-            {
-                return Ok(Err(ExecHaveFnByInducStmtFailed::Disjoint { i, j }));
-            }
-
-            if let Err(failed) =
-                rt.verify_induc_case_list_returns(stmt, &stmt.cases, 0, verify_state.clone())?
-            {
-                return Ok(Err(failed));
-            }
+            let case_checks =
+                match rt.verify_induc_case_list(stmt, &stmt.cases, verify_state.clone())? {
+                    Ok(checks) => checks,
+                    Err(failed) => return Ok(Err(failed)),
+                };
 
             Ok(Ok((
                 measure_in_z,
                 lower_in_z,
                 measure_ge_lower,
-                coverage,
+                case_checks,
             )))
         })?;
 
-        let (measure_in_z, lower_in_z, measure_ge_lower, coverage) = match inner {
+        let (measure_in_z, lower_in_z, measure_ge_lower, case_checks) = match inner {
             Ok(v) => v,
             Err(failed) => return Ok(ExecHaveFnByInducStmtResult::Failed(failed)),
         };
@@ -204,7 +225,7 @@ impl Runtime {
                 measure_in_z,
                 lower_in_z,
                 measure_ge_lower,
-                coverage,
+                case_checks,
                 store_and_infer_result,
                 local_env,
             },
@@ -218,28 +239,23 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
         fn_set: &FnSet,
     ) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
-        if self.identifier_defined_in_stack(&stmt.name) {
-            return Err(crate::runtime::RuntimeError::InternalBug(
-                format!(
-                    "identifier `{}` is already defined in this ExecEnv",
-                    stmt.name
-                ),
-            ));
+        if self.identifier_defined_in_stack(&stmt.name.name) {
+            return Err(crate::runtime::RuntimeError::InternalBug(format!(
+                "identifier `{}` is already defined in this ExecEnv",
+                stmt.name
+            )));
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
-            stmt.name.clone(),
+            stmt.name.name.clone(),
             StoredIdentifierDefinition::HaveFnByInduc((
-                stmt.name.clone(),
+                stmt.name.name.clone(),
                 Rc::new(stmt.clone()),
             )),
         );
 
-        let flat = flatten_induc_to_case_by_case(self, stmt)
-            .map_err(|msg| {
-                crate::runtime::RuntimeError::InternalBug(format!(
-                    "flatten induc: {msg}"
-                ))
-            })?;
+        let flat = flatten_induc_to_case_by_case(self, stmt).map_err(|msg| {
+            crate::runtime::RuntimeError::InternalBug(format!("flatten induc: {msg}"))
+        })?;
         self.store_piecewise_fn_membership_and_case_foralls(&flat, fn_set)
     }
 
@@ -258,17 +274,14 @@ impl Runtime {
         self.verify_fact(&fact, verify_state)
     }
 
-    fn register_restricted_recursive_fn(
-        &mut self,
-        stmt: &HaveFnByInducStmt,
-    ) -> Result<(), String> {
-        if self.identifier_defined_in_stack(&stmt.name) {
+    fn register_restricted_recursive_fn(&mut self, stmt: &HaveFnByInducStmt) -> Result<(), String> {
+        if self.identifier_defined_in_stack(&stmt.name.name) {
             // Already occupied at parse; ensure ExecEnv definition row exists.
         } else {
             self.top_exec_env_mut().definitions.identifiers.insert(
-                stmt.name.clone(),
+                stmt.name.name.clone(),
                 StoredIdentifierDefinition::HaveFnByInduc((
-                    stmt.name.clone(),
+                    stmt.name.name.clone(),
                     Rc::new(stmt.clone()),
                 )),
             );
@@ -313,60 +326,67 @@ impl Runtime {
             dom_facts,
             ret_set: Box::new(generated_ret),
         };
-        // Prefer Identifier heads as they appear in recursive bodies. Template
-        // bodies are parsed under a temporary parse scope, so those ids can
-        // differ from the post-pop file-root template name id.
-        let mut self_heads = Vec::new();
-        collect_induc_self_application_heads(stmt, &mut self_heads);
-        // Ordinary (non-template) induc: body heads already match the file-root
-        // symbol. Template induc: body heads carry the temporary-scope ids and
-        // must be preferred; only fall back to file-root when there is no
-        // recursive self-application in the body.
-        if self_heads.is_empty() {
-            self_heads.push(self.identifier_obj_for_file_root_symbol(stmt.name.clone()));
-        }
-        let mut seen = std::collections::HashSet::new();
-        for head in self_heads {
-            let function_obj = Obj::Identifier(head);
-            let key = function_obj.ir();
-            if !seen.insert(key) {
-                continue;
-            }
-            let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                element: function_obj,
-                set: Obj::FunctionSpace(FunctionSpace::FnSet(restricted.clone())),
-                line_file: Some(stmt.line_file.clone()),
-            }));
-            if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
-                self.record_fn_signature_from_definition_membership(in_fact);
-            }
-            let _ = self
-                .store_fact_and_infer(&membership)
-                .map_err(|e| format!("recursive membership store: {e:?}"))?;
-        }
+        // Only this declaration receives the induction hypothesis. Same-name
+        // functions in other exports/modules retain their own signatures.
+        let function_obj = Obj::Identifier(self.identifier_obj_for_stored_mention(&stmt.name));
+        let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: function_obj,
+            set: Obj::FunctionSpace(FunctionSpace::FnSet(restricted)),
+            line_file: Some(stmt.line_file.clone()),
+        }));
+        let _ = self
+            .store_fact_and_infer(&membership)
+            .map_err(|e| format!("recursive membership store: {e:?}"))?;
         Ok(())
     }
 
-    fn verify_induc_cases_disjoint(
+    // Every sibling list must be total and disjoint in its enclosing guard.
+    // Example: under n = 0, cases n = 0 / n >= 0 overlap and cannot define a function.
+    fn verify_induc_case_list(
         &mut self,
         stmt: &HaveFnByInducStmt,
         cases: &[HaveFnByInducCase],
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<(usize, usize)>> {
+    ) -> RuntimeResult<Result<InducCaseListSuccess, ExecHaveFnByInducStmtFailed>> {
+        if cases.is_empty() {
+            return Ok(Err(ExecHaveFnByInducStmtFailed::EmptyCases));
+        }
+        let coverage_fact = Fact::OrFact(OrFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            facts: cases.iter().map(|case| case.case_fact.clone()).collect(),
+            line_file: Some(stmt.line_file.clone()),
+        });
+        let coverage = self.verify_fact(&coverage_fact, verify_state.clone())?;
+        if coverage.is_failed() {
+            return Ok(Err(ExecHaveFnByInducStmtFailed::Coverage(coverage)));
+        }
+        let mut disjoint = Vec::new();
         for i in 0..cases.len() {
             for j in (i + 1)..cases.len() {
-                if !self.have_fn_induc_case_pair_disjoint(
+                let Some(proof) = self.have_fn_induc_case_pair_disjoint(
                     stmt,
                     &cases[i].case_fact,
                     &cases[j].case_fact,
+                    i,
+                    j,
                     verify_state.clone(),
-                )? {
-                    return Ok(Some((i, j)));
-                }
+                )?
+                else {
+                    return Ok(Err(ExecHaveFnByInducStmtFailed::Disjoint { i, j }));
+                };
+                disjoint.push(proof);
             }
         }
-        Ok(None)
+        let returns = match self.verify_induc_case_list_returns(stmt, cases, verify_state)? {
+            Ok(returns) => returns,
+            Err(failed) => return Ok(Err(failed)),
+        };
+        Ok(Ok(InducCaseListSuccess {
+            coverage,
+            disjoint,
+            cases: returns,
+        }))
     }
 
     fn have_fn_induc_case_pair_disjoint(
@@ -374,12 +394,16 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
         left: &AndChainAtomicFact,
         right: &AndChainAtomicFact,
+        i: usize,
+        j: usize,
         verify_state: VerifyState,
-    ) -> RuntimeResult<bool> {
-        if self.induc_case_implies_not_other(stmt, left, right, verify_state.clone())? {
-            return Ok(true);
+    ) -> RuntimeResult<Option<InducCasesDisjointSuccess>> {
+        if let Some(proof) =
+            self.induc_case_implies_not_other(stmt, left, right, i, j, verify_state.clone())?
+        {
+            return Ok(Some(proof));
         }
-        self.induc_case_implies_not_other(stmt, right, left, verify_state)
+        self.induc_case_implies_not_other(stmt, right, left, i, j, verify_state)
     }
 
     // Nested under the outer induc local that already introduced binders.
@@ -390,49 +414,56 @@ impl Runtime {
         _stmt: &HaveFnByInducStmt,
         assumed: &AndChainAtomicFact,
         other: &AndChainAtomicFact,
+        i: usize,
+        j: usize,
         verify_state: VerifyState,
-    ) -> RuntimeResult<bool> {
-        let (ok, _env) = self.run_in_local_env_and_take_env(|rt| {
-            let _ = rt.store_fact_and_infer(&and_chain_as_fact(assumed))?;
-            for atom in flatten_and_chain_atoms(other) {
-                let Some(negated) = negate_atomic_fact(&atom, rt.global_ids.allocate_fact_id()) else {
+    ) -> RuntimeResult<Option<InducCasesDisjointSuccess>> {
+        let (proof, local_env) = self.run_in_local_env_and_take_env(|rt| {
+            let assumption_stored = rt.store_fact_and_infer(&and_chain_as_fact(assumed))?;
+            for atom in flatten_and_chain_atoms(rt, other)? {
+                let Some(negated) = negate_atomic_fact(&atom, rt.global_ids.allocate_fact_id())
+                else {
                     continue;
                 };
-                let checked =
-                    rt.verify_fact(&Fact::AtomicFact(negated), verify_state.clone())?;
+                let checked = rt.verify_fact(&Fact::AtomicFact(negated), verify_state.clone())?;
                 if !checked.is_failed() {
-                    return Ok(true);
+                    return Ok(Some((assumption_stored, checked)));
                 }
             }
-            Ok(false)
+            Ok(None)
         })?;
-        Ok(ok)
+        Ok(proof.map(
+            |(assumption_stored, negated_component)| InducCasesDisjointSuccess {
+                i,
+                j,
+                assumption_stored,
+                negated_component,
+                local_env,
+            },
+        ))
     }
 
     fn verify_induc_case_list_returns(
         &mut self,
         stmt: &HaveFnByInducStmt,
         cases: &[HaveFnByInducCase],
-        index_base: usize,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Result<(), ExecHaveFnByInducStmtFailed>> {
-        for (offset, case) in cases.iter().enumerate() {
-            let case_index = index_base + offset;
-            match &case.body {
-                HaveFnByInducCaseBody::EqualTo(equal_to) => {
-                    // Binders already live on the outer induc local; only
-                    // assume this case in a nested env.
-                    let (inner, _env) = self.run_in_local_env_and_take_env(|rt| {
-                        let _ = rt.store_fact_and_infer(&and_chain_as_fact(&case.case_fact))?;
+    ) -> RuntimeResult<Result<Vec<InducCaseSuccess>, ExecHaveFnByInducStmtFailed>> {
+        let mut returns = Vec::new();
+        for (case_index, case) in cases.iter().enumerate() {
+            let (inner, local_env) = self.run_in_local_env_and_take_env(|rt| {
+                let assumption_stored =
+                    rt.store_fact_and_infer(&and_chain_as_fact(&case.case_fact))?;
+                let body = match &case.body {
+                    HaveFnByInducCaseBody::EqualTo(equal_to) => {
+                        // Binders already live on the outer induc local; only
+                        // assume this case in a nested env.
                         let body_wd =
                             rt.verify_obj_well_definedness(equal_to, verify_state.clone())?;
                         if body_wd.is_failed() {
-                            return Ok(Err(
-                                ExecHaveFnByInducStmtFailed::CaseBodyWellDefined(
-                                    case_index,
-                                    body_wd,
-                                ),
-                            ));
+                            return Ok(Err(ExecHaveFnByInducStmtFailed::CaseBodyWellDefined(
+                                case_index, body_wd,
+                            )));
                         }
                         let in_fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
                             fact_id: rt.global_ids.allocate_fact_id(),
@@ -443,33 +474,38 @@ impl Runtime {
                         let in_ret = rt.verify_fact(&in_fact, verify_state.clone())?;
                         if in_ret.is_failed() {
                             return Ok(Err(ExecHaveFnByInducStmtFailed::CaseBodyInRetSet(
-                                case_index,
-                                in_ret,
+                                case_index, in_ret,
                             )));
                         }
-                        Ok(Ok(()))
-                    })?;
-                    if let Err(failed) = inner {
-                        return Ok(Err(failed));
+                        InducCaseBodySuccess::EqualTo {
+                            well_defined: body_wd,
+                            in_ret_set: in_ret,
+                        }
                     }
-                }
-                HaveFnByInducCaseBody::NestedCases(nested) => {
-                    let (inner, _env) = self.run_in_local_env_and_take_env(|rt| {
-                        let _ = rt.store_fact_and_infer(&and_chain_as_fact(&case.case_fact))?;
-                        rt.verify_induc_case_list_returns(
-                            stmt,
-                            nested,
-                            case_index * 1000,
-                            verify_state.clone(),
-                        )
-                    })?;
-                    if let Err(failed) = inner {
-                        return Ok(Err(failed));
+                    HaveFnByInducCaseBody::NestedCases(nested) => {
+                        match rt.verify_induc_case_list(stmt, nested, verify_state.clone())? {
+                            Ok(checks) => InducCaseBodySuccess::NestedCases(checks),
+                            Err(failed) => {
+                                return Ok(Err(ExecHaveFnByInducStmtFailed::NestedCase {
+                                    index: case_index,
+                                    failed: Box::new(failed),
+                                }))
+                            }
+                        }
                     }
-                }
+                };
+                Ok(Ok((assumption_stored, body)))
+            })?;
+            match inner {
+                Ok((assumption_stored, body)) => returns.push(InducCaseSuccess {
+                    assumption_stored,
+                    body,
+                    local_env,
+                }),
+                Err(failed) => return Ok(Err(failed)),
             }
         }
-        Ok(Ok(()))
+        Ok(Ok(returns))
     }
 }
 
@@ -550,14 +586,7 @@ fn flatten_case_list(
                 equal_tos.push(eq.clone());
             }
             HaveFnByInducCaseBody::NestedCases(nested) => {
-                flatten_case_list(
-                    runtime,
-                    nested,
-                    Some(merged),
-                    cases,
-                    equal_tos,
-                    line_file,
-                )?;
+                flatten_case_list(runtime, nested, Some(merged), cases, equal_tos, line_file)?;
             }
         }
     }
@@ -570,8 +599,10 @@ fn merge_and_chains(
     right: &AndChainAtomicFact,
     line_file: &crate::ast::line_file::SourceLine,
 ) -> Result<AndChainAtomicFact, String> {
-    let mut atoms = flatten_and_chain_atoms(left);
-    atoms.extend(flatten_and_chain_atoms(right));
+    let mut atoms =
+        flatten_and_chain_atoms(runtime, left).map_err(|e| format!("case chain: {e:?}"))?;
+    atoms
+        .extend(flatten_and_chain_atoms(runtime, right).map_err(|e| format!("case chain: {e:?}"))?);
     if atoms.is_empty() {
         return Err("merged induc case has no atomic facts".to_string());
     }
@@ -585,67 +616,13 @@ fn merge_and_chains(
     }))
 }
 
-fn flatten_and_chain_atoms(fact: &AndChainAtomicFact) -> Vec<AtomicFact> {
+fn flatten_and_chain_atoms(
+    runtime: &mut Runtime,
+    fact: &AndChainAtomicFact,
+) -> RuntimeResult<Vec<AtomicFact>> {
     match fact {
-        AndChainAtomicFact::AtomicFact(a) => vec![a.clone()],
-        AndChainAtomicFact::AndFact(a) => a.facts.clone(),
-        AndChainAtomicFact::ChainFact(_) => Vec::new(),
-    }
-}
-
-// Collect Identifier heads of recursive self-applications in induc case bodies.
-// Template body parse uses a temporary scope, so these ids may differ from the
-// later file-root template name id.
-fn collect_induc_self_application_heads(
-    stmt: &HaveFnByInducStmt,
-    out: &mut Vec<IdentifierObj>,
-) {
-    for case in &stmt.cases {
-        collect_induc_self_application_heads_in_case_body(&stmt.name, &case.body, out);
-    }
-}
-
-fn collect_induc_self_application_heads_in_case_body(
-    self_name: &str,
-    body: &HaveFnByInducCaseBody,
-    out: &mut Vec<IdentifierObj>,
-) {
-    match body {
-        HaveFnByInducCaseBody::EqualTo(obj) => {
-            collect_induc_self_application_heads_in_obj(self_name, obj, out);
-        }
-        HaveFnByInducCaseBody::NestedCases(nested) => {
-            for case in nested {
-                collect_induc_self_application_heads_in_case_body(self_name, &case.body, out);
-            }
-        }
-    }
-}
-
-fn collect_induc_self_application_heads_in_obj(
-    self_name: &str,
-    obj: &Obj,
-    out: &mut Vec<IdentifierObj>,
-) {
-    let Obj::FnObj(fn_obj) = obj else {
-        return;
-    };
-    if let FnObjHead::Identifier(head) = fn_obj.head.as_ref() {
-        if identifier_obj_plain_name(head) == Some(self_name) {
-            out.push(head.clone());
-        }
-    }
-    for layer in &fn_obj.body {
-        for arg in layer {
-            collect_induc_self_application_heads_in_obj(self_name, arg, out);
-        }
-    }
-}
-
-fn identifier_obj_plain_name(head: &IdentifierObj) -> Option<&str> {
-    match head {
-        IdentifierObj::Plain { name, .. }
-        | IdentifierObj::WithExportFileId { name, .. }
-        | IdentifierObj::WithModAndExportFileId { name, .. } => Some(name.as_str()),
+        AndChainAtomicFact::AtomicFact(a) => Ok(vec![a.clone()]),
+        AndChainAtomicFact::AndFact(a) => Ok(a.facts.clone()),
+        AndChainAtomicFact::ChainFact(c) => runtime.chain_adjacent_atomics(c),
     }
 }

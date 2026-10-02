@@ -1,0 +1,24 @@
+# AST: Obj::ArithmeticOperator::Min
+# Run: target/release/litex -f examples/test_objs/min.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: min(2, 3) = 2
+sketch:
+    min(2, 3) = 2
+
+# P02: min(3, 2) = 2
+sketch:
+    min(3, 2) = 2
+
+# P03: min(2, 2) = 2
+sketch:
+    min(2, 2) = 2
+
+# P04: min(-3, -2) = -3
+sketch:
+    min(-3, -2) = -3
+
+# P06: min(x, y) = min(y, x)
+sketch:
+    forall x, y R:
+        min(x, y) = min(y, x)

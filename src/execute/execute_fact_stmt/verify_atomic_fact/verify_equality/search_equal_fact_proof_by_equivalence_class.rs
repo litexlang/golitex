@@ -3,7 +3,7 @@ use super::equivalence_class_graph::{
     equivalence_class_keys_in_adjacency, equivalence_class_members_with_paths_in_adjacency,
     equivalence_class_path_in_adjacency, EquivalenceClassAdjacency,
 };
-use super::result::{EqualityViaPeersProof, KnownEqualityPathProof, PeerEqualitySuccess};
+use super::result::{EqualityViaPeersProof, KnownEqualityPathProof, KnownEqualityAlphaEndpointsProof, PeerEqualitySuccess};
 use super::well_defined_result::VerifyEqualFactWellDefinedResult;
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::Obj;
@@ -28,7 +28,7 @@ impl Runtime {
             return Ok(Some(KnownEqualityPathProof::new(path).into()));
         }
         if verify_state.equality_class_search == EqualityClassSearchMode::StoredPathsOnly {
-            return Ok(None);
+            return Ok(search_alpha_endpoints(&adjacency, fact));
         }
 
         // BFS lists include the original endpoint at index 0. Try left-only,
@@ -65,7 +65,7 @@ impl Runtime {
                 .into(),
             ));
         }
-        Ok(None)
+        Ok(search_alpha_endpoints(&adjacency, fact))
     }
 
     // A bridge verifies WD and then only identity, budgeted builtin or matching.
@@ -146,4 +146,28 @@ impl Runtime {
         }
         adjacency
     }
+}
+
+fn search_alpha_endpoints(adjacency: &EquivalenceClassAdjacency, fact: &EqualFact) -> Option<EqualFactSearchedProofByEquivalenceClass> {
+    // Stored binder IDs can differ from a freshly parsed goal's IDs.
+    // Cite the existing equality and prove pure alpha identity on each side;
+    // never normalize the knowledge graph or perform definition rewriting.
+    for edges in adjacency.values() {
+        for (_, cited) in edges {
+        for reversed in [false, true] {
+            let (left, right) = if reversed { (&cited.right, &cited.left) }
+            else { (&cited.left, &cited.right) };
+            let mut endpoint = fact.clone();
+            endpoint.right = left.clone();
+            let Some(left_identity) = search_equal_fact_proof_by_they_are_the_same(&endpoint) else { continue; };
+            endpoint.left = fact.right.clone();
+            endpoint.right = right.clone();
+            let Some(right_identity) = search_equal_fact_proof_by_they_are_the_same(&endpoint) else { continue; };
+            return Some(EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(
+            KnownEqualityAlphaEndpointsProof { cited: cited.clone(), reversed, left_identity, right_identity }
+            ));
+        }
+        }
+    }
+    None
 }

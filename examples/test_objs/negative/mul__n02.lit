@@ -1,0 +1,2 @@
+# Must reject: mul N02
+let x = {} * 1

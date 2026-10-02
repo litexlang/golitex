@@ -1,0 +1,2 @@
+# Intended valid regression: cos P03
+cos(pi / 2) = 0

@@ -7,6 +7,7 @@ use crate::ast::fact::{
     AndChainAtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
 };
 use crate::ast::line_file::SourceLine;
+use crate::ast::names::BoundName;
 use crate::ast::obj::{AnonymousFn, FnSet, Obj};
 use crate::ast::param::ParamType;
 use crate::ast::stmt::{
@@ -42,14 +43,15 @@ impl Runtime {
             .into());
         }
 
-        // Occupy at enclosing scope before param binders.
-        let bound = self.define_plain_atom_as_parse(&tb, name.clone())?;
-
-        // `have fn name by exist!:` has no signature paren list.
+        // The proved source forall finishes before introducing the chosen function.
+        // Its binders may share the new function's spelling without sharing its ID.
         if tb.peek() == Some(BY) {
             return self.parse_have_fn_by_exist_or_error(block, &mut tb, name);
         }
 
+        // Signature/body forms occupy the function before their parameter binders
+        // so recursive references retain the declaration's identity.
+        let bound = self.define_plain_atom_as_parse(&tb, name.clone())?;
         self.push_parse_scope();
         let result = (|| {
             let (params, dom_facts) = self.parse_fn_set_header(&mut tb)?;
@@ -63,10 +65,10 @@ impl Runtime {
             if tb.peek() == Some(BY) {
                 tb.expect(BY)?;
                 if tb.peek() == Some(CASES) {
-                    return self.parse_have_fn_by_cases_tail(block, &mut tb, name, fn_set_clause);
+                    return self.parse_have_fn_by_cases_tail(block, &mut tb, bound, fn_set_clause);
                 }
                 if tb.peek() == Some(INDUC) {
-                    return self.parse_have_fn_by_induc_tail(block, &mut tb, name, fn_set_clause);
+                    return self.parse_have_fn_by_induc_tail(block, &mut tb, bound, fn_set_clause);
                 }
                 return Err(tb.parse_error(
                     "have fn: expected `by cases` or `by induc` after signature",
@@ -120,7 +122,7 @@ impl Runtime {
         &mut self,
         block: &TokenBlock,
         tb: &mut TokenBlock,
-        name: String,
+        name: BoundName,
         fn_set_clause: FnSetClause,
     ) -> RuntimeResult<Stmt> {
         tb.expect(CASES)?;
@@ -170,7 +172,7 @@ impl Runtime {
         &mut self,
         block: &TokenBlock,
         tb: &mut TokenBlock,
-        name: String,
+        name: BoundName,
         fn_set_clause: FnSetClause,
     ) -> RuntimeResult<Stmt> {
         tb.expect(INDUC)?;
@@ -305,6 +307,7 @@ impl Runtime {
         let mut goal = block.body[0].clone();
         let forall = self.parse_goal_forall_fact(&mut goal, "have fn by exist!")?;
         check_have_fn_by_exist_forall_shape(block, &forall)?;
+        let name = self.define_plain_atom_as_parse(tb, name)?;
 
         Ok(Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt {
                 name,

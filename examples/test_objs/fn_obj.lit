@@ -1,0 +1,41 @@
+# AST: Obj::FnObj
+# Run: target/release/litex -f examples/test_objs/fn_obj.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: f(2) = 3
+sketch:
+    have fn f(x R) R = x + 1
+    f(2) = 3
+
+# P02: f(4, 1) = 3
+sketch:
+    have fn f(x, y R) R = x - y
+    f(4, 1) = 3
+
+# P03: fn(x R) R {x + 1}(2) = 3
+sketch:
+    fn(x R) R {x + 1}(2) = 3
+
+# P04: fn(x R: x != 0) R {1 / x}(2) = 1 / 2
+sketch:
+    fn(x R: x != 0) R {1 / x}(2) = 1 / 2
+
+# P07: b.f(1) $in R
+sketch:
+    struct Bundle:
+        f fn(x R) R
+        tag N
+    forall b &Bundle:
+        b.f(1) $in R
+
+# P08: \identity<R>(2) = 2
+sketch:
+    template<S set>:
+        have fn identity(x S) S = x
+    \identity<R>(2) = 2
+
+# P09: f(f(1)) = f(2) = 3
+sketch:
+    have fn f(x R) R = x + 1
+    f(1) = 2
+    f(f(1)) = f(2) = 3

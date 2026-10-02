@@ -1,0 +1,2 @@
+# Must reject: tuple_dim N01
+let d = tuple_dim(1)

@@ -1097,12 +1097,7 @@ impl Runtime {
         &self,
         struct_obj: &StructObj,
     ) -> Option<(crate::ast::stmt::DefStructStmt, HashMap<IdentifierId, Obj>)> {
-        let name = match &struct_obj.name {
-            AtomicName::Plain { name }
-            | AtomicName::WithExportFileId { name, .. }
-            | AtomicName::WithModAndExportFileId { name, .. } => name.clone(),
-        };
-        let def = self.def_struct_visible_in_stack(&name)?.clone();
+        let def = self.def_struct_visible(&struct_obj.name)?.clone();
         let expected = def
             .param_def_with_dom
             .as_ref()

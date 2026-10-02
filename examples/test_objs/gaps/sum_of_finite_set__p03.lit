@@ -1,0 +1,2 @@
+# Intended valid regression: sum_of_finite_set P03
+finite_set_sum({1, 2}, fn(x Z) Z {x}) = 3

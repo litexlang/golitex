@@ -1,0 +1,2 @@
+# Must reject: power_set N01
+{2} $in power_set({1})

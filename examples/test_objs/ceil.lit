@@ -1,0 +1,28 @@
+# AST: Obj::ArithmeticOperator::Ceil
+# Run: target/release/litex -f examples/test_objs/ceil.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: ceil(0) = 0
+sketch:
+    ceil(0) = 0
+
+# P02: ceil(3) = 3
+sketch:
+    ceil(3) = 3
+
+# P03: ceil(3.2) = 4
+sketch:
+    ceil(3.2) = 4
+
+# P04: ceil(-3.2) = -3
+sketch:
+    ceil(-3.2) = -3
+
+# P05: ceil(1 / 2) = 1
+sketch:
+    ceil(1 / 2) = 1
+
+# P06: ceil(x) = x
+sketch:
+    forall x Z:
+        ceil(x) = x

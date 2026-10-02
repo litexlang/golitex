@@ -19,7 +19,7 @@ pub fn exec_def_algo_by_induc_stmt(
     runtime: &mut Runtime,
     stmt: &DefAlgoByInducStmt,
 ) -> RuntimeResult<ExecDefAlgoByInducStmtResult> {
-    if runtime.def_algo_visible_in_stack(&stmt.name).is_some() {
+    if runtime.def_algo_visible_in_stack(&stmt.name.name).is_some() {
         return Ok(ExecDefAlgoByInducStmtResult::Failed(
             ExecDefAlgoByInducStmtFailed::AlgoAlreadyDefined,
         ));

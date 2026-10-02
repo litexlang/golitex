@@ -1,0 +1,12 @@
+# Before: index_cart_nonempty_by_choice_from_family was absent from native release thm.
+# release thm index_cart_nonempty_by_choice_from_family(index_cart(...))
+# Now: verified nonemptiness premises and explicit axiom-of-choice provenance.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/index_cart_nonempty_by_choice_from_family.lit
+thm choice_from_family:
+    ? forall S nonempty_set, g fn(k {1}) S:
+        forall A S:
+            $is_nonempty_set(A)
+        =>:
+            $is_nonempty_set(index_cart({1}, S, g))
+    release thm index_cart_nonempty_by_choice_from_family(index_cart({1}, S, g))
+# Boundary: empty factors or empty indices remain rejected.

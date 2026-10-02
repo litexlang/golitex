@@ -1,0 +1,2 @@
+# Intended valid regression: obj_at_index P04
+((1, 2), 3)[1][2] = 2

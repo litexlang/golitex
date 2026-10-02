@@ -1,0 +1,2 @@
+# Must reject: complex_abs N02
+C_abs(i) = 0

@@ -1,0 +1,2 @@
+# Must reject: abs N01
+let x = abs(i)

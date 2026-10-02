@@ -1,0 +1,2 @@
+# Must reject: quot N03
+quot(-7, 3) = -2

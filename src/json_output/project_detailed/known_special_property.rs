@@ -16,7 +16,7 @@ pub(super) fn project_known_special_property(
             InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(p),
         ) => (
             "FnApplicationInCodomain",
-            p.cite_definition_fact_id,
+            p.cite_property_fact_id,
             p.signature_return_matches
                 .iter()
                 .map(|p| {
@@ -40,7 +40,7 @@ pub(super) fn project_known_special_property(
             InFactSearchProofByKnownSpecialProperty::FnApplicationInFnRange(p),
         ) => (
             "FnApplicationInFnRange",
-            p.cite_definition_fact_id,
+            p.cite_property_fact_id,
             p.signature_matches
                 .iter()
                 .map(|p| {
@@ -65,7 +65,7 @@ pub(super) fn project_known_special_property(
         ("type", string("by_known_special_property")),
         ("family", string("InFact")),
         ("rule", string(rule)),
-        ("cite_definition_fact_id", string(id.to_string())),
+        ("cite_property_fact_id", string(id.to_string())),
         ("signature_matches", JsonValue::Array(matches)),
     ];
     if let Some(fact) = runtime.fact_by_id_in_stack(id) {

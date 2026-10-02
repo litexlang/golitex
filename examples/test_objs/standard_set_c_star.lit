@@ -1,0 +1,23 @@
+# AST: Obj::StandardSet::CStar
+# Run: target/release/litex -f examples/test_objs/standard_set_c_star.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 1 $in C*
+sketch:
+    1 $in C*
+
+# P02: -1 $in C*
+sketch:
+    -1 $in C*
+
+# P03: i $in C*
+sketch:
+    i $in C*
+
+# P04: $is_set(C*)
+sketch:
+    $is_set(C*)
+
+# P05: C* $subset C
+sketch:
+    C* $subset C

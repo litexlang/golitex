@@ -1,0 +1,6 @@
+# Before: named builtin was not found.
+# release thm set_builder_member(1, {x R: x > 0})
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/set_builder_member.lit
+release thm set_builder_member(1, {x R: x > 0})
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

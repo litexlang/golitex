@@ -1,0 +1,2 @@
+# Intended valid regression: sin P04
+sin(-pi / 2) = -1

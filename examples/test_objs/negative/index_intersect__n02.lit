@@ -1,0 +1,3 @@
+# Must reject: index_intersect N02
+let A = fn(k {1}) N {k}
+let X = index_intersect({1}, N, A)

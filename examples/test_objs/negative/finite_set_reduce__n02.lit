@@ -1,0 +1,2 @@
+# Must reject: finite_set_reduce N02
+let r = finite_set_reduce(R, fn(x R) R {x}, fn(a, b R) R {a + b}, 0)

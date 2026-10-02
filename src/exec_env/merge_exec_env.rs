@@ -203,12 +203,10 @@ fn merge_well_defined_objects_from(parent: &mut ExecEnv, child: &ExecEnv) -> Run
 }
 
 fn merge_special_object_properties_from(parent: &mut ExecEnv, child: &ExecEnv) {
-    for (key, values) in child.special_object_properties_by_def.iter() {
-        parent
-            .special_object_properties_by_def
-            .entry(key.clone())
-            .or_default()
-            .extend(values.iter().cloned());
+    for (key, values) in child.special_properties.iter() {
+        for property in values {
+            parent.record_special_property(key.clone(), property.clone());
+        }
     }
 }
 

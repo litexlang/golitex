@@ -1,0 +1,4 @@
+# Must reject: instantiated_template_obj N02
+template<S set>:
+    have carrier_copy set = S
+\carrier_copy<R, N> = R

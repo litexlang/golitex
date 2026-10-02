@@ -1,0 +1,24 @@
+# AST: Obj::ExpLogOperator::Ln
+# Run: target/release/litex -f examples/test_objs/ln.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: ln(1) = 0
+sketch:
+    ln(1) = 0
+
+# P02: ln(e) = 1
+sketch:
+    ln(e) = 1
+
+# P03: ln(exp(2)) = 2
+sketch:
+    ln(exp(2)) = 2
+
+# P04: ln(x) $in R
+sketch:
+    forall x R+:
+        ln(x) $in R
+
+# P05: ln(1 * 1) = 0
+sketch:
+    ln(1 * 1) = 0

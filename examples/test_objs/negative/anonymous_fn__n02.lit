@@ -1,0 +1,2 @@
+# Must reject: anonymous_fn N02
+let f = fn(x R) R {ghost}

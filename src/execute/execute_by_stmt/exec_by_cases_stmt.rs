@@ -1,6 +1,7 @@
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use super::helper::{
     and_chain_fact, assume_fact, close_by_contradiction, or_fact_from_and_chains,
-    proof_verify_state, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
+    proof_verify_state, store_goal_fact, verify_goal_fact,
 };
 use super::result::{
     ByCasesBranchClosingSuccess, ByCasesBranchFailed, ByCasesBranchSuccess,
@@ -96,7 +97,7 @@ fn exec_one_case_branch(
         };
         let assumption_fact_id = assumptions_stored.primary_fact_id();
         let assumption_components = assumptions_stored.atomic_components();
-        let proof_steps = match run_fact_only_proof_steps(rt, &stmt.proofs[index])? {
+        let proof_steps = match run_proof_body_stmts(rt, &stmt.proofs[index])? {
             Ok(steps) => steps,
             Err(failed) => return Ok(Err(ByCasesBranchFailed::ProofBody(failed))),
         };

@@ -1,0 +1,2 @@
+# Must reject: finite_set_max N01
+let n = finite_set_max({})

@@ -1,0 +1,3 @@
+# Intended valid regression: complex_abs P06
+forall z C:
+    C_abs(z) >= 0

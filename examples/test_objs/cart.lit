@@ -1,0 +1,23 @@
+# AST: Obj::ProductShape::Cart
+# Run: target/release/litex -f examples/test_objs/cart.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: (1, 2) $in cart(R, Z)
+sketch:
+    (1, 2) $in cart(R, Z)
+
+# P02: (1, 2, 3) $in cart(R, Z, N)
+sketch:
+    (1, 2, 3) $in cart(R, Z, N)
+
+# P03: ((1, 2), 3) $in cart(cart(R, Z), N)
+sketch:
+    ((1, 2), 3) $in cart(cart(R, Z), N)
+
+# P05: cart({}, {1}) = {}
+sketch:
+    cart({}, {1}) = {}
+
+# P06: cart_dim(cart(R, Z, N)) = 3
+sketch:
+    cart_dim(cart(R, Z, N)) = 3

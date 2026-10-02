@@ -1,0 +1,27 @@
+# AST: Obj::Literal::ImaginaryUnit
+# Run: target/release/litex -f examples/test_objs/imaginary_unit.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: i $in C
+sketch:
+    i $in C
+
+# P02: i * i = -1
+sketch:
+    i * i = -1
+
+# P03: i^2 = -1
+sketch:
+    i^2 = -1
+
+# P04: re(i) = 0
+sketch:
+    re(i) = 0
+
+# P05: img(i) = 1
+sketch:
+    img(i) = 1
+
+# P06: C_abs(i) = 1
+sketch:
+    C_abs(i) = 1

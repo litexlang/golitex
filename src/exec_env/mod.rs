@@ -7,11 +7,13 @@ pub mod known_forall_conclusion_memory;
 mod merge_exec_env;
 pub mod or_fact_index_key;
 pub mod session_view;
+pub mod special_property;
 
 pub use exec_env::{
-    DefinitionMemory, ExecEnv, SpecialObjectPropertyByDefinition, StoredDefAlgo,
+    DefinitionMemory, ExecEnv, StoredDefAlgo,
     StoredIdentifierDefinition,
 };
+pub use special_property::SpecialProperty;
 pub use session_view::ExecEnvSessionView;
 pub use exist_shaped_fact_index_key::{
     exist_shaped_fact_alpha_match_key, exist_shaped_fact_can_prove_goal, exist_shaped_fact_index_key,

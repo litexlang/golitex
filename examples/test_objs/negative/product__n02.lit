@@ -1,0 +1,2 @@
+# Must reject: product N02
+let x = product(1, 2, fn(k Z) set {{k}})

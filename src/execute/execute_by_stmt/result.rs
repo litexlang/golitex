@@ -6,6 +6,10 @@ use crate::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::runtime::FactId;
+use crate::execute::ExecStmtResult;
+use crate::execute::execute_proof_block_stmt::ProofBlockBodyFailed;
+use crate::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
+use crate::execute::execute_fact_stmt::AssumeDomFactResult;
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
 // `local_env` on by-stmt Success (and nested branch/case Success):
@@ -58,7 +62,7 @@ pub enum ExecByExtensionStmtResult {
 // Stage order: goal_wd → proof_steps → left_to_right → right_to_left → local_env → stored.
 pub struct ExecByExtensionStmtSuccess {
     pub goal_wd: VerifyFactWellDefinedResult,
-    pub proof_steps: Vec<ByProofStepResult>,
+    pub proof_steps: Vec<ExecStmtResult>,
     pub left_to_right: VerifyFactResult,
     pub right_to_left: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
@@ -67,7 +71,7 @@ pub struct ExecByExtensionStmtSuccess {
 
 pub enum ExecByExtensionStmtFailed {
     GoalWd(VerifyFactWellDefinedResult),
-    ProofBody(ByProofBodyFailed),
+    ProofBody(ProofBlockBodyFailed),
     LeftToRight(VerifyFactResult),
     RightToLeft(VerifyFactResult),
     Store(String),
@@ -92,7 +96,7 @@ pub enum ExecByFnExtensionStmtResult {
 pub struct ExecByFnExtensionStmtSuccess {
     pub goal_wd: VerifyFactWellDefinedResult,
     pub carrier: FnSet,
-    pub proof_steps: Vec<ByProofStepResult>,
+    pub proof_steps: Vec<ExecStmtResult>,
     pub pointwise_proof: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
     pub stored: StoreFactAndInferResult,
@@ -101,7 +105,7 @@ pub struct ExecByFnExtensionStmtSuccess {
 pub enum ExecByFnExtensionStmtFailed {
     GoalWd(VerifyFactWellDefinedResult),
     NoCompatibleFnSet,
-    ProofBody(ByProofBodyFailed),
+    ProofBody(ProofBlockBodyFailed),
     Pointwise(VerifyFactResult),
     Store(String),
 }
@@ -163,7 +167,7 @@ pub struct ExecByContraStmtSuccess {
     pub reverse_assumption_fact_id: FactId,
     pub assumption_components: Vec<(FactId, AtomicFact)>,
     pub negation_assumed: StoreFactAndInferResult,
-    pub proof_steps: Vec<ByProofStepResult>,
+    pub proof_steps: Vec<ExecStmtResult>,
     pub closing: ByContradictionClosingSuccess,
     pub local_env: Box<ExecEnv>,
     pub stored: StoreFactAndInferResult,
@@ -173,7 +177,7 @@ pub enum ExecByContraStmtFailed {
     GoalWd(VerifyFactWellDefinedResult),
     NegationUnsupported(String),
     NegationAssume(String),
-    ProofBody(ByProofBodyFailed),
+    ProofBody(ProofBlockBodyFailed),
     Closing(ByContradictionClosingFailed),
     Store(String),
 }
@@ -207,7 +211,7 @@ pub struct ByCasesBranchSuccess {
     pub assumption_fact_id: FactId,
     pub assumption_components: Vec<(FactId, AtomicFact)>,
     pub assumptions_stored: StoreFactAndInferResult,
-    pub proof_steps: Vec<ByProofStepResult>,
+    pub proof_steps: Vec<ExecStmtResult>,
     pub closing: ByCasesBranchClosingSuccess,
     pub local_env: Box<ExecEnv>,
 }
@@ -240,7 +244,7 @@ pub enum ExecByCasesStmtFailed {
 
 pub enum ByCasesBranchFailed {
     AssumeCase(String),
-    ProofBody(ByProofBodyFailed),
+    ProofBody(ProofBlockBodyFailed),
     ClosingThen {
         then_index: usize,
         result: VerifyFactResult,
@@ -289,6 +293,15 @@ impl ExecByDefStmtResult {
 // release thm (top-level Stmt; result lives here next to by thm)
 // ---------------------------------------------------------------------------
 
+// Reserved builtin application metadata is separate from verified premises.
+// The proof results below certify each requirement in this contract in order.
+pub struct BuiltinThmApplication {
+    pub theorem: crate::builtin_theorem::BuiltinTheoremId,
+    pub arguments: Vec<crate::ast::obj::Obj>,
+    pub requirements: Vec<Fact>,
+    pub conclusions: Vec<Fact>,
+}
+
 pub enum ExecReleaseThmStmtResult {
     Success(ExecReleaseThmStmtSuccess),
     Failed(ExecReleaseThmStmtFailed),
@@ -297,25 +310,40 @@ pub enum ExecReleaseThmStmtResult {
 // Stage order: type_proofs → dom_proofs → local_env → stored conclusions.
 pub struct ExecReleaseThmStmtSuccess {
     pub thm_name: String,
+    pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
     pub dom_proofs: Vec<VerifyFactResult>,
+    pub conclusions_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
     pub stored: Vec<StoreFactAndInferResult>,
 }
 
 pub enum ExecReleaseThmStmtFailed {
+    BuiltinArity { theorem: crate::builtin_theorem::BuiltinTheoremId, expected: usize, actual: usize },
+    BuiltinShape { theorem: crate::builtin_theorem::BuiltinTheoremId, message: String },
     ThmNotFound(String),
     Shape(String),
     Type {
+        theorem: String,
+        fact: Fact,
         index: usize,
         result: VerifyFactResult,
     },
     Dom {
+        theorem: String,
+        fact: Fact,
         index: usize,
         result: VerifyFactResult,
     },
     Instantiate(String),
+    ConclusionWd {
+        theorem: String,
+        fact: Fact,
+        index: usize,
+        result: VerifyFactWellDefinedResult,
+    },
     Store {
+        theorem: String,
         index: usize,
         message: String,
     },
@@ -339,8 +367,10 @@ pub enum ExecByThmStmtResult {
 // Stage order: type_proofs → dom_proofs → selected_proof → local_env → stored.
 pub struct ExecByThmStmtSuccess {
     pub thm_name: String,
+    pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
     pub dom_proofs: Vec<VerifyFactResult>,
+    pub conclusions_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
     pub selected_proof: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
     pub stored: StoreFactAndInferResult,
@@ -348,8 +378,8 @@ pub struct ExecByThmStmtSuccess {
 
 pub enum ExecByThmStmtFailed {
     Release(ExecReleaseThmStmtFailed),
-    Selected(VerifyFactResult),
-    Store(String),
+    Selected { theorem: String, fact: Fact, result: VerifyFactResult },
+    Store { theorem: String, message: String },
 }
 
 impl ExecByThmStmtResult {
@@ -368,7 +398,10 @@ pub enum ExecByInducStmtResult {
 }
 
 pub struct ExecByInducStmtSuccess {
+    pub from_in_z: VerifyFactResult,
+    pub goal_domain_stored: StoreFactAndInferResult,
     pub goals_wd: Vec<VerifyFactWellDefinedResult>,
+    pub goal_wd_env: Box<ExecEnv>,
     pub body: ByInducBodySuccess,
     pub stored: StoreFactAndInferResult,
 }
@@ -386,25 +419,28 @@ pub enum ByInducBodySuccess {
 
 pub struct ByInducCaseSuccess {
     pub assumptions_stored: Vec<StoreFactAndInferResult>,
-    pub proof_steps: Vec<ByProofStepResult>,
+    pub proof_steps: Vec<crate::execute::ExecStmtResult>,
     pub goals_verified: Vec<VerifyFactResult>,
     pub local_env: Box<ExecEnv>,
 }
 
 pub enum ExecByInducStmtFailed {
+    FromNotInteger(VerifyFactResult),
+    GoalDomain(String),
     GoalWd {
         index: usize,
         result: VerifyFactWellDefinedResult,
     },
     BodyShape(String),
-    Case(ByInducCaseFailed),
+    BaseCase(ByInducCaseFailed),
+    StepCase(ByInducCaseFailed),
     Store(String),
     NotFullyWired(String),
 }
 
 pub enum ByInducCaseFailed {
     Assume(String),
-    ProofBody(ByProofBodyFailed),
+    ProofBody(crate::execute::execute_proof_block_stmt::ProofBlockBodyFailed),
     Goal {
         index: usize,
         result: VerifyFactResult,
@@ -423,18 +459,24 @@ pub enum ExecByStrongInducStmtResult {
 }
 
 pub struct ExecByStrongInducStmtSuccess {
+    pub from_in_z: VerifyFactResult,
+    pub goal_domain_stored: StoreFactAndInferResult,
     pub goals_wd: Vec<VerifyFactWellDefinedResult>,
+    pub goal_wd_env: Box<ExecEnv>,
     pub body: ByInducBodySuccess,
     pub stored: StoreFactAndInferResult,
 }
 
 pub enum ExecByStrongInducStmtFailed {
+    FromNotInteger(VerifyFactResult),
+    GoalDomain(String),
     GoalWd {
         index: usize,
         result: VerifyFactWellDefinedResult,
     },
     BodyShape(String),
-    Case(ByInducCaseFailed),
+    BaseCase(ByInducCaseFailed),
+    StepCase(ByInducCaseFailed),
     Store(String),
     NotFullyWired(String),
 }
@@ -462,11 +504,27 @@ pub struct ExecByEnumerateFiniteSetStmtSuccess {
 }
 
 pub struct EnumerateAssignmentSuccess {
-    pub then_proofs: Vec<VerifyFactResult>,
+    pub introduced_params: IntroduceTypedParametersResult,
+    pub binding_assumptions: Vec<AssumeDomFactResult>,
+    pub outcome: EnumerateAssignmentOutcome,
     pub local_env: Box<ExecEnv>,
 }
 
+pub enum EnumerateAssignmentOutcome {
+    Skipped {
+        premise_assumptions: Vec<AssumeDomFactResult>,
+        premise_index: usize,
+        negated_premise: VerifyFactResult,
+    },
+    Proved {
+        premise_assumptions: Vec<AssumeDomFactResult>,
+        proof_steps: Vec<ExecStmtResult>,
+        then_proofs: Vec<VerifyFactResult>,
+    },
+}
+
 pub enum ExecByEnumerateFiniteSetStmtFailed {
+    ProofBody(ProofBlockBodyFailed),
     GoalWd(VerifyFactWellDefinedResult),
     Domain(String),
     Assignment {
@@ -496,6 +554,7 @@ pub struct ExecByForStmtSuccess {
 }
 
 pub enum ExecByForStmtFailed {
+    ProofBody(ProofBlockBodyFailed),
     GoalWd(VerifyFactWellDefinedResult),
     Domain(String),
     Assignment {
@@ -573,7 +632,7 @@ pub enum ExecReleaseAxiomOfChoiceStmtResult {
 // Stage order: family_wd → proof_steps → obligations → local_env → stored.
 pub struct ExecReleaseAxiomOfChoiceStmtSuccess {
     pub family_wd: VerifyObjWellDefinedResult,
-    pub proof_steps: Vec<ByProofStepResult>,
+    pub proof_steps: Vec<ExecStmtResult>,
     pub obligations: Vec<VerifyFactResult>,
     pub local_env: Box<ExecEnv>,
     pub stored: StoreFactAndInferResult,
@@ -581,7 +640,7 @@ pub struct ExecReleaseAxiomOfChoiceStmtSuccess {
 
 pub enum ExecReleaseAxiomOfChoiceStmtFailed {
     FamilyWd(VerifyObjWellDefinedResult),
-    ProofBody(ByProofBodyFailed),
+    ProofBody(ProofBlockBodyFailed),
     Obligation {
         index: usize,
         result: VerifyFactResult,
@@ -603,7 +662,7 @@ pub enum ExecReleaseZornLemmaStmtResult {
 // Stage order: set_wd → prop interface checks → proof_steps → obligations → local_env → stored.
 pub struct ExecReleaseZornLemmaStmtSuccess {
     pub set_wd: VerifyObjWellDefinedResult,
-    pub proof_steps: Vec<ByProofStepResult>,
+    pub proof_steps: Vec<ExecStmtResult>,
     pub obligations: Vec<VerifyFactResult>,
     pub local_env: Box<ExecEnv>,
     pub stored: StoreFactAndInferResult,
@@ -612,7 +671,7 @@ pub struct ExecReleaseZornLemmaStmtSuccess {
 pub enum ExecReleaseZornLemmaStmtFailed {
     SetWd(VerifyObjWellDefinedResult),
     PropInterface(String),
-    ProofBody(ByProofBodyFailed),
+    ProofBody(ProofBlockBodyFailed),
     Obligation {
         index: usize,
         result: VerifyFactResult,

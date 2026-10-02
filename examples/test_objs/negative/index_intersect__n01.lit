@@ -1,0 +1,2 @@
+# Must reject: index_intersect N01
+let X = index_intersect({1}, N, 1)

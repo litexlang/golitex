@@ -25,7 +25,7 @@ pub fn exec_register_reflexive_prop_stmt(
         }
     };
     let name = plain_prop_name(&prop);
-    let Some(definition) = runtime.def_prop_visible_in_stack(name) else {
+    let Some(definition) = runtime.def_prop_visible(&prop) else {
         return Ok(ExecRegisterStmtResult::ReflexiveProp(
             ExecRegisterReflexivePropStmtResult::Failed(
                 ExecRegisterReflexivePropStmtFailed::PropNotDefined(name.to_string()),

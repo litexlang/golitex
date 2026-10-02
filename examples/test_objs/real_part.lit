@@ -1,0 +1,20 @@
+# AST: Obj::ComplexOperator::RealPart
+# Run: target/release/litex -f examples/test_objs/real_part.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: re(0) = 0
+sketch:
+    re(0) = 0
+
+# P02: re(i) = 0
+sketch:
+    re(i) = 0
+
+# P03: re(3 + 2 * i) = 3
+sketch:
+    re(3 + 2 * i) = 3
+
+# P05: re(x) = x
+sketch:
+    forall x R:
+        re(x) = x

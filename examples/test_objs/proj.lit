@@ -1,0 +1,19 @@
+# AST: Obj::ProductShape::Proj
+# Run: target/release/litex -f examples/test_objs/proj.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: proj(cart(R, Z), 1) = R
+sketch:
+    proj(cart(R, Z), 1) = R
+
+# P02: proj(cart(R, Z), 2) = Z
+sketch:
+    proj(cart(R, Z), 2) = Z
+
+# P03: proj(cart(R, Z, N), 3) = N
+sketch:
+    proj(cart(R, Z, N), 3) = N
+
+# P04: proj(cart(cart(R, Z), N), 1) = cart(R, Z)
+sketch:
+    proj(cart(cart(R, Z), N), 1) = cart(R, Z)

@@ -1,0 +1,2 @@
+# Intended valid regression: complex_abs P04
+C_abs(-3) = 3

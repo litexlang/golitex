@@ -1,0 +1,11 @@
+# AST: Obj::TrigOperator::Arctan
+# Run: target/release/litex -f examples/test_objs/arctan.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: arctan(0) = 0
+sketch:
+    arctan(0) = 0
+
+# P04: tan(arctan(3)) = 3
+sketch:
+    tan(arctan(3)) = 3

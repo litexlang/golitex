@@ -1,0 +1,2 @@
+# Must reject: sub N02
+let x = {} - 1

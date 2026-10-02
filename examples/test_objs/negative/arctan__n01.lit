@@ -1,0 +1,2 @@
+# Must reject: arctan N01
+let x = arctan(i)

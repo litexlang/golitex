@@ -19,7 +19,7 @@ Callers verify the seed first. Nested WD/proof inside a statement uses
 
 ```text
 store_fact_and_infer/
-  store_fact.rs              # shape → known-* indexes (+ FnSet shape on store)
+  store_fact.rs              # shape → known-* indexes + object-keyed special-property facts
   store_fact_and_infer.rs    # glue: store then infer
   helper.rs
   infer_fact/
@@ -55,7 +55,7 @@ store_fact_and_infer/
 - Literal `u − v = 0` → `u = v` is **verify-time**
   `EqualFromKnownDifferenceZero` (not infer)
 - Positive-real power membership transport  
-  (set-builder / anon / closed-numeric / FnSet signature live on **store indexes**)
+  (set-builder / closed-numeric indexes and actual membership/equality special-property facts live on **store indexes**)
 
 **Other atomics**
 
@@ -89,3 +89,14 @@ One rule → one file under `examples/infer/` (see that README).
 ```bash
 target/release/litex -f examples/infer/atomic/in_index_cart.lit
 ```
+
+## Object capabilities from facts
+
+`ExecEnv.special_properties` indexes actual `InFact` and `EqualFact` sources.
+Atomic storage writes it once; definition executors do not separately register
+function or sequence shapes. Querying a function signature may use a stored
+function membership or an equality to a literal function/signature, and WD may
+transport those sources through stored equality paths. Body unfolding retains
+its head-to-anonymous-function equality proof. A signature alone never supplies
+a concrete body. Default struct field views are separately marked by typed
+definition exits; an ordinary struct membership does not select a default view.

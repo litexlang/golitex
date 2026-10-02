@@ -1,0 +1,24 @@
+# AST: Obj::ArithmeticOperator::Abs
+# Run: target/release/litex -f examples/test_objs/abs.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: abs(0) = 0
+sketch:
+    abs(0) = 0
+
+# P02: abs(-3) = 3
+sketch:
+    abs(-3) = 3
+
+# P03: abs(2.5) = 2.5
+sketch:
+    abs(2.5) = 2.5
+
+# P04: abs(abs(-4)) = 4
+sketch:
+    abs(abs(-4)) = 4
+
+# P06: abs(x) >= 0
+sketch:
+    forall x R:
+        abs(x) >= 0

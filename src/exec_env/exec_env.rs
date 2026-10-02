@@ -1,5 +1,5 @@
 use crate::ast::names::{AtomicName, BoundName, PlainName};
-use crate::ast::obj::{FiniteSeqSet, FnSet, Obj, SeqSet, StructObj};
+use crate::ast::obj::Obj;
 use crate::ast::param::ParamType;
 use crate::ast::stmt::AxiomStmt;
 use crate::ast::stmt::DefAbstractPropStmt;
@@ -22,7 +22,8 @@ use crate::ast::stmt::LetObjStmt;
 use crate::ast::stmt::TrustHaveStmt;
 use crate::exec_env::known_fact_memory::ObjIR;
 use crate::exec_env::session_view::ExecEnvSessionView;
-use crate::runtime::runtime_ids::{FactId, WellDefinednessId};
+use crate::exec_env::SpecialProperty;
+use crate::runtime::runtime_ids::WellDefinednessId;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -55,8 +56,8 @@ pub struct ExecEnv {
     /// Facts and fact indexes stored in this scope.
     pub facts: KnownFactMemory,
 
-    /// Definition-time shape memory only. Never written from arbitrary stored facts.
-    pub special_object_properties_by_def: HashMap<ObjIR, Vec<SpecialObjectPropertyByDefinition>>,
+    /// Object-keyed facts and the explicitly selected default struct view.
+    pub special_properties: HashMap<ObjIR, Vec<SpecialProperty>>,
 
     /// Algebraic properties proved for predicates in this scope.
     pub prop_rewrite_properties: HashMap<AtomicName, Vec<PropRewriteProperty>>,
@@ -114,8 +115,8 @@ pub enum StoredDefAlgo {
 impl StoredDefAlgo {
     pub fn name(&self) -> &PlainName {
         match self {
-            Self::ByCases(s) => &s.name,
-            Self::ByInduc(s) => &s.name,
+            Self::ByCases(s) => &s.name.name,
+            Self::ByInduc(s) => &s.name.name,
         }
     }
 }
@@ -147,26 +148,6 @@ pub enum PropRewriteProperty {
     Reflexive,
 }
 
-/// Definition-channel object shapes. Only definition exits may write these
-/// (have/let/have fn/typed params/template WD/field-from-struct-def, …).
-/// Post-hoc `$in` / `=` proofs must not mutate this memory.
-#[derive(Clone)]
-pub enum SpecialObjectPropertyByDefinition {
-    /// Callable signature from a definition exit; cite the definitional membership FactId.
-    InFunctionSet((FnSet, FactId)),
-    /// `f = anon` from a definition exit; cite the defining equality FactId.
-    EqualToFunction((Obj, FactId)),
-    /// Definition-time struct carrier only (`have p &Point`, `forall p &Point`, …).
-    /// Never written from a later `$in &Struct` proof (avoids carrier conflicts).
-    /// `FactId` cites the definition-time membership `p $in &Point`.
-    /// Example: after `have p &Point`, key `p` stores `(&Point, fact_id)` for `p.x` WD.
-    DefinedAsStruct((StructObj, FactId)),
-    /// Definition-time `a $in finite_seq(S, n)`; cite the definitional membership FactId.
-    DefinedAsFiniteSeq((FiniteSeqSet, FactId)),
-    /// Definition-time `a $in seq(S)`; cite the definitional membership FactId.
-    DefinedAsSeqSet((SeqSet, FactId)),
-}
-
 // -----------------------------------------------------------------------------
 // Construction and memory operations
 // -----------------------------------------------------------------------------
@@ -176,7 +157,7 @@ impl ExecEnv {
         Self {
             definitions: DefinitionMemory::new(),
             facts: KnownFactMemory::new(),
-            special_object_properties_by_def: HashMap::new(),
+            special_properties: HashMap::new(),
             prop_rewrite_properties: HashMap::new(),
             well_defined_objects: WellDefinedObjectMemory::new(),
             session_view,

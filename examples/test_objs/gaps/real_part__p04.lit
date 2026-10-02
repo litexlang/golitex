@@ -1,0 +1,2 @@
+# Intended valid regression: real_part P04
+re(-2 - i) = -2

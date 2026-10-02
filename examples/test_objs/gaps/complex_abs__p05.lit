@@ -1,0 +1,2 @@
+# Intended valid regression: complex_abs P05
+C_abs(-i) = 1

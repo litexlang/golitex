@@ -7,12 +7,13 @@ use super::helper::{
 };
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
-use crate::ast::fact::{AtomicFact, InFact};
+use crate::ast::fact::{AtomicFact, Fact, InFact};
 use crate::ast::obj::{
     FnObj, FnObjHead, FnRange, FnSet, FunctionSpace, IdentifierObj, Literal, Obj,
 };
-use crate::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
+use crate::exec_env::SpecialProperty;
 use crate::runtime::runtime_ids::FactId;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -141,6 +142,13 @@ impl Runtime {
 
         let mut last_domain_fail: Option<ObjWellDefinedByDefCommonStages> = None;
         for (fn_set, fact_id) in candidates {
+            let source = match self.fact_by_id_in_stack(fact_id) {
+                Some(Fact::AtomicFact(AtomicFact::InFact(fact))) => SpecialProperty::Membership(fact.clone()),
+                Some(Fact::AtomicFact(AtomicFact::EqualFact(fact))) => SpecialProperty::Equality(fact.clone()),
+                _ => continue,
+            };
+            let Some(subject) = source.function_subject() else { continue; };
+            let Some(path) = self.equivalence_class_path(&head_obj, subject) else { continue; };
             match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
                 Ok(stages) => {
                     let (child_obj_well_defined, requirement_fact_verified) =
@@ -149,6 +157,7 @@ impl Runtime {
                         domain_fn_set: Some(FnObjDomainFnSetEvidence::InFunctionSet {
                             fn_set,
                             fact_id,
+                            function_equal: KnownEqualityPathProof::new(path),
                         }),
                         child_obj_well_defined,
                         requirement_fact_verified,
@@ -427,14 +436,15 @@ impl Runtime {
         let mut out = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
             for key in &keys {
-                let Some(props) = env.special_object_properties_by_def.get(key) else {
+                let Some(props) = env.special_properties.get(key) else {
                     continue;
                 };
                 for prop in props {
-                    if let SpecialObjectPropertyByDefinition::InFunctionSet((fn_set, fact_id)) =
-                        prop
-                    {
-                        out.push((fn_set.clone(), *fact_id));
+                    if let Some(signature) = prop.function_signature() {
+                        let candidate = (signature, prop.fact_id());
+                        if !out.contains(&candidate) {
+                            out.push(candidate);
+                        }
                     }
                 }
             }

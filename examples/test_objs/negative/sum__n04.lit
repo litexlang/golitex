@@ -1,0 +1,2 @@
+# Must reject: sum N04
+sum(1, 1, fn(k Z) Z {k}) = 2

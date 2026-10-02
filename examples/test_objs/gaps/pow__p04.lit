@@ -1,0 +1,2 @@
+# Intended valid regression: pow P04
+2^(-3) = 1 / 8

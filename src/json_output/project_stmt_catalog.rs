@@ -93,8 +93,9 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 "have_fn_induc",
                 &s.store_and_infer_result.stored_fact_ids,
             ),
-            ExecHaveFnByInducStmtResult::Failed(_) => {
-                failed(runtime, "have fn … by induc", "have_fn_induc")
+            ExecHaveFnByInducStmtResult::Failed(f) => {
+                failed_with_details(runtime, "have fn … by induc", "have_fn_induc",
+                    super::project_detailed::project_induc_definition_failure(f, runtime))
             }
         },
         ExecDefinitionStmtResult::DefProp(r) => match r {
@@ -130,9 +131,12 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             ExecDefAlgoByInducStmtResult::Success(s) => {
                 success_plain(runtime, s.statement.readable_string(), "def_algo_induc")
             }
-            ExecDefAlgoByInducStmtResult::Failed(_) => {
-                failed(runtime, "algo … by induc", "def_algo_induc")
+            ExecDefAlgoByInducStmtResult::Failed(crate::execute::ExecDefAlgoByInducStmtFailed::DefineFn(f)) => {
+                failed_with_details(runtime, "algo … by induc", "def_algo_induc",
+                    super::project_detailed::project_induc_definition_failure(f, runtime))
             }
+            ExecDefAlgoByInducStmtResult::Failed(crate::execute::ExecDefAlgoByInducStmtFailed::AlgoAlreadyDefined) =>
+                failed(runtime, "algo … by induc", "def_algo_induc"),
         },
         ExecDefinitionStmtResult::DefThm(r) => match r {
             ExecDefThmStmtResult::Success(s) => {
@@ -144,7 +148,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                     .unwrap_or_else(|| "thm".to_string());
                 success_parts(runtime, statement, "def_thm", stores, infers)
             }
-            ExecDefThmStmtResult::Failed(_) => failed(runtime, "thm", "def_thm"),
+            ExecDefThmStmtResult::Failed(f) => failed_with_details(runtime, "thm", "def_thm", super::project_detailed::project_def_thm_failure(f, runtime)),
         },
         ExecDefinitionStmtResult::Axiom(r) => match r {
             ExecAxiomStmtResult::Success(s) => {
@@ -392,13 +396,15 @@ fn project_by(b: &ExecByStmtResult, runtime: &Runtime) -> JsonValue {
                 "by_thm",
                 &s.stored,
             ),
-            ExecByThmStmtResult::Failed(_) => failed(runtime, "by thm", "by_thm"),
+            ExecByThmStmtResult::Failed(f) => failed_with_details(runtime, "by thm", "by_thm",
+                super::project_detailed::project_by_thm_failure(f, runtime)),
         },
         ExecByStmtResult::Induc(r) => match r {
             ExecByInducStmtResult::Success(s) => {
                 success_from_store(runtime, "by induc".into(), "by_induc", &s.stored)
             }
-            ExecByInducStmtResult::Failed(_) => failed(runtime, "by induc", "by_induc"),
+            ExecByInducStmtResult::Failed(f) => failed_with_details(runtime, "by induc", "by_induc",
+                super::project_detailed::project_induc_failure(f, runtime)),
         },
         ExecByStmtResult::StrongInduc(r) => match r {
             ExecByStrongInducStmtResult::Success(s) => success_from_store(
@@ -407,8 +413,9 @@ fn project_by(b: &ExecByStmtResult, runtime: &Runtime) -> JsonValue {
                 "by_strong_induc",
                 &s.stored,
             ),
-            ExecByStrongInducStmtResult::Failed(_) => {
-                failed(runtime, "by strong_induc", "by_strong_induc")
+            ExecByStrongInducStmtResult::Failed(f) => {
+                failed_with_details(runtime, "by strong_induc", "by_strong_induc",
+                    super::project_detailed::project_strong_induc_failure(f, runtime))
             }
         },
     }
@@ -430,10 +437,13 @@ fn project_register(r: &ExecRegisterStmtResult, runtime: &Runtime) -> JsonValue 
 fn project_release(r: &ExecReleaseAndExpandStmtResult, runtime: &Runtime) -> JsonValue {
     match r {
         ExecReleaseAndExpandStmtResult::Thm(x) => {
-            if x.is_failed() {
-                failed(runtime, "release thm …", "release_thm")
-            } else {
-                success_plain(runtime, "release thm …".into(), "release_thm")
+            match x {
+                crate::execute::execute_by_stmt::ExecReleaseThmStmtResult::Failed(f) => failed_with_details(runtime, "release thm …", "release_thm",
+                    super::project_detailed::project_release_thm_failure(f, runtime)),
+                crate::execute::execute_by_stmt::ExecReleaseThmStmtResult::Success(s) => {
+                    let (stores, infers) = flatten_store_nodes(runtime, &s.stored);
+                    success_parts(runtime, format!("release thm {}", s.thm_name), "release_thm", stores, infers)
+                }
             }
         }
         ExecReleaseAndExpandStmtResult::StructDef(x) => match x {
@@ -591,6 +601,19 @@ fn failed(runtime: &Runtime, statement: &str, kind: &str) -> JsonValue {
         ("stores", empty_string_array()),
         ("infers", empty_string_array()),
     ])
+}
+
+fn failed_with_details(runtime: &Runtime, statement: &str, kind: &str, details: JsonValue) -> JsonValue {
+    let mut value = failed(runtime, statement, kind);
+    let lang = output_language(runtime);
+    let reason_key = super::json_keys::localize_key("why_failed", lang);
+    if let JsonValue::Object(fields) = &mut value {
+        if let Some(JsonValue::Object(mut reason)) = fields.get(&reason_key).cloned() {
+            reason.insert(super::json_keys::localize_key("failure", lang), details);
+            fields.insert(reason_key, JsonValue::Object(reason));
+        }
+    }
+    value
 }
 
 fn flatten_store_nodes(

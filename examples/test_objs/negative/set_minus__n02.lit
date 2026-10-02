@@ -1,0 +1,2 @@
+# Must reject: set_minus N02
+set_minus({1}, {1}) = {1}

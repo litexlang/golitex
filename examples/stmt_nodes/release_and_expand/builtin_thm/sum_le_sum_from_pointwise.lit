@@ -1,0 +1,6 @@
+# Before: named builtin was not found.
+# release thm sum_le_sum_from_pointwise(sum(1, 2, fn(x Z) R {x}), sum(1, 2, fn(y Z) R {y + 1}))
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/sum_le_sum_from_pointwise.lit
+release thm sum_le_sum_from_pointwise(sum(1, 2, fn(x Z) R {x}), sum(1, 2, fn(y Z) R {y + 1}))
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

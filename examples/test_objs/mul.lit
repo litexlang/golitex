@@ -1,0 +1,33 @@
+# AST: Obj::ArithmeticOperator::Mul
+# Run: target/release/litex -f examples/test_objs/mul.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 2 * 3 = 6
+sketch:
+    2 * 3 = 6
+
+# P02: 0 * 999 = 0
+sketch:
+    0 * 999 = 0
+
+# P03: (-2) * (-3) = 6
+sketch:
+    (-2) * (-3) = 6
+
+# P04: 2 * (3 + 4) = 14
+sketch:
+    2 * (3 + 4) = 14
+
+# P05: i * i = -1
+sketch:
+    i * i = -1
+
+# P06: x * y = y * x
+sketch:
+    forall x, y C:
+        x * y = y * x
+
+# P07: x * (y + z) = x * y + x * z
+sketch:
+    forall x, y, z R:
+        x * (y + z) = x * y + x * z

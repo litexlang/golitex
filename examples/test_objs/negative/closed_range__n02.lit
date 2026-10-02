@@ -1,0 +1,2 @@
+# Must reject: closed_range N02
+4 $in closed_range(1, 3)

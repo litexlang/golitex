@@ -1,0 +1,15 @@
+# AST: Obj::ProductShape::CartDim
+# Run: target/release/litex -f examples/test_objs/cart_dim.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: cart_dim(cart(R, Z)) = 2
+sketch:
+    cart_dim(cart(R, Z)) = 2
+
+# P02: cart_dim(cart(R, Z, N)) = 3
+sketch:
+    cart_dim(cart(R, Z, N)) = 3
+
+# P03: cart_dim(cart(cart(R, Z), N)) = 2
+sketch:
+    cart_dim(cart(cart(R, Z), N)) = 2

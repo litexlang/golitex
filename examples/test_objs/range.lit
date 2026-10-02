@@ -1,0 +1,23 @@
+# AST: Obj::SetFormer::Range
+# Run: target/release/litex -f examples/test_objs/range.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: range(1, 3) = {1, 2}
+sketch:
+    range(1, 3) = {1, 2}
+
+# P02: range(2, 2) = {}
+sketch:
+    range(2, 2) = {}
+
+# P03: range(3, 1) = {}
+sketch:
+    range(3, 1) = {}
+
+# P05: 1 $in range(1, 3)
+sketch:
+    1 $in range(1, 3)
+
+# P07: finite_set_size(range(0, 3)) = 3
+sketch:
+    finite_set_size(range(0, 3)) = 3

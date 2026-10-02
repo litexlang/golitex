@@ -1,0 +1,2 @@
+# Intended valid regression: standard_set_r_pos P03
+sqrt(2) $in R+

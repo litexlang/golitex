@@ -1,0 +1,23 @@
+# AST: Obj::StandardSet::Q
+# Run: target/release/litex -f examples/test_objs/standard_set_q.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 0 $in Q
+sketch:
+    0 $in Q
+
+# P02: -3 $in Q
+sketch:
+    -3 $in Q
+
+# P03: 1 / 2 $in Q
+sketch:
+    1 / 2 $in Q
+
+# P04: $is_set(Q)
+sketch:
+    $is_set(Q)
+
+# P05: Q $subset R
+sketch:
+    Q $subset R

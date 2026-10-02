@@ -1,0 +1,2 @@
+# Intended valid regression: fn_range P02
+fn_range(fn(x R) R {x}) = R

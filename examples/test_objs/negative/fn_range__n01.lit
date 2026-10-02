@@ -1,0 +1,2 @@
+# Must reject: fn_range N01
+let I = fn_range(1)

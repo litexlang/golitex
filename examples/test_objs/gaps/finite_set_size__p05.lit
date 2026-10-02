@@ -1,0 +1,2 @@
+# Intended valid regression: finite_set_size P05
+finite_set_size({{1}, {2}}) = 2

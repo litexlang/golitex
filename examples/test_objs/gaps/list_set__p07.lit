@@ -1,0 +1,2 @@
+# Intended valid regression: list_set P07
+(1, 2) $in {(1, 2), (2, 1)}

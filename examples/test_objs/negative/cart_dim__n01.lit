@@ -1,0 +1,2 @@
+# Must reject: cart_dim N01
+let d = cart_dim(R)

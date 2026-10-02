@@ -356,7 +356,27 @@ impl Runtime {
                 )
                 .into());
             }
-            dom_facts.push(self.parse_fact(tb)?);
+            // The outer arrow is the last top-level arrow: an inline forall
+            // premise may itself contain an arrow, but conclusions are atomic/exist.
+            let mut depth = 0usize;
+            let mut arrow_index = None;
+            for index in tb.parse_index..tb.header.len() {
+                match tb.header[index].as_str() {
+                    "(" | "{" | "[" => depth += 1,
+                    ")" | "}" | "]" => depth = depth.saturating_sub(1),
+                    RIGHT_ARROW if depth == 0 => arrow_index = Some(index),
+                    _ => {}
+                }
+            }
+            let Some(arrow_index) = arrow_index else {
+                return Err(tb.parse_error("inline forall: expected `=>` after domain fact"));
+            };
+            let mut premise = TokenBlock::new(
+                tb.header[tb.parse_index..arrow_index].to_vec(),
+                vec![], tb.line, tb.source_path.clone(),
+            );
+            dom_facts.push(self.parse_complete_fact(&mut premise)?);
+            tb.parse_index = arrow_index;
         }
 
         tb.expect(RIGHT_ARROW)?;

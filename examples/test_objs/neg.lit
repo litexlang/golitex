@@ -1,0 +1,29 @@
+# AST: Obj::ArithmeticOperator::Neg
+# Run: target/release/litex -f examples/test_objs/neg.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: -0 = 0
+sketch:
+    -0 = 0
+
+# P02: -(-3) = 3
+sketch:
+    -(-3) = 3
+
+# P03: -(1 + 2) = -3
+sketch:
+    -(1 + 2) = -3
+
+# P04: -(1 / 2) = -1 / 2
+sketch:
+    -(1 / 2) = -1 / 2
+
+# P05: -(-x) = x
+sketch:
+    forall x C:
+        -(-x) = x
+
+# P06: -(x + y) = -x - y
+sketch:
+    forall x, y R:
+        -(x + y) = -x - y

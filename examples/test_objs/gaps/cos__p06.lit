@@ -1,0 +1,3 @@
+# Intended valid regression: cos P06
+forall x R:
+    cos(-x) = cos(x)

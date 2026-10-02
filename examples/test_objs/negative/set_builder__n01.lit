@@ -1,0 +1,2 @@
+# Must reject: set_builder N01
+let A = {x Object: x = x}

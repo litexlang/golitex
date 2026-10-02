@@ -535,7 +535,11 @@ impl Runtime {
 
         self.push_parse_scope();
         let parsed = (|| {
-            let _bound = self.define_plain_atom(param.clone())?;
+            // `by induc n` selects an existing goal binder when it is visible;
+            // it introduces a binder only for a standalone induction statement.
+            if !self.plain_atom_is_visible(&param) {
+                self.define_plain_atom_as_parse(tb, param.clone())?;
+            }
             let mut goal_count = 0usize;
             for child in &tb.body {
                 if !is_induc_goal_block(child) {

@@ -3639,55 +3639,47 @@
         "statement_success": [],
         "session_error_contains": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
       }
+    },
+    {
+      "leaf": "LetObjStmt",
+      "name": "resolved-K001-callable-alias-direct",
+      "file": "bugs/let_obj_stmt/K001-callable-alias-direct/repro.lit",
+      "strict": true,
+      "expect": {
+        "success": true,
+        "statement_success": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "leaf": "HaveFnByInducStmt",
+      "name": "recursive-equation-explicit-chain",
+      "file": "boundaries/recursive-equation-explicit-chain.lit",
+      "strict": true,
+      "expect": {
+        "success": true,
+        "statement_success": [
+          true,
+          true,
+          true,
+          true
+        ]
+      }
     }
   ],
   "known_gaps": [
     {
-      "id": "K001",
-      "leaf": "LetObjStmt",
-      "file": "known_gaps/callable-alias-direct.lit",
-      "strict": true,
-      "desired_success": true,
-      "observed": {
-        "success": false,
-        "statement_success": [
-          true,
-          true,
-          false
-        ],
-        "failed_phase": [
-          "search_proof"
-        ]
-      }
-    },
-    {
       "id": "K002",
       "leaf": "DefTemplateStmt",
-      "file": "known_gaps/template-member-carrier.lit",
+      "file": "bugs/def_template_stmt/K002-template-member-carrier/repro.lit",
       "strict": true,
       "desired_success": true,
       "observed": {
         "success": false,
         "statement_success": [
-          true,
-          false
-        ],
-        "failed_phase": [
-          "search_proof"
-        ]
-      }
-    },
-    {
-      "id": "K003",
-      "leaf": "HaveFnByInducStmt",
-      "file": "known_gaps/recursive-direct-equation.lit",
-      "strict": true,
-      "desired_success": true,
-      "observed": {
-        "success": false,
-        "statement_success": [
-          true,
-          true,
           true,
           false
         ],
@@ -3699,7 +3691,7 @@
     {
       "id": "K004",
       "leaf": "HaveFnByInducStmt",
-      "file": "known_gaps/recursive-call-under-addition.lit",
+      "file": "bugs/have_fn_by_induc_stmt/K004-recursive-call-under-addition/repro.lit",
       "strict": true,
       "desired_success": true,
       "observed": {
@@ -3719,7 +3711,7 @@
     {
       "id": "K005",
       "leaf": "Fact",
-      "file": "known_gaps/finite-negated-existence.lit",
+      "file": "bugs/fact/K005-finite-negated-existence/repro.lit",
       "strict": true,
       "desired_success": true,
       "observed": {
@@ -3736,7 +3728,7 @@
     {
       "id": "K006",
       "leaf": "DefTemplateStmt",
-      "file": "known_gaps/strict-template-trust-have.lit",
+      "file": "bugs/def_template_stmt/K006-strict-template-trust-have/repro.lit",
       "strict": true,
       "desired_success": false,
       "observed": {
@@ -3746,7 +3738,7 @@
     {
       "id": "K007-for",
       "leaf": "ByForStmt",
-      "file": "known_gaps/for-binder-proof-body.lit",
+      "file": "bugs/by_for_stmt/K007-for-binder-proof-body/repro.lit",
       "strict": true,
       "desired_success": true,
       "observed": {
@@ -3762,7 +3754,7 @@
     {
       "id": "K007-enumerate",
       "leaf": "ByEnumerateFiniteSetStmt",
-      "file": "known_gaps/enumeration-binder-proof-body.lit",
+      "file": "bugs/by_enumerate_finite_set_stmt/K007-enumeration-binder-proof-body/repro.lit",
       "strict": true,
       "desired_success": true,
       "observed": {
@@ -3778,7 +3770,7 @@
     {
       "id": "K008",
       "leaf": "ByForStmt",
-      "file": "known_gaps/finite-cartesian-domain.lit",
+      "file": "bugs/by_for_stmt/K008-finite-cartesian-domain/repro.lit",
       "strict": true,
       "desired_success": true,
       "observed": {
@@ -3794,7 +3786,7 @@
     {
       "id": "K009-for",
       "leaf": "ByForStmt",
-      "file": "known_gaps/conditional-for-goal.lit",
+      "file": "bugs/by_for_stmt/K009-conditional-for-goal/repro.lit",
       "strict": true,
       "desired_success": true,
       "observed": {
@@ -3810,7 +3802,7 @@
     {
       "id": "K009-enumerate",
       "leaf": "ByEnumerateFiniteSetStmt",
-      "file": "known_gaps/conditional-enumeration-goal.lit",
+      "file": "bugs/by_enumerate_finite_set_stmt/K009-conditional-enumeration-goal/repro.lit",
       "strict": true,
       "desired_success": true,
       "observed": {
@@ -3826,7 +3818,7 @@
     {
       "id": "K010",
       "leaf": "ByEnumerateFiniteSetStmt",
-      "file": "known_gaps/enumeration-arithmetic-carrier.lit",
+      "file": "bugs/by_enumerate_finite_set_stmt/K010-enumeration-arithmetic-carrier/repro.lit",
       "strict": true,
       "desired_success": true,
       "observed": {

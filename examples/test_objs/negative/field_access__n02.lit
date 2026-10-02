@@ -1,0 +1,6 @@
+# Must reject: field_access N02
+struct Point:
+    x R
+    y R
+have p &Point = (1, 2)
+p.z = 0

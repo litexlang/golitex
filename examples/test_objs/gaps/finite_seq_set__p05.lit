@@ -1,0 +1,2 @@
+# Intended valid regression: finite_seq_set P05
+fn(x closed_range(0, 1)) R {x} $in finite_seq(R, 2)

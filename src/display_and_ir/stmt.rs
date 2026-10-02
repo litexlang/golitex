@@ -512,7 +512,7 @@ impl HaveFnEqualCaseByCaseStmt {
             .iter()
             .map(|d| d.ir())
             .collect();
-        let mut out = format!("{} {} {}", HAVE, FN, self.name);
+        let mut out = format!("{} {} {}", HAVE, FN, self.name.ir_string());
         out.push_str(LEFT_PAREN);
         if !params.is_empty() && !dom.is_empty() {
             out.push_str(&params.join(", "));
@@ -595,7 +595,7 @@ impl HaveFnByInducStmt {
             .iter()
             .map(|d| d.ir())
             .collect();
-        let mut out = format!("{} {} {}", HAVE, FN, self.name);
+        let mut out = format!("{} {} {}", HAVE, FN, self.name.ir_string());
         out.push_str(LEFT_PAREN);
         if !params.is_empty() && !dom.is_empty() {
             out.push_str(&params.join(", "));
@@ -633,7 +633,7 @@ impl HaveFnByForallExistUniqueStmt {
             "{} {} {} {} {}{}\n{}",
             HAVE,
             FN,
-            self.name,
+            self.name.ir_string(),
             BY,
             EXIST_BANG,
             COLON,
@@ -786,7 +786,7 @@ impl DefAlgoByCasesStmt {
             .iter()
             .map(|d| d.ir())
             .collect();
-        let mut out = format!("{} {}", ALGO, self.name);
+        let mut out = format!("{} {}", ALGO, self.name.ir_string());
         out.push_str(LEFT_PAREN);
         if !params.is_empty() && !dom.is_empty() {
             out.push_str(&params.join(", "));
@@ -840,7 +840,7 @@ impl DefAlgoByInducStmt {
             .iter()
             .map(|d| d.ir())
             .collect();
-        let mut out = format!("{} {}", ALGO, self.name);
+        let mut out = format!("{} {}", ALGO, self.name.ir_string());
         out.push_str(LEFT_PAREN);
         if !params.is_empty() && !dom.is_empty() {
             out.push_str(&params.join(", "));

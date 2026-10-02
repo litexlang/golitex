@@ -1,0 +1,2 @@
+# Must reject: abs N02
+abs(-3) = -3

@@ -1,0 +1,7 @@
+# Before: named builtin was not found.
+# release thm subset_of_finite_set_is_finite({1}, {1, 2})
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/subset_of_finite_set_is_finite.lit
+release thm subset_of_finite_set_is_finite({1}, {1, 2})
+$is_finite_set({1})
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

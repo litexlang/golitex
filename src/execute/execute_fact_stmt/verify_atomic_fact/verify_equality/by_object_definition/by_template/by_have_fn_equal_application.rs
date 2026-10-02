@@ -76,8 +76,7 @@ impl Runtime {
         inst: &InstantiatedTemplateObj,
         fn_obj: &FnObj,
     ) -> RuntimeResult<Option<Obj>> {
-        let plain = inst.template_name.local_name();
-        let Some(def) = self.def_template_visible_in_stack(plain) else {
+        let Some(def) = self.def_template_visible(&inst.template_name) else {
             return Ok(None);
         };
         let TemplateDefEnum::HaveFnEqualStmt(have_fn) = &def.template_def_stmt else {

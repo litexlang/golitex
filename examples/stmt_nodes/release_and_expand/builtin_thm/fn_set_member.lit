@@ -1,0 +1,6 @@
+# Before: named builtin was not found.
+# release thm fn_set_member(fn(x R) R {x}, fn(y R) R)
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_set_member.lit
+release thm fn_set_member(fn(x R) R {x}, fn(y R) R)
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

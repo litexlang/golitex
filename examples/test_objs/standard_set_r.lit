@@ -1,0 +1,23 @@
+# AST: Obj::StandardSet::R
+# Run: target/release/litex -f examples/test_objs/standard_set_r.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 0 $in R
+sketch:
+    0 $in R
+
+# P02: -3 $in R
+sketch:
+    -3 $in R
+
+# P03: sqrt(2) $in R
+sketch:
+    sqrt(2) $in R
+
+# P04: $is_set(R)
+sketch:
+    $is_set(R)
+
+# P05: R $subset C
+sketch:
+    R $subset C

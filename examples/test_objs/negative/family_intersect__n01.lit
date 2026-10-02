@@ -1,0 +1,2 @@
+# Must reject: family_intersect N01
+family_intersect({{1}, {2}}) = {1}

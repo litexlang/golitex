@@ -1,0 +1,11 @@
+# AST: Obj::IteratedOperator::FiniteSetReduce
+# Run: target/release/litex -f examples/test_objs/finite_set_reduce.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: finite_set_reduce({}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 7) = 7
+sketch:
+    finite_set_reduce({}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 7) = 7
+
+# P90: Nearest valid-domain control
+sketch:
+    let r = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0)

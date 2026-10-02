@@ -1,0 +1,2 @@
+# Must reject: div N01
+let x = 1 / 0

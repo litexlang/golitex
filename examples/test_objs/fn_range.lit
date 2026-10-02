@@ -1,0 +1,18 @@
+# AST: Obj::FunctionSpace::FnRange
+# Run: target/release/litex -f examples/test_objs/fn_range.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: fn_range(fn(x R) R {1}) = {1}
+sketch:
+    fn_range(fn(x R) R {1}) = {1}
+
+# P03: fn_range(f) = {1}
+sketch:
+    have fn f(x R) R = 1
+    fn_range(f) = {1}
+
+# P04: $is_set(I)
+sketch:
+    let f = fn(x N) N {x}
+    let I = fn_range(f)
+    $is_set(I)

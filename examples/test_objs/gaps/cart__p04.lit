@@ -1,0 +1,2 @@
+# Intended valid regression: cart P04
+cart({1}, {2}) = {(1, 2)}

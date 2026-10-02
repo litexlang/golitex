@@ -1,0 +1,2 @@
+# Must reject: set_builder N03
+by thm set_builder_member(-1, {x R: x > 0}) => -1 $in {x R: x > 0}

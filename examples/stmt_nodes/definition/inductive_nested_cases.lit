@@ -1,0 +1,20 @@
+# Tracer: every nested inductive case list is total and disjoint under its parent.
+# Before (accepted invalid definition, could prove 0 = 1):
+# have fn hole(n N) N by induc n from 0:
+#     case n = 0:
+#         case n = 0: 0
+#         case n >= 0: 1
+#     case n >= 1: 1
+# Now: that definition is rejected before its function or equations are stored.
+# Boundary: nested missing coverage, overlap, and nondecreasing recursion reject.
+# Executable negative gates: tests/unit/execute/induction_repairs/tests.rs.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/definition/inductive_nested_cases.lit
+
+have fn nested(n N) N by induc n from 0:
+    case n = 0:
+        case n = 0: 0
+    case n >= 1:
+        case 1 <= n < 2: 1
+        case n >= 2: nested(n - 1)
+nested(0) = 0
+nested(1) = 1

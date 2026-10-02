@@ -1,0 +1,4 @@
+# Must reject: identifier_plain N03
+have x R = 1
+forall x R:
+    x = x

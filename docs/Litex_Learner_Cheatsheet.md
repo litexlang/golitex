@@ -348,6 +348,18 @@ extra echo.
 
 Induction is explicit when the invariant is not a direct builtin fact:
 
+The target's WD may use the integer lower bound. Local proof actions such as
+`have`, `let`, and `by def` are checked separately in the base and step scopes:
+
+```litex
+have fn f(x N) N = x
+by induc n from 0:
+    ? f(n) = f(n)
+    have a N = 0
+```
+
+The base has no induction hypothesis; its local objects do not escape.
+
 > **Migration example:** Current `src/` checking stops at `internal_bug: name n is already bound in an enclosing parse scope`. This retained block is not a verified result.
 
 <!-- litex:skip-test -->
@@ -625,3 +637,18 @@ the [CLI boundary](cli.md#lean-compiler-boundary).
 
 The learner's central habit is simple: write the next mathematical fact, read
 the verifier's evidence, and let only accepted context drive the next line.
+
+
+### Native named builtins and complex calculation
+
+```litex
+forall x R: x > 0 => x > 0
+release thm set_builder_member(1, {x R: x > 0})
+release thm subset_of_finite_set_is_finite({1}, {1, 2})
+i * i = -1
+(1 + i) * (1 - i) = 2
+```
+
+`release thm` checks premises before storing conclusions. `by thm NAME(args)
+=> FACT` selects an atomic/and/chain conclusion. Existential conclusions use
+`release`. Indexed operators require a nonempty index, including named families.

@@ -1,0 +1,11 @@
+# AST: Obj::ComplexOperator::ComplexAbs
+# Run: target/release/litex -f examples/test_objs/complex_abs.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: C_abs(0) = 0
+sketch:
+    C_abs(0) = 0
+
+# P02: C_abs(i) = 1
+sketch:
+    C_abs(i) = 1

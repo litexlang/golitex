@@ -23,4 +23,5 @@ pub use decimal_comparison::{
 };
 pub use normalization::{
     algebraic_normalization_nonzero_requirements, objs_equal_by_rational_expression_evaluation,
+    objs_equal_by_complex_expression_evaluation, contains_imaginary_unit,
 };

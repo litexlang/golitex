@@ -1,0 +1,3 @@
+# Intended valid regression: family_intersect P04
+let I = family_intersect({{1}, {2}})
+I = I

@@ -1,0 +1,2 @@
+# Must reject: arctan N02
+arctan(0) = 1

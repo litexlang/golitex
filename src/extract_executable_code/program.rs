@@ -170,7 +170,7 @@ impl ProgramExtractor {
 
     fn extract_algo_by_cases(&mut self, stmt: &DefAlgoByCasesStmt) -> RuntimeResult<()> {
         validate_real_function_signature(
-            &stmt.name,
+            &stmt.name.name,
             &stmt.fn_set_clause.set_bound_parameters,
             &stmt.fn_set_clause.dom_facts,
             &stmt.fn_set_clause.ret_set,
@@ -183,7 +183,7 @@ impl ProgramExtractor {
                 &stmt.line_file,
                 format!(
                     "code extractor v1 needs at least one case for function implementation `{}`",
-                    stmt.name
+                    stmt.name.name
                 ),
             ));
         }
@@ -192,13 +192,13 @@ impl ProgramExtractor {
                 &stmt.line_file,
                 format!(
                     "code extractor internal error: algo `{}` case/value arity mismatch",
-                    stmt.name
+                    stmt.name.name
                 ),
             ));
         }
 
         let params_in_scope = params.iter().cloned().collect::<HashSet<String>>();
-        self.functions.insert(stmt.name.clone());
+        self.functions.insert(stmt.name.name.clone());
         let mut cases = vec![];
         for (case, value) in stmt.cases.iter().zip(stmt.equal_tos.iter()) {
             cases.push(ExtractedCase {
@@ -208,7 +208,7 @@ impl ProgramExtractor {
         }
         self.statements
             .push(ExtractedStatement::Function(ExtractedFunction {
-                name: stmt.name.clone(),
+                name: stmt.name.name.clone(),
                 params,
                 cases,
                 default_return: None,

@@ -1,0 +1,2 @@
+# Intended valid regression: cot P03
+cot(-pi / 4) = -1

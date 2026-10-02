@@ -207,7 +207,7 @@ impl Runtime {
             | AtomicName::WithModAndExportFileId { name, .. } => name.clone(),
         };
         let def = self
-            .def_struct_visible_in_stack(&name)
+            .def_struct_visible(&struct_obj.name)
             .cloned()
             .ok_or_else(|| format!("struct `{name}` is not defined"))?;
         let expected = def

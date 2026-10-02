@@ -1,0 +1,6 @@
+# Before: named builtin was not found.
+# release thm finite_set_sum_le_from_pointwise(finite_set_sum({1, 2}, fn(x {1, 2}) R {1}), finite_set_sum({1, 2}, fn(y {1, 2}) R {2}))
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/finite_set_sum_le_from_pointwise.lit
+release thm finite_set_sum_le_from_pointwise(finite_set_sum({1, 2}, fn(x {1, 2}) R {1}), finite_set_sum({1, 2}, fn(y {1, 2}) R {2}))
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

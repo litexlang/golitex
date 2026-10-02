@@ -1,0 +1,7 @@
+# Before: named builtin was not found.
+# release thm defined_set_member(1, positives)
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/defined_set_member.lit
+let positives = {x R: x > 0}
+release thm defined_set_member(1, positives)
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

@@ -1,0 +1,2 @@
+# Intended valid regression: real_part P06
+re(i * i) = -1

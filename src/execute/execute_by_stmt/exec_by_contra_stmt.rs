@@ -1,6 +1,7 @@
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use super::helper::{
     assume_fact, close_by_contradiction, negate_fact_for_contra, proof_verify_state,
-    run_fact_only_proof_steps, store_goal_fact,
+    store_goal_fact,
 };
 use super::result::{
     ExecByContraStmtFailed, ExecByContraStmtResult, ExecByContraStmtSuccess, ExecByStmtResult,
@@ -36,7 +37,7 @@ pub fn exec_by_contra_stmt(
         };
         let reverse_assumption_fact_id = negation_assumed.primary_fact_id();
         let assumption_components = negation_assumed.atomic_components();
-        let proof_steps = match run_fact_only_proof_steps(rt, &stmt.proof)? {
+        let proof_steps = match run_proof_body_stmts(rt, &stmt.proof)? {
             Ok(steps) => steps,
             Err(failed) => return Ok(Err(ExecByContraStmtFailed::ProofBody(failed))),
         };

@@ -1,0 +1,2 @@
+# Intended valid regression: finite_set_reduce P05
+finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 10) = 13

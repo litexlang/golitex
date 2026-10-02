@@ -1,0 +1,2 @@
+# Must reject: interval_open_closed N02
+let A = '(0, i]

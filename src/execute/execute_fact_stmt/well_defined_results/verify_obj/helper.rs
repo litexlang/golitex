@@ -117,7 +117,7 @@ impl Runtime {
         }
         let mut carrier = self.resolve_definition_struct_carrier(access.obj.as_ref())?;
         for (index, field_name) in access.fields.iter().enumerate() {
-            let def = self.def_struct_visible_in_stack(carrier.name.local_name())?;
+            let def = self.def_struct_visible(&carrier.name)?;
             let field = def.fields.iter().find(|f| f.binding.name == *field_name)?;
             let is_last = index + 1 == access.fields.len();
             if is_last {

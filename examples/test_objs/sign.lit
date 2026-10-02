@@ -1,0 +1,24 @@
+# AST: Obj::ArithmeticOperator::Sign
+# Run: target/release/litex -f examples/test_objs/sign.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: sign(0) = 0
+sketch:
+    sign(0) = 0
+
+# P02: sign(3) = 1
+sketch:
+    sign(3) = 1
+
+# P03: sign(-3) = -1
+sketch:
+    sign(-3) = -1
+
+# P04: sign(1 / 2) = 1
+sketch:
+    sign(1 / 2) = 1
+
+# P05: sign(-x) = -sign(x)
+sketch:
+    forall x R:
+        sign(-x) = -sign(x)

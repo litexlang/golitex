@@ -1,0 +1,19 @@
+# AST: Obj::IteratedOperator::ProductOfFiniteSet
+# Run: target/release/litex -f examples/test_objs/product_of_finite_set.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: finite_set_product({}, fn(x Z) Z {x}) = 1
+sketch:
+    finite_set_product({}, fn(x Z) Z {x}) = 1
+
+# P02: finite_set_product({2}, fn(x Z) Z {x}) = 2
+sketch:
+    finite_set_product({2}, fn(x Z) Z {x}) = 2
+
+# P05: finite_set_product({2}, fn(x Z) Z {3}) = 3
+sketch:
+    finite_set_product({2}, fn(x Z) Z {3}) = 3
+
+# P90: Nearest valid-domain control
+sketch:
+    let s = finite_set_product({1}, fn(x {1}) Z {x})

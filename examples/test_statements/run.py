@@ -60,6 +60,7 @@ def main():
                      case['strict'], case['observed'])
         record['known_gap'] = True
         record['desired_success'] = case['desired_success']
+        record['issue_file'] = str(Path(case['file']).with_name('README.md'))
         records.append(record)
 
     failures = [record for record in records if not record['matches']]
@@ -70,7 +71,7 @@ def main():
         if record['stderr']:
             print(record['stderr'])
     for record in gaps:
-        print('KNOWN ' + record['name'] + ' (see todo.md)')
+        print('KNOWN ' + record['name'] + ' (see ' + record['issue_file'] + ')')
     report = {'schema_version': 1, 'binary': str(binary),
               'statement_leaves': len(selected), 'checks': len(records),
               'passed': len(records) - len(failures), 'unexpected_failures': len(failures),

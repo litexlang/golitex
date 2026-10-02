@@ -1,0 +1,7 @@
+# Same terminal names as the importing file; actual owners stay distinct.
+have fn step(n N) N = 1
+prop get(a R):
+    exist x R st {x = 0}
+thm ready:
+    ? $get(0)
+    witness $get(0) from 0

@@ -1,0 +1,31 @@
+# AST: Obj::IntegerOperator::Mod
+# Run: target/release/litex -f examples/test_objs/mod.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 7 % 3 = 1
+sketch:
+    7 % 3 = 1
+
+# P02: (-7) % 3 = 2
+sketch:
+    (-7) % 3 = 2
+
+# P03: 7 % (-3) = 1
+sketch:
+    7 % (-3) = 1
+
+# P04: (-7) % (-3) = 2
+sketch:
+    (-7) % (-3) = 2
+
+# P05: 0 % 3 = 0
+sketch:
+    0 % 3 = 0
+
+# P06: 8 % 1 = 0
+sketch:
+    8 % 1 = 0
+
+# P07: (3 * 7) % 3 = 0
+sketch:
+    (3 * 7) % 3 = 0

@@ -1,5 +1,6 @@
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use super::helper::{
-    proof_verify_state, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
+    proof_verify_state, store_goal_fact, verify_goal_fact,
 };
 use super::result::{
     ExecReleaseZornLemmaStmtFailed, ExecReleaseZornLemmaStmtResult,
@@ -43,7 +44,7 @@ pub fn exec_release_zorn_lemma_stmt(
     );
 
     let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let proof_steps = match run_fact_only_proof_steps(rt, &stmt.proof)? {
+        let proof_steps = match run_proof_body_stmts(rt, &stmt.proof)? {
             Ok(steps) => steps,
             Err(failed) => return Ok(Err(ExecReleaseZornLemmaStmtFailed::ProofBody(failed))),
         };
@@ -95,9 +96,9 @@ pub fn exec_release_zorn_lemma_stmt(
 
 fn validate_zorn_props(runtime: &mut Runtime, stmt: &ReleaseZornLemmaStmt) -> Result<(), String> {
     let relation = plain_prop_name(&stmt.prop_name);
-    let relation_arity = if let Some(abs) = runtime.def_abstract_prop_visible_in_stack(relation) {
+    let relation_arity = if let Some(abs) = runtime.def_abstract_prop_visible(&stmt.prop_name) {
         abs.params.len()
-    } else if let Some(def) = runtime.def_prop_visible_in_stack(relation) {
+    } else if let Some(def) = runtime.def_prop_visible(&stmt.prop_name) {
         prop_arity(def)
     } else {
         return Err(format!(
@@ -120,7 +121,7 @@ fn validate_upper_bound_prop(
     stmt: &ReleaseZornLemmaStmt,
 ) -> Result<(), String> {
     let ub_name = plain_prop_name(&stmt.upper_bound_prop_name);
-    let Some(ub_def) = runtime.def_prop_visible_in_stack(ub_name).cloned() else {
+    let Some(ub_def) = runtime.def_prop_visible(&stmt.upper_bound_prop_name).cloned() else {
         return Err(format!(
             "release zorn_lemma: upper-bound `{ub_name}` must be a concrete named prop"
         ));
@@ -193,7 +194,7 @@ fn validate_maximal_prop(
     stmt: &ReleaseZornLemmaStmt,
 ) -> Result<(), String> {
     let max_name = plain_prop_name(&stmt.maximal_prop_name);
-    let Some(max_def) = runtime.def_prop_visible_in_stack(max_name).cloned() else {
+    let Some(max_def) = runtime.def_prop_visible(&stmt.maximal_prop_name).cloned() else {
         return Err(format!(
             "release zorn_lemma: maximality `{max_name}` must be a concrete named prop"
         ));

@@ -1,0 +1,23 @@
+# AST: Obj::StandardSet::ZStar
+# Run: target/release/litex -f examples/test_objs/standard_set_z_star.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 1 $in Z*
+sketch:
+    1 $in Z*
+
+# P02: -1 $in Z*
+sketch:
+    -1 $in Z*
+
+# P03: 3 $in Z*
+sketch:
+    3 $in Z*
+
+# P04: $is_set(Z*)
+sketch:
+    $is_set(Z*)
+
+# P05: Z* $subset Z
+sketch:
+    Z* $subset Z

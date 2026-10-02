@@ -1,0 +1,2 @@
+# Must reject: imaginary_part N01
+let x = img({1})

@@ -153,9 +153,6 @@ impl Runtime {
                 line_file: Some(stmt.line_file.clone()),
             }));
             let stored = self.store_fact_and_infer(&equal_fact)?;
-            if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = &equal_fact {
-                self.record_fn_signature_from_definition_equal(eq);
-            }
             store_and_infer_result
                 .stored_fact_ids
                 .extend(stored.stored_fact_ids());

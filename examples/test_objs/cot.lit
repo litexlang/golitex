@@ -1,0 +1,11 @@
+# AST: Obj::TrigOperator::Cot
+# Run: target/release/litex -f examples/test_objs/cot.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: cot(pi / 2) = 0
+sketch:
+    cot(pi / 2) = 0
+
+# P04: cot(arccot(2)) = 2
+sketch:
+    cot(arccot(2)) = 2

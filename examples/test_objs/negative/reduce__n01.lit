@@ -1,0 +1,2 @@
+# Must reject: reduce N01
+let r = reduce(1, 2, fn(x Z) Z {x}, fn(a Z) Z {a}, 0)

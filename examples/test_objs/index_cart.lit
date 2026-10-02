@@ -1,0 +1,19 @@
+# AST: Obj::SetOperator::IndexCart
+# Run: target/release/litex -f examples/test_objs/index_cart.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P04: index_cart({1}, power_set(N), A) = index_cart({1}, power_set(N), A)
+sketch:
+    forall A fn(k {1}) power_set(N):
+        index_cart({1}, power_set(N), A) = index_cart({1}, power_set(N), A)
+
+# P05: $is_set(index_cart({1, 2}, power_set(N), A))
+sketch:
+    forall A fn(k {1, 2}) power_set(N):
+        $is_set(index_cart({1, 2}, power_set(N), A))
+
+# Retired empty-index positive: WD now requires a nonempty index.
+# # P06: $is_set(index_cart({}, power_set(N), A))
+# sketch:
+#     forall A fn(k {}) power_set(N):
+#         $is_set(index_cart({}, power_set(N), A))

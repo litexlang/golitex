@@ -1,0 +1,2 @@
+# Must reject: complex_abs N01
+let x = C_abs({1})
