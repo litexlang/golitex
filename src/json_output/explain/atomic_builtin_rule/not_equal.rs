@@ -29,9 +29,20 @@ use super::text::text;
 impl NotEqualFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
-            Self::ImaginaryUnitNonzero(_) => text("ImaginaryUnitNonzero", "i ≠ 0", "The reserved imaginary unit satisfies i² = -1 and is nonzero"),
+            Self::NonzeroFromSignedBound(_) => text("NonzeroFromSignedBound", "Nonzero from signed bound", "A checked bound strictly separates the value from zero"),
+            Self::ImaginaryUnitNonzero(_) => match lang {
+                OutputLanguage::English => text("ImaginaryUnitNonzero", "i ≠ 0", "The reserved imaginary unit satisfies i² = -1 and is nonzero"),
+                OutputLanguage::Chinese => text("ImaginaryUnitNonzero", "虚数单位非零", "内建虚数单位满足 i² = -1，因而不等于零"),
+            },
+            Self::InequalityFromDifferenceNonzero(_) => text("InequalityFromDifferenceNonzero", "Nonzero difference", "A checked nonzero difference implies unequal operands"),
+            Self::InequalityFromSumNonzero(_) => text("InequalityFromSumNonzero", "Nonzero sum", "A checked nonzero sum excludes opposite operands"),
+            Self::ComplexModulusNonzero(_) => text("ComplexModulusNonzero", "Nonzero complex modulus", "A nonzero complex number has nonzero modulus"),
             Self::PiNonzero(_) => text("PiNonzero", "π ≠ 0", "The real constant π is strictly positive, hence nonzero"),
             Self::ClosedDecimal(p) => p.rule_id_and_message(lang),
+            Self::ClosedRational(_) => match lang {
+                OutputLanguage::English => text("ClosedRationalNotEqual", "Exact rational inequality", "Exact closed fractions have different normalized values"),
+                OutputLanguage::Chinese => text("ClosedRationalNotEqual", "精确分数不等", "两边的精确分数规范化后不同"),
+            },
             Self::NotEqualSymmetry(p) => p.rule_id_and_message(lang),
             Self::ListSetDifferentLength(p) => p.rule_id_and_message(lang),
             Self::FromKnownStrictOrder(p) => p.rule_id_and_message(lang),
@@ -55,7 +66,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::NonzeroFromSignedBound(p) => Some(p.cite_fact_id),
             Self::FromKnownStrictOrder(p) => p.premise_proof.cite_fact_id(),
+            Self::InequalityFromDifferenceNonzero(p) => p.premise_proof.cite_fact_id(),
+            Self::InequalityFromSumNonzero(p) => p.premise_proof.cite_fact_id(),
             _ => None,
         }
     }

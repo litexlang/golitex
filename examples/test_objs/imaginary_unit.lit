@@ -25,3 +25,14 @@ sketch:
 # P06: C_abs(i) = 1
 sketch:
     C_abs(i) = 1
+
+# P101: imaginary-unit nonzero builtin
+sketch:
+    i != 0
+    0 != i
+    i $in C*
+
+# P102: guarded imaginary inverse
+sketch:
+    i / i = 1
+    1 / i + i = 0

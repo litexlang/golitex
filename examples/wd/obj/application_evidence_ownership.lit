@@ -1,0 +1,19 @@
+# Before: execution succeeded, but repeated composite arguments returned a
+# ByKnown WD id owned only by the discarded signature-candidate environment.
+# Old tracer (now active below):
+# have fn choose(a, b R) R = a
+# let value = choose(1 + 1, 1 + 1)
+# After: candidate checks retain full proofs or cite existing ancestor ids;
+# only the selected, successful application records new WD in the caller.
+# Run: target/release/litex -strict -f examples/wd/obj/application_evidence_ownership.lit
+# Citation ownership is checked by tests/unit/execute/function_application_wd_evidence/tests.rs.
+
+have fn choose(a, b R) R = a
+let named_value = choose(1 + 1, 1 + 1)
+let literal_value = fn(a, b R) R {a}(1 + 1, 1 + 1)
+
+struct Pair:
+    operation fn(a, b R) R
+    value R
+forall pair &Pair:
+    pair.operation(1 + 1, 1 + 1) = pair.operation(1 + 1, 1 + 1)

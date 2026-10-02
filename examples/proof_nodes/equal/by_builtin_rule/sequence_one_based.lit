@@ -1,0 +1,19 @@
+# One-based sequence contract. Run: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/sequence_one_based.lit
+# Previously rejected:
+# seq(R) = fn(index N+) R
+# finite_seq(R, 2) = fn(index closed_range(1, 2)) R
+# Invalid indices are executable negative regressions in sequence_struct_contract_tests.
+
+seq(R) = fn(index N+) R
+finite_seq(R, 2) = fn(index closed_range(1, 2)) R
+finite_seq(R, 0) = fn(index {}) R
+
+forall n N:
+    finite_seq(R, n) = fn(index N+: index <= n) R
+
+forall p finite_seq(R, 2):
+    p(1) = p(1)
+    p(2) = p(2)
+
+forall s seq(R), n N+:
+    s(n) = s(n)

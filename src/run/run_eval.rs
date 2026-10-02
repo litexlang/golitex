@@ -20,10 +20,11 @@ pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
     match mount_cwd_config(&mut runtime)? {
         MountCwdConfigOutcome::Done => {}
         MountCwdConfigOutcome::SessionError(session_error) => {
-            return Ok(RunEvalResult::new(RunLitexCodeResult::new(
-                Vec::new(),
-                Some(session_error),
-            )));
+            let mut code_result = RunLitexCodeResult::new(Vec::new(), Some(session_error));
+            // Mount failure still has a structured CLI result; do not run the
+            // requested eval after a failed export (e.g. an export containing 1 = 2).
+            code_result.attach_normal_json(&runtime, "eval", None);
+            return Ok(RunEvalResult::new(code_result));
         }
     }
 

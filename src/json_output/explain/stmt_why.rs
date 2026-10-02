@@ -291,10 +291,10 @@ pub fn explain_stmt_kind(kind: &str, lang: OutputLanguage) -> StmtWhyText {
         }
         ("sketch", OutputLanguage::Chinese) => ("证明块", "sketch 块", "运行 sketch 证明块"),
         ("eval", OutputLanguage::English) => {
-            ("command", "Eval", "Evaluate a closed numeric / algo expression")
+            ("command", "Eval", "Evaluate an exact numeric, function or finite aggregate expression")
         }
         ("eval", OutputLanguage::Chinese) => {
-            ("命令", "求值", "对封闭数值或算法表达式求值")
+            ("命令", "求值", "对精确数值、函数或有限求和求积表达式求值")
         }
 
         (_, OutputLanguage::English) => ("stmt", kind, "Statement completed"),

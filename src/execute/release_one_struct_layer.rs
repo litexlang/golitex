@@ -229,7 +229,7 @@ impl Runtime {
 
     // Header params + each field BoundName → field access. `<=>:` and field
     // types already reuse those BoundName ids at parse time.
-    fn struct_release_subst(
+    pub(in crate::execute) fn struct_release_subst(
         &self,
         obj: &Obj,
         struct_obj: &StructObj,

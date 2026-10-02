@@ -1,0 +1,2 @@
+# N102: must reject: callable predicate rejects one displayed element
+let bad = finite_set_sum({1,2},fn(k Z:k!=1) Z {0})

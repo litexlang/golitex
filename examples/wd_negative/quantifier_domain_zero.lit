@@ -1,0 +1,8 @@
+# Expected: soft WD failure even with a valid nonzero guard for y.
+prop zero_denominator(x R):
+    forall y R:
+        y != 0
+        =>:
+            1 / 0 = 1 / 0
+        <=>:
+            y = y

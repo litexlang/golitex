@@ -151,6 +151,28 @@ fn run_project_kb_cache_write_then_hit_cross_mod() {
     // Root export still runs; imported lib should be served from kb (no lib file result).
     assert_eq!(second.files.len(), 1, "kb hit should skip re-exec of lib export");
 
+    // Products checked before the decimal/aggregate correction must be cold
+    // rebuilt even when their module source bytes have not changed.
+    let manifest = root.join("lib/__litex_knowledge_base__/manifest.json");
+    let current_manifest = fs::read_to_string(&manifest).unwrap();
+    let old_manifest = current_manifest.replace(
+        &format!("\"abi\": \"{}\"", crate::knowledge_base::KB_ABI),
+        "\"abi\": \"2\"",
+    );
+    assert_ne!(old_manifest, current_manifest);
+    fs::write(&manifest, old_manifest).unwrap();
+    let rebuilt = run_project(LaunchCommand::Repository {
+        path:root.clone(), session:false, strict:false, language:OutputLanguage::English,
+    }).expect("old ABI falls back to source");
+    assert!(rebuilt.run.success, "{:?}", rebuilt.run.session_error);
+    assert_eq!(rebuilt.files.len(), 2, "old cached library must execute again");
+    assert_eq!(fs::read_to_string(&manifest).unwrap(), current_manifest);
+    let warm_again = run_project(LaunchCommand::Repository {
+        path:root.clone(), session:false, strict:false, language:OutputLanguage::English,
+    }).expect("rebuilt cache can be reused");
+    assert!(warm_again.run.success);
+    assert_eq!(warm_again.files.len(), 1);
+
     let _ = fs::remove_dir_all(&root);
 }
 

@@ -106,6 +106,7 @@ if -session: keep target env → REPL
 ```text
 abort placeholder Eval env
 mount_cwd_config()                      # missing → Done / no-op
+# mount failure: return normal JSON success=false / session_error; do not eval
 begin Eval env
 run code
 if -session and success: REPL

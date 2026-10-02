@@ -3,7 +3,7 @@ use crate::ast::fact::{
     AtomicFact, Fact, InFact, IsNonemptySetFact, LessEqualFact, LessFact, NotEqualFact, NotInFact,
 };
 use crate::ast::obj::{
-    Abs, Add, ArithmeticOperator, Cos, Div, ExpLogOperator, Literal, Mul, Number, Obj, Pow,
+    Abs, Add, ArithmeticOperator, ComplexOperator, Cos, Div, ExpLogOperator, Literal, Mul, Number, Obj, Pow,
     SetFormer, Sin, Sqrt, StandardSet, Sub, TrigOperator,
 };
 use crate::ast::names::AtomicName;
@@ -16,10 +16,14 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::{
     evaluate_obj_to_normalized_decimal_number, objs_equal_by_rational_expression_evaluation,
 };
-use crate::runtime::{Runtime, RuntimeResult};
+use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
+    NonzeroFromSignedBound(NonzeroFromSignedBoundBuiltinRuleProof),
+    InequalityFromDifferenceNonzero(InequalityFromDifferenceNonzeroBuiltinRuleProof),
+    InequalityFromSumNonzero(InequalityFromSumNonzeroBuiltinRuleProof),
+    ComplexModulusNonzero(ComplexModulusNonzeroBuiltinRuleProof),
     // The reserved complex imaginary unit satisfies i²=-1, hence i != 0.
     ImaginaryUnitNonzero(ImaginaryUnitNonzeroBuiltinRuleProof),
     // The real constant pi is strictly positive, hence nonzero. Example: pi / pi = 1.
@@ -29,6 +33,8 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     // `L` and `R` with `L != R`, then the objects are unequal.
     // Examples: `1 != 0`, `1 + 1 != 3`.
     ClosedDecimal(ClosedDecimalNotEqualBuiltinRuleProof),
+    // Exact closed rationals also cover nonterminating decimal fractions.
+    ClosedRational(ClosedRationalNotEqualBuiltinRuleProof),
     // Not-equal symmetry: prove `a != b` from a proved `b != a`.
     // Example: known `0 != x` proves `x != 0`.
     NotEqualSymmetry(NotEqualSymmetryBuiltinRuleProof),
@@ -100,12 +106,27 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     MembershipContradiction(MembershipContradictionBuiltinRuleProof),
 }
 
+pub struct InequalityFromDifferenceNonzeroBuiltinRuleProof {
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
+}
+pub struct InequalityFromSumNonzeroBuiltinRuleProof {
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
+}
+pub struct ComplexModulusNonzeroBuiltinRuleProof {
+    pub arg_nonzero_proof: VerifyFactResult,
+}
+pub struct NonzeroFromSignedBoundBuiltinRuleProof { pub cite_fact_id: FactId }
 pub struct PiNonzeroBuiltinRuleProof {}
 pub struct ImaginaryUnitNonzeroBuiltinRuleProof {}
 
 pub struct ClosedDecimalNotEqualBuiltinRuleProof {
     pub left_normal: String,
     pub right_normal: String,
+}
+
+pub struct ClosedRationalNotEqualBuiltinRuleProof {
+    pub left_normal: Obj,
+    pub right_normal: Obj,
 }
 
 pub struct NotEqualSymmetryBuiltinRuleProof {
@@ -208,6 +229,18 @@ impl Runtime {
                 )));
             }
         }
+        if let (Some(left), Some(right)) = (
+            crate::rational_expression::exact_rational::EvalRational::from_obj(&fact.left),
+            crate::rational_expression::exact_rational::EvalRational::from_obj(&fact.right),
+        ) {
+            if left != right {
+                return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ClosedRational(
+                    ClosedRationalNotEqualBuiltinRuleProof {
+                        left_normal: left.to_obj(), right_normal: right.to_obj(),
+                    },
+                )));
+            }
+        }
         if let Some(premise_proof) = self
             .known_greater_proof(&fact.left, &fact.right)
             .or_else(|| self.known_less_proof(&fact.left, &fact.right))
@@ -220,9 +253,58 @@ impl Runtime {
                 ),
             ));
         }
+        for (value,zero) in [(&fact.left,&fact.right),(&fact.right,&fact.left)] {
+            if !is_zero_obj(zero) { continue; }
+            let positive=LessFact {fact_id:self.global_ids.allocate_fact_id(),left:zero.clone(),right:value.clone(),line_file:None};
+            let negative=LessEqualFact {fact_id:self.global_ids.allocate_fact_id(),left:value.clone(),right:zero.clone(),line_file:None};
+            let cite=self.try_order_sign_from_positive_literal_bound(&positive).map(|p|p.cite_fact_id)
+                .or_else(||self.try_order_sign_from_negative_literal_bound(&negative).map(|p|p.cite_fact_id));
+            if let Some(cite_fact_id)=cite { return Ok(Some(NotEqualFactSearchProofByBuiltinRule::NonzeroFromSignedBound(
+                NonzeroFromSignedBoundBuiltinRuleProof {cite_fact_id},
+            ))); }
+        }
         // Prove `a != b` from a known / already-proved `b != a` (no recursive flip).
         if let Some(proof) = self.try_not_equal_symmetry(fact) {
             return Ok(Some(proof));
+        }
+
+        // Consume a checked nonzero difference/sum; never recursively prove it.
+        for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            let difference = Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
+                left: Box::new(left.clone()), right: Box::new(right.clone()),
+            }));
+            if let Some(premise_proof) = self.known_not_equal_proof(&difference, &zero_obj()) {
+                return Ok(Some(NotEqualFactSearchProofByBuiltinRule::InequalityFromDifferenceNonzero(
+                    InequalityFromDifferenceNonzeroBuiltinRuleProof { premise_proof },
+                )));
+            }
+            let negated_arg = match right {
+                Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) => Some(neg.arg.as_ref()),
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) if is_zero_obj(&sub.left) => Some(sub.right.as_ref()),
+                _ => None,
+            };
+            if let Some(arg) = negated_arg {
+                for (a, b) in [(left, arg), (arg, left)] {
+                    let sum = Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
+                        left: Box::new(a.clone()), right: Box::new(b.clone()),
+                    }));
+                    if let Some(premise_proof) = self.known_not_equal_proof(&sum, &zero_obj()) {
+                        return Ok(Some(NotEqualFactSearchProofByBuiltinRule::InequalityFromSumNonzero(
+                            InequalityFromSumNonzeroBuiltinRuleProof { premise_proof },
+                        )));
+                    }
+                }
+            }
+            if let Obj::ComplexOperator(ComplexOperator::ComplexAbs(modulus)) = left {
+                if is_zero_obj(right) {
+                    if let Some(NotEqualFactSearchProofByBuiltinRule::AbsNonzeroFromArg(p)) =
+                        self.abs_nonzero_from_arg_proof(&modulus.arg, verify_state.clone())? {
+                        return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ComplexModulusNonzero(
+                            ComplexModulusNonzeroBuiltinRuleProof { arg_nonzero_proof: p.arg_nonzero_proof },
+                        )));
+                    }
+                }
+            }
         }
 
         // A — shape

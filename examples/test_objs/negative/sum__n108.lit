@@ -1,0 +1,2 @@
+# N108: must reject: complex result cannot acquire real carrier
+sum(1,3,fn(k Z) C {i}) $in R

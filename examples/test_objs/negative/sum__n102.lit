@@ -1,0 +1,2 @@
+# N102: must reject: callable predicate fails at zero
+let bad = sum(0,3,fn(k Z:k!=0) Z {1})

@@ -1,2 +1,0 @@
-# Intended valid regression: product P04
-product(1, 3, fn(x Z) Z {2}) = 8

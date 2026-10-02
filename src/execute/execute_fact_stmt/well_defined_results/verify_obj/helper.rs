@@ -1,6 +1,6 @@
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::ast::obj::{
-    FieldAccess, FnObjHead, FnSet, FunctionSpace, Obj, StructAndFieldAccessObj,
+    FieldAccess, FnObjHead, FnSet, FunctionSpace, Obj, StructAndFieldAccessObj, StructObj,
 };
 use crate::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
@@ -64,7 +64,7 @@ impl Runtime {
 
     // Resolve a callable's FnSet: anonymous literal, bare name with InFunctionSet, or
     // identifier-headed empty application. Used by iterated / reduce WD.
-    pub(in crate::execute) fn resolve_callable_fn_set(&self, function: &Obj) -> Option<FnSet> {
+    pub(in crate::execute) fn resolve_callable_fn_set(&mut self, function: &Obj) -> Option<FnSet> {
         match function {
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => Some(anon.body.clone()),
             Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
@@ -110,27 +110,50 @@ impl Runtime {
         }
     }
 
-    // Last field's declared type along a FieldAccess path (definition-time carrier walk).
-    pub(super) fn resolve_field_access_field_type(&self, access: &FieldAccess) -> Option<Obj> {
+    // Each field uses the selected carrier's actual arguments, e.g. Op<R>.add
+    // has domain R, not the free parameter from struct Op<A>.
+    pub(super) fn resolve_field_access_field_type(&mut self, access: &FieldAccess) -> Option<Obj> {
         if access.fields.is_empty() {
             return None;
         }
         let mut carrier = self.resolve_definition_struct_carrier(access.obj.as_ref())?;
+        let mut receiver = access.obj.as_ref().clone();
         for (index, field_name) in access.fields.iter().enumerate() {
-            let def = self.def_struct_visible(&carrier.name)?;
-            let field = def.fields.iter().find(|f| f.binding.name == *field_name)?;
+            let field_type = self.instantiate_struct_field_type(&receiver, &carrier, field_name)?;
             let is_last = index + 1 == access.fields.len();
             if is_last {
-                return Some(field.field_type.clone());
+                return Some(field_type);
             }
-            match &field.field_type {
+            match field_type {
                 Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(next)) => {
-                    carrier = next.clone();
+                    carrier = next;
                 }
                 _ => return None,
             }
+            receiver = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(
+                FieldAccess {
+                    obj: access.obj.clone(),
+                    fields: access.fields[..=index].to_vec(),
+                },
+            ));
         }
         None
+    }
+
+    pub(super) fn instantiate_struct_field_type(
+        &mut self,
+        receiver: &Obj,
+        carrier: &StructObj,
+        field_name: &str,
+    ) -> Option<Obj> {
+        let def = self.def_struct_visible(&carrier.name)?;
+        let field_type = def.fields.iter()
+            .find(|field| field.binding.name == field_name)?
+            .field_type.clone();
+        // Keep parameter and dependent-field substitution identical to the
+        // existing explicit release path; this does not release any facts.
+        let subst = self.struct_release_subst(receiver, carrier, def).ok()?;
+        self.inst_obj(&field_type, &subst).ok()
     }
 }
 

@@ -1,0 +1,2 @@
+# N103: must reject: shared nested work allowance
+eval sum(1,32,fn(k Z) Z {sum(1,32,fn(j Z) Z {1})})

@@ -167,12 +167,17 @@ fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
 fn parse_instantiated_template(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     tb.expect(TEMPLATE_INSTANCE_PREFIX)?;
     let name_tok = tb
-        .advance()
-        .map_err(|_| tb.parse_error("`\\` expects a template name"))?;
-    if !is_simple_name(&name_tok) {
+        .peek()
+        .ok_or_else(|| tb.parse_error("`\\` expects a template name"))?;
+    if !is_simple_name(name_tok) {
         return Err(tb.parse_error(format!("invalid template name `{name_tok}` after `\\`")));
     }
-    let template_name = rt.atomic_name_for_plain_prop_ref(name_tok);
+    // Templates already carry AtomicName. Resolve the same canonical export /
+    // import forms as predicates, e.g. `\prefix::copied<R>`.
+    let template_name = rt.parse_prop_name(tb).map_err(|err| match err {
+        crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
+        other => other,
+    })?;
     if tb.peek() != Some(LESS) {
         return Err(tb.parse_error("template instance expects `<...>` arguments (e.g. `\\T<a>`)"));
     }

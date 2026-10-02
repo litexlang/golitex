@@ -26,3 +26,5 @@ pub(in crate::json_output) use induction::{project_induc_failure, project_strong
 pub(in crate::json_output) use theorem::{project_release_thm_failure, project_by_thm_failure, project_def_thm_failure};
 
 pub(in crate::json_output) use wd::project_verify_obj_wd;
+pub(in crate::json_output) use verify::project_verify_fact;
+pub(in crate::json_output) use stmt::{project_def_prop_failure, project_cases_definition_failure};

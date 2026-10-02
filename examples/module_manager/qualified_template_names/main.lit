@@ -1,0 +1,8 @@
+# Before: the parser stopped after the first name and demanded angle arguments:
+# \local::copied<R> = R
+# Now: retain canonical export/import ownership using existing AtomicName fields.
+\local::copied<R> = R
+\Library::defs::copied<N> = N
+\Library:::copied<Z> = Z
+# Boundary: known export names do not define nonexistent templates.
+# Gate: python3 examples/module_manager/qualified_template_names/check.py

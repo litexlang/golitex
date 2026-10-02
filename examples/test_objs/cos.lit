@@ -10,6 +10,10 @@ sketch:
 sketch:
     cos(pi) = -1
 
+# P03: cos(pi / 2) = 0
+sketch:
+    cos(pi / 2) = 0
+
 # P05: cos(x) $in R
 sketch:
     forall x R:

@@ -34,6 +34,8 @@ run. This package owns **tables + parse + mount APIs + name elaborate** only.
 - Export name may equal an import alias; forms disambiguate.
 - Import aliases within one config must not collide with each other.
 - Imports before exports. Deps of a module must already be on global before it runs.
+- Template instances use these same name forms after `\`, such as
+  `\export::copied<R>` and `\Lib::defs::copied<R>`, preserving AtomicName ownership.
 - Object well-definedness, definition unfolding, and `release obj def` select
   the declaration by the complete file/module owner. A known export name does
   not make an undeclared member such as `base::ghost` a well-defined object.

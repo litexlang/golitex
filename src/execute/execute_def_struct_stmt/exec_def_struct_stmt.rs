@@ -34,6 +34,7 @@ use crate::execute::{
 use crate::parse::keywords::STRUCT;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactResult;
+use super::store_struct_definition_facts::StoreStructDefinitionFactResult;
 
 pub enum ExecDefStructStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
@@ -65,6 +66,7 @@ pub struct ExecDefStructStmtSuccessResult {
     pub field_type_well_defined: Vec<ObjWellDefinedProof>,
     pub field_scope: ExecDefStructFieldScopeSuccessResult,
     pub local_env: Box<ExecEnv>,
+    pub definition_facts: Vec<StoreStructDefinitionFactResult>,
 }
 
 pub enum ExecDefStructStmtResult {
@@ -80,10 +82,9 @@ impl ExecDefStructStmtResult {
 
 impl Runtime {
     // Mathematical contract: a struct definition is checked under a temporary
-    // header-parameter environment and a nested field binder environment; only
-    // the struct definition escapes to the parent. Field carriers and `<=>:`
-    // laws must be well-defined under those binders; property release
-    // (`release struct def`, `$in &Struct`) is deferred.
+    // header-parameter environment and a nested field binder environment.
+    // Publish the definition and its quantified laws in the statement transaction;
+    // local field assumptions never escape as unquantified ambient facts.
     pub(in crate::execute) fn exec_def_struct_stmt(
         &mut self,
         def_struct: &DefStructStmt,
@@ -100,6 +101,7 @@ impl Runtime {
 
         self.top_exec_env_mut()
             .store_def_struct(def_struct.clone());
+        let definition_facts = self.store_struct_definition_facts(def_struct)?;
 
         Ok(ExecDefStructStmtResult::Success(
             ExecDefStructStmtSuccessResult {
@@ -109,6 +111,7 @@ impl Runtime {
                 field_type_well_defined: parts.field_type_well_defined,
                 field_scope: parts.field_scope,
                 local_env,
+                definition_facts,
             },
         ))
     }

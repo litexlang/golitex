@@ -370,9 +370,17 @@ evaluated objects. A failed eval WD is also exposed in Normal
 stage; its command phase remains `eval`.
 
 Normal let and named-function failures expose their existing WD result under
-`why_failed.failure`. A sketch failure adds the zero-based `step_index` and
+`why_failed.failure`. Concrete `prop` failures retain `parameter_type`,
+`auto_open_struct_layer`, or `iff_fact_well_defined` with the existing nested
+cause; Normal uses `why_failed.failure`, and Detailed uses `failure`.
+A sketch failure adds the zero-based `step_index` and
 the nested Normal `result`. Symbolic eval's `UnsupportedExpression` reports
-`cause: "unsupported_expression"`; other eval causes keep their current output.
+`cause: "unsupported_expression"`. Finite aggregate eval also reports
+`aggregate_budget_exceeded` or `aggregate_range_overflow` in Normal and Detailed
+output. Successful Normal eval exposes `evaluated_object` and keeps `stores` and
+`infers` empty. Detailed output additionally retains range/set enumeration,
+function substitution, algorithm equation evidence, each exact term and running
+totals. Aggregate equality and symbolic identities project their dedicated proofs.
 
 Detailed failed lets retain `value_well_defined`. Compound fact statement
 labels use the same available full goal text as Normal. Successful nonempty

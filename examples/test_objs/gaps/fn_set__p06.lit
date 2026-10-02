@@ -1,2 +1,0 @@
-# Intended valid regression: fn_set P06
-fn(x, y R) R {x + y} $in fn(a, b R) R

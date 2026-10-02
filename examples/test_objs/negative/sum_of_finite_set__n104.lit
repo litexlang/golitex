@@ -1,0 +1,4 @@
+# N104: must reject: union needs disjointness
+have A,B finite_set
+have f fn(k union(A,B)) R
+finite_set_sum(union(A,B),f) = finite_set_sum(A,f)+finite_set_sum(B,f)

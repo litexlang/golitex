@@ -1,0 +1,3 @@
+# N101: must reject: complex membership does not imply nonzero
+have z C
+z != 0

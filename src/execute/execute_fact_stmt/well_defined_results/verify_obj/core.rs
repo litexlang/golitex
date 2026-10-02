@@ -461,7 +461,13 @@ impl Runtime {
     ) -> RuntimeResult<Result<ObjWellDefinedByDefCommonStages, ObjWellDefinedByDefCommonStages>>
     {
         let (proof, _local_env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.verify_fn_obj_against_fn_set_in_local(value, fn_set, verify_state)
+            // A candidate scope is discarded, so returned child/requirement
+            // proofs must not cite WD ids created only inside that scope.
+            // Existing ancestor ids remain usable; success records the whole
+            // application in the caller's environment after candidate selection.
+            rt.verify_fn_obj_against_fn_set_in_local(
+                value, fn_set, verify_state.without_well_defined_storage(),
+            )
         })?;
         Ok(proof)
     }

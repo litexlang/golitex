@@ -8,10 +8,6 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
-> **Litex is an experimental hobby project in beta; expect rough edges.** The author of Litex is not a so-called expert. Views in this blueprint carry no authority. Discussion is welcome.
-
-> **Implementation boundary (2026-09-30):** This blueprint distinguishes design goals from current `src/`. The current build has no Lean compiler entrypoint; Section 5 preserves an earlier experiment and target interface. Blocks labeled “Migration example” are not currently checked examples. See the [CLI reference](cli.md) for current commands and output.
-
 <!-- Blueprint spine: reasoning abundance from AI → scientific object → design hypothesis → measurable costs → potential capacity impact → dual bottlenecks of verification and understanding → two participation barriers → four language design choices → knowledge record left by each statement → Human–AI–Litex skill and knowledge-production protocol (including definition and verification) → replay, reuse, and Lean/Mathlib handoff of the record → ecosystem role → from AI for Math toward trustworthy, efficient reasoning in the AI era → success criterion -->
 
 <!--
@@ -46,13 +42,13 @@ Writing boundary: the first three layers are Litex's scientific core; the fourth
 
 ## 0. Litex Blueprint Overview
 
-*Litex (begun in 2024) is a set-theoretic formal language designed to be easy to learn and use. Litex source follows ordinary mathematical writing: users state objects and facts directly—what they want to prove; the system verifies bottom-up and returns the grounds for each step, or where checking stops. Lean interoperability is a design goal; the current build does not expose that compiler. Together with humans and AI, Litex hopes to form a collaboration loop that can accumulate checkable verification work for Math for AI.*
+*Begun in 2024, Litex asks a question: can formal proofs stay close to ordinary mathematics, be easy to write and read, and still be rigorously checked? It hopes to become a Python for formal languages, bringing more people into the world of checkable mathematics.*
 
-Behind that sits a mathematical question: can a formal language be both easy to write and read, and strictly checkable—with source close to ordinary mathematical expression, and a verification process that lays out what each step does and which mathematical dependencies it rests on? Natural language is easy to understand but hard to verify rigorously; formal code can be verified but is often hard to understand. Litex aims to be a bridge between the two.
+To do this, Litex starts from the familiar set-theoretic world of sets, elements, functions, and relations. Authors choose definitions, constructions, and facts to prove; Litex checks for local grounds in the current knowledge and explains why a statement holds or where verification stops. Accepted facts stay in the context for later proofs. This explicit feedback also lets humans and AI try, revise, and accumulate checkable results together.
 
-*In one line: Litex wants to be the Python of formal languages—easier to learn and use for writing and reading checkable mathematics; and when you read, you get not only the source, but also the mathematical grounds behind it, deepening understanding and sparking inspiration; that way, more non-specialists can take up a formal language and put it to work.*
+The next step on this path is Lean. The Litex-to-Lean compiler is not yet integrated into the current build and is expected to be completed by the end of 2026. Its goal is to let Lean independently recheck supported Litex proofs, connecting familiar mathematical expression to the existing formalization ecosystem.
 
-The value of mathematics lies in helping humans understand the world we live in. Litex hopes to help keep [fostering understanding](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)—what people are most likely to lose, and most need to keep, in the AI era.
+These choices ultimately serve human understanding. Mathematics helps us understand the world we live in; Litex hopes to keep [fostering understanding](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/) in the AI era, when this ability may be easiest to lose and most important to retain.
 
 <a id="overview-spine"></a>
 
@@ -1925,3 +1921,16 @@ mom_age = 3 * 15 + 4 = 49
 ```
 
 You supply the mathematical move; Litex checks each connection and keeps what passed.
+
+Exact decimal construction normalizes aliases such as `2.400` and `2.4` before
+comparison and persistence. The imaginary unit has a dedicated nonzero builtin,
+and complex division retains denominator evidence. Finite sums and products
+share an evaluator with the equality verifier: checked function application,
+binding-aware substitution, recursive exact evaluation, then accumulation.
+Each evaluation shares a 1024-term allowance across nested aggregates and
+checks integer endpoint overflow. Separate symbolic rules retain their domain,
+pointwise or partition premises. Detailed results expose the term calculations;
+`eval` displays a value without publishing a fact. The
+[aggregate tracer](../examples/proof_nodes/equal/by_builtin_rule/aggregate_calculation.lit)
+and [symbolic tracer](../examples/proof_nodes/equal/by_builtin_rule/aggregate_identities.lit)
+exercise these paths. These verifier paths do not establish Lean export support.

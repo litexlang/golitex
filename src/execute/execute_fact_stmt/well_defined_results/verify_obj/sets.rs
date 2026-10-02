@@ -532,7 +532,7 @@ impl Runtime {
         Ok(self.with_requirements(proof, vec![req]))
     }
 
-    // finite_set_max(S): children, `$is_finite_set` and `$is_nonempty_set`.
+    // finite_set_max(S): finite, nonempty, and real-valued. Example: max({1, 2}).
     pub(super) fn verify_finite_set_max_obj_well_definedness_by_def(
         &mut self,
         value: &FiniteSetMax,
@@ -548,8 +548,14 @@ impl Runtime {
         )?);
         reqs.push(self.require_is_nonempty_set(
             value.set.as_ref(),
-            verify_state,
+            verify_state.clone(),
             format!("finite_set_max requires a finite nonempty set, got {}", value.set.ir()),
+        )?);
+        reqs.push(self.require_obj_subset_of_standard_set(
+            value.set.as_ref(),
+            StandardSet::R,
+            verify_state,
+            format!("finite_set_max requires a real-valued set, got {}", value.set.ir()),
         )?);
         Ok(self.with_requirements(proof, reqs))
     }
@@ -570,8 +576,14 @@ impl Runtime {
         )?);
         reqs.push(self.require_is_nonempty_set(
             value.set.as_ref(),
-            verify_state,
+            verify_state.clone(),
             format!("finite_set_min requires a finite nonempty set, got {}", value.set.ir()),
+        )?);
+        reqs.push(self.require_obj_subset_of_standard_set(
+            value.set.as_ref(),
+            StandardSet::R,
+            verify_state,
+            format!("finite_set_min requires a real-valued set, got {}", value.set.ir()),
         )?);
         Ok(self.with_requirements(proof, reqs))
     }
@@ -631,4 +643,3 @@ impl Runtime {
         Ok(self.with_requirements(proof, reqs))
     }
 }
-

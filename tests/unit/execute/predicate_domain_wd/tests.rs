@@ -11,6 +11,25 @@ fn runtime() -> Runtime {
 }
 
 #[test]
+fn predicate_domain_wd_does_not_reopen_anonymous_function_peers() {
+    // The stored `prior = fn(n N) N {1}` provides an equality peer.
+    // Checking an unrelated numeric domain must not enter its binder again.
+    for (body, expected) in [
+        ("have n N\n0 <= n\n", true),
+        ("have A set = R\nhave x A = 0\nx <= 1\n", true),
+        ("forall x C:\n    x >= 0\n    =>:\n        x >= 0\n", false),
+    ] {
+        let mut rt = runtime();
+        let code = format!("have fn prior(n N) N = 1\n{body}");
+        let run = rt.run_litex_code(&code).unwrap();
+        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert_eq!(run.success, expected, "{code}");
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+        assert!(!rt.run_litex_code("0 = 1\n").unwrap().success);
+    }
+}
+
+#[test]
 fn predicate_domain_wd_requires_the_numeric_domain_before_assuming_a_fact() {
     for (header, atom) in [
         ("x R", "$prime(x)"),
@@ -187,7 +206,7 @@ fn predicate_domain_wd_preserves_equal_carriers_and_the_exact_one_based_prefix()
             .stringify();
             assert!(detail.contains("predicate_domain"), "{detail}");
             assert!(
-                detail.contains("by_known_atomic_fact"),
+                detail.contains("by_known_atomic"),
                 "signature must cite its actual stored type: {detail}"
             );
         }
@@ -207,5 +226,21 @@ fn predicate_domain_wd_preserves_equal_carriers_and_the_exact_one_based_prefix()
             run.session_error
         );
         assert!(!run.success, "{code}");
+    }
+}
+
+#[test]
+fn predicate_domain_wd_closed_negative_carriers_terminate_and_positive_integer_evidence_remains() {
+    let run = runtime().run_litex_code(include_str!(
+        "../../../../examples/wd/predicate_positive_integer_carrier.lit"
+    )).unwrap();
+    assert!(run.success, "{:?}", run.session_error);
+    for carrier in ["Z", "N", "N+"] {
+        let mut rt = runtime();
+        let code = format!("1 / 2 $in {carrier}\n");
+        let run = rt.run_litex_code(&code).unwrap();
+        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(!run.success, "{code}");
+        assert_eq!(rt.execution_environments_stack.len(), 1);
     }
 }

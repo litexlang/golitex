@@ -9,6 +9,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::{
     VerifyObjWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -66,7 +67,12 @@ impl Runtime {
         let mut succeeded_dom = Vec::with_capacity(fact.dom_facts.len());
         for (failed_index, dom) in fact.dom_facts.iter().enumerate() {
             match self.verify_quantifier_free_as_fact_wd(dom, verify_state.clone())? {
-                VerifyFactWellDefinedResult::Success(proof) => succeeded_dom.push(proof),
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    // Checked antecedents guard later domains and conclusions.
+                    // This binder environment is retained as evidence, not merged.
+                    let _ = self.store_fact_and_infer(&quantifier_free_fact_to_fact(dom.clone()))?;
+                    succeeded_dom.push(proof);
+                }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {
                     return Ok(Err(FailToVerifyNotForallFactWellDefinedResult::DomFact {
                         failed_index,

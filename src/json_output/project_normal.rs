@@ -126,7 +126,7 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
         }
         ExecFactStmtResult::Failed(verify) => {
             let statement = verify_goal_display(verify);
-            let why = why_failed(verify, lang);
+            let why = why_failed(verify, runtime);
             object(lang, vec![
                 ("success", bool_value(false)),
                 ("statement", string(statement)),
@@ -298,11 +298,13 @@ fn searched_proof_why_json(runtime: &Runtime, kind: &str) -> JsonValue {
     ])
 }
 
-fn why_failed(verify: &VerifyFactResult, lang: crate::launch_command::OutputLanguage) -> JsonValue {
+fn why_failed(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
+    let lang = output_language(runtime);
     if verify.is_wd_failed() {
         return object(
             lang,
-            vec![("phase", string(phase_value_well_defined(lang)))],
+            vec![("phase", string(phase_value_well_defined(lang))),
+                ("verification", super::project_detailed::project_verify_fact(verify, runtime))],
         );
     }
     let goal = verify_goal_display(verify);

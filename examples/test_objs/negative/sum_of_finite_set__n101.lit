@@ -1,0 +1,2 @@
+# N101: must reject: empty sum is not positive
+finite_set_sum({},fn(k Z) N+ {1}) $in N+

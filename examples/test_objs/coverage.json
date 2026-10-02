@@ -12,6 +12,7 @@
       "positive_cases": [
         "P01",
         "P02",
+        "P03",
         "P04",
         "P05",
         "P06"
@@ -30,19 +31,7 @@
           "file": "negative/identifier_plain__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/identifier_plain__p03.lit",
-          "intended": "accept",
-          "issue": "identifier_plain-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"a[2] = 2\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"a[2] = 2\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "fn_obj",
@@ -107,7 +96,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `f`\", line: 3, path: Real(\"examples/test_objs/gaps/fn_obj__p06.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"have fn \u2026\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `f`\", line: 3, path: Real(\"examples/test_objs/gaps/fn_obj__p06.lit\") }))"
           }
         }
       ]
@@ -122,10 +111,13 @@
       "positive_cases": [
         "P01",
         "P02",
+        "P03",
         "P04",
         "P05",
         "P06",
-        "P07"
+        "P07",
+        "P101",
+        "P102"
       ],
       "negative_cases": [
         {
@@ -141,30 +133,7 @@
           "file": "negative/number__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/number__p03.lit",
-          "intended": "accept",
-          "issue": "number-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"2.400 = 2.4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"2.400 = 2.4\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "N03",
-          "file": "negative/number__n03.lit",
-          "intended": "reject",
-          "issue": "number-N03",
-          "baseline": {
-            "observed": "accept",
-            "phase": null,
-            "diagnostic": "{\"success\": true, \"statement\": \"2.400 != 2.4\", \"proof_method\": {\"type\": \"builtin_rule\", \"rule_name\": \"Closed decimal inequality\", \"message\": \"Both sides evaluate to different closed numbers\"}, \"stores\": [\"2.400 != 2.4\"], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "imaginary_unit",
@@ -179,7 +148,9 @@
         "P03",
         "P04",
         "P05",
-        "P06"
+        "P06",
+        "P101",
+        "P102"
       ],
       "negative_cases": [
         {
@@ -189,6 +160,10 @@
         {
           "id": "N02",
           "file": "negative/imaginary_unit__n02.lit"
+        },
+        {
+          "id": "N101",
+          "file": "negative/imaginary_unit__n101.lit"
         }
       ],
       "gaps": []
@@ -370,7 +345,9 @@
         "P04",
         "P05",
         "P06",
-        "P07"
+        "P07",
+        "P08",
+        "P101"
       ],
       "negative_cases": [
         {
@@ -388,21 +365,21 @@
         {
           "id": "N04",
           "file": "negative/div__n04.lit"
+        },
+        {
+          "id": "N101",
+          "file": "negative/div__n101.lit"
+        },
+        {
+          "id": "N102",
+          "file": "negative/div__n102.lit"
+        },
+        {
+          "id": "N103",
+          "file": "negative/div__n103.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P08",
-          "file": "gaps/div__p08.lit",
-          "intended": "accept",
-          "issue": "div-P08",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "pow",
@@ -863,6 +840,7 @@
       "positive_cases": [
         "P01",
         "P02",
+        "P03",
         "P05"
       ],
       "negative_cases": [
@@ -876,17 +854,6 @@
         }
       ],
       "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/cos__p03.lit",
-          "intended": "accept",
-          "issue": "cos-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"cos(pi / 2) = 0\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"cos(pi / 2) = 0\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
         {
           "id": "P04",
           "file": "gaps/cos__p04.lit",
@@ -1732,7 +1699,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `I`\", line: 3, path: Real(\"examples/test_objs/gaps/family_intersect__p04.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `I`\", line: 3, path: Real(\"examples/test_objs/gaps/family_intersect__p04.lit\") }))"
           }
         }
       ]
@@ -1783,6 +1750,8 @@
       "positive_file": "index_union.lit",
       "helper_paths": [],
       "positive_cases": [
+        "P01",
+        "P04",
         "P05",
         "P06"
       ],
@@ -1806,17 +1775,6 @@
       ],
       "gaps": [
         {
-          "id": "P01",
-          "file": "gaps/index_union__p01.lit",
-          "intended": "accept",
-          "issue": "index_union-P01",
-          "baseline": {
-            "observed": "reject",
-            "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `X`\", line: 4, path: Real(\"examples/test_objs/gaps/index_union__p01.lit\") }))"
-          }
-        },
-        {
           "id": "P02",
           "file": "gaps/index_union__p02.lit",
           "intended": "accept",
@@ -1824,18 +1782,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_union__p02.lit\") }))"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/index_union__p04.lit",
-          "intended": "accept",
-          "issue": "index_union-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
+            "diagnostic": "{\"success\": false, \"statement\": \"have fn \u2026\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_union__p02.lit\") }))"
           }
         }
       ]
@@ -1848,6 +1795,8 @@
       "positive_file": "index_intersect.lit",
       "helper_paths": [],
       "positive_cases": [
+        "P01",
+        "P04",
         "P05",
         "P06"
       ],
@@ -1871,17 +1820,6 @@
       ],
       "gaps": [
         {
-          "id": "P01",
-          "file": "gaps/index_intersect__p01.lit",
-          "intended": "accept",
-          "issue": "index_intersect-P01",
-          "baseline": {
-            "observed": "reject",
-            "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `X`\", line: 4, path: Real(\"examples/test_objs/gaps/index_intersect__p01.lit\") }))"
-          }
-        },
-        {
           "id": "P02",
           "file": "gaps/index_intersect__p02.lit",
           "intended": "accept",
@@ -1889,18 +1827,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_intersect__p02.lit\") }))"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/index_intersect__p04.lit",
-          "intended": "accept",
-          "issue": "index_intersect-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
+            "diagnostic": "{\"success\": false, \"statement\": \"have fn \u2026\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_intersect__p02.lit\") }))"
           }
         }
       ]
@@ -1913,6 +1840,8 @@
       "positive_file": "index_cart.lit",
       "helper_paths": [],
       "positive_cases": [
+        "P01",
+        "P02",
         "P04",
         "P05"
       ],
@@ -1930,30 +1859,7 @@
           "file": "negative/index_cart__empty_index.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P01",
-          "file": "gaps/index_cart__p01.lit",
-          "intended": "accept",
-          "issue": "index_cart-P01",
-          "baseline": {
-            "observed": "reject",
-            "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `P`\", line: 4, path: Real(\"examples/test_objs/gaps/index_cart__p01.lit\") }))"
-          }
-        },
-        {
-          "id": "P02",
-          "file": "gaps/index_cart__p02.lit",
-          "intended": "accept",
-          "issue": "index_cart-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `P`\", line: 4, path: Real(\"examples/test_objs/gaps/index_cart__p02.lit\") }))"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "list_set",
@@ -2278,7 +2184,8 @@
       "positive_cases": [
         "P01",
         "P02",
-        "P03"
+        "P03",
+        "P05"
       ],
       "negative_cases": [
         {
@@ -2300,17 +2207,6 @@
             "observed": "reject",
             "phase": "well_defined",
             "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P05",
-          "file": "gaps/tuple__p05.lit",
-          "intended": "accept",
-          "issue": "tuple-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"(1 + 1, 3) = (2, 3)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"(1 + 1, 3) = (2, 3)\"}, \"stores\": [], \"infers\": []}"
           }
         },
         {
@@ -2430,7 +2326,8 @@
       "positive_cases": [
         "P01",
         "P02",
-        "P03"
+        "P03",
+        "P05"
       ],
       "negative_cases": [
         {
@@ -2467,17 +2364,6 @@
           }
         },
         {
-          "id": "P05",
-          "file": "gaps/obj_at_index__p05.lit",
-          "intended": "accept",
-          "issue": "obj_at_index-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"t[1] = 1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"t[1] = 1\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
           "id": "P06",
           "file": "gaps/obj_at_index__p06.lit",
           "intended": "accept",
@@ -2503,7 +2389,9 @@
         "P01",
         "P02",
         "P03",
-        "P04"
+        "P04",
+        "P05",
+        "P06"
       ],
       "negative_cases": [
         {
@@ -2519,30 +2407,7 @@
           "file": "negative/fn_set__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P05",
-          "file": "gaps/fn_set__p05.lit",
-          "intended": "accept",
-          "issue": "fn_set-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"fn (x R) R{x} $in fn (y R) R\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x R) R{x} $in fn (y R) R\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/fn_set__p06.lit",
-          "intended": "accept",
-          "issue": "fn_set-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"fn (x, y R) R{x + y} $in fn (a, b R) R\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x, y R) R{x + y} $in fn (a, b R) R\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "anonymous_fn",
@@ -2558,6 +2423,7 @@
         "P02",
         "P03",
         "P04",
+        "P05",
         "P90"
       ],
       "negative_cases": [
@@ -2580,17 +2446,6 @@
       ],
       "gaps": [
         {
-          "id": "P05",
-          "file": "gaps/anonymous_fn__p05.lit",
-          "intended": "accept",
-          "issue": "anonymous_fn-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"fn (x R) R{x + 1} $in fn (y R) R\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x R) R{x + 1} $in fn (y R) R\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
           "id": "P06",
           "file": "gaps/anonymous_fn__p06.lit",
           "intended": "accept",
@@ -2599,28 +2454,6 @@
             "observed": "reject",
             "phase": "search_proof",
             "diagnostic": "{\"success\": false, \"statement\": \"fn (x R) R{x + y}(2) = 5\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x R) R{x + y}(2) = 5\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "N01",
-          "file": "negative/anonymous_fn__n01.lit",
-          "intended": "reject",
-          "issue": "anonymous_fn-N01",
-          "baseline": {
-            "observed": "accept",
-            "phase": "success",
-            "diagnostic": ""
-          }
-        },
-        {
-          "id": "N04",
-          "file": "negative/anonymous_fn__n04.lit",
-          "intended": "reject",
-          "issue": "anonymous_fn-N04",
-          "baseline": {
-            "observed": "accept",
-            "phase": "success",
-            "diagnostic": ""
           }
         }
       ],
@@ -2672,8 +2505,20 @@
       "positive_cases": [
         "P01",
         "P02",
+        "P03",
+        "P04",
         "P05",
-        "P06"
+        "P06",
+        "P101",
+        "P102",
+        "P103",
+        "P104",
+        "P105",
+        "P106",
+        "P107",
+        "P108",
+        "P109",
+        "P110"
       ],
       "negative_cases": [
         {
@@ -2691,32 +2536,41 @@
         {
           "id": "N04",
           "file": "negative/sum__n04.lit"
-        }
-      ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/sum__p03.lit",
-          "intended": "accept",
-          "issue": "sum-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"sum(1, 3, fn (x Z) Z{x}) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"sum(1, 3, fn (x Z) Z{x}) = 6\"}, \"stores\": [], \"infers\": []}"
-          }
         },
         {
-          "id": "P04",
-          "file": "gaps/sum__p04.lit",
-          "intended": "accept",
-          "issue": "sum-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"sum(1, 3, fn (x Z) Z{2}) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"sum(1, 3, fn (x Z) Z{2}) = 6\"}, \"stores\": [], \"infers\": []}"
-          }
+          "id": "N101",
+          "file": "negative/sum__n101.lit"
+        },
+        {
+          "id": "N102",
+          "file": "negative/sum__n102.lit"
+        },
+        {
+          "id": "N103",
+          "file": "negative/sum__n103.lit"
+        },
+        {
+          "id": "N104",
+          "file": "negative/sum__n104.lit"
+        },
+        {
+          "id": "N105",
+          "file": "negative/sum__n105.lit"
+        },
+        {
+          "id": "N106",
+          "file": "negative/sum__n106.lit"
+        },
+        {
+          "id": "N107",
+          "file": "negative/sum__n107.lit"
+        },
+        {
+          "id": "N108",
+          "file": "negative/sum__n108.lit"
         }
-      ]
+      ],
+      "gaps": []
     },
     {
       "name": "product",
@@ -2728,8 +2582,15 @@
       "positive_cases": [
         "P01",
         "P02",
+        "P03",
+        "P04",
         "P05",
-        "P06"
+        "P06",
+        "P101",
+        "P102",
+        "P103",
+        "P104",
+        "P105"
       ],
       "negative_cases": [
         {
@@ -2743,32 +2604,21 @@
         {
           "id": "N03",
           "file": "negative/product__n03.lit"
-        }
-      ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/product__p03.lit",
-          "intended": "accept",
-          "issue": "product-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"product(1, 3, fn (x Z) Z{x}) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"product(1, 3, fn (x Z) Z{x}) = 6\"}, \"stores\": [], \"infers\": []}"
-          }
         },
         {
-          "id": "P04",
-          "file": "gaps/product__p04.lit",
-          "intended": "accept",
-          "issue": "product-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"product(1, 3, fn (x Z) Z{2}) = 8\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"product(1, 3, fn (x Z) Z{2}) = 8\"}, \"stores\": [], \"infers\": []}"
-          }
+          "id": "N101",
+          "file": "negative/product__n101.lit"
+        },
+        {
+          "id": "N102",
+          "file": "negative/product__n102.lit"
+        },
+        {
+          "id": "N103",
+          "file": "negative/product__n103.lit"
         }
-      ]
+      ],
+      "gaps": []
     },
     {
       "name": "sum_of_finite_set",
@@ -2780,8 +2630,17 @@
       "positive_cases": [
         "P01",
         "P02",
+        "P03",
+        "P04",
         "P05",
-        "P90"
+        "P06",
+        "P90",
+        "P101",
+        "P102",
+        "P103",
+        "P104",
+        "P105",
+        "P106"
       ],
       "negative_cases": [
         {
@@ -2799,54 +2658,25 @@
         {
           "id": "N04",
           "file": "negative/sum_of_finite_set__n04.lit"
+        },
+        {
+          "id": "N101",
+          "file": "negative/sum_of_finite_set__n101.lit"
+        },
+        {
+          "id": "N102",
+          "file": "negative/sum_of_finite_set__n102.lit"
+        },
+        {
+          "id": "N103",
+          "file": "negative/sum_of_finite_set__n103.lit"
+        },
+        {
+          "id": "N104",
+          "file": "negative/sum_of_finite_set__n104.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/sum_of_finite_set__p03.lit",
-          "intended": "accept",
-          "issue": "sum_of_finite_set-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"finite_set_sum({1, 2}, fn (x Z) Z{x}) = 3\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_sum({1, 2}, fn (x Z) Z{x}) = 3\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/sum_of_finite_set__p04.lit",
-          "intended": "accept",
-          "issue": "sum_of_finite_set-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"finite_set_sum({2, 1}, fn (x Z) Z{x}) = 3\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_sum({2, 1}, fn (x Z) Z{x}) = 3\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/sum_of_finite_set__p06.lit",
-          "intended": "accept",
-          "issue": "sum_of_finite_set-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"finite_set_sum(closed_range(3, 1), fn (x Z) Z{x}) = 0\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_sum(closed_range(3, 1), fn (x Z) Z{x}) = 0\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "N02",
-          "file": "negative/sum_of_finite_set__n02.lit",
-          "intended": "reject",
-          "issue": "sum_of_finite_set-N02",
-          "baseline": {
-            "observed": "accept",
-            "phase": "success",
-            "diagnostic": ""
-          }
-        }
-      ],
+      "gaps": [],
       "valid_domain_control": "P90"
     },
     {
@@ -2859,8 +2689,16 @@
       "positive_cases": [
         "P01",
         "P02",
+        "P03",
+        "P04",
         "P05",
-        "P90"
+        "P06",
+        "P90",
+        "P101",
+        "P102",
+        "P103",
+        "P104",
+        "P105"
       ],
       "negative_cases": [
         {
@@ -2878,54 +2716,21 @@
         {
           "id": "N04",
           "file": "negative/product_of_finite_set__n04.lit"
+        },
+        {
+          "id": "N101",
+          "file": "negative/product_of_finite_set__n101.lit"
+        },
+        {
+          "id": "N102",
+          "file": "negative/product_of_finite_set__n102.lit"
+        },
+        {
+          "id": "N103",
+          "file": "negative/product_of_finite_set__n103.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/product_of_finite_set__p03.lit",
-          "intended": "accept",
-          "issue": "product_of_finite_set-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"finite_set_product({2, 3}, fn (x Z) Z{x}) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_product({2, 3}, fn (x Z) Z{x}) = 6\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/product_of_finite_set__p04.lit",
-          "intended": "accept",
-          "issue": "product_of_finite_set-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"finite_set_product({3, 2}, fn (x Z) Z{x}) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_product({3, 2}, fn (x Z) Z{x}) = 6\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/product_of_finite_set__p06.lit",
-          "intended": "accept",
-          "issue": "product_of_finite_set-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"finite_set_product({0, 2}, fn (x Z) Z{x}) = 0\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_product({0, 2}, fn (x Z) Z{x}) = 0\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "N02",
-          "file": "negative/product_of_finite_set__n02.lit",
-          "intended": "reject",
-          "issue": "product_of_finite_set-N02",
-          "baseline": {
-            "observed": "accept",
-            "phase": "success",
-            "diagnostic": ""
-          }
-        }
-      ],
+      "gaps": [],
       "valid_domain_control": "P90"
     },
     {
@@ -3163,17 +2968,6 @@
             "phase": "well_defined",
             "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
           }
-        },
-        {
-          "id": "N03",
-          "file": "negative/finite_set_max__n03.lit",
-          "intended": "reject",
-          "issue": "finite_set_max-N03",
-          "baseline": {
-            "observed": "accept",
-            "phase": "success",
-            "diagnostic": ""
-          }
         }
       ],
       "valid_domain_control": "P90"
@@ -3224,17 +3018,6 @@
             "observed": "reject",
             "phase": "well_defined",
             "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "N03",
-          "file": "negative/finite_set_min__n03.lit",
-          "intended": "reject",
-          "issue": "finite_set_min-N03",
-          "baseline": {
-            "observed": "accept",
-            "phase": "success",
-            "diagnostic": ""
           }
         }
       ],
@@ -3717,6 +3500,7 @@
       "positive_cases": [
         "P01",
         "P02",
+        "P03",
         "P04",
         "P05"
       ],
@@ -3730,19 +3514,7 @@
           "file": "negative/standard_set_r_star__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/standard_set_r_star__p03.lit",
-          "intended": "accept",
-          "issue": "standard_set_r_star-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"sqrt (2) $in R*\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"sqrt (2) $in R*\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "standard_set_c_star",

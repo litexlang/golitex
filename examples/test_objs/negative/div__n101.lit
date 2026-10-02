@@ -1,0 +1,2 @@
+# N101: must reject: wrong imaginary inverse
+1/i = -1

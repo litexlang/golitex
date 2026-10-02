@@ -10,6 +10,10 @@ sketch:
 sketch:
     -1 $in R*
 
+# P03: sqrt(2) $in R*
+sketch:
+    sqrt(2) $in R*
+
 # P04: $is_set(R*)
 sketch:
     $is_set(R*)

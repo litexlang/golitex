@@ -27,7 +27,8 @@ Executable boundaries also check a zero denominator, an unproved nonzero denomin
 let x = 1 / 0
 ```
 
-A complex inverse remains a separate [gap](gaps/div__p08.lit); successful real division is not claimed to establish every complex capability.
+A complex inverse was originally a separate gap. It is now checked in `div.lit`
+case `P08`; the repair journal below preserves its rejected baseline.
 
 ## Initial complete-suite verification snapshot
 

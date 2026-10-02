@@ -38,6 +38,7 @@ pub struct RangeSumConstantBuiltinRuleProof {
 pub struct RangeProductConstantBuiltinRuleProof {
     pub function_expansion: AnonFnApplicationBodyProof,
     pub constant: Obj,
+    pub exponent_equal: Option<VerifyFactResult>,
     pub residual_equal: VerifyFactResult,
 }
 pub struct FiniteSetSumConstantBuiltinRuleProof {
@@ -48,14 +49,27 @@ pub struct FiniteSetSumConstantBuiltinRuleProof {
 pub struct FiniteSetProductConstantBuiltinRuleProof {
     pub function_expansion: AnonFnApplicationBodyProof,
     pub constant: Obj,
+    pub exponent_equal: Option<VerifyFactResult>,
     pub residual_equal: VerifyFactResult,
 }
-pub struct RangeSumPartitionBuiltinRuleProof { pub premises: Vec<VerifyFactResult> }
-pub struct RangeProductPartitionBuiltinRuleProof { pub premises: Vec<VerifyFactResult> }
-pub struct FiniteSetSumRangeBridgeBuiltinRuleProof { pub premises: Vec<VerifyFactResult> }
-pub struct FiniteSetProductRangeBridgeBuiltinRuleProof { pub premises: Vec<VerifyFactResult> }
-pub struct FiniteSetSumDisjointUnionBuiltinRuleProof { pub premises: Vec<VerifyFactResult> }
-pub struct FiniteSetProductDisjointUnionBuiltinRuleProof { pub premises: Vec<VerifyFactResult> }
+pub struct RangeSumPartitionBuiltinRuleProof {
+    pub premises: Vec<VerifyFactResult>,
+}
+pub struct RangeProductPartitionBuiltinRuleProof {
+    pub premises: Vec<VerifyFactResult>,
+}
+pub struct FiniteSetSumRangeBridgeBuiltinRuleProof {
+    pub premises: Vec<VerifyFactResult>,
+}
+pub struct FiniteSetProductRangeBridgeBuiltinRuleProof {
+    pub premises: Vec<VerifyFactResult>,
+}
+pub struct FiniteSetSumDisjointUnionBuiltinRuleProof {
+    pub premises: Vec<VerifyFactResult>,
+}
+pub struct FiniteSetProductDisjointUnionBuiltinRuleProof {
+    pub premises: Vec<VerifyFactResult>,
+}
 pub struct RangeSumPointwiseBuiltinRuleProof {
     pub premises: Vec<VerifyFactResult>,
     pub pointwise: AggregatePointwiseProof,
@@ -115,4 +129,3 @@ pub struct AggregatePointwiseProof {
     pub equality: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
 }
-

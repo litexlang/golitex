@@ -69,7 +69,12 @@ impl Runtime {
         let mut succeeded_dom = Vec::with_capacity(inner.dom_facts.len());
         for (failed_index, dom) in inner.dom_facts.iter().enumerate() {
             match self.verify_fact_well_definedness(dom, verify_state.clone())? {
-                VerifyFactWellDefinedResult::Success(proof) => succeeded_dom.push(proof),
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    // Only the shared antecedents guard both sides of the iff.
+                    // Neither side is assumed while checking the other side's WD.
+                    let _ = self.store_fact_and_infer(dom)?;
+                    succeeded_dom.push(proof);
+                }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {
                     return Ok(Err(FailToVerifyForallFactWithIffWellDefinedResult::DomFact {
                         failed_index,

@@ -26,6 +26,16 @@ Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
 ## Fundamental equality examples
 
+Exact decimal normalization, guarded imaginary division and finite aggregates
+have maintained tracers:
+[numeric normalization](equal/by_builtin_rule/numeric_normalization.lit),
+[imaginary division](equal/by_builtin_rule/imaginary_division.lit),
+[aggregate calculation](equal/by_builtin_rule/aggregate_calculation.lit),
+[symbolic aggregate identities](equal/by_builtin_rule/aggregate_identities.lit)
+and [exact rational inequality](atomic/by_builtin_rule/closed_rational_inequality.lit).
+Aggregate rejection controls live in `../test_objs/negative/` and the shared
+budget/domain/publication checks in `exec_eval_stmt_tests`.
+
 Known tuple-property routes have dedicated tracers for
 [reconstruction](equal/by_known_special_property/tuple_reconstruction.lit),
 [stored-equality projection](equal/by_known_special_property/tuple_projection.lit),
@@ -349,3 +359,11 @@ Natural-power builtin premises cite known memberships; concrete zero/negative
 examples explicitly establish the literal type facts first. The add2 chain keeps
 its intermediate coordinate expression. A direct `add2(...)= (4,6)` without
 that step is still not proved automatically. None of these examples uses trust.
+
+Checked return-carrier/signature leaves have dedicated tracers:
+`atomic/by_builtin_rule/cart_dimension_in_natural.lit`,
+`atomic/by_builtin_rule/tuple_dimension_in_natural.lit`, and
+`atomic/by_builtin_rule/anonymous_function_declared_signature.lit`. Their
+argument/body WD must already succeed; they do not drop domain conditions or
+rename free definition owners. Focused positive and negative contracts run
+with `cargo test --release predicate_domain`.

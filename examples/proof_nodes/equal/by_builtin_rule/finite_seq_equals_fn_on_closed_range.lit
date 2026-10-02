@@ -1,2 +1,2 @@
-# Node: equal.ByBuiltinRule.FiniteSeqEqualsFnOnClosedRange
-finite_seq(R, 3) = fn(x closed_range(0, 2)) R
+# Node: equal.ByBuiltinRule.FiniteSeqEqualsFnOnOneBasedDomain
+finite_seq(R, 3) = fn(x closed_range(1, 3)) R

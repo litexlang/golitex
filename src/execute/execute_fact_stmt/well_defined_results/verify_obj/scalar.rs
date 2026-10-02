@@ -2,7 +2,7 @@
 //! Ported from verification/well_definedness/object/scalar.rs.
 
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
-use crate::ast::fact::{AtomicFact, GreaterFact, LessEqualFact, NotEqualFact};
+use crate::ast::fact::{AndChainAtomicFact, AtomicFact, GreaterFact, LessEqualFact, NotEqualFact, OrFact, QuantifierFreeFact};
 use crate::ast::obj::StandardSet;
 use crate::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart, Lcm, Ln, Log, Max, Min, Mod, Mul, Neg, Number, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan, IntegerOperator, Literal, TrigOperator};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -221,6 +221,20 @@ impl Runtime {
             right: zero,
             line_file: None,
         });
+        // The domain excludes only the all-zero pair. A checked disjunction
+        // suffices without selecting either nonzero operand.
+        let non_all_zero = QuantifierFreeFact::OrFact(OrFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            facts: vec![AndChainAtomicFact::AtomicFact(left_nz.clone()), AndChainAtomicFact::AtomicFact(right_nz.clone())],
+            line_file: None,
+        });
+        let disjunction = self.verify_required_quantifier_free_fact(
+            non_all_zero, verify_state.clone(),
+        )?;
+        if !disjunction.is_failed() {
+            reqs.push(disjunction);
+            return Ok(self.with_requirements(proof, reqs));
+        }
         let left_r = self.verify_required_atomic_fact(
             left_nz,
             verify_state.clone(),

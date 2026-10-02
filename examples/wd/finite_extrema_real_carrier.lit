@@ -1,0 +1,19 @@
+# Tracer: finite extrema require a finite, nonempty, real-valued set.
+# Before: let bad_max = finite_set_max({i})
+# Before: let bad_min = finite_set_min({i})
+# Former behavior: both non-real declarations were incorrectly accepted.
+# Now: real literals, aliases, and checked generic set domains remain valid.
+# Boundary: non-real, empty, or unproved finite sets fail WD.
+# Evidence: target/release/litex -strict -f examples/wd/finite_extrema_real_carrier.lit
+# Rust controls: wd_obligation_tests::finite_extrema_*
+let maximum = finite_set_max({-2, 1, 3})
+let minimum = finite_set_min({-2, 1, 3})
+have values set = {-2, 1, 3}
+let alias_maximum = finite_set_max(values)
+let alias_minimum = finite_set_min(values)
+forall S finite_set:
+    $is_nonempty_set(S)
+    S $subset R
+    =>:
+        finite_set_max(S) = finite_set_max(S)
+        finite_set_min(S) = finite_set_min(S)

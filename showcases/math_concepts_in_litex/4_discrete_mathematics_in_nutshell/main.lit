@@ -10,6 +10,21 @@ finite_set_size({4, 5}) = 2
 finite_set_size({1, 2, 3, 4, 5}) = 5
 finite_set_size({1, 2, 3, 4, 5}) = finite_set_size({1, 2, 3}) + finite_set_size({4, 5})
 
+# Removing one unit from a positive integer leaves a nonnegative sum.
+strategy predecessor_sum_bounds:
+    ? forall a, b Z:
+        a > 0
+        b >= 0
+        =>:
+            a - 1 + b >= 0
+            b + (a - 1) >= 0
+    a - 1 >= 0
+
+strategy natural_predecessor:
+    ? forall n N+:
+        n - 1 $in N
+    n - 1 >= 0
+
 # The Pascal table is defined recursively from its two boundary rows.
 have fn pascal_entry(a Z, b Z: a >= 0, b >= 0) N by induc a + b from 0:
     case a = 0: 1

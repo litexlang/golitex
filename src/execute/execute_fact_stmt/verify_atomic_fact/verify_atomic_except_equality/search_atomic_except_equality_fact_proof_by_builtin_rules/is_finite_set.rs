@@ -2,11 +2,12 @@ use crate::ast::fact::{AtomicFact, Fact, IsFiniteSetFact};
 use crate::ast::obj::{Literal, Number, Obj, SetFormer};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::{Runtime, RuntimeResult};
+use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // These constructors carry finiteness intrinsically.
 // Example: prove `$is_finite_set({1, 2})`, `$is_finite_set(closed_range(1, n))`.
 pub enum IsFiniteSetFactSearchProofByBuiltinRule {
+    SurjectiveImageOfFiniteSet(SurjectiveImageOfFiniteSetBuiltinRuleProof),
     ListSet(ListSetFiniteBuiltinRuleProof),
     ClosedRange(ClosedRangeFiniteBuiltinRuleProof),
     Range(RangeFiniteBuiltinRuleProof),
@@ -16,6 +17,11 @@ pub enum IsFiniteSetFactSearchProofByBuiltinRule {
     // Finite codomain ⇒ finite length-n sequence carrier.
     // Example: `$is_finite_set({1})` proves `$is_finite_set(finite_seq({1}, 3))`.
     FiniteSeqFromFiniteCodomain(FiniteSeqFromFiniteCodomainBuiltinRuleProof),
+}
+
+pub struct SurjectiveImageOfFiniteSetBuiltinRuleProof {
+    pub cite_surjective_fact_id: FactId,
+    pub domain_finite_proof: VerifyFactResult,
 }
 
 pub struct ListSetFiniteBuiltinRuleProof {}
@@ -38,6 +44,28 @@ impl Runtime {
         fact: &IsFiniteSetFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<IsFiniteSetFactSearchProofByBuiltinRule>> {
+        let mut candidates = Vec::new();
+        let key=(crate::ast::names::AtomicName::Plain {name:crate::parse::keywords::SURJECTIVE.into()},true);
+        for env in self.execution_environments_stack.iter().rev() {
+            if let Some(knowns)=env.facts.known_atomic_except_equality_facts.by_prop.get(&key) {
+                for known in knowns {
+                    if let AtomicFact::SurjectiveFact(s)=known {
+                        if s.codomain.ir()==fact.set.ir() {candidates.push((s.fact_id,s.domain.clone()));}
+                    }
+                }
+            }
+        }
+        for (cite_surjective_fact_id,domain) in candidates {
+            let premise=Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
+                fact_id:self.global_ids.allocate_fact_id(),set:domain,line_file:None,
+            }));
+            let domain_finite_proof=self.verify_builtin_rule_premise(&premise,verify_state.clone())?;
+            if !domain_finite_proof.is_failed() {
+                return Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::SurjectiveImageOfFiniteSet(
+                    SurjectiveImageOfFiniteSetBuiltinRuleProof {cite_surjective_fact_id,domain_finite_proof},
+                )));
+            }
+        }
         match &fact.set {
             Obj::SetFormer(SetFormer::ListSet(_)) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::ListSet(
                 ListSetFiniteBuiltinRuleProof {},

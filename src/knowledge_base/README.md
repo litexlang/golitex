@@ -55,8 +55,16 @@ by thm only need the goal interface.
     definitions.json            # one DefinitionMemory (supported subset)
 ```
 
-`KB_ABI` (`paths.rs`) bumps when wire/manifest layout is incompatible.
-ABI 2 stores the `HaveFnEqual` statement name as a `BoundName` (`id`, `name`)
+`KB_ABI` (`paths.rs`) bumps when wire/manifest layout is incompatible or a
+verifier correction invalidates previously checked products. ABI 3 keeps the
+ABI 2 layout, but forces a cold rebuild after exact decimal normalization and
+aggregate WD corrections. The old checker could accept a false decimal
+inequality; cached theorem interfaces omit their proof process and cannot be
+treated as freshly checked by the repaired verifier. The fingerprint includes
+the ABI revision and old manifests are rejected, so imports rebuild once and
+then use the ordinary cache again. Runtime/Env state shapes are unchanged.
+
+ABI 2 introduced the `HaveFnEqual` statement name as a `BoundName` (`id`, `name`)
 and remaps that ID together with the function's parameter/body IDs. ABI 1
 module products are cache misses and are rebuilt from source. A standalone
 legacy `HaveFnEqual` record with a string name is rejected because it contains

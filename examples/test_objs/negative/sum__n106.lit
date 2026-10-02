@@ -1,0 +1,4 @@
+# N106: must reject: partition gap
+have n N+
+have f fn(k Z) R
+sum(1,n+2,f) = sum(1,n,f)+sum(n+2,n+2,f)

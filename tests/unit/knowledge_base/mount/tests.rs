@@ -183,22 +183,24 @@ fn old_module_abi_is_a_cache_miss() {
     write_module_kb(&root, fingerprint, 0, &BTreeMap::new(), &[]).expect("write current cache");
     let manifest = crate::knowledge_base::manifest_path(&root);
     let current = fs::read_to_string(&manifest).unwrap();
-    let old = current.replace(
-        &format!("\"abi\": \"{}\"", crate::knowledge_base::KB_ABI),
-        "\"abi\": \"1\"",
-    );
-    assert_ne!(current, old);
-    fs::write(&manifest, old).unwrap();
-    let mounted = try_mount_module(
-        &root,
-        fingerprint,
-        &GlobalIdsSnapshot::new(1, 1, 1, 1),
-        &HashMap::new(),
-    );
-    assert!(matches!(
-        mounted,
-        Err(KbMountMiss::Corrupt(crate::knowledge_base::KbCodecError::Shape(message)))
-            if message.contains("kb abi mismatch: file `1`")
-    ));
+    for old_abi in ["1", "2"] {
+        let old = current.replace(
+            &format!("\"abi\": \"{}\"", crate::knowledge_base::KB_ABI),
+            &format!("\"abi\": \"{old_abi}\""),
+        );
+        assert_ne!(current, old);
+        fs::write(&manifest, old).unwrap();
+        let mounted = try_mount_module(
+            &root,
+            fingerprint,
+            &GlobalIdsSnapshot::new(1, 1, 1, 1),
+            &HashMap::new(),
+        );
+        assert!(matches!(
+            mounted,
+            Err(KbMountMiss::Corrupt(crate::knowledge_base::KbCodecError::Shape(message)))
+                if message.contains(&format!("kb abi mismatch: file `{old_abi}`"))
+        ));
+    }
     fs::remove_dir_all(&root).unwrap();
 }

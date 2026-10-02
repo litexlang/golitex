@@ -1,0 +1,31 @@
+# Struct law publication and alpha-aware existential application.
+# Run: target/release/litex -strict -f examples/proof_nodes/exist/by_known_forall/struct_existential_law.lit
+# Previously rejected even after `release struct def s`:
+# thm use_law:
+#     ? forall A nonempty_set, s &RightZero<A>, x A:
+#         exist y A st {s.add(x, y) = s.zero}
+# Wrong carriers/guards/laws are executable negative regressions in sequence_struct_contract_tests.
+
+struct RightZero<A nonempty_set>:
+    zero A
+    add fn(x, y A) A
+    <=>:
+        forall x A:
+            exist y A st {add(x, y) = zero}
+
+thm use_law:
+    ? forall A nonempty_set, s &RightZero<A>, x A:
+        exist y A st {s.add(x, y) = s.zero}
+
+thm obtain_from_law:
+    ? forall s &RightZero<R>, x R:
+        exist z R st {s.add(x, z) = s.zero}
+    obtain inverse from exist y R st {s.add(x, y) = s.zero}
+    witness exist z R st {s.add(x, z) = s.zero} from inverse
+
+# The consumer also works when the source is an ordinary forall premise.
+forall f fn(x, y R) R, zero R:
+    forall x R:
+        exist y R st {f(x, y) = zero}
+    =>:
+        exist z R st {f(2, z) = zero}

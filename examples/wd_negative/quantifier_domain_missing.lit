@@ -1,0 +1,6 @@
+# Expected: soft WD failure; y = y cannot justify a nonzero denominator.
+prop unguarded(x R):
+    not forall y R:
+        y = y
+        =>:
+            1 / y != 1 / y

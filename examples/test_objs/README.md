@@ -13,6 +13,11 @@ cases use independent `sketch:` scopes, whose facts and definitions do not
 escape to later cases. Rejections and unresolved positive cases are standalone
 fixtures. No test uses `trust` to manufacture success.
 
+The approved numeric and aggregate repairs add exact decimal normalization,
+imaginary nonzero and guarded division, bounded nested sum/product calculation
+and symbolic identities. See [acceptance](acceptance.md) for current gate results
+and [todo](todo.md) for surviving issues. Earlier reports remain historical.
+
 ## Run
 
 From the repository root:

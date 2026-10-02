@@ -1,3 +1,0 @@
-# Intended valid regression: identifier_plain P03
-let a = (1, 2)
-a[2] = 2

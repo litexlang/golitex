@@ -1,0 +1,17 @@
+# Finite fold iterands must cover every member of the finite set.
+# Before: the WD owner omitted coverage obligations for these invalid iterands:
+# let bad_domain = finite_set_reduce({0, 1}, fn(x {2}) Z {x}, fn(a, b Z) Z {a + b}, 0)
+# let bad_predicate = finite_set_reduce({0, 1}, fn(x Z: x > 0) Z {x}, fn(a, b Z) Z {a + b}, 0)
+# Now: the ordinary declared domain and its predicates are checked elementwise.
+let additive = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0)
+let constrained = finite_set_reduce({1, 2}, fn(x Z: x > 0) Z {x}, fn(a, b Z) Z {a + b}, 0)
+let exact_domain = finite_set_reduce({1, 2}, fn(x {1, 2}) Z {x}, fn(a, b Z) Z {a + b}, 0)
+let empty_additive = finite_set_reduce({}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0)
+have fn identity(x Z) Z = x
+let named_iterand = finite_set_reduce({1, 2}, identity, fn(a, b Z) Z {a + b}, 0)
+
+# Boundary: associativity/commutativity enforcement remains an independent gap.
+# Ordered reduce retains its existing subtraction contract.
+let ordered_subtraction = reduce(1, 2, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0)
+# Gate: target/release/litex -strict -f examples/wd/finite_set_fold_domain.lit
+# Regression: cargo test --release finite_set_fold_ -- --nocapture

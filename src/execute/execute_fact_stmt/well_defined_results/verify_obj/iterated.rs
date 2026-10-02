@@ -148,9 +148,37 @@ impl Runtime {
             value.op.as_ref(),
             value.seed.as_ref(),
             "finite_set_reduce",
-            verify_state,
+            verify_state.clone(),
             &mut reqs,
         )?;
+        // A finite fold applies f at every set element, so its declared domain
+        // and predicates must cover the set (e.g. {1} is not covered by {2}).
+        if let Some(signature) = self.resolve_callable_fn_set(value.func.as_ref()) {
+            if set_bound_parameter_count(&signature.set_bound_parameters) == 1 {
+                for group in &signature.set_bound_parameters.groups {
+                    if group.params.is_empty() {
+                        continue;
+                    }
+                    let coverage = AtomicFact::SubsetFact(SubsetFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: value.set.as_ref().clone(),
+                        right: group.param_type.as_ref().clone(),
+                        line_file: None,
+                    });
+                    reqs.push(self.verify_required_atomic_fact(
+                        coverage,
+                        verify_state.clone(),
+                        "finite_set_reduce: iterand must cover the finite set".to_string(),
+                    )?);
+                }
+                self.append_aggregate_predicate_requirements(
+                    &signature,
+                    AggregateIndexDomain::FiniteSet(value.set.as_ref()),
+                    verify_state.clone(),
+                    &mut reqs,
+                )?;
+            }
+        }
         Ok(self.with_requirements(proof, reqs))
     }
 
@@ -465,6 +493,19 @@ impl Runtime {
         state:VerifyState, requirements:&mut Vec<VerifyFactResult>) -> RuntimeResult<()> {
         if signature.dom_facts.is_empty() { return Ok(()); }
         if matches!(domain, AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::ListSet(s))) if s.list.is_empty()) { return Ok(()); }
+        if let Some((arguments, endpoint_equalities)) = self.explicit_aggregate_predicate_arguments(domain) {
+            for equality in endpoint_equalities { requirements.push(self.verify_fact(&equality,state.without_well_defined_storage())?); }
+            let original = signature.set_bound_parameters.groups.iter().flat_map(|g| &g.params).next().expect("unary");
+            for argument in arguments {
+                let substitution = std::collections::HashMap::from([(original.id,argument)]);
+                for condition in &signature.dom_facts {
+                    let instantiated = self.inst_fact(&crate::instantiate::quantifier_free_fact_to_fact(condition.clone()),&substitution)
+                        .map_err(|e|crate::runtime::RuntimeError::InternalBug(format!("aggregate argument substitution: {e}")))?;
+                    requirements.push(self.verify_fact(&instantiated,state.without_well_defined_storage())?);
+                }
+            }
+            return Ok(());
+        }
         let parameter = self.fresh_internal_param();
         let index = Obj::Identifier(crate::ast::obj::IdentifierObj::from_bound_name(&parameter));
         let original = signature.set_bound_parameters.groups.iter().flat_map(|g| &g.params).next().expect("unary");
@@ -494,6 +535,37 @@ impl Runtime {
             dom_facts,then_facts,line_file:None };
         requirements.push(self.verify_forall_fact(&coverage,state.without_well_defined_storage())?);
         Ok(())
+    }
+
+    // Literal finite enumeration supplies exactly the predicate obligations for
+    // the source interval/list. Endpoint calculation is retained as equality
+    // evidence; symbolic domains continue through the universal coverage path.
+    fn explicit_aggregate_predicate_arguments(&mut self, domain:AggregateIndexDomain) -> Option<(Vec<Obj>,Vec<Fact>)> {
+        use crate::rational_expression::exact_rational::EvalRational;
+        let (start,end,half_open) = match domain {
+            AggregateIndexDomain::Range(a,b) => (a,b,false),
+            AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::ListSet(s))) => {
+                return (s.list.len()<=crate::execute::execute_eval_stmt::helper::MAX_AGGREGATE_TERMS)
+                    .then(|| (s.list.iter().map(|v|v.as_ref().clone()).collect(),vec![]));
+            }
+            AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::ClosedRange(s))) => (s.start.as_ref(),s.end.as_ref(),false),
+            AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::Range(s))) => (s.start.as_ref(),s.end.as_ref(),true),
+            AggregateIndexDomain::FiniteSet(_) => return None,
+        };
+        let (start_rewritten,_) = self.rewrite_obj_by_known_closed_numeric_equal(start);
+        let (end_rewritten,_) = self.rewrite_obj_by_known_closed_numeric_equal(end);
+        let first = EvalRational::from_obj(&start_rewritten)?.to_i128_if_integer()?;
+        let last = EvalRational::from_obj(&end_rewritten)?.to_i128_if_integer()?;
+        let count = if last<first || (half_open && last==first) { 0 } else {
+            let difference = last.checked_sub(first)?;
+            usize::try_from(if half_open { difference } else { difference.checked_add(1)? }).ok()?
+        };
+        if count>crate::execute::execute_eval_stmt::helper::MAX_AGGREGATE_TERMS { return None; }
+        let number = |value:i128|Obj::Literal(crate::ast::obj::Literal::Number(crate::ast::obj::Number::new(value.to_string())));
+        let endpoints = vec![crate::ast::fact::EqualFact { fact_id:self.global_ids.allocate_fact_id(),left:start.clone(),right:number(first),line_file:None }.into(),
+            crate::ast::fact::EqualFact { fact_id:self.global_ids.allocate_fact_id(),left:end.clone(),right:number(last),line_file:None }.into()];
+        let arguments = (0..count).map(|offset|number(first.checked_add(offset as i128).expect("checked interval count"))).collect();
+        Some((arguments,endpoints))
     }
 
     // Light coverage: universal numeric carriers auto-pass; N / NPos check start;
@@ -675,7 +747,7 @@ impl Runtime {
         )
     }
 
-    fn require_obj_subset_of_standard_set(
+    pub(super) fn require_obj_subset_of_standard_set(
         &mut self,
         obj: &Obj,
         set: StandardSet,
@@ -721,6 +793,7 @@ impl Runtime {
     }
 }
 
+#[derive(Clone,Copy)]
 enum AggregateIndexDomain<'a> { Range(&'a Obj,&'a Obj), FiniteSet(&'a Obj) }
 
 fn homogeneous_binary_carrier(fn_set: &FnSet) -> Option<Obj> {

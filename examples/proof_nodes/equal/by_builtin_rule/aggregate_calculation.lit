@@ -12,3 +12,5 @@ finite_set_sum({1, 2, 3}, fn(k Z) Z {k}) = 6
 finite_set_product({1, 2, 3}, fn(k Z) Z {k}) = 6
 finite_set_sum({}, fn(k Z) Z {k}) = 0
 finite_set_product({}, fn(k Z) Z {k}) = 1
+# Displayed fractions retain exact pairwise-distinctness evidence.
+finite_set_product({1 / 2, 1 / 3}, fn(k Q) Q {k}) = 1 / 6

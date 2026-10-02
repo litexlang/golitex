@@ -1,2 +1,2 @@
-# Node: equal.ByBuiltinRule.SeqEqualsFnOnN
-seq(R) = fn(x N) R
+# Node: equal.ByBuiltinRule.SeqEqualsFnOnNPos
+seq(R) = fn(x N+) R

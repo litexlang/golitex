@@ -42,7 +42,7 @@ use crate::json_output::helper::{bool_value, object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
-pub(super) fn project_verify_fact(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
+pub(in crate::json_output) fn project_verify_fact(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
     match verify {
         VerifyFactResult::AtomicExceptEquality(r) => project_atomic_except(r, runtime),
         VerifyFactResult::Equality(r) => project_equality(r, runtime),

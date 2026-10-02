@@ -1,0 +1,8 @@
+# Expected: soft WD failure; the left iff branch does not guard the right.
+prop cross_assumption(x R):
+    forall y R:
+        y = y
+        =>:
+            y != 0
+        <=>:
+            1 / y = 1 / y
