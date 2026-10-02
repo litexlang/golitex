@@ -7,7 +7,7 @@
       "plain_name": "ident",
       "stmt": {
         "name": {
-          "id": 7,
+          "id": 1,
           "name": "ident"
         },
         "equal_to_anonymous_fn": {
@@ -17,7 +17,7 @@
                 {
                   "params": [
                     {
-                      "id": 8,
+                      "id": 2,
                       "name": "x"
                     }
                   ],
@@ -40,7 +40,7 @@
               "tag": "Identifier",
               "identifier": {
                 "tag": "Plain",
-                "id": 8,
+                "id": 2,
                 "name": "x"
               }
             },
@@ -57,7 +57,7 @@
           "line": 1,
           "origin": {
             "tag": "ImportedExport",
-            "global_mod_id": 2,
+            "global_mod_id": 0,
             "export_file_id": 0
           }
         }

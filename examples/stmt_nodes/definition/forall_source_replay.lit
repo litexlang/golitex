@@ -1,0 +1,25 @@
+# Formerly rejected: the proved source's outer parameter was unused.
+# claim:
+#     ? forall t R:
+#         exist! y R st {y = 0}
+#     witness exist! y R st {y = 0} from 0
+# have fn selected by exist!:
+#     ? forall x R:
+#         exist! y R st {y = 0}
+# Now: replay the whole proved forall, renaming binders without assigning them.
+# Gate: target/release/litex -strict -f examples/stmt_nodes/definition/forall_source_replay.lit
+# Boundary: unproved / nonunique sources, changed carriers or free identities
+# are rejected by cargo test --release forall_source_replay.
+claim:
+    ? forall t R:
+        exist! y R st {y = 0}
+    witness exist! y R st {y = 0} from 0
+have fn selected by exist!:
+    ? forall x R:
+        exist! z R st {z = 0}
+selected(0) = 0
+selected(2) = 0
+have x R = 7
+have z R = 8
+x = 7
+z = 8

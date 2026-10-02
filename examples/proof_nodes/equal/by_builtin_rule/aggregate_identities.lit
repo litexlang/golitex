@@ -1,0 +1,53 @@
+# Symbolic endpoints; these identities cannot be established by enumeration.
+forall n N+, c R:
+    sum(1, n, fn(k Z) R {c}) = n * c
+
+have n N+
+have c R
+have f, g fn(k Z) R
+sum(1, n, fn(k Z) R {f(k) + g(k)}) = sum(1, n, f) + sum(1, n, g)
+sum(1, n, fn(k Z) R {f(k) - g(k)}) = sum(1, n, f) - sum(1, n, g)
+sum(1, n, fn(k Z) R {c * f(k)}) = c * sum(1, n, f)
+sum(1, n + 1, f) = sum(1, n, f) + sum(n + 1, n + 1, f)
+product(1, n + 1, f) = product(1, n, f) * product(n + 1, n + 1, f)
+sum(1, n, fn(k Z) Z {k + k}) = sum(1, n, fn(j Z) Z {2 * j})
+
+# Legal source and target ranges are explicit hypotheses for this reindexing rule.
+forall a, b, t Z:
+    a <= b
+    a + t <= b + t
+    =>:
+        sum(a, b, fn(k Z) R {f(k + t)}) = sum(a + t, b + t, f)
+        product(a, b, fn(k Z) R {f(k + t)}) = product(a + t, b + t, f)
+
+finite_set_sum(closed_range(1, n), f) = sum(1, n, f)
+finite_set_product(closed_range(1, n), f) = product(1, n, f)
+
+have S finite_set
+have h, j fn(k S) R
+finite_set_sum(S, fn(k S) R {c}) = finite_set_size(S) * c
+finite_set_sum(S, fn(k S) R {h(k) + j(k)}) = finite_set_sum(S, h) + finite_set_sum(S, j)
+finite_set_sum(S, fn(k S) R {h(k) - j(k)}) = finite_set_sum(S, h) - finite_set_sum(S, j)
+finite_set_sum(S, fn(k S) R {c * h(k)}) = c * finite_set_sum(S, h)
+finite_set_product(S, fn(k S) R {h(k) * j(k)}) = finite_set_product(S, h) * finite_set_product(S, j)
+
+have d R*
+finite_set_product(S, fn(k S) R* {d}) = d ^ finite_set_size(S)
+
+forall m N+:
+    forall k Z:
+        1 <= k
+        k <= m
+        =>:
+            f(k) = g(k)
+    =>:
+        sum(1, m, f) = sum(1, m, g)
+        product(1, m, f) = product(1, m, g)
+
+have A, B finite_set
+have q fn(k union(A, B)) R
+forall:
+    intersect(A, B) = {}
+    =>:
+        finite_set_sum(union(A, B), q) = finite_set_sum(A, q) + finite_set_sum(B, q)
+        finite_set_product(union(A, B), q) = finite_set_product(A, q) * finite_set_product(B, q)

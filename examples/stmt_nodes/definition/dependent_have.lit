@@ -1,0 +1,13 @@
+# Migration tracer: the original have/equal forms failed whole-list type WD.
+# Original failing declarations:
+# have A nonempty_set, x A
+# have B set, y B = R, 0
+# Run: target/release/litex -strict -f examples/stmt_nodes/definition/dependent_have.lit
+have A nonempty_set, x A
+x $in A
+have B set, y B = R, 0
+y $in B
+y = 0
+have C nonempty_set, z C, n N = R, 2, 1
+z = 2
+n = 1

@@ -1366,6 +1366,18 @@ pub(super) fn project_atomic_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::AnonymousFnInDeclaredFnSet(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")),
+            ("rule", string("AnonymousFnInDeclaredFnSet")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::CartDimInNatural(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")),
+            ("rule", string("CartDimInNatural")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::TupleDimInNatural(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")),
+            ("rule", string("TupleDimInNatural")),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::NativeScalarCodomain(p)) => {
             object_for(runtime, vec![
                 ("type", string("builtin_rule")),
@@ -1381,8 +1393,22 @@ pub(super) fn project_atomic_builtin_rule(
                 ("rule", string("StandardSetSubsetMembership")),
             ];
             entries.push(("source_set", string(p.source_set.ir().as_str().to_string())));
-            let _ = (&p.source_membership_proof, runtime);
+            entries.push(("source_membership_proof", project_verify_fact(&p.source_membership_proof, runtime)));
             object_for(runtime, entries)
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::AggregateScalarCodomain(p)) => {
+            object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("AggregateScalarCodomain")),
+                ("iterand_return_set", string(p.iterand_return_set.readable_string())), ("codomain", string(format!("{:?}", p.codomain)))])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::FiniteSetSubsetMembership(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("InFact")),
+                ("rule", string("FiniteSetSubsetMembership")),
+                ("source_set", string(p.source_set.ir().as_str().to_string())),
+                ("source_membership_proof", project_verify_fact(&p.source_membership_proof, runtime)),
+                ("member_in_proofs", project_verify_facts(&p.member_in_proofs, runtime)),
+            ])
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::SetBuilderMembership(p)) => {
             let mut entries = vec![
@@ -1802,6 +1828,9 @@ pub(super) fn project_atomic_builtin_rule(
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::PiNonzero(_)) => {
             object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("PiNonzero"))])
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ImaginaryUnitNonzero(_)) => {
+            object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("ImaginaryUnitNonzero"))])
+        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ClosedDecimal(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -2220,5 +2249,5 @@ pub(super) fn project_atomic_builtin_rule(
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsChoiceFunctionForFact(_) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("NotIsChoiceFunctionForFact")),
         ]),
-    }
+        }
 }

@@ -1,0 +1,10 @@
+# Formerly rejected:
+# fn(x R) R {x} $in fn(y R) R
+# Now: checked anonymous function membership uses its declared signature.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/anonymous_function_declared_signature.lit
+# Boundary: changed carriers, dropped domain conditions, malformed body and
+# changed free identities are rejected in predicate_domain_wd tests.
+fn(x R) R {x} $in fn(y R) R
+forall F set:
+    fn(B F) F {B} $in fn(A F) F
+fn(x R: x > 0) R {1 / x} $in fn(y R: y > 0) R

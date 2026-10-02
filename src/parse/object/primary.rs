@@ -828,9 +828,7 @@ fn parse_number(tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     if !is_number_literal(&normalized) {
         return Err(tb.parse_error(format!("invalid number `{normalized}`")));
     }
-    Ok(Obj::Literal(Literal::Number(Number {
-        normalized_value: normalized,
-    })))
+    Ok(Obj::Literal(Literal::Number(Number::new(normalized))))
 }
 
 fn parse_identifier_or_mod_or_standard_set(

@@ -853,7 +853,7 @@ pub struct AnonymousFnObjWellDefinedProof {
     pub dom_fact_well_defined: Vec<FactWellDefinedProof>,
     pub ret_set_well_defined: Box<ObjWellDefinedProof>,
     pub body_well_defined: Box<ObjWellDefinedProof>,
-    pub body_in_ret_set: Option<VerifyFactResult>,
+    pub body_in_ret_set: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
 }
 

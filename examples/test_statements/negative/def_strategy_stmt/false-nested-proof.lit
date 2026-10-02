@@ -1,6 +1,5 @@
-# Expected rejection: proof-control-in-strategy-is-unsupported
+# Expected rejection: false-nested-proof
 # Owner: DefStrategyStmt
-
 prop P(x R):
     x = 1
 strategy s:
@@ -8,4 +7,6 @@ strategy s:
         x = 1
         =>:
             $P(x)
-    by def $P(x)
+    claim:
+        ? x = 0
+        x = 0

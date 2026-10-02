@@ -1,14 +1,42 @@
+use super::ForallFactWellDefinedProof;
 use crate::ast::fact::ForallFact;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::verify_forall_fact::well_defined_result::FailToVerifyForallFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
 use crate::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
+use crate::runtime::{FactId, IdentifierId};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
 pub enum VerifyForallFactResult {
-    Success(VerifyForallFactSuccess),
+    Success(VerifyForallFactProof),
     Failed(VerifyForallFactFailed),
+}
+
+pub enum VerifyForallFactProof {
+    ByLocalIntroduction(VerifyForallFactSuccess),
+    ByKnownForallFact(VerifyKnownForallFactProof),
+}
+
+impl VerifyForallFactProof {
+    pub fn fact(&self) -> &ForallFact {
+        match self {
+            Self::ByLocalIntroduction(p) => &p.fact,
+            Self::ByKnownForallFact(p) => &p.fact,
+        }
+    }
+}
+
+pub struct VerifyKnownForallFactProof {
+    pub fact: ForallFact,
+    pub well_defined: ForallFactWellDefinedProof,
+    pub cite_fact_id: FactId,
+    pub parameter_renamings: Vec<ForallParameterRenaming>,
+}
+
+pub struct ForallParameterRenaming {
+    pub source: IdentifierId,
+    pub target: IdentifierId,
 }
 
 // forall local-proof pipeline (field order = stage order).
@@ -62,13 +90,13 @@ pub fn forall_fact_result_from_success(
     local_env: Box<ExecEnv>,
 ) -> VerifyFactResult {
     VerifyFactResult::ForallFact(Box::new(VerifyForallFactResult::Success(
-        VerifyForallFactSuccess {
+        VerifyForallFactProof::ByLocalIntroduction(VerifyForallFactSuccess {
             fact: fact.clone(),
             introduced_params,
             assumed_dom_facts,
             proved_then_facts,
             local_env,
-        },
+        }),
     )))
 }
 

@@ -1,4 +1,6 @@
-use crate::ast::fact::ForallFact;
+use crate::ast::fact::{Fact, ForallFact};
+use crate::ast::obj::{IdentifierObj, Obj};
+use crate::ast::param::ParamType;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::verify_forall_fact::result::{
     forall_fact_result_from_success, forall_fact_result_from_then_fail,
@@ -6,7 +8,9 @@ use crate::execute::execute_fact_stmt::verify_forall_fact::result::{
 };
 use crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::verify_forall_fact::{
-    AssumeDomFactResult, ProveAndStoreThenFactResult,
+    AssumeDomFactResult, ForallParameterRenaming, ProveAndStoreThenFactResult,
+    VerifyForallFactProof, VerifyForallFactResult, VerifyForallFactWellDefinedResult,
+    VerifyKnownForallFactProof,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::fail_to_verify_obj_well_defined_others;
 use crate::execute::execute_fact_stmt::{
@@ -17,6 +21,7 @@ use crate::execute::introduce_typed_parameters::{
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
+use std::collections::HashMap;
 
 enum ForallLocalOutcome {
     Success {
@@ -46,6 +51,27 @@ impl Runtime {
         fact: &ForallFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
+        // Reuse the entire proved proposition before projecting conclusions.
+        // An unused binder is renamed positionally; it is never given a value.
+        if let Some((cite_fact_id, parameter_renamings)) = self.match_known_forall_source(fact) {
+            let well_defined =
+                match self.verify_forall_fact_well_definedness(fact, verify_state.clone())? {
+                    VerifyForallFactWellDefinedResult::Success(proof) => proof,
+                    VerifyForallFactWellDefinedResult::Failed(reason) => {
+                        return Ok(forall_fact_result_from_wd_fail(reason));
+                    }
+                };
+            return Ok(VerifyFactResult::ForallFact(Box::new(
+                VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(
+                    VerifyKnownForallFactProof {
+                        fact: fact.clone(),
+                        well_defined,
+                        cite_fact_id,
+                        parameter_renamings,
+                    },
+                )),
+            )));
+        }
         let (local_outcome, local_env) = self.run_in_local_env_and_take_env(|rt| {
             rt.verify_forall_fact_in_local(fact, verify_state.clone())
         })?;
@@ -79,6 +105,100 @@ impl Runtime {
                 local_env,
             )),
         }
+    }
+
+    fn match_known_forall_source(
+        &mut self,
+        goal: &ForallFact,
+    ) -> Option<(crate::runtime::FactId, Vec<ForallParameterRenaming>)> {
+        let sources: Vec<_> = self
+            .execution_environments_stack
+            .iter()
+            .rev()
+            .flat_map(|env| env.facts.facts_by_id.iter())
+            .filter_map(|(id, fact)| match fact {
+                Fact::ForallFact(source) => Some((*id, source.clone())),
+                _ => None,
+            })
+            .collect();
+        for (id, source) in sources {
+            let source_bindings: Vec<_> = source
+                .typed_parameters
+                .groups
+                .iter()
+                .flat_map(|g| g.params.iter().map(|p| (p, &g.param_type)))
+                .collect();
+            let goal_bindings: Vec<_> = goal
+                .typed_parameters
+                .groups
+                .iter()
+                .flat_map(|g| g.params.iter().map(|p| (p, &g.param_type)))
+                .collect();
+            if source_bindings.len() != goal_bindings.len()
+                || source.dom_facts.len() != goal.dom_facts.len()
+                || source.then_facts.len() != goal.then_facts.len()
+            {
+                continue;
+            }
+            let subst: HashMap<_, _> = source_bindings
+                .iter()
+                .zip(&goal_bindings)
+                .map(|((src, _), (dst, _))| {
+                    (src.id, Obj::Identifier(IdentifierObj::from_bound_name(dst)))
+                })
+                .collect();
+            let types_match =
+                source_bindings
+                    .iter()
+                    .zip(&goal_bindings)
+                    .all(
+                        |((_, src), (_, dst))| match self.inst_param_type(src, &subst) {
+                            Ok(inst) => match (&inst, *dst) {
+                                (ParamType::Obj(a), ParamType::Obj(b)) => a.ir() == b.ir(),
+                                (ParamType::Set(_), ParamType::Set(_))
+                                | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
+                                | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => true,
+                                _ => false,
+                            },
+                            Err(_) => false,
+                        },
+                    );
+            if !types_match {
+                continue;
+            }
+            let facts_match = source
+                .dom_facts
+                .iter()
+                .zip(&goal.dom_facts)
+                .all(|(src, dst)| {
+                    self.inst_fact(src, &subst)
+                        .ok()
+                        .is_some_and(|inst| same_quantified_source_fact(&inst, dst))
+                })
+                && source
+                    .then_facts
+                    .iter()
+                    .zip(&goal.then_facts)
+                    .all(|(src, dst)| {
+                        self.inst_fact(&Fact::from(src.clone()), &subst)
+                            .ok()
+                            .is_some_and(|inst| {
+                                same_quantified_source_fact(&inst, &Fact::from(dst.clone()))
+                            })
+                    });
+            if facts_match {
+                let parameter_renamings = source_bindings
+                    .iter()
+                    .zip(&goal_bindings)
+                    .map(|((src, _), (dst, _))| ForallParameterRenaming {
+                        source: src.id,
+                        target: dst.id,
+                    })
+                    .collect();
+                return Some((id, parameter_renamings));
+            }
+        }
+        None
     }
 
     fn verify_forall_fact_in_local(
@@ -176,3 +296,27 @@ impl Runtime {
         }))
     }
 }
+
+// Exact free identities and polarity remain significant. The existing exist
+// alpha key handles its own witness binders after outer parameters are renamed.
+fn same_quantified_source_fact(source: &Fact, goal: &Fact) -> bool {
+    if std::mem::discriminant(source) != std::mem::discriminant(goal) {
+        return false;
+    }
+    match (
+        crate::ast::fact::exist_shaped_fact_from_fact(source),
+        crate::ast::fact::exist_shaped_fact_from_fact(goal),
+    ) {
+        (Some(a), Some(b)) => {
+            crate::exec_env::exist_shaped_fact_index_key::exist_shaped_fact_alpha_match_key(&a)
+                == crate::exec_env::exist_shaped_fact_index_key::exist_shaped_fact_alpha_match_key(
+                    &b,
+                )
+        }
+        _ => source.ir() == goal.ir(),
+    }
+}
+
+#[cfg(test)]
+#[path = "../../../../tests/unit/execute/forall_source_replay/tests.rs"]
+mod source_replay_tests;

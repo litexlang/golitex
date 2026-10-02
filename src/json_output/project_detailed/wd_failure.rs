@@ -25,12 +25,7 @@ pub(super) fn project_fact_wd_failure(f: &FailToVerifyFactWellDefinedResult, rt:
             crate::execute::execute_fact_stmt::verify_exist_shaped_fact::FailToVerifyExistShapedFactWellDefinedResult::ParamType(p) => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
             crate::execute::execute_fact_stmt::verify_exist_shaped_fact::FailToVerifyExistShapedFactWellDefinedResult::BodyFact { failed_index, failed_body, .. } => node(rt, "failed_body", Some(*failed_index), project_fact_wd_failure(failed_body, rt)),
         },
-        ForallFact(p) => match p {
-            crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult::ParamType(p) => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
-            crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer(_) => message(rt, "failed to open struct carrier"),
-            crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult::DomFact { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
-            crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult::ThenFact { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
-        },
+        ForallFact(p) => project_forall_wd_failure(p, rt),
         ForallFactWithIff(p) => match p {
             crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::ParamType(p) => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
             crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::DomFact { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
@@ -45,6 +40,19 @@ pub(super) fn project_fact_wd_failure(f: &FailToVerifyFactWellDefinedResult, rt:
     }
 }
 
+pub(super) fn project_forall_wd_failure(
+    failure: &crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult::*;
+    match failure {
+        ParamType(p) => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
+        AutoOpenStructLayer(_) => message(rt, "failed to open struct carrier"),
+        DomFact { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
+        ThenFact { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
+    }
+}
+
 pub(super) fn project_atomic_wd_failure(
     failure: &crate::execute::execute_fact_stmt::verify_atomic_fact::FailToVerifyAtomicFactWellDefinedResult,
     rt: &Runtime,
@@ -54,6 +62,15 @@ pub(super) fn project_atomic_wd_failure(
     };
     match failure {
         FailToVerifyAtomicFactWellDefinedResult::Argument(reason) => project_obj_wd_failure(reason, rt),
+        FailToVerifyAtomicFactWellDefinedResult::Domain { requirement, result, completed, .. } => object_for(rt, vec![
+            ("phase", string("predicate_domain")),
+            ("completed_requirements", JsonValue::Array(completed.iter().map(|p| object_for(rt, vec![
+                ("requirement", string(p.requirement.readable_string())),
+                ("verify", project_verify_fact(&p.result, rt)),
+            ])).collect())),
+            ("requirement", string(requirement.readable_string())),
+            ("verify", project_verify_fact(result, rt)),
+        ]),
         FailToVerifyAtomicFactWellDefinedResult::Predicate { well_defined_of_each_parameter, reason } => {
             let mut fields = vec![
                 ("phase", string("predicate_signature")),

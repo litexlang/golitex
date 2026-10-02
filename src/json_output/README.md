@@ -30,6 +30,21 @@ signature and its arity. An undefined or wrong-arity user predicate fails at
 is distinct from an argument-object WD failure. Equality stays on its separate
 WD path; mixed conjunction/chain evidence uses the intrinsic signature case.
 
+Builtin atomic WD then records `predicate_domain`, whose entries contain the
+required carrier/signature fact and its verification evidence. A failed
+domain entry retains the completed argument, signature and earlier domain
+stages. This prevents malformed builtin predicates from becoming assumptions
+merely because their conclusions repeat the same fact.
+
+Whole-forall replay has Detailed `searched_proof.type: by_known_forall_fact`,
+with a real `cite_fact_id` and `parameter_renamings` (`source` / `target`
+IdentifierIds), followed by the goal WD evidence. The local-introduction
+route keeps its introduced parameters, assumed domains and proved conclusions.
+Successful `have_fn_by_forall_exist_unique` now exposes `source_forall` and
+`fn_set_well_defined`; failures identify the source / FnSet / property stage.
+See `examples/stmt_nodes/definition/forall_source_replay.lit` for an unused
+outer binder and renamed existential witness.
+
 ## Template definition facts
 
 Successful templates expose their published universal definition facts in
@@ -313,6 +328,15 @@ containing the stored equality path from the submitted head to the anonymous
 function. Known special-property membership proofs use `cite_property_fact_id`
 instead of `cite_definition_fact_id`, since their source may be an ordinary
 membership or equality fact. The source fact remains resolvable by FactId.
+
+Anonymous-function WD always includes `body_in_ret_set`, the checked return
+membership under its parameter and domain assumptions. This proof is required
+for parameter projections as well as other bodies. Struct-instance WD retains
+the substituted header type proofs in `requirement_fact_verified`; a failed
+argument-domain check projects the failed requirement before accepting WD.
+Named `have fn` Detailed results expose `anonymous_fn_well_defined` followed
+by `fn_set_well_defined` and `store_and_infer`; failures retain the failed WD
+stage.
 
 ## Native theorem and calculation evidence
 

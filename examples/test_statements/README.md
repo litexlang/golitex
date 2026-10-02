@@ -3,9 +3,9 @@
 Task: detailed per-statement tests requested on 2026-10-01.
 The authoritative inventory is `src/ast/stmt.rs`: 50 reachable statement
 leaves, including `Stmt::Fact`. Each leaf has one primary `.lit` file with
-multiple runnable scenarios. There are 169 positive scenarios,
-130 negative scenarios, 19 additional boundary/regression checks, and 3 gap
-reproductions covering 3 open issue groups. Each scenario runs independently;
+multiple runnable scenarios. There are 170 positive scenarios,
+130 negative scenarios, 21 additional boundary/regression checks, and 1 gap
+reproduction covering 1 open issue group. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
 ## Run
@@ -48,13 +48,15 @@ issues.** `--require-no-gaps` exits 1 while the recorded gaps remain. A gap
 changing behavior also fails the ordinary runner, prompting review and removal
 of its stale issue record. See the [issue index](bugs/README.md) for per-statement
 folders containing exact reproductions, captured output, checked controls, and
-repair acceptance commands. The index also records the trust-have display defect
-D001; its display acceptance check is separate from the execution success flags.
+repair acceptance commands. The index links the resolved trust-have display defect
+D001 and its fresh-parser replay acceptance.
 
 `--report <path>` saves the complete structured result; `--binary <path>` tests
 another release binary. Neither option changes fixtures or expectations.
 
 K003 uses the accepted explicit equality chain [`f(2) = f(2 - 1) = f(1) = 0`](boundaries/recursive-equation-explicit-chain.lit). It is recorded as a [current proof-search limitation](experience/problem_notes/K003-explicit-recursive-equation-chain.md), not an open bug.
+
+K004 uses the user's [explicit arithmetic chain](boundaries/recursive-increment-explicit-chain.lit). K010's [original arithmetic enumeration](boundaries/finite-numeric-enumeration.lit) now succeeds using finite-carrier membership evidence. Both are ordinary successful coverage. [Focused acceptance](proof_journals/k004_k010_d001_acceptance.json) also records D001's output replay.
 
 ## First acceptance example
 
@@ -139,7 +141,7 @@ recursive `.lit` file in this directory as a positive example.
 | `DefAlgoByInducStmt` | [def_algo_by_induc_stmt.lit](def_algo_by_induc_stmt.lit) | 5 | 2 |
 | `DefThmStmt` | [def_thm_stmt.lit](def_thm_stmt.lit) | 3 | 2 |
 | `AxiomStmt` | [axiom_stmt.lit](axiom_stmt.lit) | 3 | 2 |
-| `DefStrategyStmt` | [def_strategy_stmt.lit](def_strategy_stmt.lit) | 3 | 3 |
+| `DefStrategyStmt` | [def_strategy_stmt.lit](def_strategy_stmt.lit) | 4 | 3 |
 | `ReleaseThmStmt` | [release_thm_stmt.lit](release_thm_stmt.lit) | 3 | 3 |
 | `ReleaseStructDefStmt` | [release_struct_def_stmt.lit](release_struct_def_stmt.lit) | 3 | 2 |
 | `ReleaseObjDefStmt` | [release_obj_def_stmt.lit](release_obj_def_stmt.lit) | 3 | 2 |

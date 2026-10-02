@@ -8,6 +8,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     ComplexCoordinateInComplexBuiltinRuleProof,
     ComplexCoordinateInRealBuiltinRuleProof,
     FamilyUnionMembershipFromMemberBuiltinRuleProof,
+    FiniteSetSubsetMembershipBuiltinRuleProof,
     AnonymousFnApplicationInFnRangeBuiltinRuleProof,
     InFactSearchProofByBuiltinRule,
     IndexUnionMembershipFromIndexBuiltinRuleProof,
@@ -17,6 +18,9 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     MulInNaturalBuiltinRuleProof,
     NativeConstantMembershipBuiltinRuleProof,
     NativeScalarCodomainBuiltinRuleProof,
+    CartDimInNaturalBuiltinRuleProof,
+    TupleDimInNaturalBuiltinRuleProof,
+    AnonymousFnInDeclaredFnSetBuiltinRuleProof,
     OneSideInfinityIntervalMembershipBuiltinRuleProof,
     PowerSetMembershipBuiltinRuleProof,
     PredecessorInNaturalBuiltinRuleProof,
@@ -46,7 +50,15 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInComplex(p) => p.rule_id_and_message(lang),
             Self::RealArithmeticClosure(p) => p.rule_id_and_message(lang),
             Self::NativeScalarCodomain(p) => p.rule_id_and_message(lang),
+            Self::AggregateScalarCodomain(_) => BuiltinRuleText {
+                rule_id: "AggregateScalarCodomain", rule_name: "Finite aggregate scalar carrier".into(),
+                message: "Checked summands or factors close the declared scalar carrier; empty sums include zero".into(),
+            },
+            Self::CartDimInNatural(p) => p.rule_id_and_message(lang),
+            Self::TupleDimInNatural(p) => p.rule_id_and_message(lang),
+            Self::AnonymousFnInDeclaredFnSet(p) => p.rule_id_and_message(lang),
             Self::StandardSetSubsetMembership(p) => p.rule_id_and_message(lang),
+            Self::FiniteSetSubsetMembership(p) => p.rule_id_and_message(lang),
             Self::SetBuilderMembership(p) => p.rule_id_and_message(lang),
             Self::NativeConstantMembership(p) => p.rule_id_and_message(lang),
             Self::ListSetElementMembership(p) => p.rule_id_and_message(lang),
@@ -78,7 +90,12 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInComplex(_) => None,
             Self::RealArithmeticClosure(_) => None,
             Self::NativeScalarCodomain(_) => None,
+            Self::AggregateScalarCodomain(_) => None,
+            Self::CartDimInNatural(_) => None,
+            Self::TupleDimInNatural(_) => None,
+            Self::AnonymousFnInDeclaredFnSet(_) => None,
             Self::StandardSetSubsetMembership(_) => None,
+            Self::FiniteSetSubsetMembership(_) => None,
             Self::SetBuilderMembership(_) => None,
             Self::NativeConstantMembership(_) => None,
             Self::ListSetElementMembership(_) => None,
@@ -297,6 +314,23 @@ impl StandardSetSubsetMembershipBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl FiniteSetSubsetMembershipBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text(
+                "FiniteSetSubsetMembership",
+                "Finite Set Subset Membership",
+                "the element belongs to a finite set whose every member belongs to the target carrier",
+            ),
+            OutputLanguage::Chinese => text(
+                "FiniteSetSubsetMembership",
+                "有限集成员类型提升",
+                "元素属于有限集，且每个列出的成员都属于目标集合",
+            ),
         }
     }
 }
@@ -778,6 +812,33 @@ impl NativeScalarCodomainBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl CartDimInNaturalBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text("CartDimInNatural", "Cartesian Dimension in N", "a well-defined Cartesian dimension belongs to N and its numeric supertypes"),
+            OutputLanguage::Chinese => text("CartDimInNatural", "笛卡尔维数属于自然数", "已通过良定检查的笛卡尔维数属于 N 及其数值超集"),
+        }
+    }
+}
+
+impl TupleDimInNaturalBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text("TupleDimInNatural", "Tuple Dimension in N", "a well-defined tuple dimension belongs to N and its numeric supertypes"),
+            OutputLanguage::Chinese => text("TupleDimInNatural", "元组维数属于自然数", "已通过良定检查的元组维数属于 N 及其数值超集"),
+        }
+    }
+}
+
+impl AnonymousFnInDeclaredFnSetBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text("AnonymousFnInDeclaredFnSet", "Anonymous function in declared function set", "the checked function's signature matches the target modulo bound-name renaming"),
+            OutputLanguage::Chinese => text("AnonymousFnInDeclaredFnSet", "匿名函数属于声明的函数集", "函数已通过良定检查，目标签名仅在绑定参数名称上不同"),
         }
     }
 }

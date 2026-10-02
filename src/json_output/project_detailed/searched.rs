@@ -324,6 +324,9 @@ fn project_equality_builtin_strategy(
             &p.requirement_facts,
             &p.proof_of_requirement_facts,
         ),
+        EqualitySearchProofByBuiltinStrategy::ComplexWithNonzeroPremises(p) => (
+            "ComplexWithNonzeroPremises", &p.requirement_facts, &p.proof_of_requirement_facts,
+        ),
     };
     object_for(runtime, vec![
         ("type", string("builtin_strategy")),

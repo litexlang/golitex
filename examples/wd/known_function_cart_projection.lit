@@ -1,0 +1,14 @@
+# Known tuple structure supplies projection WD without a membership bridge.
+# Before: is_tuple(p) could not follow the cart alias; function projection WD failed.
+# Boundary: a return type alone does not specify coordinate values.
+# Gate: target/release/litex -strict -f examples/wd/known_function_cart_projection.lit
+have plane set = cart(R,R)
+have p plane
+$is_tuple(p)
+tuple_dim(p) = 2
+p[1] $in R
+have fn pair(x R) cart(R,R) = (x,x)
+have a R
+$is_tuple(pair(a))
+tuple_dim(pair(a)) = 2
+pair(a)[1] $in R

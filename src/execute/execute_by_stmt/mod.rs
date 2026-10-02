@@ -33,7 +33,7 @@ pub use exec_by_axiom_of_choice_stmt::exec_release_axiom_of_choice_stmt;
 pub use exec_by_zorn_lemma_stmt::exec_release_zorn_lemma_stmt;
 pub use result::{
     EnumerateAssignmentSuccess, EnumerateAssignmentOutcome,
-    ByInducBodySuccess, ByInducCaseFailed, ByInducCaseSuccess, ByProofBodyFailed, ByProofStepResult, ExecByCasesStmtResult, ExecByContraStmtResult,
+    ByInducBodySuccess, ByInducCaseFailed, ByInducCaseSuccess, ExecByCasesStmtResult, ExecByContraStmtResult,
     ExecByDefStmtResult, ExecByEnumerateFiniteSetStmtResult, ExecByExtensionStmtResult,
     ExecByFnExtensionStmtResult, ExecByForStmtResult, ExecByInducStmtFailed, ExecByInducStmtResult, ExecByStmtResult,
     ExecByStrongInducStmtFailed, ExecByStrongInducStmtResult, ExecByThmStmtResult, ExecExpandRangeStmtResult,
@@ -42,7 +42,7 @@ pub use result::{
 };
 pub(crate) use exec_by_thm_stmt::{prepare_release_conclusions, PreparedRelease};
 pub(crate) use helper::{
-    proof_verify_state, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
+    proof_verify_state, store_goal_fact, verify_goal_fact,
 };
 
 #[cfg(test)]

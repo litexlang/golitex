@@ -4,6 +4,8 @@ mod builtin_atomic_gen;
 mod entry;
 mod induction;
 mod equality_builtin_gen;
+mod aggregate_evaluation;
+mod aggregate_identity;
 mod exist_builtin_gen;
 mod or_builtin_gen;
 mod searched;

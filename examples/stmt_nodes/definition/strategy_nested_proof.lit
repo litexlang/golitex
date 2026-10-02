@@ -1,0 +1,27 @@
+# Migration tracer: the old fact-only strategy body rejected `by def`.
+# Failed original body, before repair:
+# strategy use_same:
+#     ? forall x R:
+#         x = 0
+#         =>:
+#             $same(x)
+#     by def $same(x)
+# Run: target/release/litex -strict -f examples/stmt_nodes/definition/strategy_nested_proof.lit
+
+prop same(x R):
+    x = 0
+strategy use_same:
+    ? forall x R:
+        x = 0
+        =>:
+            $same(x)
+    have helper R = x
+    claim:
+        ? helper = 0
+        helper = 0
+    witness exist u R st {u = helper} from helper
+    obtain u from exist u R st {u = helper}
+    by def $same(x)
+$same(0)
+have helper R = 1
+helper = 1

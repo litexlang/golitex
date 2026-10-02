@@ -34,6 +34,7 @@ use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::rc::Rc;
 
 /// Shared stmt body for multi-name `have` / `trust have` (name attached at insert).
+#[derive(Clone)]
 pub enum SharedHaveDefinition {
     HaveObjInNonemptySetOrParamType(Rc<HaveObjInNonemptySetOrParamTypeStmt>),
     HaveObjEqual(Rc<HaveObjEqualStmt>),
@@ -98,6 +99,15 @@ impl Runtime {
         typed_parameters: &TypedParameterList,
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<IntroduceTypedParametersResult, IntroduceTypedParametersFailed>> {
+        self.introduce_typed_parameters_with_definition(typed_parameters, verify_state, None)
+    }
+
+    pub(in crate::execute) fn introduce_typed_parameters_with_definition(
+        &mut self,
+        typed_parameters: &TypedParameterList,
+        verify_state: VerifyState,
+        shared_have: Option<SharedHaveDefinition>,
+    ) -> RuntimeResult<Result<IntroduceTypedParametersResult, IntroduceTypedParametersFailed>> {
         let mut param_type_well_defined = Vec::new();
         let mut stored_fact_ids = Vec::new();
         for group in &typed_parameters.groups {
@@ -118,7 +128,7 @@ impl Runtime {
                 return Ok(Err(IntroduceTypedParametersFailed::ParamType(failed)));
             }
             param_type_well_defined.push(proof);
-            let defined = self.define_typed_parameters_in_current_env(&one, None)?;
+            let defined = self.define_typed_parameters_in_current_env(&one, shared_have.clone())?;
             stored_fact_ids.extend(defined.stored_fact_ids);
         }
 

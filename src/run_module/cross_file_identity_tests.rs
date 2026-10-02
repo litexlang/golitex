@@ -60,6 +60,30 @@ fn same_predicate_spelling_with_different_arities_keeps_its_owner_in_cached_impo
     fs::remove_dir_all(root).unwrap();
 }
 
+#[test]
+fn forall_source_replay_keeps_same_named_imported_objects_separate() {
+    let root = temp_dir("forall_source_owners");
+    write(&root.join("litex.config"), "[import]\nOther = \"./library\"\n[export]\nmain = \"./main.lit\"\n");
+    write(&root.join("library/litex.config"), "[export]\nfacts = \"./facts.lit\"\n");
+    write(&root.join("library/facts.lit"), "have value R = 0\nthm fixed:\n    ? forall t R:\n        exist! y R st {y = value}\n    witness exist! y R st {y = value} from value\n");
+    let valid = "have value R = 1\nrelease obj def Other::facts::value\nclaim:\n    ? forall t R:\n        exist! y R st {y = Other::facts::value}\n    release thm Other::facts::fixed(t)\nhave fn selected by exist!:\n    ? forall x R:\n        exist! z R st {z = Other::facts::value}\nselected(2) = Other::facts::value\nselected(2) = 0\nvalue = 1\n";
+    write(&root.join("main.lit"), valid);
+    let cold = project(&root);
+    assert!(cold.run.success, "{:?}", cold.run.session_error);
+    let repeated = project(&root);
+    assert!(repeated.run.success, "{:?}", repeated.run.session_error);
+    assert_eq!(repeated.files.len(), 2, "exist! theorem is outside the existing cache codec subset; verify source fallback");
+    assert!(!root.join("library/__litex_knowledge_base__/manifest.json").exists());
+    let target = root.join("invalid.lit");
+    write(&target, &valid.replace("selected(2) = 0", "selected(2) = 1"));
+    let invalid = run_file_with_config(LaunchCommand::File {
+        path: target, session: false, strict: true, language: OutputLanguage::English,
+    }).unwrap();
+    assert!(invalid.run.session_error.is_none(), "{:?}", invalid.run.session_error);
+    assert!(!invalid.run.success, "local value may not replace the imported owner");
+    fs::remove_dir_all(root).unwrap();
+}
+
 fn dependency_fixture() -> PathBuf {
     let root = temp_dir("local_alias_owners");
     // This authored label also collides with the first generated suffix.

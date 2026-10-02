@@ -1,0 +1,10 @@
+# Exact decimal spellings share a canonical numeric value.
+2.400 = 2.4
+2.000 = 2
+0.000 = 0
+(-0.000) = 0
+0.1 + 0.2 = 0.3
+2.000 $in Z
+2.400 <= 2.4
+2.400 >= 2.4
+2.400 != 2.5

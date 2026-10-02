@@ -32,8 +32,9 @@ Never call branch `exec_*_stmt` functions from outside
 Nested source statements use `run_proof_body_stmts`, which calls the same
 transactional `exec_stmt` inside the enclosing child proof scope. A failed
 step fails that proof; helper definitions never merge into the outer scope.
-This is shared by claim/witness and by-method proof bodies. Strategy bodies
-retain their separate fact-only contract.
+This is shared by claim/witness, by-method and strategy proof bodies. Strategy
+definitions publish their checked interface without injecting the goal as an
+ordinary known-forall fact.
 
 ## Result shape
 

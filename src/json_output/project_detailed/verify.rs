@@ -25,7 +25,7 @@ use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::{
 };
 use crate::execute::execute_fact_stmt::verify_forall_fact::{
     AssumeDomFactResult, ProveAndStoreThenFactResult, VerifyForallFactFailed,
-    VerifyForallFactResult,
+    VerifyForallFactResult, VerifyForallFactProof,
 };
 use crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::{
     VerifyForallFactWithIffFailed, VerifyForallFactWithIffResult,
@@ -369,7 +369,7 @@ fn project_exist_failed(
 
 fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonValue {
     match result {
-        VerifyForallFactResult::Success(s) => object_for(runtime, vec![
+        VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(s)) => object_for(runtime, vec![
             ("type", string("forall")),
             ("success", bool_value(true)),
             (
@@ -399,11 +399,24 @@ fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonVal
                 ),
             ),
                     ]),
-        VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(_)) => {
+        VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(s)) => object_for(runtime, vec![
+            ("type", string("forall")), ("success", bool_value(true)),
+            ("fact", string(Fact::ForallFact(s.fact.clone()).readable_string())),
+            ("searched_proof", object_for(runtime, vec![
+                ("type", string("by_known_forall_fact")),
+                ("cite_fact_id", string(s.cite_fact_id.to_string())),
+                ("parameter_renamings", JsonValue::Array(s.parameter_renamings.iter().map(|r|
+                    object_for(runtime, vec![("source", string(r.source.to_string())),
+                        ("target", string(r.target.to_string()))])).collect())),
+            ])),
+            ("well_defined", super::wd::project_forall_wd(&s.well_defined, runtime)),
+        ]),
+        VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(reason)) => {
             object_for(runtime, vec![
                 ("type", string("forall")),
                 ("success", bool_value(false)),
                 ("phase", string("well_defined")),
+                ("failure", super::wd_failure::project_forall_wd_failure(reason, runtime)),
             ])
         }
         VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToSearchProof {

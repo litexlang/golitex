@@ -20,7 +20,7 @@ use crate::rational_expression::helper::{
 //   e.g. `sqrt(4) * log(2, 8) + floor(2.5)!`, `((-7) % 3)^log(2, 4) + sqrt(0.36)`.
 pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
     match obj {
-        Obj::Literal(Literal::Number(number)) => Some(number.clone()),
+        Obj::Literal(Literal::Number(number)) => Some(Number::new(number.normalized_value.clone())),
         Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&add.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&add.right)?;

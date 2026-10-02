@@ -14,6 +14,7 @@ use crate::execute::execute_fact_stmt::{
 };
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::execute::introduce_typed_parameters::SharedHaveDefinition;
+use crate::execute::IntroduceTypedParametersFailed;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
@@ -58,31 +59,25 @@ impl Runtime {
     ) -> RuntimeResult<ExecTrustHaveStmtResult> {
         let verify_state = trust_verify_state();
 
-        let param_type_well_defined = match self
-            .verify_typed_parameters_well_definedness_or_fail(&stmt.param_def, verify_state.clone())?
-        {
-            Ok(proofs) => proofs,
-            Err(failed) => {
+        let introduced = match self.introduce_typed_parameters_with_definition(
+            &stmt.param_def, verify_state.clone(),
+            Some(SharedHaveDefinition::TrustHave(Rc::new(stmt.clone()))),
+        )? {
+            Ok(result) => result,
+            Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
                 return Ok(ExecTrustHaveStmtResult::Failed(
                     ExecTrustHaveStmtFailed::ParamType(failed),
                 ));
             }
+            Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
+                return Ok(ExecTrustHaveStmtResult::Failed(
+                    ExecTrustHaveStmtFailed::AutoOpenStructLayer(failed),
+                ));
+            }
         };
-
-        let defined_param_store_and_infer = self.define_typed_parameters_in_current_env(
-            &stmt.param_def,
-            Some(SharedHaveDefinition::TrustHave(Rc::new(stmt.clone()))),
-        )?;
-
-        let auto_opened_struct_layers =
-            match self.auto_open_struct_layers_for_typed_parameters(&stmt.param_def)? {
-                Ok(layers) => layers,
-                Err((_, failed)) => {
-                    return Ok(ExecTrustHaveStmtResult::Failed(
-                        ExecTrustHaveStmtFailed::AutoOpenStructLayer(failed),
-                    ));
-                }
-            };
+        let param_type_well_defined = introduced.param_type_well_defined;
+        let defined_param_store_and_infer = introduced.defined_params;
+        let auto_opened_struct_layers = introduced.auto_opened_struct_layers;
 
         let subst = file_root_subst_for_trust_have_params(self, &stmt.param_def);
         let mut rewritten_body = Vec::with_capacity(stmt.facts.len());

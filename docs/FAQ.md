@@ -24,7 +24,7 @@ field names and proof explanations, including `"语言": "zh"`. See [`docs/cli.m
 ## How does equality reuse known equal objects?
 
 After well-definedness, equality first checks exact IR or structural alpha
-identity, then permitted mathematical builtin rules. Its single class-search
+identity, then finite known tuple-property reads, then permitted mathematical builtin rules. Its single class-search
 stage first follows stored equality paths. If needed, it compares members of
 the two endpoint classes using identity, permitted builtin rules, or constructor
 matching, and records the left path, new proof, and right path. This also lets
@@ -33,6 +33,15 @@ cannot recursively expand more classes or enable a disabled builtin entry. Large
 classes still mean more candidate comparisons. The
 [equality README](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md)
 shows the complete call and result structure.
+
+For example, `have p cart(R,R)` now lets `p = (p[1],p[2])` cite the
+Cartesian membership. With `have p cart(R,R) = (a,b)`, `p[1] = a` cites
+the stored equality. A tuple-valued function can likewise be projected after
+application WD and one checked body substitution. Known shape supplies tuple
+and index requirements without a user-written membership bridge. This route
+retains source FactIds; it does not recursively unfold nested function bodies
+or accept an out-of-range index. See the
+[function tracer](../examples/proof_nodes/equal/by_known_special_property/fn_tuple_projection.lit).
 
 An explicit chain such as `y = x + 1 = 3` checks its adjacent steps and also
 stores the endpoint `y = 3`. Subsequent facts can reuse that stored equality.
@@ -46,7 +55,7 @@ Yes. After an atomic goal passes well-definedness, the shared `by_known`
 entry tries stored atomic facts first, then `known_special_property`.
 For a well-defined application, the latter can match its function's recorded
 signature to establish codomain or `fn_range` membership. It only reads
-exact-object definition-time shape memory, substitutes arguments, and cites
+the general Membership/Equality fact index, substitutes arguments, and cites
 identity or stored equalities. It generates no proof subgoals and consumes
 neither builtin entry nor strategy depth. Invalid applications still fail WD.
 
@@ -1657,3 +1666,16 @@ The runnable [finite-set proof tracer](../examples/stmt_nodes/by/finite_set_cond
 and [eval domain tracer](../examples/stmt_nodes/command/eval_source_domain.lit)
 show these boundaries. False conclusions under true premises and out-of-domain
 calls are executable rejection controls in the statement suite.
+
+### Can a proved constant unique-existence source be renamed?
+
+Yes. After proving `forall t R: exist! y R st {y = 0}`,
+`have fn f by exist!` may ask for the same statement with `x` and `z`.
+The verifier replays the whole proved proposition and checks WD again; it
+records its source FactId and bound-name renamings. An unused `t` receives no
+arbitrary value. Carriers, premises, uniqueness and free definition owners
+must still match. A local `value` cannot replace `Other::facts::value`.
+
+The [constant-source tracer](../examples/stmt_nodes/definition/forall_source_replay.lit)
+contains the complete checked proof. Tests also reject an unproved source,
+an ordinary `exist` source and a source whose premise was dropped.

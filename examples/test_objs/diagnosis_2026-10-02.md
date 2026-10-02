@@ -5,7 +5,7 @@
 - Task: explain the three Obj examples selected by the user and assess finite-sum evaluation.
 - Scope: Number equality/inequality, complex division WD and proof search, sum expansion and `eval`.
 - Related workspace: golitex, `examples/test_objs`.
-- Date: 2026-10-02. The observations below were executed after a successful current-source release build. Kernel changes were not made by this diagnosis.
+- Date: 2026-10-02. The observations below were executed after a successful current-source release build. [Structured diagnostic probes](proof_journals/diagnosis_2026-10-02.json) record source/executable hashes, complete envelopes and exit codes, with both source and binary stable during the gate. Kernel changes were not made by this diagnosis.
 
 ## Decimal spelling is not normalized at construction
 
@@ -42,7 +42,7 @@ i != 0            # rejected: search_proof
 1 / i = -1        # rejected: well_defined, independently of its false RHS
 ```
 
-`verify_div_obj_well_definedness_by_def` requires the divisor to be nonzero and both operands to belong to `C`. The direct `i != 0` requirement has no automatic proof in these probes. A checked contradiction proof supplies it:
+`verify_div_obj_well_definedness_by_def` requires the divisor to be nonzero and both operands to belong to `C`. The direct `i != 0` requirement has no automatic proof in these probes. A contradiction proof was tested to isolate the next stage:
 
 ```litex
 by contra:
@@ -53,7 +53,9 @@ by contra:
 1 / i = -i
 ```
 
-In this exact combined probe the contradiction statement succeeds and stores `i != 0`; the last equality now fails at `search_proof`, rather than `well_defined`. The incorrect `1 / i = -1` still fails after the same nonzero proof.
+In successful runs of the contradiction step, it stores `i != 0`; the last equality then fails at `search_proof`, rather than `well_defined`. The incorrect `1 / i = -1` was also tested and rejected.
+
+The contradiction proof itself is **not repeatable**, so it must not be promoted as a stable workaround. With the same source and executable hashes, 12 standalone runs accepted the nonzero proof 4 times and rejected it 8 times at `by_contra`. In 12 runs of the exact combined snippet above, the nonzero proof succeeded 7 times, followed by `search_proof` failure of the inverse; the other 5 runs failed the proof and then failed the inverse at `well_defined`. The structured journal retains every run. The cause of this variation has not been established by this diagnosis.
 
 There is a second source barrier: `Calculation::Complex` allows nonzero denominators only when the real decimal evaluator can evaluate them to a nonzero number. It cannot evaluate `i`. The guarded rational strategy uses ordinary algebraic normalization, which does not apply `i² = -1`. Thus merely adding an automatic `i != 0` rule will not make this direct inverse succeed. A checked complex normalization route must consume the denominator's nonzero evidence as well.
 
@@ -111,3 +113,5 @@ python3 examples/test_objs/run.py --object number --report examples/test_objs/nu
 ```
 
 The first must reproduce the Number observations. The second must currently fail on P03 and N03, keeping both defects visible. These are focused snapshots; the original complete-suite reports remain historical snapshots of the earlier inventory.
+
+Checked follow-up: inventory audit passed; Number baseline reproduced both defects; the Number intended gate returned exit 1 with exactly the P03 rejection and N03 incorrect admission. No full-suite rerun is claimed.

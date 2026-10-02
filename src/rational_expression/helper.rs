@@ -10,12 +10,14 @@ pub fn obj_key(obj: &Obj) -> String {
 }
 
 pub fn number_from_normalized(normalized_value: String) -> Number {
-    Number { normalized_value }
+    Number::new(normalized_value)
 }
 
 impl Number {
     pub fn new(normalized_value: String) -> Self {
-        Self { normalized_value }
+        Self {
+            normalized_value: super::decimal_arithmetic::normalize_decimal_number_string(&normalized_value),
+        }
     }
 }
 

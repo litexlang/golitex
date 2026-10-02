@@ -20,6 +20,8 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
+    // The reserved complex imaginary unit satisfies i²=-1, hence i != 0.
+    ImaginaryUnitNonzero(ImaginaryUnitNonzeroBuiltinRuleProof),
     // The real constant pi is strictly positive, hence nonzero. Example: pi / pi = 1.
     PiNonzero(PiNonzeroBuiltinRuleProof),
     // Closed decimal evaluation yields unequal normals.
@@ -99,6 +101,7 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
 }
 
 pub struct PiNonzeroBuiltinRuleProof {}
+pub struct ImaginaryUnitNonzeroBuiltinRuleProof {}
 
 pub struct ClosedDecimalNotEqualBuiltinRuleProof {
     pub left_normal: String,
@@ -178,6 +181,13 @@ impl Runtime {
         fact: &NotEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
+        if (matches!(&fact.left, Obj::Literal(Literal::ImaginaryUnit(_))) && is_zero_obj(&fact.right))
+            || (matches!(&fact.right, Obj::Literal(Literal::ImaginaryUnit(_))) && is_zero_obj(&fact.left))
+        {
+            return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ImaginaryUnitNonzero(
+                ImaginaryUnitNonzeroBuiltinRuleProof {},
+            )));
+        }
         if (matches!(&fact.left, Obj::Literal(Literal::Pi(_))) && is_zero_obj(&fact.right))
             || (matches!(&fact.right, Obj::Literal(Literal::Pi(_))) && is_zero_obj(&fact.left))
         {

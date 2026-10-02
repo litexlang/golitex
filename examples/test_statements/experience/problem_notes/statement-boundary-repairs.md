@@ -41,7 +41,7 @@ can use the binder names. False conclusions under true premises still reject.
 Both `by enumerate finite_set` and `by for` share this pipeline. Displayed list
 sets and existing concrete integer ranges are supported; `cart(...)` is not.
 K007 and K009 are resolved; K008 is a user-selected unsupported boundary.
-K010's arithmetic-carrier issue remains a separate open problem.
+K010 was a separate open problem at this checkpoint; its later [finite-carrier repair](K010-finite-numeric-carrier.md) closes it.
 
 ```litex
 # Previously rejected as a non-fact body step; now verified.

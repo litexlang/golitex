@@ -105,9 +105,9 @@ pub(super) fn project_have_in_nonempty_only(
                 "param_type_well_defined",
                 JsonValue::Array(
                     success
-                        .param_type_well_defined
+                        .groups
                         .iter()
-                        .map(|p| project_param_type_wd(p, runtime))
+                        .map(|g| project_param_type_wd(&g.param_type_well_defined, runtime))
                         .collect(),
                 ),
             ),
@@ -115,9 +115,9 @@ pub(super) fn project_have_in_nonempty_only(
                 "nonempty_checks",
                 JsonValue::Array(
                     success
-                        .nonempty_checks
+                        .groups
                         .iter()
-                        .map(|c| project_param_type_fact_check(c, runtime))
+                        .map(|g| project_param_type_fact_check(&g.nonempty_check, runtime))
                         .collect(),
                 ),
             ),
@@ -154,7 +154,7 @@ pub(super) fn project_have_equal_only(
                 "param_type_well_defined",
                 JsonValue::Array(
                     success
-                        .param_type_well_defined
+                        .type_preflight.param_type_well_defined
                         .iter()
                         .map(|p| project_param_type_wd(p, runtime))
                         .collect(),

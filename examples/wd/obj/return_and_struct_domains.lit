@@ -1,0 +1,37 @@
+# Tracer: prove function return and struct argument domains before accepting WD.
+# Before (incorrectly accepted under -strict):
+# have fn f(x Z) N = x
+# f(-1) = -1
+# -1 $in N
+# Former behavior: the unchecked return signature proved a false membership.
+# Now: invalid definitions reject; valid projections retain their type proof.
+have fn identity(x Z) Z = x
+identity(-1) = -1
+have fn widened(x N) Z = x
+widened(0) = 0
+have fn nonnegative(x Z: x >= 0) N = x
+nonnegative(0) = 0
+let literal = fn(x Z) Z {x}
+literal(-1) = -1
+have fn singleton(x R) {x} = x
+singleton(2) = 2
+
+# Before (incorrectly accepted):
+# struct Box<n N>:
+#     value R
+#     tag R
+# let bad = &Box<-1>
+# Now: each instantiated header type must be proved before caching WD.
+struct Box<n N>:
+    value R
+    tag R
+let good = &Box<0>
+&Box<0> = &Box<0>
+struct Pair<S set, a S>:
+    left S
+    right S
+let dependent = &Pair<{0}, 0>
+
+# Boundary: wrong returns, -1 in N, invalid kind/dependent struct args reject.
+# Evidence: target/release/litex -strict -f examples/wd/obj/return_and_struct_domains.lit
+# Tests: cargo test --release wd_obligation_tests

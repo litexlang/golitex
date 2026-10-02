@@ -12,6 +12,8 @@ Primary fixture: [fact.lit](../../fact.lit).
 
 - [ ] [K005: Negated existence is not derived from the checked universal exclusion](K005-finite-negated-existence/README.md)
 
+An additional [internal known-only verifier control](internal-known-only-control/README.md) failed a supplemental Rust gate and needs diagnosis. It is separate from the native CLI reproduction count.
+
 Current restrictions and strict policy: [limitations.md](limitations.md).
 
 ```bash

@@ -68,6 +68,18 @@ fn store_load_string_round_trip() {
 }
 
 #[test]
+fn numeric_decoder_normalizes_old_spelling_and_preserves_hot_cold_identity() {
+    let mut prop = sample_is_pos();
+    let Fact::AtomicFact(AtomicFact::GreaterFact(fact)) = &mut prop.iff_facts[0] else { panic!("greater"); };
+    fact.right = Obj::Literal(Literal::Number(Number { normalized_value: "2.400".into() }));
+    let cold = load_def_prop(&store_def_prop(&prop).unwrap()).unwrap();
+    let hot = load_def_prop(&store_def_prop(&cold).unwrap()).unwrap();
+    assert_eq!(cold, hot);
+    let Fact::AtomicFact(AtomicFact::GreaterFact(fact)) = &cold.iff_facts[0] else { panic!("greater"); };
+    assert_eq!(fact.right.ir(), Obj::Literal(Literal::Number(Number::new("2.4".into()))).ir());
+}
+
+#[test]
 fn load_example_golden_matches_sample() {
     let back = load_def_prop(IS_POS_FIXTURE).expect("load example golden");
     assert_eq!(sample_is_pos(), back);

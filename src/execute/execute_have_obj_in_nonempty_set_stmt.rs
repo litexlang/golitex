@@ -22,11 +22,16 @@ pub enum ExecHaveObjInNonemptySetStmtFailed {
     AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
 }
 
-// Pipeline: WD param types → nonempty obligations → define symbols.
+// Each group: WD type → prove nonempty → define symbols; then auto-open.
+pub struct HaveObjInNonemptySetGroupResult {
+    pub param_type_well_defined: ParamTypeWellDefinedProof,
+    pub nonempty_check: ParamTypeFactCheckResult,
+    pub defined_params: StoreHaveObjAndInferResult,
+}
+
 pub struct ExecHaveObjInNonemptySetStmtSuccessResult {
     pub statement: HaveObjInNonemptySetOrParamTypeStmt,
-    pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
-    pub nonempty_checks: Vec<ParamTypeFactCheckResult>,
+    pub groups: Vec<HaveObjInNonemptySetGroupResult>,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
     pub auto_opened_struct_layers:
         Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
@@ -60,31 +65,34 @@ impl Runtime {
             equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
         };
 
-        let param_type_well_defined = match self
-            .verify_typed_parameters_well_definedness_or_fail(&stmt.param_def, verify_state.clone())?
-        {
-            Ok(proofs) => proofs,
-            Err(failed) => {
-                return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
+        let mut groups = Vec::with_capacity(stmt.param_def.groups.len());
+        let mut stored_fact_ids = Vec::new();
+        let shared = Rc::new(stmt.clone());
+        for group in &stmt.param_def.groups {
+            let one = TypedParameterList { groups: vec![group.clone()] };
+            let param_type_well_defined = match self
+                .verify_typed_parameters_well_definedness_or_fail(&one, verify_state.clone())?
+            {
+                Ok(mut proofs) => proofs.remove(0),
+                Err(failed) => return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
                     ExecHaveObjInNonemptySetStmtFailed::ParamType(failed),
-                ));
-            }
-        };
-
-        let nonempty_checks =
-            match self.verify_have_obj_nonempty_obligations(&stmt.param_def, verify_state)? {
-                Ok(checks) => checks,
-                Err(failed) => {
-                    return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(failed));
-                }
+                )),
             };
-
-        let store_and_infer_result = self.define_typed_parameters_in_current_env(
-            &stmt.param_def,
-            Some(SharedHaveDefinition::HaveObjInNonemptySetOrParamType(Rc::new(
-                stmt.clone(),
-            ))),
-        )?;
+            let nonempty_check =
+                match self.verify_have_obj_nonempty_obligations(&one, verify_state.clone())? {
+                Ok(mut checks) => checks.remove(0),
+                Err(failed) => return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(failed)),
+            };
+            let defined_params = self.define_typed_parameters_in_current_env(
+                &one,
+                Some(SharedHaveDefinition::HaveObjInNonemptySetOrParamType(Rc::clone(&shared))),
+            )?;
+            stored_fact_ids.extend(defined_params.stored_fact_ids.iter().copied());
+            groups.push(HaveObjInNonemptySetGroupResult {
+                param_type_well_defined, nonempty_check, defined_params,
+            });
+        }
+        let store_and_infer_result = StoreHaveObjAndInferResult { stored_fact_ids };
 
         let auto_opened_struct_layers =
             match self.auto_open_struct_layers_for_typed_parameters(&stmt.param_def)? {
@@ -99,8 +107,7 @@ impl Runtime {
         Ok(ExecHaveObjInNonemptySetStmtResult::Success(
             ExecHaveObjInNonemptySetStmtSuccessResult {
                 statement: stmt.clone(),
-                param_type_well_defined,
-                nonempty_checks,
+                groups,
                 store_and_infer_result,
                 auto_opened_struct_layers,
             },
@@ -149,3 +156,7 @@ fn nonempty_check_set_for_param_obj(param_set: &Obj) -> Obj {
         _ => param_set.clone(),
     }
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/dependent_have/tests.rs"]
+mod dependent_have_tests;

@@ -1,6 +1,6 @@
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::ast::obj::{
-    AnonymousFn, FieldAccess, FnObjHead, FnSet, FunctionSpace, Obj, StructAndFieldAccessObj,
+    FieldAccess, FnObjHead, FnSet, FunctionSpace, Obj, StructAndFieldAccessObj,
 };
 use crate::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
@@ -64,7 +64,7 @@ impl Runtime {
 
     // Resolve a callable's FnSet: anonymous literal, bare name with InFunctionSet, or
     // identifier-headed empty application. Used by iterated / reduce WD.
-    pub(super) fn resolve_callable_fn_set(&self, function: &Obj) -> Option<FnSet> {
+    pub(in crate::execute) fn resolve_callable_fn_set(&self, function: &Obj) -> Option<FnSet> {
         match function {
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => Some(anon.body.clone()),
             Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
@@ -186,23 +186,6 @@ pub(super) fn set_bound_params_to_arg_map(
         }
     }
     map
-}
-
-// True when `equal_to` is exactly one of the anonymous fn's bound parameters.
-pub(super) fn anonymous_fn_body_is_bound_param(value: &AnonymousFn) -> bool {
-    let Obj::Identifier(crate::ast::obj::IdentifierObj::Plain { id, .. }) =
-        value.equal_to.as_ref()
-    else {
-        return false;
-    };
-    for group in &value.body.set_bound_parameters.groups {
-        for param in &group.params {
-            if param.id == *id {
-                return true;
-            }
-        }
-    }
-    false
 }
 
 // FnSet / AnonymousFn obj carriers must be fixed sets: a later group's

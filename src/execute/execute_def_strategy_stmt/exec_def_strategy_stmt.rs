@@ -2,15 +2,16 @@ use crate::ast::fact::Fact;
 use crate::ast::stmt::DefStrategyStmt;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_by_stmt::{
-    proof_verify_state, run_fact_only_proof_steps, verify_goal_fact, ByProofBodyFailed,
-    ByProofStepResult,
+    proof_verify_state, verify_goal_fact,
 };
+use crate::execute::ExecStmtResult;
+use crate::execute::execute_proof_block_stmt::{run_proof_body_stmts, ProofBlockBodyFailed};
 use crate::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyFactWellDefinedResult,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 
-// strategy Name: ? forall … — prove the forall (fact-only body) and store the
+// strategy Name: ? forall … — prove the forall in a local body and store the
 // named interface under strategy_definitions.
 //
 // The proved forall is NOT injected into ordinary known_forall matching.
@@ -33,7 +34,7 @@ pub enum ExecDefStrategyStmtResult {
 
 pub struct ExecDefStrategyStmtSuccess {
     pub goal_wd: VerifyFactWellDefinedResult,
-    pub proof_steps: Vec<ByProofStepResult>,
+    pub proof_steps: Vec<ExecStmtResult>,
     pub conclusion_proofs: Vec<VerifyFactResult>,
     pub local_env: Box<ExecEnv>,
 }
@@ -42,7 +43,7 @@ pub enum ExecDefStrategyStmtFailed {
     NameClash(String),
     GoalWd(VerifyFactWellDefinedResult),
     Introduce(String),
-    ProofBody(ByProofBodyFailed),
+    ProofBody(ProofBlockBodyFailed),
     Conclusion {
         index: usize,
         result: VerifyFactResult,
@@ -103,7 +104,7 @@ fn exec_def_strategy_forall_body(
     forall: &crate::ast::fact::ForallFact,
     proof: &[crate::ast::stmt::Stmt],
 ) -> RuntimeResult<
-    Result<(Vec<ByProofStepResult>, Vec<VerifyFactResult>), ExecDefStrategyStmtFailed>,
+    Result<(Vec<ExecStmtResult>, Vec<VerifyFactResult>), ExecDefStrategyStmtFailed>,
 > {
     if runtime
         .introduce_typed_parameters(&forall.typed_parameters, proof_verify_state())?
@@ -124,7 +125,7 @@ fn exec_def_strategy_forall_body(
         let _ = runtime.store_fact_and_infer(dom)?;
     }
 
-    let proof_steps = match run_fact_only_proof_steps(runtime, proof)? {
+    let proof_steps = match run_proof_body_stmts(runtime, proof)? {
         Ok(steps) => steps,
         Err(failed) => return Ok(Err(ExecDefStrategyStmtFailed::ProofBody(failed))),
     };

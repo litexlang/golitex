@@ -3,7 +3,7 @@
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
-use super::wrap_obj_well_defined_by_def::finish_by_def;
+use super::wrap_obj_well_defined_by_def::{finish_by_def, wrap_common_fail};
 use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
@@ -19,7 +19,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
 impl Runtime {
-    // `&Name` / `&Name<args>`: known structure definition, matching arity, param WD.
+    // `&Name` / `&Name<args>`: definition, arity, argument WD and declared types.
     // Does not prove membership `$in &Struct`.
     // Example: after `struct Point: x R; y R`, WD of `&Point` succeeds.
     pub(super) fn verify_struct_obj_well_definedness(
@@ -28,7 +28,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         let plain = value.name.local_name();
-        let expected_arity = {
+        let (expected_arity, header) = {
             let Some(def) = self.def_struct_visible(&value.name) else {
                 let root =
                     Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(value.clone()));
@@ -46,8 +46,8 @@ impl Runtime {
                 });
             };
             match &def.param_def_with_dom {
-                None => 0,
-                Some((params, _)) => params.ordered_param_ids().len(),
+                None => (0, None),
+                Some((params, dom)) => (params.ordered_param_ids().len(), Some((params.clone(), dom.clone()))),
             }
         };
         if value.params.len() != expected_arity {
@@ -69,8 +69,39 @@ impl Runtime {
         }
 
         let refs: Vec<&Obj> = value.params.iter().collect();
-        let stages = self.verify_objs_as_children(&refs, verify_state.clone())?;
+        let mut stages = self.verify_objs_as_children(&refs, verify_state.clone())?;
         let root = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(value.clone()));
+        if stages.is_fully_known() {
+            if let Some((params, dom)) = header {
+                let mut requirements = match self.type_facts_for_typed_arguments(&params, &value.params) {
+                    Ok(facts) => facts,
+                    Err(reason) => return Ok(VerifyObjWellDefinedResult::Failed {
+                        obj: root.clone(),
+                        reason: wrap_common_fail(&root, FailToVerifyObjWellDefinedByDefCommon::Others(reason)),
+                    }),
+                };
+                let subst: HashMap<IdentifierId, Obj> = params.ordered_param_ids().into_iter()
+                    .zip(value.params.iter().cloned()).collect();
+                for fact in &dom {
+                    let instantiated = match self.inst_quantifier_free_fact(fact, &subst) {
+                        Ok(fact) => fact,
+                        Err(error) => return Ok(VerifyObjWellDefinedResult::Failed {
+                            obj: root.clone(),
+                            reason: wrap_common_fail(&root, FailToVerifyObjWellDefinedByDefCommon::Others(error.to_string())),
+                        }),
+                    };
+                    requirements.push(crate::instantiate::quantifier_free_fact_to_fact(instantiated));
+                }
+                for fact in &requirements {
+                    let proof = self.verify_fact(fact, verify_state.clone())?;
+                    let failed = proof.is_failed();
+                    stages.requirement_fact_verified.push(proof);
+                    if failed {
+                        break;
+                    }
+                }
+            }
+        }
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
                 if verify_state.store_well_defined_fact {

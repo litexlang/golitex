@@ -135,6 +135,9 @@ impl Runtime {
         if let Some(proof) = self.search_equal_fact_by_arithmetic_congruence(fact, ctx)? {
             return Ok(Some(EqualitySearchProofByBuiltinStrategy::ArithmeticCongruence(proof)));
         }
+        if let Some(proof) = self.search_equal_fact_by_complex_with_nonzero_premises(fact, ctx)? {
+            return Ok(Some(EqualitySearchProofByBuiltinStrategy::ComplexWithNonzeroPremises(proof)));
+        }
         if let Some(proof) =
             self.search_equal_fact_by_rational_with_nonzero_premises(fact, ctx)?
         {

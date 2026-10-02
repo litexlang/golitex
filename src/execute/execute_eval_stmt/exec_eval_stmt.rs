@@ -35,7 +35,7 @@ pub fn exec_eval_stmt(
             )));
         }
     };
-    let (rewritten_object, cited_equal_fact_ids) =
+    let (rewritten_object, mut cited_equal_fact_ids) =
         runtime.rewrite_obj_by_known_closed_numeric_equal(&stmt.obj_to_eval);
 
     let mut active_calls = ActiveAlgoCalls::new();
@@ -46,6 +46,8 @@ pub fn exec_eval_stmt(
         }
     };
 
+    cited_equal_fact_ids.extend(active_calls.cited_equal_fact_ids);
+
     Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(
         ExecEvalStmtSuccess {
             statement: stmt.clone(),
@@ -54,6 +56,9 @@ pub fn exec_eval_stmt(
             rewritten_object,
             cited_equal_fact_ids,
             evaluated_object,
+            aggregate_evaluations: active_calls.aggregate_evaluations,
+            function_evaluations: active_calls.function_evaluations,
+            algo_evaluations: active_calls.algo_evaluations,
         },
     )))
 }

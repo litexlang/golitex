@@ -6,14 +6,14 @@
 use super::helper::set_bound_parameter_count;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::ast::fact::{
-    AtomicFact, InFact, IsTupleFact, LessEqualFact, SubsetFact,
+    AtomicFact, Fact, ForallFact, ExistOrAndChainAtomicFact, InFact, IsTupleFact, LessEqualFact, SubsetFact,
 };
 use crate::ast::obj::{
     ClosedRange, FiniteSeqSet, FiniteSetReduce, FnSet, FunctionSpace, Obj, ObjAtIndex, Product,
     ProductOfFiniteSet, ProductShape, Range, Reduce, SeqSet, SetFormer, StandardSet, Sum,
     SumOfFiniteSet, TupleDim,
 };
-use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
+use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList, SetBoundParameterGroup, SetBoundParameterList};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -372,15 +372,25 @@ impl Runtime {
                         verify_state,
                     )?);
                 } else {
+                    let parameter_set = fn_set.set_bound_parameters.groups.iter().find(|g| !g.params.is_empty()).expect("one parameter").param_type.as_ref();
+                    let subset = AtomicFact::SubsetFact(SubsetFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: set.clone(), right: parameter_set.clone(), line_file: None,
+                    });
+                    reqs.push(self.verify_required_atomic_fact(
+                        subset, verify_state.clone(),
+                        format!("{operation}: set {} is not covered by iterand domain {}", set.ir(), parameter_set.ir()),
+                    )?);
                     reqs.push(self.require_obj_subset_of_standard_set(
                         fn_set.ret_set.as_ref(),
                         StandardSet::C,
-                        verify_state,
+                        verify_state.clone(),
                         format!(
                             "{operation}: iterand return set {} is not verified ⊆ C",
                             fn_set.ret_set.ir()
                         ),
                     )?);
+                    self.append_aggregate_predicate_requirements(&fn_set, AggregateIndexDomain::FiniteSet(set), verify_state, &mut reqs)?;
                 }
             }
             None => {
@@ -442,9 +452,47 @@ impl Runtime {
             end,
             &param_set,
             operation,
-            verify_state,
+            verify_state.clone(),
             reqs,
         )?;
+        self.append_aggregate_predicate_requirements(&fn_set, AggregateIndexDomain::Range(start,end), verify_state, reqs)?;
+        Ok(())
+    }
+
+    // A callable's predicate domain must hold at every aggregate argument,
+    // before either symbolic identities or numeric consumers may use it.
+    fn append_aggregate_predicate_requirements(&mut self, signature:&FnSet, domain:AggregateIndexDomain,
+        state:VerifyState, requirements:&mut Vec<VerifyFactResult>) -> RuntimeResult<()> {
+        if signature.dom_facts.is_empty() { return Ok(()); }
+        if matches!(domain, AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::ListSet(s))) if s.list.is_empty()) { return Ok(()); }
+        let parameter = self.fresh_internal_param();
+        let index = Obj::Identifier(crate::ast::obj::IdentifierObj::from_bound_name(&parameter));
+        let original = signature.set_bound_parameters.groups.iter().flat_map(|g| &g.params).next().expect("unary");
+        let substitution = std::collections::HashMap::from([(original.id,index.clone())]);
+        let (parameter_set,dom_facts) = match domain {
+            AggregateIndexDomain::FiniteSet(set) => (set.clone(),vec![]),
+            AggregateIndexDomain::Range(start,end) => {
+                let lower:Fact = LessEqualFact { fact_id:self.global_ids.allocate_fact_id(),left:start.clone(),right:index.clone(),line_file:None }.into();
+                let upper:Fact = LessEqualFact { fact_id:self.global_ids.allocate_fact_id(),left:index,right:end.clone(),line_file:None }.into();
+                (Obj::StandardSet(StandardSet::Z),vec![lower,upper])
+            }
+        };
+        let mut then_facts = Vec::new();
+        for condition in &signature.dom_facts {
+            let instantiated = self.inst_fact(&crate::instantiate::quantifier_free_fact_to_fact(condition.clone()),&substitution)
+                .map_err(|error| crate::runtime::RuntimeError::InternalBug(format!("aggregate predicate binder substitution: {error}")))?;
+            then_facts.push(match instantiated {
+                Fact::AtomicFact(p) => ExistOrAndChainAtomicFact::AtomicFact(p),
+                Fact::AndFact(p) => ExistOrAndChainAtomicFact::AndFact(p),
+                Fact::ChainFact(p) => ExistOrAndChainAtomicFact::ChainFact(p),
+                Fact::OrFact(p) => ExistOrAndChainAtomicFact::OrFact(p),
+                _ => unreachable!("quantifier-free callable domain"),
+            });
+        }
+        let coverage = ForallFact { fact_id:self.global_ids.allocate_fact_id(),
+            typed_parameters:TypedParameterList { groups:vec![TypedParameterGroup { params:vec![parameter],param_type:ParamType::Obj(parameter_set) }] },
+            dom_facts,then_facts,line_file:None };
+        requirements.push(self.verify_forall_fact(&coverage,state.without_well_defined_storage())?);
         Ok(())
     }
 
@@ -672,6 +720,8 @@ impl Runtime {
         }
     }
 }
+
+enum AggregateIndexDomain<'a> { Range(&'a Obj,&'a Obj), FiniteSet(&'a Obj) }
 
 fn homogeneous_binary_carrier(fn_set: &FnSet) -> Option<Obj> {
     if set_bound_parameter_count(&fn_set.set_bound_parameters) != 2 || !fn_set.dom_facts.is_empty()

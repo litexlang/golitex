@@ -776,9 +776,9 @@ pub(crate) fn encode_literal(lit: &Literal) -> Result<JsonValue, KbCodecError> {
 pub(crate) fn decode_literal(value: &JsonValue) -> Result<Literal, KbCodecError> {
     let map = value.as_object()?;
     match JsonValue::get(map, "tag")?.as_str()? {
-        "Number" => Ok(Literal::Number(Number {
-            normalized_value: JsonValue::get(map, "text")?.as_str()?.to_string(),
-        })),
+        "Number" => Ok(Literal::Number(Number::new(
+            JsonValue::get(map, "text")?.as_str()?.to_string(),
+        ))),
         "ImaginaryUnit" => Ok(Literal::ImaginaryUnit(
             crate::ast::obj::ImaginaryUnit,
         )),

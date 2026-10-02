@@ -70,7 +70,12 @@ pub(super) fn project_atomic_wd_proof(
                 .map(|p| project_obj_wd_proof(p, runtime))
                 .collect(),
         ),
-    ), ("predicate_signature", signature)])
+    ), ("predicate_signature", signature),
+    ("predicate_domain", JsonValue::Array(proof.predicate_domain.iter().map(|p|
+        object_for(runtime, vec![
+            ("requirement", string(p.requirement.readable_string())),
+            ("verify", super::verify::project_verify_fact(&p.result, runtime)),
+        ])).collect()))])
 }
 
 pub(super) fn project_equal_wd_proof(
@@ -204,7 +209,7 @@ pub(super) fn project_exist_wd_proof(
             ])
 }
 
-fn project_forall_wd(proof: &ForallFactWellDefinedProof, runtime: &Runtime) -> JsonValue {
+pub(super) fn project_forall_wd(proof: &ForallFactWellDefinedProof, runtime: &Runtime) -> JsonValue {
     object_for(runtime, vec![
         ("type", string("forall")),
         (

@@ -81,17 +81,15 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
             object_for(runtime, entries)
         },
         ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("by_def")), ("family", string("FunctionSpace")), ("kind", string("AnonymousFn")),
                 ("obj", string(obj.readable_string())),
                 ("param_type_well_defined", JsonValue::Array(p.param_type_well_defined.iter().map(|c| project_obj_wd_proof(c, runtime)).collect())),
                 ("dom_fact_well_defined", JsonValue::Array(p.dom_fact_well_defined.iter().map(|f| project_fact_wd_proof(f, runtime)).collect())),
                 ("ret_set_well_defined", project_obj_wd_proof(&p.ret_set_well_defined, runtime)),
                 ("body_well_defined", project_obj_wd_proof(&p.body_well_defined, runtime)),
+                ("body_in_ret_set", super::verify::project_verify_fact(&p.body_in_ret_set, runtime)),
                             ];
-            if let Some(body_in) = &p.body_in_ret_set {
-                entries.push(("body_in_ret_set", super::verify::project_verify_fact(body_in, runtime)));
-            }
             object_for(runtime, entries)
         },
         ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnRange(p)) => project_common_by_def(obj, "FunctionSpace", "FnRange", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),

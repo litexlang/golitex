@@ -36,3 +36,14 @@ strategy strat_use_same:
             $strat_same(x, y)
     $strat_same(x, y)
 $strat_same(2, 2)
+
+# case: strategy-proof-control
+prop strat_control(x R):
+    x = 1
+strategy strat_use_control:
+    ? forall x R:
+        x = 1
+        =>:
+            $strat_control(x)
+    by def $strat_control(x)
+$strat_control(1)

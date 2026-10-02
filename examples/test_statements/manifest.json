@@ -1005,7 +1005,7 @@
           "expect": {
             "success": false,
             "statement_success": [],
-            "session_error_contains": "`have fn \u2026 by exist!`: the only forall then fact must be `exist!`"
+            "session_error_contains": "`have fn … by exist!`: the only forall then fact must be `exist!`"
           }
         },
         {
@@ -1616,6 +1616,13 @@
           "expect": {
             "success": true
           }
+        },
+        {
+          "name": "strategy-proof-control",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
         }
       ],
       "negative": [
@@ -1645,8 +1652,8 @@
           }
         },
         {
-          "name": "proof-control-in-strategy-is-unsupported",
-          "file": "negative/def_strategy_stmt/proof-control-in-strategy-is-unsupported.lit",
+          "name": "false-nested-proof",
+          "file": "negative/def_strategy_stmt/false-nested-proof.lit",
           "strict": true,
           "expect": {
             "success": false,
@@ -1895,7 +1902,7 @@
           "expect": {
             "success": false,
             "statement_success": [],
-            "session_error_contains": "expand: expected `e $in range(\u2026)`, `e $in closed_range(\u2026)`, or `e $in a...b`"
+            "session_error_contains": "expand: expected `e $in range(…)`, `e $in closed_range(…)`, or `e $in a...b`"
           }
         },
         {
@@ -3847,29 +3854,36 @@
           true
         ]
       }
-    }
-  ],
-  "known_gaps": [
+    },
     {
-      "id": "K004",
       "leaf": "HaveFnByInducStmt",
-      "file": "bugs/have_fn_by_induc_stmt/K004-recursive-call-under-addition/repro.lit",
+      "name": "recursive-increment-explicit-chain",
+      "file": "boundaries/recursive-increment-explicit-chain.lit",
       "strict": true,
-      "desired_success": true,
-      "observed": {
-        "success": false,
+      "expect": {
+        "success": true,
         "statement_success": [
           true,
           true,
           true,
-          true,
-          false
-        ],
-        "failed_phase": [
-          "search_proof"
+          true
         ]
       }
     },
+    {
+      "leaf": "ByEnumerateFiniteSetStmt",
+      "name": "finite-numeric-enumeration",
+      "file": "boundaries/finite-numeric-enumeration.lit",
+      "strict": true,
+      "expect": {
+        "success": true,
+        "statement_success": [
+          true
+        ]
+      }
+    }
+  ],
+  "known_gaps": [
     {
       "id": "K005",
       "leaf": "Fact",
@@ -3884,22 +3898,6 @@
         ],
         "failed_phase": [
           "search_proof"
-        ]
-      }
-    },
-    {
-      "id": "K010",
-      "leaf": "ByEnumerateFiniteSetStmt",
-      "file": "bugs/by_enumerate_finite_set_stmt/K010-enumeration-arithmetic-carrier/repro.lit",
-      "strict": true,
-      "desired_success": true,
-      "observed": {
-        "success": false,
-        "statement_success": [
-          false
-        ],
-        "failed_phase": [
-          "by_enumerate"
         ]
       }
     }
