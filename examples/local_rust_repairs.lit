@@ -1,0 +1,40 @@
+# Local cases/Or repairs: strict acceptance tracer, no trust.
+# Run: target/release/litex -strict -f examples/local_rust_repairs.lit
+# Previously rejected unchanged input (chain atoms were discarded):
+# have fn flag(x R: 0 <= x < 1 or 1 <= x < 2) N by cases:
+#     case 0 <= x < 1: 0
+#     case 1 <= x < 2: 1
+have fn flag(x R: 0 <= x < 1 or 1 <= x < 2) N by cases:
+    case 0 <= x < 1: 0
+    case 1 <= x < 2: 1
+flag(0) = 0
+flag(1) = 1
+
+algo interval_flag(x R: 0 <= x < 1 or 1 <= x < 2) N by cases:
+    case 0 <= x < 1: 0
+    case 1 <= x < 2: 1
+interval_flag(0) = 0
+interval_flag(1) = 1
+
+# Previously rejected unchanged compound/chain Or inputs:
+# 0 = 0 and 1 = 1 or 0 = 1 and 1 = 2
+# 0 <= 0 < 1 or 1 < 0 <= 2
+0 = 0 and 1 = 1 or 0 = 1 and 1 = 2
+0 <= 0 < 1 or 1 < 0 <= 2
+
+let good = 1 / 1
+have fn reciprocal(x R: x != 0) R = 1 / x
+sketch:
+    1 = 1
+    0 = 0
+eval 1 + 1
+witness $is_nonempty_set({1, 2}) from 1:
+    1 $in {1, 2}
+witness exist x N st {x = 1} from 1:
+    1 = 1
+by strong_induc n from 0:
+    ? n = n
+    ? from n = 0:
+        0 = 0
+    ? strong_induc:
+        n + 1 = n + 1

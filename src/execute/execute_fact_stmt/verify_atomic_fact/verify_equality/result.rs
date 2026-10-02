@@ -11,6 +11,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::runtime::runtime_ids::{FactId, IdentifierId};
 use super::by_they_are_the_same::TheyAreTheSameProof;
+use super::search_equal_fact_proof_by_known_special_property::EqualFactSearchProofByKnownSpecialProperty;
 
 // Shared known-forall application certificate.
 // Field order mirrors successful apply stages:
@@ -88,6 +89,7 @@ pub struct StrictEqualWithFact {
 // Equal search routes allowed when matching forall conclusion args.
 pub enum StrictEqualArgProof {
     ByTheyAreTheSame(TheyAreTheSameProof),
+    ByKnownSpecialProperty(EqualFactSearchProofByKnownSpecialProperty),
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByEquivalenceClass(EqualFactSearchedProofByEquivalenceClass),
     ByObjectDefinition(EqualitySearchProofByObjectDefinition),
@@ -125,6 +127,7 @@ impl VerifyEqualityResult {
 // Rewrite stages replace legacy opaque resolve_obj (ClosedNumeric only).
 pub enum EqualFactSearchedProof {
     ByTheyAreTheSame(TheyAreTheSameProof),
+    ByKnownSpecialProperty(EqualFactSearchProofByKnownSpecialProperty),
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByEquivalenceClass(EqualFactSearchedProofByEquivalenceClass),
     ByObjectDefinition(EqualitySearchProofByObjectDefinition),
@@ -275,6 +278,7 @@ pub fn strict_equal_arg_proof_from_searched(
 ) -> Option<StrictEqualArgProof> {
     match proof {
         EqualFactSearchedProof::ByTheyAreTheSame(p) => Some(StrictEqualArgProof::ByTheyAreTheSame(p)),
+        EqualFactSearchedProof::ByKnownSpecialProperty(p) => Some(StrictEqualArgProof::ByKnownSpecialProperty(p)),
         EqualFactSearchedProof::ByBuiltinRule(p) => Some(StrictEqualArgProof::ByBuiltinRule(p)),
         EqualFactSearchedProof::ByEquivalenceClass(p) => {
             Some(StrictEqualArgProof::ByEquivalenceClass(p))

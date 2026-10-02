@@ -259,12 +259,6 @@ fn verify_goal_display(verify: &VerifyFactResult) -> String {
                 "<wd_failed>".into()
             }
         },
-        VerifyFactResult::AndFact(_) => "and …".into(),
-        VerifyFactResult::ChainFact(_) => "chain …".into(),
-        VerifyFactResult::OrFact(_) => "or …".into(),
-        VerifyFactResult::ExistShapedFact(_) => "exist …".into(),
-        VerifyFactResult::ForallFact(_) => "forall …".into(),
-        VerifyFactResult::ForallFactWithIff(_) => "forall … <=> …".into(),
-        VerifyFactResult::NotForall(_) => "not forall …".into(),
+        _ => super::super::project_normal::verify_goal_display(verify),
     }
 }

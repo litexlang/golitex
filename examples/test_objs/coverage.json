@@ -107,7 +107,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn \u2026\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `f`\", line: 3, path: Real(\"examples/test_objs/gaps/fn_obj__p06.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `f`\", line: 3, path: Real(\"examples/test_objs/gaps/fn_obj__p06.lit\") }))"
           }
         }
       ]
@@ -135,6 +135,10 @@
         {
           "id": "N02",
           "file": "negative/number__n02.lit"
+        },
+        {
+          "id": "N03",
+          "file": "negative/number__n03.lit"
         }
       ],
       "gaps": [
@@ -147,6 +151,17 @@
             "observed": "reject",
             "phase": "search_proof",
             "diagnostic": "{\"success\": false, \"statement\": \"2.400 = 2.4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"2.400 = 2.4\"}, \"stores\": [], \"infers\": []}"
+          }
+        },
+        {
+          "id": "N03",
+          "file": "negative/number__n03.lit",
+          "intended": "reject",
+          "issue": "number-N03",
+          "baseline": {
+            "observed": "accept",
+            "phase": null,
+            "diagnostic": "{\"success\": true, \"statement\": \"2.400 != 2.4\", \"proof_method\": {\"type\": \"builtin_rule\", \"rule_name\": \"Closed decimal inequality\", \"message\": \"Both sides evaluate to different closed numbers\"}, \"stores\": [\"2.400 != 2.4\"], \"infers\": []}"
           }
         }
       ]
@@ -1717,7 +1732,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `I`\", line: 3, path: Real(\"examples/test_objs/gaps/family_intersect__p04.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `I`\", line: 3, path: Real(\"examples/test_objs/gaps/family_intersect__p04.lit\") }))"
           }
         }
       ]
@@ -1798,7 +1813,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `X`\", line: 4, path: Real(\"examples/test_objs/gaps/index_union__p01.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `X`\", line: 4, path: Real(\"examples/test_objs/gaps/index_union__p01.lit\") }))"
           }
         },
         {
@@ -1809,7 +1824,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn \u2026\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_union__p02.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_union__p02.lit\") }))"
           }
         },
         {
@@ -1863,7 +1878,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `X`\", line: 4, path: Real(\"examples/test_objs/gaps/index_intersect__p01.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `X`\", line: 4, path: Real(\"examples/test_objs/gaps/index_intersect__p01.lit\") }))"
           }
         },
         {
@@ -1874,7 +1889,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn \u2026\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_intersect__p02.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_intersect__p02.lit\") }))"
           }
         },
         {
@@ -1924,7 +1939,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `P`\", line: 4, path: Real(\"examples/test_objs/gaps/index_cart__p01.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `P`\", line: 4, path: Real(\"examples/test_objs/gaps/index_cart__p01.lit\") }))"
           }
         },
         {
@@ -1935,7 +1950,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `P`\", line: 4, path: Real(\"examples/test_objs/gaps/index_cart__p02.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `P`\", line: 4, path: Real(\"examples/test_objs/gaps/index_cart__p02.lit\") }))"
           }
         }
       ]

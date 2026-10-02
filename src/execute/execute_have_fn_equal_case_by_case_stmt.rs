@@ -224,7 +224,7 @@ impl Runtime {
             rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause)?;
             let assumed_fact = and_chain_as_fact(assumed);
             let _ = rt.store_fact_and_infer(&assumed_fact)?;
-            for atom in flatten_and_chain_atoms(other) {
+            for atom in flatten_and_chain_atoms(rt, other)? {
                 let Some(negated) = negate_atomic_fact(&atom, rt.global_ids.allocate_fact_id()) else {
                     continue;
                 };
@@ -433,11 +433,11 @@ pub(crate) fn set_bound_to_typed(list: &SetBoundParameterList) -> TypedParameter
     }
 }
 
-fn flatten_and_chain_atoms(fact: &AndChainAtomicFact) -> Vec<AtomicFact> {
+fn flatten_and_chain_atoms(runtime: &mut Runtime, fact: &AndChainAtomicFact) -> RuntimeResult<Vec<AtomicFact>> {
     match fact {
-        AndChainAtomicFact::AtomicFact(a) => vec![a.clone()],
-        AndChainAtomicFact::AndFact(a) => a.facts.clone(),
-        AndChainAtomicFact::ChainFact(_) => Vec::new(),
+        AndChainAtomicFact::AtomicFact(a) => Ok(vec![a.clone()]),
+        AndChainAtomicFact::AndFact(a) => Ok(a.facts.clone()),
+        AndChainAtomicFact::ChainFact(c) => runtime.chain_adjacent_atomics(c),
     }
 }
 

@@ -1,0 +1,3 @@
+# N03: mathematically equal decimal spellings must not prove inequality.
+# Intended: reject. Current defect: accepts via Closed decimal inequality.
+2.400 != 2.4

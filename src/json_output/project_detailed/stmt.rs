@@ -323,9 +323,10 @@ fn project_let_obj(result: &ExecLetObjStmtResult, runtime: &Runtime) -> JsonValu
                 project_fact_ids_as_store(&s.stored_fact_ids, runtime),
             ),
         ]),
-        ExecLetObjStmtResult::Failed(_) => object_for(runtime, vec![
+        ExecLetObjStmtResult::Failed(wd) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("let_obj")),
+            ("value_well_defined", project_verify_obj_wd(wd, runtime)),
         ]),
     }
 }
@@ -385,6 +386,12 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                     ("success", bool_value(true)),
                     ("kind", string("witness_exist_fact")),
                     ("statement", string(s.statement.readable_string())),
+                    ("exist_fact_well_defined", project_fact_wd_proof(&s.ambient.exist_fact_well_defined, runtime)),
+                    ("witness_obj_well_defined", JsonValue::Array(s.ambient.witness_obj_well_defined.iter().map(|wd| project_verify_obj_wd(wd, runtime)).collect())),
+                    ("witness_type_checks", project_verify_facts(&s.ambient.witness_type_checks, runtime)),
+                    ("proof_steps", project_stmt_steps(&s.proof_steps, runtime)),
+                    ("body_checks", project_verify_facts(&s.obligations.body_checks, runtime)),
+                    ("uniqueness_check", s.obligations.uniqueness_check.as_ref().map(|check| project_verify_fact(check, runtime)).unwrap_or(JsonValue::Null)),
                     (
                         "store_and_infer",
                         project_store_and_infer(&s.store_and_infer_result, runtime),
@@ -423,6 +430,10 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                     ("success", bool_value(true)),
                     ("kind", string("witness_nonempty_set")),
                     ("statement", string(s.statement.readable_string())),
+                    ("obj_well_defined", project_verify_obj_wd(&s.obj_well_defined, runtime)),
+                    ("set_well_defined", project_verify_obj_wd(&s.set_well_defined, runtime)),
+                    ("proof_steps", project_stmt_steps(&s.proof_steps, runtime)),
+                    ("membership_check", project_verify_fact(&s.membership_check, runtime)),
                     (
                         "store_and_infer",
                         project_store_and_infer(&s.store_and_infer_result, runtime),

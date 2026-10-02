@@ -85,7 +85,7 @@ fn structurally_inapplicable_signature_does_not_hide_a_later_definition() {
         let proof = rt
             .search_atomic_except_equality_fact_proof_by_known_special_property(&target)
             .expect("later applicable definition must still be considered");
-        let source = rt.fact_by_id_in_stack(proof.cite_property_fact_id()).unwrap();
+        let source = rt.fact_by_id_in_stack(proof.cite_property_fact_id().unwrap()).unwrap();
         assert!(source.readable_string().contains("id $in fn"));
         assert_special(
             rt.verify_fact(&Fact::AtomicFact(target), builtin_disabled()).unwrap(),

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "mode": "baseline",
+  "built_from_current_source": true,
+  "binary_sha256": "22c11926aa4803f191f27007ae8b3e8c01b921292afeee803b303f6c5c98be4e",
+  "source_sha256": "f4e4ced1a784fcc29b2cd73a9290fb6d0abfbe1f42d59f40afe3cd28b64470e9",
+  "ast_sha256": "e37538eb5d1e9797e450e306239e42e19a80608fa954a1fa46503c970b302802",
+  "objects": 1,
+  "positive_assertions": 6,
+  "observations": [
+    {
+      "observed": "accept",
+      "exit_code": 0,
+      "phase": "success",
+      "diagnostic": "",
+      "statements": 6,
+      "object": "number",
+      "file": "number.lit",
+      "kind": "positive",
+      "intended": "accept"
+    },
+    {
+      "observed": "reject",
+      "exit_code": 1,
+      "phase": "search_proof",
+      "diagnostic": "{\"success\": false, \"statement\": \"0.1 + 0.2 = 0.4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"0.1 + 0.2 = 0.4\"}, \"stores\": [], \"infers\": []}",
+      "statements": 1,
+      "object": "number",
+      "file": "negative/number__n01.lit",
+      "kind": "negative",
+      "intended": "reject"
+    },
+    {
+      "observed": "reject",
+      "exit_code": 1,
+      "phase": "search_proof",
+      "diagnostic": "{\"success\": false, \"statement\": \"2.5 $in Z\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"2.5 $in Z\"}, \"stores\": [], \"infers\": []}",
+      "statements": 1,
+      "object": "number",
+      "file": "negative/number__n02.lit",
+      "kind": "negative",
+      "intended": "reject"
+    },
+    {
+      "observed": "accept",
+      "exit_code": 0,
+      "phase": "success",
+      "diagnostic": "",
+      "statements": 1,
+      "object": "number",
+      "file": "negative/number__n03.lit",
+      "kind": "negative",
+      "intended": "reject"
+    },
+    {
+      "observed": "reject",
+      "exit_code": 1,
+      "phase": "search_proof",
+      "diagnostic": "{\"success\": false, \"statement\": \"2.400 = 2.4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"2.400 = 2.4\"}, \"stores\": [], \"infers\": []}",
+      "statements": 1,
+      "object": "number",
+      "file": "gaps/number__p03.lit",
+      "kind": "gap",
+      "intended": "accept"
+    }
+  ],
+  "failures": [],
+  "known_gaps": [
+    {
+      "object": "number",
+      "file": "negative/number__n03.lit",
+      "intended": "reject",
+      "observed": "accept",
+      "issue": "number-N03"
+    },
+    {
+      "object": "number",
+      "file": "gaps/number__p03.lit",
+      "intended": "accept",
+      "observed": "reject",
+      "issue": "number-P03"
+    }
+  ],
+  "binary_stable": true,
+  "source_stable": true,
+  "ok": true
+}

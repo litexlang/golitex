@@ -4,6 +4,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::Veri
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
     VerifyAtomicFactWellDefinedResult,
+    PredicateSignatureWellDefinedFailure, PredicateSignatureWellDefinedProof,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::VerifyObjWellDefinedResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -11,7 +12,7 @@ use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
     // Atomic-except-equality only. EqualFact uses verify_equal_fact_well_definedness.
-    // Classify shape, then WD each argument object.
+    // WD each argument object, then resolve the predicate signature.
     // First soft-missing argument → Failed; otherwise Success with proof.
     pub fn verify_atomic_fact_well_definedness(
         &mut self,
@@ -30,15 +31,62 @@ impl Runtime {
             match self.verify_obj_well_definedness(arg, verify_state.clone())? {
                 VerifyObjWellDefinedResult::Failed { reason, .. } => {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
-                        FailToVerifyAtomicFactWellDefinedResult { reason },
+                        FailToVerifyAtomicFactWellDefinedResult::Argument(reason),
                     ));
                 }
                 VerifyObjWellDefinedResult::Success(proof) => succeeded_args.push(proof),
             }
         }
+        // A checked goal may not borrow a declaration from its later proof
+        // body. For example, `claim: ? $chosen(0)` must fail here if chosen
+        // has not been declared, even if the body defines it locally.
+        let user_signature = match fact {
+            AtomicFact::NormalAtomicFact(normal) => Some((&normal.predicate, normal.body.len())),
+            AtomicFact::NotNormalAtomicFact(normal) => Some((&normal.predicate, normal.body.len())),
+            _ => None,
+        };
+        let predicate_signature = match user_signature {
+            Some((predicate, actual_arity)) => {
+                let signature = if let Some(def) = self.def_prop_visible(predicate) {
+                    PredicateSignatureWellDefinedProof::Prop {
+                        predicate: predicate.clone(),
+                        arity: def.typed_parameters.groups.iter().map(|g| g.params.len()).sum(),
+                    }
+                } else if let Some(def) = self.def_abstract_prop_visible(predicate) {
+                    PredicateSignatureWellDefinedProof::AbstractProp {
+                        predicate: predicate.clone(), arity: def.params.len(),
+                    }
+                } else {
+                    return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                        FailToVerifyAtomicFactWellDefinedResult::Predicate {
+                            well_defined_of_each_parameter: succeeded_args,
+                            reason: PredicateSignatureWellDefinedFailure::Undefined {
+                                predicate: predicate.clone(),
+                            },
+                        },
+                    ));
+                };
+                let (PredicateSignatureWellDefinedProof::Prop { arity, .. }
+                    | PredicateSignatureWellDefinedProof::AbstractProp { arity, .. }) = &signature
+                    else { unreachable!("resolved user predicate signature") };
+                if *arity != actual_arity {
+                    return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                        FailToVerifyAtomicFactWellDefinedResult::Predicate {
+                            well_defined_of_each_parameter: succeeded_args,
+                            reason: PredicateSignatureWellDefinedFailure::Arity {
+                                predicate: predicate.clone(), expected: *arity, actual: actual_arity,
+                            },
+                        },
+                    ));
+                }
+                signature
+            }
+            _ => PredicateSignatureWellDefinedProof::Builtin,
+        };
         Ok(VerifyAtomicFactWellDefinedResult::Success(
             AtomicFactWellDefinedProof {
                 well_defined_of_each_parameter: succeeded_args,
+                predicate_signature,
             },
         ))
     }
@@ -116,3 +164,7 @@ fn atomic_except_equality_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotIsChoiceFunctionForFact(f) => vec![&f.index, &f.set, &f.family, &f.choice],
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../tests/unit/execute/predicate_signature_wd/tests.rs"]
+mod predicate_signature_tests;

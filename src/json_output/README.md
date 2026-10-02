@@ -23,6 +23,13 @@ Normal output explains the checked native codomain (for example `Z` for
 `codomain: "Z"`. The enclosing atomic result retains the input WD proof.
 Closed numeric expressions keep the existing calculation-membership route.
 
+Detailed atomic WD records argument proofs followed by `predicate_signature`:
+an intrinsic builtin signature or an owner-qualified `prop` / `abstract_prop`
+signature and its arity. An undefined or wrong-arity user predicate fails at
+`predicate_signature`, retaining the successful argument proofs. This failure
+is distinct from an argument-object WD failure. Equality stays on its separate
+WD path; mixed conjunction/chain evidence uses the intrinsic signature case.
+
 ## Template definition facts
 
 Successful templates expose their published universal definition facts in
@@ -337,3 +344,15 @@ Detailed eval success includes `source_well_defined` before its rewritten and
 evaluated objects. A failed eval WD is also exposed in Normal
 `why_failed.failure`, including the offending source expression and failed WD
 stage; its command phase remains `eval`.
+
+Normal let and named-function failures expose their existing WD result under
+`why_failed.failure`. A sketch failure adds the zero-based `step_index` and
+the nested Normal `result`. Symbolic eval's `UnsupportedExpression` reports
+`cause: "unsupported_expression"`; other eval causes keep their current output.
+
+Detailed failed lets retain `value_well_defined`. Compound fact statement
+labels use the same available full goal text as Normal. Successful nonempty
+witnesses include object/set WD, `proof_steps`, and `membership_check`;
+existential witnesses include ambient WD, witness type checks, proof steps,
+body checks, and the optional `uniqueness_check` (`null` for ordinary exist).
+These are projections of existing checked evidence, not additional proof rules.

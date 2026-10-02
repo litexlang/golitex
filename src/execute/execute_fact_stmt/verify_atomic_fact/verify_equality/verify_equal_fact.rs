@@ -38,7 +38,7 @@ impl Runtime {
         }
     }
 
-    // Cheap phase: same object → builtin rule → unified equivalence class.
+    // Cheap phase: same object → known structural property → builtin rule → equivalence class.
     // Class search tries stored paths before one restricted peer bridge.
     // Deep phase (can_use_def_and_known_forall_and_known_strategy, remaining_deep_search_depth > 0):
     //   after_deep_search() once, then
@@ -53,6 +53,9 @@ impl Runtime {
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
         if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(fact) {
             return Ok(Some(proof.into()));
+        }
+        if let Some(proof) = self.search_equal_fact_proof_by_known_special_property(fact)? {
+            return Ok(Some(EqualFactSearchedProof::ByKnownSpecialProperty(proof)));
         }
         // Enter builtin only when the caller permits it; premise entry closes recursion.
         if verify_state.can_use_builtin_rule {

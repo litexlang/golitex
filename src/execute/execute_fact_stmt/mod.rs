@@ -4,6 +4,7 @@
 
 mod exec_fact_stmt;
 mod helper;
+pub(crate) mod known_tuple;
 mod result;
 mod strategy_search;
 mod verify;

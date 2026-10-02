@@ -8,6 +8,7 @@ mod exist_builtin_gen;
 mod or_builtin_gen;
 mod searched;
 mod known_special_property;
+mod known_tuple;
 mod stmt;
 mod theorem;
 mod store;

@@ -50,9 +50,15 @@ atomic-except-equality only and returns
 `RuntimeResult<VerifyAtomicFactWellDefinedResult>`:
 
 - `Ok(Success(AtomicFactWellDefinedProof))` when every argument Obj WD succeeds
-  (`well_defined_of_each_parameter: Vec<ObjWellDefinedProof>`)
-- `Ok(Failed(FailToVerifyAtomicFactWellDefinedResult { reason }))` when some
-  argument Obj WD soft-misses (`reason` is the Obj fail only)
+  and the predicate signature is valid. Fields follow those stages:
+  `well_defined_of_each_parameter`, then `predicate_signature`.
+- User `prop` / `abstract_prop` signatures resolve through the complete
+  `AtomicName`, including module/file ownership, and require exact arity.
+  A later declaration inside a proof body cannot define an earlier claim goal.
+- `Ok(Failed(Argument(reason)))` when argument Obj WD soft-misses, or
+  `Ok(Failed(Predicate { well_defined_of_each_parameter, reason }))` for an
+  undefined predicate or wrong arity after the arguments passed.
+  Predicate failures are not represented as object failures.
 - `Err(...)` only for real runtime / invariant failures (including calling it on
   `EqualFact`)
 

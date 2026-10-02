@@ -639,6 +639,11 @@ impl Runtime {
                     }
                     header.expect_colon_end_of_header()?;
                     step_proof = Some(self.parse_body_stmts(&header.body)?);
+                } else if is_induc_step_header_block(child, !strong) {
+                    return Err(child.parse_error(format!(
+                        "{syntax}: expected `? {}:` for this induction method",
+                        if strong { STRONG_INDUC } else { INDUC }
+                    )));
                 } else {
                     return Err(child.parse_error(format!(
                         "{syntax}: unstructured proof cannot mix with `? from` / `? induc` blocks"

@@ -1357,6 +1357,13 @@ not a soft-miss theorem label.
 
 ### Domain obligations
 
+Ordinary `prop` and `abstract_prop` facts must refer to a declaration visible
+at the point where their well-definedness is checked, with exactly the declared
+number of arguments. Qualified predicate names use the declaration in that
+module and file. A declaration later in a claim's proof body cannot make an
+earlier undefined goal well-defined. This also applies to negated predicate
+facts and to facts used as quantified assumptions.
+
 Function definitions are checked under the parameter types and domain facts
 written in their signature.
 
@@ -1595,6 +1602,10 @@ arbitrarily nestable.
 
 Verification of an `or` proves that at least one branch holds; it does not add
 an arbitrary branch as a known fact.
+
+A verified conjunction or relation chain can introduce a disjunction even
+when its other branches are compound. Litex checks the selected branch and
+retains that proof; it does not assume that the compound branch is true.
 
 ```text
 have x R
@@ -2265,6 +2276,10 @@ Writing `have tuple` (etc.) is a parse error: use `have fn` for indexed data.
 Use `have fn ... = ...` for one formula and `have fn ... by cases` for a
 piecewise definition. Case conditions must cover the domain and be mutually
 exclusive; their order does not create priority.
+
+Relation-chain guards contribute every adjacent comparison to the mutual
+exclusion check, just as the equivalent flat `and` guard does. This also
+applies to `algo ... by cases`; coverage and return checks are still required.
 
 ```litex
 have fn successor(x Z) Z = x + 1

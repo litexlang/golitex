@@ -23,6 +23,15 @@ target/release/litex -f <this-file>
 | **Real binder WD** | Forall / Exist / NotForall |
 | **Mostly Obj routing** | Equal / Atomic / And / Or / Chain |
 
+[Predicate signature preflight](predicate_signature_preflight.lit) preserves
+legal local proof helpers and later same-name declarations. Ordinary predicate
+WD additionally resolves the complete owner-qualified name and checks exact
+arity before assumptions or proof bodies use the fact. Executable undefined,
+arity, rollback and imported-cache controls live in
+`tests/unit/execute/predicate_signature_wd/tests.rs` and
+`src/run_module/cross_file_identity_tests.rs`. Builtin predicate domain checks
+are a separate migration audit; this tracer does not establish their parity.
+
 ## Layout
 
 ```text

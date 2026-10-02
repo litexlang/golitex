@@ -80,7 +80,7 @@ fn project_atomic_except(
             ("type", string("atomic_except_equality")),
             ("success", bool_value(false)),
             ("phase", string("well_defined")),
-            ("failure", super::wd_failure::project_obj_wd_failure(&f.reason, runtime)),
+            ("failure", super::wd_failure::project_atomic_wd_failure(f, runtime)),
         ]),
         VerifyAtomicExceptEqualityFactResult::Failed(
             VerifyAtomicExceptEqualityFactFailed::FailToSearchProof {

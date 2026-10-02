@@ -49,6 +49,18 @@ pub(super) fn project_atomic_wd_proof(
     proof: &AtomicFactWellDefinedProof,
     runtime: &Runtime,
 ) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateSignatureWellDefinedProof;
+    let signature = match &proof.predicate_signature {
+        PredicateSignatureWellDefinedProof::Builtin => object_for(runtime, vec![("type", string("builtin"))]),
+        PredicateSignatureWellDefinedProof::Prop { predicate, arity } => object_for(runtime, vec![
+            ("type", string("prop")), ("predicate", string(predicate.display_string())),
+            ("arity", JsonValue::Number(*arity as f64)),
+        ]),
+        PredicateSignatureWellDefinedProof::AbstractProp { predicate, arity } => object_for(runtime, vec![
+            ("type", string("abstract_prop")), ("predicate", string(predicate.display_string())),
+            ("arity", JsonValue::Number(*arity as f64)),
+        ]),
+    };
     object_for(runtime, vec![(
         "well_defined_of_each_parameter",
         JsonValue::Array(
@@ -58,7 +70,7 @@ pub(super) fn project_atomic_wd_proof(
                 .map(|p| project_obj_wd_proof(p, runtime))
                 .collect(),
         ),
-    )])
+    ), ("predicate_signature", signature)])
 }
 
 pub(super) fn project_equal_wd_proof(

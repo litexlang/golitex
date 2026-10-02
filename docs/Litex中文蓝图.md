@@ -39,7 +39,7 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 - [8. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
 - [9. 追寻与众不同的艺术](#conclusions)
   - [特别感谢](#special-thanks)
-- [附录：不同读者的入口](#overview-readers)
+- [附录：编程、数学与Litex形式化](#overview-readers)
 
 <a id="overview"></a>
 
@@ -211,7 +211,7 @@ theorem one_add_one : Litex.Same ((1 : ℂ) + (1 : ℂ)) (2 : ℂ) := by
 
 `Litex.Same` 是编译层中的相等关系。上面的最小 Lean 片段已由 Lean 检查；它展示目标证明的形式，当前 Litex 构建仍未提供生成它的编译入口。
 
-无论你是数学家、程序员，还是 Lean 用户，都可以从 Litex 中发现新的知识与视角；感兴趣的话，可以继续阅读文末的[不同读者的入口](#overview-readers)。
+无论你是数学家、程序员，还是 Lean 用户，都可以从 Litex 中发现新的知识与视角；感兴趣的话，可以继续阅读文末的[编程、数学与Litex形式化](#overview-readers)。
 
 <a id="overview-spine"></a>
 
@@ -1672,7 +1672,7 @@ Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu
 
 <a id="overview-readers"></a>
 
-## 附录：不同读者的入口
+## 附录：编程、数学与Litex形式化
 
 这一节从 Lean 用户、数学从业者、程序员和其他知识领域读者的经验出发，讨论 Litex 可能带来的知识与视角。您可以选择感兴趣的部分阅读，也可以回到[五条主线](#overview-spine)继续了解语言设计。
 
