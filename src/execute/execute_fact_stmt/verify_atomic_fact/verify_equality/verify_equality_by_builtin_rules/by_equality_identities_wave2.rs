@@ -944,7 +944,7 @@ impl Runtime {
             right: modulus.clone(),
             line_file: None,
         }));
-        let proof = self.verify_fact(&goal, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }
@@ -1020,7 +1020,7 @@ impl Runtime {
             right: zero,
             line_file: None,
         }));
-        let divisible_proof = self.verify_fact(&divisible, verify_state.clone())?;
+        let divisible_proof = self.verify_builtin_rule_premise(&divisible, verify_state.clone())?;
         if divisible_proof.is_failed() {
             return Ok(None);
         }

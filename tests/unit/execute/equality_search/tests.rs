@@ -10,7 +10,7 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 #[test]
-fn identity_and_alpha_work_without_builtin_fuel() {
+fn identity_and_alpha_work_without_builtin_entry() {
     for (code, shape) in [
         ("1 = 1", "ir"),
         ("fn(x R) R = fn(y R) R", "fn"),
@@ -177,7 +177,7 @@ fn both_classes_supply_alpha_peers_with_complete_paths_and_no_store() {
 }
 
 #[test]
-fn peer_builtin_inherits_fuel_and_handles_both_orientations() {
+fn peer_builtin_inherits_permission_and_handles_both_orientations() {
     for code in ["a = 2", "2 = a"] {
         let mut runtime = runtime();
         exec_ok(&mut runtime, "let a = 1 + 1");
@@ -191,7 +191,7 @@ fn peer_builtin_inherits_fuel_and_handles_both_orientations() {
                 )
                 .unwrap()
                 .is_none(),
-            "known-only must not acquire builtin fuel"
+            "known-only must not enable builtin entry"
         );
         let proof = runtime
             .search_equal_fact_proof_by_equivalence_class(&goal, VerifyState::top_level())
@@ -262,7 +262,7 @@ fn peer_mode_survives_all_child_state_transitions() {
         state.clone(),
         state.after_builtin_rule(),
         state.known_only_no_wd(),
-        state.with_one_less_round(),
+        state.after_deep_search(),
         state.without_well_defined_storage(),
     ] {
         assert_eq!(
@@ -272,7 +272,8 @@ fn peer_mode_survives_all_child_state_transitions() {
         assert!(!child.store_well_defined_fact);
         assert!(!child.can_use_rewrite);
         assert!(!child.can_use_def_and_known_forall_and_known_strategy);
-        assert!(child.can_use_builtin_rule_round <= state.can_use_builtin_rule_round);
+        assert!(!child.can_use_builtin_rule || state.can_use_builtin_rule);
+        assert!(child.remaining_deep_search_depth <= state.remaining_deep_search_depth);
     }
 }
 
@@ -355,9 +356,9 @@ fn explicit_definition_chain_stores_endpoint_before_later_verification() {
     let mut runtime = runtime();
     exec_ok(&mut runtime, "have x R = 2");
     exec_ok(&mut runtime, "have y R = x + 1");
-    // Even with enough fuel, definition residuals must keep rewrite disabled.
+    // Even with builtin entry enabled, definition residuals must keep rewrite disabled.
     let mut state = VerifyState::top_level();
-    state.can_use_builtin_rule_round = 3;
+    state.can_use_builtin_rule = true;
     assert!(verify(&mut runtime, "y = 3", state).is_failed());
 
     exec_ok(&mut runtime, "y = x + 1 = 3");
@@ -486,9 +487,9 @@ fn check_path(
 }
 
 #[test]
-fn compound_alpha_identity_preserves_ranges_bodies_and_free_ids_at_zero_fuel() {
+fn compound_alpha_identity_preserves_ranges_bodies_and_free_ids_at_builtin_disabled() {
     let mut rt = runtime();
-    let state = VerifyState { can_use_builtin_rule_round: 0, ..VerifyState::top_level().known_only_no_wd() };
+    let state = VerifyState { can_use_builtin_rule: false, ..VerifyState::top_level().known_only_no_wd() };
     let fact = equal(&mut rt, "sum(1, 2, fn(x Z) R {x}) = sum(1, 2, fn(y Z) R {y})");
     assert!(rt.search_equal_fact_proof(&fact, state.clone()).unwrap().is_some());
     exec_ok(&mut rt, "have a R, b R");

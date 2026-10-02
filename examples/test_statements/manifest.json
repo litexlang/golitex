@@ -1005,7 +1005,7 @@
           "expect": {
             "success": false,
             "statement_success": [],
-            "session_error_contains": "`have fn … by exist!`: the only forall then fact must be `exist!`"
+            "session_error_contains": "`have fn \u2026 by exist!`: the only forall then fact must be `exist!`"
           }
         },
         {
@@ -1895,7 +1895,7 @@
           "expect": {
             "success": false,
             "statement_success": [],
-            "session_error_contains": "expand: expected `e $in range(…)`, `e $in closed_range(…)`, or `e $in a...b`"
+            "session_error_contains": "expand: expected `e $in range(\u2026)`, `e $in closed_range(\u2026)`, or `e $in a...b`"
           }
         },
         {
@@ -3797,9 +3797,9 @@
       }
     },
     {
-      "name": "unsupported-K008",
+      "name": "unsupported-cartesian-for-domain",
       "leaf": "ByForStmt",
-      "file": "bugs/by_for_stmt/K008-finite-cartesian-domain/repro.lit",
+      "file": "boundaries/unsupported-cartesian-for-domain.lit",
       "strict": true,
       "expect": {
         "success": false,

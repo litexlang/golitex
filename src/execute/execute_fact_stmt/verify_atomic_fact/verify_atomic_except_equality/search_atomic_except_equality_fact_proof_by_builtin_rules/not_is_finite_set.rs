@@ -53,7 +53,7 @@ impl Runtime {
             set: left.as_ref().clone(),
             line_file: None,
         }));
-        let left_infinite_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        let left_infinite_proof = self.verify_builtin_rule_premise(&left_goal, verify_state.clone())?;
         if left_infinite_proof.is_failed() {
             return Ok(None);
         }
@@ -63,7 +63,7 @@ impl Runtime {
             set: right.as_ref().clone(),
             line_file: None,
         }));
-        let right_finite_proof = self.verify_fact(&right_goal, verify_state)?;
+        let right_finite_proof = self.verify_builtin_rule_premise(&right_goal, verify_state)?;
         if right_finite_proof.is_failed() {
             return Ok(None);
         }

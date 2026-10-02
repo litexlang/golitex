@@ -522,7 +522,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::R),
             line_file: None,
         }));
-        let in_real_proof = self.verify_fact(&in_real, verify_state.clone())?;
+        let in_real_proof = self.verify_builtin_rule_premise(&in_real, verify_state.clone())?;
         if in_real_proof.is_failed() {
             return Ok(None);
         }
@@ -542,7 +542,7 @@ impl Runtime {
                 line_file: None,
             }))
         };
-        let lower_bound_proof = self.verify_fact(&lower, verify_state.clone())?;
+        let lower_bound_proof = self.verify_builtin_rule_premise(&lower, verify_state.clone())?;
         if lower_bound_proof.is_failed() {
             return Ok(None);
         }
@@ -562,7 +562,7 @@ impl Runtime {
                 line_file: None,
             }))
         };
-        let upper_bound_proof = self.verify_fact(&upper, verify_state)?;
+        let upper_bound_proof = self.verify_builtin_rule_premise(&upper, verify_state)?;
         if upper_bound_proof.is_failed() {
             return Ok(None);
         }
@@ -600,7 +600,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::R),
             line_file: None,
         }));
-        let in_real_proof = self.verify_fact(&in_real, verify_state.clone())?;
+        let in_real_proof = self.verify_builtin_rule_premise(&in_real, verify_state.clone())?;
         if in_real_proof.is_failed() {
             return Ok(None);
         }
@@ -631,7 +631,7 @@ impl Runtime {
                 line_file: None,
             })),
         };
-        let endpoint_bound_proof = self.verify_fact(&bound, verify_state)?;
+        let endpoint_bound_proof = self.verify_builtin_rule_premise(&bound, verify_state)?;
         if endpoint_bound_proof.is_failed() {
             return Ok(None);
         }
@@ -663,7 +663,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::N),
             line_file: None,
         }));
-        let left_in_n_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        let left_in_n_proof = self.verify_builtin_rule_premise(&left_goal, verify_state.clone())?;
         if left_in_n_proof.is_failed() {
             return Ok(None);
         }
@@ -673,7 +673,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::N),
             line_file: None,
         }));
-        let right_in_n_proof = self.verify_fact(&right_goal, verify_state)?;
+        let right_in_n_proof = self.verify_builtin_rule_premise(&right_goal, verify_state)?;
         if right_in_n_proof.is_failed() {
             return Ok(None);
         }
@@ -702,7 +702,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::N),
             line_file: None,
         }));
-        let left_in_n_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        let left_in_n_proof = self.verify_builtin_rule_premise(&left_goal, verify_state.clone())?;
         if left_in_n_proof.is_failed() {
             return Ok(None);
         }
@@ -712,7 +712,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::N),
             line_file: None,
         }));
-        let right_in_n_proof = self.verify_fact(&right_goal, verify_state)?;
+        let right_in_n_proof = self.verify_builtin_rule_premise(&right_goal, verify_state)?;
         if right_in_n_proof.is_failed() {
             return Ok(None);
         }
@@ -786,7 +786,7 @@ impl Runtime {
                 set: Obj::StandardSet(source.clone()),
                 line_file: None,
             }));
-            let source_membership_proof = self.verify_fact(&probe, source_state.clone())?;
+            let source_membership_proof = self.verify_builtin_rule_premise(&probe, source_state.clone())?;
             if source_membership_proof.is_failed() {
                 continue;
             }
@@ -831,7 +831,7 @@ impl Runtime {
         }
         let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
         for requirement in &requirement_facts {
-            let proof = self.verify_fact(requirement, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(requirement, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(None);
             }
@@ -862,7 +862,7 @@ impl Runtime {
                 right: listed.as_ref().clone(),
                 line_file: None,
             }));
-            let equality_proof = self.verify_fact(&equality, verify_state.clone())?;
+            let equality_proof = self.verify_builtin_rule_premise(&equality, verify_state.clone())?;
             if equality_proof.is_failed() {
                 continue;
             }
@@ -894,7 +894,7 @@ impl Runtime {
             right: power.set.as_ref().clone(),
             line_file: fact.line_file.clone(),
         }));
-        let subset_proof = self.verify_fact(&subset, verify_state)?;
+        let subset_proof = self.verify_builtin_rule_premise(&subset, verify_state)?;
         if subset_proof.is_failed() {
             return Ok(None);
         }
@@ -932,7 +932,7 @@ impl Runtime {
                         set: fact.element.clone(),
                         line_file: fact.line_file.clone(),
                     }));
-                    let is_tuple = self.verify_fact(&is_tuple_fact, verify_state.clone())?;
+                    let is_tuple = self.verify_builtin_rule_premise(&is_tuple_fact, verify_state.clone())?;
                     if is_tuple.is_failed() {
                         return Ok(None);
                     }
@@ -946,7 +946,7 @@ impl Runtime {
                         })),
                         line_file: fact.line_file.clone(),
                     }));
-                    let dimension = self.verify_fact(&dimension_fact, verify_state.clone())?;
+                    let dimension = self.verify_builtin_rule_premise(&dimension_fact, verify_state.clone())?;
                     if dimension.is_failed() {
                         return Ok(None);
                     }
@@ -978,7 +978,7 @@ impl Runtime {
                 set: factor.as_ref().clone(),
                 line_file: fact.line_file.clone(),
             }));
-            let proof = self.verify_fact(&membership, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&membership, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(None);
             }
@@ -1048,7 +1048,7 @@ impl Runtime {
                         set: field_type.clone(),
                         line_file: fact.line_file.clone(),
                     }));
-                    let proof = self.verify_fact(&membership, verify_state.clone())?;
+                    let proof = self.verify_builtin_rule_premise(&membership, verify_state.clone())?;
                     if proof.is_failed() {
                         return Ok(None);
                     }
@@ -1065,7 +1065,7 @@ impl Runtime {
                     set: cart,
                     line_file: fact.line_file.clone(),
                 }));
-                let proof = self.verify_fact(&cart_membership, verify_state.clone())?;
+                let proof = self.verify_builtin_rule_premise(&cart_membership, verify_state.clone())?;
                 if proof.is_failed() {
                     return Ok(None);
                 }
@@ -1078,7 +1078,7 @@ impl Runtime {
             let Ok(instantiated) = self.inst_fact(law, &subst) else {
                 return Ok(None);
             };
-            let proof = self.verify_fact(&instantiated, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&instantiated, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(None);
             }
@@ -1135,7 +1135,7 @@ impl Runtime {
             set: union.left.as_ref().clone(),
             line_file: None,
         }));
-        let left_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        let left_proof = self.verify_builtin_rule_premise(&left_goal, verify_state.clone())?;
         if !left_proof.is_failed() {
             return Ok(Some(InFactSearchProofByBuiltinRule::UnionMembershipFromLeft(
                 UnionMembershipFromLeftBuiltinRuleProof {
@@ -1149,7 +1149,7 @@ impl Runtime {
             set: union.right.as_ref().clone(),
             line_file: None,
         }));
-        let right_proof = self.verify_fact(&right_goal, verify_state)?;
+        let right_proof = self.verify_builtin_rule_premise(&right_goal, verify_state)?;
         if right_proof.is_failed() {
             return Ok(None);
         }
@@ -1175,7 +1175,7 @@ impl Runtime {
             set: intersect.left.as_ref().clone(),
             line_file: None,
         }));
-        let left_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        let left_proof = self.verify_builtin_rule_premise(&left_goal, verify_state.clone())?;
         if left_proof.is_failed() {
             return Ok(None);
         }
@@ -1185,7 +1185,7 @@ impl Runtime {
             set: intersect.right.as_ref().clone(),
             line_file: None,
         }));
-        let right_proof = self.verify_fact(&right_goal, verify_state)?;
+        let right_proof = self.verify_builtin_rule_premise(&right_goal, verify_state)?;
         if right_proof.is_failed() {
             return Ok(None);
         }
@@ -1212,7 +1212,7 @@ impl Runtime {
             set: set_minus.left.as_ref().clone(),
             line_file: None,
         }));
-        let left_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        let left_proof = self.verify_builtin_rule_premise(&left_goal, verify_state.clone())?;
         if left_proof.is_failed() {
             return Ok(None);
         }
@@ -1222,7 +1222,7 @@ impl Runtime {
             set: set_minus.right.as_ref().clone(),
             line_file: None,
         }));
-        let right_proof = self.verify_fact(&right_goal, verify_state)?;
+        let right_proof = self.verify_builtin_rule_premise(&right_goal, verify_state)?;
         if right_proof.is_failed() {
             return Ok(None);
         }
@@ -1272,7 +1272,7 @@ impl Runtime {
                 line_file: None,
             }));
             let element_in_member_set_proof =
-                self.verify_fact(&element_goal, verify_state.clone())?;
+                self.verify_builtin_rule_premise(&element_goal, verify_state.clone())?;
             if element_in_member_set_proof.is_failed() {
                 continue;
             }
@@ -1327,7 +1327,7 @@ impl Runtime {
                 set: fiber,
                 line_file: None,
             }));
-            let element_in_fiber_proof = self.verify_fact(&fiber_goal, verify_state.clone())?;
+            let element_in_fiber_proof = self.verify_builtin_rule_premise(&fiber_goal, verify_state.clone())?;
             if element_in_fiber_proof.is_failed() {
                 continue;
             }

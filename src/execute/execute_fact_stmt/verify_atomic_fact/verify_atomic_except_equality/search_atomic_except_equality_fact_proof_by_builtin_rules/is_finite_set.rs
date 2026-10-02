@@ -61,7 +61,7 @@ impl Runtime {
                     set: seq.set.as_ref().clone(),
                     line_file: None,
                 }));
-                let proof = self.verify_fact(&premise, verify_state)?;
+                let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
                 if proof.is_failed() {
                     return Ok(None);
                 }

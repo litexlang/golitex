@@ -492,10 +492,10 @@ impl Runtime {
         }
 
         // Premise-producing / shape rules consume the builtin-rule budget.
-        if verify_state.can_use_builtin_rule_round == 0 {
+        if !verify_state.can_use_builtin_rule {
             return Ok(None);
         }
-        let child_state = verify_state.after_builtin_rule();
+        let child_state = verify_state.clone();
 
         if let Some(proof) =
             self.search_order_abs_algebra_less_equal_proof(fact, child_state.clone())?

@@ -290,7 +290,7 @@ impl Runtime {
             right: y.clone(),
             line_file: None,
         }));
-        let proof = self.verify_fact(&premise, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }
@@ -338,7 +338,7 @@ impl Runtime {
                             right: zero.clone(),
                             line_file: None,
                         }));
-                        let nz_proof = self.verify_fact(&nonzero, verify_state.clone())?;
+                        let nz_proof = self.verify_builtin_rule_premise(&nonzero, verify_state.clone())?;
                         if nz_proof.is_failed() {
                             continue;
                         }
@@ -348,7 +348,7 @@ impl Runtime {
                             right: zero.clone(),
                             line_file: None,
                         }));
-                        let pz_proof = self.verify_fact(&product_zero, verify_state.clone())?;
+                        let pz_proof = self.verify_builtin_rule_premise(&product_zero, verify_state.clone())?;
                         if pz_proof.is_failed() {
                             continue;
                         }
@@ -387,7 +387,7 @@ impl Runtime {
                     right: c.clone(),
                     line_file: None,
                 }));
-                let proof = self.verify_fact(&premise, verify_state.clone())?;
+                let proof = self.verify_builtin_rule_premise(&premise, verify_state.clone())?;
                 if proof.is_failed() {
                     continue;
                 }

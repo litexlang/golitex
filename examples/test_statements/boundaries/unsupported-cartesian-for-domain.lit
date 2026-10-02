@@ -1,0 +1,7 @@
+# Task: K008 cart support excluded by user on 2026-10-02.
+# Expected: strict release rejects this unsupported by-for carrier (exit 1).
+# This is a supported-boundary test, not an open implementation request.
+
+by for:
+    ? forall p cart({1, 2}, {3, 4}):
+        p = p

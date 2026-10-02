@@ -49,12 +49,13 @@ impl Runtime {
         stmt: &HaveFnEqualStmt,
     ) -> RuntimeResult<ExecHaveFnEqualStmtResult> {
         let verify_state = VerifyState {
-            can_use_builtin_rule_round: VerifyState::TOP_BUILTIN_RULE_ROUND,
+            can_use_builtin_rule: true,
+            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
             equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-};
+        };
 
         let anon_obj = Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone()));
         let anonymous_fn_well_defined =

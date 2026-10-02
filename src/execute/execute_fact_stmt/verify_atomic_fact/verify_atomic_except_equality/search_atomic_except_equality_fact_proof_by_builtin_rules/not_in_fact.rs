@@ -138,7 +138,7 @@ impl Runtime {
                 right: listed.as_ref().clone(),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&disequality, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&disequality, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(None);
             }
@@ -167,7 +167,7 @@ impl Runtime {
             set: intersect.left.as_ref().clone(),
             line_file: None,
         }));
-        let left_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        let left_proof = self.verify_builtin_rule_premise(&left_goal, verify_state.clone())?;
         if !left_proof.is_failed() {
             return Ok(Some(
                 NotInFactSearchProofByBuiltinRule::NonMembershipOfIntersectFromLeft(
@@ -183,7 +183,7 @@ impl Runtime {
             set: intersect.right.as_ref().clone(),
             line_file: None,
         }));
-        let right_proof = self.verify_fact(&right_goal, verify_state)?;
+        let right_proof = self.verify_builtin_rule_premise(&right_goal, verify_state)?;
         if right_proof.is_failed() {
             return Ok(None);
         }
@@ -210,7 +210,7 @@ impl Runtime {
             set: union.left.as_ref().clone(),
             line_file: None,
         }));
-        let left_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        let left_proof = self.verify_builtin_rule_premise(&left_goal, verify_state.clone())?;
         if left_proof.is_failed() {
             return Ok(None);
         }
@@ -220,7 +220,7 @@ impl Runtime {
             set: union.right.as_ref().clone(),
             line_file: None,
         }));
-        let right_proof = self.verify_fact(&right_goal, verify_state)?;
+        let right_proof = self.verify_builtin_rule_premise(&right_goal, verify_state)?;
         if right_proof.is_failed() {
             return Ok(None);
         }
@@ -247,7 +247,7 @@ impl Runtime {
             set: set_minus.right.as_ref().clone(),
             line_file: None,
         }));
-        let right_proof = self.verify_fact(&right_in, verify_state.clone())?;
+        let right_proof = self.verify_builtin_rule_premise(&right_in, verify_state.clone())?;
         if !right_proof.is_failed() {
             return Ok(Some(
                 NotInFactSearchProofByBuiltinRule::NonMembershipOfSetMinusFromRight(
@@ -264,7 +264,7 @@ impl Runtime {
             set: set_minus.left.as_ref().clone(),
             line_file: None,
         }));
-        let left_proof = self.verify_fact(&left_notin, verify_state)?;
+        let left_proof = self.verify_builtin_rule_premise(&left_notin, verify_state)?;
         if left_proof.is_failed() {
             return Ok(None);
         }
@@ -299,7 +299,7 @@ impl Runtime {
                 right: start.clone(),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&eq, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&eq, verify_state.clone())?;
             if !proof.is_failed() {
                 return Ok(Some(
                     NotInFactSearchProofByBuiltinRule::NonMembershipOfIntervalAtOpenEndpoint(
@@ -317,7 +317,7 @@ impl Runtime {
                 right: end.clone(),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&eq, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&eq, verify_state.clone())?;
             if !proof.is_failed() {
                 return Ok(Some(
                     NotInFactSearchProofByBuiltinRule::NonMembershipOfIntervalAtOpenEndpoint(
@@ -336,7 +336,7 @@ impl Runtime {
             right: start.clone(),
             line_file: None,
         }));
-        let left_proof = self.verify_fact(&left_out, verify_state.clone())?;
+        let left_proof = self.verify_builtin_rule_premise(&left_out, verify_state.clone())?;
         if !left_proof.is_failed() {
             return Ok(Some(
                 NotInFactSearchProofByBuiltinRule::NonMembershipOfIntervalOutside(
@@ -353,7 +353,7 @@ impl Runtime {
             right: fact.element.clone(),
             line_file: None,
         }));
-        let right_proof = self.verify_fact(&right_out, verify_state)?;
+        let right_proof = self.verify_builtin_rule_premise(&right_out, verify_state)?;
         if right_proof.is_failed() {
             return Ok(None);
         }
@@ -388,7 +388,7 @@ impl Runtime {
                 right: endpoint.clone(),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&eq, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&eq, verify_state.clone())?;
             if !proof.is_failed() {
                 return Ok(Some(
                     NotInFactSearchProofByBuiltinRule::NonMembershipOfIntervalAtOpenEndpoint(
@@ -432,7 +432,7 @@ impl Runtime {
                 line_file: None,
             }))
         };
-        let proof = self.verify_fact(&outside, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&outside, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }

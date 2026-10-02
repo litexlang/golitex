@@ -116,7 +116,8 @@ fn order_complement_rejects_nonreal_carriers_and_keeps_premise_evidence() {
 fn positive_base_power_laws_allow_zero_natural_exponent() {
     check("forall a R+, k N:\n    a^k * a^0 = a^(k + 0)\n    (a^k)^0 = a^(k * 0)\n", true);
     check("forall a, b R+, k N:\n    (a * b)^k = a^k * b^k\n", true);
-    check("forall k N:\n    0^k * 0^0 = 0^(k + 0)\n", false);
+    // Zero natural powers are valid; zero negative powers remain undefined.
+    check("forall k N:\n    0^k * 0^(-1) = 0^(k - 1)\n", false);
 }
 
 

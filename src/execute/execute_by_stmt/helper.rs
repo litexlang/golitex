@@ -15,7 +15,8 @@ use crate::store_fact_and_infer::StoreFactAndInferResult;
 
 pub(crate) fn proof_verify_state() -> VerifyState {
     VerifyState {
-        can_use_builtin_rule_round: VerifyState::TOP_BUILTIN_RULE_ROUND,
+        can_use_builtin_rule: true,
+        remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
         can_use_def_and_known_forall_and_known_strategy: true,
         can_use_rewrite: true,
         store_well_defined_fact: true,

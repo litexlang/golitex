@@ -780,6 +780,13 @@ have a R:
 $is_positive(a)
 ```
 
+Ordinary builtin-rule entry is controlled by `can_use_builtin_rule: bool`.
+Builtin premises disable that entry and use known evidence or computation;
+one checked function-body substitution may finish without another definition
+unfold. Definition and known-forall search keep an independent depth of 3,
+while strategy recursion keeps its depth of 16.
+
+
 Users remember these shape patterns; the kernel maintains fact and rule tables and does the naming and alignment for you.
 
 <details>

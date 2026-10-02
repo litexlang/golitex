@@ -26,10 +26,10 @@ field names and proof explanations, including `"语言": "zh"`. See [`docs/cli.m
 After well-definedness, equality first checks exact IR or structural alpha
 identity, then permitted mathematical builtin rules. Its single class-search
 stage first follows stored equality paths. If needed, it compares members of
-the two endpoint classes using identity, budgeted builtin rules, or constructor
+the two endpoint classes using identity, permitted builtin rules, or constructor
 matching, and records the left path, new proof, and right path. This also lets
 known membership cross alpha-equivalent named function sets. The peer proof
-cannot recursively expand more classes or obtain fresh builtin fuel. Larger
+cannot recursively expand more classes or enable a disabled builtin entry. Larger
 classes still mean more candidate comparisons. The
 [equality README](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md)
 shows the complete call and result structure.
@@ -40,7 +40,7 @@ For `have x R = 2` and `have y R = x + 1`, use this chain to expose the
 definition and calculation; definition expansion keeps residual rewrite
 disabled. See the [runnable example](../examples/proof_nodes/chain/named_definition_endpoint.lit).
 
-## Can definition-time properties be used without builtin search fuel?
+## Can definition-time properties be used with builtin entry disabled?
 
 Yes. After an atomic goal passes well-definedness, the shared `by_known`
 entry tries stored atomic facts first, then `known_special_property`.
@@ -48,7 +48,7 @@ For a well-defined application, the latter can match its function's recorded
 signature to establish codomain or `fn_range` membership. It only reads
 exact-object definition-time shape memory, substitutes arguments, and cites
 identity or stored equalities. It generates no proof subgoals and consumes
-neither builtin rounds nor strategy depth. Invalid applications still fail WD.
+neither builtin entry nor strategy depth. Invalid applications still fail WD.
 
 Fixed builtin premises also use the read-only form of this entry. Their
 results retain the stored-fact or definition-property evidence. Candidate
@@ -192,7 +192,7 @@ rules. In particular, a rule may consume a known complete `or` fact without
 claiming that any branch is separately known. For example, the premise
 `a = 1 or a = 2 or a = 3` can prove `a $in {1, 2, 3}`. When the verifier instead
 introduces an `or`, it must prove one selected branch. In both directions every
-atomic leaf keeps the surrounding builtin-depth budget; the compound fact does
+atomic leaf keeps the surrounding builtin permission and deep-search budget; the compound fact does
 not reopen full proof search.
 
 Universal conclusions follow the same bounded grammar. A `forall` conclusion
@@ -455,25 +455,15 @@ well-defined. Reversing those two facts still fails. The same ordered check is
 used at definition time and whenever the instantiated struct carrier is
 checked; the temporary facts never leak into the surrounding environment.
 
-At outer round 0, equality does not enumerate stored representatives or open a
-candidate graph. It may reduce one checked named-function application only
-when that application is literally one side of the submitted goal. The reduced
-term is compared with the other goal side by identity, an already stored
-non-forall equality class, pure numeric computation, bounded obligation-free
-rational-expression normalization, capture-avoiding beta reduction of one
-complete anonymous-function application layer, and structural descent. This
-comparison does not launch the ordinary builtin dispatcher. Thus two terms
-such as `fn(x R) R {f(x) * g(x)}(a)` and
-`fn(x R) R {f(x) * g(x)}(b)` are compared as `f(a) * g(a)` and
-`f(b) * g(b)`; multiplication descent still needs both corresponding leaf
-equalities to be stored. The reduced product equality is only a transient
-comparison target. Definition reduction does not instantiate known `forall`
-facts, follow an equality-class representative to find a reducible application,
-or recursively unfold a second named definition. If aliases hide the function
-application on both goal sides, write the required bridge equality explicitly.
-For example, after `have selected R = f(a, 0)` and `a = 1`, write
-`selected = f(a, 0) = f(1, 0)`; the shorter `selected = f(1, 0)` does not
-implicitly reopen `selected` as an equality representative.
+With ordinary builtin entry disabled, equality still checks identity, stored
+paths, and constructor matching. Peer comparison keeps the caller's builtin
+permission and cannot expand another peer class, start deep search, or store WD.
+A builtin premise can use one checked named or literal function-body substitution;
+the resulting equality must finish with identity, stored evidence, constructor
+matching, or calculation. It cannot recursively unfold another function body.
+Definition and known-`forall` search retain a separate depth budget of 3;
+builtin strategies retain their own depth of 16. See the
+[runnable builtin-entry example](../examples/proof_nodes/atomic/by_builtin_rule/builtin_entry_boolean.lit).
 
 Separately, a full equality goal reuses the same constructor matcher while
 allowing each corresponding child equality to use the bounded builtin/equality
@@ -532,7 +522,7 @@ separate bare legacy alias omits it.
 Mathematical definitions similarly use explicit `by def A $subset B` and
 `by def $injective(A, B, f)` statements. New code should use this inline
 spelling; the older `by def:` plus one `? fact` goal remains accepted for
-compatibility. At the outer verification round, a
+compatibility. At the top-level verification entry, a
 bare positive concrete predicate can also be proved from its defining clauses
 before known `forall` matching and user strategies. `by def` remains useful
 when that proof route and its output should be explicit. Its execution entry

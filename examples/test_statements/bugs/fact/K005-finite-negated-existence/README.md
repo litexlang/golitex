@@ -30,6 +30,23 @@ not exist x {0} st {x = 1}
 - Desired after repair: exit 0, JSON `success: true`. Keep the same assertion and avoid introducing trust.
 - Actual CLI result, process status, and original command: [observed.json](observed.json).
 
+## Requested finite-enumeration route (2026-10-02)
+
+Task: the user requests `by enumerate finite_set` for this proof.
+
+```litex
+by enumerate finite_set:
+    ? forall x {0}:
+        x != 1
+not exist x {0} st {x = 1}
+```
+
+The enumeration succeeds and stores the universal exclusion. The original negative-existence conclusion still rejects with `search_proof`. Directly putting `? not exist x {0} st {x = 1}` under the enumeration header rejects at parse time: `goal must be a single forall fact`. An explicit contradiction route also reaches the currently unsupported compound-goal negation boundary.
+
+All three concrete sources and current release outputs are in [k005_enumeration_attempts.json](../../../proof_journals/k005_enumeration_attempts.json).
+
+Decision pending: retain the original negative-existence goal and support the explicit enumeration-plus-contradiction proof, or adopt the equivalent universal enumeration formulation as a current capability limitation. K005 remains open; a successful universal statement alone is not recorded as proof of the original negative-existence statement.
+
 ## Evidence and next action
 
 The recorded behavior is reproduced. Source links below are investigation entry points, not proof that a particular function contains the defect.

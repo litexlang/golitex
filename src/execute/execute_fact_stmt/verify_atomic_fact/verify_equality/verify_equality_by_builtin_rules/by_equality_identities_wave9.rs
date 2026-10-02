@@ -251,7 +251,7 @@ impl Runtime {
                     set: base,
                     line_file: None,
                 }));
-                let proof = self.verify_fact(&premise, child.clone())?;
+                let proof = self.verify_builtin_rule_premise(&premise, child.clone())?;
                 if !proof.is_failed() {
                     return Ok(Some(
                         EqualityIdentitiesWave9BuiltinRuleProof::PowerSetFiniteSetSize(
@@ -301,7 +301,7 @@ impl Runtime {
                 right: superset.clone(),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&premise, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&premise, verify_state.clone())?;
             if proof.is_failed() {
                 continue;
             }
@@ -327,7 +327,7 @@ impl Runtime {
             set: set.clone(),
             line_file: None,
         }));
-        let proof = self.verify_fact(&premise, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }

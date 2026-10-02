@@ -28,6 +28,9 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: StrategySearch,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
+        if let Some(proof) = self.search_literal_tuple_projection_membership_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::LiteralTupleProjectionMembership(proof)));
+        }
         // nonzero (NotEqual)
         if let Some(proof) = self.search_nonzero_product_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(proof)));

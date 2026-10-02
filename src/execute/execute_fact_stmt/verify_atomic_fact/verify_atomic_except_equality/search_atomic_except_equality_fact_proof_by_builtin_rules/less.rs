@@ -384,10 +384,10 @@ impl Runtime {
             _ => {}
         }
 
-        if verify_state.can_use_builtin_rule_round == 0 {
+        if !verify_state.can_use_builtin_rule {
             return Ok(None);
         }
-        let verify_state = verify_state.after_builtin_rule();
+        let verify_state = verify_state.clone();
 
         match (&fact.left, &fact.right) {
             // `0 < a + b` / `0 < a * b`
@@ -578,7 +578,7 @@ impl Runtime {
             right: obj.clone(),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
     fn verify_nonnegative_for_less(
@@ -595,7 +595,7 @@ impl Runtime {
                 line_file: None,
             },
         ));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
     fn add_right_congruence_strict_proof(
@@ -610,7 +610,7 @@ impl Runtime {
             right: right_l.clone(),
             line_file: None,
         }));
-        let premise_proof = self.verify_fact(&premise, verify_state)?;
+        let premise_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if premise_proof.is_failed() {
             return Ok(None);
         }
@@ -633,7 +633,7 @@ impl Runtime {
             right: right_r.clone(),
             line_file: None,
         }));
-        let premise_proof = self.verify_fact(&premise, verify_state)?;
+        let premise_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if premise_proof.is_failed() {
             return Ok(None);
         }
@@ -661,7 +661,7 @@ impl Runtime {
             right: right_b.clone(),
             line_file: None,
         }));
-        let order_premise_proof = self.verify_fact(&order_premise, verify_state)?;
+        let order_premise_proof = self.verify_builtin_rule_premise(&order_premise, verify_state)?;
         if order_premise_proof.is_failed() {
             return Ok(None);
         }
@@ -692,7 +692,7 @@ impl Runtime {
             right: right_b.clone(),
             line_file: None,
         }));
-        let order_premise_proof = self.verify_fact(&order_premise, verify_state)?;
+        let order_premise_proof = self.verify_builtin_rule_premise(&order_premise, verify_state)?;
         if order_premise_proof.is_failed() {
             return Ok(None);
         }

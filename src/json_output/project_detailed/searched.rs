@@ -293,6 +293,15 @@ fn project_equality_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     let (name, requirements, proofs) = match proof {
+        EqualitySearchProofByBuiltinStrategy::CosZeroIntegerOffset(p) => (
+            "CosZeroIntegerOffset", &p.requirement_facts, &p.proof_of_requirement_facts,
+        ),
+        EqualitySearchProofByBuiltinStrategy::TupleComponentEquality(p) => (
+            "TupleComponentEquality", &p.requirement_facts, &p.proof_of_requirement_facts,
+        ),
+        EqualitySearchProofByBuiltinStrategy::ArithmeticCongruence(p) => (
+            "ArithmeticCongruence", &p.requirement_facts, &p.proof_of_requirement_facts,
+        ),
         EqualitySearchProofByBuiltinStrategy::ExtremumEquality(p) => (
             "ExtremumEquality",
             &p.requirement_facts,

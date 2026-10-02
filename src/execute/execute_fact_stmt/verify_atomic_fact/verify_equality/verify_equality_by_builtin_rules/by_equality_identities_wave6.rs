@@ -310,7 +310,7 @@ impl Runtime {
             right: right.clone(),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 }
 

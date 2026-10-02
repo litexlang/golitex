@@ -322,3 +322,22 @@ Imaginary-unit calculation is traced by
 Both are strict runnable examples. Named finite-enumeration release also
 checks reuse of a stored equality whose nested anonymous binder IDs differ
 from the goal, retaining the original equality citation.
+
+## Showcase local rules (2026-10-02)
+
+These tracers require strict verification: exit 0 and top-level JSON `success: true`.
+
+| Capability | Tracer |
+| --- | --- |
+| Cosine zeros from an integer offset, including general integer periods | [Cosine integer offset](equal/by_builtin_strategy/cos_zero_integer_offset.lit) |
+| Native pi nonzero evidence for division WD | [Pi nonzero](atomic/by_builtin_rule/not_equal_pi_nonzero.lit) |
+| Natural-power laws over the existing numeric domains | [Natural powers](equal/by_builtin_rule/natural_power_laws.lit) |
+| Tuple equality with computed coordinates | [Tuple components](equal/by_builtin_strategy/tuple_component_calculation.lit) |
+| Arithmetic equality with proved operand equalities | [Arithmetic congruence](equal/by_builtin_strategy/arithmetic_congruence.lit) |
+| Literal tuple projection carrier, with projection and membership evidence | [Projection membership](atomic/by_builtin_strategy/literal_tuple_projection_membership.lit) |
+| Full named add2 function call and explicit calculation chain | [add2 chain](equal/by_builtin_strategy/add2_calculation_chain.lit) |
+
+Natural-power builtin premises cite known memberships; concrete zero/negative
+examples explicitly establish the literal type facts first. The add2 chain keeps
+its intermediate coordinate expression. A direct `add2(...)= (4,6)` without
+that step is still not proved automatically. None of these examples uses trust.

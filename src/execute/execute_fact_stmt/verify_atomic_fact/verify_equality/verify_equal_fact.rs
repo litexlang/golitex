@@ -40,8 +40,8 @@ impl Runtime {
 
     // Cheap phase: same object → builtin rule → unified equivalence class.
     // Class search tries stored paths before one restricted peer bridge.
-    // Deep phase (can_use_def_and_known_forall_and_known_strategy, round > 0):
-    //   with_one_less_round() once, then
+    // Deep phase (can_use_def_and_known_forall_and_known_strategy, remaining_deep_search_depth > 0):
+    //   after_deep_search() once, then
     //   object definition → verify_by_strategy → matching one arg → known forall →
     //   (can_use_rewrite) builtin rewrite.
     // MatchingOneArgByOne is constructor peel (not rewrite).
@@ -54,10 +54,10 @@ impl Runtime {
         if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(fact) {
             return Ok(Some(proof.into()));
         }
-        // Enter builtin only when round > 0; pass round - 1 into the search.
-        if verify_state.can_use_builtin_rule_round > 0 {
+        // Enter builtin only when the caller permits it; premise entry closes recursion.
+        if verify_state.can_use_builtin_rule {
             if let Some(result) =
-                self.search_equal_fact_builtin_rule(fact, verify_state.with_one_less_round())?
+                self.search_equal_fact_builtin_rule(fact, verify_state.clone())?
             {
                 return Ok(Some(EqualFactSearchedProof::ByBuiltinRule(result)));
             }
@@ -70,7 +70,7 @@ impl Runtime {
         }
 
         if !verify_state.can_use_def_and_known_forall_and_known_strategy
-            || verify_state.can_use_builtin_rule_round == 0
+            || verify_state.remaining_deep_search_depth == 0
         {
             // Matching peel stays available as a cheap structural step.
             let matching_child_state = verify_state.known_only_no_wd();
@@ -82,7 +82,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        let deep_state = verify_state.with_one_less_round();
+        let deep_state = verify_state.after_deep_search();
 
         if let Some(result) =
             self.search_equal_fact_proof_by_object_definition(fact, deep_state.clone())?
@@ -123,6 +123,15 @@ impl Runtime {
         fact: &EqualFact,
         ctx: StrategySearch,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinStrategy>> {
+        if let Some(proof) = self.search_equal_fact_by_cos_zero_integer_offset(fact, ctx)? {
+            return Ok(Some(EqualitySearchProofByBuiltinStrategy::CosZeroIntegerOffset(proof)));
+        }
+        if let Some(proof) = self.search_equal_fact_by_tuple_components(fact, ctx)? {
+            return Ok(Some(EqualitySearchProofByBuiltinStrategy::TupleComponentEquality(proof)));
+        }
+        if let Some(proof) = self.search_equal_fact_by_arithmetic_congruence(fact, ctx)? {
+            return Ok(Some(EqualitySearchProofByBuiltinStrategy::ArithmeticCongruence(proof)));
+        }
         if let Some(proof) =
             self.search_equal_fact_by_rational_with_nonzero_premises(fact, ctx)?
         {

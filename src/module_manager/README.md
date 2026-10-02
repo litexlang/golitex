@@ -71,7 +71,7 @@ display-name uniqueness. Repeating an alias in one config remains invalid.
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `name` | `String` | Preferred global alias (first registration). |
+| `name` | `String` | Unique global display label (first registration). |
 | `path` | `PathBuf` | Normalized dir; same as key in `path_to_mod_id`. |
 | `litex_config` | `LitexConfig` | That folder’s manifest (for its own imports/exports when running its files). |
 | `export_files_and_their_env` | `Vec<ExportFileAndItsExecEnv>` | That module’s ordered exports + envs. **Index = `file_id`** inside this module. |

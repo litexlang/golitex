@@ -93,9 +93,9 @@ impl Runtime {
                 proof.into(),
             )));
         }
-        if state.can_use_builtin_rule_round > 0 {
+        if state.can_use_builtin_rule {
             if let Some(proof) =
-                self.search_equal_fact_builtin_rule(&fact, state.with_one_less_round())?
+                self.search_equal_fact_builtin_rule(&fact, state.clone())?
             {
                 return Ok(Some(PeerEqualitySuccess::new(
                     fact,

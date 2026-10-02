@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "task": "User excludes K008 cart enumeration support",
+  "captured_at": "2026-10-02T10:55:35+08:00",
+  "decision": "Remove K008 from bug records; preserve the unsupported-domain rejection",
+  "bug_folder_removed": true,
+  "kernel_changed_by_this_task": false,
+  "active_fixture": "boundaries/unsupported-cartesian-for-domain.lit",
+  "focused_gate": {
+    "command": "python3 examples/test_statements/run.py --leaf ByForStmt",
+    "exit_code": 0,
+    "checks": 13,
+    "unexpected_failures": 0
+  },
+  "boundary_record": {
+    "name": "boundary/unsupported-cartesian-for-domain",
+    "command": [
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+      "-lang",
+      "en",
+      "-strict",
+      "-f",
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/boundaries/unsupported-cartesian-for-domain.lit"
+    ],
+    "exit_code": 1,
+    "matches": true,
+    "errors": [],
+    "output": {
+      "kind": "run",
+      "success": false,
+      "target": "file",
+      "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/boundaries/unsupported-cartesian-for-domain.lit",
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": false,
+          "statement": "by for",
+          "why_failed": {
+            "type": "by",
+            "rule_name": "By for",
+            "message": "Prove inside a for-block",
+            "phase": "by_for"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "stderr": ""
+  },
+  "k005_status": "Pending user choice after three native proof attempts"
+}
