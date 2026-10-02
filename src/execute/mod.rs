@@ -63,6 +63,9 @@ mod finite_set_cardinality_rule_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/induction_repairs/tests.rs"]
 mod induction_repair_tests;
+#[cfg(test)]
+#[path = "../../tests/unit/execute/local_rust_repairs/tests.rs"]
+mod local_rust_repair_tests;
 
 pub use exec_stmt_result::{
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,

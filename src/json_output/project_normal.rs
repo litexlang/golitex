@@ -138,7 +138,7 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
     }
 }
 
-fn verify_goal_display(verify: &VerifyFactResult) -> String {
+pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
     match verify {
         VerifyFactResult::AtomicExceptEquality(r) => match r.as_ref() {
             VerifyAtomicExceptEqualityFactResult::Success(s) => s.fact.readable_string(),
@@ -331,7 +331,7 @@ fn why_from_atomic_except_searched(
                 ("rule_name", string(text.rule_name)),
                 ("message", string(text.message)),
             ];
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_property_fact_id()) {
+            if let Some(fact) = p.cite_property_fact_id().and_then(|id| runtime.fact_by_id_in_stack(id)) {
                 fields.push(("cite", string(fact.readable_string())));
             }
             object(lang, fields)
@@ -364,6 +364,9 @@ fn why_from_equal_searched(searched: &EqualFactSearchedProof, runtime: &Runtime)
     match searched {
         EqualFactSearchedProof::ByTheyAreTheSame(_) => {
             searched_proof_why_json(runtime, "they_are_the_same")
+        }
+        EqualFactSearchedProof::ByKnownSpecialProperty(_) => {
+            searched_proof_why_json(runtime, "known_special_property")
         }
         EqualFactSearchedProof::ByBuiltinRule(r) => why_from_equal_builtin_rule(r, runtime),
         EqualFactSearchedProof::ByKnownForallFact(p) => {

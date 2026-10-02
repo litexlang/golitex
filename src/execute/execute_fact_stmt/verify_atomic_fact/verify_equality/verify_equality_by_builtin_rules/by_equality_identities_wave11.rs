@@ -15,6 +15,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_t
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
+use crate::execute::execute_fact_stmt::known_tuple::literal_positive_usize;
 
 // Builtin UnionAbsorptionFromSubset: A ⊆ B ⇒ union(A, B) = B (either operand order).
 // Example: have A set; have B set; trust A $subset B; union(A, B) = B.
@@ -485,18 +486,6 @@ fn zero_obj() -> Obj {
     Obj::Literal(Literal::Number(Number {
         normalized_value: "0".to_string(),
     }))
-}
-
-fn literal_positive_usize(obj: &Obj) -> Option<usize> {
-    let Obj::Literal(Literal::Number(Number { normalized_value })) = obj else {
-        return None;
-    };
-    let n: usize = normalized_value.parse().ok()?;
-    if n >= 1 {
-        Some(n)
-    } else {
-        None
-    }
 }
 
 fn apply_fn_one_arg(f: &Obj, arg: Obj) -> Option<Obj> {

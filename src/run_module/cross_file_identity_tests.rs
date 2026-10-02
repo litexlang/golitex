@@ -17,6 +17,49 @@ fn project(root: &Path) -> RunRepoResult {
     .expect("run actual project")
 }
 
+#[test]
+fn undefined_local_predicate_goal_cannot_be_exported_and_captured_by_the_caller() {
+    let root = temp_dir("predicate_goal_preflight");
+    write(&root.join("litex.config"), "[import]\nOther = \"./library\"\n[export]\nmain = \"./main.lit\"\n");
+    write(&root.join("library/litex.config"), "[export]\nfacts = \"./facts.lit\"\n");
+    write(&root.join("library/facts.lit"), "claim:\n    ? $chosen(0)\n    prop chosen(x R):\n        x = 0\n    by def $chosen(0)\nthm ready:\n    ? $chosen(0)\n");
+    write(&root.join("main.lit"), "prop chosen(x R):\n    x = 1\nrelease thm Other::facts::ready\n0 = 1\n");
+    for _ in 0..2 {
+        let result = project(&root);
+        assert!(!result.run.success, "a malformed library may not prove 0=1");
+        assert!(!root.join("library/__litex_knowledge_base__/manifest.json").exists(),
+            "failed library execution must not write a reusable cache");
+    }
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn same_predicate_spelling_with_different_arities_keeps_its_owner_in_cached_imports() {
+    let root = temp_dir("predicate_signature_owners");
+    write(&root.join("litex.config"), "[import]\nLeft = \"./left\"\nRight = \"./right\"\n[export]\nmain = \"./main.lit\"\n");
+    for (module, source) in [
+        ("left", "prop relation(x R):\n    x = 0\n"),
+        ("right", "prop relation(x, y R):\n    x = y\n"),
+    ] {
+        write(&root.join(format!("{module}/litex.config")), "[export]\nfacts = \"./facts.lit\"\n");
+        write(&root.join(format!("{module}/facts.lit")), source);
+    }
+    write(&root.join("main.lit"), "prop relation(a, b, c R):\n    a = b\n    b = c\nby def $Left::facts::relation(0)\nby def $Right::facts::relation(1, 1)\nby def $relation(2, 2, 2)\n");
+    let cold = project(&root);
+    assert!(cold.run.success, "{:?}", cold.run.session_error);
+    let warm = project(&root);
+    assert!(warm.run.success, "{:?}", warm.run.session_error);
+    assert_eq!(warm.files.len(), 1, "imported files must actually come from cache");
+    write(&root.join("main.lit"), "forall x R:\n    $Left::facts::relation(x, x)\n    =>:\n        $Left::facts::relation(x, x)\n");
+    let invalid = run_file_with_config(LaunchCommand::File {
+        path: root.join("main.lit"), session: false, strict: true,
+        language: OutputLanguage::English,
+    }).unwrap();
+    assert!(invalid.run.session_error.is_none(), "{:?}", invalid.run.session_error);
+    assert!(!invalid.run.success, "the right owner's arity must not rescue Left's invalid call");
+    fs::remove_dir_all(root).unwrap();
+}
+
 fn dependency_fixture() -> PathBuf {
     let root = temp_dir("local_alias_owners");
     // This authored label also collides with the first generated suffix.

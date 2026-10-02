@@ -17,9 +17,9 @@ pub(super) fn project_fact_wd_failure(f: &FailToVerifyFactWellDefinedResult, rt:
     use FailToVerifyFactWellDefinedResult::*;
     match f {
         Equality(p) => project_obj_wd_failure(&p.reason, rt),
-        AtomicExceptEquality(p) => project_obj_wd_failure(&p.reason, rt),
-        AndFact(p) => node(rt, "component", Some(p.failed_index), project_obj_wd_failure(&p.failed_component.reason, rt)),
-        ChainFact(p) => node(rt, "adjacent", Some(p.failed_index), project_obj_wd_failure(&p.failed_adjacent.reason, rt)),
+        AtomicExceptEquality(p) => project_atomic_wd_failure(p, rt),
+        AndFact(p) => node(rt, "component", Some(p.failed_index), project_atomic_wd_failure(&p.failed_component, rt)),
+        ChainFact(p) => node(rt, "adjacent", Some(p.failed_index), project_atomic_wd_failure(&p.failed_adjacent, rt)),
         OrFact(p) => node(rt, "branch", Some(p.failed_index), project_fact_wd_failure(&p.failed_branch, rt)),
         ExistFact(p) => match p {
             crate::execute::execute_fact_stmt::verify_exist_shaped_fact::FailToVerifyExistShapedFactWellDefinedResult::ParamType(p) => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
@@ -42,6 +42,37 @@ pub(super) fn project_fact_wd_failure(f: &FailToVerifyFactWellDefinedResult, rt:
             crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::DomFact { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
             crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::ThenFact { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
         },
+    }
+}
+
+pub(super) fn project_atomic_wd_failure(
+    failure: &crate::execute::execute_fact_stmt::verify_atomic_fact::FailToVerifyAtomicFactWellDefinedResult,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
+        FailToVerifyAtomicFactWellDefinedResult, PredicateSignatureWellDefinedFailure,
+    };
+    match failure {
+        FailToVerifyAtomicFactWellDefinedResult::Argument(reason) => project_obj_wd_failure(reason, rt),
+        FailToVerifyAtomicFactWellDefinedResult::Predicate { well_defined_of_each_parameter, reason } => {
+            let mut fields = vec![
+                ("phase", string("predicate_signature")),
+                ("well_defined_of_each_parameter", JsonValue::Array(well_defined_of_each_parameter.iter()
+                    .map(|p| super::wd::project_obj_wd_proof(p, rt)).collect())),
+            ];
+            match reason {
+                PredicateSignatureWellDefinedFailure::Undefined { predicate } => fields.extend([
+                    ("reason", string("undefined_predicate")),
+                    ("predicate", string(predicate.display_string())),
+                ]),
+                PredicateSignatureWellDefinedFailure::Arity { predicate, expected, actual } => fields.extend([
+                    ("reason", string("arity")), ("predicate", string(predicate.display_string())),
+                    ("expected", JsonValue::Number(*expected as f64)),
+                    ("actual", JsonValue::Number(*actual as f64)),
+                ]),
+            }
+            object_for(rt, fields)
+        }
     }
 }
 

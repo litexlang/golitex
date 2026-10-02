@@ -29,7 +29,7 @@ let x = 1 / 0
 
 A complex inverse remains a separate [gap](gaps/div__p08.lit); successful real division is not claimed to establish every complex capability.
 
-## Current checked corpus
+## Initial complete-suite verification snapshot
 
 - 99 terminal Obj paths audited against `src/ast/obj.rs`, including all nested interval and number-set alternatives and the helper enums.
 - 461 independently scoped positive cases in 99 dedicated files.
@@ -72,3 +72,13 @@ f(2) = 2
 This task did not implement the engine repair; it captured the successful behavior in the corpus.
 
 Temporary staging scripts and probes were removed after durable journals, reports and issue records were written. Earlier unrelated workspace edits were preserved.
+
+## Follow-up diagnosis (2026-10-02)
+
+The written inventory now contains 262 negative fixtures and 111 recorded gaps. The new negative [number__n03.lit](negative/number__n03.lit) must reject:
+
+```litex
+2.400 != 2.4
+```
+
+The release verifier instead accepted it through `Closed decimal inequality`. See [diagnosis_2026-10-02.md](diagnosis_2026-10-02.md) for the normalization cause, the two complex-inverse barriers and the proposed finite-sum reduction. The follow-up ran a focused Number gate; it did not rerun the complete corpus or change kernel semantics. `number_diagnosis_baseline.json` and `number_diagnosis_results.json` record that focused snapshot; the earlier `baseline.json` and `results.json` describe the initial full gate and earlier inventory.

@@ -9,6 +9,9 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
+#[path = "known_tuple.rs"]
+mod known_tuple;
+
 #[test]
 fn identity_and_alpha_work_without_builtin_entry() {
     for (code, shape) in [

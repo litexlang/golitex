@@ -14,7 +14,7 @@ use crate::execute::execute_by_stmt::{
 };
 use crate::execute::execute_eval_stmt::{ExecCommandStmtResult, ExecEvalStmtResult};
 use crate::execute::execute_proof_block_stmt::{
-    ExecClaimStmtResult, ExecProofBlockStmtResult, ExecSketchStmtResult,
+    ExecClaimStmtResult, ExecProofBlockStmtResult, ExecSketchStmtFailed, ExecSketchStmtResult,
 };
 use crate::execute::execute_register_stmt::ExecRegisterStmtResult;
 use crate::execute::execute_release_obj_def_stmt::ExecReleaseObjDefStmtResult;
@@ -26,7 +26,7 @@ use crate::execute::{
     ExecDefTemplateStmtResult, ExecDefThmStmtResult, ExecDefineObjStmtResult,
     ExecDefinitionStmtResult, ExecHaveByFnPreimageStmtResult, ExecHaveByReplacementAxiomStmtResult,
     ExecHaveFnByForallExistUniqueStmtResult, ExecHaveFnByInducStmtResult,
-    ExecHaveFnEqualCaseByCaseStmtResult, ExecHaveFnEqualStmtResult,
+    ExecHaveFnEqualCaseByCaseStmtResult, ExecHaveFnEqualStmtFailed, ExecHaveFnEqualStmtResult,
     ExecHaveObjByExistFactsStmtResult, ExecHaveObjEqualStmtResult,
     ExecHaveObjInNonemptySetStmtResult, ExecLetObjStmtResult, ExecObtainObjFromAtomicFactStmtResult,
     ExecObtainObjFromExistFactStmtResult, ExecReleaseAndExpandStmtResult,
@@ -62,7 +62,12 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 "have_fn_equal",
                 &s.store_and_infer_result.stored_fact_ids,
             ),
-            ExecHaveFnEqualStmtResult::Failed(_) => failed(runtime, "have fn …", "have_fn_equal"),
+            ExecHaveFnEqualStmtResult::Failed(
+                ExecHaveFnEqualStmtFailed::AnonymousFnWellDefined(wd)
+                | ExecHaveFnEqualStmtFailed::FnSetWellDefined(wd),
+            ) => failed_with_details(
+                runtime, "have fn …", "have_fn_equal", super::project_detailed::project_verify_obj_wd(wd, runtime),
+            ),
         },
         ExecDefinitionStmtResult::HaveFnEqualCaseByCase(r) => match r {
             ExecHaveFnEqualCaseByCaseStmtResult::Success(s) => success_with_ids(
@@ -186,7 +191,9 @@ fn project_define_obj(obj: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                 "let",
                 &s.stored_fact_ids,
             ),
-            ExecLetObjStmtResult::Failed(_) => failed(runtime, "let …", "let"),
+            ExecLetObjStmtResult::Failed(wd) => failed_with_details(
+                runtime, "let …", "let", super::project_detailed::project_verify_obj_wd(wd, runtime),
+            ),
         },
         ExecDefineObjStmtResult::HaveObjInNonemptySet(r) => match r {
             ExecHaveObjInNonemptySetStmtResult::Success(s) => success_with_ids(
@@ -523,7 +530,12 @@ fn project_proof_block(p: &ExecProofBlockStmtResult, runtime: &Runtime) -> JsonV
         },
         ExecProofBlockStmtResult::Sketch(r) => match r {
             ExecSketchStmtResult::Success(_) => success_plain(runtime, "sketch".into(), "sketch"),
-            ExecSketchStmtResult::Failed(_) => failed(runtime, "sketch", "sketch"),
+            ExecSketchStmtResult::Failed(ExecSketchStmtFailed::ProofBody(f)) => failed_with_details(
+                runtime, "sketch", "sketch", object(output_language(runtime), vec![
+                    ("step_index", JsonValue::Number(f.step_index as f64)),
+                    ("result", super::project_normal::project_stmt_normal(&f.result, runtime)),
+                ]),
+            ),
         },
     }
 }
@@ -536,6 +548,9 @@ fn project_command(c: &ExecCommandStmtResult, runtime: &Runtime) -> JsonValue {
             }
             ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::WellDefined(failed_wd)) => failed_with_details(
                 runtime, "eval …", "eval", super::project_detailed::project_verify_obj_wd(failed_wd, runtime),
+            ),
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::UnsupportedExpression) => failed_with_details(
+                runtime, "eval …", "eval", object(output_language(runtime), vec![("cause", string("unsupported_expression"))]),
             ),
             ExecEvalStmtResult::Failed(_) => failed(runtime, "eval …", "eval"),
         },

@@ -67,8 +67,12 @@ journals record ordinary persistent sessions and final clean-file gates instead.
 - `gaps/`: legitimate cases that remain unverified. These are executed too.
 - `fixtures/`: small maintained library for qualified-identifier tests.
 - `coverage.json`: AST path, file, case and observed-gap inventory.
-- `baseline.json`, `results.json`: complete process observations for the
-  recorded baseline and intended behavior; consult their hashes and status.
+- `baseline.json`, `results.json`: historical complete-suite process observations
+  for the initial inventory; consult their hashes and status.
+- `number_diagnosis_*.json`: focused follow-up snapshots for the added Number
+  inequality regression.
+- [diagnosis_2026-10-02.md](diagnosis_2026-10-02.md): checked causes of the
+  decimal, complex-inverse and finite-sum examples selected by the user.
 - `proof_journals/`: accepted source and materially distinct failed attempts.
 - [coverage.md](coverage.md): readable per-object inventory and case counts.
 - [todo.md](todo.md): concrete reproductions, exact diagnostics, intended

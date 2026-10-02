@@ -12,6 +12,23 @@ pub(super) fn project_known_special_property(
     runtime: &Runtime,
 ) -> JsonValue {
     let (rule, id, matches) = match proof {
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::IsTuple(p) => {
+            return super::known_tuple::project_atomic_tuple_shape("IsTuple", &p.shape, None, runtime);
+        }
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::TupleIndexBound(p) => {
+            return super::known_tuple::project_atomic_tuple_shape("TupleIndexBound", &p.shape, Some(p.index), runtime);
+        }
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
+            InFactSearchProofByKnownSpecialProperty::TupleCoordinate(p),
+        ) => {
+            return object_for(runtime, vec![
+                ("type", string("by_known_special_property")),
+                ("rule", string("TupleCoordinate")),
+                ("index", string(p.index.to_string())),
+                ("shape", super::known_tuple::project_shape(&p.shape, runtime)),
+                ("carrier_equal", project_equal_searched(&p.carrier_equal, runtime)),
+            ]);
+        }
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
             InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(p),
         ) => (

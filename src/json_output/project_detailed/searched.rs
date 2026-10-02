@@ -83,6 +83,8 @@ pub(super) fn project_equal_searched(
 ) -> JsonValue {
     match searched {
         EqualFactSearchedProof::ByTheyAreTheSame(p) => project_they_are_the_same(p, runtime),
+        EqualFactSearchedProof::ByKnownSpecialProperty(p) =>
+            super::known_tuple::project_equal_known_tuple(p, runtime),
         EqualFactSearchedProof::ByBuiltinRule(r) => project_equality_builtin_rule(r, runtime),
         EqualFactSearchedProof::ByKnownForallFact(p) => project_known_forall(p, runtime),
         EqualFactSearchedProof::ByEquivalenceClass(p) => project_equivalence_class(p, runtime),

@@ -2,7 +2,7 @@
 
 Task: add detailed regression files for every current Litex Obj variant.
 
-The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 461 positive cases, 261 rejection fixtures and 110 recorded gaps.
+The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 461 positive cases, 262 rejection fixtures and 111 recorded gaps.
 
 These counts describe coverage of written cases, not proof that the implementation is bug-free. The runner audits the enum tree and all `.lit` fixtures on every run.
 
@@ -10,7 +10,7 @@ These counts describe coverage of written cases, not proof that the implementati
 | --- | --- | ---: | ---: | ---: |
 | `Obj::Identifier::Plain` | [identifier_plain](identifier_plain.lit) | 5 | 3 | 1 |
 | `Obj::FnObj` | [fn_obj](fn_obj.lit) | 7 | 5 | 2 |
-| `Obj::Literal::Number` | [number](number.lit) | 6 | 2 | 1 |
+| `Obj::Literal::Number` | [number](number.lit) | 6 | 3 | 2 |
 | `Obj::Literal::ImaginaryUnit` | [imaginary_unit](imaginary_unit.lit) | 6 | 2 | 0 |
 | `Obj::Literal::EulerNumber` | [euler_number](euler_number.lit) | 5 | 2 | 0 |
 | `Obj::Literal::Pi` | [pi](pi.lit) | 5 | 2 | 0 |

@@ -14,6 +14,7 @@ pub mod search_equal_fact_by_tuple_components;
 pub mod search_equal_fact_proof_by_builtin_rewrite;
 pub mod search_equal_fact_proof_by_matching_one_arg_by_one;
 pub mod search_equal_fact_proof_by_equivalence_class;
+pub mod search_equal_fact_proof_by_known_special_property;
 pub mod verify_equal_fact;
 pub mod by_object_definition;
 pub mod verify_equality_by_builtin_rules;

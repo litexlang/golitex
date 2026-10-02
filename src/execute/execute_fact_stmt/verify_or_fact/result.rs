@@ -35,7 +35,7 @@ impl VerifyOrFactResult {
     }
 }
 
-// After WD Success: builtin → selected branch (¬ others) → known_or → known_forall.
+// After WD Success: builtin → selected branch (direct or ¬ atomic others) → known_or → known_forall.
 pub enum OrFactSearchedProof {
     ByBuiltinRule(OrFactSearchProofByBuiltinRule),
     BySelectedBranch(OrFactSearchProofBySelectedBranch),
@@ -239,7 +239,8 @@ pub struct OrBuiltinIntegerDiscreteSplit {
     pub base_in_z: VerifyFactResult,
 }
 
-// Classical: assume ¬ of every other branch in a local env, prove selected.
+// Prove selected locally, directly or assuming ¬ of every other atomic branch.
+// Direct Or introduction has an empty assumed_negated_branches list.
 // Example: assume `not (1 = 2)`, prove `1 = 1` ⇒ `1 = 1 or 1 = 2`.
 pub struct OrFactSearchProofBySelectedBranch {
     pub selected_index: usize,

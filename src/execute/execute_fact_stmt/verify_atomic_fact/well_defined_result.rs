@@ -1,15 +1,33 @@
 use crate::execute::execute_fact_stmt::well_defined_results::{
     FailToVerifyObjWellDefinedResult, ObjWellDefinedProof,
 };
+use crate::ast::names::AtomicName;
 
-// Soft miss: the first argument Obj WD that failed, and why.
-pub struct FailToVerifyAtomicFactWellDefinedResult {
-    pub reason: FailToVerifyObjWellDefinedResult,
+pub enum FailToVerifyAtomicFactWellDefinedResult {
+    Argument(FailToVerifyObjWellDefinedResult),
+    Predicate {
+        well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
+        reason: PredicateSignatureWellDefinedFailure,
+    },
 }
 
-// Success-only evidence that every argument of an atomic fact is well-defined.
+pub enum PredicateSignatureWellDefinedFailure {
+    Undefined { predicate: AtomicName },
+    Arity { predicate: AtomicName, expected: usize, actual: usize },
+}
+
+// Builtin arity is fixed by the AST leaf. User signatures are resolved using
+// the full owner-qualified name, never only its local spelling.
+pub enum PredicateSignatureWellDefinedProof {
+    Builtin,
+    Prop { predicate: AtomicName, arity: usize },
+    AbstractProp { predicate: AtomicName, arity: usize },
+}
+
+// Success evidence follows the WD stages: argument objects, then signature.
 pub struct AtomicFactWellDefinedProof {
     pub well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
+    pub predicate_signature: PredicateSignatureWellDefinedProof,
 }
 
 // Soft miss vs success for atomic-fact WD. Proof never embeds Fail.

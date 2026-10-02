@@ -26,7 +26,7 @@ pub(super) fn fn_app_args(fn_obj: &FnObj) -> Option<Vec<Obj>> {
     )
 }
 
-pub(super) fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {
+pub(in crate::execute) fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {
     let mut n = 0;
     for group in &list.groups {
         n += group.params.len();
@@ -34,7 +34,7 @@ pub(super) fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {
     n
 }
 
-pub(super) fn set_bound_params_to_arg_map(
+pub(in crate::execute) fn set_bound_params_to_arg_map(
     list: &SetBoundParameterList,
     args: &[Obj],
 ) -> HashMap<IdentifierId, Obj> {

@@ -3214,7 +3214,7 @@ fn by_def_rechecks_known_predicate_obligations() {
     assert!(!exec_one(&mut runtime, "$prime(5)").is_failed());
     assert!(exec_one(&mut runtime, "by def $prime(5)").is_failed());
     // Even a known abstract predicate has no definition.
-    assert!(!exec_one(&mut runtime, "abstract_prop opaque(x R)").is_failed());
+    assert!(!exec_one(&mut runtime, "abstract_prop opaque(x)").is_failed());
     assert!(!exec_one(&mut runtime, "trust $opaque(1)").is_failed());
     assert!(exec_one(&mut runtime, "by def $opaque(1)").is_failed());
 }

@@ -1,0 +1,33 @@
+# Tracer: predicate signature WD precedes claim proof-body execution.
+# Before (incorrectly accepted; executable negative is in Rust regressions):
+# claim:
+#     ? $chosen(0)
+#     prop chosen(x R):
+#         x = 0
+#     by def $chosen(0)
+# prop chosen(x R):
+#     x = 1
+# $chosen(0)
+# 0 = 1
+# Former behavior: the undeclared goal borrowed a later local predicate;
+# its escaped fact could be reinterpreted by a same-name root declaration.
+# Now: an already well-defined goal may still use a local helper.
+claim:
+    ? 0 = 0
+    prop chosen(x R):
+        x = 0
+    by def $chosen(0)
+prop chosen(x R):
+    x = 1
+by def $chosen(1)
+
+prop relation(a, b R):
+    a = b
+forall x R:
+    $relation(x, x)
+    =>:
+        $relation(x, x)
+# Boundary: undefined predicates and wrong arities fail WD, in either polarity.
+# Evidence: target/release/litex -strict -f examples/wd/predicate_signature_preflight.lit
+# Rust negatives: tests/unit/execute/predicate_signature_wd/tests.rs
+# Cross-file/cache controls: src/run_module/cross_file_identity_tests.rs

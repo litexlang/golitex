@@ -23,7 +23,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
 impl Runtime {
-    // Prove or: WD → builtin → selected branch (¬ others) → known_or → known_forall.
+    // Prove or: WD → builtin → selected branch (direct or ¬ atomic others) → known_or → known_forall.
     // Example: known `1 = 1` proves `1 = 1 or 1 = 2` by assuming `not 1 = 2` locally.
     pub fn verify_or_fact(
         &mut self,
@@ -79,10 +79,13 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
         for selected_index in 0..fact.facts.len() {
-            if !other_branches_are_atomic(fact, selected_index) {
-                continue;
-            }
             let (attempt, local_env) = self.run_in_local_env_and_take_env(|rt| {
+                if !other_branches_are_atomic(fact, selected_index) {
+                    let selected = rt.verify_fact(
+                        &and_chain_as_fact(&fact.facts[selected_index]), verify_state.clone(),
+                    )?;
+                    return Ok((!selected.is_failed()).then_some((Vec::new(), selected)));
+                }
                 rt.try_or_selected_branch_in_local(fact, selected_index, verify_state.clone())
             })?;
             if let Some((assumed_negated_branches, selected_branch)) = attempt {

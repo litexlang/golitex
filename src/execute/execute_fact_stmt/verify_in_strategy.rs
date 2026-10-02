@@ -187,6 +187,9 @@ impl Runtime {
         if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(fact) {
             return Ok(Some(proof.into()));
         }
+        if let Some(proof) = self.search_equal_fact_proof_by_known_special_property(fact)? {
+            return Ok(Some(EqualFactSearchedProof::ByKnownSpecialProperty(proof)));
+        }
         let cite_state = VerifyState::strategy_wd();
         // Cite-only / calculation equality arms under can_use_builtin_rule=false.
         if let Some(result) = self.search_equal_fact_builtin_rule(fact, cite_state.clone())? {

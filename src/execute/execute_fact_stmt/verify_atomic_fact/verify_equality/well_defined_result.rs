@@ -1,5 +1,6 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
+    PredicateSignatureWellDefinedProof,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::{
     FailToVerifyObjWellDefinedResult, ObjWellDefinedProof,
@@ -32,14 +33,13 @@ impl From<EqualFactWellDefinedProof> for AtomicFactWellDefinedProof {
     fn from(proof: EqualFactWellDefinedProof) -> Self {
         AtomicFactWellDefinedProof {
             well_defined_of_each_parameter: vec![proof.left, proof.right],
+            predicate_signature: PredicateSignatureWellDefinedProof::Builtin,
         }
     }
 }
 
 impl From<FailToVerifyEqualFactWellDefinedResult> for FailToVerifyAtomicFactWellDefinedResult {
     fn from(fail: FailToVerifyEqualFactWellDefinedResult) -> Self {
-        FailToVerifyAtomicFactWellDefinedResult {
-            reason: fail.reason,
-        }
+        FailToVerifyAtomicFactWellDefinedResult::Argument(fail.reason)
     }
 }
