@@ -1,0 +1,8 @@
+# Before: this same graph failed to import because both dependency configs used Common.
+# Run: target/release/litex -strict -f examples/module_manager/cross_file_identity/target.lit
+release obj def Left::facts::ident
+release obj def Right::facts::ident
+release thm Left::facts::ready(2)
+release thm Right::facts::ready(2)
+Left::facts::ident(2) = 2
+Right::facts::ident(2) = 3

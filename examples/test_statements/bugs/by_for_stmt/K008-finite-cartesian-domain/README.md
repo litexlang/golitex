@@ -1,6 +1,12 @@
 # K008: Advertised finite Cartesian-product enumeration is unsupported
 
-Status: open. Primary blocker: `kernel_problem`.
+Status: explicitly unsupported by user decision on 2026-10-02.
+
+The user limited enumeration to finite list sets and retained integer ranges;
+Cartesian-domain expansion is outside the current contract. Manual wording has
+been corrected. This unchanged reproduction is a rejection boundary in the
+manifest. The original requested expansion and captured rejection below are
+historical evidence, not pending implementation work.
 
 ## Task context
 

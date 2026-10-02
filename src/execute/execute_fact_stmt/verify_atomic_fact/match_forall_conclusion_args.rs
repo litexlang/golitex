@@ -246,7 +246,18 @@ impl Runtime {
         }
 
         // Same constructor: recurse. No fallback to NonParamEqual (legacy-aligned).
-        if let Some(pairs) = corresponding_arg_pairs(pattern, goal) {
+        // A template occurrence is a constructor with definition-owned identity
+        // and ordinary object arguments. Bind its parameters without unfolding.
+        // Example: `\member<S> $in S` matches `\member<R> $in R` via S = R.
+        let pairs = match (pattern, goal) {
+            (Obj::InstantiatedTemplateObj(left), Obj::InstantiatedTemplateObj(right))
+                if left.template_name == right.template_name && left.args.len() == right.args.len() =>
+            {
+                Some(left.args.iter().cloned().zip(right.args.iter().cloned()).collect())
+            }
+            _ => corresponding_arg_pairs(pattern, goal),
+        };
+        if let Some(pairs) = pairs {
             if !pairs.is_empty() {
                 let mut child_matches = Vec::with_capacity(pairs.len());
                 for (child_pattern, child_goal) in &pairs {

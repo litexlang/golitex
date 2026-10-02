@@ -1,6 +1,10 @@
 # K006: Strict mode accepts trust-have inside a template
 
-Status: open. Primary blocker: `kernel_problem`.
+Status: resolved on 2026-10-02. The reproduction is now an ordinary boundary regression.
+
+Current acceptance: [statement boundary repairs](../../../experience/problem_notes/statement-boundary-repairs.md).
+`observed.json` and the before-repair discussion below are historical evidence;
+current expected behavior is recorded in the suite manifest.
 
 ## Task context
 

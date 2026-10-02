@@ -3,7 +3,7 @@ use crate::ast::names::AtomicName;
 use crate::ast::obj::FnSet;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::{
-    ExecFactStmtResult, VerifyFactResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
+    ExecFactStmtResult, ProveAndStoreThenFactResult, VerifyFactResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::runtime::FactId;
 use crate::execute::ExecStmtResult;
@@ -519,7 +519,7 @@ pub enum EnumerateAssignmentOutcome {
     Proved {
         premise_assumptions: Vec<AssumeDomFactResult>,
         proof_steps: Vec<ExecStmtResult>,
-        then_proofs: Vec<VerifyFactResult>,
+        then_proofs: Vec<ProveAndStoreThenFactResult>,
     },
 }
 

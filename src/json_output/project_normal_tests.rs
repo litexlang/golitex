@@ -66,15 +66,16 @@ fn normal_json_have_natural_then_nonnegative_by_builtin() {
     );
     assert_eq!(
         why.get("rule_name").and_then(|v| v.as_str().ok()),
-        Some("From known in N")
+        Some("Known converse order")
     );
     assert_eq!(
         why.get("message").and_then(|v| v.as_str().ok()),
-        Some("The goal follows from a known natural-number membership")
+        Some("The opposite-direction comparison is already known")
     );
     assert!(why.get("rule").is_none(), "Normal JSON must not print rule_id");
     let cite = why.get("cite").and_then(|v| v.as_str().ok()).unwrap_or("");
-    assert_eq!(cite, "k $in N");
+    // `have k N` already inferred the checked opposite-direction comparison.
+    assert_eq!(cite, "0 <= k");
     assert!(
         !cite.contains('#'),
         "readable cite must not keep #id# wrappers: {cite:?}"

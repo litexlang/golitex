@@ -6,6 +6,7 @@
 //! 3. exec wired body have / trust-have form
 //! 4. close local env into the result (not merged)
 //! 5. store the template definition in the parent ExecEnv
+//! 6. publish body definition facts under template binders and premises
 //!
 //! Example:
 //!   template<S set>:
@@ -64,6 +65,7 @@ use crate::execute::{
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::parse::keywords::TEMPLATE;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
+use super::store_template_definition_facts::StoreTemplateDefinitionFactResult;
 
 pub enum ExecDefTemplateStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
@@ -108,6 +110,7 @@ pub struct ExecDefTemplateStmtSuccessResult {
     pub assumed_dom_facts: Vec<AssumedTemplateDomFactResult>,
     pub body: ExecTemplateDefBodyResult,
     pub local_env: Box<ExecEnv>,
+    pub definition_facts: Vec<StoreTemplateDefinitionFactResult>,
 }
 
 pub enum ExecDefTemplateStmtResult {
@@ -129,7 +132,8 @@ struct LocalParts {
 
 impl Runtime {
     // Mathematical contract: a template is checked under a temporary parameter
-    // environment; only the template definition escapes to the parent.
+    // environment; its definition facts escape only under the template's
+    // binders and premises. Parameter assumptions remain local.
     // Example:
     //   template<S set>:
     //       have carrier_copy set = S
@@ -151,6 +155,9 @@ impl Runtime {
         self.top_exec_env_mut()
             .store_def_template(def_template.clone());
 
+        let definition_facts =
+            self.store_template_definition_facts(def_template, &parts.body, &local_env)?;
+
         Ok(ExecDefTemplateStmtResult::Success(
             ExecDefTemplateStmtSuccessResult {
                 statement: def_template.clone(),
@@ -158,6 +165,7 @@ impl Runtime {
                 assumed_dom_facts: parts.assumed_dom_facts,
                 body: parts.body,
                 local_env,
+                definition_facts,
             },
         ))
     }

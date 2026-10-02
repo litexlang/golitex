@@ -1,0 +1,106 @@
+# Tracer: automatic template definition facts
+#
+# Before (did not work):
+# template<S nonempty_set>:
+#     have member S
+# \member<R> $in R
+# Former behavior: declaration succeeded; membership failed at search_proof (K002).
+#
+# Now (verified by focused Rust regressions and the strict release CLI):
+template<S nonempty_set>:
+    have member S
+\member<R> $in R
+forall T nonempty_set:
+    \member<T> $in T
+
+template<S set: $is_nonempty_set(S)>:
+    have guarded S
+\guarded<R> $in R
+
+template<S nonempty_set>:
+    have nonempty nonempty_set = S
+$is_nonempty_set(\nonempty<R>)
+template<n N>:
+    have finite finite_set = {n}
+$is_finite_set(\finite<2>)
+template<S set>:
+    have carrier set = S
+\carrier<R> = R
+template<S nonempty_set, a S>:
+    have selected S = a
+\selected<R, 2> $in R
+\selected<R, 2> = 2
+
+witness exist x R st {x = 2} from 2
+template<S set>:
+    have existing R:
+        existing = 2
+\existing<R> = 2
+template<S set>:
+    obtain obtained from exist x R st {x = 2}
+\obtained<R> = 2
+prop has_copy(a R):
+    exist x R st {x = a}
+witness $has_copy(4) from 4
+template<S set>:
+    obtain atomic from $has_copy(4)
+\atomic<R> = 4
+
+prop image_rel(x, y set):
+    x = y
+forall x {1}, y, z set:
+    $image_rel(x, y)
+    $image_rel(x, z)
+    =>:
+        y = z
+template<S set>:
+    have by replacement_axiom: image from prop image_rel, set {1}
+by def $image_rel(1, 1)
+1 $in \image<R>
+forall y \image<R>:
+    exist x {1} st {$image_rel(x, y)}
+
+template<S set>:
+    have fn ident(x S) S = x
+\ident<R> $in fn(x R) R
+\ident<R>(4) = 4
+template<T set>:
+    have fn flag(x R) N by cases:
+        case x = 0: 0
+        case x != 0: 1
+\flag<R> $in fn(x R) N
+\flag<R>(0) = 0
+\flag<R>(1) = 1
+template<b N>:
+    have fn count(n N) N by induc n from 0:
+        case n = 0: b
+        case n >= 1: count(n - 1) + 1
+\count<2> $in fn(n N) N
+\count<2>(1 - 1) = 2
+\count<2>(1) = \count<2>(1 - 1) + 1 = 3
+\count<7>(1 - 1) = 7
+\count<7>(1) = \count<7>(1 - 1) + 1 = 8
+
+prop successor_rel(x, y R):
+    y = x + 1
+claim:
+    ? forall x R:
+        exist! y R st {$successor_rel(x, y)}
+    witness exist! y R st {$successor_rel(x, y)} from x + 1:
+        by def $successor_rel(x, x + 1)
+template<S set>:
+    have fn chosen by exist!:
+        ? forall x R:
+            exist! y R st {$successor_rel(x, y)}
+\chosen<R> $in fn(x R) R
+$successor_rel(2, \chosen<R>(2))
+forall x, y R:
+    $successor_rel(x, y)
+    =>:
+        y = \chosen<R>(x)
+
+# Boundary: empty/mismatched arguments, unconditional case equations, and
+# arbitrary-member uniqueness remain rejected. Failed scopes discard exports.
+# Trust bodies remain nonstrict; see the dedicated Rust rejection control.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/definition/template_definition_facts.lit
+# Tests: tests/unit/execute/template_definition_facts/tests.rs

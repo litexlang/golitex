@@ -22,3 +22,11 @@ by for:
     ? forall n range(0, 2):
         n = n
     1 = 1
+
+# case: conditional-binder-body
+by for:
+    ? forall n {0, 1, 2}:
+        n > 0
+        =>:
+            n != 0
+    n = n

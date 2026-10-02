@@ -87,7 +87,7 @@ fn check_fixtures() {
     let facts = all.iter().filter(|tag| tag.starts_with("Fact.")).count();
     assert_eq!(facts, 10, "exercise every Fact shape inside Stmt::Fact");
     assert!(all.contains("Induction.NestedCases"));
-    assert_eq!(evaluated, ["9", "1/2", "3", "6", "2", "11", "0", "2", "0"]);
+    assert_eq!(evaluated, ["9", "1/2", "3", "6", "2", "11", "0", "2", "0", "0", "3"]);
 }
 
 fn collect_stmt(statement: &Stmt, seen: &mut BTreeSet<String>) {

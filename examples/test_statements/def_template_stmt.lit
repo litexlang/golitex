@@ -14,6 +14,9 @@ template<T set>:
 template<S nonempty_set>:
     have template_member S
 let template_selected = \template_member<R>
+\template_member<R> $in R
+forall T nonempty_set:
+    \template_member<T> $in T
 
 # case: case-and-recursive-functions
 template<S set>:

@@ -30,3 +30,9 @@ claim:
             2 > 1
         case x = 3:
             3 > 1
+
+# case: nested-extension-step
+by cases:
+    ? 1 = 1
+    case 1 = 1:
+        by extension {1} = {1}

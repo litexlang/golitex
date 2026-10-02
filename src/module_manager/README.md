@@ -58,6 +58,13 @@ No `HashMap<mod_id, name>`: name is `imports[mod_id].name`. Missing / bad id →
 
 **API sketch:** `record_import` by path (merge or push); `record_root_export`; lookup `path_to_mod_id`.
 
+The mount API still requires a unique global display name for each distinct
+path. `run_module::run_import_module` derives that input from the config-local
+alias, suffixing a reused global label when necessary. It does not rewrite
+`litex_config.imports`: each package continues resolving its aliases through
+its own configured paths. Same-path registrations still merge before checking
+display-name uniqueness. Repeating an alias in one config remains invalid.
+
 ---
 
 ### `ImportedModule` (one global mount)

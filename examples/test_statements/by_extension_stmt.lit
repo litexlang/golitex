@@ -11,3 +11,8 @@ by extension:
 
 # case: empty-set
 by extension {} = {}
+
+# case: nested-definition-step
+by extension:
+    ? {1} = {1}
+    by def {1} $subset {1}

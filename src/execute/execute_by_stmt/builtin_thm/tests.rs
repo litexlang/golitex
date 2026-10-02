@@ -101,6 +101,19 @@ fn builtin_theorems_do_not_certify_missing_premises_or_bad_shapes() {
 }
 
 #[test]
+fn chinese_theorem_diagnostics_keep_the_exact_failed_premise() {
+    let mut rt = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::Chinese });
+    let result = execute(&mut rt, "release thm subset_of_finite_set_is_finite({2}, {1})");
+    assert!(result.is_failed());
+    for json in [project_stmt_normal(&result, &rt), project_stmt_detailed(&result, &rt)] {
+        let text = json.stringify();
+        for expected in ["定理名", "目标命题", "下标", "subset_of_finite_set_is_finite", "{2} $subset {1}"] {
+            assert!(text.contains(expected), "missing {expected}: {text}");
+        }
+    }
+}
+
+#[test]
 fn builtin_release_keeps_contract_premise_and_wd_evidence() {
     let mut rt = runtime();
     let result = execute(&mut rt, "release thm rational_between_reals(0, 1)");

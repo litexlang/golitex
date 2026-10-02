@@ -94,7 +94,8 @@ every explicit `trust` or `axiom` are relevant to the trusted boundary.
 `trust` records an assumption; it is not a proof. A successful Litex check is
 therefore a claim relative to the checker, its builtin rules, and any visible
 trusted inputs. Use `-strict` when a run must reject user `trust`, `trust have`,
-and `abstract_prop` statements. The current strict gate does not reject
+and `abstract_prop` statements, including `trust have` inside templates and
+trust steps inside local proof bodies. The current strict gate does not reject
 `axiom` or the named set-theoretic releases; it is not an axiom-free mode.
 
 Lean rechecking is a separate experimental direction. The current `src/lib.rs`
@@ -1273,9 +1274,46 @@ template<S set>:
 ```
 
 A template parameter such as `S set` is not a function argument ranging over a
-set of all sets. The body is checked once in the parameterized context; later
-`\name<args>` keeps the surface form and uses definitional unfold for equality
-and membership.
+set of all sets. The body is checked once in the parameterized context. On
+success, Litex substitutes its defined name with `\name<parameters>` in the
+body definition facts and stores them under the template's universal binders
+and header conditions. Later `\name<args>` keeps its surface form; ordinary
+known-`forall` search can instantiate those facts, and existing
+definition-unfolding routes remain available.
+
+> **Preview:** automatic template definition facts include object membership
+> and set kinds, defining equalities, selected-witness properties, function
+> signatures and guarded case/recursive equations, unique-selection properties
+> and uniqueness, and replacement introduction/elimination. Only facts emitted
+> by the successful body definition stores and their ordinary inference escape;
+> parameter assumptions and proof-search intermediate facts stay local.
+
+```litex
+template<S nonempty_set>:
+    have member S
+
+\member<R> $in R
+forall T nonempty_set:
+    \member<T> $in T
+```
+
+The definition stores `forall S nonempty_set: \member<S> $in S`. It does not
+claim that all members of `S` equal the selected object. Header conditions
+remain premises of every published fact:
+
+```litex
+template<S set: $is_nonempty_set(S)>:
+    have selected S
+
+\selected<R> $in R
+```
+
+Here the stored fact has binder `S set`, premise `$is_nonempty_set(S)`, and
+conclusion `\selected<S> $in S`. An empty-set argument is rejected. Function
+domains and case conditions are retained as well. A `trust have` body remains
+trusted and is rejected under `-strict`; automatic publication does not prove
+its assumptions. The [runnable acceptance example](../examples/stmt_nodes/definition/template_definition_facts.lit)
+covers the definition families and direct use of their instances.
 
 When a template selects a set-builder value, membership in the instance unfolds
 to membership in the defining set-builder:
@@ -2473,7 +2511,9 @@ function.
 > `algo f(n N) N by induc n from 0:` (no separate `have fn` required).
 > Execution defines the function (same checks as `have fn … by cases` / `by induc`)
 > and stores the executable presentation.
-> `eval` first substitutes `known_closed_numeric_equal` representatives, then
+> `eval` first checks the source expression's well-definedness, including each
+> function argument domain and domain condition. It then substitutes
+> `known_closed_numeric_equal` representatives and
 > recursively evaluates: closed-numeric simplify, and plain-Identifier function
 > calls through a stored algo (case match → return expr → evaluate again).
 > It does not store a proof fact. Dedicated recursive-algo tracers are deferred.
@@ -2828,8 +2868,7 @@ statements are no longer part of the language.
 
 > **Project modules:** there is no `submodule` and no `[hierarchy]`.
 > A maintained package is a single module. `[export]` lists only `.lit` files;
-> `[import]` and `[import std]` both mount modules under aliases that share one
-> namespace.
+> `[import]` and `[import std]` share one alias namespace within each manifest.
 >
 > - Tables / parse / `::` elaborate:
 >   [`src/module_manager/README.md`](../src/module_manager/README.md)
@@ -2876,8 +2915,9 @@ Important rules:
    `[import std]` accepts either a bare name `N` (meaning `N = N`) or
    `Alias = StdName`; both mount `<std_root>/<StdName>` under `Alias`.
    After resolution `[import]` and `[import std]` are the same kind of
-   import. Import aliases from both sections must not collide with each
-   other. An export name may reuse an import spelling: `a::b` is always a
+   import. Import aliases from both sections must be unique within that
+   `litex.config`; separate packages may reuse an alias for their own paths.
+   An export name may reuse an import spelling: `a::b` is always a
    current export, `a::b::c` is an import path, and `a:::b` is explicit
    single-export sugar for `a::<sole_export>::b`.
 4. Canonical names follow the mount alias and export name, for example
@@ -2888,6 +2928,14 @@ and symbols are separate, so a local symbol may also be named `A`; field
 selection such as `obj.b` remains in the field namespace. An export is
 unavailable while it is still loading, so an earlier file cannot cite a later
 export.
+
+An import alias is resolved using the importing package's manifest, then the
+normalized directory path selects the global module ID. For example, two
+packages may each declare `Common = "./dep"` and refer to different dependency
+directories. Same-path imports under different aliases share one module.
+The loader assigns distinct global display labels when local aliases repeat;
+these labels do not change source name resolution. See the runnable
+[cross-file identity fixture](../examples/module_manager/cross_file_identity/README.md).
 
 Project dependencies come from `litex.config` (`[import]` / `[import std]`),
 not from source-level `import` statements. Every `.lit` file rejects `import`;
@@ -2978,9 +3026,9 @@ forms share one row, such as the related object-introduction statements.
 | Predicate-property registrations | Exact reflexive/symmetric/transitive forall shape. Previously `by *_prop`. Now: `register reflexive` / `symmetric` / `transitive`; one `? forall …` goal only; no indented proof body. | A reusable property route for later rewriting. |
 | `expand: e $in …` | Preview: membership in a concrete `range` / `closed_range` / `a...b` is already known. | Stores `e = a or e = b or …`. |
 | `release regularity_axiom` | Its displayed set/nonemptiness obligations. Preview: `release regularity_axiom(S)`; parse+exec wired; no proof body. | An explicitly trusted set-theoretic conclusion; the current strict gate does not reject this release. |
-| `release axiom_of_choice` | The family is a set and every member is proved nonempty. Preview: `release axiom_of_choice: set F`; parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
+| `release axiom_of_choice` | The family is a set and every member is proved nonempty. Preview: `release axiom_of_choice: set F`; parse+exec wired; proof body accepts ordinary local statements. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
 | `release zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview: `release zorn_lemma: …`; parse+exec wired with green tracer; prop-definition equality uses IR alignment (binder ids taken from the user prop body). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
-| `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
+| `eval` | The source expression is well-defined, including callable parameter domains, and belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
 
 ---
 
@@ -3511,9 +3559,32 @@ named impossible fact `2 = 3` was never derived.
 
 ### Finite enumeration and range expansion
 
-`by enumerate finite_set` proves a forall by checking a concrete finite
-domain. Separately, `expand:` turns known numeric-range membership into
-equality cases for later `by cases`.
+`by enumerate finite_set` and `by for` prove a forall by checking every
+assignment from displayed finite list sets, `range(start, end)`, or
+`closed_range(start, end)`. Multiple independently enumerable parameters are
+supported. A named finite set without a displayed domain is not expanded;
+`cart(...)` domains are not supported, even when their factors are finite.
+Separately, `expand:` turns known numeric-range membership into equality cases
+for later `by cases`.
+
+Conditional targets are checked as implications for each assignment. A proved
+negation of an atomic premise skips that assignment. Otherwise premises are
+assumed only in the assignment's local proof scope, and every conclusion must
+verify there. Failure to prove a premise's negation never counts as a skipped
+case. Premises are introduced in source order, so earlier guards can license
+later objects.
+
+```litex
+by enumerate finite_set:
+    ? forall n {0, 1, 2}:
+        n > 0
+        =>:
+            n != 0
+```
+
+Optional proof bodies may use the quantified names and nested proof methods.
+Each assignment binds those names to its concrete values. Declarations and
+helper facts stay local; only the verified universal is stored outside.
 
 > **Migration example:** This retained block still fails at `by_enumerate` in the current checker; it is not a verified result.
 
@@ -3637,16 +3708,17 @@ concrete finite list set.
 > is `forall n Z: n >= base => P(n)`.
 >
 > Also wired under the Litex CLI: `release regularity_axiom(A)`,
-> `release axiom_of_choice: set F` (optional fact-only proof body), and
-> `release zorn_lemma: set S, prop P, prop U, prop M` (optional fact-only proof body).
+> `release axiom_of_choice: set F` (optional local proof body), and
+> `release zorn_lemma: set S, prop P, prop U, prop M` (optional local proof body).
 > Semantics: prove the displayed obligations, then
 > store the trusted axiomatic conclusion.
 
 ### Bounded iteration and extensionality
 
-`by for` is a bounded proof shell for integer ranges and supported finite
-Cartesian products. `by extension` proves set equality through mutual
-membership.
+`by for` is a bounded proof shell for displayed finite list sets and concrete
+integer ranges. It shares the conditional-assignment behavior above.
+`cart(...)` domains are outside this interface. `by extension` proves set
+equality through mutual membership.
 
 `by for` always takes an indented `? forall ...` goal. Proof statements after
 that goal are optional. `by extension` alone also keeps its bodyless one-line
@@ -3756,8 +3828,8 @@ the same user-defined predicate.
 ### Trusted preview proof steps
 
 > **Preview:** `release regularity_axiom`, `release axiom_of_choice`, and
-> `release zorn_lemma` are parse+exec wired. Local proof bodies are fact-only (same
-> restriction as other NP by-stmts). Soft-fail on missing obligations or prop
+> `release zorn_lemma` are parse+exec wired. Local proof bodies accept ordinary
+> statements in a child scope. Soft-fail on missing obligations or prop
 > interface checks; the trusted conclusions are stored after checks succeed.
 
 `release regularity_axiom` exposes set-theoretic foundation as an explicit trusted
@@ -3792,7 +3864,7 @@ forall A F:
 `release zorn_lemma` requires the two quantified conditions that occur below
 existentials to be named concrete props. Their signatures and definitions are
 checked exactly (IR alignment) before any obligation is accepted. Local proof
-bodies are fact-only — trust the obligations outside first (same pattern as
+bodies accept ordinary statements in a child scope (same pattern as
 `release axiom_of_choice`):
 
 ```litex
@@ -5142,7 +5214,9 @@ inventory that can drift out of sync.
 | Named set-theoretic releases | Obligations checked; foundation assumed | Still accepted |
 | Imports | Cold execution or an import knowledge-base cache hit | The same cache path; not a fresh audit guarantee |
 
-The strict check lives in `src/execute/exec_stmt.rs`. It blocks the three
+The strict check lives in `src/execute/exec_stmt.rs`, including inspection of
+a template's `trust have` body. Nested proof statements use the same entry.
+It blocks the three
 source forms above when they execute; it does not certify absence of all
 assumptions. In particular, `src/run_module/import_kb.rs` may reuse imported
 environments, and its fingerprint does not include strictness. Earlier root

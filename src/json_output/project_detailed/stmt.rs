@@ -114,15 +114,21 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             },
             None,
             runtime),
-        ExecDefinitionStmtResult::DefTemplate(r) => project_success_failed_shell(
-            "def_template",
-            !r.is_failed(),
-            match r {
-                ExecDefTemplateStmtResult::Success(s) => Some(s.statement.readable_string()),
-                _ => None,
-            },
-            None,
-            runtime),
+        ExecDefinitionStmtResult::DefTemplate(r) => match r {
+            ExecDefTemplateStmtResult::Success(s) => object_for(runtime, vec![
+                ("success", bool_value(true)),
+                ("kind", string("def_template")),
+                ("statement", string(s.statement.readable_string())),
+                ("definition_facts", JsonValue::Array(s.definition_facts.iter().map(|published| {
+                    object_for(runtime, vec![
+                        ("source_fact_id", string(published.source_fact_id.to_string())),
+                        ("store_and_infer", project_store_and_infer(&published.store_and_infer, runtime)),
+                    ])
+                }).collect())),
+            ]),
+            ExecDefTemplateStmtResult::Failed(_) => project_success_failed_shell(
+                "def_template", false, None, None, runtime),
+        },
         ExecDefinitionStmtResult::DefAlgoByCases(r) => project_success_failed_shell(
             "def_algo_by_cases",
             !r.is_failed(),
@@ -770,7 +776,10 @@ fn project_enumeration_assignments(
                 object_for(runtime, vec![
                     ("kind", string("proved")),
                     ("proof_steps", project_stmt_steps(proof_steps, runtime)),
-                    ("then_proofs", project_verify_facts(then_proofs, runtime)),
+                    ("then_proofs", JsonValue::Array(then_proofs.iter().map(|proof| object_for(runtime, vec![
+                        ("verify_result", project_verify_fact(&proof.verify_result, runtime)),
+                        ("store_and_infer", project_store_and_infer(&proof.store_and_infer, runtime)),
+                    ])).collect())),
                 ]),
             ),
         };

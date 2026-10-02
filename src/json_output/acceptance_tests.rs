@@ -573,9 +573,9 @@ fn acceptance_cite_readable_no_hash_wrappers() {
     let json = project_stmt_normal(&exec_one(&mut rt, "k >= 0"), &rt);
     let why = obj_field(&json, "proof_method").as_object().unwrap();
     let cite = why.get("cite").and_then(|x| x.as_str().ok()).unwrap_or("");
-    assert_eq!(cite, "k $in N");
+    assert_eq!(cite, "0 <= k");
     assert!(!cite.contains('#'));
-    assert_eq!(why.get("rule_name").and_then(|x| x.as_str().ok()), Some("From known in N"));
+    assert_eq!(why.get("rule_name").and_then(|x| x.as_str().ok()), Some("Known converse order"));
 }
 
 #[test]
@@ -612,7 +612,7 @@ fn acceptance_hot_atomic_chinese_from_known_in_n() {
     let _ = exec_one(&mut rt, "have k N");
     let json = project_stmt_normal(&exec_one(&mut rt, "k >= 0"), &rt);
     let why = obj_field(&json, "证明方法").as_object().unwrap();
-    assert_eq!(why.get("规则名").and_then(|x| x.as_str().ok()), Some("已知属于自然数"));
+    assert_eq!(why.get("规则名").and_then(|x| x.as_str().ok()), Some("已知反向序关系"));
     assert!(has_cjk(why.get("说明").and_then(|x| x.as_str().ok()).unwrap_or("")));
 }
 

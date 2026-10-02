@@ -115,7 +115,13 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
         },
         ExecDefinitionStmtResult::DefTemplate(r) => match r {
             ExecDefTemplateStmtResult::Success(s) => {
-                success_plain(runtime, s.statement.readable_string(), "def_template")
+                let mut stores = Vec::new();
+                let mut infers = Vec::new();
+                for published in &s.definition_facts {
+                    stores.extend(store_fact_texts(&published.store_and_infer.store));
+                    infers.extend(infer_fact_texts_from_store_and_infer(runtime, &published.store_and_infer));
+                }
+                success_parts(runtime, s.statement.readable_string(), "def_template", stores, infers)
             }
             ExecDefTemplateStmtResult::Failed(_) => failed(runtime, "template …", "def_template"),
         },
@@ -528,6 +534,9 @@ fn project_command(c: &ExecCommandStmtResult, runtime: &Runtime) -> JsonValue {
             ExecEvalStmtResult::Success(s) => {
                 success_plain(runtime, s.statement.readable_string(), "eval")
             }
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::WellDefined(failed_wd)) => failed_with_details(
+                runtime, "eval …", "eval", super::project_detailed::project_verify_obj_wd(failed_wd, runtime),
+            ),
             ExecEvalStmtResult::Failed(_) => failed(runtime, "eval …", "eval"),
         },
     }

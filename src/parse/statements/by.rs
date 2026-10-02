@@ -69,7 +69,10 @@ impl Runtime {
             let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = fact else {
                 return Err(tb.parse_error("by extension: goal expects an equality fact"));
             };
-            let proof = self.parse_body_stmts(&tb.body[1..])?;
+            self.push_parse_scope();
+            let proof = self.parse_body_stmts(&tb.body[1..]);
+            self.pop_parse_scope();
+            let proof = proof?;
             (eq.left, eq.right, proof)
         } else {
             if !tb.body.is_empty() {
@@ -112,7 +115,10 @@ impl Runtime {
             let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = fact else {
                 return Err(tb.parse_error("by fn_extension: goal expects an equality fact"));
             };
-            let proof = self.parse_body_stmts(&tb.body[1..])?;
+            self.push_parse_scope();
+            let proof = self.parse_body_stmts(&tb.body[1..]);
+            self.pop_parse_scope();
+            let proof = proof?;
             (eq.left, eq.right, proof)
         } else {
             if !tb.body.is_empty() {
