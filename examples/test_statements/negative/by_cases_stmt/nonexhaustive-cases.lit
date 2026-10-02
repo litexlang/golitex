@@ -1,0 +1,7 @@
+# Expected rejection: nonexhaustive-cases
+# Owner: ByCasesStmt
+
+have x R
+by cases:
+    ? x = 0
+    case x = 0

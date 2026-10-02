@@ -1,0 +1,37 @@
+# Stmt: HaveByReplacementAxiomStmt
+# AST: Stmt::Definition::DefineObj::HaveByReplacementAxiomStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf HaveByReplacementAxiomStmt
+
+# case: finite-identity-image
+prop replace_id(x, y set):
+    y = x
+forall x {1, 2}, y, z set:
+    $replace_id(x, y)
+    $replace_id(x, z)
+    =>:
+        y = z
+have by replacement_axiom: replace_img from prop replace_id, set {1, 2}
+$is_set(replace_img)
+release obj def replace_img
+
+# case: empty-identity-image
+prop replace_empty(x, y set):
+    y = x
+forall x {}, y, z set:
+    $replace_empty(x, y)
+    $replace_empty(x, z)
+    =>:
+        y = z
+have by replacement_axiom: replace_zero from prop replace_empty, set {}
+$is_set(replace_zero)
+
+# case: singleton-identity-image
+prop replace_single(x, y set):
+    y = x
+forall x {5}, y, z set:
+    $replace_single(x, y)
+    $replace_single(x, z)
+    =>:
+        y = z
+have by replacement_axiom: replace_one from prop replace_single, set {5}
+$is_set(replace_one)

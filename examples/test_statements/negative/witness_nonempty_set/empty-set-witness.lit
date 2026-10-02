@@ -1,0 +1,4 @@
+# Expected rejection: empty-set-witness
+# Owner: WitnessNonemptySet
+
+witness $is_nonempty_set({}) from 1

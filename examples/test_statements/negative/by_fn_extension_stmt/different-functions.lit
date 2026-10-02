@@ -1,0 +1,6 @@
+# Expected rejection: different-functions
+# Owner: ByFnExtensionStmt
+
+have fn f(x R) R = x
+have fn g(x R) R = x + 1
+by fn_extension f = g

@@ -1,0 +1,18 @@
+# Stmt: ByContraStmt
+# AST: Stmt::By::ByContraStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ByContraStmt
+
+# case: equality-contradiction
+by contra:
+    ? 1 = 1
+    impossible 1 != 1
+
+# case: membership-contradiction
+by contra:
+    ? 0 $in {0}
+    impossible not 0 $in {0}
+
+# case: nonzero-contradiction
+by contra:
+    ? 1 != 0
+    impossible 1 = 0

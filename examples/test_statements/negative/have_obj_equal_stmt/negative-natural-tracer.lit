@@ -1,0 +1,4 @@
+# Expected rejection: negative-natural-tracer
+# Owner: HaveObjEqualStmt
+
+have k N = -1

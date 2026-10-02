@@ -1,0 +1,11 @@
+# Expected rejection: symmetric-carrier-N
+# Owner: RegisterSymmetricPropStmt
+
+prop reg_symmetric_third(x, y N):
+    x = y
+register symmetric:
+    ? forall x, y N:
+        $reg_symmetric_third(x, y)
+        =>:
+            $reg_symmetric_third(y, x)
+$reg_symmetric_third(1, 1)

@@ -1,0 +1,9 @@
+# Expected rejection: extra-registration-proof
+# Owner: RegisterReflexivePropStmt
+
+prop P(x, y set):
+    x = y
+register reflexive:
+    ? forall x set:
+        $P(x, x)
+    1 = 1

@@ -1,0 +1,4 @@
+# Expected rejection: undefined-value
+# Owner: LetObjStmt
+
+let x = missing

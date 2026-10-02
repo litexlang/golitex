@@ -1,0 +1,6 @@
+# Expected rejection: wrong-prop-argument-type
+# Owner: ObtainObjFromAtomicFact
+
+prop P(a N):
+    exist x N st {x = a}
+obtain b from $P(-1)

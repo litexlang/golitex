@@ -1,0 +1,40 @@
+# Stmt: DefAlgoByInducStmt
+# AST: Stmt::Definition::DefAlgoByInducStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf DefAlgoByInducStmt
+
+# case: countdown-mathematical-equation
+algo algo_count(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: algo_count(n - 1)
+algo_count(0) = 0
+algo_count(1) = 0
+algo_count(2) = algo_count(2 - 1) = algo_count(1) = 0
+
+# case: identity-evaluation
+algo algo_identity(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: n
+eval algo_identity(3)
+
+# case: increment-mathematical-equation
+algo algo_inc(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: algo_inc(n - 1) + 1
+algo_inc(0) = 0
+algo_inc(1 - 1) = algo_inc(0) = 0
+algo_inc(1) = algo_inc(1 - 1) + 1
+
+# case: nested-induction-cases
+algo nested_algo(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1:
+        case n = 1: 0
+        case n != 1: nested_algo(n - 1)
+nested_algo(0) = 0
+nested_algo(1) = 0
+
+# case: recursive-computation
+algo compute_count(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: compute_count(n - 1)
+eval compute_count(2)

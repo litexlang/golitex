@@ -1,0 +1,32 @@
+# Stmt: ByCasesStmt
+# AST: Stmt::By::ByCasesStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ByCasesStmt
+
+# case: single-exhaustive-case
+by cases:
+    ? 1 = 1
+    case 1 = 1
+
+# case: two-cases-from-premise
+claim:
+    ? forall x R:
+        x = 0 or x = 1
+        =>:
+            x >= 0
+    by cases:
+        ? x >= 0
+        case x = 0
+        case x = 1
+
+# case: case-proof-bodies
+claim:
+    ? forall x R:
+        x = 2 or x = 3
+        =>:
+            x > 1
+    by cases:
+        ? x > 1
+        case x = 2:
+            2 > 1
+        case x = 3:
+            3 > 1

@@ -1,0 +1,19 @@
+# Stmt: HaveFnEqualStmt
+# AST: Stmt::Definition::HaveFnEqualStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf HaveFnEqualStmt
+
+# case: unary-polynomial
+have fn fn_square(x R) R = x * x
+fn_square(3) = 9
+
+# case: binary-and-dependent-carrier
+have fn fn_add(x, y R) R = x + y
+fn_add(2, 3) = 5
+have fn fn_nat(n N) N = n + 1
+fn_nat(0) = 1
+
+# case: local-function
+claim:
+    ? 5 = 5
+    have fn local_id(x R) R = x
+    local_id(5) = 5

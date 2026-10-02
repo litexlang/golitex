@@ -1,0 +1,6 @@
+# Expected rejection: ordinary-existence-is-insufficient
+# Owner: HaveFnByForallExistUniqueStmt
+
+have fn f by exist!:
+    ? forall x R:
+        exist y R st {y = x}

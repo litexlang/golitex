@@ -1,0 +1,4 @@
+# Expected rejection: unknown-prop
+# Owner: HaveByReplacementAxiomStmt
+
+have by replacement_axiom: Img from prop Missing, set {1}

@@ -1,0 +1,20 @@
+# Stmt: DefThmStmt
+# AST: Stmt::Definition::DefThmStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf DefThmStmt
+
+# case: bodyless-atomic
+thm theorem_one:
+    ? 1 = 1
+release thm theorem_one
+
+# case: bodyless-universal
+thm theorem_identity:
+    ? forall x R:
+        x + 0 = x
+release thm theorem_identity(3)
+
+# case: proof-body-witness
+thm theorem_existence:
+    ? exist x R st {x = 8}
+    witness exist x R st {x = 8} from 8
+release thm theorem_existence

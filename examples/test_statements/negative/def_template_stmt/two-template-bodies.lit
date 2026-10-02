@@ -1,0 +1,6 @@
+# Expected rejection: two-template-bodies
+# Owner: DefTemplateStmt
+
+template<S set>:
+    have a set = S
+    have b set = S

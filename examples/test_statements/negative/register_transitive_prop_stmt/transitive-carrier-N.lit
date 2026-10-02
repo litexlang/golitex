@@ -1,0 +1,12 @@
+# Expected rejection: transitive-carrier-N
+# Owner: RegisterTransitivePropStmt
+
+prop reg_transitive_third(x, y N):
+    x = y
+register transitive:
+    ? forall x, y, z N:
+        $reg_transitive_third(x, y)
+        $reg_transitive_third(y, z)
+        =>:
+            $reg_transitive_third(x, z)
+$reg_transitive_third(1, 1)

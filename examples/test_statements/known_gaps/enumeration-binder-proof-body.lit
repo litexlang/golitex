@@ -1,0 +1,8 @@
+# Known gap: K007-enumerate
+# Desired success: true
+# See todo.md; runner checks observed behavior explicitly.
+
+by enumerate finite_set:
+    ? forall n {0, 1}:
+        n = n
+    n = n

@@ -1,0 +1,6 @@
+# Boundary: strict-choice-allowed
+# Owner: ReleaseAxiomOfChoiceStmt
+
+release axiom_of_choice: set {{1}}:
+    forall A {{1}}:
+        $is_nonempty_set(A)

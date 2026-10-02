@@ -16,6 +16,99 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::FromKnownGreater(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")), ("family", string("LessFact")),
+                ("rule", string("FromKnownGreater")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FromKnownGreaterEqual(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")), ("family", string("LessEqualFact")),
+                ("rule", string("FromKnownGreaterEqual")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FromKnownLessEqual(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")), ("family", string("GreaterEqualFact")),
+                ("rule", string("FromKnownLessEqual")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::FromKnownOrderComplement(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("LessFact")),
+                ("rule", string("FromKnownOrderComplement")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+                ("real_carrier_proofs", project_verify_facts(&p.real_carrier_proofs, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::FromKnownOrderComplement(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("GreaterFact")),
+                ("rule", string("FromKnownOrderComplement")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+                ("real_carrier_proofs", project_verify_facts(&p.real_carrier_proofs, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("LessEqualFact")),
+                ("rule", string("FromKnownOrderComplement")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+                ("real_carrier_proofs", project_verify_facts(&p.real_carrier_proofs, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("GreaterEqualFact")),
+                ("rule", string("FromKnownOrderComplement")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+                ("real_carrier_proofs", project_verify_facts(&p.real_carrier_proofs, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessFact(br::not_less::NotLessFactSearchProofByBuiltinRule::FromKnownOrderComplement(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("NotLessFact")),
+                ("rule", string("FromKnownOrderComplement")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+                ("real_carrier_proofs", project_verify_facts(&p.real_carrier_proofs, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterFact(br::not_greater::NotGreaterFactSearchProofByBuiltinRule::FromKnownOrderComplement(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("NotGreaterFact")),
+                ("rule", string("FromKnownOrderComplement")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+                ("real_carrier_proofs", project_verify_facts(&p.real_carrier_proofs, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessEqualFact(br::not_less_equal::NotLessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("NotLessEqualFact")),
+                ("rule", string("FromKnownOrderComplement")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+                ("real_carrier_proofs", project_verify_facts(&p.real_carrier_proofs, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterEqualFact(br::not_greater_equal::NotGreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("NotGreaterEqualFact")),
+                ("rule", string("FromKnownOrderComplement")),
+                ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+                ("real_carrier_proofs", project_verify_facts(&p.real_carrier_proofs, runtime)),
+            ])
+        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::PrimeFact(PrimeFactSearchProofByBuiltinRule::PrimeByComputation(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),

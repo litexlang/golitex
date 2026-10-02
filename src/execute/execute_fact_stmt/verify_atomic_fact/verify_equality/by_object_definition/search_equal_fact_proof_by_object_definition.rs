@@ -18,9 +18,8 @@ use super::EqualitySearchProofByObjectDefinition;
 impl Runtime {
     // When: goal is `L = R`, and at least one side is an identifier / named fn
     // application / instantiated template whose definition is stored.
-    // After: prove by unfolding that definition into a residual equality.
-    // Identifier HaveObjEqual preserves caller rewrite permission; other
-    // definition owners keep their existing restrictions. Tries left, then right.
+    // After: prove by unfolding that definition into a residual equality
+    // (rewrite off on the residual). Tries left-as-def-side, then right.
     // Example: `have a R = 1 + 1` then goal `a = 2` → residual `1 + 1 = 2`.
     pub fn search_equal_fact_proof_by_object_definition(
         &mut self,

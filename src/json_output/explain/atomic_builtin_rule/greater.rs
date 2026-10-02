@@ -20,6 +20,7 @@ use super::text::text;
 impl GreaterFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message(lang),
             Self::ClosedNumericComparison(p) => p.rule_id_and_message(lang),
             Self::FromKnownLess(p) => p.rule_id_and_message(lang),
             Self::AddRightCongruenceStrict(p) => p.rule_id_and_message(lang),
@@ -34,6 +35,7 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),
             Self::ClosedNumericComparison(_) => None,
             Self::FromKnownLess(p) => p.premise_proof.cite_fact_id(),
             Self::AddRightCongruenceStrict(_) => None,

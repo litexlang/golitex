@@ -1,0 +1,5 @@
+# Expected rejection: false-step-case
+# Owner: ByInducStmt
+
+by induc n from 0:
+    ? n = 0

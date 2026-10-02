@@ -1,0 +1,19 @@
+# Stmt: ClaimStmt
+# AST: Stmt::ProofBlock::ClaimStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ClaimStmt
+
+# case: bodyless-claim
+claim:
+    ? 1 = 1
+
+# case: universal-local-function
+claim:
+    ? forall x R:
+        x + 0 = x
+    have fn claim_id(y R) R = y
+    claim_id(x) = x
+
+# case: witness-body-claim
+claim:
+    ? exist x R st {x = 9}
+    witness exist x R st {x = 9} from 9

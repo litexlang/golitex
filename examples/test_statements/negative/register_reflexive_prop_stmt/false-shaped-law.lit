@@ -1,0 +1,7 @@
+# Expected rejection: false shaped RegisterReflexivePropStmt law
+
+prop P(x, y set):
+    x != y
+register reflexive:
+    ? forall x set:
+        $P(x, x)

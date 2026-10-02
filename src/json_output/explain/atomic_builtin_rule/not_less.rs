@@ -13,6 +13,7 @@ use super::text::text;
 impl NotLessFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message(lang),
             Self::ClosedNumericComparison(p) => p.rule_id_and_message(lang),
             Self::FromKnownGreater(p) => p.rule_id_and_message(lang),
         }
@@ -20,6 +21,7 @@ impl NotLessFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),
             Self::ClosedNumericComparison(_) => None,
             Self::FromKnownGreater(p) => p.premise_proof.cite_fact_id(),
         }

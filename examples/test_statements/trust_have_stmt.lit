@@ -1,0 +1,18 @@
+# Stmt: TrustHaveStmt
+# AST: Stmt::Trust::TrustHaveStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf TrustHaveStmt
+
+# case: single-name-and-fact
+trust have trusted_a R:
+    trusted_a = 1
+trusted_a = 1
+
+# case: multiple-dependent-names
+trust have trusted_b, trusted_c R:
+    trusted_b = trusted_c
+trusted_b = trusted_c
+
+# case: typed-natural
+trust have trusted_n N:
+    trusted_n >= 0
+trusted_n $in N

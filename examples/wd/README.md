@@ -41,3 +41,14 @@ while IFS= read -r f; do
 done < <(find examples/wd -name '*.lit' | sort)
 exit $fail
 ```
+
+## Dependent quantifier parameters
+
+[dependent_parameters.lit](fact/dependent_parameters.lit) covers `claim` and
+`thm` goals whose later parameter carriers refer to earlier parameters, such
+as `A nonempty_set, a A` and `A nonempty_set, f fn(x A) A`. The verifier checks
+and introduces one group at a time inside the existing local WD scope. The
+same ordering is used for forall, forall-iff, not-forall, and existential WD;
+this does not prove a quantified conclusion or leak its bound parameters.
+
+- [Original group left cancellation](fact/group_left_cancel.lit): dependent carriers and the complete original theorem proof.

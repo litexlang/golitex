@@ -1,0 +1,5 @@
+# Boundary: strict-sketch-trust-rejected
+# Owner: SketchStmt
+
+sketch:
+    trust 1 = 1

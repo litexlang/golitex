@@ -1,0 +1,4 @@
+# Expected rejection: ill-defined-trusted-expression
+# Owner: TrustStmt
+
+trust 1 / 0 = 0

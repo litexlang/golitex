@@ -1,0 +1,17 @@
+# Stmt: TrustStmt
+# AST: Stmt::Trust::TrustStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf TrustStmt
+
+# case: inline-trust
+trust 1 = 1
+
+# case: block-trust-and-reuse
+trust:
+    2 = 2
+    3 > 0
+3 > 0
+
+# case: quantified-trust
+trust:
+    forall x R:
+        x = x

@@ -1,0 +1,48 @@
+# Original showcase AM-GM proof, including the original contradiction argument.
+# Previously 0 <= (x+y)/2 and real-order complementation blocked this proof.
+# Denominator sign, real carriers, and nonnegative square operands are required.
+# Gate: target/release/litex -strict -f examples/proof_nodes/order/am_gm.lit
+
+have fn arithmetic_mean(x, y R) R = (x + y) / 2
+
+claim:
+    ? forall x, y R:
+        x >= 0
+        y >= 0
+        =>:
+            x * y >= 0
+    0 <= x
+    0 <= y
+    0 <= x * y
+have fn geometric_mean(x, y R: x >= 0, y >= 0) R = sqrt(x * y)
+
+thm two_variable_am_gm:
+    ? forall x, y R:
+        x >= 0
+        y >= 0
+        =>:
+            geometric_mean(x, y) <= arithmetic_mean(x, y)
+    x * y >= 0
+    0 <= x * y
+    sqrt(x * y)^2 = x * y
+    0 <= x
+    0 <= y
+    (x + y)^2 - 4 * x * y = (x - y)^2
+    0 <= (x - y)^2
+    0 <= (x + y)^2 - 4 * x * y
+    4 * x * y <= (x + y)^2
+    x * y = (4 * x * y) / 4 <= (x + y)^2 / 4
+    ((x + y) / 2)^2 = (x + y)^2 / 4
+    x * y <= ((x + y) / 2)^2
+    0 <= sqrt(x * y)
+    0 <= x + y
+    0 < 2
+    0 <= (x + y) / 2
+    by contra:
+        ? sqrt(x * y) <= (x + y) / 2
+        sqrt(x * y) > (x + y) / 2
+        sqrt(x * y)^2 > ((x + y) / 2)^2
+        impossible x * y <= ((x + y) / 2)^2
+    geometric_mean(x, y) = sqrt(x * y)
+    arithmetic_mean(x, y) = (x + y) / 2
+

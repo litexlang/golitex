@@ -549,6 +549,7 @@ fn refined_numeric_carrier_requirements(
     let element = fact.element.clone();
     let lf = fact.line_file.clone();
     let (base, condition) = match target {
+        StandardSet::N => (StandardSet::Z, runtime.strategy_less_equal_fact(zero_obj(), element.clone(), lf.clone())),
         StandardSet::QPos => (StandardSet::Q, runtime.strategy_less_fact(zero_obj(), element.clone(), lf.clone())),
         StandardSet::RPos => (StandardSet::R, runtime.strategy_less_fact(zero_obj(), element.clone(), lf.clone())),
         StandardSet::QNeg => (StandardSet::Q, runtime.strategy_less_fact(element.clone(), zero_obj(), lf.clone())),

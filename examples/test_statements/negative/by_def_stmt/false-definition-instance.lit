@@ -1,0 +1,6 @@
+# Expected rejection: false-definition-instance
+# Owner: ByDefStmt
+
+prop P(x R):
+    x > 0
+by def $P(-1)

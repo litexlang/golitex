@@ -1,0 +1,5 @@
+# Expected rejection: abstract-is-not-truth
+# Owner: DefAbstractPropStmt
+
+abstract_prop P(x)
+$P(1)

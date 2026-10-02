@@ -1,0 +1,4 @@
+# Expected rejection: wrong-value-count
+# Owner: HaveObjEqualStmt
+
+have x, y R = 1

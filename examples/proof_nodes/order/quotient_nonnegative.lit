@@ -1,0 +1,33 @@
+# Before (rejected by the previous implementation):
+# forall a, c R:
+#     0 <= a
+#     0 < c
+#     =>:
+#         0 <= a / c
+# Now: the active proof below verifies without trust.
+# Boundary: a weak or unknown denominator sign cannot justify division or its sign.
+# Gate: target/release/litex -strict -f examples/proof_nodes/order/quotient_nonnegative.lit
+
+forall a, c R:
+    0 <= a
+    0 < c
+    =>:
+        0 <= a / c
+
+forall a, c R:
+    a <= 0
+    0 < c
+    =>:
+        a / c <= 0
+
+forall a, c R:
+    a <= 0
+    c < 0
+    =>:
+        0 <= a / c
+
+forall a, c R:
+    0 <= a
+    c < 0
+    =>:
+        a / c <= 0

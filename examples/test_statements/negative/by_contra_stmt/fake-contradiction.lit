@@ -1,0 +1,6 @@
+# Expected rejection: fake-contradiction
+# Owner: ByContraStmt
+
+by contra:
+    ? 1 = 2
+    impossible 0 = 1

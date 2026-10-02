@@ -1,0 +1,4 @@
+# Expected rejection: empty-carrier
+# Owner: HaveObjInNonemptySetStmt
+
+have x {}

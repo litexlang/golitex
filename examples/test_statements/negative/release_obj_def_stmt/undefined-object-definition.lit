@@ -1,0 +1,4 @@
+# Expected rejection: undefined-object-definition
+# Owner: ReleaseObjDefStmt
+
+release obj def missing

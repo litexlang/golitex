@@ -1,6 +1,8 @@
 //! GreaterEqual (`a >= b`) builtin explain + cite.
 
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::{
+    FromKnownLessEqualBuiltinRuleProof,
+
     ClosedNumericComparisonBuiltinRuleProof, FiniteSetSizeAtLeastOneBuiltinRuleProof,
     FiniteSetSizeNonnegativeBuiltinRuleProof, FromKnownGreaterBuiltinRuleProof,
     FromKnownInPositiveNaturalBuiltinRuleProof,
@@ -17,6 +19,8 @@ use super::text::text;
 impl GreaterEqualFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::FromKnownLessEqual(p) => p.rule_id_and_message(lang),
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message(lang),
             Self::FromKnownInPositiveNatural(p) => p.rule_id_and_message(lang),
             Self::FromKnownGreater(p) => p.rule_id_and_message(lang),
             Self::OrderReflexivity(p) => p.rule_id_and_message(lang),
@@ -30,6 +34,8 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::FromKnownLessEqual(p) => p.premise_proof.cite_fact_id(),
+            Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),
             Self::FromKnownInPositiveNatural(p) => p.premise_proof.cite_fact_id(),
             Self::FromKnownGreater(p) => p.premise_proof.cite_fact_id(),
             Self::OrderFlipMulMinusOne(p) => p.premise_proof.cite_fact_id(),
@@ -239,6 +245,15 @@ impl OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl FromKnownLessEqualBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text("FromKnownLessEqual", "Known converse order", "The opposite-direction comparison is already known"),
+            OutputLanguage::Chinese => text("FromKnownLessEqual", "已知反向序关系", "引用已知的反向比较事实"),
         }
     }
 }

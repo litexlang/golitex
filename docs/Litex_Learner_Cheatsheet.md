@@ -98,19 +98,20 @@ Read the first line as one statement with two effects: it introduces the object
 <code>x = 2</code>. The next two lines are ordinary fact statements. They are
 checked from the current context and become available after they succeed.
 
-Names may depend on earlier names:
+Names may depend on earlier names. Write an equality chain to expose the
+definition and the calculation:
 
-> **Migration example:** Current `src/` checking stops at `search_proof` (`y = 3`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 have x R = 2
 have y R = x + 1
 
-y = 3
+y = x + 1 = 3
 y^2 = 9
 x + y = 5
 ```
+
+After both adjacent equalities pass, the chain also stores `y = 3`.
+The next two facts can use that endpoint without a separate `y = 3` statement.
 
 This is Litex's default bottom-up direction: establish a useful fact, keep it,
 and use the stronger context to establish the next fact. You may still write a

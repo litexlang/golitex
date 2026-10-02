@@ -1,0 +1,4 @@
+# Expected rejection: false-membership
+# Owner: Fact
+
+(-1) $in N

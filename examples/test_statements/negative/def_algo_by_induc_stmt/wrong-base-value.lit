@@ -1,0 +1,6 @@
+# Expected rejection: wrong-base-value
+# Owner: DefAlgoByInducStmt
+
+algo f(n N) N by induc n from 0:
+    case n = 0: -1
+    case n >= 1: 0

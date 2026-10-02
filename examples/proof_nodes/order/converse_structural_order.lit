@@ -1,0 +1,21 @@
+# Before: structural order strategies matched only < and <= goals.
+# forall a, b, c R:
+#     a >= b
+#     0 <= c
+#     =>:
+#         a * c >= b * c
+# Now: converse spellings use the same bounded strategy and explicit premises.
+# Boundary: a negative multiplier does not preserve this order.
+# Gate: target/release/litex -strict -f examples/proof_nodes/order/converse_structural_order.lit
+
+forall a, b, c R:
+    a >= b
+    0 <= c
+    =>:
+        a * c >= b * c
+
+forall a, b R:
+    a > b
+    0 <= b
+    =>:
+        a^2 > b^2

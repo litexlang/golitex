@@ -1,0 +1,6 @@
+# Expected rejection: different-carriers
+# Owner: ByFnExtensionStmt
+
+have fn f(x R) R = x
+have fn g(x N) N = x
+by fn_extension f = g

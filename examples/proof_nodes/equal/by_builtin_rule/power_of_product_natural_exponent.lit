@@ -1,0 +1,9 @@
+# Before (rejected by the previous implementation):
+# forall a, b R+, k N:
+#     (a * b)^k = a^k * b^k
+# Now: the active proof below verifies without trust.
+# Boundary: positive-base and natural-exponent requirements still apply; no permission for 0^0.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/power_of_product_natural_exponent.lit
+
+forall a, b R+, k N:
+    (a * b)^k = a^k * b^k

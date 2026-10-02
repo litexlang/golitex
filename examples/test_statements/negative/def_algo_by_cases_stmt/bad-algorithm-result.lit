@@ -1,0 +1,6 @@
+# Expected rejection: bad-algorithm-result
+# Owner: DefAlgoByCasesStmt
+
+algo f(x R) N by cases:
+    case x = 0: -1
+    case x != 0: 1

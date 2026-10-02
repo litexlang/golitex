@@ -1,0 +1,26 @@
+# Original showcase left cancellation: later carriers depend on earlier parameters.
+# Previously its theorem goal failed WD before reaching the group proof.
+# Now the original proof is checked; its group assumptions remain explicit.
+# Gate: target/release/litex -strict -f examples/wd/fact/group_left_cancel.lit
+
+prop GroupSetting(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
+    forall u, v, w A:
+        mul(mul(u, v), w) = mul(u, mul(v, w))
+    forall u A:
+        mul(one, u) = u
+        mul(u, one) = u
+        mul(inv(u), u) = one
+        mul(u, inv(u)) = one
+
+prop is_group(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
+    $GroupSetting(A, mul, one, inv)
+
+thm group_left_cancel:
+    ? forall A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, a A, b A, c A:
+        $GroupSetting(A, mul, one, inv)
+        mul(a, b) = mul(a, c)
+        =>:
+            b = c
+    mul(inv(a), a) = one
+    b = mul(one, b) = mul(mul(inv(a), a), b) = mul(inv(a), mul(a, b)) = mul(inv(a), mul(a, c)) = mul(mul(inv(a), a), c) = mul(one, c) = c
+

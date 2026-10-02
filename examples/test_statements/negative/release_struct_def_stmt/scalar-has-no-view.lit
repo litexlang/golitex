@@ -1,0 +1,5 @@
+# Expected rejection: scalar-has-no-view
+# Owner: ReleaseStructDefStmt
+
+have x R = 1
+release struct def x

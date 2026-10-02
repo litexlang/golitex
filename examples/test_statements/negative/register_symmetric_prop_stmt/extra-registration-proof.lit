@@ -1,0 +1,11 @@
+# Expected rejection: extra-registration-proof
+# Owner: RegisterSymmetricPropStmt
+
+prop P(x, y set):
+    x = y
+register symmetric:
+    ? forall x, y set:
+        $P(x, y)
+        =>:
+            $P(y, x)
+    1 = 1

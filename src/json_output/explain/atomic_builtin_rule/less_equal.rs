@@ -1,6 +1,8 @@
 //! Explain + cite for `LessEqualFactSearchProofByBuiltinRule`.
 
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::{LessEqualFactSearchProofByBuiltinRule,
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::{
+    FromKnownGreaterEqualBuiltinRuleProof,
+LessEqualFactSearchProofByBuiltinRule,
     AbsLeFromSymmetricBoundsBuiltinRuleProof,
     AbsLeImpliesNegUpperBuiltinRuleProof,
     AbsLeImpliesUpperBuiltinRuleProof,
@@ -68,6 +70,8 @@ use super::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::FromKnownGreaterEqual(p) => p.rule_id_and_message(lang),
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message(lang),
             Self::ClosedNumericComparison(p) => p.rule_id_and_message(lang),
             Self::OrderReflexivity(p) => p.rule_id_and_message(lang),
             Self::FromKnownLess(p) => p.rule_id_and_message(lang),
@@ -131,6 +135,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::FromKnownGreaterEqual(p) => p.premise_proof.cite_fact_id(),
+            Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),
             Self::FromKnownLess(p) => p.premise_proof.cite_fact_id(),
             Self::AbsLeImpliesUpper(p) => p.premise_proof.cite_fact_id(),
             Self::AbsLeImpliesNegUpper(p) => p.premise_proof.cite_fact_id(),
@@ -1598,6 +1604,15 @@ impl OrderSignFromNegativeLiteralBoundBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl FromKnownGreaterEqualBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text("FromKnownGreaterEqual", "Known converse order", "The opposite-direction comparison is already known"),
+            OutputLanguage::Chinese => text("FromKnownGreaterEqual", "已知反向序关系", "引用已知的反向比较事实"),
         }
     }
 }

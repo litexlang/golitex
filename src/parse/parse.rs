@@ -9,17 +9,30 @@ use crate::runtime::{Runtime, RuntimeParseError, RuntimeResult};
 use crate::tokenize::TokenBlock;
 
 impl Runtime {
-    /// Parse token blocks into statements.
+    /// Parse a batch without executing it; a parse error restores all scopes.
     pub fn parse(&mut self, token_blocks: &[TokenBlock]) -> RuntimeResult<Vec<Stmt>> {
+        let scopes_before = self.begin_parse_scope_transaction();
         let mut stmts = Vec::new();
         for block in token_blocks {
-            stmts.push(self.parse_token_block(block)?);
+            match self.parse_token_block(block) {
+                Ok(stmt) => stmts.push(stmt),
+                Err(error) => {
+                    // A partially parsed declaration or nested proof must not
+                    // occupy names in the caller's next parse attempt. Restore
+                    // the full stack, including its original lexical depth.
+                    self.parse_scope_stack = scopes_before;
+                    return Err(error);
+                }
+            }
         }
         Ok(stmts)
     }
 
     // Match the leading token, then hand off to the statement family parser.
-    pub(super) fn parse_token_block(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    // Top-level callers own rollback: parse() spans a parse-only batch; the
+    // source runner spans one complete block's parse AND execution. Recursive
+    // proof parsing remains inside that enclosing block's transaction.
+    pub(crate) fn parse_token_block(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         // Tokenizer never emits empty headers.
         let first = block.header[0].as_str();
         match first {

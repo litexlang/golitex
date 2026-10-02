@@ -1,0 +1,45 @@
+# Stmt: HaveFnByForallExistUniqueStmt
+# AST: Stmt::Definition::HaveFnByForallExistUniqueStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf HaveFnByForallExistUniqueStmt
+
+# case: identity-from-unique
+prop unique_id_rel(x, y R):
+    y = x + 0
+claim:
+    ? forall x R:
+        exist! y R st {$unique_id_rel(x, y)}
+    witness exist! y R st {$unique_id_rel(x, y)} from x + 0:
+        by def $unique_id_rel(x, x + 0)
+have fn unique_id by exist!:
+    ? forall x R:
+        exist! y R st {$unique_id_rel(x, y)}
+forall x R:
+    $unique_id_rel(x, unique_id(x))
+
+# case: successor-from-unique
+prop unique_succ_rel(x, y R):
+    y = x + 1
+claim:
+    ? forall x R:
+        exist! y R st {$unique_succ_rel(x, y)}
+    witness exist! y R st {$unique_succ_rel(x, y)} from x + 1:
+        by def $unique_succ_rel(x, x + 1)
+have fn unique_succ by exist!:
+    ? forall x R:
+        exist! y R st {$unique_succ_rel(x, y)}
+forall x R:
+    $unique_succ_rel(x, unique_succ(x))
+
+# case: shift-from-unique
+prop unique_shift_rel(x, y R):
+    y = x + 2
+claim:
+    ? forall x R:
+        exist! y R st {$unique_shift_rel(x, y)}
+    witness exist! y R st {$unique_shift_rel(x, y)} from x + 2:
+        by def $unique_shift_rel(x, x + 2)
+have fn unique_shift by exist!:
+    ? forall x R:
+        exist! y R st {$unique_shift_rel(x, y)}
+forall x R:
+    $unique_shift_rel(x, unique_shift(x))

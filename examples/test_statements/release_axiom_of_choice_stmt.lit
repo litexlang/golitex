@@ -1,0 +1,30 @@
+# Stmt: ReleaseAxiomOfChoiceStmt
+# AST: Stmt::ReleaseAndExpand::ReleaseAxiomOfChoiceStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ReleaseAxiomOfChoiceStmt
+
+# case: conditional-family-choice
+claim:
+    ? forall F set:
+        forall A F:
+            $is_nonempty_set(A)
+        =>:
+            exist f fn(A F) family_union(F) st {$is_choice_function_for(F, F, fn(B F) F {B}, f)}
+    release axiom_of_choice: set F:
+        forall A F:
+            $is_nonempty_set(A)
+
+# case: renamed-family-choice
+claim:
+    ? forall ChoiceFamily set:
+        forall A ChoiceFamily:
+            $is_nonempty_set(A)
+        =>:
+            exist f fn(A ChoiceFamily) family_union(ChoiceFamily) st {$is_choice_function_for(ChoiceFamily, ChoiceFamily, fn(B ChoiceFamily) ChoiceFamily {B}, f)}
+    release axiom_of_choice: set ChoiceFamily:
+        forall A ChoiceFamily:
+            $is_nonempty_set(A)
+
+# case: singleton-nonempty-family
+release axiom_of_choice: set {{1}}:
+    forall A {{1}}:
+        $is_nonempty_set(A)

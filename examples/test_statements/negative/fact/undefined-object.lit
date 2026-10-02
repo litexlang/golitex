@@ -1,0 +1,4 @@
+# Expected rejection: undefined-object
+# Owner: Fact
+
+missing = 0

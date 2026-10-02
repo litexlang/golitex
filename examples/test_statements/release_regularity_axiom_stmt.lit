@@ -1,0 +1,12 @@
+# Stmt: ReleaseRegularityAxiomStmt
+# AST: Stmt::ReleaseAndExpand::ReleaseRegularityAxiomStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ReleaseRegularityAxiomStmt
+
+# case: singleton-regularity
+release regularity_axiom({1})
+
+# case: pair-regularity
+release regularity_axiom({1, 2})
+
+# case: triple-regularity
+release regularity_axiom({1, 2, 3})

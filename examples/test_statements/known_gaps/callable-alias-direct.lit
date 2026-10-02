@@ -1,0 +1,7 @@
+# Known gap: K001
+# Desired success: true
+# See todo.md; runner checks observed behavior explicitly.
+
+have fn f(x R) R = x + 1
+let g = f
+g(4) = 5

@@ -1,3 +1,4 @@
+use super::order_complement::FromKnownOrderComplementBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::NotLessFact;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -8,6 +9,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `not a < b` (i.e. a >= b on numbers).
 pub enum NotLessFactSearchProofByBuiltinRule {
+    FromKnownOrderComplement(FromKnownOrderComplementBuiltinRuleProof),
     // Closed numeric comparison: evaluated L is not strictly less than R.
     // Mathematical property: if L >= R as decimals, then `not (left < right)`.
     // Examples: `not 2 < 1`, `not 2 < 2`.
@@ -32,8 +34,11 @@ impl Runtime {
     pub fn search_not_less_fact_proof_by_builtin_rule(
         &mut self,
         fact: &NotLessFact,
-        _verify_state: VerifyState,
+        verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotLessFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.known_order_complement(fact.clone().into(), verify_state.clone())? {
+            return Ok(Some(NotLessFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof)));
+        }
         if let Some(premise_proof) = self.known_greater_proof(&fact.left, &fact.right) {
             return Ok(Some(
                 NotLessFactSearchProofByBuiltinRule::FromKnownGreater(

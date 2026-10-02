@@ -41,7 +41,12 @@ impl Runtime {
     }
 
     fn search_and_fact_by_known_forall(&mut self, goal: &AndFact, verify_state: VerifyState) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
-        if !verify_state.can_use_def_and_known_forall_and_known_strategy { return Ok(None); }
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy
+            || verify_state.can_use_builtin_rule_round == 0
+        {
+            return Ok(None);
+        }
+        let premise_state = verify_state.with_one_less_round();
         let key = and_forall_conclusion_index_key(goal);
         let mut cites = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
@@ -55,7 +60,7 @@ impl Runtime {
             let params = forall.typed_parameters.ordered_param_ids();
             let Some(matched) = self.match_forall_conclusion_args(&conclusion_args, &goal_args, &params)? else { continue; };
             let subst = subst_from_ordered_params(&params, &matched.forall_parameters_match_what_args);
-            let Some(req) = self.prove_forall_instantiation_requirements(&forall, &subst, verify_state.clone())? else { continue; };
+            let Some(req) = self.prove_forall_instantiation_requirements(&forall, &subst, premise_state.clone())? else { continue; };
             return Ok(Some(SearchProofByKnownForallFact { cite, forall_parameters_match_what_args: matched.forall_parameters_match_what_args, arg_match_proofs: matched.arg_match_proofs, instantiation_requirements: req }));
         }
         Ok(None)

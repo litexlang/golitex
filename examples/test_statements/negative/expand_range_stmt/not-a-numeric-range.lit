@@ -1,0 +1,4 @@
+# Expected rejection: not-a-numeric-range
+# Owner: ExpandRangeStmt
+
+expand: 1 $in {1, 2}

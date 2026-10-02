@@ -1,0 +1,4 @@
+# Expected rejection: ill-defined-function-body
+# Owner: HaveFnEqualStmt
+
+have fn f(x R) R = 1 / x

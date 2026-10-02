@@ -1,0 +1,26 @@
+# Stmt: AxiomStmt
+# AST: Stmt::Definition::AxiomStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf AxiomStmt
+
+# case: explicit-background-interface
+abstract_prop ax_background(x)
+axiom ax_zero:
+    ? forall x R:
+        x = 0
+        =>:
+            $ax_background(x)
+release thm ax_zero(0)
+$ax_background(0)
+
+# case: arithmetic-interface
+axiom ax_identity:
+    ? forall x R:
+        x + 0 = x
+release thm ax_identity(2)
+
+# case: selected-axiom-call
+axiom ax_sides:
+    ? forall x R:
+        x + 0 = x
+        0 + x = x
+by thm ax_sides(3) => 3 + 0 = 0 + 3

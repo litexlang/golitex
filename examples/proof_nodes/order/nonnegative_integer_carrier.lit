@@ -1,0 +1,13 @@
+# Before: the refined-carrier strategy omitted N.
+# forall k Z:
+#     0 <= k
+#     =>:
+#         k $in N
+# Now: both integer membership and nonnegativity are proved requirements.
+# Boundary: a nonnegative real need not be an integer.
+# Gate: target/release/litex -strict -f examples/proof_nodes/order/nonnegative_integer_carrier.lit
+
+forall k Z:
+    0 <= k
+    =>:
+        k $in N

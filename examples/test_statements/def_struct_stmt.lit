@@ -1,0 +1,26 @@
+# Stmt: DefStructStmt
+# AST: Stmt::Definition::DefStructStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf DefStructStmt
+
+# case: plain-fields-and-view
+struct TestPoint:
+    x R
+    y R
+let point_view = &TestPoint
+$is_set(point_view)
+
+# case: parametric-fields
+struct TestPair<A set>:
+    left A
+    right A
+let pair_view = &TestPair<R>
+$is_set(pair_view)
+
+# case: laws-and-auto-open
+struct TestOrigin:
+    x R
+    y R
+    <=>:
+        x = 0
+forall p &TestOrigin:
+    p.x = 0

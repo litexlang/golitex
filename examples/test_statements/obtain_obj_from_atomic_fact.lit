@@ -1,0 +1,25 @@
+# Stmt: ObtainObjFromAtomicFact
+# AST: Stmt::Definition::DefineObj::ObtainObjFromAtomicFact
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ObtainObjFromAtomicFact
+
+# case: ordinary-prop-exist
+prop obtain_copy(a R):
+    exist x R st {x = a}
+witness $obtain_copy(2) from 2
+obtain atomic_a from $obtain_copy(2)
+atomic_a = 2
+
+# case: unique-prop-exist
+prop obtain_unique(a R):
+    exist! x R st {x = a}
+witness exist! x R st {x = 3} from 3
+by def $obtain_unique(3)
+obtain atomic_b from $obtain_unique(3)
+atomic_b = 3
+
+# case: two-prop-witnesses
+prop obtain_pair(a R):
+    exist x, y R st {x = a, y = a + 1}
+witness $obtain_pair(4) from 4, 5
+obtain atomic_c, atomic_d from $obtain_pair(4)
+atomic_d = atomic_c + 1

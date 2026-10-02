@@ -1,0 +1,22 @@
+# Stmt: HaveObjByExistFactsStmt
+# AST: Stmt::Definition::DefineObj::HaveObjByExistFactsStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf HaveObjByExistFactsStmt
+
+# case: known-existence
+witness exist u R st {u = 4} from 4
+have existing_a R:
+    existing_a = 4
+existing_a = 4
+
+# case: two-witnesses
+witness exist u, v R st {u = 1, v = 2} from 1, 2
+have existing_b, existing_c R:
+    existing_b = 1
+    existing_c = 2
+existing_b + existing_c = 3
+
+# case: natural-witness
+witness exist n N st {n = 0} from 0
+have existing_n N:
+    existing_n = 0
+existing_n $in N

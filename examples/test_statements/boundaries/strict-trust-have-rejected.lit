@@ -1,0 +1,5 @@
+# Boundary: strict-trust-have-rejected
+# Owner: TrustHaveStmt
+
+trust have x R:
+    x = 1

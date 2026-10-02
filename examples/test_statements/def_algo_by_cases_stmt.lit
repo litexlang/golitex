@@ -1,0 +1,23 @@
+# Stmt: DefAlgoByCasesStmt
+# AST: Stmt::Definition::DefAlgoByCasesStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf DefAlgoByCasesStmt
+
+# case: flag-proof-and-evaluation
+algo algo_flag(x R) N by cases:
+    case x = 0: 0
+    case x != 0: 1
+algo_flag(2) = 1
+eval algo_flag(0)
+
+# case: natural-algorithm
+algo algo_nat(n N) N by cases:
+    case n = 0: 1
+    case n != 0: n
+eval algo_nat(3)
+
+# case: binary-algorithm
+algo algo_binary(x, y R) R by cases:
+    case x = 0: y
+    case x != 0: x + y
+algo_binary(0, 2) = 2
+eval algo_binary(1, 2)

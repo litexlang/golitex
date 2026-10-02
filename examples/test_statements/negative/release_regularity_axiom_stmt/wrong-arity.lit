@@ -1,0 +1,4 @@
+# Expected rejection: wrong-arity
+# Owner: ReleaseRegularityAxiomStmt
+
+release regularity_axiom({1}, {2})

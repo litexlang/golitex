@@ -1,0 +1,21 @@
+# Stmt: HaveByPreimageStmt
+# AST: Stmt::Definition::DefineObj::HaveByPreimageStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf HaveByPreimageStmt
+
+# case: one-coordinate
+have fn pre_shift(x R) R = x + 1
+have by fn_preimage: pre_a from pre_shift(2) $in fn_range(pre_shift)
+pre_a $in R
+pre_shift(pre_a) = pre_shift(2)
+
+# case: two-coordinates
+have fn pre_sum(x R, y R) R = x + y
+have by fn_preimage: pre_b, pre_c from pre_sum(2, 3) $in fn_range(pre_sum)
+pre_b $in R
+pre_c $in R
+pre_sum(pre_b, pre_c) = pre_sum(2, 3)
+
+# case: natural-carrier
+have fn pre_succ(n N) N = n + 1
+have by fn_preimage: pre_n from pre_succ(0) $in fn_range(pre_succ)
+pre_n $in N

@@ -1,0 +1,6 @@
+# Expected rejection: sketch-name-does-not-escape
+# Owner: SketchStmt
+
+sketch:
+    let local = 1
+local = 1

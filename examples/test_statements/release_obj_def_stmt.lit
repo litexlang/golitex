@@ -1,0 +1,18 @@
+# Stmt: ReleaseObjDefStmt
+# AST: Stmt::ReleaseAndExpand::ReleaseObjDefStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ReleaseObjDefStmt
+
+# case: let-definition
+let open_obj_a = 1
+release obj def open_obj_a
+open_obj_a = 1
+
+# case: typed-equality-definition
+have open_obj_b N = 2
+release obj def open_obj_b
+open_obj_b $in N
+
+# case: function-definition
+have fn open_obj_id(x R) R = x
+release obj def open_obj_id
+open_obj_id(3) = 3

@@ -1,0 +1,4 @@
+# Expected rejection: zero-outside-positive-finite-carrier
+# Owner: HaveObjEqualStmt
+
+have k {1, 2} = 0

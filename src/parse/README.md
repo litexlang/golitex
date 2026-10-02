@@ -9,6 +9,14 @@ This is a **parse** reference, not a verifier guide.
 - Exec wiring may lag parse: see `examples/stmt_nodes/README.md`
 - Human tutorial: `docs/Manual.md` / `docs/Litex_Learner_Cheatsheet.md`
 
+`Runtime::parse` is a parse-only batch API: success retains the batch's new
+bindings; any parse error restores the entire prior scope stack. It does not
+execute statements, and ID allocation remains monotonic even on failure.
+The source runner instead owns a transaction spanning one top-level block's
+parse and `exec_stmt`, then proceeds to the next block. See
+[`run/README.md`](../run/README.md#source-string-transaction-order) for why
+parse bindings need rollback independently of the execution environment.
+
 Acceptance for cited tracers:
 
 ```bash

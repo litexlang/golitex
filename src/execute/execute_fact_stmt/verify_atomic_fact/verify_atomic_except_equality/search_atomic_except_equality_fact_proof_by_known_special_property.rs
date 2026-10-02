@@ -47,8 +47,8 @@ pub struct SignatureMatchProof {
 }
 
 impl Runtime {
-    // The caller established WD. This leaf only matches definition-time rows
-    // and cites stored equalities; it never verifies a new premise.
+    // The caller established WD. This leaf only matches registered rows in the
+    // definition table and cites stored equalities; it never verifies a new premise.
     pub(in crate::execute) fn search_atomic_except_equality_fact_proof_by_known_special_property(
         &mut self,
         fact: &AtomicFact,

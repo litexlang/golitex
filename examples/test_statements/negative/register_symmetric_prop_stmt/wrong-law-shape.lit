@@ -1,0 +1,8 @@
+# Expected rejection: wrong-law-shape
+# Owner: RegisterSymmetricPropStmt
+
+prop P(x, y set):
+    x = y
+register symmetric:
+    ? forall x set:
+        x = x

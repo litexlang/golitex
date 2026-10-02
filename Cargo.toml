@@ -31,6 +31,10 @@ name = "litex"
 name = "litex"
 path = "src/main.rs"
 
+[[test]]
+name = "test_statements"
+path = "tests/integration/test_statements.rs"
+
 [dependencies]
 
 [profile.dev]

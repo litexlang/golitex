@@ -1,0 +1,4 @@
+# Expected rejection: unequal-sets
+# Owner: ByExtensionStmt
+
+by extension {1} = {2}

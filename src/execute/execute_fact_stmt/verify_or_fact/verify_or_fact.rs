@@ -186,9 +186,12 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy
+            || verify_state.can_use_builtin_rule_round == 0
+        {
             return Ok(None);
         }
+        let premise_state = verify_state.with_one_less_round();
         let lookup_key = or_fact_index_key(fact);
         let mut candidates = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
@@ -198,7 +201,7 @@ impl Runtime {
         }
         for cite in candidates {
             if let Some(proof) =
-                self.try_apply_forall_or_conclusion_cite(fact, &cite, verify_state.clone())?
+                self.try_apply_forall_or_conclusion_cite(fact, &cite, premise_state.clone())?
             {
                 return Ok(Some(OrFactSearchedProof::ByKnownForallFact(proof)));
             }

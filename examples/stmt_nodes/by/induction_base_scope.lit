@@ -1,0 +1,16 @@
+# Stmt: By.ByInducStmt / By.ByStrongInducStmt
+# Gate: target/release/litex -strict -f examples/stmt_nodes/by/induction_base_scope.lit
+# Before: one shared scope let an induction hypothesis prove the base case.
+# Now: an unstructured proof body is checked in separate base and step scopes.
+
+by induc n from 0:
+    ? n = n
+
+by strong_induc k from 0:
+    ? k = k
+
+# This cannot prove its base from the step's induction hypothesis:
+# prop bad(n Z):
+#     1 = 2
+# by induc n from 0:
+#     ? $bad(n)

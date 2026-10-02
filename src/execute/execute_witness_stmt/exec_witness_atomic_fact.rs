@@ -24,6 +24,7 @@ use crate::ast::obj::Obj;
 use crate::ast::stmt::WitnessAtomicFact;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::exec_stmt_result::ExecStmtResult;
+use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{IdentifierId, Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
@@ -47,12 +48,18 @@ pub enum ExecWitnessAtomicFactStmtFailed {
     PropNotFound,
     BadDefinition(String),
     Instantiate(String),
+    PropArgumentType {
+        index: usize,
+        result: VerifyFactResult,
+    },
     ExistCheck(ExecWitnessExistFactStmtFailed),
 }
 
-// Stage order: projected_exist → ambient → proof_steps → obligations → local_env → store.
+// Stage order: prop argument types → projected_exist → ambient → proof_steps
+// → obligations → local_env → store.
 pub struct ExecWitnessAtomicFactStmtSuccessResult {
     pub statement: WitnessAtomicFact,
+    pub prop_argument_type_checks: Vec<VerifyFactResult>,
     pub projected_exist: ExistShapedFact,
     pub ambient: WitnessExistAmbientSuccess,
     pub proof_steps: Vec<ExecStmtResult>,
@@ -102,6 +109,28 @@ impl Runtime {
             ));
         }
 
+        let type_facts = match self.type_facts_for_typed_arguments(
+            &definition.typed_parameters,
+            &stmt.atomic_fact.body,
+        ) {
+            Ok(facts) => facts,
+            Err(message) => {
+                return Ok(ExecWitnessAtomicFactStmtResult::Failed(
+                    ExecWitnessAtomicFactStmtFailed::Instantiate(message),
+                ));
+            }
+        };
+        let mut prop_argument_type_checks = Vec::with_capacity(type_facts.len());
+        for (index, fact) in type_facts.iter().enumerate() {
+            let check = self.verify_fact(fact, VerifyState::top_level())?;
+            if check.is_failed() {
+                return Ok(ExecWitnessAtomicFactStmtResult::Failed(
+                    ExecWitnessAtomicFactStmtFailed::PropArgumentType { index, result: check },
+                ));
+            }
+            prop_argument_type_checks.push(check);
+        }
+
         let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
         for (id, arg) in param_ids.into_iter().zip(stmt.atomic_fact.body.iter()) {
             subst.insert(id, arg.clone());
@@ -146,6 +175,7 @@ impl Runtime {
         Ok(ExecWitnessAtomicFactStmtResult::Success(
             ExecWitnessAtomicFactStmtSuccessResult {
                 statement: stmt.clone(),
+                prop_argument_type_checks,
                 projected_exist,
                 ambient,
                 proof_steps,

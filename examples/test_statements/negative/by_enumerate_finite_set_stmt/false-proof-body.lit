@@ -1,0 +1,7 @@
+# Expected rejection: false-proof-body
+# Owner: ByEnumerateFiniteSetStmt
+
+by enumerate finite_set:
+    ? forall n {0, 1}:
+        n = n
+    1 = 2

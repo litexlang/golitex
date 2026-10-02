@@ -1,0 +1,17 @@
+# Stmt: ByDefStmt
+# AST: Stmt::By::ByDefStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ByDefStmt
+
+# case: inline-predicate-fold
+prop def_pos(x R):
+    x > 0
+by def $def_pos(1)
+
+# case: block-predicate-fold
+prop def_zero(x R):
+    x = 0
+by def:
+    ? $def_zero(0)
+
+# case: builtin-subset-fold
+by def {1} $subset {1, 2}

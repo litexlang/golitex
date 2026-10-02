@@ -1,0 +1,38 @@
+# Stmt: DefStrategyStmt
+# AST: Stmt::Definition::DefStrategyStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf DefStrategyStmt
+
+# case: strategy-from-definition
+prop strat_one(x R):
+    x = 1
+strategy strat_use_one:
+    ? forall x R:
+        x = 1
+        =>:
+            $strat_one(x)
+    $strat_one(x)
+have strat_a R = 1
+$strat_one(strat_a)
+
+# case: strategy-for-zero
+prop strat_zero(x R):
+    x = 0
+strategy strat_use_zero:
+    ? forall x R:
+        x = 0
+        =>:
+            $strat_zero(x)
+    $strat_zero(x)
+have strat_b R = 0
+$strat_zero(strat_b)
+
+# case: strategy-two-arguments
+prop strat_same(x, y R):
+    x = y
+strategy strat_use_same:
+    ? forall x, y R:
+        x = y
+        =>:
+            $strat_same(x, y)
+    $strat_same(x, y)
+$strat_same(2, 2)

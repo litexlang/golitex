@@ -1,0 +1,13 @@
+# Stmt: WitnessNonemptySet
+# AST: Stmt::Witness::WitnessNonemptySet
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf WitnessNonemptySet
+
+# case: singleton-member
+witness $is_nonempty_set({1}) from 1
+
+# case: list-set-member
+witness $is_nonempty_set({2, 3}) from 3
+
+# case: local-body-member
+witness $is_nonempty_set({4, 5}) from 4:
+    4 $in {4, 5}

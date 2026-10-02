@@ -1,0 +1,4 @@
+# Expected rejection: zero-divisor
+# Owner: LetObjStmt
+
+let x = 1 / 0

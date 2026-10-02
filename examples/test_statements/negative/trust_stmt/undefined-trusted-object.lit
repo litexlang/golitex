@@ -1,0 +1,4 @@
+# Expected rejection: undefined-trusted-object
+# Owner: TrustStmt
+
+trust missing = 1

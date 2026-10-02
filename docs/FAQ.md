@@ -34,6 +34,12 @@ classes still mean more candidate comparisons. The
 [equality README](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md)
 shows the complete call and result structure.
 
+An explicit chain such as `y = x + 1 = 3` checks its adjacent steps and also
+stores the endpoint `y = 3`. Subsequent facts can reuse that stored equality.
+For `have x R = 2` and `have y R = x + 1`, use this chain to expose the
+definition and calculation; definition expansion keeps residual rewrite
+disabled. See the [runnable example](../examples/proof_nodes/chain/named_definition_endpoint.lit).
+
 ## Can definition-time properties be used without builtin search fuel?
 
 Yes. After an atomic goal passes well-definedness, the shared `by_known`

@@ -1,0 +1,4 @@
+# Expected rejection: expression-not-name
+# Owner: ReleaseObjDefStmt
+
+release obj def 1 + 1

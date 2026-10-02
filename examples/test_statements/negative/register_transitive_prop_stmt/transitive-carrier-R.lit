@@ -1,0 +1,12 @@
+# Expected rejection: transitive-carrier-R
+# Owner: RegisterTransitivePropStmt
+
+prop reg_transitive_second(x, y R):
+    x = y
+register transitive:
+    ? forall x, y, z R:
+        $reg_transitive_second(x, y)
+        $reg_transitive_second(y, z)
+        =>:
+            $reg_transitive_second(x, z)
+$reg_transitive_second(1, 1)

@@ -1,0 +1,7 @@
+# Expected rejection: selected-fact-not-returned
+# Owner: ByThmStmt
+
+thm t:
+    ? forall x R:
+        x = x
+by thm t(1) => 1 = 2

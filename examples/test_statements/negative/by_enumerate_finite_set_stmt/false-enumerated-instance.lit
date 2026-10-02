@@ -1,0 +1,6 @@
+# Expected rejection: false-enumerated-instance
+# Owner: ByEnumerateFiniteSetStmt
+
+by enumerate finite_set:
+    ? forall x {0, 1}:
+        x = 0

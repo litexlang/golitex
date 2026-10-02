@@ -1,0 +1,5 @@
+# Expected rejection: undefined-family
+# Owner: ReleaseAxiomOfChoiceStmt
+
+release axiom_of_choice: set Missing:
+    1 = 1

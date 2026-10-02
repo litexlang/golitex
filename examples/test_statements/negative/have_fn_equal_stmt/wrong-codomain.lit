@@ -1,0 +1,4 @@
+# Expected rejection: wrong-codomain
+# Owner: HaveFnEqualStmt
+
+have fn f(x R) N = -1

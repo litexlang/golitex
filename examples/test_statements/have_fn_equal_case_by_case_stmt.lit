@@ -1,0 +1,24 @@
+# Stmt: HaveFnEqualCaseByCaseStmt
+# AST: Stmt::Definition::HaveFnEqualCaseByCaseStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf HaveFnEqualCaseByCaseStmt
+
+# case: zero-and-nonzero
+have fn case_flag(x R) N by cases:
+    case x = 0: 0
+    case x != 0: 1
+case_flag(0) = 0
+case_flag(-2) = 1
+
+# case: natural-domain
+have fn case_nat(n N) N by cases:
+    case n = 0: 1
+    case n != 0: n
+case_nat(0) = 1
+case_nat(3) = 3
+
+# case: real-identity-in-two-cases
+have fn case_id(x R) R by cases:
+    case x = 0: x
+    case x != 0: x
+case_id(0) = 0
+case_id(4) = 4

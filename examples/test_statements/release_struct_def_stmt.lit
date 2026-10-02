@@ -1,0 +1,35 @@
+# Stmt: ReleaseStructDefStmt
+# AST: Stmt::ReleaseAndExpand::ReleaseStructDefStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ReleaseStructDefStmt
+
+# case: nested-law-opening
+struct OpenInner:
+    x R
+    y R
+    <=>:
+        x = 0
+struct OpenOuter:
+    inner &OpenInner
+    tag N
+claim:
+    ? forall p &OpenOuter:
+        p.inner.x = 0
+    release struct def p.inner
+
+# case: explicit-direct-opening
+struct OpenPoint:
+    x R
+    y R
+claim:
+    ? forall p &OpenPoint:
+        p.x $in R
+    release struct def p
+
+# case: parameterized-opening
+struct OpenPair<A set>:
+    left A
+    right A
+claim:
+    ? forall p &OpenPair<R>:
+        p.left $in R
+    release struct def p

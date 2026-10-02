@@ -1,0 +1,4 @@
+# Expected rejection: undefined-carrier
+# Owner: HaveObjInNonemptySetStmt
+
+have x Missing

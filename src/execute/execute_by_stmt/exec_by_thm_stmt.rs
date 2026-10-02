@@ -21,6 +21,10 @@ pub fn exec_release_thm_stmt(
     };
 
     let (dom_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
+        let type_proofs = match verify_prepared_type_facts(rt, &prepared.type_facts)? {
+            Ok(proofs) => proofs,
+            Err(failed) => return Ok(Err(failed)),
+        };
         let mut dom_proofs = Vec::with_capacity(prepared.dom_facts.len());
         for (index, dom) in prepared.dom_facts.iter().enumerate() {
             let proof = verify_goal_fact(rt, dom)?;
@@ -29,10 +33,10 @@ pub fn exec_release_thm_stmt(
             }
             dom_proofs.push(proof);
         }
-        Ok(Ok(dom_proofs))
+        Ok(Ok((type_proofs, dom_proofs)))
     })?;
 
-    let dom_proofs = match dom_outcome {
+    let (type_proofs, dom_proofs) = match dom_outcome {
         Ok(p) => p,
         Err(failed) => return Ok(ExecReleaseThmStmtResult::Failed(failed)),
     };
@@ -51,6 +55,7 @@ pub fn exec_release_thm_stmt(
 
     Ok(ExecReleaseThmStmtResult::Success(ExecReleaseThmStmtSuccess {
         thm_name,
+        type_proofs,
         dom_proofs,
         local_env,
         stored,
@@ -73,6 +78,10 @@ pub fn exec_by_thm_stmt(
 
     let selected: Fact = stmt.selected_fact.clone().into();
     let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
+        let type_proofs = match verify_prepared_type_facts(rt, &prepared.type_facts)? {
+            Ok(proofs) => proofs,
+            Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
+        };
         let mut dom_proofs = Vec::with_capacity(prepared.dom_facts.len());
         for (index, dom) in prepared.dom_facts.iter().enumerate() {
             let proof = verify_goal_fact(rt, dom)?;
@@ -91,10 +100,10 @@ pub fn exec_by_thm_stmt(
         if selected_proof.is_failed() {
             return Ok(Err(ExecByThmStmtFailed::Selected(selected_proof)));
         }
-        Ok(Ok((dom_proofs, selected_proof)))
+        Ok(Ok((type_proofs, dom_proofs, selected_proof)))
     })?;
 
-    let (dom_proofs, selected_proof) = match local_outcome {
+    let (type_proofs, dom_proofs, selected_proof) = match local_outcome {
         Ok(v) => v,
         Err(failed) => {
             return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(failed)));
@@ -113,6 +122,7 @@ pub fn exec_by_thm_stmt(
     Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(
         ExecByThmStmtSuccess {
             thm_name,
+            type_proofs,
             dom_proofs,
             selected_proof,
             local_env,
@@ -122,6 +132,7 @@ pub fn exec_by_thm_stmt(
 }
 
 pub(crate) struct PreparedRelease {
+    pub(crate) type_facts: Vec<Fact>,
     pub(crate) dom_facts: Vec<Fact>,
     pub(crate) conclusions: Vec<Fact>,
 }
@@ -136,6 +147,7 @@ pub(crate) fn prepare_release_conclusions(
             Fact::ForallFact(forall) => prepare_forall_release(runtime, forall, &call.arguments),
             other => match &call.arguments {
                 TheoremCallArguments::Bare => Ok(Ok(PreparedRelease {
+                    type_facts: Vec::new(),
                     dom_facts: Vec::new(),
                     conclusions: vec![other.clone()],
                 })),
@@ -184,6 +196,11 @@ fn prepare_forall_release(
         subst.insert(id, arg.clone());
     }
 
+    let type_facts = match runtime.type_facts_for_typed_arguments(&forall.typed_parameters, args) {
+        Ok(facts) => facts,
+        Err(message) => return Ok(Err(ExecReleaseThmStmtFailed::Instantiate(message))),
+    };
+
     let mut dom_facts = Vec::with_capacity(forall.dom_facts.len());
     for dom in &forall.dom_facts {
         match runtime.inst_fact(dom, &subst) {
@@ -206,7 +223,24 @@ fn prepare_forall_release(
     }
 
     Ok(Ok(PreparedRelease {
+        type_facts,
         dom_facts,
         conclusions,
     }))
+}
+
+fn verify_prepared_type_facts(
+    runtime: &mut Runtime,
+    type_facts: &[Fact],
+) -> RuntimeResult<Result<Vec<crate::execute::execute_fact_stmt::VerifyFactResult>, ExecReleaseThmStmtFailed>> {
+    let mut proofs = Vec::with_capacity(type_facts.len());
+    for (index, fact) in type_facts.iter().enumerate() {
+        let proof = verify_goal_fact(runtime, fact)?;
+        if proof.is_failed() {
+            return Ok(Err(ExecReleaseThmStmtFailed::Type { index, result: proof }));
+        }
+        let _ = runtime.store_fact_and_infer(fact)?;
+        proofs.push(proof);
+    }
+    Ok(Ok(proofs))
 }

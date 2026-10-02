@@ -1,0 +1,13 @@
+# Stmt: ByExtensionStmt
+# AST: Stmt::By::ByExtensionStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ByExtensionStmt
+
+# case: inline-reflexive-set
+by extension {1} = {1}
+
+# case: reordered-list-set
+by extension:
+    ? {1, 2} = {2, 1}
+
+# case: empty-set
+by extension {} = {}

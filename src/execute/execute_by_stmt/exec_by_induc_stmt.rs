@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use super::helper::{
-    assume_fact, proof_verify_state, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
+    assume_fact, proof_verify_state, recover_induction_param, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
 };
 use super::result::{
     ByInducBodySuccess, ByInducCaseFailed, ByInducCaseSuccess, ExecByInducStmtFailed,
@@ -87,7 +87,7 @@ fn run_induc(
     stmt: Parts<'_>,
     strong: bool,
 ) -> RuntimeResult<ExecByInducStmtResult> {
-    let Some(param) = recover_param(stmt.param_binding, stmt.to_prove) else {
+    let Some(param) = recover_induction_param(stmt.param_binding, stmt.to_prove) else {
         return Ok(failed_shape(format!(
             "by induc: cannot recover binder `{}` from goals",
             stmt.param_binding
@@ -139,20 +139,26 @@ fn run_induc(
         Err(e) => return Ok(ExecByInducStmtResult::Failed(e)),
     };
 
+    let base_proof = stmt.base_proof.as_deref().unwrap_or(stmt.proof);
+    let step_proof = stmt.step_proof.as_deref().unwrap_or(stmt.proof);
+    let (base, step) = match run_induction_cases(
+        runtime,
+        &stmt,
+        &param,
+        strong,
+        &goal_facts,
+        base_proof,
+        step_proof,
+    )? {
+        Ok(cases) => cases,
+        Err(failed) => {
+            return Ok(ExecByInducStmtResult::Failed(ExecByInducStmtFailed::Case(failed)));
+        }
+    };
     let body = if structured {
-        match run_structured(runtime, &stmt, &param, strong, &goal_facts)? {
-            Ok(b) => b,
-            Err(c) => {
-                return Ok(ExecByInducStmtResult::Failed(ExecByInducStmtFailed::Case(c)));
-            }
-        }
+        ByInducBodySuccess::Structured { base, step }
     } else {
-        match run_unstructured(runtime, &stmt, &param, strong, &goal_facts)? {
-            Ok(b) => b,
-            Err(c) => {
-                return Ok(ExecByInducStmtResult::Failed(ExecByInducStmtFailed::Case(c)));
-            }
-        }
+        ByInducBodySuccess::Unstructured { base, step }
     };
 
     let concluding = mk_concluding_forall(runtime, &param, stmt.induc_from, stmt.to_prove);
@@ -172,86 +178,15 @@ fn run_induc(
     }))
 }
 
-fn run_unstructured(
+fn run_induction_cases(
     runtime: &mut Runtime,
     stmt: &Parts<'_>,
     param: &BoundName,
     strong: bool,
     goal_facts: &[Fact],
-) -> RuntimeResult<Result<ByInducBodySuccess, ByInducCaseFailed>> {
-    let (inner, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let mut assumptions_stored = Vec::new();
-        if let Err(msg) = intro_param_z(rt, param)? {
-            return Ok(Err(ByInducCaseFailed::Assume(msg)));
-        }
-        let n_ge_from = mk_greater_equal(rt, param_obj(param), stmt.induc_from.clone());
-        match assume_fact(rt, &n_ge_from)? {
-            Ok(s) => assumptions_stored.push(s),
-            Err(msg) => return Ok(Err(ByInducCaseFailed::Assume(msg))),
-        }
-        match store_ihs(rt, param, stmt.induc_from, goal_facts, strong)? {
-            Ok(mut xs) => assumptions_stored.append(&mut xs),
-            Err(e) => return Ok(Err(e)),
-        }
-        let proof_steps = match run_fact_only_proof_steps(rt, stmt.proof)? {
-            Ok(s) => s,
-            Err(e) => return Ok(Err(ByInducCaseFailed::ProofBody(e))),
-        };
-        let mut goals_verified = Vec::new();
-        for (index, goal) in goal_facts.iter().enumerate() {
-            let base = match inst_at(rt, goal, param.id, stmt.induc_from.clone()) {
-                Ok(f) => f,
-                Err(msg) => return Ok(Err(ByInducCaseFailed::Assume(msg))),
-            };
-            let base_proof = verify_goal_fact(rt, &base)?;
-            if base_proof.is_failed() {
-                return Ok(Err(ByInducCaseFailed::Goal {
-                    index,
-                    result: base_proof,
-                }));
-            }
-            goals_verified.push(base_proof);
-
-            // Prove P(n+1) under live `n` and IH; do not open a forall binder
-            // named the same as `n` (stack name clash → InternalBug).
-            let succ_goal = match inst_at(rt, goal, param.id, add_one(param_obj(param))) {
-                Ok(f) => f,
-                Err(msg) => return Ok(Err(ByInducCaseFailed::Assume(msg))),
-            };
-            let step_proof = verify_goal_fact(rt, &succ_goal)?;
-            if step_proof.is_failed() {
-                return Ok(Err(ByInducCaseFailed::Goal {
-                    index,
-                    result: step_proof,
-                }));
-            }
-            goals_verified.push(step_proof);
-        }
-        Ok(Ok((assumptions_stored, proof_steps, goals_verified)))
-    })?;
-
-    match inner {
-        Ok((assumptions_stored, proof_steps, goals_verified)) => {
-            Ok(Ok(ByInducBodySuccess::Unstructured(ByInducCaseSuccess {
-                assumptions_stored,
-                proof_steps,
-                goals_verified,
-                local_env,
-            })))
-        }
-        Err(e) => Ok(Err(e)),
-    }
-}
-
-fn run_structured(
-    runtime: &mut Runtime,
-    stmt: &Parts<'_>,
-    param: &BoundName,
-    strong: bool,
-    goal_facts: &[Fact],
-) -> RuntimeResult<Result<ByInducBodySuccess, ByInducCaseFailed>> {
-    let base_proof = stmt.base_proof.as_ref().expect("structured");
-    let step_proof = stmt.step_proof.as_ref().expect("structured");
+    base_proof: &[Stmt],
+    step_proof: &[Stmt],
+) -> RuntimeResult<Result<(ByInducCaseSuccess, ByInducCaseSuccess), ByInducCaseFailed>> {
 
     let (base_inner, base_env) = runtime.run_in_local_env_and_take_env(|rt| {
         let mut assumptions_stored = Vec::new();
@@ -340,7 +275,7 @@ fn run_structured(
         Err(e) => return Ok(Err(e)),
     };
 
-    Ok(Ok(ByInducBodySuccess::Structured { base, step }))
+    Ok(Ok((base, step)))
 }
 
 fn intro_param_z(runtime: &mut Runtime, param: &BoundName) -> RuntimeResult<Result<(), String>> {
@@ -472,37 +407,6 @@ fn to_exist_or_and(fact: Fact) -> Result<ExistOrAndChainAtomicFact, String> {
         Fact::ExistUniqueFact(e) => Ok(ExistOrAndChainAtomicFact::ExistUniqueFact(e)),
         Fact::NotExistFact(e) => Ok(ExistOrAndChainAtomicFact::NotExistFact(e)),
         _ => Err("induction goal must stay quantifier-free".to_string()),
-    }
-}
-
-fn recover_param(name: &str, goals: &[ExistOrAndChainAtomicFact]) -> Option<BoundName> {
-    for goal in goals {
-        if let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(eq)) = goal {
-            if let Some(b) = bound_from_obj(name, &eq.left).or_else(|| bound_from_obj(name, &eq.right))
-            {
-                return Some(b);
-            }
-        }
-        if let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::NormalAtomicFact(n)) = goal {
-            for obj in &n.body {
-                if let Some(b) = bound_from_obj(name, obj) {
-                    return Some(b);
-                }
-            }
-        }
-    }
-    None
-}
-
-fn bound_from_obj(name: &str, obj: &Obj) -> Option<BoundName> {
-    match obj {
-        Obj::Identifier(IdentifierObj::Plain { id, name: n }) if n == name => {
-            Some(BoundName::new(*id, n.clone()))
-        }
-        Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) => {
-            bound_from_obj(name, left).or_else(|| bound_from_obj(name, right))
-        }
-        _ => None,
     }
 }
 

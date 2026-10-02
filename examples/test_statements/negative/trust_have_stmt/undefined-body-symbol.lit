@@ -1,0 +1,5 @@
+# Expected rejection: undefined-body-symbol
+# Owner: TrustHaveStmt
+
+trust have x R:
+    x = missing

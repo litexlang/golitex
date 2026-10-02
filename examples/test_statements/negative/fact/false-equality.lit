@@ -1,0 +1,4 @@
+# Expected rejection: false-equality
+# Owner: Fact
+
+1 = 2

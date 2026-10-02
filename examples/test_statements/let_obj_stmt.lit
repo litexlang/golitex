@@ -1,0 +1,18 @@
+# Stmt: LetObjStmt
+# AST: Stmt::Definition::DefineObj::LetObjStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf LetObjStmt
+
+# case: numeric-substitution
+let let_a = 3
+let_a + 2 = 5
+
+# case: set-alias-and-membership
+let let_s = {1, 2}
+1 $in let_s
+
+# case: callable-alias
+have fn let_id(x R) R = x + 1
+let let_alias = let_id
+let_alias(4) = let_id(4)
+let_id(4) = 5
+let_alias(4) = 5

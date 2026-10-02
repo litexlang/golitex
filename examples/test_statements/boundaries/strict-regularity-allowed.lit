@@ -1,0 +1,4 @@
+# Boundary: strict-regularity-allowed
+# Owner: ReleaseRegularityAxiomStmt
+
+release regularity_axiom({1})

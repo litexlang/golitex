@@ -33,7 +33,7 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     ListSetDifferentLength(ListSetDifferentLengthBuiltinRuleProof),
     // Strict order implies inequality.
     // Mathematical property: `a > b` or `a < b` ⇒ `a != b`.
-    // Example: known `x > 0` proves `x != 0`.
+    // Example: known `x > 0` or `0 < x` proves `x != 0`.
     FromKnownStrictOrder(FromKnownStrictOrderBuiltinRuleProof),
     // Cosine is nonzero on the open principal tangent interval.
     // Mathematical property: `-pi/2 < y < pi/2` ⇒ `cos(y) != 0`.
@@ -191,6 +191,8 @@ impl Runtime {
         if let Some(premise_proof) = self
             .known_greater_proof(&fact.left, &fact.right)
             .or_else(|| self.known_less_proof(&fact.left, &fact.right))
+            .or_else(|| self.known_greater_proof(&fact.right, &fact.left))
+            .or_else(|| self.known_less_proof(&fact.right, &fact.left))
         {
             return Ok(Some(
                 NotEqualFactSearchProofByBuiltinRule::FromKnownStrictOrder(

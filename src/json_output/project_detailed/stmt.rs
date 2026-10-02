@@ -703,6 +703,7 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
             ("success", bool_value(true)),
             ("kind", string("by_thm")),
             ("thm_name", string(s.thm_name.clone())),
+            ("type_proofs", project_verify_facts(&s.type_proofs, runtime)),
             (
                 "dom_proofs",
                 project_verify_facts(&s.dom_proofs, runtime),

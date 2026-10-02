@@ -1507,6 +1507,21 @@ chain, and `or` for alternatives.
 1 < 2 or 1 >= 2
 ```
 
+For an equality chain, Litex checks each adjacent equality and then stores
+the non-adjacent equalities by transitivity. For example, this chain stores
+`y = 3`, which the next statement can use:
+
+```litex
+have x R = 2
+have y R = x + 1
+y = x + 1 = 3
+y^2 = 9
+```
+
+The definition step and calculation step are explicit. Automatic definition
+expansion does not enable rewrite in its residual goal. A failed chain does
+not commit its endpoint equality.
+
 The fact grammar has a deliberate canonical hierarchy rather than arbitrary
 recursive nesting. A conjunction is a flat list of atomic facts. A disjunction
 is the outer layer, and each of its branches is one atomic fact, one relation
@@ -2938,8 +2953,8 @@ forms share one row, such as the related object-introduction statements.
 | `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. Plain or `mod::export::`-qualified theorem name (preview). | All instantiated conclusions and their ordinary inferred consequences. |
 | `by thm ... => fact` | Arity/domains/premises and one selected atomic target. Same qualified-name lookup as `release thm` (preview). | Only the requested atomic selection and its ordinary inferred consequences. |
 | `strategy` | The statement proves its `? forall` goal (preview: fact-only body; no stricter atomic-shape gate yet). | A named strategy definition; later non-equality atomics may apply it via `known_strategy` (`ByKnownStrategy`), not ambient known_forall. |
-| `witness exist/exist!` | Witness count/types/body (optional local proof body first); `exist!` additionally verifies the generated two-candidate uniqueness universal. | The exact existential fact. Binder names and helpers stay local. |
-| `witness $P(args)` | The concrete prop has one positive ordinary `exist` clause; ordinary witness checks run after substitution (optional local proof body). `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
+| `witness exist/exist!` | Witness count and concrete types before local binder assumptions; the optional proof body then establishes the substituted body; `exist!` additionally verifies the generated two-candidate uniqueness universal. | The exact existential fact. Binder names and helpers stay local. |
+| `witness $P(args)` | Every predicate argument has its declared type, and the concrete prop has one positive ordinary `exist` clause; the projected existential uses the same witness checks. `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
 | `witness $is_nonempty_set(S)` | The proposed object is in `S` (optional local proof body). | Nonemptiness of `S`. |
 | `by cases`, `by contra` | Every branch closes the target, or an explicit contradiction is produced. | The requested target only. |
 | Enumeration, induction, `by for`, `by extension`, `by fn_extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. Preview: `by fn_extension` proves `f = g` from pointwise equality on alpha-equivalent FnSet carriers. | The requested universal/equality/atomic target. |
@@ -3276,10 +3291,12 @@ This request fails because an abstract predicate has no definition to unfold.
 > **Preview:** `witness exist` / `exist!` / `$P(args)` /
 > `$is_nonempty_set(S)` are wired at top level. Each form may be a flat one-line
 > header, or end with `:` and an indented local proof body (full Stmt list,
-> claim-style). Ambient WD of the exist / witnesses runs first; the proof body
-> then runs in a local env; type, substituted body, membership, and (for
-> `exist!`) uniqueness obligations are verified in that same local after the
-> proof steps. Helpers stay in the discarded local env; only the target fact
+> claim-style). Ambient WD and each concrete witness's substituted type are
+> verified before the existential binders and their equalities are introduced.
+> The proof body then runs in a local env; substituted body and (for `exist!`)
+> uniqueness obligations are verified there after the proof steps. The proof
+> body cannot establish a witness type by citing its own assumed binder type.
+> Helpers stay in the discarded local env; only the target fact
 > is stored. `exist!` verifies the generated two-candidate uniqueness forall
 > via the same builder as `obtain` from `exist!`. `witness $P` requires a
 > concrete prop whose sole clause is ordinary `exist` (reject `exist!` /
@@ -3543,7 +3560,9 @@ expand: z $in 1...2
 `by induc n from base` proves a discrete target from a base case and a
 successor step. `by strong_induc` supplies the corresponding bounded universal
 induction hypothesis. Structured goals use `? from`, `? induc`, and
-`? strong_induc`.
+`? strong_induc`. An unstructured proof body is checked once in the base
+scope without an induction hypothesis and once in the successor scope with
+one; both checks must succeed.
 
 > **Migration example:** Current `src/` checking stops at `internal_bug: name n is already bound in an enclosing parse scope`. This retained block is not a verified result.
 

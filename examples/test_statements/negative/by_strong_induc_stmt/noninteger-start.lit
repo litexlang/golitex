@@ -1,0 +1,5 @@
+# Expected rejection: noninteger-start
+# Owner: ByStrongInducStmt
+
+by strong_induc n from 1 / 2:
+    ? n = n

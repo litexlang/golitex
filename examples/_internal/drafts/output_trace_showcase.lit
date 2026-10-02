@@ -3,7 +3,7 @@
 
 # Claim forall: parameters, stored assumptions, proof steps, and conclusions.
 claim:
-    ? forall x {x R: x > 0}:
+    ? forall x {y R: y > 0}:
         x = 1
         =>:
             x = 1

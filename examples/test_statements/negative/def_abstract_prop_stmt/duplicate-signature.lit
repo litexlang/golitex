@@ -1,0 +1,5 @@
+# Expected rejection: duplicate-signature
+# Owner: DefAbstractPropStmt
+
+abstract_prop P(x)
+abstract_prop P(x)

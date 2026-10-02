@@ -351,72 +351,52 @@ fn strategy_entry_keeps_zero_depth_identity_calculation_and_named_alpha() {
 }
 
 #[test]
-fn have_obj_equal_residual_inherits_rewrite_and_retains_its_proof() {
-    use super::by_object_definition::{
-        by_identifier::EqualitySearchProofByIdentifierObjectDefinition,
-        EqualitySearchProofByObjectDefinition,
-    };
+fn explicit_definition_chain_stores_endpoint_before_later_verification() {
+    let mut runtime = runtime();
+    exec_ok(&mut runtime, "have x R = 2");
+    exec_ok(&mut runtime, "have y R = x + 1");
+    // Even with enough fuel, definition residuals must keep rewrite disabled.
+    let mut state = VerifyState::top_level();
+    state.can_use_builtin_rule_round = 3;
+    assert!(verify(&mut runtime, "y = 3", state).is_failed());
 
-    for goal in ["y = 3", "3 = y"] {
-        let mut runtime = runtime();
-        exec_ok(&mut runtime, "have x R = 2");
-        exec_ok(&mut runtime, "have y R = x + 1");
+    exec_ok(&mut runtime, "y = x + 1 = 3");
+    for code in ["y = 3", "3 = y"] {
+        let goal = equal(&mut runtime, code);
+        let path = runtime.equivalence_class_path(&goal.left, &goal.right).unwrap();
+        assert_eq!(path.len(), 1, "chain must store its endpoint equality directly");
+        let stored = KnownEqualityPathProof::new(path);
+        check_path(&runtime, &stored, &goal.left, &goal.right);
         let before = store_sizes(&runtime);
-        let mut state = VerifyState::top_level().without_well_defined_storage();
-        // Definition, rewrite and final calculation currently each need an entry.
-        state.can_use_builtin_rule_round = 3;
-        let VerifyEqualityResult::Success(success) = verify(&mut runtime, goal, state) else {
-            panic!("definition residual must be allowed to rewrite: {goal}");
-        };
-        let EqualFactSearchedProof::ByObjectDefinition(
-            EqualitySearchProofByObjectDefinition::ByIdentifier(
-                EqualitySearchProofByIdentifierObjectDefinition::HaveObjEqual(proof),
-            ),
-        ) = success.searched_proof else {
-            panic!("definition must own the proof");
-        };
-        let VerifyFactResult::Equality(residual) = proof.residual_equal else {
-            panic!("residual equality");
-        };
-        let VerifyEqualityResult::Success(residual) = *residual else {
-            panic!("residual must be proved");
+        let state = VerifyState::top_level()
+            .known_only_no_wd()
+            .for_equality_peer_comparison();
+        let VerifyEqualityResult::Success(success) = verify(&mut runtime, code, state) else {
+            panic!("stored endpoint must need no calculation or rewrite");
         };
         assert!(matches!(
-            residual.searched_proof,
-            EqualFactSearchedProof::ByBuiltinRewrite(_)
+            success.searched_proof,
+            EqualFactSearchedProof::ByEquivalenceClass(
+                EqualFactSearchedProofByEquivalenceClass::KnownPath(_)
+            )
         ));
-        assert_eq!(store_sizes(&runtime), before, "search must not store facts or WD");
+        assert_eq!(store_sizes(&runtime), before);
     }
+    exec_ok(&mut runtime, "y^2 = 9");
+    exec_ok(&mut runtime, "x + y = 5");
 }
 
 #[test]
-fn have_obj_equal_residual_keeps_rewrite_and_fuel_restrictions() {
-    for (rewrite, rounds) in [(false, 3), (true, 0), (true, 1), (true, 2)] {
-        let mut runtime = runtime();
-        exec_ok(&mut runtime, "have x R = 2");
-        exec_ok(&mut runtime, "have y R = x + 1");
-        let mut state = VerifyState::top_level().without_well_defined_storage();
-        state.can_use_rewrite = rewrite;
-        state.can_use_builtin_rule_round = rounds;
-        assert!(verify(&mut runtime, "y = 3", state).is_failed(),
-            "must preserve caller restriction: rewrite={rewrite}, rounds={rounds}");
-    }
-}
-
-#[test]
-fn have_obj_equal_residual_rejects_false_missing_and_undefined_goals() {
-    for (setup, goal) in [
-        ("have x R = 2", "y = 4"),
-        ("have x R", "y = 3"),
-        ("have x R = 2", "y = 1 / 0"),
-    ] {
-        let mut runtime = runtime();
-        exec_ok(&mut runtime, setup);
-        exec_ok(&mut runtime, "have y R = x + 1");
-        let mut state = VerifyState::top_level();
-        state.can_use_builtin_rule_round = 3;
-        assert!(verify(&mut runtime, goal, state).is_failed(), "must reject {goal}");
-    }
+fn failed_definition_chain_does_not_store_its_endpoint() {
+    let mut runtime = runtime();
+    exec_ok(&mut runtime, "have x R = 2");
+    exec_ok(&mut runtime, "have y R = x + 1");
+    let before = store_sizes(&runtime);
+    assert!(exec(&mut runtime, "y = x + 1 = 4").is_failed());
+    assert_eq!(store_sizes(&runtime), before, "failed chain must roll back");
+    let goal = equal(&mut runtime, "y = 4");
+    assert!(runtime.equivalence_class_path(&goal.left, &goal.right).is_none());
+    assert!(verify(&mut runtime, "y = 4", VerifyState::top_level()).is_failed());
 }
 
 fn runtime() -> Runtime {

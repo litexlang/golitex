@@ -1,0 +1,16 @@
+# Stmt: Witness.WitnessExistFact / Witness.WitnessAtomicFact
+# Gate: target/release/litex -strict -f examples/stmt_nodes/witness/witness_type_soundness.lit
+# Before: `from 0` for a binder of type `{1}` was accepted and could yield `0 = 1`.
+# Now: concrete types are checked before any existential binder is assumed.
+
+witness exist x {1} st {x = 1} from 1
+witness exist S nonempty_set st {S = {1}} from {1}
+
+prop has_zero(a N):
+    exist y R st {y = 0}
+witness $has_zero(0) from 0
+
+# All three statements below must be rejected when run separately:
+# witness exist x {1} st {x = 0} from 0
+# witness exist S nonempty_set st {S = {}} from {}
+# witness $has_zero(-1) from 0

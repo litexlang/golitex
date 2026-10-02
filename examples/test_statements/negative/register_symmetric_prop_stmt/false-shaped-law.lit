@@ -1,0 +1,10 @@
+# Expected rejection: false shaped RegisterSymmetricPropStmt law
+
+prop P(x, y set):
+    x = {}
+    y = {1}
+register symmetric:
+    ? forall x, y set:
+        $P(x, y)
+        =>:
+            $P(y, x)

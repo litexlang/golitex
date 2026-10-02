@@ -1,0 +1,28 @@
+# Stmt: RegisterReflexivePropStmt
+# AST: Stmt::Register::RegisterReflexivePropStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf RegisterReflexivePropStmt
+
+# case: reflexive-carrier-set
+prop reg_reflexive_first(x, y set):
+    x = y
+register reflexive:
+    ? forall x set:
+        $reg_reflexive_first(x, x)
+$reg_reflexive_first(1, 1)
+
+# case: subset-relation
+prop reg_reflexive_second(x, y set):
+    x $subset y
+register reflexive:
+    ? forall x set:
+        $reg_reflexive_second(x, x)
+$reg_reflexive_second({1}, {1})
+
+# case: conjunctive-relation
+prop reg_reflexive_third(x, y set):
+    x = y
+    y = x
+register reflexive:
+    ? forall x set:
+        $reg_reflexive_third(x, x)
+$reg_reflexive_third(1, 1)

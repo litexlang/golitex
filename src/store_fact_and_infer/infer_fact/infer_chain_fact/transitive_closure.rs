@@ -94,13 +94,17 @@ impl Runtime {
         for start in 0..chain_fact.objs.len() {
             for end in start + 2..chain_fact.objs.len() {
                 let path = &edges[start..end];
-                if path.iter().any(|edge| *edge == OrderEdge::Eq) {
-                    continue;
-                }
+                // Equality preserves the direction of the checked order edges.
+                // For example, `a >= b = c >= d` entails `a >= d`.
+                // A purely equal subpath still entails equality, even inside
+                // a longer order chain: `a = b = c < d` entails `a = c`.
+                let path_is_equality = path.iter().all(|edge| *edge == OrderEdge::Eq);
                 let path_is_strict = path
                     .iter()
                     .any(|edge| matches!(edge, OrderEdge::Lt | OrderEdge::Gt));
-                let op = if has_up {
+                let op = if path_is_equality {
+                    EQUAL
+                } else if has_up {
                     if path_is_strict {
                         LESS
                     } else {
@@ -123,7 +127,11 @@ impl Runtime {
                     self.store_inferred_fact_and_infer(&Fact::AtomicFact(conclusion))?,
                 );
                 closures.push(InferChainTransitiveClosureResult {
-                    cite: ChainTransitiveCite::BuiltinNumericOrder,
+                    cite: if path_is_equality {
+                        ChainTransitiveCite::BuiltinEquality
+                    } else {
+                        ChainTransitiveCite::BuiltinNumericOrder
+                    },
                     start_object_index: start,
                     end_object_index: end,
                     premise_edge_indexes: (start..end).collect(),

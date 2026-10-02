@@ -1,0 +1,5 @@
+# Expected rejection: wrong-call-arity
+# Owner: HaveFnEqualStmt
+
+have fn f(x R) R = x
+f(1, 2) = 1
