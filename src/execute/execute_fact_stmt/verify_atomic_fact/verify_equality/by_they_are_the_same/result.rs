@@ -9,12 +9,14 @@ pub enum SameFreeParamShapeProof {
     FnSet(FnSetAlphaProof),
     AnonymousFn(AnonymousFnAlphaProof),
     SetBuilder(SetBuilderAlphaProof),
+    Compound(CompoundObjAlphaProof),
 }
 
 pub struct SameIrProof {}
 pub struct FnSetAlphaProof {}
 pub struct AnonymousFnAlphaProof {}
 pub struct SetBuilderAlphaProof {}
+pub struct CompoundObjAlphaProof {}
 
 impl SameIrProof {
     pub fn new() -> Self {
@@ -68,4 +70,11 @@ impl From<SetBuilderAlphaProof> for SameFreeParamShapeProof {
     fn from(proof: SetBuilderAlphaProof) -> Self {
         Self::SetBuilder(proof)
     }
+}
+
+impl CompoundObjAlphaProof {
+    pub fn new() -> Self { Self {} }
+}
+impl From<CompoundObjAlphaProof> for SameFreeParamShapeProof {
+    fn from(proof: CompoundObjAlphaProof) -> Self { Self::Compound(proof) }
 }

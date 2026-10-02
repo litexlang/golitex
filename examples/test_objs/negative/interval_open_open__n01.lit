@@ -1,0 +1,2 @@
+# Must reject: interval_open_open N01
+3 $in '(0, 2)

@@ -1,0 +1,2 @@
+# Must reject: ceil N01
+let x = ceil(i)

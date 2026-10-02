@@ -1,0 +1,29 @@
+# AST: Obj::ExpLogOperator::Exp
+# Run: target/release/litex -f examples/test_objs/exp.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: exp(0) = 1
+sketch:
+    exp(0) = 1
+
+# P02: exp(1) = e
+sketch:
+    exp(1) = e
+
+# P03: exp(ln(2)) = 2
+sketch:
+    exp(ln(2)) = 2
+
+# P04: exp(x) > 0
+sketch:
+    forall x R:
+        exp(x) > 0
+
+# P05: exp(x) $in R
+sketch:
+    forall x R:
+        exp(x) $in R
+
+# P06: exp(0 + 0) = 1
+sketch:
+    exp(0 + 0) = 1

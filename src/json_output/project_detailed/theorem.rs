@@ -1,0 +1,74 @@
+//! Named theorem contracts and stage-specific failures for both JSON views.
+use super::store::project_store_and_infer;
+use super::verify::project_verify_fact;
+use super::wd::{project_fact_wd_proof, project_verify_fact_wd_result};
+use crate::builtin_theorem::BuiltinTheoremId;
+use crate::execute::execute_by_stmt::{BuiltinThmApplication, ExecByThmStmtFailed, ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult};
+use crate::json_output::helper::{bool_value, object_for, string};
+use crate::knowledge_base::JsonValue;
+use crate::runtime::Runtime;
+
+pub(in crate::json_output) fn project_release_thm_failure(failed: &ExecReleaseThmStmtFailed, rt: &Runtime) -> JsonValue {
+    use ExecReleaseThmStmtFailed::*;
+    match failed {
+        ThmNotFound(name) => object_for(rt, vec![("phase", string("lookup")), ("thm_name", string(name.clone())), ("message", string(format!("theorem `{name}` was not found")))]),
+        Shape(message) | Instantiate(message) => object_for(rt, vec![("phase", string(if matches!(failed, Shape(_)) { "call_shape" } else { "instantiate" })), ("message", string(message.clone()))]),
+        BuiltinArity { theorem, expected, actual } => object_for(rt, vec![("phase", string("arity")), ("thm_name", string(theorem.as_str())), ("expected", JsonValue::Number(*expected as f64)), ("actual", JsonValue::Number(*actual as f64)), ("message", string(format!("builtin theorem `{theorem}` expects {expected} argument(s), got {actual}")))]),
+        BuiltinShape { theorem, message } => object_for(rt, vec![("phase", string("call_shape")), ("thm_name", string(theorem.as_str())), ("message", string(message.clone()))]),
+        Type { theorem, fact, index, result } | Dom { theorem, fact, index, result } => object_for(rt, vec![
+            ("phase", string(if matches!(failed, Type { .. }) { "argument_type" } else { "premise" })),
+            ("thm_name", string(theorem.clone())), ("index", JsonValue::Number(*index as f64)),
+            ("goal", string(fact.readable_string())), ("result", project_verify_fact(result, rt)),
+        ]),
+        ConclusionWd { theorem, fact, index, result } => object_for(rt, vec![
+            ("phase", string("conclusion_well_defined")), ("thm_name", string(theorem.clone())),
+            ("index", JsonValue::Number(*index as f64)), ("goal", string(fact.readable_string())),
+            ("result", project_verify_fact_wd_result(result, rt)),
+        ]),
+        Store { theorem, index, message } => object_for(rt, vec![("phase", string("store")), ("thm_name", string(theorem.clone())), ("index", JsonValue::Number(*index as f64)), ("message", string(message.clone()))]),
+    }
+}
+pub(in crate::json_output) fn project_by_thm_failure(failed: &ExecByThmStmtFailed, rt: &Runtime) -> JsonValue {
+    match failed {
+        ExecByThmStmtFailed::Release(failed) => project_release_thm_failure(failed, rt),
+        ExecByThmStmtFailed::Selected { theorem, fact, result } => object_for(rt, vec![("phase", string("selected_fact")), ("thm_name", string(theorem.clone())), ("goal", string(fact.readable_string())), ("result", project_verify_fact(result, rt))]),
+        ExecByThmStmtFailed::Store { theorem, message } => object_for(rt, vec![("phase", string("store")), ("thm_name", string(theorem.clone())), ("message", string(message.clone()))]),
+    }
+}
+pub(super) fn project_builtin_application(application: &Option<BuiltinThmApplication>, rt: &Runtime) -> JsonValue {
+    let Some(p) = application else { return JsonValue::Null; };
+    let provenance = if matches!(p.theorem, BuiltinTheoremId::IndexCartesianNonemptyByChoiceFromFamily | BuiltinTheoremId::IndexCartesianNonemptyByChoiceFromPointwise) { "axiom_of_choice" } else { "builtin_theorem" };
+    object_for(rt, vec![
+        ("theorem", string(p.theorem.as_str())),
+        ("arguments", JsonValue::Array(p.arguments.iter().map(|x| string(x.readable_string())).collect())),
+        ("requirements", JsonValue::Array(p.requirements.iter().map(|x| string(x.readable_string())).collect())),
+        ("conclusions", JsonValue::Array(p.conclusions.iter().map(|x| string(x.readable_string())).collect())),
+        ("provenance", string(provenance)),
+    ])
+}
+pub(super) fn project_conclusions_wd(proofs: &[crate::execute::execute_fact_stmt::FactWellDefinedProof], rt: &Runtime) -> JsonValue {
+    JsonValue::Array(proofs.iter().map(|proof| project_fact_wd_proof(proof, rt)).collect())
+}
+pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtime) -> JsonValue {
+    match result {
+        ExecReleaseThmStmtResult::Success(s) => object_for(rt, vec![
+            ("success", bool_value(true)), ("kind", string("release_thm")), ("thm_name", string(s.thm_name.clone())),
+            ("builtin", project_builtin_application(&s.builtin, rt)),
+            ("type_proofs", super::store::project_verify_facts(&s.type_proofs, rt)),
+            ("dom_proofs", super::store::project_verify_facts(&s.dom_proofs, rt)),
+            ("conclusions_wd", project_conclusions_wd(&s.conclusions_wd, rt)),
+            ("stored", JsonValue::Array(s.stored.iter().map(|x| project_store_and_infer(x, rt)).collect())),
+        ]),
+        ExecReleaseThmStmtResult::Failed(f) => object_for(rt, vec![("success", bool_value(false)), ("kind", string("release_thm")), ("failure", project_release_thm_failure(f, rt))]),
+    }
+}
+
+pub(in crate::json_output) fn project_def_thm_failure(failed: &crate::execute::ExecDefThmStmtFailed, rt: &Runtime) -> JsonValue {
+    use crate::execute::ExecDefThmStmtFailed::*;
+    match failed {
+        NameClash(text) | Introduce(text) | Store(text) => object_for(rt, vec![("phase", string(match failed { NameClash(_) => "name_clash", Introduce(_) => "introduce", _ => "store" })), ("message", string(text.clone()))]),
+        GoalWd(result) => object_for(rt, vec![("phase", string("goal_well_defined")), ("result", project_verify_fact_wd_result(result, rt))]),
+        ProofBody(f) => object_for(rt, vec![("phase", string("proof_body")), ("index", JsonValue::Number(f.step_index as f64)), ("result", super::entry::project_stmt_detailed(&f.result, rt))]),
+        Conclusion { index, result } => object_for(rt, vec![("phase", string("conclusion")), ("index", JsonValue::Number(*index as f64)), ("result", project_verify_fact(result, rt))]),
+    }
+}

@@ -1,0 +1,7 @@
+# AST: Obj::SetOperator::FamilyUnion
+# Run: target/release/litex -f examples/test_objs/family_union.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: family_union({}) = {}
+sketch:
+    family_union({}) = {}

@@ -1,0 +1,2 @@
+# Must reject: tuple N01
+(1, 2) = (2, 1)

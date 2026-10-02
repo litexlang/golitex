@@ -1,0 +1,2 @@
+# Must reject: family_union N01
+3 $in family_union({{1}, {2}})

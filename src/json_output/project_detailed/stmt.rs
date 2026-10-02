@@ -1,11 +1,12 @@
 //! Detailed projection for non-fact statement kinds.
 
+use super::induction::{project_by_induc, project_by_strong_induc, project_induc_definition, project_induc_algo};
 use super::store::{
     project_have_store_ids, project_store_and_infer, project_verify_facts,
 };
 use super::verify::project_verify_fact;
 use super::wd::{
-    project_fact_wd_proof, project_param_type_wd, project_verify_fact_wd_result,
+    project_fact_wd_proof, project_obj_wd_proof, project_param_type_wd, project_verify_fact_wd_result,
     project_verify_obj_wd,
 };
 use crate::execute::execute_by_stmt::{
@@ -22,7 +23,7 @@ use crate::execute::execute_witness_stmt::ExecWitnessStmtResult;
 use crate::execute::execute_register_stmt::ExecRegisterStmtResult;
 use crate::execute::{
     ExecAxiomStmtResult, ExecCommandStmtResult, ExecDefAbstractPropStmtSuccessResult,
-    ExecDefAlgoByCasesStmtResult, ExecDefAlgoByInducStmtResult, ExecDefPropStmtResult,
+    ExecDefAlgoByCasesStmtResult, ExecDefPropStmtResult,
     ExecDefStrategyStmtResult, ExecDefStructStmtResult, ExecDefTemplateStmtResult,
     ExecDefThmStmtResult, ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecEvalStmtResult,
     ExecHaveByFnPreimageStmtResult, ExecHaveByReplacementAxiomStmtResult,
@@ -101,20 +102,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 _ => None,
             },
             runtime),
-        ExecDefinitionStmtResult::HaveFnByInduc(r) => project_success_failed_shell(
-            "have_fn_by_induc",
-            !r.is_failed(),
-            match r {
-                ExecHaveFnByInducStmtResult::Success(s) => Some(s.statement.readable_string()),
-                _ => None,
-            },
-            match r {
-                ExecHaveFnByInducStmtResult::Success(s) => {
-                    Some(project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime))
-                }
-                _ => None,
-            },
-            runtime),
+        ExecDefinitionStmtResult::HaveFnByInduc(r) => project_induc_definition(r, runtime),
         ExecDefinitionStmtResult::DefProp(r) => project_def_prop(r, runtime),
         ExecDefinitionStmtResult::DefAbstractProp(r) => project_def_abstract_prop(r, runtime),
         ExecDefinitionStmtResult::DefStruct(r) => project_success_failed_shell(
@@ -144,15 +132,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             },
             None,
             runtime),
-        ExecDefinitionStmtResult::DefAlgoByInduc(r) => project_success_failed_shell(
-            "def_algo_by_induc",
-            !r.is_failed(),
-            match r {
-                ExecDefAlgoByInducStmtResult::Success(s) => Some(s.statement.readable_string()),
-                _ => None,
-            },
-            None,
-            runtime),
+        ExecDefinitionStmtResult::DefAlgoByInduc(r) => project_induc_algo(r, runtime),
         ExecDefinitionStmtResult::DefThm(r) => project_def_thm(r, runtime),
         ExecDefinitionStmtResult::Axiom(r) => project_axiom(r, runtime),
         ExecDefinitionStmtResult::DefStrategy(r) => project_def_strategy(r, runtime),
@@ -184,9 +164,10 @@ fn project_def_thm(result: &ExecDefThmStmtResult, runtime: &Runtime) -> JsonValu
             ),
                         ("store_and_infer", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecDefThmStmtResult::Failed(_) => object_for(runtime, vec![
+        ExecDefThmStmtResult::Failed(f) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("def_thm")),
+            ("failure", super::theorem::project_def_thm_failure(f, runtime)),
         ]),
     }
 }
@@ -549,6 +530,10 @@ fn project_by_proof_steps(steps: &[ByProofStepResult], runtime: &Runtime) -> Jso
     )
 }
 
+fn project_stmt_steps(steps: &[ExecStmtResult], runtime: &Runtime) -> JsonValue {
+    JsonValue::Array(steps.iter().map(|step| project_stmt_detailed(step, runtime)).collect())
+}
+
 fn project_by_extension(result: &ExecByExtensionStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
         ExecByExtensionStmtResult::Success(s) => object_for(runtime, vec![
@@ -560,7 +545,7 @@ fn project_by_extension(result: &ExecByExtensionStmtResult, runtime: &Runtime) -
             ),
             (
                 "proof_steps",
-                project_by_proof_steps(&s.proof_steps, runtime),
+                project_stmt_steps(&s.proof_steps, runtime),
             ),
             (
                 "left_to_right",
@@ -596,7 +581,7 @@ fn project_by_fn_extension(result: &ExecByFnExtensionStmtResult, runtime: &Runti
             ),
             (
                 "proof_steps",
-                project_by_proof_steps(&s.proof_steps, runtime),
+                project_stmt_steps(&s.proof_steps, runtime),
             ),
             (
                 "pointwise_proof",
@@ -635,7 +620,7 @@ fn project_by_contra(result: &ExecByContraStmtResult, runtime: &Runtime) -> Json
             ),
             (
                 "proof_steps",
-                project_by_proof_steps(&s.proof_steps, runtime),
+                project_stmt_steps(&s.proof_steps, runtime),
             ),
                         ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
@@ -703,6 +688,8 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
             ("success", bool_value(true)),
             ("kind", string("by_thm")),
             ("thm_name", string(s.thm_name.clone())),
+            ("builtin", super::theorem::project_builtin_application(&s.builtin, runtime)),
+            ("conclusions_wd", super::theorem::project_conclusions_wd(&s.conclusions_wd, runtime)),
             ("type_proofs", project_verify_facts(&s.type_proofs, runtime)),
             (
                 "dom_proofs",
@@ -714,62 +701,10 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
             ),
                         ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByThmStmtResult::Failed(_) => object_for(runtime, vec![
+        ExecByThmStmtResult::Failed(f) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_thm")),
-        ]),
-    }
-}
-
-fn project_by_induc(
-    kind: &str,
-    result: &ExecByInducStmtResult,
-    runtime: &Runtime,
-) -> JsonValue {
-    match result {
-        ExecByInducStmtResult::Success(s) => object_for(runtime, vec![
-            ("success", bool_value(true)),
-            ("kind", string(kind)),
-            (
-                "goals_wd",
-                JsonValue::Array(
-                    s.goals_wd
-                        .iter()
-                        .map(|w| project_verify_fact_wd_result(w, runtime))
-                        .collect(),
-                ),
-            ),
-            ("stored", project_store_and_infer(&s.stored, runtime)),
-        ]),
-        ExecByInducStmtResult::Failed(_) => object_for(runtime, vec![
-            ("success", bool_value(false)),
-            ("kind", string(kind)),
-        ]),
-    }
-}
-
-fn project_by_strong_induc(
-    result: &ExecByStrongInducStmtResult,
-    runtime: &Runtime,
-) -> JsonValue {
-    match result {
-        ExecByStrongInducStmtResult::Success(s) => object_for(runtime, vec![
-            ("success", bool_value(true)),
-            ("kind", string("by_strong_induc")),
-            (
-                "goals_wd",
-                JsonValue::Array(
-                    s.goals_wd
-                        .iter()
-                        .map(|w| project_verify_fact_wd_result(w, runtime))
-                        .collect(),
-                ),
-            ),
-            ("stored", project_store_and_infer(&s.stored, runtime)),
-        ]),
-        ExecByStrongInducStmtResult::Failed(_) => object_for(runtime, vec![
-            ("success", bool_value(false)),
-            ("kind", string("by_strong_induc")),
+            ("failure", super::theorem::project_by_thm_failure(f, runtime)),
         ]),
     }
 }
@@ -786,6 +721,7 @@ fn project_by_enumerate(
                 "goal_wd",
                 project_verify_fact_wd_result(&s.goal_wd, runtime),
             ),
+            ("assignments", project_enumeration_assignments(&s.assignments, runtime)),
             ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
         ExecByEnumerateFiniteSetStmtResult::Failed(_) => object_for(runtime, vec![
@@ -804,6 +740,7 @@ fn project_by_for(result: &ExecByForStmtResult, runtime: &Runtime) -> JsonValue 
                 "goal_wd",
                 project_verify_fact_wd_result(&s.goal_wd, runtime),
             ),
+            ("assignments", project_enumeration_assignments(&s.assignments, runtime)),
             ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
         ExecByForStmtResult::Failed(_) => object_for(runtime, vec![
@@ -811,6 +748,46 @@ fn project_by_for(result: &ExecByForStmtResult, runtime: &Runtime) -> JsonValue 
             ("kind", string("by_for")),
         ]),
     }
+}
+
+fn project_enumeration_assignments(
+    assignments: &[crate::execute::execute_by_stmt::EnumerateAssignmentSuccess],
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_by_stmt::EnumerateAssignmentOutcome;
+    JsonValue::Array(assignments.iter().map(|assignment| {
+        let (premises, outcome) = match &assignment.outcome {
+            EnumerateAssignmentOutcome::Skipped { premise_assumptions, premise_index, negated_premise } => (
+                premise_assumptions,
+                object_for(runtime, vec![
+                    ("kind", string("skipped_false_premise")),
+                    ("premise_index", string(premise_index.to_string())),
+                    ("negated_premise", project_verify_fact(negated_premise, runtime)),
+                ]),
+            ),
+            EnumerateAssignmentOutcome::Proved { premise_assumptions, proof_steps, then_proofs } => (
+                premise_assumptions,
+                object_for(runtime, vec![
+                    ("kind", string("proved")),
+                    ("proof_steps", project_stmt_steps(proof_steps, runtime)),
+                    ("then_proofs", project_verify_facts(then_proofs, runtime)),
+                ]),
+            ),
+        };
+        let project_assumptions = |facts: &[crate::execute::execute_fact_stmt::AssumeDomFactResult]| {
+            JsonValue::Array(facts.iter().map(|fact| object_for(runtime, vec![
+                ("well_defined", project_fact_wd_proof(&fact.well_defined, runtime)),
+                ("store_and_infer", project_store_and_infer(&fact.store_and_infer, runtime)),
+            ])).collect())
+        };
+        object_for(runtime, vec![
+            ("param_type_well_defined", JsonValue::Array(assignment.introduced_params.param_type_well_defined.iter()
+                .map(|proof| project_param_type_wd(proof, runtime)).collect())),
+            ("binding_assumptions", project_assumptions(&assignment.binding_assumptions)),
+            ("premise_assumptions", project_assumptions(premises)),
+            ("outcome", outcome),
+        ])
+    }).collect())
 }
 
 fn project_register(result: &ExecRegisterStmtResult, runtime: &Runtime) -> JsonValue {
@@ -824,7 +801,9 @@ fn project_release_and_expand(
     result: &ExecReleaseAndExpandStmtResult,
     runtime: &Runtime,
 ) -> JsonValue {
-    let _ = runtime;
+    if let ExecReleaseAndExpandStmtResult::Thm(result) = result {
+        return super::theorem::project_release_thm(result, runtime);
+    }
     let kind = match result {
         ExecReleaseAndExpandStmtResult::Thm(_) => "release_thm",
         ExecReleaseAndExpandStmtResult::StructDef(_) => "release_struct_def",
@@ -903,6 +882,7 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                     "source_object",
                     string(s.source_object.readable_string()),
                 ),
+                ("source_well_defined", project_obj_wd_proof(&s.source_well_defined, runtime)),
                 (
                     "rewritten_object",
                     string(s.rewritten_object.readable_string()),
@@ -911,6 +891,11 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                     "evaluated_object",
                     string(s.evaluated_object.readable_string()),
                 ),
+            ]),
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::WellDefined(failed)) => object_for(runtime, vec![
+                ("success", bool_value(false)),
+                ("kind", string("eval")),
+                ("source_well_defined", project_verify_obj_wd(failed, runtime)),
             ]),
             ExecEvalStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),

@@ -313,11 +313,12 @@ impl Runtime {
             let Obj::FnObj(fn_obj) = arg else {
                 continue;
             };
-            let Some(expanded_body) =
+            let Some(expansion) =
                 self.expanded_named_or_literal_anon_fn_application_body(fn_obj)?
             else {
                 continue;
             };
+            let expanded_body = expansion.expanded_body;
             if expanded_body.ir() == arg.ir() {
                 continue;
             }

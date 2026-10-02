@@ -1,0 +1,2 @@
+# Must reject: union N02
+union({1}, {2}) = {1}

@@ -1,0 +1,19 @@
+# AST: Obj::IteratedOperator::Product
+# Run: target/release/litex -f examples/test_objs/product.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: product(1, 1, fn(x Z) Z {x}) = 1
+sketch:
+    product(1, 1, fn(x Z) Z {x}) = 1
+
+# P02: product(-2, -2, fn(x Z) Z {x}) = -2
+sketch:
+    product(-2, -2, fn(x Z) Z {x}) = -2
+
+# P05: product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * 3
+sketch:
+    product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * 3
+
+# P06: product(0, 0, fn(x Z) Z {0}) = 0
+sketch:
+    product(0, 0, fn(x Z) Z {0}) = 0

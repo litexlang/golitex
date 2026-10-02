@@ -320,16 +320,16 @@ impl Runtime {
         stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set: &FnSet,
     ) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
-        if self.identifier_defined_in_stack(&stmt.name) {
+        if self.identifier_defined_in_stack(&stmt.name.name) {
             return Err(RuntimeError::InternalBug(format!(
                 "identifier `{}` is already defined in this ExecEnv",
                 stmt.name
             )));
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
-            stmt.name.clone(),
+            stmt.name.name.clone(),
             StoredIdentifierDefinition::HaveFnEqualCaseByCase((
-                stmt.name.clone(),
+                stmt.name.name.clone(),
                 Rc::new(stmt.clone()),
             )),
         );
@@ -344,7 +344,7 @@ impl Runtime {
         fn_set: &FnSet,
     ) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
         let function_ident =
-            self.identifier_obj_for_file_root_symbol(stmt.name.clone());
+            self.identifier_obj_for_stored_mention(&stmt.name);
         let function_obj = Obj::Identifier(function_ident.clone());
 
         let membership_fact_id = self.global_ids.allocate_fact_id();
@@ -355,9 +355,6 @@ impl Runtime {
             line_file: Some(stmt.line_file.clone()),
         }));
         let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
-        if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
-            self.record_fn_signature_from_definition_membership(in_fact);
-        }
 
         let typed = set_bound_to_typed(&stmt.fn_set_clause.set_bound_parameters);
         let mut args = Vec::new();

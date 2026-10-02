@@ -1,0 +1,2 @@
+# Must reject: identifier_with_mod_and_export_file_id N01
+Values::base::k = 9

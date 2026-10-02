@@ -59,7 +59,7 @@ impl Runtime {
 
     // Index one atomic into known-* only.
     // Example: store `a = b` updates equivalence classes; store `x $in S` indexes the in-fact.
-    // Also records FnSet / FiniteSeq / SeqSet / AnonymousFn shape knowledge used by WD.
+    // Special properties index the actual accepted membership/equality facts.
     pub fn store_atomic_fact(&mut self, atomic_fact: &AtomicFact) -> RuntimeResult<Vec<FactId>> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
@@ -75,9 +75,8 @@ impl Runtime {
                         .known_equal_to_obj_with_free_params
                         .maybe_index(equal_fact);
                     env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
+                    env.index_special_property(atomic_fact);
                 }
-                // `trust f = fn(...)` / `trust f = anon` must register InFunctionSet like def exits.
-                self.record_fn_signature_from_definition_equal(equal_fact);
                 Ok(vec![fact_id])
             }
             _ => {
@@ -92,10 +91,7 @@ impl Runtime {
                         atomic_fact.clone(),
                     );
                     env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
-                }
-                // `trust f $in fn(...)` / finite_seq / seq must register callable shape.
-                if let AtomicFact::InFact(in_fact) = atomic_fact {
-                    self.record_definition_membership_shape(in_fact);
+                    env.index_special_property(atomic_fact);
                 }
                 Ok(vec![fact_id])
             }

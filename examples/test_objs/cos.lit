@@ -1,0 +1,16 @@
+# AST: Obj::TrigOperator::Cos
+# Run: target/release/litex -f examples/test_objs/cos.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: cos(0) = 1
+sketch:
+    cos(0) = 1
+
+# P02: cos(pi) = -1
+sketch:
+    cos(pi) = -1
+
+# P05: cos(x) $in R
+sketch:
+    forall x R:
+        cos(x) $in R

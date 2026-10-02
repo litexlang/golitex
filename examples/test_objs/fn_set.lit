@@ -1,0 +1,23 @@
+# AST: Obj::FunctionSpace::FnSet
+# Run: target/release/litex -f examples/test_objs/fn_set.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: $is_set(F)
+sketch:
+    let F = fn(x R) R
+    $is_set(F)
+
+# P02: $is_set(F)
+sketch:
+    let F = fn(x R: x > 0) R
+    $is_set(F)
+
+# P03: $is_set(F)
+sketch:
+    let F = fn(x R) fn(y R) R
+    $is_set(F)
+
+# P04: $is_set(F)
+sketch:
+    let F = fn(x R) x
+    $is_set(F)

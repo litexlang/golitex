@@ -1,0 +1,2 @@
+# Must reject: max N01
+let x = max(i, 1)

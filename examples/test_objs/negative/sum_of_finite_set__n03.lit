@@ -1,0 +1,2 @@
+# Must reject: sum_of_finite_set N03
+finite_set_sum({1, 2}, fn(x Z) Z {x}) = 4

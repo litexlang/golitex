@@ -1,0 +1,2 @@
+# Must reject: mod N02
+let x = 1.5 % 2

@@ -10,7 +10,12 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
     match rule {
         EqualitySearchProofByBuiltinRule::Calculation(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("Calculation"))];
-            let _ = p;
+            let mode = match p {
+                crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculation::ClosedDecimal { .. } => "closed_decimal",
+                crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculation::Rational {} => "rational",
+                crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculation::Complex {} => "complex_imaginary_unit",
+            };
+            entries.push(("mode", string(mode)));
             object_for(runtime, entries)
         },
         EqualitySearchProofByBuiltinRule::SinArcsinLeftInverse(p) => {

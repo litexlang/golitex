@@ -1,0 +1,2 @@
+# Must reject: seq_set N01
+seq(R) = seq(N)

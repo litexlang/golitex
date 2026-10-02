@@ -1,0 +1,30 @@
+# AST: Obj::IntegerOperator::Gcd
+# Run: target/release/litex -f examples/test_objs/gcd.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: gcd(54, 24) = 6
+sketch:
+    gcd(54, 24) = 6
+
+# P02: gcd(54, -24) = 6
+sketch:
+    gcd(54, -24) = 6
+
+# P03: gcd(7, 7) = 7
+sketch:
+    gcd(7, 7) = 7
+
+# P04: gcd(0, -7) = 7
+sketch:
+    gcd(0, -7) = 7
+
+# P05: gcd(7, 13) = 1
+sketch:
+    gcd(7, 13) = 1
+
+# P06: gcd(a, b) = gcd(b, a)
+sketch:
+    forall a, b Z:
+        a != 0
+        =>:
+            gcd(a, b) = gcd(b, a)

@@ -39,11 +39,10 @@ impl Runtime {
         &mut self,
         normal: &NormalAtomicFact,
     ) -> RuntimeResult<Option<InferNormalAtomicParamTypesProjectedResult>> {
-        let name = normal.predicate.local_name();
-        if self.def_abstract_prop_visible_in_stack(name).is_some() {
+        if self.def_abstract_prop_visible(&normal.predicate).is_some() {
             return Ok(None);
         }
-        let Some(definition) = self.def_prop_visible_in_stack(name) else {
+        let Some(definition) = self.def_prop_visible(&normal.predicate) else {
             return Ok(None);
         };
         let definition = definition.clone();
@@ -79,11 +78,10 @@ impl Runtime {
         &mut self,
         normal: &NormalAtomicFact,
     ) -> RuntimeResult<Option<InferExpandDefinitionResult>> {
-        let name = normal.predicate.local_name();
-        if self.def_abstract_prop_visible_in_stack(name).is_some() {
+        if self.def_abstract_prop_visible(&normal.predicate).is_some() {
             return Ok(None);
         }
-        let Some(definition) = self.def_prop_visible_in_stack(name) else {
+        let Some(definition) = self.def_prop_visible(&normal.predicate) else {
             return Ok(None);
         };
         if definition.iff_facts.is_empty() {

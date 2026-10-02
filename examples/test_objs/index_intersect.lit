@@ -1,0 +1,20 @@
+# AST: Obj::SetOperator::IndexIntersect
+# Run: target/release/litex -f examples/test_objs/index_intersect.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# Retired empty-index positive: WD now requires a nonempty index.
+# # P03: index_intersect({}, N, A) = N
+# sketch:
+#     have fn A(k {}) power_set(N) = {}
+#     index_intersect({}, N, A) = N
+#
+
+# P05: $is_set(index_intersect({1}, N, A))
+sketch:
+    forall A fn(k {1}) power_set(N):
+        $is_set(index_intersect({1}, N, A))
+
+# P06: index_intersect({1, 2}, N, A) = index_intersect({1, 2}, N, A)
+sketch:
+    forall A fn(k {1, 2}) power_set(N):
+        index_intersect({1, 2}, N, A) = index_intersect({1, 2}, N, A)

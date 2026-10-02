@@ -3,7 +3,7 @@ use super::exec_stmt_result::{
 };
 use crate::ast::stmt::{
     ByStmt, CommandStmt, DefineObjStmt, DefinitionStmt, ProofBlockStmt, RegisterStmt,
-    ReleaseAndExpandStmt, Stmt,
+    ReleaseAndExpandStmt, Stmt, TemplateDefEnum,
 };
 use crate::execute::execute_by_stmt::{
     exec_by_cases_stmt, exec_by_contra_stmt, exec_by_def_stmt, exec_by_enumerate_finite_set_stmt,
@@ -41,13 +41,20 @@ impl Runtime {
 
     fn exec_stmt_in_current_env(&mut self, stmt: &Stmt) -> RuntimeResult<ExecStmtResult> {
         if self.launch_command.is_strict() {
-            match stmt {
-                Stmt::Trust(_) => {
-                    return Err(RuntimeError::InvalidArguments(format!(
-                        "`trust` / `trust have` are forbidden under {} `-strict`",
-                        crate::LITEX
-                    )));
+            let has_user_trust = match stmt {
+                Stmt::Trust(_) => true,
+                Stmt::Definition(DefinitionStmt::DefTemplateStmt(template)) => {
+                    matches!(&template.template_def_stmt, TemplateDefEnum::TrustHaveStmt(_))
                 }
+                _ => false,
+            };
+            if has_user_trust {
+                return Err(RuntimeError::InvalidArguments(format!(
+                    "`trust` / `trust have` are forbidden under {} `-strict`",
+                    crate::LITEX
+                )));
+            }
+            match stmt {
                 Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(_)) => {
                     return Err(RuntimeError::InvalidArguments(format!(
                         "`abstract_prop` is forbidden under {} `-strict`",

@@ -1,0 +1,2 @@
+# Must reject: factorial N01
+let x = factorial(-1)

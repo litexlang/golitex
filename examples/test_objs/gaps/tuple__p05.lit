@@ -1,0 +1,2 @@
+# Intended valid regression: tuple P05
+(1 + 1, 3) = (2, 3)

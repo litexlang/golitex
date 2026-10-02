@@ -1,0 +1,31 @@
+# AST: Obj::ExpLogOperator::Sqrt
+# Run: target/release/litex -f examples/test_objs/sqrt.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: sqrt(0) = 0
+sketch:
+    sqrt(0) = 0
+
+# P02: sqrt(1) = 1
+sketch:
+    sqrt(1) = 1
+
+# P03: sqrt(4) = 2
+sketch:
+    sqrt(4) = 2
+
+# P04: sqrt(1 / 4) = 1 / 2
+sketch:
+    sqrt(1 / 4) = 1 / 2
+
+# P05: sqrt(2)^2 = 2
+sketch:
+    sqrt(2)^2 = 2
+
+# P06: sqrt((-3)^2) = 3
+sketch:
+    sqrt((-3)^2) = 3
+
+# P07: sqrt(sqrt(16)) = 2
+sketch:
+    sqrt(sqrt(16)) = 2

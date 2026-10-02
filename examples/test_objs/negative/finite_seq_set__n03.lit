@@ -1,0 +1,2 @@
+# Must reject: finite_seq_set N03
+finite_seq(R, 2) = finite_seq(R, 3)

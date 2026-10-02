@@ -1,0 +1,2 @@
+# Must reject: imaginary_part N02
+img(i) = 0

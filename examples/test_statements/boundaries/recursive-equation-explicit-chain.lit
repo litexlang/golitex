@@ -1,0 +1,13 @@
+# Task: K003 reclassified as a current proof-search limitation on 2026-10-02.
+# Run: target/release/litex -lang en -strict -f examples/test_statements/boundaries/recursive-equation-explicit-chain.lit
+
+have fn f(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: f(n - 1)
+f(0) = 0
+f(1) = 0
+f(2) = f(2 - 1) = f(1) = 0
+
+# Former short assertion: f(2) = 0
+# The user classifies the required explicit steps as a current capability limit,
+# not a verifier bug. Preserve the accepted chain as normal regression coverage.

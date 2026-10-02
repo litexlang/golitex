@@ -1,0 +1,2 @@
+# Must reject: arcsin N03
+let x = arcsin(2)

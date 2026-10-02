@@ -29,9 +29,7 @@ fn map_failed(failed: EnumerateForallFailed) -> ExecByEnumerateFiniteSetStmtFail
     match failed {
         EnumerateForallFailed::GoalWd(r) => ExecByEnumerateFiniteSetStmtFailed::GoalWd(r),
         EnumerateForallFailed::Domain(s) => ExecByEnumerateFiniteSetStmtFailed::Domain(s),
-        EnumerateForallFailed::ProofBody(_b) => {
-            ExecByEnumerateFiniteSetStmtFailed::Domain("proof body failed".to_string())
-        }
+        EnumerateForallFailed::ProofBody(failed) => ExecByEnumerateFiniteSetStmtFailed::ProofBody(failed),
         EnumerateForallFailed::Assignment {
             index,
             then_index,

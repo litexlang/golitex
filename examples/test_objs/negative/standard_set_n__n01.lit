@@ -1,0 +1,2 @@
+# Must reject: standard_set_n N01
+-1 $in N

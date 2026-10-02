@@ -121,6 +121,12 @@ impl Runtime {
             verify_state.clone(),
         )?;
         let mut reqs = Vec::new();
+        // Indexed operators require a nonempty index carrier, independently
+        // of whether the family is an anonymous or a named function.
+        reqs.push(self.require_is_nonempty_set(
+            value.index_set.as_ref(), verify_state.clone(),
+            format!("index_union: index {} must be nonempty", value.index_set.ir()),
+        )?);
         reqs.push(self.require_is_set(
             value.index_set.as_ref(),
             verify_state.clone(),
@@ -207,6 +213,12 @@ impl Runtime {
             verify_state.clone(),
         )?;
         let mut reqs = Vec::new();
+        // Indexed operators require a nonempty index carrier, independently
+        // of whether the family is an anonymous or a named function.
+        reqs.push(self.require_is_nonempty_set(
+            value.index_set.as_ref(), verify_state.clone(),
+            format!("index_intersect: index {} must be nonempty", value.index_set.ir()),
+        )?);
         reqs.push(self.require_is_set(
             value.index_set.as_ref(),
             verify_state.clone(),
@@ -308,6 +320,12 @@ impl Runtime {
             verify_state.clone(),
         )?;
         let mut reqs = Vec::new();
+        // Indexed operators require a nonempty index carrier, independently
+        // of whether the family is an anonymous or a named function.
+        reqs.push(self.require_is_nonempty_set(
+            value.index_set.as_ref(), verify_state.clone(),
+            format!("index_cart: index {} must be nonempty", value.index_set.ir()),
+        )?);
         reqs.push(self.require_is_set(
             value.index_set.as_ref(),
             verify_state.clone(),

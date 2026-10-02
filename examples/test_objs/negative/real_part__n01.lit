@@ -1,0 +1,2 @@
+# Must reject: real_part N01
+let x = re({1})

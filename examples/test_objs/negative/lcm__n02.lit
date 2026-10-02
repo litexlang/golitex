@@ -1,0 +1,2 @@
+# Must reject: lcm N02
+lcm(6, 4) = 6

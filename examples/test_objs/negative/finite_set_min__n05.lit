@@ -1,0 +1,2 @@
+# Must reject: finite_set_min N05
+let n = finite_set_min({2, 2})

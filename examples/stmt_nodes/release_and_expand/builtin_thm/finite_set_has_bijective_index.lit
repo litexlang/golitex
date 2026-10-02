@@ -1,0 +1,7 @@
+# Before: named builtin was not found.
+# release thm finite_set_has_bijective_index({1, 2})
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/finite_set_has_bijective_index.lit
+release thm finite_set_has_bijective_index({1, 2})
+exist idx finite_seq({1, 2}, finite_set_size({1, 2})) st {$bijective(closed_range(1, finite_set_size({1, 2})), {1, 2}, idx)}
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

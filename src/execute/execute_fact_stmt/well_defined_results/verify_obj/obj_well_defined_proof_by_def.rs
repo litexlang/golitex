@@ -7,6 +7,7 @@ use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::ast::obj::FnSet;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result::FactWellDefinedProof;
 use crate::runtime::FactId;
 
@@ -148,12 +149,13 @@ impl IdentifierObjWellDefinedProof {
 }
 
 // Which FnSet supplied the domain check for a successful FnObj application.
-// Identifier / template heads cite an InFunctionSet store; anonymous literals
+// Identifier / template heads cite a source fact and its head equality; anonymous literals
 // carry their own `body` FnSet and have no registration FactId.
 pub enum FnObjDomainFnSetEvidence {
     InFunctionSet {
         fn_set: FnSet,
         fact_id: FactId,
+        function_equal: KnownEqualityPathProof,
     },
     AnonymousLiteral {
         fn_set: FnSet,
@@ -1206,4 +1208,3 @@ impl IntervalObjObjWellDefinedProof {
         }
     }
 }
-

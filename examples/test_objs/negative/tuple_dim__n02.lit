@@ -1,0 +1,2 @@
+# Must reject: tuple_dim N02
+tuple_dim((1, 2)) = 3

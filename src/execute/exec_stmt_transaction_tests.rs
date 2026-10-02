@@ -1574,7 +1574,6 @@ fn ambient_by_definition_expands_user_prop() {
 
 #[test]
 fn fn_obj_application_requires_in_function_set() {
-    use crate::exec_env::SpecialObjectPropertyByDefinition;
 
     // No registration → soft fail.
     let mut runtime = runtime_with_file_env();
@@ -1591,10 +1590,10 @@ fn fn_obj_application_requires_in_function_set() {
     assert!(
         runtime
             .top_exec_env()
-            .special_object_properties_by_def
+            .special_properties
             .values()
             .flatten()
-            .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
+            .any(|p| p.function_signature().is_some()),
         "let f = anon must store InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
@@ -1712,7 +1711,6 @@ fn binder_obj_well_definedness_keeps_local_env() {
 
 #[test]
 fn have_fn_equal_and_by_exist_slice1() {
-    use crate::exec_env::SpecialObjectPropertyByDefinition;
 
     let mut runtime = runtime_with_file_env();
     let r = exec_one(&mut runtime, "have left_greater R:\n    left_greater > 100");
@@ -1724,10 +1722,10 @@ fn have_fn_equal_and_by_exist_slice1() {
     assert!(
         runtime
             .top_exec_env()
-            .special_object_properties_by_def
+            .special_properties
             .values()
             .flatten()
-            .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
+            .any(|p| p.function_signature().is_some()),
         "have fn must store InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
@@ -1739,7 +1737,6 @@ fn have_fn_equal_and_by_exist_slice1() {
 
 #[test]
 fn have_fn_by_cases_slice2() {
-    use crate::exec_env::SpecialObjectPropertyByDefinition;
     use crate::execute::execute_have_fn_equal_case_by_case_stmt::{
         ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult
     };
@@ -1778,10 +1775,10 @@ fn have_fn_by_cases_slice2() {
     assert!(
         runtime
             .top_exec_env()
-            .special_object_properties_by_def
+            .special_properties
             .values()
             .flatten()
-            .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
+            .any(|p| p.function_signature().is_some()),
         "by cases must store InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have a R = 2").is_failed());
@@ -1796,7 +1793,6 @@ fn have_fn_by_exist_stores_membership_and_properties() {
     use crate::execute::execute_have_fn_by_forall_exist_unique_stmt::ExecHaveFnByForallExistUniqueStmtResult;
     use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::execute::ExecStmtResult;
-    use crate::exec_env::SpecialObjectPropertyByDefinition;
 
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
@@ -1833,10 +1829,10 @@ fn have_fn_by_exist_stores_membership_and_properties() {
 
     let props_ok = runtime
         .top_exec_env()
-        .special_object_properties_by_def
+        .special_properties
         .values()
         .flatten()
-        .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_)));
+        .any(|p| p.function_signature().is_some());
     assert!(props_ok, "by exist! must store InFunctionSet");
 }
 
@@ -2018,6 +2014,7 @@ fn have_fn_by_induc_countdown_slice() {
                 ExecHaveFnByInducStmtFailed::CaseBodyInRetSet(i, _) => {
                     format!("CaseBodyInRetSet {i}")
                 }
+                ExecHaveFnByInducStmtFailed::NestedCase { index, .. } => format!("NestedCase {index}"),
                 ExecHaveFnByInducStmtFailed::Shape(s) => format!("Shape({s})")
             };
             panic!("countdown by induc failed: {msg}");
@@ -2977,16 +2974,15 @@ fn infer_positive_real_power_equal_transfers_r_pos_membership() {
 #[test]
 fn trust_in_fn_set_registers_in_function_set_for_application_wd() {
     let mut runtime = runtime_with_file_env();
-    use crate::exec_env::SpecialObjectPropertyByDefinition;
     assert!(!exec_one(&mut runtime, "have f set").is_failed());
     assert!(!exec_one(&mut runtime, "trust f $in fn(t R) R").is_failed());
     assert!(
         runtime
             .top_exec_env()
-            .special_object_properties_by_def
+            .special_properties
             .values()
             .flatten()
-            .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
+            .any(|p| p.function_signature().is_some()),
         "trust f $in fn(...) must register InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have arg R").is_failed());

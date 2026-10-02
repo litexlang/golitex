@@ -175,8 +175,7 @@ conclusion and alpha-compares to the goal before instantiation requirements.
 `VerifyState` non-equality atomic search phases (after WD):
 
 1. **By known**: `search_atomic_except_equality_fact_proof_by_known` first
-   tries stored atomic facts, then registered shape memory in the definition
-   table. It returns
+   tries stored atomic facts, then the object-keyed special-property fact index. It returns
    the existing `AtomicExceptEqualityFactSearchedProof` variants directly:
    `ByKnownAtomicFact` or `ByKnownSpecialProperty`. Both ordinary truth search
    and strategy known-first use this entry; neither consumes builtin rounds
@@ -193,7 +192,7 @@ Equality retains its own identity / builtin / equality-class / constructor /
 deep pipeline; this change concerns non-equality atomics only.
 
 `ByKnownSpecialProperty` reads only exact-object rows from
-`special_object_properties_by_def`, across visible environments. It never
+`special_properties`, across visible environments. It never
 writes that table, verifies a premise, or invokes general equality search.
 The supported leaves establish function-application codomain or `fn_range`
 membership after caller-owned WD. Return sets are structurally substituted
@@ -204,14 +203,28 @@ remains available to prove additional domain premises and records its selected
 signature citation alongside those premise proofs. Source rows are never
 borrowed from an equal function's object key.
 
-This stage preserves existing registration into the definition table, including
-function and sequence shape rows registered by generic `store_atomic_fact`
-from stored memberships/equalities. Consequently, reading this table alone
-does not guarantee that every source row came from a definition statement,
-despite its "definition-time only" declaration comment. A broader fact-based
-condition mechanism, and separation of ordinary signature facts from definition
-metadata in WD and fallback readers, are deferred to a later stage.
-This query refactor changes neither the writers nor WD result/cache fields.
+`SpecialProperty::Membership(InFact)` and `Equality(EqualFact)` retain the
+actual source facts and are indexed centrally by `store_atomic_fact`, regardless
+of whether the source is a definition, a proved statement, an inferred fact,
+or a local hypothesis. Membership rows use the element's canonical ObjIR;
+equality rows use both endpoints. Repeated storage and scope merge deduplicate
+identical rows. `cite_property_fact_id` resolves to the source fact, which may
+be membership or equality rather than a definition statement.
+
+Function WD collects visible signatures through stored equality neighbors and
+records the head-to-signature-subject generating-edge path alongside the source FactId.
+Function-body reduction independently follows a known generating-edge path to
+an anonymous function and records that path as `function_equal` before checking
+the substituted residual equality. Thus `have fn f(x R) R = x + 1; let g = f`
+supports `g(4) = 5` directly. A bare `g $in fn(x R) R` qualifies the call but
+does not supply a body or prove a particular value.
+
+`DefaultStructView(InFact)` labels the view explicitly selected by a typed
+definition. An ordinary later struct membership is indexed as Membership only:
+it neither selects default field names nor releases struct laws. Sequence
+memberships remain real indexed facts rather than definition-only shape rows.
+Statement failure discards all three property kinds with its temporary env;
+known-property queries remain read-only and retain their existing fuel boundary.
 
 Fixed cite-only builtin premises use
 `lookup_atomic_except_equality_fact_proof_by_known`: stored atomic facts first,

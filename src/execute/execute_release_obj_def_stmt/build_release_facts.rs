@@ -90,10 +90,7 @@ impl Runtime {
         let mut out = Vec::with_capacity(built.facts.len());
         for fact in &built.facts {
             if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = fact {
-                self.record_definition_membership_shape(in_fact);
-            }
-            if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = fact {
-                self.record_fn_signature_from_definition_equal(eq);
+                self.record_default_struct_view(in_fact);
             }
             out.push(self.store_fact_and_infer(fact)?);
         }

@@ -1,0 +1,2 @@
+# Must reject: family_union N02
+family_union({{1}}) = {}

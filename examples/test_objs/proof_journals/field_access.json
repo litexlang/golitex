@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "target": "examples/test_objs/field_access.lit",
+  "session_command": "target/release/litex -session -e '1 = 1'",
+  "workflow_deviation": "Current CLI lacks -before/-compact/-runner and parser lacks try; each sketch discards its scope.",
+  "proof_spine": [
+    "Check independent values, carriers, boundaries and composition for field_access"
+  ],
+  "blocks": [
+    {
+      "id": "P01",
+      "source_order": 1,
+      "intent": "p.y = 2",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    struct Point:\n        x R\n        y R\n    have p &Point = (1, 2)\n    p.x = 1\n    p.y = 2",
+          "result": "failed",
+          "verifier_evidence": "... ... ... ... ... ... ... error\nlitex> "
+        }
+      ],
+      "status": "blocked"
+    },
+    {
+      "id": "P02",
+      "source_order": 2,
+      "intent": "p.point.y = p.point.y",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    struct Point:\n        x R\n        y R\n    struct Tagged:\n        point &Point\n        tag N\n    forall p &Tagged:\n        p.point.x = p.point.x\n        p.point.y = p.point.y",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... ... ... ... ... ... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    struct Point:\n        x R\n        y R\n    struct Tagged:\n        point &Point\n        tag N\n    forall p &Tagged:\n        p.point.x = p.point.x\n        p.point.y = p.point.y",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P03",
+      "source_order": 3,
+      "intent": "o.f(2) = o.f(2)",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    struct Ops:\n        f fn(x R) R\n        tag N\n    forall o &Ops:\n        o.f(2) = o.f(2)",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... ... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    struct Ops:\n        f fn(x R) R\n        tag N\n    forall o &Ops:\n        o.f(2) = o.f(2)",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P04",
+      "source_order": 4,
+      "intent": "p.y $in R",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    struct Point:\n        x R\n        y R\n    have p &Point = (1, 2)\n    &Point{p}.x = 1",
+          "result": "failed",
+          "verifier_evidence": "... ... ... ... ... ... session_error: Runtime(ParseError(RuntimeParseError { message: \"explicit struct selection `&Struct{object}.field` has been removed; define the object or function return directly with `&Struct` and write `object.field`\", line: 6, path: Eval }))\nparse_error: explicit struct selection `&Struct{object}.field` has been removed; define the object or function return directly with `&Struct` and write `object.field` at line 6 in <eval>\n"
+        },
+        {
+          "candidate": "sketch:\n    struct Point:\n        x R\n        y R\n    forall p &Point:\n        p.x $in R\n        p.y $in R",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... ... ... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    struct Point:\n        x R\n        y R\n    forall p &Point:\n        p.x $in R\n        p.y $in R",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions.",
+      "contract_revision": "Earlier candidate corrected against current Manual, scope/WD contract, or independent control."
+    }
+  ],
+  "materialization": {
+    "block_ids": [
+      "P02",
+      "P03",
+      "P04"
+    ],
+    "file_gate_result": {
+      "command": [
+        "-f",
+        "examples/test_objs/field_access.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/test_objs/field_access.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "ok": true
+    }
+  },
+  "latest_clean_file_gate": {
+    "command": "target/release/litex -f examples/test_objs/field_access.lit",
+    "verification_date": "2026-10-02",
+    "binary_sha256": "f24fc5c4ded2c946813ede37bd05ac55267a2d49bbc367174daf1428924a34fc",
+    "source_sha256": "c1702e495977ec1c597c105aba9c32c548655f8356131b2134f6344b7c164fd8",
+    "observation": {
+      "observed": "accept",
+      "exit_code": 0,
+      "phase": "success",
+      "diagnostic": "",
+      "statements": 3,
+      "object": "field_access",
+      "file": "field_access.lit",
+      "kind": "positive",
+      "intended": "accept"
+    }
+  }
+}

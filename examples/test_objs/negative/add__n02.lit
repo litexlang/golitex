@@ -1,0 +1,2 @@
+# Must reject: add N02
+let x = {1} + 2

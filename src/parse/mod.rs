@@ -16,7 +16,7 @@
 //!    ExecEnv here.
 //! 4. Errors use RuntimeParseError + TokenBlock path; AST uses SourceLine (CodeSource).
 //!
-//! Deferred: by induc binder reuse (parse_error).
+//! `by induc n` selects a visible binder; declarations still reject shadowing.
 
 mod fact;
 mod fact_prop;

@@ -1,0 +1,38 @@
+# Before: f(n) failed goal WD because n >= 0 was absent; have/by-def bodies
+# were rejected as NonFactStmt even when their own statements were valid.
+# have fn f(x N) N = x
+# by induc n from 0:
+#     ? f(n) = f(n)
+# Now: goal WD uses n in Z and n >= from, without the induction hypothesis.
+# Both proof cases use the ordinary checked proof-body executor.
+# Boundary: from -1 for f : N -> N and ill-typed proof statements reject.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/by/induction_domain_and_proof_actions.lit
+
+have fn f(x N) N = x
+by induc n from 0:
+    ? f(n) = f(n)
+    have a N = 0
+    let b = a
+
+prop same(x Z):
+    x = x
+by induc m from 0:
+    ? $same(m)
+    ? from m = 0:
+        by def $same(0)
+    ? induc:
+        by def $same(m + 1)
+# Recursive goals can now reach the case proofs. Prove the argument equality
+# explicitly before using the recursive equation and induction hypothesis.
+have fn countdown(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: countdown(n - 1)
+by induc k from 0:
+    ? countdown(k) = 0
+    ? from k = 0:
+        countdown(k) = 0
+    ? induc:
+        (k + 1) - 1 = k
+        countdown(k + 1) = countdown((k + 1) - 1)
+        countdown((k + 1) - 1) = countdown(k)
+        countdown(k) = 0

@@ -76,6 +76,14 @@ impl Runtime {
         self.lookup_named_definition(name, |env, plain| env.lookup_def_abstract_prop(plain))
     }
 
+    pub(crate) fn def_struct_visible(&self, name: &AtomicName) -> Option<&DefStructStmt> {
+        self.lookup_named_definition(name, |env, plain| env.lookup_def_struct(plain))
+    }
+
+    pub(crate) fn def_template_visible(&self, name: &AtomicName) -> Option<&DefTemplateStmt> {
+        self.lookup_named_definition(name, |env, plain| env.lookup_def_template(plain))
+    }
+
     pub(crate) fn def_struct_visible_in_stack(&self, name: &str) -> Option<&DefStructStmt> {
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(def) = env.lookup_def_struct(name) {
@@ -252,9 +260,9 @@ fn stored_identifier_binding_id(definition: &StoredIdentifierDefinition, name: &
         StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((_, stmt)) => &stmt.param_def,
         StoredIdentifierDefinition::HaveObjByExistFacts((_, stmt)) => &stmt.param_def,
         StoredIdentifierDefinition::TrustHave((_, stmt)) => &stmt.param_def,
-        StoredIdentifierDefinition::HaveFnEqualCaseByCase(_)
-        | StoredIdentifierDefinition::HaveFnByForallExistUnique(_)
-        | StoredIdentifierDefinition::HaveFnByInduc(_) => return None,
+        StoredIdentifierDefinition::HaveFnEqualCaseByCase((_, stmt)) => return Some(stmt.name.id),
+        StoredIdentifierDefinition::HaveFnByForallExistUnique((_, stmt)) => return Some(stmt.name.id),
+        StoredIdentifierDefinition::HaveFnByInduc((_, stmt)) => return Some(stmt.name.id),
     };
     params.groups.iter().flat_map(|group| &group.params)
         .find(|bound| bound.name == name).map(|bound| bound.id)

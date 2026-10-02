@@ -1,0 +1,2 @@
+# Must reject: range N02
+3 $in range(1, 3)

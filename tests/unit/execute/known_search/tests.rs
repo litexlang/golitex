@@ -50,7 +50,6 @@ fn cached_literal_application_uses_definition_without_reproving_the_domain() {
 
 #[test]
 fn structurally_inapplicable_signature_does_not_hide_a_later_definition() {
-    use crate::exec_env::SpecialObjectPropertyByDefinition;
 
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn id(x R) R = x");
@@ -69,15 +68,15 @@ fn structurally_inapplicable_signature_does_not_hide_a_later_definition() {
     let id_key = id_signature.element.ir();
     let pair_key = pair_signature.element.ir();
     let env = rt.top_exec_env_mut();
-    let candidate = env.special_object_properties_by_def[&pair_key]
+    let candidate = env.special_properties[&pair_key]
         .iter()
-        .find(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_)))
+        .find(|p| p.function_signature().is_some())
         .unwrap()
         .clone();
     // Inject an arity-mismatched candidate ahead of the real definition to
     // isolate candidate iteration from the definition-registration policy.
     // This candidate must be skipped and must never become the cited source.
-    env.special_object_properties_by_def
+    env.special_properties
         .get_mut(&id_key)
         .unwrap()
         .insert(0, candidate);
@@ -86,7 +85,7 @@ fn structurally_inapplicable_signature_does_not_hide_a_later_definition() {
         let proof = rt
             .search_atomic_except_equality_fact_proof_by_known_special_property(&target)
             .expect("later applicable definition must still be considered");
-        let source = rt.fact_by_id_in_stack(proof.cite_definition_fact_id()).unwrap();
+        let source = rt.fact_by_id_in_stack(proof.cite_property_fact_id()).unwrap();
         assert!(source.readable_string().contains("id $in fn"));
         assert_special(
             rt.verify_fact(&Fact::AtomicFact(target), zero_fuel()).unwrap(),
@@ -208,7 +207,7 @@ fn new_route_has_bilingual_normal_and_typed_detailed_output() {
         for marker in [
             "by_known_special_property",
             "FnApplicationInCodomain",
-            "cite_definition_fact_id",
+            "cite_property_fact_id",
             "signature_matches",
         ] {
             assert!(detailed.contains(marker), "missing {marker}: {detailed}");
@@ -582,7 +581,7 @@ fn memory_sizes(rt: &Runtime) -> Vec<(usize, usize, usize)> {
             (
                 env.facts.facts_by_id.len(),
                 env.well_defined_objects.object_to_wd_id.len(),
-                env.special_object_properties_by_def
+                env.special_properties
                     .values()
                     .map(Vec::len)
                     .sum(),

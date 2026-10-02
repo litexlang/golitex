@@ -1,0 +1,27 @@
+# AST: Obj::IntegerOperator::Factorial
+# Run: target/release/litex -f examples/test_objs/factorial.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 0! = 1
+sketch:
+    0! = 1
+
+# P02: 1! = 1
+sketch:
+    1! = 1
+
+# P03: 5! = 120
+sketch:
+    5! = 120
+
+# P04: factorial(4) = 24
+sketch:
+    factorial(4) = 24
+
+# P05: (2 + 1)! = 6
+sketch:
+    (2 + 1)! = 6
+
+# P06: 3! + 2! = 8
+sketch:
+    3! + 2! = 8

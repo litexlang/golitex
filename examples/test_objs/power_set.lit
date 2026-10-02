@@ -1,0 +1,23 @@
+# AST: Obj::SetOperator::PowerSet
+# Run: target/release/litex -f examples/test_objs/power_set.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: power_set({}) = {{}}
+sketch:
+    power_set({}) = {{}}
+
+# P02: {} $in power_set({1})
+sketch:
+    {} $in power_set({1})
+
+# P03: {1} $in power_set({1})
+sketch:
+    {1} $in power_set({1})
+
+# P04: {1, 2} $in power_set({1, 2})
+sketch:
+    {1, 2} $in power_set({1, 2})
+
+# P05: power_set({1}) = {{}, {1}}
+sketch:
+    power_set({1}) = {{}, {1}}

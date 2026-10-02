@@ -68,21 +68,33 @@ indexing.
 ## Definition table vs IdentifierId
 
 The definition table stores definitions under the **surface plain name**.
-Stmt payload fields that are definition / store keys (`Def*Stmt.name`,
-the case/induction/unique-existence `HaveFn*Stmt.name` fields,
-`DefTemplateStmt.template_name`, …) are typed as `PlainName`.
-Binding-carrying payloads such as `LetObjStmt.name`, have parameters, and
-obtain `equal_tos`, `HaveFnEqualStmt.name`, and
-`HaveByPreimageStmt.preimage_names` preserve `BoundName`; their `.name` remains the definition
+Namespace/label fields such as `DefPropStmt.name`,
+`DefTemplateStmt.template_name`, and theorem names remain `PlainName`.
+Ordinary object declarations preserve `BoundName`: `LetObjStmt.name`, have
+parameters, obtain `equal_tos`, all four `HaveFn*Stmt.name` fields,
+`DefAlgoByCasesStmt.name`, `DefAlgoByInducStmt.name`, and
+`HaveByPreimageStmt.preimage_names`. Their `.name` remains the definition
 table key. Stored mentions are promoted only when the file-root binding has
 the same ID, so a later top-level name cannot capture an earlier local one.
-Local function/preimage execution must use these saved IDs after parse scopes
-have ended. Function definition cache records also encode and remap the
+Local function/preimage execution uses these saved IDs after parse scopes
+have ended. Induction hypotheses and template self-call rewriting use only
+the defining function's saved identity; a foreign same-name function is not
+self-recursion. Equality-form function cache records encode and remap the
 function's BoundName; KB ABI 2 rejects older records lacking this identity.
+Case/induction/unique-existence functions and algo definitions remain
+unsupported by the cache codec and fall back to source execution.
 Occurrence identity for objects/facts uses `IdentifierId` on plain AST/IR,
 or qualified indices+name after file-root promotion.
 Looking up “what is `x` defined as?” is by plain name; citing it across
 files uses `file::x` / `mod::file::x`.
+
+Named-definition readers retain the complete `AtomicName` until selecting
+the owning environment. Qualified predicates use `def_prop_visible` /
+`def_abstract_prop_visible`; template and struct readers use
+`def_template_visible` / `def_struct_visible`. Only the selected environment
+looks up the final plain table key. Calling a stack lookup with
+`name.local_name()` before selecting that owner can substitute a local
+same-name definition into an imported predicate, template, or struct.
 
 ## Deferred
 
@@ -105,6 +117,9 @@ files uses `file::x` / `mod::file::x`.
   `release obj def` can rebuild those three facts.
   A `template` may run this body under local params; `\Name<args>` installs
   the same three facts (membership / property / uniqueness) on the instance.
+  Its source forall is parsed before allocating the chosen function's
+  binding, as with obtain's source. A source parameter or existential witness
+  can therefore share the new function's spelling while retaining its own ID.
 - **`-r` / project mount run loop** still deferred for some polish; set
   `Runtime.code_source` (`RootExport` / `ImportedExport` / …) before parsing
   each export or standalone file. `Eval` / `Repl` never pretend to be `f0`.

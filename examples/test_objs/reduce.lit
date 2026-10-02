@@ -1,0 +1,11 @@
+# AST: Obj::IteratedOperator::Reduce
+# Run: target/release/litex -f examples/test_objs/reduce.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: reduce(2, 2, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 2
+sketch:
+    reduce(2, 2, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 2
+
+# P02: reduce(1, 0, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 7) = 7
+sketch:
+    reduce(1, 0, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 7) = 7

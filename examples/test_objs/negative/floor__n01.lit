@@ -1,0 +1,2 @@
+# Must reject: floor N01
+let x = floor(i)

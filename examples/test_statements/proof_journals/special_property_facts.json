@@ -1,0 +1,228 @@
+{
+  "task": "K001 special-property facts and callable alias redesign",
+  "date": "2026-10-02",
+  "baseline": {
+    "file": "examples/test_statements/bugs/let_obj_stmt/K001-callable-alias-direct/repro.lit",
+    "exit_code": 1,
+    "success": false,
+    "statement_success": [
+      true,
+      true,
+      false
+    ],
+    "failed_phase": "search_proof",
+    "historical_capture": "../bugs/let_obj_stmt/K001-callable-alias-direct/observed.json"
+  },
+  "workflow_deviations": [
+    {
+      "source": "try:\n    have fn property_f(x R) R = x + 1",
+      "status": "rejected",
+      "exit_code": 1,
+      "error": "undefined name `try` at line 1 in <eval>",
+      "label": "kernel_problem",
+      "consequence": "REPL exited; restarted with the supported source-order session. No CLI/parser capability was added."
+    },
+    {
+      "command": "target/release/litex -compact -isolated -runner -f examples/test_statements/bugs/let_obj_stmt/K001-callable-alias-direct/repro.lit",
+      "exit_code": 2,
+      "error": "launch_error: unsupported flags",
+      "consequence": "Use supported -strict -f, require parsed top-level success true and exit 0."
+    }
+  ],
+  "accepted_blocks": [
+    {
+      "source": "have fn property_f(x R) R = x + 1",
+      "output": "have fn property_f(x R) R = x + 1\r\n\r\nsuccess\r\nlitex> litex> ",
+      "exit": null
+    },
+    {
+      "source": "let property_g = property_f",
+      "output": "let property_g = property_f\r\n\r\nsuccess\r\nlitex> litex> ",
+      "exit": null
+    },
+    {
+      "source": "property_g(4) = 5",
+      "output": "property_g(4) = 5\r\n\r\nsuccess\r\nlitex> litex> ",
+      "exit": null
+    },
+    {
+      "source": "let property_h = property_g",
+      "output": "let property_h = property_g\r\n\r\nsuccess\r\nlitex> litex> ",
+      "exit": null
+    },
+    {
+      "source": "property_h(4) = 5",
+      "output": "property_h(4) = 5\r\n\r\nsuccess\r\nlitex> litex> ",
+      "exit": null
+    },
+    {
+      "source": "forall callable set:\n    callable $in fn(x R) R\n    =>:\n        callable(4) $in R",
+      "output": "forall callable set:\r\n    callable $in fn(x R) R\r\n    =>:\r\n        callable(4) $in R\r\n\r\n... ... ... ... success\r\nlitex> ",
+      "exit": null
+    },
+    {
+      "source": "forall other set:\n    property_f = other\n    =>:\n        other(4) = 5",
+      "output": "forall other set:\r\n    property_f = other\r\n    =>:\r\n        other(4) = 5\r\n\r\n... ... ... ... success\r\nlitex> ",
+      "exit": null
+    }
+  ],
+  "checkpoint": {
+    "file": "examples/proof_nodes/equal/by_object_definition/by_fn_application/callable_alias_special_property.lit",
+    "command": "target/release/litex -strict -f examples/proof_nodes/equal/by_object_definition/by_fn_application/callable_alias_special_property.lit",
+    "exit_code": 0,
+    "success": true,
+    "statement_success": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "verification_status": "Complete for the requested SpecialProperty/K001 contract; full docs scan has unrelated audit-reproduction failures.",
+  "rust_gates": {
+    "special_property_tests": {
+      "passed": 8,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "known_search_tests": {
+      "passed": 20,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "equality_search_tests": {
+      "passed": 13,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "exec_stmt_transaction_tests": {
+      "passed": 137,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "declaration_binding_tests": {
+      "passed": 23,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "run_examples": {
+      "passed": 1,
+      "failed": 0,
+      "exit_code": 0
+    }
+  },
+  "statement_suite": {
+    "statement_leaves": 50,
+    "checks": 361,
+    "passed": 361,
+    "unexpected_failures": 0,
+    "known_gaps": 11
+  },
+  "direct_artifacts": [
+    {
+      "file": "examples/proof_nodes/equal/by_object_definition/by_fn_application/callable_alias_special_property.lit",
+      "exit_code": 0,
+      "success": true
+    },
+    {
+      "file": "examples/proof_nodes/equal/by_object_definition/by_fn_application/have_fn_equal.lit",
+      "exit_code": 0,
+      "success": true
+    },
+    {
+      "file": "examples/proof_nodes/equal/by_object_definition/by_fn_application/have_fn_equal_case_by_case.lit",
+      "exit_code": 0,
+      "success": true
+    },
+    {
+      "file": "examples/proof_nodes/equal/by_object_definition/by_fn_application/have_fn_by_induc.lit",
+      "exit_code": 0,
+      "success": true
+    },
+    {
+      "file": "examples/stmt_nodes/definition/struct_field_access_wd.lit",
+      "exit_code": 0,
+      "success": true
+    },
+    {
+      "file": "examples/stmt_nodes/definition/struct_field_access_nested.lit",
+      "exit_code": 0,
+      "success": true
+    },
+    {
+      "file": "examples/stmt_nodes/definition/release_struct_def.lit",
+      "exit_code": 0,
+      "success": true
+    }
+  ],
+  "let_suite": {
+    "checks": 8,
+    "passed": 8,
+    "unexpected_failures": 0,
+    "known_gaps": 0
+  },
+  "touched_documentation": [
+    {
+      "file": "docs/Manual.md",
+      "passed": 72,
+      "failures": []
+    },
+    {
+      "file": "docs/FAQ.md",
+      "passed": 15,
+      "failures": []
+    },
+    {
+      "file": "docs/Litex_Blueprint.md",
+      "passed": 26,
+      "failures": []
+    }
+  ],
+  "full_documentation_scan": {
+    "exit_code": 1,
+    "blocks": 190,
+    "passed": 181,
+    "failed": 9,
+    "failed_blocks": [
+      "docs/audits/statement-semantics-crosscheck-2026-10-02.md ```litex```#2 (md line 35)",
+      "docs/audits/statement-semantics-crosscheck-2026-10-02.md ```litex```#3 (md line 45)",
+      "docs/audits/statement-semantics-crosscheck-2026-10-02.md ```litex```#4 (md line 55)",
+      "docs/audits/statement-soundness-2026-10-01.md ```litex```#0 (md line 11)",
+      "docs/audits/statement-soundness-2026-10-01.md ```litex```#1 (md line 21)",
+      "docs/audits/statement-soundness-2026-10-01.md ```litex```#2 (md line 44)",
+      "docs/audits/statement-soundness-2026-10-01.md ```litex```#3 (md line 65)",
+      "docs/audits/statement-soundness-2026-10-01.md ```litex```#4 (md line 79)",
+      "docs/audits/statement-soundness-2026-10-01.md ```litex```#5 (md line 105)"
+    ],
+    "reason": "Unmodified audit documents contain expected-rejection or known-gap reproductions; the positive-fence harness expects success for each unskipped fence. No audit content was changed or skipped."
+  },
+  "examples_harness": {
+    "command": "cargo test --release run_examples -- --nocapture",
+    "passed": 1,
+    "coverage": "The dedicated callable-alias tracer is included by run_examples_callable_alias_special_property. This filter does not represent all repository examples."
+  },
+  "public_output_changes": [
+    "special property source citations: cite_definition_fact_id -> cite_property_fact_id",
+    "function_equal generating-edge paths in application WD and function-body reduction"
+  ],
+  "documentation_impact": {
+    "contract_prose": [
+      "docs/Manual.md",
+      "docs/FAQ.md",
+      "docs/Litex_Blueprint.md",
+      "src/store_fact_and_infer/README.md",
+      "src/execute/execute_fact_stmt/README.md"
+    ],
+    "executable_proof_migration": [
+      "examples/test_statements/let_obj_stmt.lit drops the now-unnecessary application bridges"
+    ],
+    "output_provenance": [
+      "src/json_output/README.md"
+    ],
+    "incidental_cleanup": []
+  },
+  "cleanup": "Task-owned scratch build and test captures removed after transferring summaries to this journal. Historical K001 observed.json is preserved unchanged."
+}

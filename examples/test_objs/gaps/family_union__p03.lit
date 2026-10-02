@@ -1,0 +1,2 @@
+# Intended valid regression: family_union P03
+family_union({{1}, {2}}) = {1, 2}

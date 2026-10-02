@@ -1,0 +1,2 @@
+# Must reject: gcd N01
+let x = gcd(1.5, 2)

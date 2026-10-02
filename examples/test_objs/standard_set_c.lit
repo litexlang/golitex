@@ -1,0 +1,19 @@
+# AST: Obj::StandardSet::C
+# Run: target/release/litex -f examples/test_objs/standard_set_c.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 0 $in C
+sketch:
+    0 $in C
+
+# P02: i $in C
+sketch:
+    i $in C
+
+# P03: 1 + i $in C
+sketch:
+    1 + i $in C
+
+# P04: $is_set(C)
+sketch:
+    $is_set(C)

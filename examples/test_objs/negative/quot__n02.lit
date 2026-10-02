@@ -1,0 +1,2 @@
+# Must reject: quot N02
+let x = quot(1.5, 2)

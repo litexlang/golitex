@@ -1,0 +1,2 @@
+# Must reject: range N01
+let A = range(1 / 2, 3)

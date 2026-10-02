@@ -1,0 +1,3 @@
+# Intended valid regression: index_intersect P02
+have fn A(k {1}) power_set(N) = {k}
+index_intersect({1}, N, A) = {1}

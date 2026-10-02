@@ -1,0 +1,20 @@
+# AST: Obj::SetFormer::FiniteSeqSet
+# Run: target/release/litex -f examples/test_objs/finite_seq_set.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: finite_seq(R, 0) = fn(x {}) R
+sketch:
+    finite_seq(R, 0) = fn(x {}) R
+
+# P02: finite_seq(R, 1) = fn(x closed_range(0, 0)) R
+sketch:
+    finite_seq(R, 1) = fn(x closed_range(0, 0)) R
+
+# P03: finite_seq(R, 3) = fn(x closed_range(0, 2)) R
+sketch:
+    finite_seq(R, 3) = fn(x closed_range(0, 2)) R
+
+# P04: $is_set(S)
+sketch:
+    let S = finite_seq({}, 0)
+    $is_set(S)

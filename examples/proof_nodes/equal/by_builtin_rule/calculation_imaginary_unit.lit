@@ -1,0 +1,14 @@
+# Before (Ordinary-only calculation rejected both):
+# i * i = -1
+# i^2 = -1
+# Now: Calculation with complex normalization, using the reserved i literal.
+# Run: target/release/litex -f examples/proof_nodes/equal/by_builtin_rule/calculation_imaginary_unit.lit
+i * i = -1
+i^2 = -1
+i^3 = -i
+i^4 = 1
+i / 2 + i / 2 = i
+(1 + i) * (1 - i) = 2
+forall z C:
+    (z + i) * (z - i) = z^2 + 1
+# Boundary: i*i=1 and division by zero remain rejected.

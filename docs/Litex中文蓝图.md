@@ -2,7 +2,7 @@
 
 文档由沈嘉辰创建和维护。
 
-最后更新：2026 年 9 月 30 日。
+最后更新：2026 年 10 月 2 日。
 
 官网页面: https://litexlang.com/doc/Litex中文蓝图
 
@@ -55,18 +55,161 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 
 Litex的设计主要由下面几个方面展开：
 
-1. 我写下要证明什么，语言告诉我为什么成立。
+**1. 我写下要证明什么，语言告诉我为什么成立。**
+
 我仍然需要思考证明、选择构造和中间结论。但对于可以从当前知识中找到的局部依据，我希望语言能主动完成检查，并向我解释它找到了什么。
-2. 我可以从已经熟悉的数学世界开始。
+
+例如，我可以直接写下一条计算事实：
+
+```litex
+1 + 1 = 2
+```
+
+下面是当前 CLI 输出中对应的语句记录。`proof_method` 说明依据，`stores` 记录后面可以继续使用的事实：
+
+```json
+{
+  "success": true,
+  "statement": "1 + 1 = 2",
+  "proof_method": {
+    "type": "builtin_rule",
+    "rule_name": "Calculation",
+    "message": "Both sides evaluate to the same number"
+  },
+  "stores": ["1 + 1 = 2"],
+  "infers": []
+}
+```
+
+我也可以先定义奇数，再写下一个具体判断：
+
+```litex
+prop is_odd(x Z):
+    x % 2 = 1
+
+$is_odd(3)
+```
+
+这句 `$is_odd(3)` 对应的 JSON 记录说明，语言通过展开定义完成检查，并留下定义中的具体事实：
+
+```json
+{
+  "success": true,
+  "statement": "$is_odd(3)",
+  "proof_method": {
+    "type": "by_definition",
+    "rule_name": "By definition",
+    "message": "Verified by unfolding a definition"
+  },
+  "stores": ["$is_odd(3)"],
+  "infers": ["3 $in Z", "3 % 2 = 1"]
+}
+```
+
+这些记录让人和 AI 都能看到：这一句检查是否成功，语言找到了哪一种依据，以及这一步留下了什么。
+
+**2. 我可以从已经熟悉的数学世界开始。**
+
 Litex 以 ZFC 为基础，用集合、元素、函数与关系组织数学。我希望读者学习形式化时，能尽可能继续使用原有的数学直觉与表达习惯。
-3. 我们已经建立的知识，语言能够记住并继续使用。
+
+例如，把实数、集合、函数和关系放在同一个小例子里：
+
+```litex
+have a R = 2
+
+have S set = {x R: x > 0}
+
+have fn f(x R) R = x^2
+
+prop is_less(x, y R):
+    x < y
+
+$is_less(2, 4)
+```
+
+`have a R = 2` 同时引入了 `a $in R` 和 `a = 2`。`S` 是正实数集合，`f` 是实数上的平方函数，`is_less` 表达两个实数之间的小于关系；最后一句验证了具体关系 `2 < 4`。这些对象沿用日常数学中的组织方式。
+
+**3. 我们已经建立的知识，语言能够记住并继续使用。**
+
 证明每前进一步，都应留下后面可以依赖的东西。对象、定义与已验证事实共同构成当前的数学背景，让新的推理在这个背景上继续生长。
-4. 写下和检查证明的过程，也能加深理解。
-我希望读者既能读懂源码中的数学，也能看见每一步的成立依据。形式化留下的成果，应当有助于人解释、交流和重新发现证明的思路。
-5. AI 可以和人一起，在明确反馈中推进证明。
+
+例如，我们可以自己证明康托尔定理：每个函数 \(f:X\to\mathcal P(X)\) 都会漏掉某个子集，因此不可能是满射。下面先定义“一个子集没有原像”，再用对角集合证明一般结论，最后把它用于一个具体函数。整段代码不使用 `trust`：
+
+```litex
+prop has_no_preimage(X set, f fn(x X) power_set(X), D power_set(X)):
+    forall a X:
+        D != f(a)
+
+thm cantor:
+    ? forall X set, f fn(x X) power_set(X):
+        exist D power_set(X) st {$has_no_preimage(X, f, D)}
+
+    have D power_set(X) = {x X: not x $in f(x)}
+
+    thm diagonal_nonmembership:
+        ? forall a X:
+            D = f(a)
+            =>:
+                not a $in f(a)
+        by contra:
+            ? not a $in f(a)
+            a $in {x X: not x $in f(x)}
+            impossible a $in f(a)
+
+    claim:
+        ? forall a X:
+            D != f(a)
+        by contra:
+            ? D != f(a)
+            not a $in f(a)
+            a $in D
+            a $in f(a)
+            impossible a $in f(a)
+
+    by def $has_no_preimage(X, f, D)
+    witness exist E power_set(X) st {$has_no_preimage(X, f, E)} from D
+
+have fn singleton(n N) power_set(N) = {n}
+obtain missing from exist S power_set(N) st {$has_no_preimage(N, singleton, S)}
+missing != singleton(0)
+```
+
+这个例子展示了知识怎样在证明中积累并继续使用。定义概念、证明康托尔定理之后，这些成果就成为当前数学背景的一部分。引入具体函数 `singleton` 后，Litex 能继续使用已经证明的一般结论，得到新的对象与事实，供后续推理依赖。
+
+**4. AI 可以和人一起，在明确反馈中推进证明。**
+
 AI 可以协助尝试不同思路、补充步骤和修正错误；人关注问题本身与数学意义；Litex 提供验证反馈。三者共同工作的过程，应当能够积累可检查的成果。
-6. 写出的证明，最终还能交给 Lean 再检查一次。
+
+```mermaid
+flowchart LR
+    Human["人：问题与数学判断"] --> AI["AI：提出并修正证明"]
+    AI --> Litex["Litex：验证与反馈"]
+    Litex --> AI
+    Litex --> Knowledge["已验证的知识"]
+    Knowledge --> Human
+    Knowledge --> AI
+```
+
+**5. 写出的证明，最终还能交给 Lean 再检查一次。**
+
 我希望这些更贴近日常数学的表达，能够编译为 Lean 证明对象，接受独立复核并连接现有生态。当前构建尚未接入这个编译入口，它仍是 Litex 要继续实现的目标。
+
+例如，一条 Litex 计算事实：
+
+```litex
+1 + 1 = 2
+```
+
+沿用仓库早期编译实验的表示方式，对应的 Lean 证明可以写为：
+
+```lean
+import Litex
+
+theorem one_add_one : Litex.Same ((1 : ℂ) + (1 : ℂ)) (2 : ℂ) := by
+  exact Litex.Same.ofEq (by norm_num)
+```
+
+`Litex.Same` 是编译层中的相等关系。上面的最小 Lean 片段已由 Lean 检查；它展示目标证明的形式，当前 Litex 构建仍未提供生成它的编译入口。
 
 <a id="overview-readers"></a>
 

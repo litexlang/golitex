@@ -1,0 +1,2 @@
+# Must reject: cot N02
+cot(pi / 4) = 0

@@ -21,7 +21,7 @@ pub fn exec_release_thm_stmt(
     };
 
     let (dom_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let type_proofs = match verify_prepared_type_facts(rt, &prepared.type_facts)? {
+        let type_proofs = match verify_prepared_type_facts(rt, &thm_name, &prepared.type_facts)? {
             Ok(proofs) => proofs,
             Err(failed) => return Ok(Err(failed)),
         };
@@ -29,14 +29,18 @@ pub fn exec_release_thm_stmt(
         for (index, dom) in prepared.dom_facts.iter().enumerate() {
             let proof = verify_goal_fact(rt, dom)?;
             if proof.is_failed() {
-                return Ok(Err(ExecReleaseThmStmtFailed::Dom { index, result: proof }));
+                return Ok(Err(ExecReleaseThmStmtFailed::Dom { theorem: thm_name.clone(), fact: dom.clone(), index, result: proof }));
             }
+            let _ = rt.store_fact_and_infer(dom)?;
             dom_proofs.push(proof);
         }
-        Ok(Ok((type_proofs, dom_proofs)))
+        let conclusions_wd = match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
+            Ok(proofs) => proofs, Err(failed) => return Ok(Err(failed)),
+        };
+        Ok(Ok((type_proofs, dom_proofs, conclusions_wd)))
     })?;
 
-    let (type_proofs, dom_proofs) = match dom_outcome {
+    let (type_proofs, dom_proofs, conclusions_wd) = match dom_outcome {
         Ok(p) => p,
         Err(failed) => return Ok(ExecReleaseThmStmtResult::Failed(failed)),
     };
@@ -47,7 +51,7 @@ pub fn exec_release_thm_stmt(
             Ok(s) => stored.push(s),
             Err(message) => {
                 return Ok(ExecReleaseThmStmtResult::Failed(
-                    ExecReleaseThmStmtFailed::Store { index, message },
+                    ExecReleaseThmStmtFailed::Store { theorem: thm_name.clone(), index, message },
                 ));
             }
         }
@@ -55,8 +59,10 @@ pub fn exec_release_thm_stmt(
 
     Ok(ExecReleaseThmStmtResult::Success(ExecReleaseThmStmtSuccess {
         thm_name,
+        builtin: prepared.builtin,
         type_proofs,
         dom_proofs,
+        conclusions_wd,
         local_env,
         stored,
     }))
@@ -78,7 +84,7 @@ pub fn exec_by_thm_stmt(
 
     let selected: Fact = stmt.selected_fact.clone().into();
     let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let type_proofs = match verify_prepared_type_facts(rt, &prepared.type_facts)? {
+        let type_proofs = match verify_prepared_type_facts(rt, &thm_name, &prepared.type_facts)? {
             Ok(proofs) => proofs,
             Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
         };
@@ -87,23 +93,27 @@ pub fn exec_by_thm_stmt(
             let proof = verify_goal_fact(rt, dom)?;
             if proof.is_failed() {
                 return Ok(Err(ExecByThmStmtFailed::Release(
-                    ExecReleaseThmStmtFailed::Dom { index, result: proof },
+                    ExecReleaseThmStmtFailed::Dom { theorem: thm_name.clone(), fact: dom.clone(), index, result: proof },
                 )));
             }
             let _ = rt.store_fact_and_infer(dom)?;
             dom_proofs.push(proof);
         }
+        let conclusions_wd = match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
+            Ok(proofs) => proofs,
+            Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
+        };
         for conclusion in &prepared.conclusions {
             let _ = rt.store_fact_and_infer(conclusion)?;
         }
         let selected_proof = verify_goal_fact(rt, &selected)?;
         if selected_proof.is_failed() {
-            return Ok(Err(ExecByThmStmtFailed::Selected(selected_proof)));
+            return Ok(Err(ExecByThmStmtFailed::Selected { theorem: thm_name.clone(), fact: selected.clone(), result: selected_proof }));
         }
-        Ok(Ok((type_proofs, dom_proofs, selected_proof)))
+        Ok(Ok((type_proofs, dom_proofs, conclusions_wd, selected_proof)))
     })?;
 
-    let (type_proofs, dom_proofs, selected_proof) = match local_outcome {
+    let (type_proofs, dom_proofs, conclusions_wd, selected_proof) = match local_outcome {
         Ok(v) => v,
         Err(failed) => {
             return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(failed)));
@@ -114,7 +124,7 @@ pub fn exec_by_thm_stmt(
         Ok(s) => s,
         Err(msg) => {
             return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(
-                ExecByThmStmtFailed::Store(msg),
+                ExecByThmStmtFailed::Store { theorem: thm_name.clone(), message: msg },
             )));
         }
     };
@@ -122,8 +132,10 @@ pub fn exec_by_thm_stmt(
     Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(
         ExecByThmStmtSuccess {
             thm_name,
+            builtin: prepared.builtin,
             type_proofs,
             dom_proofs,
+            conclusions_wd,
             selected_proof,
             local_env,
             stored,
@@ -132,6 +144,7 @@ pub fn exec_by_thm_stmt(
 }
 
 pub(crate) struct PreparedRelease {
+    pub(crate) builtin: Option<super::result::BuiltinThmApplication>,
     pub(crate) type_facts: Vec<Fact>,
     pub(crate) dom_facts: Vec<Fact>,
     pub(crate) conclusions: Vec<Fact>,
@@ -141,12 +154,16 @@ pub(crate) fn prepare_release_conclusions(
     runtime: &mut Runtime,
     call: &TheoremCall,
 ) -> RuntimeResult<Result<PreparedRelease, ExecReleaseThmStmtFailed>> {
+    if let Some(prepared) = super::builtin_thm::prepare_builtin_thm(runtime, call)? {
+        return Ok(prepared);
+    }
     if let Some(def_thm) = runtime.def_thm_visible(&call.name).cloned() {
         let thm_name = call.name.local_name();
         return match &def_thm.fact {
             Fact::ForallFact(forall) => prepare_forall_release(runtime, forall, &call.arguments),
             other => match &call.arguments {
                 TheoremCallArguments::Bare => Ok(Ok(PreparedRelease {
+                    builtin: None,
                     type_facts: Vec::new(),
                     dom_facts: Vec::new(),
                     conclusions: vec![other.clone()],
@@ -223,6 +240,7 @@ fn prepare_forall_release(
     }
 
     Ok(Ok(PreparedRelease {
+        builtin: None,
         type_facts,
         dom_facts,
         conclusions,
@@ -231,16 +249,32 @@ fn prepare_forall_release(
 
 fn verify_prepared_type_facts(
     runtime: &mut Runtime,
+    thm_name: &str,
     type_facts: &[Fact],
 ) -> RuntimeResult<Result<Vec<crate::execute::execute_fact_stmt::VerifyFactResult>, ExecReleaseThmStmtFailed>> {
     let mut proofs = Vec::with_capacity(type_facts.len());
     for (index, fact) in type_facts.iter().enumerate() {
         let proof = verify_goal_fact(runtime, fact)?;
         if proof.is_failed() {
-            return Ok(Err(ExecReleaseThmStmtFailed::Type { index, result: proof }));
+            return Ok(Err(ExecReleaseThmStmtFailed::Type { theorem: thm_name.to_string(), fact: fact.clone(), index, result: proof }));
         }
         let _ = runtime.store_fact_and_infer(fact)?;
         proofs.push(proof);
+    }
+    Ok(Ok(proofs))
+}
+
+fn verify_prepared_conclusions_wd(
+    runtime: &mut Runtime, thm_name: &str, conclusions: &[Fact],
+) -> RuntimeResult<Result<Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>, ExecReleaseThmStmtFailed>> {
+    use crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult;
+    let mut proofs = Vec::with_capacity(conclusions.len());
+    for (index, fact) in conclusions.iter().enumerate() {
+        let result = runtime.verify_fact_well_definedness(fact, super::helper::proof_verify_state())?;
+        match result {
+            VerifyFactWellDefinedResult::Success(proof) => proofs.push(proof),
+            failed => return Ok(Err(ExecReleaseThmStmtFailed::ConclusionWd { theorem: thm_name.to_string(), fact: fact.clone(), index, result: failed })),
+        }
     }
     Ok(Ok(proofs))
 }

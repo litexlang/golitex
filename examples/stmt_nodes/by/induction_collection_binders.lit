@@ -1,0 +1,24 @@
+# Before: `{n}={n}` and `(n,0)=(n,0)` could not recover the parsed induction ID.
+# by induc n from 0:
+#     ? {n} = {n}
+# Now: collection, function, set-builder, and operator children are traversed.
+# Boundary: nested binders stay bound; module-qualified names are not local n.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/by/induction_collection_binders.lit
+
+by induc n from 0:
+    ? {n} = {n}
+by strong_induc k from 0:
+    ? (k, 0) = (k, 0)
+by induc m from 0:
+    ? {y Z: y = m} = {z Z: z = m}
+by induc t from 0:
+    ? fn(x Z) Z {t} = fn(y Z) Z {t}
+
+# A binder unused by the goal can still occur in an ordinary proof action.
+by induc j from 0:
+    ? 0 = 0
+    have a Z = j
+
+# A genuinely unused binder does not require a redundant `? k = k` target.
+by strong_induc k from 0:
+    ? 0 = 0

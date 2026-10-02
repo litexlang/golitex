@@ -1,0 +1,19 @@
+# AST: Obj::IteratedOperator::SumOfFiniteSet
+# Run: target/release/litex -f examples/test_objs/sum_of_finite_set.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: finite_set_sum({}, fn(x Z) Z {x}) = 0
+sketch:
+    finite_set_sum({}, fn(x Z) Z {x}) = 0
+
+# P02: finite_set_sum({2}, fn(x Z) Z {x}) = 2
+sketch:
+    finite_set_sum({2}, fn(x Z) Z {x}) = 2
+
+# P05: finite_set_sum({1}, fn(x Z) Z {2}) = 2
+sketch:
+    finite_set_sum({1}, fn(x Z) Z {2}) = 2
+
+# P90: Nearest valid-domain control
+sketch:
+    let s = finite_set_sum({1}, fn(x {1}) Z {x})

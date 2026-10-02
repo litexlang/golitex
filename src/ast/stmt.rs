@@ -312,7 +312,7 @@ pub struct FnSetClause {
 // Stores: `f`, signature membership, and guarded case equations.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveFnEqualCaseByCaseStmt {
-    pub name: PlainName,
+    pub name: BoundName,
     pub fn_set_clause: FnSetClause,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
@@ -338,7 +338,7 @@ pub struct HaveFnByInducCase {
 // Stores: `f`, signature membership, and checked inductive case equations.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveFnByInducStmt {
-    pub name: PlainName,
+    pub name: BoundName,
     pub fn_set_clause: FnSetClause,
     pub measure: Obj,
     pub lower_bound: Obj,
@@ -352,7 +352,7 @@ pub struct HaveFnByInducStmt {
 // (`release obj def` re-stores the same three facts).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveFnByForallExistUniqueStmt {
-    pub name: PlainName,
+    pub name: BoundName,
     pub forall: ForallFact,
     pub line_file: SourceLine,
 }
@@ -457,7 +457,7 @@ pub struct DefStructStmt {
 // Stores: mathematical fn facts (same strength as `have fn … by cases`) plus algo.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefAlgoByCasesStmt {
-    pub name: PlainName,
+    pub name: BoundName,
     pub fn_set_clause: FnSetClause,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
@@ -469,7 +469,7 @@ pub struct DefAlgoByCasesStmt {
 // Stores: mathematical fn facts (same strength as `have fn … by induc`) plus algo.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefAlgoByInducStmt {
-    pub name: PlainName,
+    pub name: BoundName,
     pub fn_set_clause: FnSetClause,
     pub measure: Obj,
     pub lower_bound: Obj,

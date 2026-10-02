@@ -1,0 +1,2 @@
+# Must reject: anonymous_fn N03
+fn(x R) R {x}(1, 2) = 1

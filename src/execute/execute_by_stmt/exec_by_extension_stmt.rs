@@ -1,5 +1,6 @@
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use super::helper::{
-    proof_verify_state, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
+    proof_verify_state, store_goal_fact, verify_goal_fact,
 };
 use super::result::{
     ExecByExtensionStmtFailed, ExecByExtensionStmtResult, ExecByExtensionStmtSuccess,
@@ -45,7 +46,7 @@ pub fn exec_by_extension_stmt(
     .into();
 
     let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let proof_steps = match run_fact_only_proof_steps(rt, &stmt.proof)? {
+        let proof_steps = match run_proof_body_stmts(rt, &stmt.proof)? {
             Ok(steps) => steps,
             Err(failed) => return Ok(Err(ExecByExtensionStmtFailed::ProofBody(failed))),
         };

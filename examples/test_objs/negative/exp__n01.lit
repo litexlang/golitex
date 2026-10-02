@@ -1,0 +1,2 @@
+# Must reject: exp N01
+let x = exp(i)

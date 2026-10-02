@@ -1,0 +1,2 @@
+# Must reject: ln N03
+let x = ln(i)

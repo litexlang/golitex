@@ -1,0 +1,2 @@
+# Must reject: cos N01
+let x = cos(i)

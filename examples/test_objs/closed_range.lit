@@ -1,0 +1,27 @@
+# AST: Obj::SetFormer::ClosedRange
+# Run: target/release/litex -f examples/test_objs/closed_range.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: closed_range(1, 3) = {1, 2, 3}
+sketch:
+    closed_range(1, 3) = {1, 2, 3}
+
+# P02: closed_range(2, 2) = {2}
+sketch:
+    closed_range(2, 2) = {2}
+
+# P03: closed_range(3, 1) = {}
+sketch:
+    closed_range(3, 1) = {}
+
+# P05: 1...3 = closed_range(1, 3)
+sketch:
+    1...3 = closed_range(1, 3)
+
+# P06: 3 $in closed_range(1, 3)
+sketch:
+    3 $in closed_range(1, 3)
+
+# P07: finite_set_size(closed_range(0, 3)) = 4
+sketch:
+    finite_set_size(closed_range(0, 3)) = 4

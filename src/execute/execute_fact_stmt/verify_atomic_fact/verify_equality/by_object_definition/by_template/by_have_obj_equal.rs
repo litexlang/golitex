@@ -76,8 +76,7 @@ impl Runtime {
         &mut self,
         inst: &InstantiatedTemplateObj,
     ) -> RuntimeResult<Option<Obj>> {
-        let plain = inst.template_name.local_name();
-        let Some(def) = self.def_template_visible_in_stack(plain) else {
+        let Some(def) = self.def_template_visible(&inst.template_name) else {
             return Ok(None);
         };
         let TemplateDefEnum::HaveObjEqualStmt(have) = &def.template_def_stmt else {

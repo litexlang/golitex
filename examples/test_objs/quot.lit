@@ -1,0 +1,31 @@
+# AST: Obj::IntegerOperator::Quot
+# Run: target/release/litex -f examples/test_objs/quot.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: quot(7, 3) = 2
+sketch:
+    quot(7, 3) = 2
+
+# P02: quot(-7, 3) = -3
+sketch:
+    quot(-7, 3) = -3
+
+# P03: quot(7, 3) * 3 + 7 % 3 = 7
+sketch:
+    quot(7, 3) * 3 + 7 % 3 = 7
+
+# P04: quot(-7, 3) * 3 + (-7) % 3 = -7
+sketch:
+    quot(-7, 3) * 3 + (-7) % 3 = -7
+
+# P05: quot(0, 3) = 0
+sketch:
+    quot(0, 3) = 0
+
+# P06: quot(7, 1) = 7
+sketch:
+    quot(7, 1) = 7
+
+# P07: -7 = 3 * quot(-7, 3) + (-7) % 3
+sketch:
+    -7 = 3 * quot(-7, 3) + (-7) % 3

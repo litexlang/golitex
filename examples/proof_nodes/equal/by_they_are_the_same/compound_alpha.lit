@@ -1,0 +1,6 @@
+# Before: alpha-equivalence was only dispatched at binder roots.
+# sum(1, 2, fn(x Z) R {x}) = sum(1, 2, fn(y Z) R {y})
+# Now: structural identity includes compound roots containing binders.
+# Run: target/release/litex -f examples/proof_nodes/equal/by_they_are_the_same/compound_alpha.lit
+sum(1, 2, fn(x Z) R {x}) = sum(1, 2, fn(y Z) R {y})
+# Boundary: a changed bound, body, carrier or free identifier is not alpha-renaming.

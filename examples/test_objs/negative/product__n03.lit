@@ -1,0 +1,2 @@
+# Must reject: product N03
+product(1, 1, fn(k Z) Z {k}) = 2

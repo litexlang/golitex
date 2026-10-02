@@ -1,0 +1,11 @@
+# Before: index_cart_member had no native theorem entry.
+# release thm index_cart_member(f, index_cart({1}, {{1}}, g))
+# Now: the callable carrier and choice predicate are verified separately.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/index_cart_member.lit
+thm member:
+    ? forall g fn(k {1}) {{1}}, f fn(i {1}) family_union({{1}}):
+        $is_choice_function_for({1}, {{1}}, g, f)
+        =>:
+            f $in index_cart({1}, {{1}}, g)
+    release thm index_cart_member(f, index_cart({1}, {{1}}, g))
+# Boundary: an arbitrary function without the choice predicate is insufficient.

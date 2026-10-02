@@ -1,0 +1,6 @@
+# Before: named builtin was not found.
+# release thm cart_member_from_coordinates((1, 2), cart(R, Z))
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/cart_member_from_coordinates.lit
+release thm cart_member_from_coordinates((1, 2), cart(R, Z))
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

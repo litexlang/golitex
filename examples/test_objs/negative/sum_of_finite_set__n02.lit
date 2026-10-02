@@ -1,0 +1,2 @@
+# Must reject: sum_of_finite_set N02
+let s = finite_set_sum({1}, fn(x {2}) Z {x})

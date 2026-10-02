@@ -1,0 +1,2 @@
+# Must reject: power_set N02
+power_set({}) = {}

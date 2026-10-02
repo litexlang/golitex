@@ -1,0 +1,2 @@
+# Must reject: quot N05
+let q = quot(-7, -3)

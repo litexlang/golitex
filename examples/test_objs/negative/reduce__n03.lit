@@ -1,0 +1,2 @@
+# Must reject: reduce N03
+reduce(1, 0, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 7) = 0

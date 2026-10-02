@@ -1,0 +1,2 @@
+# Must reject: list_set N02
+let A = {ghost}

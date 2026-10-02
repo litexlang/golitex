@@ -109,5 +109,31 @@ exit $fail
 
 [by_induc_order.lit](by/by_induc_order.lit) covers order, nested arithmetic,
 and compound goals for `by induc` / `by strong_induc`. Recovery uses the
-parser-assigned identifier from the goal; it does not allocate a replacement
-binder or waive the base and successor proof obligations.
+parser-assigned identifier wherever it occurs freely in the goals or proof
+actions, including sets, tuples, functions, and comprehensions. A fresh ID is
+used only for a genuinely unused variable. Base and successor obligations
+still both require proof; nested binders keep their own identity.
+
+[induction_collection_binders.lit](by/induction_collection_binders.lit) checks
+those object shapes and constant goals. [induction_domain_and_proof_actions.lit](by/induction_domain_and_proof_actions.lit)
+checks domain-aware goal WD and ordinary local proof actions. The local
+declarations do not escape their induction case. Normal failure details name
+base/step, goal WD, and the failed goal/proof-step index; Detailed results
+retain both case proof trees.
+
+[inductive_nested_cases.lit](definition/inductive_nested_cases.lit) checks
+coverage and disjointness at every nested level under the parent guard.
+The paired Rust tests execute the old overlapping/hole definitions and require
+rejection before publication. [template_inductive_arithmetic.lit](definition/template_inductive_arithmetic.lit)
+checks that recursive self calls inside arithmetic retain the exact template
+instance. Its explicit smaller-call equality is a proof step; the existing
+proof search may still need that step for recursive arithmetic evaluation.
+
+Native builtin release tracers: `release_and_expand/builtin_thm/` contains one
+strict runnable example for each of the 25 reserved theorem names. The
+examples verify the actual required premises before release and then reuse
+the conclusion. Parser migration tracers include
+`fact/inline_forall_premise.lit` and
+`by/induction_reuses_goal_parameter.lit`. Wrong arity, unsupported argument
+shape, missing premises, selected-fact failure and transaction rollback are
+covered by `src/execute/execute_by_stmt/builtin_thm/tests.rs`.

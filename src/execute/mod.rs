@@ -36,6 +36,13 @@ mod release_one_struct_layer;
 
 #[cfg(test)]
 mod exec_stmt_transaction_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/statement_boundaries/tests.rs"]
+mod statement_boundary_tests;
+#[cfg(test)]
+#[path = "../../tests/unit/execute/special_property/tests.rs"]
+mod special_property_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/identifier_resolution/tests.rs"]
 mod identifier_resolution_tests;
@@ -53,6 +60,9 @@ mod native_scalar_codomain_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/finite_set_cardinality_rules/tests.rs"]
 mod finite_set_cardinality_rule_tests;
+#[cfg(test)]
+#[path = "../../tests/unit/execute/induction_repairs/tests.rs"]
+mod induction_repair_tests;
 
 pub use exec_stmt_result::{
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
@@ -94,6 +104,7 @@ pub use execute_have_fn_by_forall_exist_unique_stmt::{
     ExecHaveFnByForallExistUniqueStmtSuccessResult,
 };
 pub use execute_have_fn_by_induc_stmt::{
+    InducCaseBodySuccess, InducCaseListSuccess,
     ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult, ExecHaveFnByInducStmtSuccessResult,
 };
 pub use execute_have_fn_equal_case_by_case_stmt::{

@@ -77,8 +77,12 @@ pub fn run_import_module(
         }
     }
 
+    // Config aliases are local to their package; the mount API takes a unique
+    // global display label. Identity and alias resolution remain path-based.
+    // Two packages may both import `Common = "./dep"` for different paths.
+    let display_name = global_display_name(runtime, alias);
     let mod_id = match runtime.global_module_manager.mount_module(
-        alias.to_string(),
+        display_name,
         key.clone(),
         config.clone(),
     ) {
@@ -145,4 +149,19 @@ pub fn run_import_module(
     running.remove(&key);
     done.insert(key);
     Ok(RunImportModuleOutcome::Done)
+}
+
+fn global_display_name(runtime: &Runtime, alias: &str) -> String {
+    let imports = runtime.global_module_manager.imports();
+    if !imports.iter().any(|module| module.name == alias) {
+        return alias.to_string();
+    }
+    let mut suffix = imports.len();
+    loop {
+        let candidate = format!("{alias}__m{suffix}");
+        if !imports.iter().any(|module| module.name == candidate) {
+            return candidate;
+        }
+        suffix += 1;
+    }
 }

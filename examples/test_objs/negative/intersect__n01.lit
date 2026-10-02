@@ -1,0 +1,2 @@
+# Must reject: intersect N01
+1 $in intersect({1}, {2})

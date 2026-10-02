@@ -1,0 +1,2 @@
+# Must reject: cart N02
+(1, 2, 3) $in cart(R, Z)

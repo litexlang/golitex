@@ -243,6 +243,9 @@ impl Runtime {
         tb: &TokenBlock,
         name: String,
     ) -> RuntimeResult<crate::ast::names::BoundName> {
+        if crate::builtin_theorem::is_reserved_builtin_name(&name) {
+            return Err(tb.parse_error(format!("`{name}` is a reserved builtin name")));
+        }
         self.define_plain_atom(name).map_err(|err| match err {
             crate::runtime::RuntimeError::InternalBug(message) => {
                 RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()

@@ -1,0 +1,24 @@
+# AST: Obj::ComplexOperator::ImaginaryPart
+# Run: target/release/litex -f examples/test_objs/imaginary_part.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: img(0) = 0
+sketch:
+    img(0) = 0
+
+# P02: img(i) = 1
+sketch:
+    img(i) = 1
+
+# P03: img(3 + 2 * i) = 2
+sketch:
+    img(3 + 2 * i) = 2
+
+# P05: img(x) = 0
+sketch:
+    forall x R:
+        img(x) = 0
+
+# P06: img(i * i) = 0
+sketch:
+    img(i * i) = 0

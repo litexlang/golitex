@@ -1,0 +1,7 @@
+# Before (rejected with trailing tokens at =>):
+# forall x R: x > 0 => x > 0
+# Now: parse the premise separately from the outer arrow.
+# Run: target/release/litex -f examples/stmt_nodes/fact/inline_forall_premise.lit
+forall x R: x > 0 => x > 0
+forall x R: x > 0 and x < 1 => x < 1
+# Boundary: missing premise/conclusion and stray trailing tokens remain invalid.

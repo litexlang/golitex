@@ -1,0 +1,2 @@
+# Must reject: proj N04
+let P = proj(R, 1)

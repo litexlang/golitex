@@ -1,0 +1,34 @@
+# AST: Obj::ArithmeticOperator::Div
+# Run: target/release/litex -f examples/test_objs/div.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 6 / 2 = 3
+sketch:
+    6 / 2 = 3
+
+# P02: (1 / 2) + (1 / 2) = 1
+sketch:
+    (1 / 2) + (1 / 2) = 1
+
+# P03: (-6) / 2 = -3
+sketch:
+    (-6) / 2 = -3
+
+# P04: 0 / 2 = 0
+sketch:
+    0 / 2 = 0
+
+# P05: 8 / 2 / 2 = 2
+sketch:
+    8 / 2 / 2 = 2
+
+# P06: 8 / (2 / 2) = 8
+sketch:
+    8 / (2 / 2) = 8
+
+# P07: x / x = 1
+sketch:
+    forall x R:
+        x != 0
+        =>:
+            x / x = 1

@@ -50,10 +50,9 @@ impl Runtime {
         let Some(args) = fn_app_args(fn_obj) else {
             return Ok(None);
         };
-        let plain = inst.template_name.local_name();
 
         let (stmt, subst) = {
-            let Some(def) = self.def_template_visible_in_stack(plain) else {
+            let Some(def) = self.def_template_visible(&inst.template_name) else {
                 return Ok(None);
             };
             let TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) = &def.template_def_stmt else {

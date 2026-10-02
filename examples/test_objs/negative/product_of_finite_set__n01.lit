@@ -1,0 +1,2 @@
+# Must reject: product_of_finite_set N01
+let s = finite_set_product(R, fn(x R) R {x})

@@ -1,0 +1,3 @@
+# Intended valid regression: anonymous_fn P06
+let y = 3
+fn(x R) R {x + y}(2) = 5

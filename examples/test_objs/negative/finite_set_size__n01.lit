@@ -1,0 +1,2 @@
+# Must reject: finite_set_size N01
+let n = finite_set_size(R)

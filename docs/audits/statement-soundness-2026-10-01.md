@@ -8,6 +8,7 @@ This report records observations from the vulnerable `0.9.200-beta` release CLI 
 
 Observed case (`tmp/2026-10-01/soundness-root-cause/thm_wrong_domain.lit`):
 
+<!-- litex:skip-test -->
 ```litex
 thm only_natural:
     ? forall n N:
@@ -18,6 +19,7 @@ release thm only_natural(-1)
 
 Exit `0`, JSON `success: true`, and all three statements succeed. The selected-result route also stores `-1 >= 0`:
 
+<!-- litex:skip-test -->
 ```litex
 by thm only_natural(-1) => -1 >= 0
 ```
@@ -41,6 +43,7 @@ for dom in &forall.dom_facts {
 
 Observed case (`witness_false_complete.lit`):
 
+<!-- litex:skip-test -->
 ```litex
 witness exist x {1} st {x = 0} from 0
 obtain a from exist x {1} st {x = 0}
@@ -62,6 +65,7 @@ rt.check_witness_exist_obligations_after_proof(plain, equal_tos, need_uniqueness
 
 The same function also returns `ParamTypeFactCheckResult::Set`, `NonemptySet`, or `FiniteSet` without checking the concrete witness. Observed consequence (`witness_nonempty_empty.lit`):
 
+<!-- litex:skip-test -->
 ```litex
 witness exist x nonempty_set st {x = {}} from {}
 obtain a from exist x nonempty_set st {x = {}}
@@ -76,6 +80,7 @@ Exit `0`, JSON `success: true`, all three statements succeed. The direct control
 
 Observed case (`induc_false_complete.lit`):
 
+<!-- litex:skip-test -->
 ```litex
 prop bad(n Z):
     1 = 2
@@ -102,6 +107,7 @@ The structured path already opens a base environment without IH and a distinct s
 
 Observed case (`witness_pred_wrong_domain.lit`):
 
+<!-- litex:skip-test -->
 ```litex
 prop has_any(a N):
     exist x R st {x = 0}

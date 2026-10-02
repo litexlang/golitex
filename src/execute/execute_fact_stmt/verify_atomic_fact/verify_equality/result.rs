@@ -147,7 +147,17 @@ pub struct EqualFactSearchedProofByKnownForallViaSymmetry {
 // stored chains connected by a restricted proof. Never cite a class handle.
 pub enum EqualFactSearchedProofByEquivalenceClass {
     KnownPath(KnownEqualityPathProof),
+    AlphaEndpoints(KnownEqualityAlphaEndpointsProof),
     ViaPeers(EqualityViaPeersProof),
+}
+
+// A cited checked equality, with structural alpha identity at both endpoints.
+// The caller's goal WD precedes this search; no class or IR key is rewritten.
+pub struct KnownEqualityAlphaEndpointsProof {
+    pub cited: EqualFact,
+    pub reversed: bool,
+    pub left_identity: TheyAreTheSameProof,
+    pub right_identity: TheyAreTheSameProof,
 }
 
 // Oriented generating edges, each (from, to, cited equality FactId).

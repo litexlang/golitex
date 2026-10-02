@@ -21,7 +21,7 @@ pub fn exec_def_algo_by_cases_stmt(
     runtime: &mut Runtime,
     stmt: &DefAlgoByCasesStmt,
 ) -> RuntimeResult<ExecDefAlgoByCasesStmtResult> {
-    if runtime.def_algo_visible_in_stack(&stmt.name).is_some() {
+    if runtime.def_algo_visible_in_stack(&stmt.name.name).is_some() {
         return Ok(ExecDefAlgoByCasesStmtResult::Failed(
             ExecDefAlgoByCasesStmtFailed::AlgoAlreadyDefined,
         ));

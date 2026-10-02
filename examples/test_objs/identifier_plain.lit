@@ -1,0 +1,30 @@
+# AST: Obj::Identifier::Plain
+# Run: target/release/litex -f examples/test_objs/identifier_plain.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: x = 3
+sketch:
+    have x R = 3
+    x = 3
+
+# P02: x = 5
+sketch:
+    let x = 2 + 3
+    x = 5
+
+# P04: f(2) = 3
+sketch:
+    have fn f(x R) R = x + 1
+    f(2) = 3
+
+# P05: y + 0 = y
+sketch:
+    have x R = 1
+    claim:
+        ? forall y R:
+            y + 0 = y
+
+# P06: 2 $in x
+sketch:
+    let x = {1, 2}
+    2 $in x

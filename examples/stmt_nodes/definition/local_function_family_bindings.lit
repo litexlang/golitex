@@ -1,0 +1,64 @@
+# Tracer: all five local function constructors retain their own binding.
+# Run: target/release/litex -strict -f examples/stmt_nodes/definition/local_function_family_bindings.lit
+# Before: local by-cases declarations panicked; registered versions soft-failed.
+# sketch:
+#     have fn flag(x R) R by cases:
+#         case x = 0: 0
+#         case x != 0: 1
+#     flag(0) = 0
+# Active code checks ordinary local uses and reuse after completed scopes.
+# Negative and failed-proof rollback controls are in declaration_binding_tests.
+
+sketch:
+    have fn flag(x R) R by cases:
+        case x = 0: 0
+        case x != 0: 1
+    flag(0) = 0
+    flag(2) = 1
+
+sketch:
+    have fn countdown(n N) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: countdown(n - 1)
+    countdown(0) = 0
+
+claim:
+    ? forall x R:
+        exist! y R st {y = x}
+    witness exist! y R st {y = x} from x
+sketch:
+    have fn ident by exist!:
+        ? forall x R:
+            exist! y R st {y = x}
+    ident(1) = 1
+
+sketch:
+    algo flag(x R) R by cases:
+        case x = 0: 0
+        case x != 0: 1
+    flag(0) = 0
+    flag(2) = 1
+
+sketch:
+    algo countdown(n N) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: countdown(n - 1)
+    countdown(0) = 0
+
+# Later file roots are different bindings, despite the reused spellings.
+let flag = 7
+let countdown = 7
+let ident = 7
+flag = 7
+countdown = 7
+ident = 7
+
+# The source binder ends before the chosen function is declared.
+claim:
+    ? forall f R:
+        exist! y R st {y = f}
+    witness exist! y R st {y = f} from f
+have fn f by exist!:
+    ? forall f R:
+        exist! y R st {y = f}
+f(1) = 1

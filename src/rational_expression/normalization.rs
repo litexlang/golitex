@@ -18,6 +18,24 @@ pub fn objs_equal_by_rational_expression_evaluation(left: &Obj, right: &Obj) -> 
     objs_equal_by_algebraic_normalization(left, right, AlgebraicNormalizationMode::Ordinary)
 }
 
+// Only the dedicated ImaginaryUnit AST literal is reduced using i² = -1.
+pub fn objs_equal_by_complex_expression_evaluation(left: &Obj, right: &Obj) -> bool {
+    objs_equal_by_algebraic_normalization(left, right, AlgebraicNormalizationMode::ComplexImaginaryUnit)
+}
+
+pub fn contains_imaginary_unit(obj: &Obj) -> bool {
+    match obj {
+        Obj::Literal(crate::ast::obj::Literal::ImaginaryUnit(_)) => true,
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(x)) => contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right),
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(x)) => contains_imaginary_unit(&x.arg),
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) => contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right),
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right),
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => contains_imaginary_unit(&x.base) || contains_imaginary_unit(&x.exponent),
+        _ => false,
+    }
+}
+
 // Denominators and negative-power bases that must be nonzero for cancellation
 // to be sound. Empty list means a genuine zero-premise identity.
 pub fn algebraic_normalization_nonzero_requirements(left: &Obj, right: &Obj) -> Vec<Obj> {

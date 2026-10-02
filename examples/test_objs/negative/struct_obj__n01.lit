@@ -1,0 +1,2 @@
+# Must reject: struct_obj N01
+let S = &Ghost

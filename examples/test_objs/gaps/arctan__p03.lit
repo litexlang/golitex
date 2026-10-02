@@ -1,0 +1,2 @@
+# Intended valid regression: arctan P03
+arctan(-1) = -pi / 4

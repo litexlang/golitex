@@ -1,0 +1,2 @@
+# Must reject: lcm N01
+let x = lcm(1.5, 2)

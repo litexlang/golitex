@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "target": "examples/test_objs/standard_set_q_star.lit",
+  "session_command": "target/release/litex -session -e '1 = 1'",
+  "workflow_deviation": "Current CLI lacks -before/-compact/-runner and parser lacks try; each sketch discards its scope.",
+  "proof_spine": [
+    "Check independent values, carriers, boundaries and composition for standard_set_q_star"
+  ],
+  "blocks": [
+    {
+      "id": "P01",
+      "source_order": 1,
+      "intent": "1 $in Q*",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    1 $in Q*",
+          "result": "accepted",
+          "verifier_evidence": "... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    1 $in Q*",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P02",
+      "source_order": 2,
+      "intent": "-1 $in Q*",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    -1 $in Q*",
+          "result": "accepted",
+          "verifier_evidence": "... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    -1 $in Q*",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P03",
+      "source_order": 3,
+      "intent": "1 / 2 $in Q*",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    1 / 2 $in Q*",
+          "result": "accepted",
+          "verifier_evidence": "... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    1 / 2 $in Q*",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P04",
+      "source_order": 4,
+      "intent": "$is_set(Q*)",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    $is_set(Q*)",
+          "result": "accepted",
+          "verifier_evidence": "... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    $is_set(Q*)",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P05",
+      "source_order": 5,
+      "intent": "Q* $subset Q",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    Q* $subset Q",
+          "result": "accepted",
+          "verifier_evidence": "... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    Q* $subset Q",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    }
+  ],
+  "materialization": {
+    "block_ids": [
+      "P01",
+      "P02",
+      "P03",
+      "P04",
+      "P05"
+    ],
+    "file_gate_result": {
+      "command": [
+        "-f",
+        "examples/test_objs/standard_set_q_star.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/test_objs/standard_set_q_star.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "ok": true
+    }
+  },
+  "latest_clean_file_gate": {
+    "command": "target/release/litex -f examples/test_objs/standard_set_q_star.lit",
+    "verification_date": "2026-10-02",
+    "binary_sha256": "f24fc5c4ded2c946813ede37bd05ac55267a2d49bbc367174daf1428924a34fc",
+    "source_sha256": "c1702e495977ec1c597c105aba9c32c548655f8356131b2134f6344b7c164fd8",
+    "observation": {
+      "observed": "accept",
+      "exit_code": 0,
+      "phase": "success",
+      "diagnostic": "",
+      "statements": 5,
+      "object": "standard_set_q_star",
+      "file": "standard_set_q_star.lit",
+      "kind": "positive",
+      "intended": "accept"
+    }
+  }
+}

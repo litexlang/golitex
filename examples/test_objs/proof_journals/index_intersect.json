@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "target": "examples/test_objs/index_intersect.lit",
+  "session_command": "target/release/litex -session -e '1 = 1'",
+  "workflow_deviation": "Current CLI lacks -before/-compact/-runner and parser lacks try; each sketch discards its scope.",
+  "proof_spine": [
+    "Check independent values, carriers, boundaries and composition for index_intersect"
+  ],
+  "blocks": [
+    {
+      "id": "P01",
+      "source_order": 1,
+      "intent": "X = X",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    let A = fn(k {1, 2}) power_set(N) {{1}}\n    let X = index_intersect({1, 2}, N, A)\n    X = X",
+          "result": "failed",
+          "verifier_evidence": "... ... ... ... error\nlitex> "
+        }
+      ],
+      "status": "blocked"
+    },
+    {
+      "id": "P02",
+      "source_order": 2,
+      "intent": "index_intersect({1}, N, A) = {1}",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have fn A(k {1}) power_set(N) = {k}\n    index_intersect({1}, N, A) = {1}",
+          "result": "failed",
+          "verifier_evidence": "... ... ... error\nlitex> "
+        }
+      ],
+      "status": "blocked"
+    },
+    {
+      "id": "P03",
+      "source_order": 3,
+      "intent": "index_intersect({}, N, A) = N",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have fn A(k {}) power_set(N) = {}\n    index_intersect({}, N, A) = N",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... success\nlitex> "
+        }
+      ],
+      "status": "retired_contract",
+      "accepted_litex": "sketch:\n    have fn A(k {}) power_set(N) = {}\n    index_intersect({}, N, A) = N",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions.",
+      "contract_revision": "Concurrent source update now requires a nonempty index set; see executable N_EMPTY."
+    },
+    {
+      "id": "P04",
+      "source_order": 4,
+      "intent": "$is_set(index_intersect({1}, N, A))",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    let A = fn(k {1}) power_set(N) {{1}}\n    $is_set(index_intersect({1}, N, A))",
+          "result": "failed",
+          "verifier_evidence": "... ... ... error\nlitex> "
+        }
+      ],
+      "status": "blocked"
+    },
+    {
+      "id": "P05",
+      "source_order": 5,
+      "intent": "$is_set(index_intersect({1}, N, A))",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    forall A fn(k {1}) power_set(N):\n        $is_set(index_intersect({1}, N, A))",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    forall A fn(k {1}) power_set(N):\n        $is_set(index_intersect({1}, N, A))",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P06",
+      "source_order": 6,
+      "intent": "index_intersect({1, 2}, N, A) = index_intersect({1, 2}, N, A)",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    forall A fn(k {1, 2}) power_set(N):\n        index_intersect({1, 2}, N, A) = index_intersect({1, 2}, N, A)",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    forall A fn(k {1, 2}) power_set(N):\n        index_intersect({1, 2}, N, A) = index_intersect({1, 2}, N, A)",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    }
+  ],
+  "materialization": {
+    "block_ids": [
+      "P05",
+      "P06"
+    ],
+    "file_gate_result": {
+      "command": [
+        "-f",
+        "examples/test_objs/index_intersect.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/test_objs/index_intersect.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "ok": true
+    }
+  },
+  "latest_clean_file_gate": {
+    "command": "target/release/litex -f examples/test_objs/index_intersect.lit",
+    "verification_date": "2026-10-02",
+    "binary_sha256": "f24fc5c4ded2c946813ede37bd05ac55267a2d49bbc367174daf1428924a34fc",
+    "source_sha256": "c1702e495977ec1c597c105aba9c32c548655f8356131b2134f6344b7c164fd8",
+    "observation": {
+      "observed": "accept",
+      "exit_code": 0,
+      "phase": "success",
+      "diagnostic": "",
+      "statements": 2,
+      "object": "index_intersect",
+      "file": "index_intersect.lit",
+      "kind": "positive",
+      "intended": "accept"
+    }
+  }
+}

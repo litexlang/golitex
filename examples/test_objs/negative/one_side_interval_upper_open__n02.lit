@@ -1,0 +1,2 @@
+# Must reject: one_side_interval_upper_open N02
+let A = '(,i)

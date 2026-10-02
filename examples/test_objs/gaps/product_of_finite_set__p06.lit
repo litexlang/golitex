@@ -1,0 +1,2 @@
+# Intended valid regression: product_of_finite_set P06
+finite_set_product({0, 2}, fn(x Z) Z {x}) = 0

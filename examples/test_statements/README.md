@@ -4,8 +4,8 @@ Task: detailed per-statement tests requested on 2026-10-01.
 The authoritative inventory is `src/ast/stmt.rs`: 50 reachable statement
 leaves, including `Stmt::Fact`. Each leaf has one primary `.lit` file with
 multiple runnable scenarios. There are 162 positive scenarios,
-127 negative scenarios, 10 additional boundary checks, and 12 gap
-reproductions covering 10 issue groups. Each scenario runs independently;
+127 negative scenarios, 12 additional boundary/regression checks, and 10 gap
+reproductions covering 8 open issue groups. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
 ## Run
@@ -46,11 +46,15 @@ The ordinary runner prints every `KNOWN` gap and succeeds only when current
 observations match all explicit expectations. **This does not close those
 issues.** `--require-no-gaps` exits 1 while the recorded gaps remain. A gap
 changing behavior also fails the ordinary runner, prompting review and removal
-of its stale issue record. See [todo.md](todo.md) for exact reproductions,
-observed behavior, checked controls, and follow-up boundaries.
+of its stale issue record. See the [issue index](bugs/README.md) for per-statement
+folders containing exact reproductions, captured output, checked controls, and
+repair acceptance commands. The index also records the trust-have display defect
+D001; its display acceptance check is separate from the execution success flags.
 
 `--report <path>` saves the complete structured result; `--binary <path>` tests
 another release binary. Neither option changes fixtures or expectations.
+
+K003 uses the accepted explicit equality chain [`f(2) = f(2 - 1) = f(1) = 0`](boundaries/recursive-equation-explicit-chain.lit). It is recorded as a [current proof-search limitation](experience/problem_notes/K003-explicit-recursive-equation-chain.md), not an open bug.
 
 ## First acceptance example
 
@@ -74,8 +78,10 @@ declaration did not reserve the name or publish a binding.
   `litex -f` invocation is expected to exit 1.
 - `boundaries/`: strict policy, selected-theorem syntax, and command/scope
   effects. Some boundaries deliberately accept current documented behavior.
-- `known_gaps/`: runnable unresolved reproductions with desired and observed
-  results recorded separately in `manifest.json`.
+- `bugs/<statement>/<issue>/`: unresolved reproductions, issue notes, and actual
+  JSON output. Desired and observed results remain separate in `manifest.json`.
+- `bugs/<statement>/limitations.md`: existing restrictions and policy boundaries;
+  `bugs/tooling/` records CLI/documentation drift.
 - `manifest.json`: leaf paths, payload names, scenario flags, and explicit
   expectations. Inventory audits detect missing, duplicate, or unlisted files.
 - `proof_journals/`: authoring attempts, comparisons, final CLI results, and

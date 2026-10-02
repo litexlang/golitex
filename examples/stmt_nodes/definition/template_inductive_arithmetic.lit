@@ -1,0 +1,19 @@
+# Before: declaration failed when its recursive call was nested under addition.
+# template<S set>:
+#     have fn succ_t(n N) N by induc n from 0:
+#         case n = 0: 0
+#         case n >= 1: succ_t(n - 1) + 1
+# Now: the declaration's bound ID owns the signature; replay substitutes that
+# ID using the existing capture-safe object instantiator through all constructors.
+# Boundary: nondecreasing recursion and incorrect computed values still reject.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/definition/template_inductive_arithmetic.lit
+
+template<S set>:
+    have fn succ_t(n N) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: succ_t(n - 1) + 1
+\succ_t<{0}>(0) = 0
+\succ_t<{0}>(1 - 1) = 0
+\succ_t<{0}>(1) = \succ_t<{0}>(1 - 1) + 1 = 1
+\succ_t<{1}>(1 - 1) = 0
+\succ_t<{1}>(1) = \succ_t<{1}>(1 - 1) + 1 = 1

@@ -1,0 +1,2 @@
+# Must reject: intersect N02
+intersect({1}, {2}) = {1}

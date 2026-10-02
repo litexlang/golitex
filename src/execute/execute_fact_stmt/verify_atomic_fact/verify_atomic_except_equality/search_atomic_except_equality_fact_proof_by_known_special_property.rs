@@ -1,6 +1,6 @@
 use crate::ast::fact::{AtomicFact, InFact};
 use crate::ast::obj::{FnObjHead, FunctionSpace, Obj, StructAndFieldAccessObj};
-use crate::exec_env::SpecialObjectPropertyByDefinition;
+use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::runtime::{FactId, Runtime};
 
@@ -9,13 +9,13 @@ pub enum AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 }
 
 impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
-    pub fn cite_definition_fact_id(&self) -> FactId {
+    pub fn cite_property_fact_id(&self) -> FactId {
         match self {
             Self::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(p)) => {
-                p.cite_definition_fact_id
+                p.cite_property_fact_id
             }
             Self::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInFnRange(p)) => {
-                p.cite_definition_fact_id
+                p.cite_property_fact_id
             }
         }
     }
@@ -27,7 +27,7 @@ pub enum InFactSearchProofByKnownSpecialProperty {
 }
 
 pub struct FnApplicationInCodomainKnownSpecialPropertyProof {
-    pub cite_definition_fact_id: FactId,
+    pub cite_property_fact_id: FactId,
     pub signature_return_matches: Vec<SignatureReturnMatchProof>,
 }
 
@@ -37,7 +37,7 @@ pub struct SignatureReturnMatchProof {
 }
 
 pub struct FnApplicationInFnRangeKnownSpecialPropertyProof {
-    pub cite_definition_fact_id: FactId,
+    pub cite_property_fact_id: FactId,
     pub signature_matches: Vec<SignatureMatchProof>,
 }
 
@@ -48,7 +48,7 @@ pub struct SignatureMatchProof {
 
 impl Runtime {
     // The caller established WD. This leaf only matches registered rows in the
-    // definition table and cites stored equalities; it never verifies a new premise.
+    // special-property index and cites stored equalities; it never verifies a new premise.
     pub(in crate::execute) fn search_atomic_except_equality_fact_proof_by_known_special_property(
         &mut self,
         fact: &AtomicFact,
@@ -125,11 +125,10 @@ impl Runtime {
         };
         let properties = self.known_special_properties_of(&head);
         for property in properties {
-            let SpecialObjectPropertyByDefinition::InFunctionSet((signature, definition_id)) =
-                property
-            else {
+            let Some(signature) = property.function_signature() else {
                 continue;
             };
+            let definition_id = property.fact_id();
             if let Obj::FunctionSpace(FunctionSpace::FnRange(range)) = &fact.set {
                 if head.ir() != range.function.ir() || application.body.len() != 1 {
                     continue;
@@ -166,7 +165,7 @@ impl Runtime {
                 return Some(
                     InFactSearchProofByKnownSpecialProperty::FnApplicationInFnRange(
                         FnApplicationInFnRangeKnownSpecialPropertyProof {
-                            cite_definition_fact_id: definition_id,
+                            cite_property_fact_id: definition_id,
                             signature_matches: matches,
                         },
                     ),
@@ -196,7 +195,7 @@ impl Runtime {
                 return Some(
                     InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(
                         FnApplicationInCodomainKnownSpecialPropertyProof {
-                            cite_definition_fact_id: definition_id,
+                            cite_property_fact_id: definition_id,
                             signature_return_matches: matches,
                         },
                     ),
@@ -209,11 +208,11 @@ impl Runtime {
     pub(in crate::execute) fn known_special_properties_of(
         &self,
         obj: &Obj,
-    ) -> Vec<SpecialObjectPropertyByDefinition> {
+    ) -> Vec<SpecialProperty> {
         let key = obj.ir();
         let mut properties = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
-            if let Some(rows) = env.special_object_properties_by_def.get(&key) {
+            if let Some(rows) = env.special_properties.get(&key) {
                 properties.extend(rows.iter().cloned());
             }
         }

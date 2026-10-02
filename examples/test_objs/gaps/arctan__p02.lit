@@ -1,0 +1,2 @@
+# Intended valid regression: arctan P02
+arctan(1) = pi / 4

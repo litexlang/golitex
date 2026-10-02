@@ -36,6 +36,25 @@ a FactId citation. Known-atomic Detailed output includes
 subproofs for membership and other parameter transports. See the
 [equality result tree](../execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md).
 
+## Induction evidence and failures
+
+Normal induction failures keep the statement-level `why_failed.phase` and add
+`why_failed.failure` with the exact stage. Detailed output carries the same
+value under `failure`. Stages include `from_in_z`, `goal_wd`, `base`, and
+`step`; a failed case has a nested `proof_body` or `goal` reason with a
+zero-based `step_index` or `goal_index` and the actual failed result.
+Recursive-definition failures retain a `nested_case` path, then `coverage`,
+`disjoint`, return WD, or return type, instead of collapsing to one shell.
+
+Successful Detailed induction includes the checked integer base, goal-domain
+assumption, goal WD, and `body.base` / `body.step` with their stored assumptions,
+ordinary statement results, and verified goals. Recursive-definition Detailed
+output contains `case_checks` recursively; `algo ... by induc` retains these
+checks under its `define_fn` result. Local environments remain in the
+Rust evidence for ownership and replay; they are omitted from JSON as before.
+The producer/consumer regression is
+`tests/unit/execute/induction_repairs/tests.rs`.
+
 ## Compact statement shape
 
 Success — only disposition + source text:
@@ -271,3 +290,26 @@ Locked by `cargo test --lib json_output::` (`acceptance_tests` +
 
 Projection needs a live `Runtime` so cite `FactId`s can resolve to
 `readable_string` text.
+
+Function application WD and body unfolding include `function_equal` in their detailed proofs,
+containing the stored equality path from the submitted head to the anonymous
+function. Known special-property membership proofs use `cite_property_fact_id`
+instead of `cite_definition_fact_id`, since their source may be an ordinary
+membership or equality fact. The source fact remains resolvable by FactId.
+
+## Native theorem and calculation evidence
+
+Reserved builtin calls project `builtin_theorem` identity, arguments, ordered
+requirements and conclusions. Successful releases retain checked type/premise
+proofs, conclusion WD and stored citations; choice-backed nonemptiness has
+`axiom_of_choice` provenance. Failure projections preserve lookup, arity,
+call shape, parameter type, premise, conclusion WD, selected fact and store
+stages. Premise failures include the theorem name, exact goal and zero-based
+index. Theorem-definition failures preserve nested proof-statement failures.
+
+WD failure projection is recursive over the existing cause enums. Calculation
+Detailed evidence distinguishes `closed_decimal`, `rational` and
+`complex_imaginary_unit`. Pure binder renaming inside compound objects uses
+`same_free_param_shape` / `compound_obj`; reuse of a checked stored equality
+can cite `alpha_endpoints`, with its original FactId, orientation and both
+endpoint identity proofs. This does not change stored IR keys.

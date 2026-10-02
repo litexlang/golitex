@@ -1,0 +1,2 @@
+# Must reject: fn_obj N05
+(fn(x R) R {x}, 0)[1](2) = 2

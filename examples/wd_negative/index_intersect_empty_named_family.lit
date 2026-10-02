@@ -1,0 +1,5 @@
+# WD negative: empty index is disallowed even for a named family.
+# Former positive tracer: examples/proof_nodes/equal/by_builtin_rule/index_intersect_empty_index.lit
+# Run: target/release/litex -f examples/wd_negative/index_intersect_empty_named_family.lit (must fail)
+have fn A(x {}) power_set(N) = {}
+index_intersect({}, N, A) = N

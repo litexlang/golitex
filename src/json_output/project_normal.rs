@@ -331,7 +331,7 @@ fn why_from_atomic_except_searched(
                 ("rule_name", string(text.rule_name)),
                 ("message", string(text.message)),
             ];
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_definition_fact_id()) {
+            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_property_fact_id()) {
                 fields.push(("cite", string(fact.readable_string())));
             }
             object(lang, fields)

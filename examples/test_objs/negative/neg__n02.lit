@@ -1,0 +1,2 @@
+# Must reject: neg N02
+let x = -{1}

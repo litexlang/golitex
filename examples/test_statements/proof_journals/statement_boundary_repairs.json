@@ -1,0 +1,568 @@
+{
+  "task": "statement-boundary-repairs",
+  "baseline_binary_sha256": "8bc00971eba0438a71a2022b3cd5314f7802939522e6a4f69300279b6878db55",
+  "after": [
+    {
+      "name": "nested-extension",
+      "source": "by extension:\n    ? {1} = {1}\n    by def {1} $subset {1}\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/nested-extension.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/nested-extension.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by extension",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By set extension",
+              "message": "Prove set equality by extension"
+            },
+            "stores": [
+              "{1} = {1}"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "eval-domain",
+      "source": "algo identity(x N) N by cases:\n    case x = x: x\neval identity(-1)\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/eval-domain.lit"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/eval-domain.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "algo identity(x N) N by cases :\n    case x = x: x",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define algo by cases",
+              "message": "Define an algorithm by cases"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": false,
+            "statement": "eval …",
+            "why_failed": {
+              "type": "command",
+              "rule_name": "Eval",
+              "message": "Evaluate a closed numeric / algo expression",
+              "phase": "eval"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "template-strict",
+      "source": "template<S set>:\n    trust have hidden R:\n        hidden = 1\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/template-strict.lit"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/template-strict.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+      },
+      "stderr": ""
+    },
+    {
+      "name": "conditional-enumerate",
+      "source": "by enumerate finite_set:\n    ? forall n {0, 1, 2}:\n        n > 0\n        =>:\n            n != 0\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/conditional-enumerate.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/conditional-enumerate.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by enumerate",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set"
+            },
+            "stores": [
+              "forall n {0, 1, 2}:\n    n > 0\n    =>:\n        n != 0"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "K007-for-binder-proof-body",
+      "source": "# Known gap: K007-for\n# Desired success: true\n# See todo.md; runner checks observed behavior explicitly.\n\nby for:\n    ? forall n range(0, 2):\n        n = n\n    n = n\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/by_for_stmt/K007-for-binder-proof-body/repro.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/by_for_stmt/K007-for-binder-proof-body/repro.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by for",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By for",
+              "message": "Prove inside a for-block"
+            },
+            "stores": [
+              "forall n range(0, 2):\n    n = n"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "K007-enumeration-binder-proof-body",
+      "source": "# Known gap: K007-enumerate\n# Desired success: true\n# See todo.md; runner checks observed behavior explicitly.\n\nby enumerate finite_set:\n    ? forall n {0, 1}:\n        n = n\n    n = n\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/by_enumerate_finite_set_stmt/K007-enumeration-binder-proof-body/repro.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/by_enumerate_finite_set_stmt/K007-enumeration-binder-proof-body/repro.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by enumerate",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set"
+            },
+            "stores": [
+              "forall n {0, 1}:\n    n = n"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "K009-conditional-for-goal",
+      "source": "# Known gap: K009-for\n# Desired success: true\n# See todo.md; runner checks observed behavior explicitly.\n\nby for:\n    ? forall n range(0, 3):\n        n > 0\n        =>:\n            n != 0\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/by_for_stmt/K009-conditional-for-goal/repro.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/by_for_stmt/K009-conditional-for-goal/repro.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by for",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By for",
+              "message": "Prove inside a for-block"
+            },
+            "stores": [
+              "forall n range(0, 3):\n    n > 0\n    =>:\n        n != 0"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "K009-conditional-enumeration-goal",
+      "source": "# Known gap: K009-enumerate\n# Desired success: true\n# See todo.md; runner checks observed behavior explicitly.\n\nby enumerate finite_set:\n    ? forall n {0, 1, 2}:\n        n > 0\n        =>:\n            n != 0\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/by_enumerate_finite_set_stmt/K009-conditional-enumeration-goal/repro.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/by_enumerate_finite_set_stmt/K009-conditional-enumeration-goal/repro.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by enumerate",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set"
+            },
+            "stores": [
+              "forall n {0, 1, 2}:\n    n > 0\n    =>:\n        n != 0"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "K010-enumeration-arithmetic-carrier",
+      "source": "# Known gap: K010\n# Desired success: true\n# See todo.md; runner checks observed behavior explicitly.\n\nby enumerate finite_set:\n    ? forall n {0, 1}:\n        n + 0 = n\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/by_enumerate_finite_set_stmt/K010-enumeration-arithmetic-carrier/repro.lit"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/by_enumerate_finite_set_stmt/K010-enumeration-arithmetic-carrier/repro.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by enumerate",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set",
+              "phase": "by_enumerate"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    }
+  ],
+  "unsupported_policy_commands": [
+    {
+      "name": "conditional-enumerate",
+      "source": "by enumerate finite_set:\n    ? forall n {0, 1, 2}:\n        n > 0\n        =>:\n            n != 0\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-compact",
+        "-isolated",
+        "-runner",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/conditional-enumerate.lit"
+      ],
+      "exit_code": 2,
+      "output": "",
+      "stderr": "launch_error: supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-extractpython` / `-extractc` with code / `-f` / `-r`, optional `-session` / `-strict` / `-lang <en|zh>`, `-help`, `-version`\n"
+    },
+    {
+      "name": "eval-domain",
+      "source": "algo identity(x N) N by cases:\n    case x = x: x\neval identity(-1)\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-compact",
+        "-isolated",
+        "-runner",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/eval-domain.lit"
+      ],
+      "exit_code": 2,
+      "output": "",
+      "stderr": "launch_error: supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-extractpython` / `-extractc` with code / `-f` / `-r`, optional `-session` / `-strict` / `-lang <en|zh>`, `-help`, `-version`\n"
+    },
+    {
+      "name": "nested-extension",
+      "source": "by extension:\n    ? {1} = {1}\n    by def {1} $subset {1}\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-compact",
+        "-isolated",
+        "-runner",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/nested-extension.lit"
+      ],
+      "exit_code": 2,
+      "output": "",
+      "stderr": "launch_error: supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-extractpython` / `-extractc` with code / `-f` / `-r`, optional `-session` / `-strict` / `-lang <en|zh>`, `-help`, `-version`\n"
+    },
+    {
+      "name": "template-strict",
+      "source": "template<S set>:\n    trust have hidden R:\n        hidden = 1\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-compact",
+        "-isolated",
+        "-runner",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/template-strict.lit"
+      ],
+      "exit_code": 2,
+      "output": "",
+      "stderr": "launch_error: supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-extractpython` / `-extractc` with code / `-f` / `-r`, optional `-session` / `-strict` / `-lang <en|zh>`, `-help`, `-version`\n"
+    }
+  ],
+  "before": [
+    {
+      "name": "conditional-enumerate",
+      "source": "by enumerate finite_set:\n    ? forall n {0, 1, 2}:\n        n > 0\n        =>:\n            n != 0\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/conditional-enumerate.lit"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/conditional-enumerate.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by enumerate",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set",
+              "phase": "by_enumerate"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "eval-domain",
+      "source": "algo identity(x N) N by cases:\n    case x = x: x\neval identity(-1)\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/eval-domain.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/eval-domain.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "algo identity(x N) N by cases :\n    case x = x: x",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define algo by cases",
+              "message": "Define an algorithm by cases"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "eval identity(-1)",
+            "proof_method": {
+              "type": "command",
+              "rule_name": "Eval",
+              "message": "Evaluate a closed numeric / algo expression"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "nested-extension",
+      "source": "by extension:\n    ? {1} = {1}\n    by def {1} $subset {1}\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/nested-extension.lit"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/nested-extension.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by extension",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By set extension",
+              "message": "Prove set equality by extension",
+              "phase": "by_extension"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "template-strict",
+      "source": "template<S set>:\n    trust have hidden R:\n        hidden = 1\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/template-strict.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/statement-boundary-repairs/template-strict.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "template<S set>:\n    trust havehidden R:\n        hidden = 1",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define template",
+              "message": "Define a reusable template"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    }
+  ]
+}

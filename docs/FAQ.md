@@ -427,6 +427,22 @@ Likewise, known integers `a`, `b` and `a < b + 1` directly establish
 `a <= b`; this is the discrete adjacency bridge behind the familiar
 equivalence `a <= b <=> a < b + 1`.
 
+Function qualifications come from stored facts rather than the syntax used to
+introduce a name. Known `g $in fn(x R) R` permits a correctly typed call; a known
+function equality supplies its body. For example:
+
+```litex
+have fn f(x R) R = x + 1
+let g = f
+g(4) = 5
+```
+
+The last line follows the stored path `g = f = fn(x R) R {x + 1}` before
+checking `4 + 1 = 5`. Membership alone has no such body information. Unknown
+bodies, invalid arguments, and failed local proof steps cannot establish a
+particular return value. Default struct field names still follow the view
+selected by a definition.
+
 Constructor and definition strategies remain local. They can check a dependent
 tuple as a struct, project a callable field through one checked constructor,
 or unfold one literal/checked/template set builder or one exact indexed named
@@ -1231,6 +1247,25 @@ route, not a general guarantee that cold and pre-populated proof searches
 discover identical intermediate facts. A cache should preserve meaning, but
 adding an explicit proved fact may enable a route that a bare goal misses.
 
+## Which assumptions are available when checking an induction target?
+
+For `by induc n from base`, target WD uses `n $in Z` and `n >= base`.
+It does not use the induction hypothesis. Base and step bodies then run in
+separate local scopes through the ordinary proof-body checker:
+
+```litex
+have fn f(x N) N = x
+by induc n from 0:
+    ? f(n) = f(n)
+    have a N = 0
+```
+
+This is accepted because `n >= 0` makes `f(n)` callable. Changing the base
+to `-1` rejects the target's WD. The same rules apply to `by strong_induc`;
+its stronger hypothesis is supplied only after WD, in the successor scope.
+Recursive function definitions additionally require every nested case list
+to cover its parent guard and have disjoint siblings before publication.
+
 ## Why does Litex check well-definedness before truth?
 
 Litex treats mathematical expressions as meaningful only when their objects,
@@ -1573,3 +1608,21 @@ the fold fail.
 The same bounded-design principle applies to the builtin greatest-member rule.
 It proves only the standard maximum-existence shape for a finite nonempty
 subset of `N`; dropping finiteness or nonemptiness leaves the goal unknown.
+
+
+### Why did an inline forall or an old builtin theorem call fail?
+
+`forall x R: x > 0 => x > 0` now parses the premise separately from the arrow.
+A `by induc n` inside a theorem selects the existing goal binder `n`; it does
+not redeclare it. Nested declarations with the same name are still rejected.
+The 25 legacy named builtin theorem calls now have native `release thm`
+contracts. Failures identify the theorem, stage and failed premise in JSON.
+For example, `subset_of_finite_set_is_finite({2}, {1})` fails at `{2} $subset {1}`.
+
+### How does calculation treat the imaginary unit and empty indices?
+
+Calculation uses the reserved literal `i² = -1`, so `i*i = -1` and
+`(1+i)*(1-i) = 2` are checkable without extra rewrite. Symbolic denominator
+cancellation still needs nonzero premises. Indexed union, intersection and
+Cartesian product require a nonempty index at WD. Naming an empty family
+function does not enable an empty-index identity.

@@ -348,4 +348,6 @@ pub enum EqualitySearchProofByCalculation {
     // Example: `(x + 1) * (x - 1) = x^2 - 1`.
     // Identities that need `d != 0` go to BuiltinStrategy::RationalWithNonzeroPremises.
     Rational {},
+    // Complex polynomial identity using the reserved imaginary unit i² = -1.
+    Complex {},
 }

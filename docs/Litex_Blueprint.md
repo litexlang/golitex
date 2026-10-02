@@ -616,6 +616,15 @@ Lean organizes mathematics as typed terms: after elaboration, core expressions a
 
 Litex organizes mathematics as objects and a gradually growing fact context. `e $in S` is a membership fact in the object language, at the same logical layer as equality, order, and other predicates. Therefore the same object can be proved to belong to several unrelated or overlapping sets: membership is a relation among objects, not a unique intrinsic assignment `typeOf(e) = S`.
 
+Object capability lookup uses the facts stored for the object's canonical
+identity. The execution environment's `special_properties` index retains actual
+membership and equality facts, including facts learned after a name's
+introduction. Function-call checking reads signatures from these facts;
+function-body unfolding follows and cites stored equalities. For example,
+`have fn f(x R) R = x + 1` followed by `let g = f` supports `g(4) = 5` directly.
+Membership `g $in fn(x R) R` alone supplies callability without a concrete value.
+Definition-selected default struct field views remain a distinct annotation.
+
 This does not cancel static constraints or inference. Before accepting an expression, Litex still checks domains, return sets, structure fields, and other well-definedness obligations, and derives membership and carrier facts in proofs through dedicated rules. The difference is that such inference adds facts such as `e $in S` to the context, rather than inferring a privileged type `e : T` that decides the object's identity.
 
 Lean's technical route chooses Dependent Type Theory as its foundation. Litex's technical route chooses set theory as its foundation. Both can express the same mathematics, but they differ fundamentally in default interface, source style, and understanding cost. Lean chose a more abstract mathematical axiomatic system, which gives it general programming power and a smaller kernel that is easier to audit. Litex’s trusted implementation surface (verification and rule system) can be dozens of times Lean’s small kernel, so independent Lean replay is an intended additional check. The earlier compiler experiment is not wired into the current build. There is no ranking of superiority—only different technical-route choices.
@@ -1726,3 +1735,14 @@ Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Keyao Zhu and Zhaoxuan Hong for thei
 2. For kernel implementation, see the [golitex repository](https://github.com/litexlang/golitex).
 
 Note: the current repository retains checked results, experiments, and unfinished work at once. *Public visibility is not a claim of completion*; capabilities should be judged by tests, dated status, trust boundaries, and known limitations.
+
+### Native theorem interfaces and diagnostics (2026-10-02)
+
+The 25 reserved legacy theorem names now have native contracts in
+`src/execute/execute_by_stmt/builtin_thm/`. The release owner checks each
+requirement and conclusion WD before storing anything, and reports the actual
+failed stage and premise. Complex arithmetic containing `i` is handled by
+calculation. Indexed constructions require a nonempty index set. These changes
+preserve the AST and Runtime/ExecEnv contracts; explicit equality chains remain
+the authoring route for definition endpoints. See the Manual's builtin table
+for supported argument shapes and the axiom-of-choice provenance.

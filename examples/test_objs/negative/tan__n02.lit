@@ -1,0 +1,2 @@
+# Must reject: tan N02
+tan(0) = 1

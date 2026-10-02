@@ -1,0 +1,2 @@
+# Must reject: arcsin N02
+arcsin(0) = 1

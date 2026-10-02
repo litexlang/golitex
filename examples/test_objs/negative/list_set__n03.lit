@@ -1,0 +1,2 @@
+# Must reject: list_set N03
+let A = {1, 1, 2}

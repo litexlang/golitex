@@ -1,22 +1,20 @@
 use std::collections::HashMap;
 
-use super::helper::{
-    assume_fact, proof_verify_state, recover_induction_param, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
-};
+use super::helper::{assume_fact, proof_verify_state, store_goal_fact, verify_goal_fact};
+use super::recover_induction_param::recover_induction_param;
 use super::result::{
     ByInducBodySuccess, ByInducCaseFailed, ByInducCaseSuccess, ExecByInducStmtFailed,
     ExecByInducStmtResult, ExecByInducStmtSuccess, ExecByStmtResult, ExecByStrongInducStmtFailed,
     ExecByStrongInducStmtResult, ExecByStrongInducStmtSuccess,
 };
 use crate::ast::fact::{
-    AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, GreaterEqualFact, InFact,
-    LessEqualFact,
+    EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, GreaterEqualFact, InFact, LessEqualFact,
 };
 use crate::ast::names::BoundName;
-use crate::ast::obj::{Add, IdentifierObj, Number, Obj, StandardSet, ArithmeticOperator, Literal};
+use crate::ast::obj::{Add, ArithmeticOperator, IdentifierObj, Literal, Number, Obj, StandardSet};
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::ast::stmt::{ByInducStmt, ByStrongInducStmt, Stmt};
-use crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult;
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
@@ -64,7 +62,10 @@ pub fn exec_by_strong_induc_stmt(
     Ok(ExecByStmtResult::StrongInduc(match result {
         ExecByInducStmtResult::Success(s) => {
             ExecByStrongInducStmtResult::Success(ExecByStrongInducStmtSuccess {
+                from_in_z: s.from_in_z,
+                goal_domain_stored: s.goal_domain_stored,
                 goals_wd: s.goals_wd,
+                goal_wd_env: s.goal_wd_env,
                 body: s.body,
                 stored: s.stored,
             })
@@ -87,12 +88,21 @@ fn run_induc(
     stmt: Parts<'_>,
     strong: bool,
 ) -> RuntimeResult<ExecByInducStmtResult> {
-    let Some(param) = recover_induction_param(stmt.param_binding, stmt.to_prove) else {
-        return Ok(failed_shape(format!(
-            "by induc: cannot recover binder `{}` from goals",
-            stmt.param_binding
-        )));
-    };
+    let param = recover_induction_param(
+        stmt.param_binding,
+        stmt.to_prove,
+        &[
+            stmt.proof,
+            stmt.base_proof.as_deref().unwrap_or_default(),
+            stmt.step_proof.as_deref().unwrap_or_default(),
+        ],
+    )
+    .unwrap_or_else(|| {
+        // No free occurrence exists in the target or proof. Its quantified
+        // statement is independent of this binder, so a fresh identity is safe.
+        let unused = runtime.fresh_internal_param();
+        BoundName::new(unused.id, stmt.param_binding.to_string())
+    });
 
     let structured = stmt.base_proof.is_some() || stmt.step_proof.is_some();
     if structured && (stmt.base_proof.is_none() || stmt.step_proof.is_none()) {
@@ -110,20 +120,24 @@ fn run_induc(
     let from_in_z = mk_in_z(runtime, stmt.induc_from.clone());
     let from_ok = verify_goal_fact(runtime, &from_in_z)?;
     if from_ok.is_failed() {
-        return Ok(ExecByInducStmtResult::Failed(ExecByInducStmtFailed::Case(
-            ByInducCaseFailed::Goal {
-                index: 0,
-                result: from_ok,
-            },
-        )));
+        return Ok(ExecByInducStmtResult::Failed(
+            ExecByInducStmtFailed::FromNotInteger(from_ok),
+        ));
     }
 
     let goal_facts: Vec<Fact> = stmt.to_prove.iter().cloned().map(Into::into).collect();
 
-    let (wd_res, _) = runtime.run_in_local_env_and_take_env(|rt| -> RuntimeResult<Result<Vec<VerifyFactWellDefinedResult>, ExecByInducStmtFailed>> {
+    let (wd_res, goal_wd_env) = runtime.run_in_local_env_and_take_env(|rt| {
         if let Err(msg) = intro_param_z(rt, &param)? {
             return Ok(Err(ExecByInducStmtFailed::BodyShape(msg)));
         }
+        // The theorem is over integers n >= from. WD uses this domain, never IH.
+        // Example: f : N -> N is callable in a proof inducted from zero.
+        let domain = mk_greater_equal(rt, param_obj(&param), stmt.induc_from.clone());
+        let goal_domain_stored = match assume_fact(rt, &domain)? {
+            Ok(stored) => stored,
+            Err(msg) => return Ok(Err(ExecByInducStmtFailed::GoalDomain(msg))),
+        };
         let mut wds = Vec::new();
         for (index, fact) in goal_facts.iter().enumerate() {
             let wd = rt.verify_fact_well_definedness(fact, proof_verify_state())?;
@@ -132,9 +146,9 @@ fn run_induc(
             }
             wds.push(wd);
         }
-        Ok(Ok(wds))
+        Ok(Ok((goal_domain_stored, wds)))
     })?;
-    let goals_wd = match wd_res {
+    let (goal_domain_stored, goals_wd) = match wd_res {
         Ok(w) => w,
         Err(e) => return Ok(ExecByInducStmtResult::Failed(e)),
     };
@@ -152,7 +166,7 @@ fn run_induc(
     )? {
         Ok(cases) => cases,
         Err(failed) => {
-            return Ok(ExecByInducStmtResult::Failed(ExecByInducStmtFailed::Case(failed)));
+            return Ok(ExecByInducStmtResult::Failed(failed));
         }
     };
     let body = if structured {
@@ -172,7 +186,10 @@ fn run_induc(
     };
 
     Ok(ExecByInducStmtResult::Success(ExecByInducStmtSuccess {
+        from_in_z: from_ok,
+        goal_domain_stored,
         goals_wd,
+        goal_wd_env,
         body,
         stored,
     }))
@@ -186,8 +203,7 @@ fn run_induction_cases(
     goal_facts: &[Fact],
     base_proof: &[Stmt],
     step_proof: &[Stmt],
-) -> RuntimeResult<Result<(ByInducCaseSuccess, ByInducCaseSuccess), ByInducCaseFailed>> {
-
+) -> RuntimeResult<Result<(ByInducCaseSuccess, ByInducCaseSuccess), ExecByInducStmtFailed>> {
     let (base_inner, base_env) = runtime.run_in_local_env_and_take_env(|rt| {
         let mut assumptions_stored = Vec::new();
         if let Err(msg) = intro_param_z(rt, param)? {
@@ -198,7 +214,7 @@ fn run_induction_cases(
             Ok(s) => assumptions_stored.push(s),
             Err(msg) => return Ok(Err(ByInducCaseFailed::Assume(msg))),
         }
-        let proof_steps = match run_fact_only_proof_steps(rt, base_proof)? {
+        let proof_steps = match run_proof_body_stmts(rt, base_proof)? {
             Ok(s) => s,
             Err(e) => return Ok(Err(ByInducCaseFailed::ProofBody(e))),
         };
@@ -226,7 +242,7 @@ fn run_induction_cases(
             goals_verified,
             local_env: base_env,
         },
-        Err(e) => return Ok(Err(e)),
+        Err(e) => return Ok(Err(ExecByInducStmtFailed::BaseCase(e))),
     };
 
     let (step_inner, step_env) = runtime.run_in_local_env_and_take_env(|rt| {
@@ -243,7 +259,7 @@ fn run_induction_cases(
             Ok(mut xs) => assumptions_stored.append(&mut xs),
             Err(e) => return Ok(Err(e)),
         }
-        let proof_steps = match run_fact_only_proof_steps(rt, step_proof)? {
+        let proof_steps = match run_proof_body_stmts(rt, step_proof)? {
             Ok(s) => s,
             Err(e) => return Ok(Err(ByInducCaseFailed::ProofBody(e))),
         };
@@ -272,7 +288,7 @@ fn run_induction_cases(
             goals_verified,
             local_env: step_env,
         },
-        Err(e) => return Ok(Err(e)),
+        Err(e) => return Ok(Err(ExecByInducStmtFailed::StepCase(e))),
     };
 
     Ok(Ok((base, step)))
@@ -322,9 +338,7 @@ fn store_ihs(
             match assume_fact(runtime, goal)? {
                 Ok(s) => out.push(s),
                 Err(msg) => {
-                    return Ok(Err(ByInducCaseFailed::Assume(format!(
-                        "IH {index}: {msg}"
-                    ))));
+                    return Ok(Err(ByInducCaseFailed::Assume(format!("IH {index}: {msg}"))));
                 }
             }
         }
@@ -469,11 +483,14 @@ fn failed_shape(msg: String) -> ExecByInducStmtResult {
 
 fn map_strong(failed: ExecByInducStmtFailed) -> ExecByStrongInducStmtFailed {
     match failed {
+        ExecByInducStmtFailed::FromNotInteger(r) => ExecByStrongInducStmtFailed::FromNotInteger(r),
+        ExecByInducStmtFailed::GoalDomain(s) => ExecByStrongInducStmtFailed::GoalDomain(s),
         ExecByInducStmtFailed::GoalWd { index, result } => {
             ExecByStrongInducStmtFailed::GoalWd { index, result }
         }
         ExecByInducStmtFailed::BodyShape(s) => ExecByStrongInducStmtFailed::BodyShape(s),
-        ExecByInducStmtFailed::Case(c) => ExecByStrongInducStmtFailed::Case(c),
+        ExecByInducStmtFailed::BaseCase(c) => ExecByStrongInducStmtFailed::BaseCase(c),
+        ExecByInducStmtFailed::StepCase(c) => ExecByStrongInducStmtFailed::StepCase(c),
         ExecByInducStmtFailed::Store(s) => ExecByStrongInducStmtFailed::Store(s),
         ExecByInducStmtFailed::NotFullyWired(s) => ExecByStrongInducStmtFailed::NotFullyWired(s),
     }

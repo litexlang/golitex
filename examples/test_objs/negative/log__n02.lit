@@ -1,0 +1,2 @@
+# Must reject: log N02
+let x = log(0, 2)

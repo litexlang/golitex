@@ -1,0 +1,12 @@
+# Before: named builtin was not found.
+# release thm sum_over_bijective_finite_set_enumerations(sum(1, 2, fn(k closed_range(1, 2)) R {f(e1(k))}), sum(1, 2, fn(k closed_range(1, 2)) R {f(e2(k))}))
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/sum_over_bijective_finite_set_enumerations.lit
+thm enumeration:
+    ? forall f fn(t {1, 2}) R, e1, e2 fn(u closed_range(1, 2)) {1, 2}:
+        $bijective(closed_range(1, 2), {1, 2}, e1)
+        $bijective(closed_range(1, 2), {1, 2}, e2)
+        =>:
+            sum(1, 2, fn(k closed_range(1, 2)) R {f(e1(k))}) = sum(1, 2, fn(k closed_range(1, 2)) R {f(e2(k))})
+    release thm sum_over_bijective_finite_set_enumerations(sum(1, 2, fn(k closed_range(1, 2)) R {f(e1(k))}), sum(1, 2, fn(k closed_range(1, 2)) R {f(e2(k))}))
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

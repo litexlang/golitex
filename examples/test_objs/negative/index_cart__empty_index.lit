@@ -1,0 +1,3 @@
+# Must reject: indexed object requires a nonempty index carrier
+forall A fn(k {}) power_set(N):
+    $is_set(index_cart({}, power_set(N), A))

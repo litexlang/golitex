@@ -1,0 +1,2 @@
+# Must reject: one_side_interval_upper_closed N01
+1 $in '(,0]

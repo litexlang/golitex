@@ -1,0 +1,18 @@
+# AST: Obj::StructAndFieldAccessObj::StructObj
+# Run: target/release/litex -f examples/test_objs/struct_obj.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P03: p.x $in R
+sketch:
+    struct Point:
+        x R
+        y R
+    forall p &Point:
+        p.x $in R
+
+# P04: $is_set(&Point)
+sketch:
+    struct Point:
+        x R
+        y R
+    $is_set(&Point)

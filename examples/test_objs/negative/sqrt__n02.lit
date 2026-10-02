@@ -1,0 +1,2 @@
+# Must reject: sqrt N02
+let x = sqrt(i)

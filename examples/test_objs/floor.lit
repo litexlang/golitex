@@ -1,0 +1,28 @@
+# AST: Obj::ArithmeticOperator::Floor
+# Run: target/release/litex -f examples/test_objs/floor.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: floor(0) = 0
+sketch:
+    floor(0) = 0
+
+# P02: floor(3) = 3
+sketch:
+    floor(3) = 3
+
+# P03: floor(3.7) = 3
+sketch:
+    floor(3.7) = 3
+
+# P04: floor(-3.7) = -4
+sketch:
+    floor(-3.7) = -4
+
+# P05: floor(1 / 2) = 0
+sketch:
+    floor(1 / 2) = 0
+
+# P06: floor(x) = x
+sketch:
+    forall x Z:
+        floor(x) = x

@@ -1,0 +1,32 @@
+# AST: Obj::StructAndFieldAccessObj::FieldAccess
+# Run: target/release/litex -f examples/test_objs/field_access.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P02: p.point.y = p.point.y
+sketch:
+    struct Point:
+        x R
+        y R
+    struct Tagged:
+        point &Point
+        tag N
+    forall p &Tagged:
+        p.point.x = p.point.x
+        p.point.y = p.point.y
+
+# P03: o.f(2) = o.f(2)
+sketch:
+    struct Ops:
+        f fn(x R) R
+        tag N
+    forall o &Ops:
+        o.f(2) = o.f(2)
+
+# P04: p.y $in R
+sketch:
+    struct Point:
+        x R
+        y R
+    forall p &Point:
+        p.x $in R
+        p.y $in R

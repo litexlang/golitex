@@ -1,0 +1,2 @@
+# Must reject: pow N01
+let x = 0^(-1)

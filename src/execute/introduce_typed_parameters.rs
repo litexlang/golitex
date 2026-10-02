@@ -15,13 +15,13 @@
 use crate::ast::fact::{
     AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
-use crate::ast::obj::{FiniteSeqSet, Obj, SeqSet, StructObj, FunctionSpace, SetFormer, StructAndFieldAccessObj};
+use crate::ast::obj::{Obj, StructAndFieldAccessObj};
 use crate::ast::param::{ParamType, TypedParameterList};
 use crate::ast::stmt::{
     HaveByReplacementAxiomStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
     HaveObjInNonemptySetOrParamTypeStmt, TrustHaveStmt,
 };
-use crate::exec_env::exec_env::SpecialObjectPropertyByDefinition;
+use crate::exec_env::SpecialProperty;
 use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_fact_stmt::{
     ParamTypeWellDefinedProof, VerifyObjWellDefinedResult, VerifyState,
@@ -30,7 +30,7 @@ use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferR
 use crate::execute::release_one_struct_layer::{
     FailToReleaseOneStructLayer, ReleaseOneStructLayerProof,
 };
-use crate::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::rc::Rc;
 
 /// Shared stmt body for multi-name `have` / `trust have` (name attached at insert).
@@ -222,7 +222,7 @@ impl Runtime {
                             line_file: None,
                         }));
                         if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
-                            self.record_definition_membership_shape(in_fact);
+                            self.record_default_struct_view(in_fact);
                         }
                         membership
                     }
@@ -253,153 +253,13 @@ impl Runtime {
         Ok(StoreHaveObjAndInferResult { stored_fact_ids })
     }
 
-    // Definition exit: typed `$in` membership → the matching ByDefinition shape row.
-    pub(crate) fn record_definition_membership_shape(&mut self, in_fact: &InFact) {
-        match &in_fact.set {
-            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj)) => {
-                self.record_defined_as_struct(
-                    &in_fact.element,
-                    struct_obj.clone(),
-                    in_fact.fact_id,
-                );
-            }
-            Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => {
-                self.record_in_function_set_by_definition(
-                    &in_fact.element,
-                    fn_set.clone(),
-                    in_fact.fact_id,
-                );
-            }
-            Obj::SetFormer(SetFormer::FiniteSeqSet(finite_seq_set)) => {
-                self.record_defined_as_finite_seq(
-                    &in_fact.element,
-                    finite_seq_set.clone(),
-                    in_fact.fact_id,
-                );
-            }
-            Obj::SetFormer(SetFormer::SeqSet(seq_set)) => {
-                self.record_defined_as_seq_set(
-                    &in_fact.element,
-                    seq_set.clone(),
-                    in_fact.fact_id,
-                );
-            }
-            _ => {}
-        }
-    }
-
-    // Definition-time only: attach the written `&Struct` carrier and its `$in` fact id.
-    pub(crate) fn record_defined_as_struct(
-        &mut self,
-        element: &Obj,
-        struct_obj: StructObj,
-        fact_id: FactId,
-    ) {
-        self.top_exec_env_mut()
-            .special_object_properties_by_def
-            .entry(element.ir())
-            .or_default()
-            .push(SpecialObjectPropertyByDefinition::DefinedAsStruct((
-                struct_obj,
-                fact_id,
-            )));
-    }
-
-    // Definition-time only: register callable FnSet signature.
-    pub(crate) fn record_in_function_set_by_definition(
-        &mut self,
-        element: &Obj,
-        fn_set: crate::ast::obj::FnSet,
-        fact_id: FactId,
-    ) {
-        self.top_exec_env_mut()
-            .special_object_properties_by_def
-            .entry(element.ir())
-            .or_default()
-            .push(SpecialObjectPropertyByDefinition::InFunctionSet((
-                fn_set, fact_id,
-            )));
-    }
-
-    // Definition-time only: register `element = AnonymousFn`.
-    pub(crate) fn record_equal_to_function_by_definition(
-        &mut self,
-        element: &Obj,
-        fun: Obj,
-        fact_id: FactId,
-    ) {
-        self.top_exec_env_mut()
-            .special_object_properties_by_def
-            .entry(element.ir())
-            .or_default()
-            .push(SpecialObjectPropertyByDefinition::EqualToFunction((
-                fun, fact_id,
-            )));
-    }
-
-    // Definition exit: `element $in FnSet` → InFunctionSet.
-    pub(crate) fn record_fn_signature_from_definition_membership(&mut self, in_fact: &InFact) {
-        self.record_definition_membership_shape(in_fact);
-    }
-
-    pub(crate) fn record_defined_as_finite_seq(
-        &mut self,
-        element: &Obj,
-        finite_seq_set: FiniteSeqSet,
-        fact_id: FactId,
-    ) {
-        self.top_exec_env_mut()
-            .special_object_properties_by_def
-            .entry(element.ir())
-            .or_default()
-            .push(SpecialObjectPropertyByDefinition::DefinedAsFiniteSeq((
-                finite_seq_set,
-                fact_id,
-            )));
-    }
-
-    pub(crate) fn record_defined_as_seq_set(
-        &mut self,
-        element: &Obj,
-        seq_set: SeqSet,
-        fact_id: FactId,
-    ) {
-        self.top_exec_env_mut()
-            .special_object_properties_by_def
-            .entry(element.ir())
-            .or_default()
-            .push(SpecialObjectPropertyByDefinition::DefinedAsSeqSet((
-                seq_set,
-                fact_id,
-            )));
-    }
-
-    // Definition exit: `name = anon` / `name = FnSet` → InFunctionSet (+ EqualToFunction).
-    pub(crate) fn record_fn_signature_from_definition_equal(
-        &mut self,
-        equal_fact: &crate::ast::fact::EqualFact,
-    ) {
-        let (name_side, fn_set, equal_to_function) = match (&equal_fact.left, &equal_fact.right) {
-            (Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)), other) => (
-                other,
-                anon.body.clone(),
-                Some(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.clone()))),
-            ),
-            (other, Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon))) => (
-                other,
-                anon.body.clone(),
-                Some(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.clone()))),
-            ),
-            (Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)), other) => (other, fn_set.clone(), None),
-            (other, Obj::FunctionSpace(FunctionSpace::FnSet(fn_set))) => (other, fn_set.clone(), None),
-            _ => return,
-        };
-        if matches!(name_side, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) | Obj::FunctionSpace(FunctionSpace::FnSet(_))) {
-            return;
-        }
-        self.record_in_function_set_by_definition(name_side, fn_set, equal_fact.fact_id);
-        if let Some(fun) = equal_to_function {
-            self.record_equal_to_function_by_definition(name_side, fun, equal_fact.fact_id);
+    // A typed definition selects the default field view; an ordinary membership does not.
+    pub(crate) fn record_default_struct_view(&mut self, fact: &InFact) {
+        if matches!(&fact.set, Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(_))) {
+            self.top_exec_env_mut().record_special_property(
+                fact.element.ir(),
+                SpecialProperty::DefaultStructView(fact.clone()),
+            );
         }
     }
 }

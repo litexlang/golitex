@@ -1,0 +1,2 @@
+# Must reject: arccos N01
+let x = arccos(i)

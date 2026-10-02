@@ -1,0 +1,23 @@
+# AST: Obj::SetFormer::ListSet
+# Run: target/release/litex -f examples/test_objs/list_set.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: finite_set_size({}) = 0
+sketch:
+    finite_set_size({}) = 0
+
+# P02: 1 $in {1, 2}
+sketch:
+    1 $in {1, 2}
+
+# P03: not 3 $in {1, 2}
+sketch:
+    not 3 $in {1, 2}
+
+# P05: finite_set_size({1, 2}) = 2
+sketch:
+    finite_set_size({1, 2}) = 2
+
+# P08: $is_finite_set({})
+sketch:
+    $is_finite_set({})

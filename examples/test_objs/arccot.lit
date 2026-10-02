@@ -1,0 +1,11 @@
+# AST: Obj::TrigOperator::Arccot
+# Run: target/release/litex -f examples/test_objs/arccot.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: arccot(0) = pi / 2
+sketch:
+    arccot(0) = pi / 2
+
+# P03: cot(arccot(3)) = 3
+sketch:
+    cot(arccot(3)) = 3

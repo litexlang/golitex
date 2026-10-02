@@ -1,0 +1,2 @@
+# Must reject: finite_set_min N04
+finite_set_min({1}) = 2

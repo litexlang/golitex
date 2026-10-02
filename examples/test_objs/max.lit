@@ -1,0 +1,24 @@
+# AST: Obj::ArithmeticOperator::Max
+# Run: target/release/litex -f examples/test_objs/max.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: max(2, 3) = 3
+sketch:
+    max(2, 3) = 3
+
+# P02: max(3, 2) = 3
+sketch:
+    max(3, 2) = 3
+
+# P03: max(2, 2) = 2
+sketch:
+    max(2, 2) = 2
+
+# P04: max(-3, -2) = -2
+sketch:
+    max(-3, -2) = -2
+
+# P06: max(x, y) = max(y, x)
+sketch:
+    forall x, y R:
+        max(x, y) = max(y, x)

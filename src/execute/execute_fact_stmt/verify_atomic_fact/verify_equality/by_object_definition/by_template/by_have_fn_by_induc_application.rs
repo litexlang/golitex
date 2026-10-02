@@ -19,9 +19,7 @@
 //!   \countdown_t<{0}>(1) = 0
 
 use crate::ast::fact::EqualFact;
-use crate::ast::obj::{
-    FnObj, FnObjHead, IdentifierObj, InstantiatedTemplateObj, Obj,
-};
+use crate::ast::obj::{FnObjHead, Obj};
 use crate::ast::stmt::TemplateDefEnum;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -55,10 +53,9 @@ impl Runtime {
         let Some(args) = fn_app_args(fn_obj) else {
             return Ok(None);
         };
-        let plain = inst.template_name.local_name();
 
         let (stmt, subst) = {
-            let Some(def) = self.def_template_visible_in_stack(plain) else {
+            let Some(def) = self.def_template_visible(&inst.template_name) else {
                 return Ok(None);
             };
             let TemplateDefEnum::HaveFnByInducStmt(stmt) = &def.template_def_stmt else {
@@ -90,8 +87,13 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let expanded_body =
-            rewrite_plain_self_apps_to_template_instance(&raw_body, &stmt.name, inst);
+        // Use capture-safe substitution through every object constructor.
+        // A recursive call under `+`, a tuple, or a lambda keeps this template instance.
+        let mut recursive_subst = HashMap::new();
+        recursive_subst.insert(stmt.name.id, Obj::InstantiatedTemplateObj(inst.clone()));
+        let Ok(expanded_body) = self.inst_obj(&raw_body, &recursive_subst) else {
+            return Ok(None);
+        };
 
         let residual = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -116,49 +118,5 @@ impl Runtime {
                 residual_equal,
             },
         ))
-    }
-}
-
-fn rewrite_plain_self_apps_to_template_instance(
-    obj: &Obj,
-    self_name: &str,
-    inst: &InstantiatedTemplateObj,
-) -> Obj {
-    match obj {
-        Obj::FnObj(fn_obj) => {
-            let new_body: Vec<Vec<Box<Obj>>> = fn_obj
-                .body
-                .iter()
-                .map(|layer| {
-                    layer
-                        .iter()
-                        .map(|arg| {
-                            Box::new(rewrite_plain_self_apps_to_template_instance(
-                                arg, self_name, inst,
-                            ))
-                        })
-                        .collect()
-                })
-                .collect();
-            let new_head = match fn_obj.head.as_ref() {
-                FnObjHead::Identifier(head) if identifier_plain_name(head) == Some(self_name) => {
-                    FnObjHead::InstantiatedTemplateObj(inst.clone())
-                }
-                other => other.clone(),
-            };
-            Obj::FnObj(FnObj {
-                head: Box::new(new_head),
-                body: new_body,
-            })
-        }
-        _ => obj.clone(),
-    }
-}
-
-fn identifier_plain_name(head: &IdentifierObj) -> Option<&str> {
-    match head {
-        IdentifierObj::Plain { name, .. }
-        | IdentifierObj::WithExportFileId { name, .. }
-        | IdentifierObj::WithModAndExportFileId { name, .. } => Some(name.as_str()),
     }
 }

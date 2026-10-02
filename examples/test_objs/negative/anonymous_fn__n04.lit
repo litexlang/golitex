@@ -1,0 +1,2 @@
+# Must reject: anonymous_fn N04
+fn(x R) N {x}(-1) = -1

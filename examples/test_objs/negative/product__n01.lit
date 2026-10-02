@@ -1,0 +1,2 @@
+# Must reject: product N01
+let x = product(3, 1, fn(k Z) Z {k})

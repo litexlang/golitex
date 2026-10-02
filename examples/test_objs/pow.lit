@@ -1,0 +1,40 @@
+# AST: Obj::ArithmeticOperator::Pow
+# Run: target/release/litex -f examples/test_objs/pow.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: 2^3 = 8
+sketch:
+    2^3 = 8
+
+# P02: 0^0 = 1
+sketch:
+    0^0 = 1
+
+# P03: 0^3 = 0
+sketch:
+    0^3 = 0
+
+# P05: (-2)^3 = -8
+sketch:
+    (-2)^3 = -8
+
+# P06: (-2)^4 = 16
+sketch:
+    (-2)^4 = 16
+
+# P07: 2^3^2 = 512
+sketch:
+    2^3^2 = 512
+
+# P08: (2^3)^2 = 64
+sketch:
+    (2^3)^2 = 64
+
+# P09: i^2 = -1
+sketch:
+    i^2 = -1
+
+# P10: x^0 = 1
+sketch:
+    forall x C:
+        x^0 = 1

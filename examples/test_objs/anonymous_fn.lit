@@ -1,0 +1,23 @@
+# AST: Obj::FunctionSpace::AnonymousFn
+# Run: target/release/litex -f examples/test_objs/anonymous_fn.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P01: fn(x R) R {x}(2) = 2
+sketch:
+    fn(x R) R {x}(2) = 2
+
+# P02: fn(x R) R {x + 1}(2) = 3
+sketch:
+    fn(x R) R {x + 1}(2) = 3
+
+# P03: fn(x, y R) R {x + y}(2, 3) = 5
+sketch:
+    fn(x, y R) R {x + y}(2, 3) = 5
+
+# P04: fn(x R: x > 0) R {1 / x}(2) = 1 / 2
+sketch:
+    fn(x R: x > 0) R {1 / x}(2) = 1 / 2
+
+# P90: Nearest valid-domain control
+sketch:
+    fn(x R) R {x}(-1) = -1

@@ -1,0 +1,2 @@
+# Must reject: max N02
+max(2, 3) = 4

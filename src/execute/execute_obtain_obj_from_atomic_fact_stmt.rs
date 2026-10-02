@@ -62,14 +62,13 @@ impl Runtime {
         stmt: &ObtainObjFromAtomicFact,
     ) -> RuntimeResult<ExecObtainObjFromAtomicFactStmtResult> {
         let prop_name = stmt.fact.predicate.local_name();
-
-        if self.def_abstract_prop_visible_in_stack(prop_name).is_some() {
+        if self.def_abstract_prop_visible(&stmt.fact.predicate).is_some() {
             return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
                 ExecObtainObjFromAtomicFactStmtFailed::AbstractProp,
             ));
         }
 
-        let Some(definition) = self.def_prop_visible_in_stack(prop_name).cloned() else {
+        let Some(definition) = self.def_prop_visible(&stmt.fact.predicate).cloned() else {
             return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
                 ExecObtainObjFromAtomicFactStmtFailed::PropNotFound,
             ));
@@ -88,7 +87,8 @@ impl Runtime {
         if param_ids.len() != stmt.fact.body.len() {
             return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
                 ExecObtainObjFromAtomicFactStmtFailed::BadDefinition(format!(
-                    "prop `{prop_name}` expects {} argument(s), got {}",
+                    "prop `{}` expects {} argument(s), got {}",
+                    definition.name,
                     param_ids.len(),
                     stmt.fact.body.len()
                 )),

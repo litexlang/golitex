@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "target": "examples/test_objs/fn_obj.lit",
+  "session_command": "target/release/litex -session -e '1 = 1'",
+  "workflow_deviation": "Current CLI lacks -before/-compact/-runner and parser lacks try; each sketch discards its scope.",
+  "proof_spine": [
+    "Check independent values, carriers, boundaries and composition for fn_obj"
+  ],
+  "blocks": [
+    {
+      "id": "P01",
+      "source_order": 1,
+      "intent": "f(2) = 3",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have fn f(x R) R = x + 1\n    f(2) = 3",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    have fn f(x R) R = x + 1\n    f(2) = 3",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P02",
+      "source_order": 2,
+      "intent": "f(4, 1) = 3",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have fn f(x, y R) R = x - y\n    f(4, 1) = 3",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    have fn f(x, y R) R = x - y\n    f(4, 1) = 3",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P03",
+      "source_order": 3,
+      "intent": "fn(x R) R {x + 1}(2) = 3",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    fn(x R) R {x + 1}(2) = 3",
+          "result": "accepted",
+          "verifier_evidence": "... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    fn(x R) R {x + 1}(2) = 3",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P04",
+      "source_order": 4,
+      "intent": "fn(x R: x != 0) R {1 / x}(2) = 1 / 2",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    fn(x R: x != 0) R {1 / x}(2) = 1 / 2",
+          "result": "accepted",
+          "verifier_evidence": "... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    fn(x R: x != 0) R {1 / x}(2) = 1 / 2",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P05",
+      "source_order": 5,
+      "intent": "f(f(1)) = 3",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have fn f(x R) R = x + 1\n    f(f(1)) = 3",
+          "result": "failed",
+          "verifier_evidence": "... ... ... error\nlitex> "
+        }
+      ],
+      "status": "blocked"
+    },
+    {
+      "id": "P06",
+      "source_order": 6,
+      "intent": "f(2)(3) = 5",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have fn f(x R) fn(y R) R = fn(y R) R {x + y}\n    f(2)(3) = 5",
+          "result": "failed",
+          "verifier_evidence": "... ... ... error\nlitex> "
+        }
+      ],
+      "status": "blocked"
+    },
+    {
+      "id": "P07",
+      "source_order": 7,
+      "intent": "b.f(1) $in R",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    struct Bundle:\n        f fn(x R) R\n        tag N\n    forall b &Bundle:\n        b.f(1) $in R",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... ... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    struct Bundle:\n        f fn(x R) R\n        tag N\n    forall b &Bundle:\n        b.f(1) $in R",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P08",
+      "source_order": 8,
+      "intent": "\\identity<R>(2) = 2",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    template<S set>:\n        have fn identity(x S) S = x\n    \\identity<R>(2) = 2",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    template<S set>:\n        have fn identity(x S) S = x\n    \\identity<R>(2) = 2",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P09",
+      "source_order": 9,
+      "intent": "f(f(1)) = f(2) = 3",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have fn f(x R) R = x + 1\n    f(1) = 2\n    f(f(1)) = f(2) = 3",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... success\nlitex> "
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    have fn f(x R) R = x + 1\n    f(1) = 2\n    f(f(1)) = f(2) = 3",
+      "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    }
+  ],
+  "materialization": {
+    "block_ids": [
+      "P01",
+      "P02",
+      "P03",
+      "P04",
+      "P07",
+      "P08",
+      "P09"
+    ],
+    "file_gate_result": {
+      "command": [
+        "-f",
+        "examples/test_objs/fn_obj.lit"
+      ],
+      "exit_code": 0,
+      "envelope": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/test_objs/fn_obj.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "sketch",
+            "proof_method": {
+              "type": "proof_block",
+              "rule_name": "Sketch",
+              "message": "Run a sketch proof block"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "ok": true
+    }
+  },
+  "latest_clean_file_gate": {
+    "command": "target/release/litex -f examples/test_objs/fn_obj.lit",
+    "verification_date": "2026-10-02",
+    "binary_sha256": "f24fc5c4ded2c946813ede37bd05ac55267a2d49bbc367174daf1428924a34fc",
+    "source_sha256": "c1702e495977ec1c597c105aba9c32c548655f8356131b2134f6344b7c164fd8",
+    "observation": {
+      "observed": "accept",
+      "exit_code": 0,
+      "phase": "success",
+      "diagnostic": "",
+      "statements": 7,
+      "object": "fn_obj",
+      "file": "fn_obj.lit",
+      "kind": "positive",
+      "intended": "accept"
+    }
+  }
+}

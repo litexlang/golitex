@@ -1,0 +1,24 @@
+# AST: Obj::SetOperator::Intersect
+# Run: target/release/litex -f examples/test_objs/intersect.lit
+# Cases use discarded sketch scopes; no cross-case facts.
+
+# P02: intersect({}, {1}) = {}
+sketch:
+    intersect({}, {1}) = {}
+
+# P03: intersect({1}, {1}) = {1}
+sketch:
+    intersect({1}, {1}) = {1}
+
+# P04: 2 $in intersect({1, 2}, {2, 3})
+sketch:
+    2 $in intersect({1, 2}, {2, 3})
+
+# P05: not 1 $in intersect({1, 2}, {2, 3})
+sketch:
+    not 1 $in intersect({1, 2}, {2, 3})
+
+# P06: intersect(A, B) = intersect(B, A)
+sketch:
+    forall A, B set:
+        intersect(A, B) = intersect(B, A)

@@ -1,0 +1,18 @@
+# Before: rejected by define_plain_atom("n") although the goal already bound n.
+# thm refl:
+#     ? forall n N:
+#         n = n
+#     by induc n from 0:
+#         ? n = n
+# Now: induction selects the goal's existing IdentifierId.
+# Run: target/release/litex -f examples/stmt_nodes/by/induction_reuses_goal_parameter.lit
+thm refl:
+    ? forall n N:
+        n = n
+    by induc n from 0:
+        ? n = n
+        ? from n = 0:
+            0 = 0
+        ? induc:
+            n + 1 = n + 1
+# Boundary: declaring a second forall n under the first remains invalid.

@@ -1,0 +1,2 @@
+# Intended valid regression: set_minus P01
+set_minus({1, 2}, {2}) = {1}

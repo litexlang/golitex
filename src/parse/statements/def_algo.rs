@@ -4,6 +4,7 @@ use super::super::keywords::{BY, CASE, CASES, COLON, FROM, INDUC};
 use super::super::object::{is_simple_name, parse_obj};
 use crate::ast::fact::AndChainAtomicFact;
 use crate::ast::line_file::SourceLine;
+use crate::ast::names::BoundName;
 use crate::ast::obj::Obj;
 use crate::ast::stmt::{
     DefAlgoByCasesStmt, DefAlgoByInducStmt, DefinitionStmt, FnSetClause, Stmt,
@@ -36,7 +37,7 @@ impl Runtime {
             .into());
         }
 
-        let _bound = self.define_plain_atom_as_parse(&tb, name.clone())?;
+        let bound = self.define_plain_atom_as_parse(&tb, name.clone())?;
 
         self.push_parse_scope();
         let result = (|| {
@@ -50,10 +51,10 @@ impl Runtime {
 
             tb.expect(BY)?;
             if tb.peek() == Some(CASES) {
-                return self.parse_algo_by_cases_tail(block, &mut tb, name, fn_set_clause);
+                return self.parse_algo_by_cases_tail(block, &mut tb, bound, fn_set_clause);
             }
             if tb.peek() == Some(INDUC) {
-                return self.parse_algo_by_induc_tail(block, &mut tb, name, fn_set_clause);
+                return self.parse_algo_by_induc_tail(block, &mut tb, bound, fn_set_clause);
             }
             Err(tb.parse_error(
                 "algo: expected `by cases` or `by induc` after signature",
@@ -67,7 +68,7 @@ impl Runtime {
         &mut self,
         block: &TokenBlock,
         tb: &mut TokenBlock,
-        name: String,
+        name: BoundName,
         fn_set_clause: FnSetClause,
     ) -> RuntimeResult<Stmt> {
         tb.expect(CASES)?;
@@ -117,7 +118,7 @@ impl Runtime {
         &mut self,
         block: &TokenBlock,
         tb: &mut TokenBlock,
-        name: String,
+        name: BoundName,
         fn_set_clause: FnSetClause,
     ) -> RuntimeResult<Stmt> {
         tb.expect(INDUC)?;

@@ -12,7 +12,7 @@ use crate::ast::obj::{
 };
 use crate::ast::param::ParamType;
 use crate::ast::stmt::TemplateDefEnum;
-use crate::exec_env::exec_env::SpecialObjectPropertyByDefinition;
+use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -29,7 +29,7 @@ impl Runtime {
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         let plain = value.name.local_name();
         let expected_arity = {
-            let Some(def) = self.def_struct_visible_in_stack(plain) else {
+            let Some(def) = self.def_struct_visible(&value.name) else {
                 let root =
                     Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(value.clone()));
                 return Ok(VerifyObjWellDefinedResult::Failed {
@@ -143,7 +143,7 @@ impl Runtime {
 
         for (index, field_name) in value.fields.iter().enumerate() {
             let plain = carrier.name.local_name().to_string();
-            let Some(def) = self.def_struct_visible_in_stack(&plain) else {
+            let Some(def) = self.def_struct_visible(&carrier.name) else {
                 return Ok(field_access_fail(
                     root,
                     format!("struct `{plain}` is not defined"),
@@ -195,7 +195,7 @@ impl Runtime {
         }
     }
 
-    // Definition-time `DefinedAsStruct` only (exact ObjIR; not equality class).
+    // Definition-selected `DefaultStructView` only (exact ObjIR; not equality class).
     // Nested field access: walk all fields; result carrier is the last field's
     // type when that type is `&Struct`.
     pub(in crate::execute) fn resolve_definition_struct_carrier(
@@ -213,7 +213,7 @@ impl Runtime {
         }
         let mut carrier = self.resolve_definition_struct_carrier(access.obj.as_ref())?;
         for (index, field_name) in access.fields.iter().enumerate() {
-            let def = self.def_struct_visible_in_stack(carrier.name.local_name())?;
+            let def = self.def_struct_visible(&carrier.name)?;
             let field = def.fields.iter().find(|f| f.binding.name == *field_name)?;
             let is_last = index + 1 == access.fields.len();
             match &field.field_type {
@@ -237,12 +237,14 @@ impl Runtime {
     pub(super) fn defined_as_struct_visible_in_stack(&self, obj: &Obj) -> Option<StructObj> {
         let key = obj.ir();
         for env in self.execution_environments_stack.iter().rev() {
-            let Some(props) = env.special_object_properties_by_def.get(&key) else {
+            let Some(props) = env.special_properties.get(&key) else {
                 continue;
             };
             for prop in props {
-                if let SpecialObjectPropertyByDefinition::DefinedAsStruct((carrier, _)) = prop {
-                    return Some(carrier.clone());
+                if let SpecialProperty::DefaultStructView(fact) = prop {
+                    if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier)) = &fact.set {
+                        return Some(carrier.clone());
+                    }
                 }
             }
         }
@@ -259,7 +261,7 @@ impl Runtime {
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         let plain = value.template_name.local_name();
         let (expected_arity, param_groups, dom_facts) = {
-            let Some(def) = self.def_template_visible_in_stack(plain) else {
+            let Some(def) = self.def_template_visible(&value.template_name) else {
                 return Ok(template_fail(
                     Obj::InstantiatedTemplateObj(value.clone()),
                     FailToVerifyObjWellDefinedByDefCommon::Others(format!(
@@ -415,8 +417,7 @@ impl Runtime {
         &mut self,
         value: &InstantiatedTemplateObj,
     ) -> RuntimeResult<()> {
-        let plain = value.template_name.local_name();
-        let Some(def) = self.def_template_visible_in_stack(plain).cloned() else {
+        let Some(def) = self.def_template_visible(&value.template_name).cloned() else {
             return Ok(());
         };
         let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
@@ -449,9 +450,6 @@ impl Runtime {
                     line_file: None,
                 }));
                 self.store_fact_and_infer(&membership)?;
-                if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
-                    self.record_fn_signature_from_definition_membership(in_fact);
-                }
                 let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                     fact_id: self.global_ids.allocate_fact_id(),
                     left: surface,
@@ -459,9 +457,6 @@ impl Runtime {
                     line_file: None,
                 }));
                 self.store_fact_and_infer(&defining_equal)?;
-                if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = &defining_equal {
-                    self.record_fn_signature_from_definition_equal(eq);
-                }
             }
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(have_fn) => {
                 self.store_instantiated_template_fn_set_membership(
@@ -487,9 +482,6 @@ impl Runtime {
                             let Ok(inst) = self.inst_fact(&fact, &subst) else {
                                 return Ok(());
                             };
-                            if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &inst {
-                                self.record_fn_signature_from_definition_membership(in_fact);
-                            }
                             self.store_fact_and_infer(&inst)?;
                         }
                     }
@@ -510,9 +502,6 @@ impl Runtime {
                     line_file: None,
                 }));
                 self.store_fact_and_infer(&defining_equal)?;
-                if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = &defining_equal {
-                    self.record_fn_signature_from_definition_equal(eq);
-                }
             }
             TemplateDefEnum::HaveByReplacementAxiomStmt(stmt) => {
                 // Same three facts as plain `have … by replacement_axiom` / release:
@@ -565,9 +554,6 @@ impl Runtime {
             set: inst_set,
             line_file: None,
         }));
-        if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
-            self.record_fn_signature_from_definition_membership(in_fact);
-        }
         self.store_fact_and_infer(&membership)?;
         Ok(())
     }
