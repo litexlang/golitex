@@ -407,6 +407,18 @@ Normal output identifies this route as `known_special_property`; Detailed
 output carries the definition citation and stored equality matches. Fixed
 builtin premises can retain the same evidence as nested proofs.
 
+Equality has a separate `ByKnownSpecialProperty` step after IR/alpha identity
+and before builtin rules. Known Cartesian membership supplies ordered tuple
+reconstruction, `tuple_dim`, and projection WD; a stored tuple equality supplies
+its coordinates. For example, `have p cart(R,R) = (a,b)` permits `p[1] = a`
+without an intermediate projection equality. A tuple-returning function can
+be projected after application WD and one body substitution. This route checks
+the selected definition's signature, keeps source FactIds, and declines
+unsupported nested unfolding. It also runs in strategy and fixed-premise
+truth search without enabling general builtin search. Literal index bounds
+remain mandatory. See the
+[three runnable examples](../examples/proof_nodes/equal/by_known_special_property/).
+
 ```litex
 have fn positive(x R) N+ = 1
 have a R
@@ -797,6 +809,13 @@ builtin unfold).
 function value. Function calls are ordinary objects, but the argument and all
 domain conditions must be verified.
 
+Both `have fn f(x S) T = body` and `fn(x S) T {body}` must prove
+`body $in T` under the declared parameter types and domain conditions before
+the function is accepted. Returning a parameter still requires this proof:
+`have fn f(x Z) N = x` is rejected because `x $in N` does not follow from
+`x $in Z`. `have fn f(x N) Z = x` is valid, as is the restricted definition
+`have fn f(x Z: x >= 0) N = x`.
+
 ```litex
 have fn square_plus_one(t R) R = t^2 + 1
 
@@ -998,10 +1017,21 @@ aggregate rules still require a real-valued iterand.
 
 ### Struct objects and definition-owned field access
 
+Struct `<=>:` conditions are checked in source order in a temporary field scope.
+After a condition passes WD, it is assumed locally while checking later conditions;
+for example, `x != 0` may precede a condition containing `1 / x`. These assumptions
+leave the scope with the definition check and are released only for an actual member.
+
 A `struct` defines a named set together with one definition-owned field view.
 Once its header parameters are fixed, `&Name<args>` is one ordinary set, not a
 set of sets. Every binder and function signature position that accepts a set
 therefore also accepts a struct carrier.
+
+Each actual header argument must satisfy its declared type before the struct
+instance is well-defined. For `struct Box<n N>:`, `&Box<0>` is valid and
+`&Box<-1>` is rejected. This also checks `set`, `nonempty_set`, and `finite_set`
+header kinds. Dependent headers such as `S set, a S` use the actual argument
+for `S` when checking `a`.
 
 #### Tuple representation
 
@@ -2337,6 +2367,23 @@ This is an `error`: `x != 0` and `x > 0` overlap.
 statement into a function. Prove the `forall … exist!` outside; the `have fn`
 block only names the goal and selects the function.
 
+An already proved whole `forall` can be replayed with renamed outer
+parameters and existential witnesses, including an outer parameter absent
+from the conclusion. Replay checks the goal's well-definedness, preserves
+the carriers, premises and free definition owners, and cites the stored
+source fact. It does not assign a value to an unused parameter.
+
+```litex
+claim:
+    ? forall t R:
+        exist! y R st {y = 0}
+    witness exist! y R st {y = 0} from 0
+have fn constant_choice by exist!:
+    ? forall x R:
+        exist! z R st {z = 0}
+constant_choice(2) = 0
+```
+
 ```litex
 trust:
     forall x R:
@@ -2855,7 +2902,8 @@ dedicated known-strategy search stage. There is no ambient known-forall
 injection and no separate activation state.
 
 > **Preview:** `strategy` is parse+exec wired like `thm`'s
-> forall path (fact-only proof body). The named interface is stored under
+> forall path. The goal is checked for well-definedness before the proof body;
+> body statements run in its local forall scope with normal failure rollback. The named interface is stored under
 > `strategy_definitions`. The proved forall is **not** injected into ordinary
 > known_forall matching; non-equality atomics apply it through `known_strategy`
 > (after by-definition, before known forall), returning `ByKnownStrategy`.
@@ -3030,7 +3078,7 @@ forms share one row, such as the related object-introduction statements.
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
 | `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. Plain or `mod::export::`-qualified theorem name (preview). | All instantiated conclusions and their ordinary inferred consequences. |
 | `by thm ... => fact` | Arity/domains/premises and one selected atomic target. Same qualified-name lookup as `release thm` (preview). | Only the requested atomic selection and its ordinary inferred consequences. |
-| `strategy` | The statement proves its `? forall` goal (preview: fact-only body; no stricter atomic-shape gate yet). | A named strategy definition; later non-equality atomics may apply it via `known_strategy` (`ByKnownStrategy`), not ambient known_forall. |
+| `strategy` | The statement proves its `? forall` goal (normal local statement proof body; no stricter atomic-shape gate yet). | A named strategy definition; later non-equality atomics may apply it via `known_strategy` (`ByKnownStrategy`), not ambient known_forall. |
 | `witness exist/exist!` | Witness count and concrete types before local binder assumptions; the optional proof body then establishes the substituted body; `exist!` additionally verifies the generated two-candidate uniqueness universal. | The exact existential fact. Binder names and helpers stay local. |
 | `witness $P(args)` | Every predicate argument has its declared type, and the concrete prop has one positive ordinary `exist` clause; the projected existential uses the same witness checks. `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
 | `witness $is_nonempty_set(S)` | The proposed object is in `S` (optional local proof body). | Nonemptiness of `S`. |

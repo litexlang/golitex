@@ -32,7 +32,7 @@ target/release/litex -lang en -strict -f examples/test_statements/boundaries/rec
 python3 examples/test_statements/run.py --leaf HaveFnByInducStmt
 ```
 
-Acceptance result: exit 0, JSON `success: true`, four successful statements. Keep the existing nondecreasing-recursion and wrong-base-carrier rejection controls. The remaining K004 investigation is separate from this classification decision.
+Acceptance result: exit 0, JSON `success: true`, four successful statements. Keep the existing nondecreasing-recursion and wrong-base-carrier rejection controls. K004 later adopted the user's [explicit arithmetic chain](K004-explicit-recursive-increment-chain.md) under the same authoring principle.
 
 Current acceptance capture: [k003_explicit_chain.json](../../proof_journals/k003_explicit_chain.json).
 

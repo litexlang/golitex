@@ -1,0 +1,4 @@
+# Must reject the definition before it can certify a false natural membership.
+have fn f(x Z) N = x
+f(-1) = -1
+-1 $in N

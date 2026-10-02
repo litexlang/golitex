@@ -8,11 +8,11 @@
 
 Primary fixture: [by_enumerate_finite_set_stmt.lit](../../by_enumerate_finite_set_stmt.lit).
 
-## Open issues
+## Resolved issues
 
 - [x] [K007-enumerate: Enumeration proof bodies cannot use their quantified binder](K007-enumeration-binder-proof-body/README.md)
 - [x] [K009-enumerate: Enumeration does not discharge conditional targets using their premises](K009-conditional-enumeration-goal/README.md)
-- [ ] [K010: Arithmetic target over a displayed finite numeric carrier fails enumeration](K010-enumeration-arithmetic-carrier/README.md)
+- [x] [K010: finite numeric carriers now justify arithmetic goal well-definedness](../../experience/problem_notes/K010-finite-numeric-carrier.md)
 
 ```bash
 python3 examples/test_statements/run.py --leaf ByEnumerateFiniteSetStmt

@@ -1,0 +1,12 @@
+# Before:
+# have gp cart(R,R)
+# gp = (gp[1],gp[2])
+# Former result: search_proof failure (2026-10-02 baseline).
+# Now: cite Cartesian membership and reconstruct the ordered coordinates.
+# Boundary: wrong length, coordinate order, or subject needs additional evidence.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_known_special_property/tuple_reconstruction.lit
+have gp cart(R,R)
+gp = (gp[1],gp[2])
+(gp[1],gp[2]) = gp
+have triple cart(R,Q,Z)
+triple = (triple[1],triple[2],triple[3])

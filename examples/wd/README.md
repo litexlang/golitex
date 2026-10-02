@@ -51,6 +51,18 @@ done < <(find examples/wd -name '*.lit' | sort)
 exit $fail
 ```
 
+## Function returns and struct arguments
+
+[Function returns and struct arguments](obj/return_and_struct_domains.lit)
+checks valid identity, wider, guarded and dependent return carriers, and typed
+struct header arguments. Every anonymous-function body must prove membership
+in its return set, including a body that is just a parameter. Struct-instance
+WD proves substituted header types, including the three set kinds and
+dependent element domains. The executable rejection controls are
+[`function_projection_return_domain.lit`](../wd_negative/function_projection_return_domain.lit)
+and [`struct_argument_domain.lit`](../wd_negative/struct_argument_domain.lit);
+failed statements leave no binding or successful WD cache entry.
+
 ## Dependent quantifier parameters
 
 [dependent_parameters.lit](fact/dependent_parameters.lit) covers `claim` and

@@ -1,0 +1,9 @@
+# K004: the user supplies an explicit arithmetic equality chain.
+# Former shortcut: f(1) = 1 (automatic search did not close it).
+
+have fn f(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: f(n - 1) + 1
+f(0) = 0
+f(1 - 1) = f(0) = 0
+f(1) = f(1 - 1) + 1 = 0 + 1 = 1

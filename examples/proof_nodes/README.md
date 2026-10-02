@@ -26,6 +26,14 @@ Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
 ## Fundamental equality examples
 
+Known tuple-property routes have dedicated tracers for
+[reconstruction](equal/by_known_special_property/tuple_reconstruction.lit),
+[stored-equality projection](equal/by_known_special_property/tuple_projection.lit),
+and [function projection](equal/by_known_special_property/fn_tuple_projection.lit).
+They preserve Membership/Equality citations and do not recursively unfold
+functions. Their negative and zero-depth checks live in
+`tests/unit/execute/equality_search/known_tuple.rs`.
+
 | What the example demonstrates | Runnable file |
 | --- | --- |
 | Known `a = b`; prove `a = c` by calculating `b = c` (`b` is `1 + 1`, `c` is `2`) | [Left peer, builtin bridge](equal/by_equivalence_class/via_left_peer_builtin.lit) |

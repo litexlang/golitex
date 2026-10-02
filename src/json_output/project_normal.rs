@@ -188,7 +188,7 @@ pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
         VerifyFactResult::ExistShapedFact(r) => exist_shaped_goal_display(r),
         VerifyFactResult::ForallFact(r) => match r.as_ref() {
             VerifyForallFactResult::Success(s) => {
-                Fact::ForallFact(s.fact.clone()).readable_string()
+                Fact::ForallFact(s.fact().clone()).readable_string()
             }
             VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToSearchProof {
                 fact, ..

@@ -2,12 +2,21 @@ use crate::execute::execute_fact_stmt::well_defined_results::{
     FailToVerifyObjWellDefinedResult, ObjWellDefinedProof,
 };
 use crate::ast::names::AtomicName;
+use crate::ast::fact::Fact;
+use crate::execute::execute_fact_stmt::VerifyFactResult;
 
 pub enum FailToVerifyAtomicFactWellDefinedResult {
     Argument(FailToVerifyObjWellDefinedResult),
     Predicate {
         well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
         reason: PredicateSignatureWellDefinedFailure,
+    },
+    Domain {
+        well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
+        predicate_signature: PredicateSignatureWellDefinedProof,
+        completed: Vec<PredicateDomainWellDefinedProof>,
+        requirement: Fact,
+        result: Box<VerifyFactResult>,
     },
 }
 
@@ -28,6 +37,12 @@ pub enum PredicateSignatureWellDefinedProof {
 pub struct AtomicFactWellDefinedProof {
     pub well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
     pub predicate_signature: PredicateSignatureWellDefinedProof,
+    pub predicate_domain: Vec<PredicateDomainWellDefinedProof>,
+}
+
+pub struct PredicateDomainWellDefinedProof {
+    pub requirement: Fact,
+    pub result: Box<VerifyFactResult>,
 }
 
 // Soft miss vs success for atomic-fact WD. Proof never embeds Fail.

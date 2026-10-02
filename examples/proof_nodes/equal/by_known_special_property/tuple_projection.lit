@@ -1,0 +1,13 @@
+# Before:
+# have a,b R
+# have gp cart(R,R) = (a,b)
+# gp[1] = a
+# Former result: search_proof failure unless intermediate equalities were added.
+# Now: cite the tuple equality path and select the literal index.
+# Boundary: gp[1] = b is not justified for arbitrary a,b.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_known_special_property/tuple_projection.lit
+have a,b R
+have gp cart(R,R) = (a,b)
+gp[1] = a
+have alias cart(R,R) = gp
+alias[2] = b

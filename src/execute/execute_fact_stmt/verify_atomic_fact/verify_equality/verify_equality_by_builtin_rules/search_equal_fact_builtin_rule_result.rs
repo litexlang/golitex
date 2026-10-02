@@ -129,6 +129,8 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    AggregateIdentity(super::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof),
+    AggregateCalculation(super::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof),
     Calculation(EqualitySearchProofByCalculation),
     SinArcsinLeftInverse(SinArcsinLeftInverseBuiltinRuleProof),
     CosArccosLeftInverse(CosArccosLeftInverseBuiltinRuleProof),

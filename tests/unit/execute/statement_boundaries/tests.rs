@@ -1,4 +1,4 @@
-use crate::execute::execute_by_stmt::{EnumerateAssignmentOutcome, ExecByEnumerateFiniteSetStmtResult, ExecByStmtResult};
+use crate::execute::execute_by_stmt::{EnumerateAssignmentOutcome, ExecByEnumerateFiniteSetStmtResult, ExecByForStmtResult, ExecByStmtResult};
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtFailed, ExecEvalStmtResult, ExecStmtResult};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
@@ -42,6 +42,64 @@ fn finite_guards_skip_only_proved_false_premises_and_reject_false_conclusions() 
         check(&mut runtime(true), &format!("have a R\nby {method}:\n    ? forall n {{0}}:\n        a = 0\n        =>:\n            0 = 1"), &[true, false]);
         check(&mut runtime(true), &format!("have a R\nby {method}:\n    ? forall n {{0}}:\n        a = 0\n        =>:\n            a = 0"), &[true, true]);
         check(&mut runtime(true), &format!("by {method}:\n    ? forall p cart({{0, 1}}, {{2, 3}}):\n        p = p"), &[false]);
+    }
+}
+
+#[test]
+fn finite_numeric_carriers_verify_symbolic_arithmetic_and_each_assignment() {
+    for method in ["enumerate finite_set", "for"] {
+        let mut rt = runtime(true);
+        let run = rt.run_litex_code(&format!("by {method}:\n    ? forall n {{0, 1}}:\n        n + 0 = n")).unwrap();
+        assert!(run.success, "{}", crate::json_output::project_stmt_normal(&run.statement_results[0], &rt).stringify());
+        let assignments = match &run.statement_results[0] {
+            ExecStmtResult::By(ExecByStmtResult::EnumerateFiniteSet(ExecByEnumerateFiniteSetStmtResult::Success(success))) => &success.assignments,
+            ExecStmtResult::By(ExecByStmtResult::For(ExecByForStmtResult::Success(success))) => &success.assignments,
+            _ => panic!("finite enumeration success"),
+        };
+        assert_eq!(assignments.len(), 2);
+        for assignment in assignments {
+            let EnumerateAssignmentOutcome::Proved { then_proofs, .. } = &assignment.outcome else { panic!("each assignment must be proved"); };
+            assert_eq!(then_proofs.len(), 1);
+        }
+        let detailed = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
+        for field in ["FiniteSetSubsetMembership", "source_membership_proof", "member_in_proofs", "binding_assumptions", "then_proofs"] {
+            assert!(detailed.contains(field), "missing {field}: {detailed}");
+        }
+        check(&mut rt, "have n R = 5", &[true]);
+        check(&mut runtime(true), &format!("by {method}:\n    ? forall n {{0, 1}}:\n        n + 0 = 0"), &[false]);
+        check(&mut runtime(true), &format!("by {method}:\n    ? forall n {{0, {{1}}}}:\n        n + 0 = n"), &[false]);
+        check(&mut runtime(true), &format!("by {method}:\n    ? forall n {{{{1}}}}:\n        n + 0 = n"), &[false]);
+        check(&mut runtime(true), &format!("by {method}:\n    ? forall n {{0, 1}}:\n        n / 0 = n"), &[false]);
+    }
+    // No concrete equality for n is needed to establish the carrier or identity.
+    check(&mut runtime(true), "forall n {0, 1}:\n    n + 0 = n", &[true]);
+    check(&mut runtime(true), "have n {0, 1}\nn $in N\nn + 0 = n", &[true, true, true]);
+    check(&mut runtime(true), "have a R\nhave n {a}\nn $in R", &[true, true, true]);
+    check(&mut runtime(true), "have a R*\nhave n {a, 0}\nn $in R", &[true, true, true]);
+    // A set-valued member never acquires a numeric type. One positive member
+    // is insufficient to lift a two-member carrier to N+.
+    check(&mut runtime(true), "have n {{1}}\nn $in C", &[true, false]);
+    check(&mut runtime(true), "have n {0, 1}\nn $in N+", &[true, false]);
+    check(&mut runtime(true), "have n R\nn $in {n}\nn $in N", &[true, true, false]);
+}
+
+#[test]
+fn trust_have_display_replays_body_names_and_preserves_strict_policy() {
+    for source in [
+        "trust have trusted_a R:\n    trusted_a = 1",
+        "trust have trusted_a, trusted_b R:\n    trusted_a = 1\n    trusted_b = 2",
+        "trust have trusted_a R",
+    ] {
+        let mut rt = runtime(false);
+        let run = rt.run_litex_code(source).unwrap();
+        assert!(run.success, "{source}");
+        let normal = crate::json_output::project_stmt_normal(&run.statement_results[0], &rt);
+        let rendered = normal.as_object().unwrap().get("statement").unwrap().as_str().unwrap();
+        assert!(rendered.starts_with("trust have "), "{rendered}");
+        check(&mut runtime(false), rendered, &[true]);
+        let strict = runtime(true).run_litex_code(rendered).unwrap();
+        assert!(!strict.success);
+        assert!(format!("{:?}", strict.session_error).contains("forbidden"));
     }
 }
 

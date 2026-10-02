@@ -1,0 +1,17 @@
+{
+  "status": "needs_diagnosis",
+  "command": [
+    "cargo",
+    "test",
+    "--release",
+    "--lib",
+    "builtin_entry_policy_tests"
+  ],
+  "exit_code": 101,
+  "passed": 6,
+  "failed": 1,
+  "failure_output": "running 7 tests\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::deep_budget_does_not_disable_builtin_entry_or_reenable_a_disabled_entry ... ok\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::missing_strict_positivity_and_invalid_wd_still_fail ... ok\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::stored_facts_and_zero_depth_strategy_calculation_remain_available ... FAILED\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::three_definition_layers_keep_their_independent_depth_boundary ... ok\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::builtin_premises_cannot_reenter_until_the_intermediate_fact_is_stored ... ok\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::premise_policy_is_shared_by_greater_and_equality_rules ... ok\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::builtin_premises_keep_checked_application_and_calculation_leaves ... ok\n\nfailures:\n\n---- execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::stored_facts_and_zero_depth_strategy_calculation_remain_available stdout ----\n\nthread 'execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::stored_facts_and_zero_depth_strategy_calculation_remain_available' (68301632) panicked at src/execute/execute_fact_stmt/../../../tests/unit/execute/builtin_entry_policy/tests.rs:92:5:\nassertion failed: !verify(&mut rt, \"x >= 1\",\n            VerifyState::top_level().known_only_no_wd()).is_failed()\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::stored_facts_and_zero_depth_strategy_calculation_remain_available\n\ntest result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 505 filtered out; finished in 0.03s\n\nerror: test failed, to rerun pass `--lib`\n",
+  "source_at_capture": "fn stored_facts_and_zero_depth_strategy_calculation_remain_available() {\n    let mut rt = runtime();\n    exec_ok(&mut rt, \"have x R\");\n    exec_ok(&mut rt, \"trust x >= 1\");\n    assert!(\n        !verify(\n            &mut rt,\n            \"x >= 1\",\n            VerifyState::top_level().known_only_no_wd()\n        )\n        .is_failed()\n    );\n    for code in [\"1 + 1 = 2\", \"1 < 2\"] {\n        let goal = fact(&mut rt, code);\n        assert!(\n            !rt.verify_fact_in_strategy(&goal, StrategySearch { depth: 0 })\n                .unwrap()\n                .is_failed(),\n            \"{code}\"\n        );\n    }\n    let goal = fact(&mut rt, \"0 < x + x\");\n    assert!(\n        rt.verify_fact_in_strategy(&goal, StrategySearch { depth: 0 })\n            .unwrap()\n            .is_failed()\n    );\n}\n",
+  "baseline_without_current_task_changes": "not measured",
+  "note": "This internal-state control has no finite-list carrier inputs. The new finite rule has no source candidate here; its failure cause remains unconfirmed."
+}

@@ -29,6 +29,7 @@ verify_equal_fact(goal, state)
   -> WD left, then right
   -> search_equal_fact_proof(goal, state)
        -> ByTheyAreTheSame
+       -> ByKnownSpecialProperty (finite tuple evidence reads)
        -> ByBuiltinRule (if can_use_builtin_rule is true)
        -> ByEquivalenceClass
             -> stored path
@@ -40,9 +41,32 @@ verify_equal_fact(goal, state)
 ```
 
 The strategy subtree has its own existing entry in `verify_in_strategy.rs`.
-It also checks `ByTheyAreTheSame` first, then keeps its existing cite-only /
+It checks `ByTheyAreTheSame`, then the same `ByKnownSpecialProperty` reader,
+then keeps its existing cite-only /
 calculation builtin entry, unified class search, and nested strategy order.
 Moving identity out of builtin must not remove it from this second entry.
+
+## Known tuple properties
+
+`ByKnownSpecialProperty` is a sibling of identity, not another alpha case.
+Cartesian membership proves `p = (p[1],p[2])`; a stored path to `(a,b)` proves
+`p[1] = a`. A function definition may supply a literal tuple after one beta
+substitution. Application WD precedes this step, and all candidate WD
+signatures must agree with the selected definition's full signature, including
+domains. A signature ambiguity or non-tuple body misses without recursive
+unfolding. Tuple shape also supplies atomic `is_tuple`, literal index bounds,
+coordinate carrier membership, and equality `tuple_dim(p) = n`.
+
+The shared reader in `known_tuple.rs` only traverses stored equality edges
+with visited-node tracking. It retains FactIds and local certificates, writes
+no facts or WD, and never calls a verifier. The bottom-level
+`lookup_known_obj_equality` stays identity/stored-path-only. Both ordinary and
+strategy equality entries, strict argument conversion, and Detailed JSON
+retain the new route. See the runnable
+[reconstruction](../../../../../examples/proof_nodes/equal/by_known_special_property/tuple_reconstruction.lit),
+[projection](../../../../../examples/proof_nodes/equal/by_known_special_property/tuple_projection.lit),
+and [function projection](../../../../../examples/proof_nodes/equal/by_known_special_property/fn_tuple_projection.lit)
+tracers.
 
 ## Identity: two cases
 

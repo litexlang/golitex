@@ -21,4 +21,17 @@ Verified source: [recursive-equation-explicit-chain.lit](../../boundaries/recurs
 
 Decision, prior evidence, and verification commands: [K003 experience record](../../experience/problem_notes/K003-explicit-recursive-equation-chain.md).
 
+K004 uses the same explicit-proof principle for an incrementing function:
+
+```litex
+have fn f(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: f(n - 1) + 1
+f(0) = 0
+f(1 - 1) = f(0) = 0
+f(1) = f(1 - 1) + 1 = 0 + 1 = 1
+```
+
+Verified source: [recursive-increment-explicit-chain.lit](../../boundaries/recursive-increment-explicit-chain.lit). User decision and baseline proof: [K004 experience record](../../experience/problem_notes/K004-explicit-recursive-increment-chain.md).
+
 Back to [statement folder](README.md) or [issue index](../README.md).

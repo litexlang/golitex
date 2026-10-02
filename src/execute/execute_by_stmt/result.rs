@@ -3,7 +3,7 @@ use crate::ast::names::AtomicName;
 use crate::ast::obj::FnSet;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::{
-    ExecFactStmtResult, ProveAndStoreThenFactResult, VerifyFactResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
+    ProveAndStoreThenFactResult, VerifyFactResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::runtime::FactId;
 use crate::execute::ExecStmtResult;
@@ -114,24 +114,6 @@ impl ExecByFnExtensionStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }
-}
-
-// ---------------------------------------------------------------------------
-// Shared proof-body pieces (Fact-only v1)
-// ---------------------------------------------------------------------------
-
-pub enum ByProofStepResult {
-    Fact(ExecFactStmtResult),
-}
-
-pub enum ByProofBodyFailed {
-    NonFactStmt {
-        step_index: usize,
-    },
-    FactStep {
-        step_index: usize,
-        result: ExecFactStmtResult,
-    },
 }
 
 pub struct ByContradictionClosingSuccess {

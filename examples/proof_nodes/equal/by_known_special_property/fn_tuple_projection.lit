@@ -1,0 +1,15 @@
+# Before:
+# have fn vec(a,b cart(R,R)) cart(R,R) = (b[1]-a[1],b[2]-a[2])
+# have a,b cart(R,R)
+# vec(a,b)[1] = b[1]-a[1]
+# Former result: well_defined failure before equality search.
+# Now: application WD, known codomain shape, then one checked beta substitution.
+# Boundary: invalid arguments/indices still fail WD; nested bodies are not recursively unfolded here.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_known_special_property/fn_tuple_projection.lit
+have fn vec(a,b cart(R,R)) cart(R,R) = (b[1]-a[1],b[2]-a[2])
+have a,b cart(R,R)
+vec(a,b)[1] = b[1]-a[1]
+vec(a,b)[2] = b[2]-a[2]
+vec(a,b) = (vec(a,b)[1],vec(a,b)[2])
+let vector_alias = vec
+vector_alias(a,b)[1] = b[1]-a[1]

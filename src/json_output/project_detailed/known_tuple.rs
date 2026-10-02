@@ -21,7 +21,15 @@ pub(super) fn project_equal_known_tuple(
                 ("rule", string("TupleReconstruction")),
                 ("reversed", JsonValue::Bool(p.reversed)),
                 ("shape", project_shape(&p.shape, runtime)),
-                ("subjects", JsonValue::Array(p.subjects.iter().map(|p| project_equal_searched(p, runtime)).collect())),
+                (
+                    "subjects",
+                    JsonValue::Array(
+                        p.subjects
+                            .iter()
+                            .map(|p| project_equal_searched(p, runtime))
+                            .collect(),
+                    ),
+                ),
             ]);
         }
         EqualFactSearchProofByKnownSpecialProperty::TupleProjection(p) => {
@@ -30,30 +38,70 @@ pub(super) fn project_equal_known_tuple(
                 ("reversed", JsonValue::Bool(p.reversed)),
                 ("index", string(p.index.to_string())),
                 ("tuple", project_value(&p.tuple, runtime)),
-                ("component_equal", project_equal_searched(&p.component_equal, runtime)),
+                (
+                    "component_equal",
+                    project_equal_searched(&p.component_equal, runtime),
+                ),
             ]);
         }
         EqualFactSearchProofByKnownSpecialProperty::FnTupleProjection(p) => {
             let applicability = match &p.function.applicability {
-                KnownFunctionTupleApplicability::AnonymousLiteral => object_for(runtime, vec![
-                    ("kind", string("anonymous_literal")),
-                ]),
-                KnownFunctionTupleApplicability::AllSignaturesMatch(matches) => object_for(runtime, vec![
-                    ("kind", string("all_signatures_match")),
-                    ("matches", JsonValue::Array(matches.iter().map(|p| object_for(runtime, vec![
-                        ("cite_signature_fact_id", string(p.cite_signature_fact_id.to_string())),
-                        ("signature_match", project_equal_searched(&p.signature_match, runtime)),
-                    ])).collect())),
-                ]),
+                KnownFunctionTupleApplicability::AnonymousLiteral => {
+                    object_for(runtime, vec![("kind", string("anonymous_literal"))])
+                }
+                KnownFunctionTupleApplicability::AllSignaturesMatch(matches) => object_for(
+                    runtime,
+                    vec![
+                        ("kind", string("all_signatures_match")),
+                        (
+                            "matches",
+                            JsonValue::Array(
+                                matches
+                                    .iter()
+                                    .map(|p| {
+                                        object_for(
+                                            runtime,
+                                            vec![
+                                                (
+                                                    "cite_signature_fact_id",
+                                                    string(p.cite_signature_fact_id.to_string()),
+                                                ),
+                                                (
+                                                    "signature_match",
+                                                    project_equal_searched(
+                                                        &p.signature_match,
+                                                        runtime,
+                                                    ),
+                                                ),
+                                            ],
+                                        )
+                                    })
+                                    .collect(),
+                            ),
+                        ),
+                    ],
+                ),
             };
             fields.extend([
                 ("rule", string("FnTupleProjection")),
                 ("reversed", JsonValue::Bool(p.reversed)),
                 ("index", string(p.index.to_string())),
-                ("function_equal", project_known_equality_path(&p.function.function_equal, runtime)),
+                (
+                    "function_equal",
+                    project_known_equality_path(&p.function.function_equal, runtime),
+                ),
                 ("applicability", applicability),
-                ("expanded_body", string(Obj::ProductShape(ProductShape::Tuple(p.function.value.clone())).readable_string())),
-                ("component_equal", project_equal_searched(&p.component_equal, runtime)),
+                (
+                    "expanded_body",
+                    string(
+                        Obj::ProductShape(ProductShape::Tuple(p.function.value.clone()))
+                            .readable_string(),
+                    ),
+                ),
+                (
+                    "component_equal",
+                    project_equal_searched(&p.component_equal, runtime),
+                ),
             ]);
         }
         EqualFactSearchProofByKnownSpecialProperty::TupleDimension(p) => {
@@ -61,7 +109,10 @@ pub(super) fn project_equal_known_tuple(
                 ("rule", string("TupleDimension")),
                 ("reversed", JsonValue::Bool(p.reversed)),
                 ("shape", project_shape(&p.shape, runtime)),
-                ("dimension_equal", project_equal_searched(&p.dimension_equal, runtime)),
+                (
+                    "dimension_equal",
+                    project_equal_searched(&p.dimension_equal, runtime),
+                ),
             ]);
         }
     }
@@ -91,10 +142,19 @@ pub(super) fn project_shape(shape: &KnownTupleShapeProof, runtime: &Runtime) -> 
         KnownTupleShapeProof::CartesianMembership(p) => {
             fields.extend([
                 ("kind", string("cartesian_membership")),
-                ("subject_equal", project_known_equality_path(&p.subject_equal, runtime)),
+                (
+                    "subject_equal",
+                    project_known_equality_path(&p.subject_equal, runtime),
+                ),
                 ("cite_fact_id", string(p.membership.fact_id.to_string())),
-                ("membership", string(AtomicFact::InFact(p.membership.clone()).readable_string())),
-                ("carrier_equal", project_known_equality_path(&p.carrier_equal, runtime)),
+                (
+                    "membership",
+                    string(AtomicFact::InFact(p.membership.clone()).readable_string()),
+                ),
+                (
+                    "carrier_equal",
+                    project_known_equality_path(&p.carrier_equal, runtime),
+                ),
             ]);
         }
         KnownTupleShapeProof::TupleEquality(p) => {
@@ -106,15 +166,46 @@ pub(super) fn project_shape(shape: &KnownTupleShapeProof, runtime: &Runtime) -> 
         KnownTupleShapeProof::FunctionCodomain(p) => {
             fields.extend([
                 ("kind", string("function_codomain")),
-                ("membership", string(AtomicFact::InFact(p.membership.clone()).readable_string())),
-                ("cite_property_fact_id", string(p.membership_proof.cite_property_fact_id.to_string())),
-                ("signature_matches", JsonValue::Array(p.membership_proof.signature_return_matches.iter().map(|m| {
-                    object_for(runtime, vec![
-                        ("cite_signature_fact_id", string(m.cite_signature_fact_id.to_string())),
-                        ("return_set_match", project_equal_searched(&m.return_set_match, runtime)),
-                    ])
-                }).collect())),
-                ("carrier_equal", project_known_equality_path(&p.carrier_equal, runtime)),
+                (
+                    "function_equal",
+                    project_known_equality_path(&p.function_equal, runtime),
+                ),
+                (
+                    "membership",
+                    string(AtomicFact::InFact(p.membership.clone()).readable_string()),
+                ),
+                (
+                    "cite_property_fact_id",
+                    string(p.membership_proof.cite_property_fact_id.to_string()),
+                ),
+                (
+                    "signature_matches",
+                    JsonValue::Array(
+                        p.membership_proof
+                            .signature_return_matches
+                            .iter()
+                            .map(|m| {
+                                object_for(
+                                    runtime,
+                                    vec![
+                                        (
+                                            "cite_signature_fact_id",
+                                            string(m.cite_signature_fact_id.to_string()),
+                                        ),
+                                        (
+                                            "return_set_match",
+                                            project_equal_searched(&m.return_set_match, runtime),
+                                        ),
+                                    ],
+                                )
+                            })
+                            .collect(),
+                    ),
+                ),
+                (
+                    "carrier_equal",
+                    project_known_equality_path(&p.carrier_equal, runtime),
+                ),
             ]);
         }
     }
@@ -122,8 +213,19 @@ pub(super) fn project_shape(shape: &KnownTupleShapeProof, runtime: &Runtime) -> 
 }
 
 fn project_value(value: &KnownTupleValueProof, runtime: &Runtime) -> JsonValue {
-    object_for(runtime, vec![
-        ("tuple_equal", project_known_equality_path(&value.tuple_equal, runtime)),
-        ("value", string(Obj::ProductShape(ProductShape::Tuple(value.value.clone())).readable_string())),
-    ])
+    object_for(
+        runtime,
+        vec![
+            (
+                "tuple_equal",
+                project_known_equality_path(&value.tuple_equal, runtime),
+            ),
+            (
+                "value",
+                string(
+                    Obj::ProductShape(ProductShape::Tuple(value.value.clone())).readable_string(),
+                ),
+            ),
+        ],
+    )
 }

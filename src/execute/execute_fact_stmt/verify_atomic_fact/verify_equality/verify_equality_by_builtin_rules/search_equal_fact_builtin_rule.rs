@@ -14,6 +14,12 @@ impl Runtime {
         if let Some(proof) = self.search_equal_fact_by_calculation(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::Calculation(proof)));
         }
+        if let Some(proof) = self.search_equal_fact_by_aggregate_calculation(fact, verify_state.clone())? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::AggregateCalculation(proof)));
+        }
+        if let Some(proof) = self.search_equal_fact_by_aggregate_identities(fact, verify_state.clone())? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::AggregateIdentity(proof)));
+        }
         if let Some(proof) = self
             .search_equal_fact_builtin_rule_equal_from_known_difference_zero(
                 fact,

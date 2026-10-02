@@ -5,7 +5,8 @@ use crate::ast::names::BoundName;
 use crate::ast::obj::Obj;
 use crate::ast::param::{ParamType, TypedParameterList};
 use crate::ast::stmt::HaveObjEqualStmt;
-use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
+use crate::exec_env::exec_env::ExecEnv;
+use crate::execute::{IntroduceTypedParametersFailed, IntroduceTypedParametersResult};
 use crate::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
@@ -13,6 +14,7 @@ use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferR
 use crate::execute::introduce_typed_parameters::SharedHaveDefinition;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::rc::Rc;
+use std::collections::HashMap;
 
 pub enum ExecHaveObjEqualStmtFailed {
     ParamCountMismatch,
@@ -25,7 +27,8 @@ pub enum ExecHaveObjEqualStmtFailed {
 // Pipeline: check arity → WD param types → WD RHS → membership → define → store equals.
 pub struct ExecHaveObjEqualStmtSuccessResult {
     pub statement: HaveObjEqualStmt,
-    pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
+    pub type_preflight: IntroduceTypedParametersResult,
+    pub type_local_env: Box<ExecEnv>,
     pub equal_to_well_defined: Vec<VerifyObjWellDefinedResult>,
     pub membership_checks: Vec<VerifyFactResult>,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
@@ -68,13 +71,19 @@ impl Runtime {
             equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
         };
 
-        let param_type_well_defined = match self
-            .verify_typed_parameters_well_definedness_or_fail(&stmt.param_def, verify_state.clone())?
-        {
-            Ok(proofs) => proofs,
-            Err(failed) => {
+        let (preflight, type_local_env) = self.run_in_local_env_and_take_env(|rt| {
+            rt.introduce_typed_parameters(&stmt.param_def, verify_state.clone())
+        })?;
+        let type_preflight = match preflight {
+            Ok(result) => result,
+            Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
                 return Ok(ExecHaveObjEqualStmtResult::Failed(
                     ExecHaveObjEqualStmtFailed::ParamType(failed),
+                ));
+            }
+            Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
+                return Ok(ExecHaveObjEqualStmtResult::Failed(
+                    ExecHaveObjEqualStmtFailed::AutoOpenStructLayer(failed),
                 ));
             }
         };
@@ -91,8 +100,14 @@ impl Runtime {
         }
 
         let mut membership_checks = Vec::with_capacity(bindings.len());
-        for ((_, param_type), obj) in bindings.iter().zip(stmt.objs_equal_to.iter()) {
-            let type_fact = match param_type {
+        let mut earlier_values = HashMap::new();
+        let mut value_index = 0;
+        for group in &stmt.param_def.groups {
+            let param_type = self.inst_param_type(&group.param_type, &earlier_values)
+                .map_err(|e| crate::runtime::RuntimeError::InternalBug(format!("have equal carrier instantiate: {e}")))?;
+            for binding in &group.params {
+            let obj = &stmt.objs_equal_to[value_index];
+            let type_fact = match &param_type {
                 ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
                     fact_id: self.global_ids.allocate_fact_id(),
                     element: obj.clone(),
@@ -126,6 +141,9 @@ impl Runtime {
                 ));
             }
             membership_checks.push(checked);
+            earlier_values.insert(binding.id, obj.clone());
+            value_index += 1;
+            }
         }
 
         let mut store_and_infer_result = self.define_typed_parameters_in_current_env(
@@ -162,7 +180,8 @@ impl Runtime {
         Ok(ExecHaveObjEqualStmtResult::Success(
             ExecHaveObjEqualStmtSuccessResult {
                 statement: stmt.clone(),
-                param_type_well_defined,
+                type_preflight,
+                type_local_env,
                 equal_to_well_defined,
                 membership_checks,
                 store_and_infer_result,

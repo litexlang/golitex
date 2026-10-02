@@ -2,10 +2,8 @@ use crate::ast::fact::{
     and_chain_as_fact, negate_atomic_fact, AndChainAtomicFact, AtomicFact, Fact, OrFact,
 };
 use crate::ast::line_file::SourceLine;
-use crate::ast::stmt::Stmt;
 use crate::execute::execute_by_stmt::result::{
-    ByContradictionClosingFailed, ByContradictionClosingSuccess, ByProofBodyFailed,
-    ByProofStepResult,
+    ByContradictionClosingFailed, ByContradictionClosingSuccess,
 };
 use crate::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyFactWellDefinedResult, VerifyState,
@@ -22,24 +20,6 @@ pub(crate) fn proof_verify_state() -> VerifyState {
         store_well_defined_fact: true,
         equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
     }
-}
-
-pub(crate) fn run_fact_only_proof_steps(
-    runtime: &mut Runtime,
-    proof: &[Stmt],
-) -> RuntimeResult<Result<Vec<ByProofStepResult>, ByProofBodyFailed>> {
-    let mut steps = Vec::with_capacity(proof.len());
-    for (step_index, stmt) in proof.iter().enumerate() {
-        let Stmt::Fact(fact) = stmt else {
-            return Ok(Err(ByProofBodyFailed::NonFactStmt { step_index }));
-        };
-        let result = runtime.execute_fact_statement(fact)?;
-        if result.is_failed() {
-            return Ok(Err(ByProofBodyFailed::FactStep { step_index, result }));
-        }
-        steps.push(ByProofStepResult::Fact(result));
-    }
-    Ok(Ok(steps))
 }
 
 pub(super) fn assume_fact(

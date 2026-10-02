@@ -6,7 +6,7 @@ mod decimal_comparison;
 mod denominator_clearing;
 mod exact_division;
 pub mod exact_rational;
-mod helper;
+pub(crate) mod helper;
 mod monomial;
 mod monomial_collection;
 mod normalization;

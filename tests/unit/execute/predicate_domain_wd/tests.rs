@@ -1,0 +1,211 @@
+use crate::launch_command::{LaunchCommand, OutputLanguage};
+use crate::runtime::Runtime;
+
+fn runtime() -> Runtime {
+    Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    })
+}
+
+#[test]
+fn predicate_domain_wd_requires_the_numeric_domain_before_assuming_a_fact() {
+    for (header, atom) in [
+        ("x R", "$prime(x)"),
+        ("x R", "$coprime(x, 1)"),
+        ("x R", "$dvd(x, 1)"),
+        ("x Z", "$dvd(x, 0)"),
+        ("x C", "x < 0"),
+        ("x C", "x > 0"),
+        ("x C", "x <= 0"),
+        ("x C", "x >= 0"),
+        ("x R", "$injective(R, R, x)"),
+        ("x R", "$surjective(R, R, x)"),
+        ("x R", "$bijective(R, R, x)"),
+        ("x R", "$is_choice_function_for(R, R, x, x)"),
+    ] {
+        for polarity in ["", "not "] {
+            let code = format!(
+                "forall {header}:\n    {polarity}{atom}\n    =>:\n        {polarity}{atom}\n"
+            );
+            let mut rt = runtime();
+            let run = rt.run_litex_code(&code).unwrap();
+            assert!(
+                run.session_error.is_none(),
+                "{code}: {:?}",
+                run.session_error
+            );
+            assert!(!run.success, "{code}");
+            let detail = format!(
+                "{:?}",
+                crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt)
+            );
+            assert!(detail.contains("predicate_domain"), "{code}: {detail}");
+            assert_eq!(rt.execution_environments_stack.len(), 1);
+            assert!(!rt.run_litex_code("0 = 1\n").unwrap().success);
+        }
+    }
+}
+
+#[test]
+fn predicate_domain_wd_checks_valid_function_and_choice_signatures() {
+    for atom in [
+        "$injective(A, B, f)",
+        "$surjective(A, B, f)",
+        "$bijective(A, B, f)",
+    ] {
+        let code = format!("forall A, B set, f fn(x A) B:\n    {atom}\n    =>:\n        {atom}\n");
+        let run = runtime().run_litex_code(&code).unwrap();
+        assert!(run.success, "{code}: {:?}", run.session_error);
+    }
+    let code = "forall I, S set, g fn(x I) S, f fn(x I) family_union(S):\n    $is_choice_function_for(I, S, g, f)\n    =>:\n        $is_choice_function_for(I, S, g, f)\n";
+    let run = runtime().run_litex_code(code).unwrap();
+    assert!(run.success, "{:?}", run.session_error);
+}
+
+#[test]
+fn predicate_domain_wd_valid_domains_and_prior_carrier_facts_succeed() {
+    let mut rt = runtime();
+    let run = rt
+        .run_litex_code(include_str!(
+            "../../../../examples/wd/predicate_numeric_domains.lit"
+        ))
+        .unwrap();
+    assert!(run.success, "{:?}", run.session_error);
+    let detail = format!(
+        "{:?}",
+        crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt)
+    );
+    assert!(detail.contains("predicate_domain"), "{detail}");
+    assert!(detail.contains("requirement"), "{detail}");
+    assert!(
+        rt.run_litex_code("forall x R:\n    x $in N\n    $prime(x)\n    =>:\n        $prime(x)\n")
+            .unwrap()
+            .success
+    );
+    assert!(
+        !rt.run_litex_code("forall x R:\n    $prime(x)\n    x $in N\n    =>:\n        $prime(x)\n")
+            .unwrap()
+            .success
+    );
+}
+
+#[test]
+fn predicate_domain_wd_dimension_codomain_requires_a_valid_shape() {
+    let mut rt = runtime();
+    let run = rt
+        .run_litex_code("have A set\ncart_dim(A) $in N\n")
+        .unwrap();
+    assert!(run.session_error.is_none());
+    assert!(!run.success);
+    let mut rt = runtime();
+    assert!(!rt.run_litex_code("tuple_dim(0) $in N\n").unwrap().success);
+    let mut rt = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: false,
+        language: OutputLanguage::English,
+    });
+    let run = rt
+        .run_litex_code("have A set\ntrust $is_cart(A)\ncart_dim(A) $in N\ncart_dim(A) >= 2\n")
+        .unwrap();
+    assert!(run.success, "{:?}", run.session_error);
+    let detailed = format!(
+        "{:?}",
+        crate::json_output::project_stmt_detailed(&run.statement_results[2], &rt)
+    );
+    assert!(detailed.contains("CartDimInNatural"), "{detailed}");
+}
+
+#[test]
+fn predicate_domain_wd_anonymous_function_signature_has_exact_boundaries() {
+    let mut rt = runtime();
+    let run = rt.run_litex_code(include_str!("../../../../examples/proof_nodes/atomic/by_builtin_rule/anonymous_function_declared_signature.lit")).unwrap();
+    assert!(run.session_error.is_none(), "{:?}", run.session_error);
+    assert!(run.success);
+    let detail =
+        crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
+    assert!(detail.contains("AnonymousFnInDeclaredFnSet"), "{detail}");
+    for code in [
+        "fn(x R) R {x} $in fn(y N) R\n",
+        "fn(x R) R {x} $in fn(y R) N\n",
+        "fn(x R: x > 0) R {1 / x} $in fn(y R) R\n",
+        "fn(x R) R {1 / 0} $in fn(y R) R\n",
+        "have A set = R\nhave B set = N\nfn(x A) A {x} $in fn(y B) A\n",
+    ] {
+        let run = runtime().run_litex_code(code).unwrap();
+        assert!(
+            run.session_error.is_none(),
+            "{code}: {:?}",
+            run.session_error
+        );
+        assert!(!run.success, "{code}");
+    }
+}
+
+#[test]
+fn predicate_domain_wd_restores_choice_release_without_weakening_signature() {
+    let run = runtime()
+        .run_litex_code(include_str!(
+            "../../../../examples/test_statements/release_axiom_of_choice_stmt.lit"
+        ))
+        .unwrap();
+    assert!(run.session_error.is_none(), "{:?}", run.session_error);
+    assert!(run.success);
+    for code in [
+        "forall F set, f fn(A F) family_union(F):\n    $is_choice_function_for(F, F, fn(B F) F {B}, f)\n    =>:\n        $is_choice_function_for(F, F, fn(B F) F {B}, f)\n",
+        "forall F set, f R:\n    $is_choice_function_for(F, F, fn(B F) F {B}, f)\n    =>:\n        $is_choice_function_for(F, F, fn(B F) F {B}, f)\n",
+    ] {
+        let run = runtime().run_litex_code(code).unwrap();
+        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert_eq!(run.success, !code.contains("f R"), "{code}");
+    }
+}
+
+#[test]
+fn predicate_domain_wd_preserves_equal_carriers_and_the_exact_one_based_prefix() {
+    for atom in ["$injective", "$surjective", "$bijective"] {
+        for (setup, domain, codomain) in [
+            ("have A set = R\nhave fn f(x A) A = x\n", "R", "R"),
+            ("have fn f(k N+: k <= 2) R = 0\n", "closed_range(1, 2)", "R"),
+        ] {
+            let code = format!("{setup}forall t R:\n    {atom}({domain}, {codomain}, f)\n    =>:\n        {atom}({domain}, {codomain}, f)\n");
+            let mut rt = runtime();
+            let run = rt.run_litex_code(&code).unwrap();
+            assert!(
+                run.session_error.is_none(),
+                "{code}: {:?}",
+                run.session_error
+            );
+            assert!(run.success, "{code}");
+            let detail = crate::json_output::project_stmt_detailed(
+                run.statement_results.last().unwrap(),
+                &rt,
+            )
+            .stringify();
+            assert!(detail.contains("predicate_domain"), "{detail}");
+            assert!(
+                detail.contains("by_known_atomic_fact"),
+                "signature must cite its actual stored type: {detail}"
+            );
+        }
+    }
+    for (signature, domain, codomain) in [
+        ("fn(k N+: k <= 2) R", "closed_range(0, 2)", "R"),
+        ("fn(k N+: k <= 2) R", "closed_range(1, 3)", "R"),
+        ("fn(k N+: k < 2) R", "closed_range(1, 2)", "R"),
+        ("fn(k N+: k <= 2) R", "closed_range(1, 2)", "N"),
+        ("fn(k N: k <= 2) R", "closed_range(1, 2)", "R"),
+    ] {
+        let code = format!("forall f {signature}:\n    $injective({domain}, {codomain}, f)\n    =>:\n        $injective({domain}, {codomain}, f)\n");
+        let run = runtime().run_litex_code(&code).unwrap();
+        assert!(
+            run.session_error.is_none(),
+            "{code}: {:?}",
+            run.session_error
+        );
+        assert!(!run.success, "{code}");
+    }
+}

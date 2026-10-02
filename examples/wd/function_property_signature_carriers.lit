@@ -1,0 +1,22 @@
+# Preserve equal carriers and the legacy exact one-based prefix signature.
+# Formerly accepted before builtin-domain restoration, then briefly rejected:
+# have A set = R
+# have fn f(x A) A = x
+# forall t R:
+#     $injective(R, R, f)
+#     =>:
+#         $injective(R, R, f)
+# Gate: target/release/litex -strict -f examples/wd/function_property_signature_carriers.lit
+# Boundary: carrier mismatch, prefix start 0, end mismatch, strict < bound and
+# other restricted domains are rejected by predicate_domain_wd tests.
+have A set = R
+have fn f(x A) A = x
+forall t R:
+    $injective(R, R, f)
+    =>:
+        $injective(R, R, f)
+have fn prefix(k N+: k <= 2) R = 0
+forall t R:
+    $surjective(closed_range(1, 2), R, prefix)
+    =>:
+        $surjective(closed_range(1, 2), R, prefix)

@@ -33,6 +33,7 @@ use crate::execute::{
 };
 use crate::parse::keywords::STRUCT;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::store_fact_and_infer::StoreFactResult;
 
 pub enum ExecDefStructStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
@@ -45,8 +46,15 @@ pub enum ExecDefStructStmtFailed {
 /// Nested field-binder scope evidence (taken, not merged into the outer local env).
 pub struct ExecDefStructFieldScopeSuccessResult {
     pub defined_fields: StoreHaveObjAndInferResult,
-    pub equivalent_facts_well_defined: Vec<FactWellDefinedProof>,
+    pub equivalent_facts: Vec<StructEquivalentFactWellDefinedProof>,
     pub field_local_env: Box<ExecEnv>,
+}
+
+// Each condition is checked before it is assumed for subsequent conditions.
+// These stores belong only to the field binder environment.
+pub struct StructEquivalentFactWellDefinedProof {
+    pub well_defined: FactWellDefinedProof,
+    pub store: StoreFactResult,
 }
 
 /// `struct name ...:` pipeline success payload.
@@ -181,7 +189,7 @@ impl Runtime {
             rt.exec_def_struct_field_scope(&def_struct.fields, &def_struct.equivalent_facts)
         })?;
 
-        let (defined_fields, equivalent_facts_well_defined) = match field_outcome {
+        let (defined_fields, equivalent_facts) = match field_outcome {
             Ok(parts) => parts,
             Err(failed) => return Ok(Err(failed)),
         };
@@ -192,7 +200,7 @@ impl Runtime {
             field_type_well_defined,
             field_scope: ExecDefStructFieldScopeSuccessResult {
                 defined_fields,
-                equivalent_facts_well_defined,
+                equivalent_facts,
                 field_local_env,
             },
         }))
@@ -203,7 +211,7 @@ impl Runtime {
         fields: &[StructFieldDef],
         equivalent_facts: &[Fact],
     ) -> RuntimeResult<
-        Result<(StoreHaveObjAndInferResult, Vec<FactWellDefinedProof>), ExecDefStructStmtFailed>,
+        Result<(StoreHaveObjAndInferResult, Vec<StructEquivalentFactWellDefinedProof>), ExecDefStructStmtFailed>,
     > {
         let verify_state = VerifyState {
             can_use_builtin_rule: true,
@@ -217,11 +225,15 @@ impl Runtime {
         let field_params = field_typed_parameters(fields);
         let defined_fields = self.define_typed_parameters_in_current_env(&field_params, None)?;
 
-        let mut equivalent_facts_well_defined = Vec::with_capacity(equivalent_facts.len());
+        let mut checked = Vec::with_capacity(equivalent_facts.len());
         for fact in equivalent_facts {
             match self.verify_fact_well_definedness(fact, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => {
-                    equivalent_facts_well_defined.push(proof);
+                    let store = self.store_fact(fact)?;
+                    checked.push(StructEquivalentFactWellDefinedProof {
+                        well_defined: proof,
+                        store,
+                    });
                 }
                 VerifyFactWellDefinedResult::Failed(reason) => {
                     return Ok(Err(ExecDefStructStmtFailed::EquivalentFact(reason)));
@@ -229,7 +241,7 @@ impl Runtime {
             }
         }
 
-        Ok(Ok((defined_fields, equivalent_facts_well_defined)))
+        Ok(Ok((defined_fields, checked)))
     }
 }
 
@@ -253,3 +265,7 @@ fn fact_from_quantifier_free(fact: &QuantifierFreeFact) -> Fact {
         QuantifierFreeFact::OrFact(o) => Fact::OrFact(o.clone()),
     }
 }
+
+#[cfg(test)]
+#[path = "../../../tests/unit/execute/struct_ordered_conditions/tests.rs"]
+mod ordered_condition_tests;

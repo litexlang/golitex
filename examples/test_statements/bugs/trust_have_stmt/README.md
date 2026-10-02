@@ -8,9 +8,9 @@
 
 Primary fixture: [trust_have_stmt.lit](../../trust_have_stmt.lit).
 
-## Output issue
+## Resolved output issue
 
-- [ ] [D001: missing space in displayed trust-have](D001-missing-display-space/README.md)
+- [x] [D001: displayed trust-have keeps its separator and replays successfully](../../experience/problem_notes/D001-trust-have-display.md)
 
 ## Related investigations
 

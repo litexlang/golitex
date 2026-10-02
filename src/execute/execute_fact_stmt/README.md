@@ -96,6 +96,15 @@ Object WD (`verify_obj_well_definedness`) returns
   each nested proof; no separate `(Obj, proof)` pair)
 - `Err(...)` only for real runtime / invariant failures
 
+Anonymous-function WD always proves `body $in ret_set` in its parameter/domain
+scope, including when `body` is a parameter projection. The successful
+`AnonymousFnObjWellDefinedProof.body_in_ret_set` field is mandatory, and Detailed
+JSON always projects it. `have fn` definitions and anonymous literals share
+this check before any function signature is stored. Struct-instance WD uses
+`type_facts_for_typed_arguments` to prove substituted header types before
+recording a WD id; its existing `requirement_fact_verified` list retains the
+argument-type proofs. Failures retain the actual unsatisfied type obligation.
+
 Requirement search aggregators return soft fail variants on exhaustion; they
 must not emit `Err(RuntimeError::InternalBug)` for “no proof found”.
 
@@ -198,16 +207,17 @@ conclusion and alpha-compares to the goal before instantiation requirements.
    `after_deep_search()`. Strategy children use their own depth budget (16)
    and cannot enter definition, forall or rewrite search.
 
-Equality retains its own identity / builtin / equality-class / constructor /
+Equality retains its own identity / known-special-property / builtin / equality-class / constructor /
 deep pipeline; both pipelines share the builtin-entry permission and premise policy.
 
 The [builtin-entry verification receipt](builtin_entry_verification.md) records
 the migration boundary, runnable tracer, and release comparison results.
 
-`ByKnownSpecialProperty` reads only exact-object rows from
-`special_properties`, across visible environments. It never
+The function codomain/range leaves of `ByKnownSpecialProperty` read exact-object rows from
+`special_properties`, across visible environments. The shared tuple reader
+also follows cited stored equality paths for object and Cartesian aliases. It never
 writes that table, verifies a premise, or invokes general equality search.
-The supported leaves establish function-application codomain or `fn_range`
+The function leaves establish function-application codomain or `fn_range`
 membership after caller-owned WD. Return sets are structurally substituted
 and matched by identity or stored equality paths. Cached WD does not identify
 its selected signature, so the leaf declines when visible signatures that
@@ -215,6 +225,15 @@ could supply application WD disagree on the required return; bounded strategy
 remains available to prove additional domain premises and records its selected
 signature citation alongside those premise proofs. Source rows are never
 borrowed from an equal function's object key.
+
+Known tuple structure supplies ordered reconstruction and coordinate/length
+equalities, plus the atomic tuple, bound, and coordinate-carrier requirements
+of projection WD. Function-coordinate equality uses one body substitution;
+all candidate WD signatures must agree with that body's full signature.
+These success certificates retain source paths and signature matches. They
+are transient, do not extend the fact store or WD cache, and never call the
+bottom-level equality lookup recursively. See the equality directory README
+and `examples/proof_nodes/equal/by_known_special_property/`.
 
 `SpecialProperty::Membership(InFact)` and `Equality(EqualFact)` retain the
 actual source facts and are indexed centrally by `store_atomic_fact`, regardless
@@ -275,3 +294,26 @@ do-not-break checklist:
 Here `by definition` means ambient prop / builtin definition expansion in the
 current execution-environment stack. Cross-module definitions and theorems are
 still requested explicitly by `by def` or `by thm`, not by this search slot.
+
+## Exact whole-forall source replay
+
+`verify_forall_fact` first compares the goal against whole stored forall facts
+in the existing live env stack. A structural match renames outer binders
+positionally and uses the existing existential alpha key for witness binders;
+carriers, premises, fact polarity and free owner identities remain exact.
+The verifier checks the full goal WD before returning `ByKnownForallFact`
+with a real source FactId and parameter renamings. An unused parameter is
+never instantiated with a default term. This exact citation does not enter
+deep forall-pattern search or consume its budget.
+
+On a miss, the existing local-introduction pipeline remains: introduce typed
+parameters, assume checked domains, then prove and locally store conclusions.
+Both routes retain their WD/local environments in typed evidence. Nested
+forall/anonymous-function alpha equivalence is not added by this exact-source
+matcher; those shapes retain their ordinary verification routes.
+
+The stable tracer is `examples/stmt_nodes/definition/forall_source_replay.lit`;
+producer/consumer and failure boundaries are in
+`tests/unit/execute/forall_source_replay/tests.rs`. Imported exist! theorem
+fixtures currently use source fallback because their facts are outside the
+existing KB codec subset. Supported cached definitions are tested separately.

@@ -10,7 +10,7 @@ use super::wd::{
     project_verify_obj_wd,
 };
 use crate::execute::execute_by_stmt::{
-    ByProofStepResult, ExecByCasesStmtResult, ExecByContraStmtResult, ExecByDefStmtResult,
+    ExecByCasesStmtResult, ExecByContraStmtResult, ExecByDefStmtResult,
     ExecByEnumerateFiniteSetStmtResult, ExecByExtensionStmtResult, ExecByFnExtensionStmtResult,
     ExecByForStmtResult, ExecByInducStmtResult, ExecByStmtResult, ExecByStrongInducStmtResult,
     ExecByThmStmtResult,
@@ -28,7 +28,7 @@ use crate::execute::{
     ExecDefThmStmtResult, ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecEvalStmtResult,
     ExecHaveByFnPreimageStmtResult, ExecHaveByReplacementAxiomStmtResult,
     ExecHaveFnByForallExistUniqueStmtResult, ExecHaveFnByInducStmtResult,
-    ExecHaveFnEqualCaseByCaseStmtResult, ExecHaveFnEqualStmtResult,
+    ExecHaveFnEqualCaseByCaseStmtResult, ExecHaveFnEqualStmtFailed, ExecHaveFnEqualStmtResult,
     ExecHaveObjByExistFactsStmtResult, ExecHaveObjEqualStmtResult,
     ExecHaveObjInNonemptySetStmtResult, ExecLetObjStmtResult, ExecObtainObjFromAtomicFactStmtResult,
     ExecObtainObjFromExistFactStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult,
@@ -56,20 +56,27 @@ pub(super) fn project_stmt_detailed(result: &ExecStmtResult, runtime: &Runtime) 
 fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> JsonValue {
     match def {
         ExecDefinitionStmtResult::DefineObj(d) => project_define_obj(d, runtime),
-        ExecDefinitionStmtResult::HaveFnEqual(r) => project_success_failed_shell(
-            "have_fn_equal",
-            !r.is_failed(),
-            match r {
-                ExecHaveFnEqualStmtResult::Success(s) => Some(crate::display_and_ir::readable_string_from_ir_text(s.statement.ir().as_str())),
-                _ => None,
-            },
-            match r {
-                ExecHaveFnEqualStmtResult::Success(s) => {
-                    Some(project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime))
-                }
-                _ => None,
-            },
-            runtime),
+        ExecDefinitionStmtResult::HaveFnEqual(r) => match r {
+            ExecHaveFnEqualStmtResult::Success(s) => object_for(runtime, vec![
+                ("success", bool_value(true)),
+                ("kind", string("have_fn_equal")),
+                ("statement", string(crate::display_and_ir::readable_string_from_ir_text(s.statement.ir().as_str()))),
+                ("anonymous_fn_well_defined", project_verify_obj_wd(&s.anonymous_fn_well_defined, runtime)),
+                ("fn_set_well_defined", project_verify_obj_wd(&s.fn_set_well_defined, runtime)),
+                ("store_and_infer", project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime)),
+            ]),
+            ExecHaveFnEqualStmtResult::Failed(failed) => {
+                let (phase, wd) = match failed {
+                    ExecHaveFnEqualStmtFailed::AnonymousFnWellDefined(wd) => ("anonymous_fn_well_defined", wd),
+                    ExecHaveFnEqualStmtFailed::FnSetWellDefined(wd) => ("fn_set_well_defined", wd),
+                };
+                object_for(runtime, vec![
+                    ("success", bool_value(false)),
+                    ("kind", string("have_fn_equal")),
+                    (phase, project_verify_obj_wd(wd, runtime)),
+                ])
+            }
+        },
         ExecDefinitionStmtResult::HaveFnEqualCaseByCase(r) => project_success_failed_shell(
             "have_fn_equal_case_by_case",
             !r.is_failed(),
@@ -86,34 +93,38 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 _ => None,
             },
             runtime),
-        ExecDefinitionStmtResult::HaveFnByForallExistUnique(r) => project_success_failed_shell(
-            "have_fn_by_forall_exist_unique",
-            !r.is_failed(),
+        ExecDefinitionStmtResult::HaveFnByForallExistUnique(r) => {
+            use crate::execute::ExecHaveFnByForallExistUniqueStmtFailed;
             match r {
-                ExecHaveFnByForallExistUniqueStmtResult::Success(s) => {
-                    Some(s.statement.readable_string())
+                ExecHaveFnByForallExistUniqueStmtResult::Success(s) => object_for(runtime, vec![
+                    ("success", bool_value(true)),
+                    ("kind", string("have_fn_by_forall_exist_unique")),
+                    ("statement", string(s.statement.readable_string())),
+                    ("source_forall", project_verify_fact(&s.source_forall, runtime)),
+                    ("fn_set_well_defined", super::wd::project_verify_obj_wd(&s.fn_set_well_defined, runtime)),
+                    ("store_and_infer", project_have_store_ids(&s.stored_fact_ids, runtime)),
+                ]),
+                ExecHaveFnByForallExistUniqueStmtResult::Failed(f) => {
+                    let (phase, failure) = match f {
+                        ExecHaveFnByForallExistUniqueStmtFailed::SourceForall(v) =>
+                            ("source_forall", project_verify_fact(v, runtime)),
+                        ExecHaveFnByForallExistUniqueStmtFailed::FnSetWellDefined(v) =>
+                            ("fn_set_well_defined", super::wd::project_verify_obj_wd(v, runtime)),
+                        ExecHaveFnByForallExistUniqueStmtFailed::PropertyWellDefined(v) =>
+                            ("property_well_defined", super::wd_failure::project_fact_wd_failure(v, runtime)),
+                    };
+                    object_for(runtime, vec![
+                        ("success", bool_value(false)),
+                        ("kind", string("have_fn_by_forall_exist_unique")),
+                        ("phase", string(phase)), ("failure", failure),
+                    ])
                 }
-                _ => None,
-            },
-            match r {
-                ExecHaveFnByForallExistUniqueStmtResult::Success(s) => {
-                    Some(project_have_store_ids(&s.stored_fact_ids, runtime))
-                }
-                _ => None,
-            },
-            runtime),
+            }
+        },
         ExecDefinitionStmtResult::HaveFnByInduc(r) => project_induc_definition(r, runtime),
         ExecDefinitionStmtResult::DefProp(r) => project_def_prop(r, runtime),
         ExecDefinitionStmtResult::DefAbstractProp(r) => project_def_abstract_prop(r, runtime),
-        ExecDefinitionStmtResult::DefStruct(r) => project_success_failed_shell(
-            "def_struct",
-            !r.is_failed(),
-            match r {
-                ExecDefStructStmtResult::Success(s) => Some(s.statement.readable_string()),
-                _ => None,
-            },
-            None,
-            runtime),
+        ExecDefinitionStmtResult::DefStruct(r) => project_def_struct(r, runtime),
         ExecDefinitionStmtResult::DefTemplate(r) => match r {
             ExecDefTemplateStmtResult::Success(s) => object_for(runtime, vec![
                 ("success", bool_value(true)),
@@ -178,6 +189,29 @@ fn project_def_thm(result: &ExecDefThmStmtResult, runtime: &Runtime) -> JsonValu
     }
 }
 
+fn project_def_struct(result: &ExecDefStructStmtResult, runtime: &Runtime) -> JsonValue {
+    match result {
+        ExecDefStructStmtResult::Success(s) => object_for(runtime, vec![
+            ("success", bool_value(true)),
+            ("kind", string("def_struct")),
+            ("statement", string(s.statement.readable_string())),
+            ("equivalent_facts", JsonValue::Array(s.field_scope.equivalent_facts.iter()
+                .zip(&s.statement.equivalent_facts)
+                .map(|(proof, fact)| object_for(runtime, vec![
+                    ("well_defined", project_fact_wd_proof(&proof.well_defined, runtime)),
+                    ("local_store", object_for(runtime, vec![
+                        ("fact_id", string(proof.store.primary_fact_id().to_string())),
+                        ("fact", string(fact.readable_string())),
+                    ])),
+                ])).collect())),
+        ]),
+        ExecDefStructStmtResult::Failed(_) => object_for(runtime, vec![
+            ("success", bool_value(false)),
+            ("kind", string("def_struct")),
+        ]),
+    }
+}
+
 fn project_axiom(result: &ExecAxiomStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
         ExecAxiomStmtResult::Success(s) => object_for(runtime, vec![
@@ -207,7 +241,7 @@ fn project_def_strategy(result: &ExecDefStrategyStmtResult, runtime: &Runtime) -
             ),
             (
                 "proof_steps",
-                project_by_proof_steps(&s.proof_steps, runtime),
+                project_stmt_steps(&s.proof_steps, runtime),
             ),
             (
                 "conclusion_proofs",
@@ -534,17 +568,6 @@ fn project_by(result: &ExecByStmtResult, runtime: &Runtime) -> JsonValue {
         ExecByStmtResult::Induc(r) => project_by_induc("by_induc", r, runtime),
         ExecByStmtResult::StrongInduc(r) => project_by_strong_induc(r, runtime),
     }
-}
-
-fn project_by_proof_steps(steps: &[ByProofStepResult], runtime: &Runtime) -> JsonValue {
-    JsonValue::Array(
-        steps
-            .iter()
-            .map(|step| match step {
-                ByProofStepResult::Fact(f) => super::entry::project_fact_only(f, runtime),
-            })
-            .collect(),
-    )
 }
 
 fn project_stmt_steps(steps: &[ExecStmtResult], runtime: &Runtime) -> JsonValue {
@@ -898,6 +921,9 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                 ("success", bool_value(true)),
                 ("kind", string("eval")),
                 ("statement", string(s.statement.readable_string())),
+                ("aggregate_evaluations", super::aggregate_evaluation::project_aggregate_evaluations(&s.aggregate_evaluations, runtime)),
+                ("function_evaluations", super::aggregate_evaluation::project_function_evaluations(&s.function_evaluations, runtime)),
+                ("algo_evaluations", super::aggregate_evaluation::project_algo_evaluations(&s.algo_evaluations, runtime)),
                 (
                     "source_object",
                     string(s.source_object.readable_string()),

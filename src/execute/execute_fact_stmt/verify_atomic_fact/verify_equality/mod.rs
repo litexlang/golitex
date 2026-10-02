@@ -9,6 +9,7 @@ pub mod search_equal_fact_by_extremum_equality;
 pub mod search_equal_fact_by_finite_set_product_pointwise;
 pub mod search_equal_fact_by_mod_congruence;
 pub mod search_equal_fact_by_rational_with_nonzero_premises;
+mod search_equal_fact_by_complex_with_nonzero_premises;
 pub mod search_equal_fact_by_cos_zero_integer_offset;
 pub mod search_equal_fact_by_tuple_components;
 pub mod search_equal_fact_proof_by_builtin_rewrite;

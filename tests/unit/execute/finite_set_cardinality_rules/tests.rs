@@ -81,8 +81,11 @@ fn last_conclusion(result: ExecStmtResult) -> ExecStmtResult {
     let VerifyFactResult::ForallFact(forall) = success.verify_result else {
         panic!("forall")
     };
-    let VerifyForallFactResult::Success(mut proof) = *forall else {
+    let VerifyForallFactResult::Success(proof) = *forall else {
         panic!("forall success")
+    };
+    let crate::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactProof::ByLocalIntroduction(mut proof) = proof else {
+        panic!("fresh forall must use local introduction");
     };
     let conclusion = proof.proved_then_facts.pop().expect("conclusion");
     ExecStmtResult::Fact(ExecFactStmtResult::Success(ExecFactStmtSuccessResult {

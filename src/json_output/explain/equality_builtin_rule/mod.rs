@@ -16,6 +16,15 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
             Self::Calculation(p) => p.rule_id_and_message(lang),
+            Self::AggregateIdentity(_) => BuiltinRuleText {
+                rule_id: "AggregateIdentity", rule_name: "Finite aggregate identity".into(),
+                message: "Verified constant, linear, pointwise, partition or reindexing requirements".into(),
+            },
+            Self::AggregateCalculation(_) => crate::json_output::explain::fallback::BuiltinRuleText {
+                rule_id: "AggregateCalculation",
+                rule_name: "Exact finite aggregate calculation".into(),
+                message: "Enumerate valid arguments, substitute checked function bodies and fold exact values".into(),
+            },
             Self::SinArcsinLeftInverse(p) => p.rule_id_and_message(lang),
             Self::CosArccosLeftInverse(p) => p.rule_id_and_message(lang),
             Self::TanArctanLeftInverse(p) => p.rule_id_and_message(lang),

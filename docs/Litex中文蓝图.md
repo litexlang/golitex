@@ -10,7 +10,7 @@
 
 > **Litex 是测试版（beta）的实验性爱好项目，可能存在边缘问题。** Litex 作者不是所谓的专家；蓝图中的观点没有权威性，欢迎讨论。
 
-> **当前实现边界（2026-09-30）：** 本文区分设计目标与当前 `src/`。当前构建没有接入 Lean 编译入口；第 6 节保留的是早期实验与目标接口。带“迁移示例”说明的代码尚不能作为当前内核已验证的例子；运行命令和输出以 [CLI 文档](cli.md) 为准。
+> **当前实现边界（2026-09-30）：** 本文区分设计目标与当前 `src/`。当前构建没有接入 Lean 编译入口；第 5 节保留的是早期实验与目标接口。带“迁移示例”说明的代码尚不能作为当前内核已验证的例子；运行命令和输出以 [CLI 文档](cli.md) 为准。
 
 <!-- 蓝图主线：AI 带来的推理过剩 → 科学对象 → 设计假设 → 可测成本 → 潜在能力影响 → 验证与理解的双重瓶颈 → 两种参与门槛 → 四项语言设计 → 单条语句留下的知识记录 → Human–AI–Litex skill 与知识生产协议（含定义与验证） → 记录的重放、复用和 Lean/Mathlib 接续 → 生态角色 → 从 AI for Math 走向 AI 时代的可信高效推理 → 成功标准 -->
 
@@ -26,20 +26,21 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 ## 目录
 
 - [0. Litex 蓝图总览](#overview)
-  - [0.1 五条主线](#overview-spine)
-    - [源码速览（gallery）](#overview-gallery)
-- [1. Litex 的数学基础：从最广为人熟悉的集合论出发](#set-theory)
-- [2. 事实导向：把“什么成立”写进源码](#fact-oriented)
-- [3. 自下而上：让已证明的事实推动后续证明](#bottom-up)
-- [4. 每句话都留下什么：可检查知识记录](#execution-model)
-- [5. 人类-AI-Litex 循环工作流构建](#interaction-loop)
-- [6. Litex代码如何编译成Lean代码，并与Mathlib兼容（Experimental）](#compatibility)
-  - [个人思考：Litex补齐了AI推理的范式缺口？](#summary-bottom-up-and-top-down)
-- [7. 把证明编译成可执行代码（Python / C）（Experimental）](#executable-code)
-- [8. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
-- [9. 追寻与众不同的艺术](#conclusions)
+  - [0.1 五条主线：Litex是怎么工作的](#overview-spine)
+- [1. 写下事实，看到成立的依据](#fact-oriented)
+  - [1.1 事实导向：把“什么成立”写进源码](#fact-oriented-interface)
+  - [1.2 每句话都留下什么：可检查知识记录](#execution-model)
+- [2. 从熟悉的数学世界开始：Litex 的集合论基础](#set-theory)
+- [3. 让已建立的知识继续生长：自下而上的证明](#bottom-up)
+- [4. 人、AI 与 Litex 共同推进证明](#interaction-loop)
+- [5. 连接 Lean 独立复核，并与 Mathlib 兼容（Experimental）](#compatibility)
+- [6. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
+  - [6.1 把证明编译成可执行代码（Python / C）（Experimental）](#executable-code)
+- [7. 追寻与众不同的艺术](#conclusions)
   - [特别感谢](#special-thanks)
 - [附录：编程、数学与Litex形式化](#overview-readers)
+  - [个人思考：Litex补齐了AI推理的范式缺口？](#summary-bottom-up-and-top-down)
+- [附录：源码速览（gallery）](#overview-gallery)
 
 <a id="overview"></a>
 
@@ -52,6 +53,12 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 *一句话说：Litex 想做形式化语言里的 Python——让可检查数学更好学、更好写、更好读；并且读的时候；不只读到源码，还能读到源码背后的数学依据，加深对数学的理解并激发灵感；这样更多非专业人士也能掌握一门形式化语言，帮助到自己的工作。*
 
 数学的价值在于帮助人类理解我们所处的世界。希望Litex能帮忙守住[促进理解](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)这一AI时代，人最容易失去、也最需要守住的东西。
+
+<a id="overview-spine"></a>
+
+### 0.1 五条主线：Litex是怎么工作的
+
+**Litex 不只是为形式化专家而创造的工具，它的目标更是让更多人成为形式化专家，让 Math for AI 成为可能。**
 
 Litex的设计主要由下面几个方面展开：
 
@@ -213,449 +220,17 @@ theorem one_add_one : Litex.Same ((1 : ℂ) + (1 : ℂ)) (2 : ℂ) := by
 
 无论你是数学家、程序员，还是 Lean 用户，都可以从 Litex 中发现新的知识与视角；感兴趣的话，可以继续阅读文末的[编程、数学与Litex形式化](#overview-readers)。
 
-<a id="overview-spine"></a>
-
-### 0.1 五条主线：Litex是怎么工作的
-
-**Litex 不只是为形式化专家而创造的工具，它的目标更是让更多人成为形式化专家，让 Math for AI 成为可能。**
-
-全文沿五个相连的问题展开：用户看见什么，源码保存什么，推理如何积累，证明过程如何呈现，结果如何独立复核。
-
-1. **集合论对象**：用户直接看见集合、元素、函数和关系，而不必先管理抽象的承载类型。
-2. **事实中心**：源码记录“什么成立”；验证器按形状匹配内置规则、已知事实与定义，做受约束的匹配与替换，并检查良定义性。
-3. **自下而上积累**：每个通过验证的事实都会进入上下文，供后续推理使用；这是默认的推理方向。
-4. **可追溯的证明流**：系统整理并输出每句话的数学依据，以及从定义、前提到结论的前后依赖，使证明过程成为可阅读、可检查、可复用的结构化信息——读源码之外，还能读到背后原理；出错时指出失败发生在哪里。
-5. **Lean 复核**：目标是提供独立检查路径；`lean/` 保留了早期实验产物，当前构建尚未接入其编译器。
-
-<a id="overview-gallery"></a>
-
-#### 源码速览（gallery）
-
-下面几段不是教程，只展示「直接写要证的东西」在 Litex 里长什么样；后文各节再展开设计与边界。
-
-最简单的等式：
-
-```litex
-1 + 1 = 2
-```
-
-多项式恒等式：
-
-```litex
-forall a, b R:
-    (a + b)^2 = a^2 + 2 * a * b + b^2
-```
-
-集合事实：
-
-```litex
-forall s, t, u set:
-    s $subset t
-    =>:
-        intersect(s, u) $subset intersect(t, u)
-```
-
-非负数相加仍非负：
-
-```litex
-forall x, y R:
-    0 <= x
-    0 <= y
-    =>:
-        0 <= x + y
-```
-
-定义域条件已知时的良定义调用：
-
-```litex
-forall f fn(t R: t > 0) R, x R:
-    x > 0
-    =>:
-        f(x) = f(x)
-```
-
-谓词——先定义，再当作原子事实使用：
-
-```litex
-prop is_positive(x R):
-    x > 0
-
-forall a, b R:
-    $is_positive(a)
-    a = b
-    =>:
-        $is_positive(b)
-```
-
-已知全称事实，用来推出具体的原子事实：
-
-```litex
-prop is_positive(n R):
-    exist a R+ st {n > a}
-
-claim:
-    ? forall x R:
-        x > 10
-        =>:
-            $is_positive(x)
-    witness exist a R+ st {x > a} from 10
-
-have a R:
-    a > 10
-
-$is_positive(a)
-```
-
-存在量词——先见证，再从 `exist` 事实取出对象：
-
-```litex
-witness exist x R st {x = 0} from 0
-
-obtain zero from exist x R st {x = 0}
-zero = 0
-```
-
-定理——命名可复用结论，再按需引用（整除传递性）：
-
-```litex
-prop divides_by(d, n Z):
-    exist k Z st {n = d * k}
-
-thm divides_transitive:
-    ? forall a, b, c Z:
-        $divides_by(a, b)
-        $divides_by(b, c)
-        =>:
-            $divides_by(a, c)
-    obtain k from $divides_by(a, b)
-    obtain m from $divides_by(b, c)
-    c = b * m = (a * k) * m = a * (k * m)
-    witness $divides_by(a, c) from k * m:
-        c = a * (k * m)
-
-witness $divides_by(2, 6) from 3
-witness $divides_by(6, 30) from 5
-
-by thm divides_transitive(2, 6, 30) => $divides_by(2, 30)
-```
-
-具名函数：
-
-```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-reciprocal(2) = 1 / 2
-```
-
-局部证明块 `claim`——写出沿途应当成立的等式，不必点名改写方向：
-
-```litex
-claim:
-    ? forall a, b, c, d, g, f R:
-        a * b = c * d
-        g = f
-        =>:
-            a * (b * g) = c * (d * f)
-    a * (b * g) = (a * b) * g = (c * d) * g = (c * d) * f = c * (d * f)
-```
-
-反证法——否定「每个实数都满足 `x^2 >= x`」：
-
-> **迁移示例：** 当前 `src/` 检查停在 `by_contra` (`by contradiction`)；以下保留写法不算已验证结果。
-
-<!-- litex:skip-test -->
-```litex
-by contra:
-    ? not forall x R:
-        x^2 >= x
-    impossible 0.5^2 >= 0.5
-```
-
-分类讨论——穷尽分支，再在每个分支里关闭目标：
-
-```litex
-have fn k(x R) R by cases:
-    case x = 2: 3
-    case x != 2: 4
-
-have x R
-
-by cases:
-    ? k(x) > 2
-    case x = 2:
-        k(x) = 3 > 2
-    case x != 2:
-        k(x) = 4 > 2
-```
-
-归纳法——前 `n` 个正奇数之和等于 `n^2`：
-
-> **迁移示例：** 当前 `src/` 检查停在 `internal_bug: name n is already bound in an enclosing parse scope`；以下保留写法不算已验证结果。
-
-<!-- litex:skip-test -->
-```litex
-have fn kth_odd(k Z) Z = 2 * k - 1
-
-thm sum_first_odds:
-    ? forall n Z:
-        n >= 1
-        =>:
-            sum(1, n, kth_odd) = n^2
-    by induc n from 1:
-        ? sum(1, n, kth_odd) = n^2
-
-        ? from n = 1:
-            kth_odd(1) = 2 * 1 - 1 = 1
-            sum(1, 1, kth_odd) = kth_odd(1) = 1 = 1^2
-
-        ? induc:
-            kth_odd(n + 1) = 2 * (n + 1) - 1
-            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
-```
-
-结构体——群：载体上的运算、单位元、逆元，以及单位元唯一性：
-
-```litex
-struct Group<s nonempty_set>:
-    mul fn(x, y s) s
-    one s
-    inv fn(x s) s
-    <=>:
-        forall x, y, z s:
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-        forall x s:
-            mul(x, one) = x
-            mul(one, x) = x
-            mul(inv(x), x) = one
-
-forall s nonempty_set, G &Group<s>, identity s:
-    forall a s:
-        G.mul(identity, a) = a
-        G.mul(a, identity) = a
-    =>:
-        identity = G.mul(G.one, identity) = G.one
-```
-
-模板——按参数族实例化定义，再用 `\name<args>` 取出：
-
-> **迁移示例：** 当前 `src/` 检查停在 `search_proof` (`p.first = 1`)；以下保留写法不算已验证结果。
-
-<!-- litex:skip-test -->
-```litex
-struct Triple<X set>:
-    first X
-    second X
-    third X
-
-template<X set>:
-    have fn triple(a, b, c X) &Triple<X> = (a, b, c)
-
-\triple<R>(1, 2, 3) = (1, 2, 3)
-
-have p &Triple<R> = \triple<R>(1, 2, 3)
-p.first = 1
-```
-
-一道简单应用题——当前解析器使用 ASCII 变量名，注释可以写中文：
-
-```litex
-# 妈妈年龄是小明年龄的 3 倍再加 4；小明 15 岁。妈妈几岁？
-have xiaoming_age R = 15
-let mom_age = 3 * xiaoming_age + 4
-mom_age = 3 * 15 + 4 = 49
-```
-
-你写出数学步骤；Litex 检查每一步的衔接，并把通过的事实留在上下文里。
-
-<a id="set-theory"></a>
-
-## 1. Litex 的数学基础：从最广为人熟悉的集合论出发
-
-形式化语言选择的公理体系直接决定了该语言的表达能力的边界和源代码风格。Litex 选择最广为人熟悉的集合论作为基础，避免了依赖类型论或其他公理体系的额外学习成本。它的对象是集合、元素、函数和关系；它的事实是成员关系、子集关系、交并集、函数应用和等式。
-
-例如，若 `s` 包含在 `t` 中，那么二者分别与同一集合 `u` 取交集后，前者仍包含在后者中：
-
-```litex
-forall s, t, u set:
-    s $subset t
-    =>:
-        intersect(s, u) $subset intersect(t, u)
-```
-
-可以看到，这样的写法和我们在日常数学中看到的集合论陈述非常接近。
-
-下面是《Mathematics in Lean》集合论章节中的同一数学语句的 Lean 版本：
-
-```lean
-import Mathlib.Data.Set.Lattice
-
-section
-variable {α : Type*}
-variable (s t u : Set α)
-open Set
-
-example (h : s ⊆ t) : s ∩ u ⊆ t ∩ u := by
-  rw [subset_def, inter_def, inter_def]
-  rw [subset_def] at h
-  simp only [mem_setOf]
-  rintro x ⟨xs, xu⟩
-  exact ⟨h _ xs, xu⟩
-end
-```
-
-Lean 先声明共同元素类型 `α : Type*`，再声明 `s`、`t`、`u : Set α`。这让定理可在任意元素类型上复用；`Type*` 还涉及类型的宇宙层级。
-
-差异不在于“短代码更强”：Lean 也能用短证明或自动化完成它；这里刻意保留教材的展开路径。真正的区别是默认接口：Lean 先赋予集合类型论载体，再构造证明；Litex 直接识别和检查常见集合论事实。
-
-> **集合论决定对象怎么长；不决定你每天从哪一层开始写。**
-
-选集合论作基础，常被听成两件事——其实是两层误解。
-
-<details>
-<summary><strong>两层误解：不是“先学会集合论写法”，也不是“从 ZFC 从头砌砖”</strong></summary>
-
-**误解 1：我不太熟集合论，就不会用∈、∪去表达群、拓扑空间、开集这类常见概念。**  
-这首先是**词典问题**，不是先修一门集合论课程才能动手。日常数学里怎么说，Litex 里就应有对应的可读写法。例如群、拓扑空间（及其开集族）可以直接写成工作层接口，而不必先手搓底层编码：
-
-```litex
-# Group: carrier set, operation, identity, inverse, and the usual laws
-struct Group<s nonempty_set>:
-    mul fn(x, y s) s
-    one s
-    inv fn(x s) s
-    <=>:
-        forall x, y, z s:
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-        forall x s:
-            mul(x, one) = x
-            mul(one, x) = x
-            mul(inv(x), x) = one
-
-# Topology: a space is its carrier together with a family of open sets
-prop is_topological_space(X set, open_sets power_set(power_set(X))):
-    {} $in open_sets
-    X $in open_sets
-    forall U, V open_sets:
-        intersect(U, V) $in open_sets
-    forall family power_set(power_set(X)):
-        family $subset open_sets
-        =>:
-            family_union(family) $in open_sets
-```
-
-开集就是该族中的成员：在显式假设 `$is_topological_space(X, open_sets)` 下，写 `U open_sets` 即表示 `U` 开。下文还有群与 Lean 的对照；这里只说明「词典」长什么样。覆盖仍在扩展，不宣称已经穷尽一切常用概念。
-
-**误解 2：既然基础是集合论，是不是每次都要从 ZFC 公理把分析、代数、拓扑重造一遍？那会不会太难？**  
-这是**入口高度问题**。Litex 确实提供集合论／ZFC 一侧的公理与构造接口，需要做基础研究或往下钻时可以用。但日常使用并不强迫展开这些概念的具体集合论构造定义：对日常书写中常见的对象与结构，系统给出可检查的关系与使用面，让你在想要的抽象层直接操作，而不是先从公理砌到那一层。底层接口是出口与逃生梯，不是每天上班必经的楼梯。
-
-更准确地说：Litex 的内置层关心的是对象、语句与事实之间**可检查的关系**，而不是选定某一种“真正的”具体构造定义。例如有理数 `Q`、实数 `R` 可以有多种集合论构造，函数也可以用不同的图编码来建模；内置接口不把其中某一种定为唯一定义，而直接给出成员、包含、函数定义域与值域行为等可操作的关系。需要某一种具体构造时，可以在源码中自行写出，或在必要时用 `trust` 标注兼容性假设。
-
-因此：集合论规定了对象语言长什么样；**工作入口**仍由你选择——可以从群或拓扑这类工作层出发，也可以在需要时落到公理接口。上面的片段和下文的群对照示范的都是工作层写法；它们并不要求读者先完成一套从空集公理开始的构造。
-
-</details>
-
-<details>
-<summary><strong>技术总结：类型判断与成员事实</strong></summary>
-
-Lean 把数学组织成有类型的项：经过细化后，核心表达式由 `Γ ⊢ e : T` 形式的判断检查。冒号属于元语言层的类型判断，不是 Lean 对象语言中可与等式、序关系或定理事实并列累积的普通命题。表层重载和强制转换可以把相似写法细化成不同的核心项，但每个所得项都在一个确定类型下接受检查。
-
-Litex 则把数学组织成对象与逐步增长的事实上下文。`e $in S` 是对象语言中的成员事实，与等式、序关系和其他谓词处于同一逻辑层。因此，同一对象可被证明属于多个无关或相互重叠的集合：成员关系是对象之间的关系，不是唯一内生赋值 `typeOf(e) = S`。
-
-这不等于取消静态约束或推断。Litex 在接受表达式前仍会检查定义域、返回集合、结构字段和其他良定义性义务，并通过专用规则在证明中推出成员与载体事实。区别在于，这种推断向上下文增加 `e $in S` 一类事实，而不是推断一个决定对象身份的特权类型 `e : T`。
-
-Lean的技术路线选择了 Dependent Type Theory（依赖类型论）作为基础。Litex 的技术路线选择了集合论作为基础。两者都能表达同样的数学，但在默认接口、源码风格和理解成本上有根本性差异。Lean选择了更抽象的数学公理体系，让它具备了通用的编程能力，也让它的小内核更小更容易被检验。Litex 的可信实现面（验证与规则系统）可达 Lean 小内核的几十倍，因此把证据交给 Lean 独立复核是一条目标路线；早期编译实验尚未接入当前构建。二者没有高下之分，只是不同的技术路线选择。
-
-</details>
-
-<a id="group-comparison"></a>
-
-<details>
-<summary><strong>小例子：同一数学对象在不同的公理体系下的定义</strong></summary>
-
-当标准库未覆盖某个领域时，用户能否从少量共同概念搭建理论？集合、函数、关系和运算是跨领域共享语言，可让定义和定理沿自身数学依赖生长，而非先服从外部库的编码。这就是**数学理论的自举**。
-
-成熟库当然能加速建设，但不应成为表达新领域的前置边界。下面两个群片段表达同一结构和单位元唯一性，却呈现不同的载体、运算与规律接口。
-
-群由元素、二元运算、单位元和逆元组成，并满足结合律、单位律和逆元规律。若另一元素也对所有元素表现为单位元，它必与原单位元相同。
-
-#### Lean：`Type` 上的记录类型（record）与柯里化函数
-
-```lean
-structure Group where
-  Carrier : Type
-  mul : Carrier → Carrier → Carrier
-  one : Carrier
-  inv : Carrier → Carrier
-  mul_assoc : ∀ a b c : Carrier, mul (mul a b) c = mul a (mul b c)
-  one_mul : ∀ a : Carrier, mul one a = a
-  mul_one : ∀ a : Carrier, mul a one = a
-  mul_left_inv : ∀ a : Carrier, mul (inv a) a = one
-
-theorem one_unique
-    (G : Group)
-    (e : G.Carrier)
-    (hleft : ∀ a : G.Carrier, G.mul e a = a)
-    (hright : ∀ a : G.Carrier, G.mul a e = a) :
-    e = G.one := by
-  calc
-    e = G.mul G.one e := (G.one_mul e).symm
-    _ = G.one := hright G.one
-```
-
-Lean 用 `Carrier : Type` 指定元素类型，后面的运算和规律都依赖它。`Carrier → Carrier → Carrier` 是依次接收两个元素的柯里化二元函数；结合律和单位律则成为 `mul_assoc`、`one_mul` 等具名字段。这便于抽象和大型库复用，作者也须知道证明中调用哪个字段、等式朝哪个方向使用。上例显式调用了 `G.one_mul`。
-
-#### Litex：集合上的运算与直接写下的结构事实
-
-```litex
-struct Group<s nonempty_set>:
-    mul fn(x, y s) s
-    one s
-    inv fn(x s) s
-    <=>:
-        forall x, y, z s:
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-        forall x s:
-            mul(x, one) = x
-            mul(one, x) = x
-            mul(inv(x), x) = one
-
-forall s nonempty_set, G &Group<s>, identity s:
-    forall a s:
-        G.mul(identity, a) = a
-        G.mul(a, identity) = a
-    =>:
-        identity = G.mul(G.one, identity) = G.one
-```
-
-Litex 先绑定非空集合 `s`，再把群写成其上的结构。`mul fn(x, y s) s` 表示运算接收 `s` 中两个元素，结果仍在 `s` 中；群规律作为普通事实写在 `<=>:` 下。单位元唯一性随后直接写成等式链，由内核寻找单位律依据。长期使用的结果仍可命名为 `thm`，但局部事实不必都先变成需要记忆的接口。
-
-`G.mul` 等字段路径按声明的结构载体检查，路径本身不会把群公理加入上下文。直接绑定 `G &Group<s>` 只自动打开一层；函数返回值或嵌套结构字段须用 `release struct def expression`，先验证结构归属再释放一层。后来单独得到的 `expression $in &Group<s>` 保持不透明。
-
-Lean 当然也能脱离 Mathlib 自行定义群；这里比较的是默认体验，不是表达上限。“从头搭建”也不是无依赖：Litex 仍依赖内核、规则和标准库，外部库仍是重要加速器，只是不应成为表达边界。上文“两层误解”已说明：工作层写法不等于从 ZFC 砌砖；这里的群片段是入口高度的示范，不是基础课作业。
-
-群只是小示范。更强的检验是：小团队能否为现有库覆盖不足的领域建立可读、可扩展且边界清楚的接口。未来几何等领域库应以带日期的源码、验证结果、`trust` 边界和真实复用说明进展，而非预先宣称成功。
-
-</details>
-
-<details>
-<summary><strong>设计空间中的位置：集合论式的表述并非 Litex 首创</strong></summary>
-
-[Mizar 的数学库](https://wiki.mizar.org/library/) 基于塔斯基–格罗滕迪克（Tarski–Grothendieck）集合论；
-[Lean](https://lean-lang.org/doc/reference/latest/The-Type-System/) 和
-[Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html) 向用户展示依赖类型论内核；
-[Isabelle/HOL](https://isabelle.in.tum.de/website-Isabelle2024/dist/library/Doc/Isar_Ref/HOL_Specific.html)
-使用多态高阶逻辑。
-
-Litex 面向用户的命题语言大体具有一阶逻辑风格：原子关系或具名谓词通过受限的经典逻辑形式和量词组织。它偏好规范事实形态，命题和证明不能作为普通一等值任意组合——因此也不允许 `forall p prop` 一类对命题的量化；第 2 节说明这如何使事实表能按谓词名索引。这只描述命题接口；验证器还会检查良定义性，并从定义、上下文和受支持规则中寻找依据。
-
-在这个背景下，Litex 的问题更具体地落在面向用户的对象接口上：
-一套小型、以成员关系为中心的集合论式表层，能否在不要求用户先管理类型
-宇宙（universe）的前提下，覆盖有实质内容的数学？
-
-</details>
+后文依次展开这五条主线，最后讨论语言生态；读者比较与更多源码例子放在附录。
 
 <a id="fact-oriented"></a>
 
-## 2. 事实导向：把“什么成立”写进源码
+## 1. 写下事实，看到成立的依据
+
+<a id="fact-oriented-interface"></a>
+
+### 1.1 事实导向：把“什么成立”写进源码
+
+**事实中心**：源码记录“什么成立”；验证器按形状匹配内置规则、已知事实与定义，做受约束的匹配与替换，并检查良定义性。
 
 任何数学证明都由“证明什么”和“怎么证”组成。阅读数学时，我们的心流通常是：看到书里的一句话，脑海里反应一下这句话为什么对，如果这句话被确认是正确的了，我们就在脑海里记忆下来这句话用于后续的推理。
 
@@ -665,7 +240,7 @@ Litex做的相当于就是把我们脑海的心流在机器中实现了。*用�
 
 这不只是界面偏好，也是在节约一种真实成本：用户不必为每条常见等式先记住该点名哪个 tactic、哪条引理——例如数值计算不必手写 `norm_num`，多项式不必手写 `ring`。关键选择、见证和估计仍由作者写；具体规则与等式对齐由内核寻找、记录。Litex 由事实触发局部搜索；结果都须可检查：Litex按关系、参数结构和上下文寻找内置规则、全称事实、具体事实或等式；搜索受支持范围限制，并非自由猜测。
 
-### Litex如何帮用户按事实形状寻找验证路径
+#### Litex如何帮用户按事实形状寻找验证路径
 
 Litex 验证一条事实时，并不是在“想出一个证明”。更接近的图像是：把当前目标拆成谓词和参数形状，再到上下文与规则表里做受约束查找——有点像按形状 Ctrl+F。检索时，原子事实的谓词名（如 `>=`、`$is_positive`、`$in`）就是事实表与规则表的 key；对上之后做实例化或替换，再检查前提是否齐备；对不上就停在当前目标。**本质是匹配与替换，不是自由推理。** 正因为不必先编译成中间码再精化，典型路径上时间与内存成本通常也远低于 Lean 那套编译—精化—内核检查路径——它更像一个巨大的 fancy Ctrl+F，而不是一个定理证明搜索引擎的全套编译流水线。
 
@@ -714,6 +289,8 @@ have a R:
 
 $is_positive(a)
 ```
+
+普通内置规则的入口由 `can_use_builtin_rule: bool` 控制。检查内置规则的前提时会禁用该入口，使用已知证据或计算；一次经过检查的函数体替换，可以在不继续展开定义的情况下完成验证。包含定义与已知 `forall` 的深层搜索使用深度为 3 的预算；策略递归另有深度为 16 的预算。
 
 用户记住的是这些形状模式；内核维护事实表与规则表，替你完成点名与对齐。
 
@@ -969,63 +546,11 @@ Litex 源码保存前提和结论，没有写 `simpa` 或指定等式改写方�
 
 </details>
 
-<a id="bottom-up"></a>
-
-## 3. 自下而上：让已证明的事实推动后续证明
-
-数学中有两种思维模式：一个是从前提出发，积累出越来越多的中间结论，最后得到我们想要证明的结论；一个是从结果出发，把结果不断化简，直到我们可以用已知的前提来证明它。前者是自下而上（bottom-up），后者是自上而下（top-down）。
-
-Litex 的工作原理是自下而上的：从已知条件推出新事实，源码陈述结果。每一个已经验证的事实都可以被后续的推理使用。
-
-书写Litex的心流通常是追问：“从我们已有的事实出发，还能得到什么新的事实？”积累足够多知识后，我们就能逐步接近目标。即使最后我们没有得到想要的结论，我们的中间步骤也是宝贵的，也许能用在其他问题里。
-
-Lean 的典型交互则向后、自上而下：先固定目标，再把它分解为由假设或定理解决的子目标，最后组装证明对象。
-
-书写Lean的心流通常追问“怎样把目标化约成已知条件？”；Litex 常问“由已知条件能建立什么事实？”差异在默认方向，不在逻辑标准。
-
-<a id="two-directions"></a>
-
-<details>
-<summary><strong>小例子：同一条代数等式的自上而下与自下而上写法</strong></summary>
-
-这个例子展示同一等式的两种推进方向。Lean 从目标出发，每条 `rw` 指定事实、匹配方向和替换：
-
-```lean
--- Using facts from the local context.
-example (a b c d g f : ℝ) (h : a * b = c * d) (h' : g = f) :
-    a * (b * g) = c * (d * f) := by
-  rw [h']
-  rw [← mul_assoc]
-  rw [h]
-  rw [mul_assoc]
-```
-
-Litex 从 `a * (b * g)` 写出等式链，逐步到达 `c * (d * f)`。当前内核可验证这个由左向右的方向：
-
-```litex
-claim:
-    ?forall a, b, c, d, g, f R:
-        a * b = c * d
-        g = f
-        =>:
-            a * (b * g) = c * (d * f)
-    a * (b * g) = (a * b) * g = (c * d) * g = (c * d) * f = c * (d * f)
-```
-
-四个等号依次使用乘法结合、`a * b = c * d`、`g = f` 和再次结合。Lean 指定下一步如何改写目标；Litex 写出沿途应当成立的事实，再由内核寻找相邻等式的依据。
-
-</details>
-
-<details>
-<summary><strong>设计空间中的位置：前向证明并非 Litex 首创</strong></summary>
-
-Mizar、Isar、ACL2 和 Naproche 已支持前向文本、定理累积或逐步检查，因此“自下而上”并非 Litex 独有。Litex 检验的是组合：普通事实自动触发局部验证，通过后扩展上下文，同时让已接受或停下来的路径保持可见，供用户或人工智能检查和修复；只有常规验证不足时才写显式证明结构。更完整的比较见第 4 节的小结“Litex 与 Naproche——相近目标，不同核心接口”。
-
-</details>
-
 <a id="execution-model"></a>
 
-## 4. 每句话都留下什么：可检查知识记录
+### 1.2 每句话都留下什么：可检查知识记录
+
+**可追溯的证明流**：系统整理并输出每句话的数学依据，以及从定义、前提到结论的前后依赖，使证明过程成为可阅读、可检查、可复用的结构化信息——读源码之外，还能读到背后原理；出错时指出失败发生在哪里。
 
 我们读数学时，一句话从来不是孤零零地出现。写下一个事实的同时，我们也会在脑中浮现它所依赖的定义、前提和前面已经确认的事实；这些内容共同形成一个不断生长的上下文，后面的推理便在这片已经建立的基础上继续向前。
 
@@ -1178,9 +703,256 @@ Litex 源码
 
 </details>
 
+<a id="set-theory"></a>
+
+## 2. 从熟悉的数学世界开始：Litex 的集合论基础
+
+**集合论对象**：用户直接看见集合、元素、函数和关系，而不必先管理抽象的承载类型。
+
+形式化语言选择的公理体系直接决定了该语言的表达能力的边界和源代码风格。Litex 选择最广为人熟悉的集合论作为基础，避免了依赖类型论或其他公理体系的额外学习成本。它的对象是集合、元素、函数和关系；它的事实是成员关系、子集关系、交并集、函数应用和等式。
+
+例如，若 `s` 包含在 `t` 中，那么二者分别与同一集合 `u` 取交集后，前者仍包含在后者中：
+
+```litex
+forall s, t, u set:
+    s $subset t
+    =>:
+        intersect(s, u) $subset intersect(t, u)
+```
+
+可以看到，这样的写法和我们在日常数学中看到的集合论陈述非常接近。
+
+下面是《Mathematics in Lean》集合论章节中的同一数学语句的 Lean 版本：
+
+```lean
+import Mathlib.Data.Set.Lattice
+
+section
+variable {α : Type*}
+variable (s t u : Set α)
+open Set
+
+example (h : s ⊆ t) : s ∩ u ⊆ t ∩ u := by
+  rw [subset_def, inter_def, inter_def]
+  rw [subset_def] at h
+  simp only [mem_setOf]
+  rintro x ⟨xs, xu⟩
+  exact ⟨h _ xs, xu⟩
+end
+```
+
+Lean 先声明共同元素类型 `α : Type*`，再声明 `s`、`t`、`u : Set α`。这让定理可在任意元素类型上复用；`Type*` 还涉及类型的宇宙层级。
+
+差异不在于“短代码更强”：Lean 也能用短证明或自动化完成它；这里刻意保留教材的展开路径。真正的区别是默认接口：Lean 先赋予集合类型论载体，再构造证明；Litex 直接识别和检查常见集合论事实。
+
+> **集合论决定对象怎么长；不决定你每天从哪一层开始写。**
+
+选集合论作基础，常被听成两件事——其实是两层误解。
+
+<details>
+<summary><strong>两层误解：不是“先学会集合论写法”，也不是“从 ZFC 从头砌砖”</strong></summary>
+
+**误解 1：我不太熟集合论，就不会用∈、∪去表达群、拓扑空间、开集这类常见概念。**  
+这首先是**词典问题**，不是先修一门集合论课程才能动手。日常数学里怎么说，Litex 里就应有对应的可读写法。例如群、拓扑空间（及其开集族）可以直接写成工作层接口，而不必先手搓底层编码：
+
+```litex
+# Group: carrier set, operation, identity, inverse, and the usual laws
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
+
+# Topology: a space is its carrier together with a family of open sets
+prop is_topological_space(X set, open_sets power_set(power_set(X))):
+    {} $in open_sets
+    X $in open_sets
+    forall U, V open_sets:
+        intersect(U, V) $in open_sets
+    forall family power_set(power_set(X)):
+        family $subset open_sets
+        =>:
+            family_union(family) $in open_sets
+```
+
+开集就是该族中的成员：在显式假设 `$is_topological_space(X, open_sets)` 下，写 `U open_sets` 即表示 `U` 开。下文还有群与 Lean 的对照；这里只说明「词典」长什么样。覆盖仍在扩展，不宣称已经穷尽一切常用概念。
+
+**误解 2：既然基础是集合论，是不是每次都要从 ZFC 公理把分析、代数、拓扑重造一遍？那会不会太难？**  
+这是**入口高度问题**。Litex 确实提供集合论／ZFC 一侧的公理与构造接口，需要做基础研究或往下钻时可以用。但日常使用并不强迫展开这些概念的具体集合论构造定义：对日常书写中常见的对象与结构，系统给出可检查的关系与使用面，让你在想要的抽象层直接操作，而不是先从公理砌到那一层。底层接口是出口与逃生梯，不是每天上班必经的楼梯。
+
+更准确地说：Litex 的内置层关心的是对象、语句与事实之间**可检查的关系**，而不是选定某一种“真正的”具体构造定义。例如有理数 `Q`、实数 `R` 可以有多种集合论构造，函数也可以用不同的图编码来建模；内置接口不把其中某一种定为唯一定义，而直接给出成员、包含、函数定义域与值域行为等可操作的关系。需要某一种具体构造时，可以在源码中自行写出，或在必要时用 `trust` 标注兼容性假设。
+
+因此：集合论规定了对象语言长什么样；**工作入口**仍由你选择——可以从群或拓扑这类工作层出发，也可以在需要时落到公理接口。上面的片段和下文的群对照示范的都是工作层写法；它们并不要求读者先完成一套从空集公理开始的构造。
+
+</details>
+
+<details>
+<summary><strong>技术总结：类型判断与成员事实</strong></summary>
+
+Lean 把数学组织成有类型的项：经过细化后，核心表达式由 `Γ ⊢ e : T` 形式的判断检查。冒号属于元语言层的类型判断，不是 Lean 对象语言中可与等式、序关系或定理事实并列累积的普通命题。表层重载和强制转换可以把相似写法细化成不同的核心项，但每个所得项都在一个确定类型下接受检查。
+
+Litex 则把数学组织成对象与逐步增长的事实上下文。`e $in S` 是对象语言中的成员事实，与等式、序关系和其他谓词处于同一逻辑层。因此，同一对象可被证明属于多个无关或相互重叠的集合：成员关系是对象之间的关系，不是唯一内生赋值 `typeOf(e) = S`。
+
+对象能力的查找使用该对象规范身份下存储的事实。执行环境的 `special_properties` 索引保存实际的成员关系与等式事实，也包含对象命名后新得到的事实。函数调用检查从这些事实中读取签名；函数体展开沿已存储的等式查找并引用依据。例如，先写 `have fn f(x R) R = x + 1`，再写 `let g = f`，便支持直接验证 `g(4) = 5`。仅有成员事实 `g $in fn(x R) R` 则提供可调用性，并不确定具体函数值。由定义选定的默认结构字段视图仍属于单独的注解。
+
+这不等于取消静态约束或推断。Litex 在接受表达式前仍会检查定义域、返回集合、结构字段和其他良定义性义务，并通过专用规则在证明中推出成员与载体事实。区别在于，这种推断向上下文增加 `e $in S` 一类事实，而不是推断一个决定对象身份的特权类型 `e : T`。
+
+Lean的技术路线选择了 Dependent Type Theory（依赖类型论）作为基础。Litex 的技术路线选择了集合论作为基础。两者都能表达同样的数学，但在默认接口、源码风格和理解成本上有根本性差异。Lean选择了更抽象的数学公理体系，让它具备了通用的编程能力，也让它的小内核更小更容易被检验。Litex 的可信实现面（验证与规则系统）可达 Lean 小内核的几十倍，因此把证据交给 Lean 独立复核是一条目标路线；早期编译实验尚未接入当前构建。二者没有高下之分，只是不同的技术路线选择。
+
+</details>
+
+<a id="group-comparison"></a>
+
+<details>
+<summary><strong>小例子：同一数学对象在不同的公理体系下的定义</strong></summary>
+
+当标准库未覆盖某个领域时，用户能否从少量共同概念搭建理论？集合、函数、关系和运算是跨领域共享语言，可让定义和定理沿自身数学依赖生长，而非先服从外部库的编码。这就是**数学理论的自举**。
+
+成熟库当然能加速建设，但不应成为表达新领域的前置边界。下面两个群片段表达同一结构和单位元唯一性，却呈现不同的载体、运算与规律接口。
+
+群由元素、二元运算、单位元和逆元组成，并满足结合律、单位律和逆元规律。若另一元素也对所有元素表现为单位元，它必与原单位元相同。
+
+#### Lean：`Type` 上的记录类型（record）与柯里化函数
+
+```lean
+structure Group where
+  Carrier : Type
+  mul : Carrier → Carrier → Carrier
+  one : Carrier
+  inv : Carrier → Carrier
+  mul_assoc : ∀ a b c : Carrier, mul (mul a b) c = mul a (mul b c)
+  one_mul : ∀ a : Carrier, mul one a = a
+  mul_one : ∀ a : Carrier, mul a one = a
+  mul_left_inv : ∀ a : Carrier, mul (inv a) a = one
+
+theorem one_unique
+    (G : Group)
+    (e : G.Carrier)
+    (hleft : ∀ a : G.Carrier, G.mul e a = a)
+    (hright : ∀ a : G.Carrier, G.mul a e = a) :
+    e = G.one := by
+  calc
+    e = G.mul G.one e := (G.one_mul e).symm
+    _ = G.one := hright G.one
+```
+
+Lean 用 `Carrier : Type` 指定元素类型，后面的运算和规律都依赖它。`Carrier → Carrier → Carrier` 是依次接收两个元素的柯里化二元函数；结合律和单位律则成为 `mul_assoc`、`one_mul` 等具名字段。这便于抽象和大型库复用，作者也须知道证明中调用哪个字段、等式朝哪个方向使用。上例显式调用了 `G.one_mul`。
+
+#### Litex：集合上的运算与直接写下的结构事实
+
+```litex
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
+
+forall s nonempty_set, G &Group<s>, identity s:
+    forall a s:
+        G.mul(identity, a) = a
+        G.mul(a, identity) = a
+    =>:
+        identity = G.mul(G.one, identity) = G.one
+```
+
+Litex 先绑定非空集合 `s`，再把群写成其上的结构。`mul fn(x, y s) s` 表示运算接收 `s` 中两个元素，结果仍在 `s` 中；群规律作为普通事实写在 `<=>:` 下。单位元唯一性随后直接写成等式链，由内核寻找单位律依据。长期使用的结果仍可命名为 `thm`，但局部事实不必都先变成需要记忆的接口。
+
+`G.mul` 等字段路径按声明的结构载体检查，路径本身不会把群公理加入上下文。直接绑定 `G &Group<s>` 只自动打开一层；函数返回值或嵌套结构字段须用 `release struct def expression`，先验证结构归属再释放一层。后来单独得到的 `expression $in &Group<s>` 保持不透明。
+
+Lean 当然也能脱离 Mathlib 自行定义群；这里比较的是默认体验，不是表达上限。“从头搭建”也不是无依赖：Litex 仍依赖内核、规则和标准库，外部库仍是重要加速器，只是不应成为表达边界。上文“两层误解”已说明：工作层写法不等于从 ZFC 砌砖；这里的群片段是入口高度的示范，不是基础课作业。
+
+群只是小示范。更强的检验是：小团队能否为现有库覆盖不足的领域建立可读、可扩展且边界清楚的接口。未来几何等领域库应以带日期的源码、验证结果、`trust` 边界和真实复用说明进展，而非预先宣称成功。
+
+</details>
+
+<details>
+<summary><strong>设计空间中的位置：集合论式的表述并非 Litex 首创</strong></summary>
+
+[Mizar 的数学库](https://wiki.mizar.org/library/) 基于塔斯基–格罗滕迪克（Tarski–Grothendieck）集合论；
+[Lean](https://lean-lang.org/doc/reference/latest/The-Type-System/) 和
+[Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html) 向用户展示依赖类型论内核；
+[Isabelle/HOL](https://isabelle.in.tum.de/website-Isabelle2024/dist/library/Doc/Isar_Ref/HOL_Specific.html)
+使用多态高阶逻辑。
+
+Litex 面向用户的命题语言大体具有一阶逻辑风格：原子关系或具名谓词通过受限的经典逻辑形式和量词组织。它偏好规范事实形态，命题和证明不能作为普通一等值任意组合——因此也不允许 `forall p prop` 一类对命题的量化；第 1 节说明这如何使事实表能按谓词名索引。这只描述命题接口；验证器还会检查良定义性，并从定义、上下文和受支持规则中寻找依据。
+
+在这个背景下，Litex 的问题更具体地落在面向用户的对象接口上：
+一套小型、以成员关系为中心的集合论式表层，能否在不要求用户先管理类型
+宇宙（universe）的前提下，覆盖有实质内容的数学？
+
+</details>
+
+<a id="bottom-up"></a>
+
+## 3. 让已建立的知识继续生长：自下而上的证明
+
+**自下而上积累**：每个通过验证的事实都会进入上下文，供后续推理使用；这是默认的推理方向。
+
+数学中有两种思维模式：一个是从前提出发，积累出越来越多的中间结论，最后得到我们想要证明的结论；一个是从结果出发，把结果不断化简，直到我们可以用已知的前提来证明它。前者是自下而上（bottom-up），后者是自上而下（top-down）。
+
+Litex 的工作原理是自下而上的：从已知条件推出新事实，源码陈述结果。每一个已经验证的事实都可以被后续的推理使用。
+
+书写Litex的心流通常是追问：“从我们已有的事实出发，还能得到什么新的事实？”积累足够多知识后，我们就能逐步接近目标。即使最后我们没有得到想要的结论，我们的中间步骤也是宝贵的，也许能用在其他问题里。
+
+Lean 的典型交互则向后、自上而下：先固定目标，再把它分解为由假设或定理解决的子目标，最后组装证明对象。
+
+书写Lean的心流通常追问“怎样把目标化约成已知条件？”；Litex 常问“由已知条件能建立什么事实？”差异在默认方向，不在逻辑标准。
+
+<a id="two-directions"></a>
+
+<details>
+<summary><strong>小例子：同一条代数等式的自上而下与自下而上写法</strong></summary>
+
+这个例子展示同一等式的两种推进方向。Lean 从目标出发，每条 `rw` 指定事实、匹配方向和替换：
+
+```lean
+-- Using facts from the local context.
+example (a b c d g f : ℝ) (h : a * b = c * d) (h' : g = f) :
+    a * (b * g) = c * (d * f) := by
+  rw [h']
+  rw [← mul_assoc]
+  rw [h]
+  rw [mul_assoc]
+```
+
+Litex 从 `a * (b * g)` 写出等式链，逐步到达 `c * (d * f)`。当前内核可验证这个由左向右的方向：
+
+```litex
+claim:
+    ?forall a, b, c, d, g, f R:
+        a * b = c * d
+        g = f
+        =>:
+            a * (b * g) = c * (d * f)
+    a * (b * g) = (a * b) * g = (c * d) * g = (c * d) * f = c * (d * f)
+```
+
+四个等号依次使用乘法结合、`a * b = c * d`、`g = f` 和再次结合。Lean 指定下一步如何改写目标；Litex 写出沿途应当成立的事实，再由内核寻找相邻等式的依据。
+
+</details>
+
+<details>
+<summary><strong>设计空间中的位置：前向证明并非 Litex 首创</strong></summary>
+
+Mizar、Isar、ACL2 和 Naproche 已支持前向文本、定理累积或逐步检查，因此“自下而上”并非 Litex 独有。Litex 检验的是组合：普通事实自动触发局部验证，通过后扩展上下文，同时让已接受或停下来的路径保持可见，供用户或人工智能检查和修复；只有常规验证不足时才写显式证明结构。更完整的比较见第 1 节的小结“Litex 与 Naproche——相近目标，不同核心接口”。
+
+</details>
+
 <a id="interaction-loop"></a>
 
-## 5. 人类-AI-Litex 循环工作流构建
+## 4. 人、AI 与 Litex 共同推进证明
 
 前文说明了一条定义或事实被执行后，Litex 会留下什么。更大的数学发展还需要另一层：人类和人工智能如何利用这些记录继续构造，同时把数学意图、候选方案、验证决定和维护中的源码分开。
 
@@ -1331,7 +1103,9 @@ Litex 再次检查后成功。于是同样留下源码与运行记录。
 
 <a id="compatibility"></a>
 
-## 6. Litex代码如何编译成Lean代码，并与Mathlib兼容（Experimental）
+## 5. 连接 Lean 独立复核，并与 Mathlib 兼容（Experimental）
+
+**Lean 复核**：目标是提供独立检查路径；`lean/` 保留了早期实验产物，当前构建尚未接入其编译器。
 
 Litex 可独立工作，拥有语法、运行时和验证内核。如果你相信Litex内核是没有bug的，那它不编译成 Lean 也能为你检查良定义性与事实并提供反馈。
 
@@ -1348,7 +1122,7 @@ Litex编译成Lean，并接入Mathlib-Style的Lean代码，要经过以下过程
 
 `Litex 源码 → Litex 验证 → ToLean 编译 → Lean 内核复核 → 手写 adapter → Mathlib 定理`
 
-> Litex编译成Lean的过程非常像C语言代码编译成汇编。我们知道汇编语言的代码之所以看起来像乱码是因为源码里写了很多内存地址。不管是新开地址和使用该地址时都要显式把地址写出来。Lean代码给每个事实都取了名字，在调用对应事实时也需要显式地把名字附上。Litex的内核在处理Litex代码时，替用户维护了这样一张事实表，同时在验证时会按原子事实的谓词名为 key，从该事实表中搜索对应事实来辅佐证明当前想要证明的东西（为何能这样做、为何 Lean 很难直接照搬，见第 2 节）。这个搜索过程的分叉多（Litex有几百条内置验证规则）而不深（每个验证规则都很直白，任何内置规则可以被编译成若干条Lean的tactic）。
+> Litex编译成Lean的过程非常像C语言代码编译成汇编。我们知道汇编语言的代码之所以看起来像乱码是因为源码里写了很多内存地址。不管是新开地址和使用该地址时都要显式把地址写出来。Lean代码给每个事实都取了名字，在调用对应事实时也需要显式地把名字附上。Litex的内核在处理Litex代码时，替用户维护了这样一张事实表，同时在验证时会按原子事实的谓词名为 key，从该事实表中搜索对应事实来辅佐证明当前想要证明的东西（为何能这样做、为何 Lean 很难直接照搬，见第 1 节）。这个搜索过程的分叉多（Litex有几百条内置验证规则）而不深（每个验证规则都很直白，任何内置规则可以被编译成若干条Lean的tactic）。
 
 举例：我们想要证明前`n`个正奇数之和是`n^2`。我们先写下Litex的源码：
 
@@ -1528,24 +1302,41 @@ theorem firstHundredPositiveOddIntegersSum :
 
 </details>
 
-<a id="summary-bottom-up-and-top-down"></a>
+<a id="ecosystem-role"></a>
+
+## 6. 从语言到生态：Litex 想扮演什么角色
+
+所有的设计合在一起，使 Litex 希望成为人和 AI 共同生产、使用可检查推理的基础设施。
+
+**Litex 面向人类与 AI：既是可读推理前端，也是可信推理数据生产层，并尝试通过 Lean/Mathlib 接入现有生态。** 它希望也服务于 AI、工程师和其他领域实践者。
+
+未来的数学家工作流，一定会是AI+人类协同工作，做出证明，然后把证明生成对应的形式化代码确保其正确性。这里生成的形式化代码可以是Lean，可以是Litex。Litex希望成为Lean的更可读的前端语言，降低形式化代码的阅读和书写门槛。
+
+前面的几节说明了，这个角色并不是若干功能的简单相加。集合论对象、事实导向源码、自下而上生长的已验证上下文、极简语法、贴近自然数学的表达，以及结构化验证结果，共同进入了同一套协议，使数学本身和数学的构造证据都能够被保存。
+
+| 生态角色 | Litex 希望产生的实际成果 |
+| --- | --- |
+| 可读推理的前端 | 人可以直接审核的数学对象、条件、中间事实和结论 |
+| 可信推理数据的生产层 | 经过机器检查的事实与验证来源、明确的停止边界，以及被显式标出的可信边界 |
+| 现有生态的接入层 | 从一开始的设计上即面向 Lean 编译与复核（第 5 节，Experimental）；早期 Lean 产物仅记录实验覆盖，当前 `src/` 未接入编译器；以及明确分离、由 AI 或人类编写的新增 Lean/Mathlib adapter |
+| 证明 → 可执行代码（Experimental） | 把已检查的计算片段转化成可运行的 Python / C（第 6.1 节） |
+
+当然，Litex现阶段更像是处于 `proof of an idea` 的阶段。即便它本身已经有几十万行代码，它在行业上下游中的探索仍然稀缺。这也是Litex下一阶段会着重关注的：如何让从0到1的原始创新，成为从1到10的早期价值兑现。对Litex感兴趣的朋友可以联系 litexlang@outlook.com 。
 
 <details>
-<summary><strong>个人思考：Litex补齐了AI推理的范式缺口？</strong></summary>
+<summary><strong>Litex的生态位</strong></summary>
 
-在数学实践中，自下而上的证明流（从前提出发，积累更多事实），与自上而下的证明流（分解最终结论，直到最终和前提匹配上），构成了数学证明时的不同视角和思路。Litex的源码代表了前者的思维模式，Lean代码代表了后者。那么AI更偏好哪一种思维模式呢？
+形式化语言的供需关系是必然存在的。语言设计通常由 1–2 人主导：一边设计，一边工程化、一边迭代；设计人数少，才能尽量保证设计一致性——这几乎是任何编程语言的常态。但要把一门形式化语言真正做出来，工程量极大：内核、规则、标准库、工具链、文档与生态，远不是同一两个人在传统人力条件下能同时扛住的。没有 AI 协助实现与迭代时，像 Litex 这样「设计面必须小、工程面却巨大」的项目几乎不可能落地；正是 AI 的发展，才使这类项目变得可尝试。
 
-先看自下而上的证明流。大部分数学教材都是基于自下而上的行文模式写的，这也是人类更适应的思维范式（试想，我们不会从数学最后一页开始读书！）。大模型都是在互联网中的数学知识上进行训练的，因此AI更容易阅读Litex代码。同时，让AI Agent去写Litex代码时，让它和Litex的输出交互，了解每段证明为什么对，哪里出错，更容易形成`人类-AI-Litex`的证明流构建。
+与此同时，新行业的出现也在抬高对形式化的需求。编程语言很少凭空流行。它们通常诞生于新的技术能力与新的社会需求交汇之处：Fortran 伴随大型机计算能力和高性能计算需求出现，C 与 Unix 的系统编程需求彼此塑造，JavaScript 与 Java 随互联网时代的前端和后端开发普及，Python 和 CUDA 则分别回应了 AI 框架快速迭代与底层高性能计算的需要。Lean 的新一轮发展，也与 AI for Math 对可靠形式化的需求高度重合。
 
-再看自上而下的证明流。大模型的训练围绕着目标函数和奖励信号展开。因而，AI 未必天然具备稳定的、从第一性原理自下而上展开的推理能力；在许多任务中，它更容易从期望结果或评价信号反向组织一条看起来能够到达结果的路径。
-
-因此，两种思维模式都很宝贵：自下而上适合积累可复用的局部事实、暴露中间依据；自上而下适合澄清目标、选择方向、压缩搜索空间。Litex 与 Lean 的连接，正可以把这两种方向放进同一条可检查的证据链，并让人类和 AI 在各自擅长的方向上协作。
+Litex 想寻找的，正是下一个由 AI 时代催生、目前还难以准确命名的场景。AI 将持续生成大量候选推理，新的知识工作也会因此需要更低成本的检查、解释、组织和复用。形式化语言行业能否接住这波浪潮，也是需要共同考虑的问题。我相信这样的场景应该会很快出现。
 
 </details>
 
 <a id="executable-code"></a>
 
-## 7. 把证明编译成可执行代码（Python / C）（Experimental）
+### 6.1 把证明编译成可执行代码（Python / C）（Experimental）
 
 Litex 还在做另一条实验性编译路线：把（部分）已验证的证明直接变成可运行代码——目前主要是受支持的数值定义与 `algo` 片段，抽出为 Python 或 C。重点不是「导出整座定理库」，而是：计算步骤在 Litex 里检查过之后，同一份写法可以变成你能跑的可执行代码。
 
@@ -1601,41 +1392,11 @@ double newton_sqrt_two_step(double x) {
 
 </details>
 
-<a id="ecosystem-role"></a>
-
-## 8. 从语言到生态：Litex 想扮演什么角色
-
-所有的设计合在一起，使 Litex 希望成为人和 AI 共同生产、使用可检查推理的基础设施。
-
-**Litex 面向人类与 AI：既是可读推理前端，也是可信推理数据生产层，并尝试通过 Lean/Mathlib 接入现有生态。** 它希望也服务于 AI、工程师和其他领域实践者。
-
-未来的数学家工作流，一定会是AI+人类协同工作，做出证明，然后把证明生成对应的形式化代码确保其正确性。这里生成的形式化代码可以是Lean，可以是Litex。Litex希望成为Lean的更可读的前端语言，降低形式化代码的阅读和书写门槛。
-
-前面的几节说明了，这个角色并不是若干功能的简单相加。集合论对象、事实导向源码、自下而上生长的已验证上下文、极简语法、贴近自然数学的表达，以及结构化验证结果，共同进入了同一套协议，使数学本身和数学的构造证据都能够被保存。
-
-| 生态角色 | Litex 希望产生的实际成果 |
-| --- | --- |
-| 可读推理的前端 | 人可以直接审核的数学对象、条件、中间事实和结论 |
-| 可信推理数据的生产层 | 经过机器检查的事实与验证来源、明确的停止边界，以及被显式标出的可信边界 |
-| 现有生态的接入层 | 从一开始的设计上即面向 Lean 编译与复核（第 6 节，Experimental）；早期 Lean 产物仅记录实验覆盖，当前 `src/` 未接入编译器；以及明确分离、由 AI 或人类编写的新增 Lean/Mathlib adapter |
-| 证明 → 可执行代码（Experimental） | 把已检查的计算片段转化成可运行的 Python / C（第 7 节） |
-
-当然，Litex现阶段更像是处于 `proof of an idea` 的阶段。即便它本身已经有几十万行代码，它在行业上下游中的探索仍然稀缺。这也是Litex下一阶段会着重关注的：如何让从0到1的原始创新，成为从1到10的早期价值兑现。对Litex感兴趣的朋友可以联系 litexlang@outlook.com 。
-
-<details>
-<summary><strong>Litex的生态位</strong></summary>
-
-形式化语言的供需关系是必然存在的。语言设计通常由 1–2 人主导：一边设计，一边工程化、一边迭代；设计人数少，才能尽量保证设计一致性——这几乎是任何编程语言的常态。但要把一门形式化语言真正做出来，工程量极大：内核、规则、标准库、工具链、文档与生态，远不是同一两个人在传统人力条件下能同时扛住的。没有 AI 协助实现与迭代时，像 Litex 这样「设计面必须小、工程面却巨大」的项目几乎不可能落地；正是 AI 的发展，才使这类项目变得可尝试。
-
-与此同时，新行业的出现也在抬高对形式化的需求。编程语言很少凭空流行。它们通常诞生于新的技术能力与新的社会需求交汇之处：Fortran 伴随大型机计算能力和高性能计算需求出现，C 与 Unix 的系统编程需求彼此塑造，JavaScript 与 Java 随互联网时代的前端和后端开发普及，Python 和 CUDA 则分别回应了 AI 框架快速迭代与底层高性能计算的需要。Lean 的新一轮发展，也与 AI for Math 对可靠形式化的需求高度重合。
-
-Litex 想寻找的，正是下一个由 AI 时代催生、目前还难以准确命名的场景。AI 将持续生成大量候选推理，新的知识工作也会因此需要更低成本的检查、解释、组织和复用。形式化语言行业能否接住这波浪潮，也是需要共同考虑的问题。我相信这样的场景应该会很快出现。
-
-</details>
+<a id="reasoning-direction"></a>
 
 <a id="conclusions"></a>
 
-## 9. 追寻与众不同的艺术
+## 7. 追寻与众不同的艺术
 
 <!-- 这一段比较理想主义一点。因为AI时代大家过度关注实用主义了，容易忽略一个原生的、创新的、与众不同的新解决方案带来的长期的影响力。不管是数学界，还是任何科学，大家都鼓励对同一问题的不同角度、不同解决方案的出现。这样的不同的观点，往往才是科学史上真正突破的来源，最终可能会带来更大的效益提高。 -->
 
@@ -1669,6 +1430,10 @@ Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu
 2. 如果关注内核实现，可以查看 [golitex 仓库](https://github.com/litexlang/golitex)。
 
 注：当前仓库同时保留已检查成果、实验和未完成工作。*公开可见不等于宣称完成*；能力应以测试、带日期的状态、可信边界和已知限制为准。
+
+### 原生定理接口与诊断（2026-10-02）
+
+25 个保留的旧定理名称现在在 `src/execute/execute_by_stmt/builtin_thm/` 中有原生接口约定。定理应用流程在将结论写入周围上下文之前，检查前提与结论的良定义性，并报告实际失败的阶段和前提。含有 `i` 的复数算术由计算处理；索引构造要求索引集非空。这些改动保留了 AST 与 Runtime/ExecEnv 的接口约定；定义端点仍通过显式等式链对齐。支持的参数形式与选择公理的验证来源，见手册中的内置定理表。
 
 <a id="overview-readers"></a>
 
@@ -1832,6 +1597,21 @@ Litex 仍检查 `x > 0`，但让它作为普通事实留在上下文中，源码
 
 </details>
 
+<a id="summary-bottom-up-and-top-down"></a>
+
+<details>
+<summary><strong>个人思考：Litex补齐了AI推理的范式缺口？</strong></summary>
+
+在数学实践中，自下而上的证明流（从前提出发，积累更多事实），与自上而下的证明流（分解最终结论，直到最终和前提匹配上），构成了数学证明时的不同视角和思路。Litex的源码代表了前者的思维模式，Lean代码代表了后者。那么AI更偏好哪一种思维模式呢？
+
+先看自下而上的证明流。大部分数学教材都是基于自下而上的行文模式写的，这也是人类更适应的思维范式（试想，我们不会从数学最后一页开始读书！）。大模型都是在互联网中的数学知识上进行训练的，因此AI更容易阅读Litex代码。同时，让AI Agent去写Litex代码时，让它和Litex的输出交互，了解每段证明为什么对，哪里出错，更容易形成`人类-AI-Litex`的证明流构建。
+
+再看自上而下的证明流。大模型的训练围绕着目标函数和奖励信号展开。因而，AI 未必天然具备稳定的、从第一性原理自下而上展开的推理能力；在许多任务中，它更容易从期望结果或评价信号反向组织一条看起来能够到达结果的路径。
+
+因此，两种思维模式都很宝贵：自下而上适合积累可复用的局部事实、暴露中间依据；自上而下适合澄清目标、选择方向、压缩搜索空间。Litex 与 Lean 的连接，正可以把这两种方向放进同一条可检查的证据链，并让人类和 AI 在各自擅长的方向上协作。
+
+</details>
+
 ### 写给数学从业者
 
 如果您从事数学，您可能首先关心的不是又一种工具，而是数学理解和数学代表的传统价值观在 AI 时代如何被保留。
@@ -1876,14 +1656,253 @@ Lean（写数学时）:  严格类型手感  ≈ static
 Litex:             多集合归属    ≈ dynamic（偏 Python）
 ```
 
-可以把 Litex 与 Lean 的关系粗略理解成 C 与汇编：Lean 的 tactic 证明里，常要给事实取名并显式调用；这对大脑是负担——人通常记住的是证明的 pattern（形状），而不是事实名。汇编里大量代码在写内存地址；C 替你维护“变量名 ↔ 地址”的表。Litex 类似：它维护一张事实表与规则表，你直接写出要证明什么，内核按原子事实的谓词名为 key 做匹配与替换（详见第 2 节），而不必先记住乱乱的事实名。Lean 难以直接扩充成同一默认机制，也正因为其语言允许命题高度一等量化——[第 2 节](#fact-oriented)讨论了这条边界。
+可以把 Litex 与 Lean 的关系粗略理解成 C 与汇编：Lean 的 tactic 证明里，常要给事实取名并显式调用；这对大脑是负担——人通常记住的是证明的 pattern（形状），而不是事实名。汇编里大量代码在写内存地址；C 替你维护“变量名 ↔ 地址”的表。Litex 类似：它维护一张事实表与规则表，你直接写出要证明什么，内核按原子事实的谓词名为 key 做匹配与替换（详见第 1 节），而不必先记住乱乱的事实名。Lean 难以直接扩充成同一默认机制，也正因为其语言允许命题高度一等量化——[第 1 节](#fact-oriented)讨论了这条边界。
 
 也可以从对象接口再看一层：Litex 的用户可见层更接近集合论——同一对象可属于多个集合；Lean 的默认用户层更强调每个项落在一个确定类型下。Litex 希望在数学推理与形式化验证之间建立类似的抽象层，让用户不必被底层实现细节牵绊，而能够把注意力真正放在思考本身。
 
-还有第二条程序员常关心的实验性编译路线：计算片段在 Litex 里检查过之后，可以尝试抽出可运行的 Python 或 C（第 7 节）——同样标明实验性，且范围很窄，不是整门语言的后端。
+还有第二条程序员常关心的实验性编译路线：计算片段在 Litex 里检查过之后，可以尝试抽出可运行的 Python 或 C（第 6.1 节）——同样标明实验性，且范围很窄，不是整门语言的后端。
 
 ### 写给其他知识领域的读者
 
 在数学之外，Litex 希望用简单的语法表达对象、关系、条件与规则，再用清晰的验证反馈，邀请我们探索人类直觉、机器验证与数学知识之间的另一种表现形式。Litex 也希望探索形式化语言在真实知识工作中的入口：从 AI 安全、AI 输出可解释性、金融风控、精密软件工程，到物理、化学、医疗、法律和工程。
 
 这些目前是探索方向，不是对相关行业已有支持的声明。欢迎更多非数学专业背景的工作者参与探索：在自己的行业中使用形式化工具，理解依据、发现冲突、预防错误。
+
+<a id="overview-gallery"></a>
+
+## 附录：源码速览（gallery）
+
+下面几段不是教程，只展示「直接写要证的东西」在 Litex 里长什么样；设计与边界见前文各节。
+
+最简单的等式：
+
+```litex
+1 + 1 = 2
+```
+
+多项式恒等式：
+
+```litex
+forall a, b R:
+    (a + b)^2 = a^2 + 2 * a * b + b^2
+```
+
+集合事实：
+
+```litex
+forall s, t, u set:
+    s $subset t
+    =>:
+        intersect(s, u) $subset intersect(t, u)
+```
+
+非负数相加仍非负：
+
+```litex
+forall x, y R:
+    0 <= x
+    0 <= y
+    =>:
+        0 <= x + y
+```
+
+定义域条件已知时的良定义调用：
+
+```litex
+forall f fn(t R: t > 0) R, x R:
+    x > 0
+    =>:
+        f(x) = f(x)
+```
+
+谓词——先定义，再当作原子事实使用：
+
+```litex
+prop is_positive(x R):
+    x > 0
+
+forall a, b R:
+    $is_positive(a)
+    a = b
+    =>:
+        $is_positive(b)
+```
+
+已知全称事实，用来推出具体的原子事实：
+
+```litex
+prop is_positive(n R):
+    exist a R+ st {n > a}
+
+claim:
+    ? forall x R:
+        x > 10
+        =>:
+            $is_positive(x)
+    witness exist a R+ st {x > a} from 10
+
+have a R:
+    a > 10
+
+$is_positive(a)
+```
+
+存在量词——先见证，再从 `exist` 事实取出对象：
+
+```litex
+witness exist x R st {x = 0} from 0
+
+obtain zero from exist x R st {x = 0}
+zero = 0
+```
+
+定理——命名可复用结论，再按需引用（整除传递性）：
+
+```litex
+prop divides_by(d, n Z):
+    exist k Z st {n = d * k}
+
+thm divides_transitive:
+    ? forall a, b, c Z:
+        $divides_by(a, b)
+        $divides_by(b, c)
+        =>:
+            $divides_by(a, c)
+    obtain k from $divides_by(a, b)
+    obtain m from $divides_by(b, c)
+    c = b * m = (a * k) * m = a * (k * m)
+    witness $divides_by(a, c) from k * m:
+        c = a * (k * m)
+
+witness $divides_by(2, 6) from 3
+witness $divides_by(6, 30) from 5
+
+by thm divides_transitive(2, 6, 30) => $divides_by(2, 30)
+```
+
+具名函数：
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+局部证明块 `claim`——写出沿途应当成立的等式，不必点名改写方向：
+
+```litex
+claim:
+    ? forall a, b, c, d, g, f R:
+        a * b = c * d
+        g = f
+        =>:
+            a * (b * g) = c * (d * f)
+    a * (b * g) = (a * b) * g = (c * d) * g = (c * d) * f = c * (d * f)
+```
+
+反证法——否定「每个实数都满足 `x^2 >= x`」：
+
+> **迁移示例：** 当前 `src/` 检查停在 `by_contra` (`by contradiction`)；以下保留写法不算已验证结果。
+
+<!-- litex:skip-test -->
+```litex
+by contra:
+    ? not forall x R:
+        x^2 >= x
+    impossible 0.5^2 >= 0.5
+```
+
+分类讨论——穷尽分支，再在每个分支里关闭目标：
+
+```litex
+have fn k(x R) R by cases:
+    case x = 2: 3
+    case x != 2: 4
+
+have x R
+
+by cases:
+    ? k(x) > 2
+    case x = 2:
+        k(x) = 3 > 2
+    case x != 2:
+        k(x) = 4 > 2
+```
+
+归纳法——前 `n` 个正奇数之和等于 `n^2`：
+
+> **迁移示例：** 当前 `src/` 检查停在 `internal_bug: name n is already bound in an enclosing parse scope`；以下保留写法不算已验证结果。
+
+<!-- litex:skip-test -->
+```litex
+have fn kth_odd(k Z) Z = 2 * k - 1
+
+thm sum_first_odds:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, kth_odd) = n^2
+    by induc n from 1:
+        ? sum(1, n, kth_odd) = n^2
+
+        ? from n = 1:
+            kth_odd(1) = 2 * 1 - 1 = 1
+            sum(1, 1, kth_odd) = kth_odd(1) = 1 = 1^2
+
+        ? induc:
+            kth_odd(n + 1) = 2 * (n + 1) - 1
+            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
+```
+
+结构体——群：载体上的运算、单位元、逆元，以及单位元唯一性：
+
+```litex
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
+
+forall s nonempty_set, G &Group<s>, identity s:
+    forall a s:
+        G.mul(identity, a) = a
+        G.mul(a, identity) = a
+    =>:
+        identity = G.mul(G.one, identity) = G.one
+```
+
+模板——按参数族实例化定义，再用 `\name<args>` 取出：
+
+> **迁移示例：** 当前 `src/` 检查停在 `search_proof` (`p.first = 1`)；以下保留写法不算已验证结果。
+
+<!-- litex:skip-test -->
+```litex
+struct Triple<X set>:
+    first X
+    second X
+    third X
+
+template<X set>:
+    have fn triple(a, b, c X) &Triple<X> = (a, b, c)
+
+\triple<R>(1, 2, 3) = (1, 2, 3)
+
+have p &Triple<R> = \triple<R>(1, 2, 3)
+p.first = 1
+```
+
+一道简单应用题——当前解析器使用 ASCII 变量名，注释可以写中文：
+
+```litex
+# 妈妈年龄是小明年龄的 3 倍再加 4；小明 15 岁。妈妈几岁？
+have xiaoming_age R = 15
+let mom_age = 3 * xiaoming_age + 4
+mom_age = 3 * 15 + 4 = 49
+```
+
+你写出数学步骤；Litex 检查每一步的衔接，并把通过的事实留在上下文里。

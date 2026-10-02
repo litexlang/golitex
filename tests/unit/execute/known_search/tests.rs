@@ -361,7 +361,17 @@ fn bounded_codomain_fallback_retains_its_selected_signature_citation() {
     let signature = rt
         .fact_by_id_in_stack(proof.cite_signature_fact_id)
         .unwrap();
-    assert!(signature.readable_string().contains("id $in fn"));
+    // The unified index may cite either membership or the concrete function
+    // equality. Check the cited subject and signature, not iteration order.
+    let property = match signature {
+        Fact::AtomicFact(AtomicFact::InFact(fact)) => crate::exec_env::SpecialProperty::Membership(fact.clone()),
+        Fact::AtomicFact(AtomicFact::EqualFact(fact)) => crate::exec_env::SpecialProperty::Equality(fact.clone()),
+        _ => panic!("not a function signature citation: {}", signature.readable_string()),
+    };
+    let AtomicFact::InFact(expected) = atomic(&mut rt, "id $in fn(x R) R") else { panic!("membership") };
+    assert!(rt.lookup_known_obj_equality(property.function_subject().unwrap(), &expected.element).is_some());
+    let signature = crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(property.function_signature().unwrap()));
+    assert!(rt.lookup_known_obj_equality(&signature, &expected.set).is_some());
     assert!(!proof.proof_of_requirement_facts.is_empty());
     let stmt_result = exec_ok(&mut rt, "alias(a) $in R");
     let json = project_stmt_detailed(&stmt_result, &rt).stringify();
@@ -383,8 +393,11 @@ fn field_function_codomain_strategy_retains_signature_and_domain_evidence() {
     let VerifyFactResult::ForallFact(result) = rt.verify_fact(&fact, VerifyState::top_level()).unwrap() else {
         panic!("forall result")
     };
-    let VerifyForallFactResult::Success(mut result) = *result else {
+    let VerifyForallFactResult::Success(result) = *result else {
         panic!("field application must use the applicable signature")
+    };
+    let crate::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactProof::ByLocalIntroduction(mut result) = result else {
+        panic!("fresh forall must use local introduction");
     };
     let VerifyFactResult::AtomicExceptEquality(conclusion) = result.proved_then_facts.remove(0).verify_result else {
         panic!("membership")

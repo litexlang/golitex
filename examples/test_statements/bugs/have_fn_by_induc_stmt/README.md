@@ -8,9 +8,9 @@
 
 Primary fixture: [have_fn_by_induc_stmt.lit](../../have_fn_by_induc_stmt.lit).
 
-## Open issues
+## Accepted explicit proofs
 
-- [ ] [K004: Recursive call under addition does not reduce to its value](K004-recursive-call-under-addition/README.md)
+K004 uses the user's [explicit arithmetic equality chain](../../experience/problem_notes/K004-explicit-recursive-increment-chain.md). No open issue remains in this statement folder.
 
 Current proof-search limitation: [explicit recursive equality chain](limitations.md).
 

@@ -4,10 +4,12 @@
 //! (closed numeric simplify, and Identifier FnObj → stored algo).
 
 mod dispatch_algo;
+pub(crate) mod aggregate_evaluation_result;
+pub(in crate::execute) mod evaluate_aggregate;
 mod evaluate_closed_numeric;
-mod evaluate_obj;
+pub(in crate::execute) mod evaluate_obj;
 mod exec_eval_stmt;
-mod helper;
+pub(in crate::execute) mod helper;
 mod result;
 
 #[cfg(test)]

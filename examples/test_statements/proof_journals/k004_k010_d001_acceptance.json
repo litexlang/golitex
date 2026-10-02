@@ -1,0 +1,494 @@
+{
+  "schema_version": 1,
+  "task": "K004 explicit increment chain, K010 finite numeric carriers, D001 display replay",
+  "completed_at": "2026-10-02T05:32:21.234205+00:00",
+  "binary": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+  "binary_sha256": "3916ba92d5c380d0484e5272a9af8122574d7b0ceb348f449b271ac0601b2918",
+  "build": {
+    "command": [
+      "cargo",
+      "build",
+      "--release"
+    ],
+    "exit_code": 0,
+    "summary": [
+      "warning: `litex-lang` (lib) generated 218 warnings (run `cargo fix --lib -p litex-lang` to apply 197 suggestions)",
+      "    Finished `release` profile [optimized] target(s) in 1m 42s"
+    ]
+  },
+  "rust_gate": {
+    "command": [
+      "cargo",
+      "test",
+      "--release",
+      "--lib",
+      "statement_boundary_tests"
+    ],
+    "exit_code": 0,
+    "passed": 9,
+    "failed": 0,
+    "result": "running 9 tests\ntest execute::statement_boundary_tests::strict_rejects_template_trust_at_top_level_and_in_proof_bodies ... ok\ntest execute::statement_boundary_tests::trust_have_display_replays_body_names_and_preserves_strict_policy ... ok\ntest execute::statement_boundary_tests::eval_checks_source_domain_before_rewrite_or_execution ... ok\ntest execute::statement_boundary_tests::statement_boundary_json_retains_nested_proofs_and_wd_failure ... ok\ntest execute::statement_boundary_tests::finite_proof_bodies_keep_binders_premises_and_nested_proof_evidence ... ok\ntest execute::statement_boundary_tests::nested_by_steps_preserve_helper_scope_and_failure_rollback ... ok\ntest execute::statement_boundary_tests::run_examples_statement_boundary_tracers ... ok\ntest execute::statement_boundary_tests::finite_guards_skip_only_proved_false_premises_and_reject_false_conclusions ... ok\ntest execute::statement_boundary_tests::finite_numeric_carriers_verify_symbolic_arithmetic_and_each_assignment ... ok\n\ntest result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 503 filtered out; finished in 7.34s\n\n"
+  },
+  "supplemental_gate": {
+    "command": [
+      "cargo",
+      "test",
+      "--release",
+      "--lib",
+      "builtin_entry_policy_tests"
+    ],
+    "exit_code": 101,
+    "passed": 6,
+    "failed": 1,
+    "record": "bugs/fact/internal-known-only-control/observed.json",
+    "cause": "unconfirmed"
+  },
+  "focused_cli": {
+    "checks": 42,
+    "unexpected_failures": 0,
+    "reports": [
+      "proof_journals/k004_focused_suite.json",
+      "proof_journals/k010_enumerate_focused_suite.json",
+      "proof_journals/k010_for_focused_suite.json",
+      "proof_journals/d001_focused_suite.json"
+    ]
+  },
+  "probes": [
+    {
+      "name": "enum-original",
+      "source": "by enumerate finite_set:\n    ? forall n {0, 1}:\n        n + 0 = n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-e",
+        "by enumerate finite_set:\n    ? forall n {0, 1}:\n        n + 0 = n"
+      ],
+      "exit": 0,
+      "expected_success": true,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by enumerate",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set"
+            },
+            "stores": [
+              "forall n {0, 1}:\n    n + 0 = n"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "forall-symbolic",
+      "source": "forall n {0, 1}:\n    n + 0 = n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-e",
+        "forall n {0, 1}:\n    n + 0 = n"
+      ],
+      "exit": 0,
+      "expected_success": true,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall n {0, 1}:\n    n + 0 = n",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall n {0, 1}:\n    n + 0 = n"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "symbolic-typed-members",
+      "source": "have a R*\nhave n {a, 0}\nn $in R",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-e",
+        "have a R*\nhave n {a, 0}\nn $in R"
+      ],
+      "exit": 0,
+      "expected_success": true,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "have a R*",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have from nonempty set",
+              "message": "Introduce an object from a nonempty carrier / parameter type"
+            },
+            "stores": [
+              "a $in R*"
+            ],
+            "infers": [
+              "a != 0"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "have n {a, 0}",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have from nonempty set",
+              "message": "Introduce an object from a nonempty carrier / parameter type"
+            },
+            "stores": [
+              "n $in {a, 0}"
+            ],
+            "infers": [
+              "n = a or n = 0"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "n $in R",
+            "proof_method": {
+              "type": "builtin_rule",
+              "rule_name": "Finite Set Subset Membership",
+              "message": "the element belongs to a finite set whose every member belongs to the target carrier"
+            },
+            "stores": [
+              "n $in R"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "false-enumerated-instance",
+      "source": "by enumerate finite_set:\n    ? forall n {0, 1}:\n        n + 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-e",
+        "by enumerate finite_set:\n    ? forall n {0, 1}:\n        n + 0 = 0"
+      ],
+      "exit": 1,
+      "expected_success": false,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by enumerate",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set",
+              "phase": "by_enumerate"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "nonnumeric-singleton",
+      "source": "have n {{1}}\nn $in C",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-e",
+        "have n {{1}}\nn $in C"
+      ],
+      "exit": 1,
+      "expected_success": false,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "have n {{1}}",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have from nonempty set",
+              "message": "Introduce an object from a nonempty carrier / parameter type"
+            },
+            "stores": [
+              "n $in {{1}}"
+            ],
+            "infers": [
+              "n = {1}"
+            ]
+          },
+          {
+            "success": false,
+            "statement": "n $in C",
+            "why_failed": {
+              "phase": "search_proof",
+              "goal": "n $in C"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "all-members-required",
+      "source": "have n {0, 1}\nn $in N+",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-e",
+        "have n {0, 1}\nn $in N+"
+      ],
+      "exit": 1,
+      "expected_success": false,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "have n {0, 1}",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have from nonempty set",
+              "message": "Introduce an object from a nonempty carrier / parameter type"
+            },
+            "stores": [
+              "n $in {0, 1}"
+            ],
+            "infers": [
+              "n = 0 or n = 1"
+            ]
+          },
+          {
+            "success": false,
+            "statement": "n $in N+",
+            "why_failed": {
+              "phase": "search_proof",
+              "goal": "n $in N+"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "self-membership-is-not-a-numeric-proof",
+      "source": "have n R\nn $in {n}\nn $in N",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-e",
+        "have n R\nn $in {n}\nn $in N"
+      ],
+      "exit": 1,
+      "expected_success": false,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "have n R",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have from nonempty set",
+              "message": "Introduce an object from a nonempty carrier / parameter type"
+            },
+            "stores": [
+              "n $in R"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "n $in {n}",
+            "proof_method": {
+              "type": "builtin_rule",
+              "rule_name": "List Set Element Membership",
+              "message": "if `x = a_i` for some `a_i` in `{a_1, …, a_n}`,"
+            },
+            "stores": [
+              "n $in {n}"
+            ],
+            "infers": [
+              "n = n"
+            ]
+          },
+          {
+            "success": false,
+            "statement": "n $in N",
+            "why_failed": {
+              "phase": "search_proof",
+              "goal": "n $in N"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    }
+  ],
+  "retained_K005": {
+    "name": "retained-K005",
+    "command": [
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+      "-lang",
+      "en",
+      "-strict",
+      "-f",
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/fact/K005-finite-negated-existence/repro.lit"
+    ],
+    "exit_code": 1,
+    "matches": true,
+    "errors": [],
+    "output": {
+      "kind": "run",
+      "success": false,
+      "target": "file",
+      "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/test_statements/bugs/fact/K005-finite-negated-existence/repro.lit",
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "forall x {0}:\n    x != 1",
+          "proof_method": {
+            "type": "compound_fact",
+            "rule_name": "Universal",
+            "message": "Verified as a forall fact (details omitted in Normal)"
+          },
+          "stores": [
+            "forall x {0}:\n    x != 1"
+          ],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "not exist x {0} st {x = 1}",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "not exist x {0} st {x = 1}"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "stderr": ""
+  },
+  "display_replay": {
+    "forms": 5,
+    "all_non_strict_replays_passed": true,
+    "all_strict_replays_rejected": true,
+    "report": "proof_journals/d001_display_acceptance.json"
+  },
+  "promoted_paths": {
+    "K004": "boundaries/recursive-increment-explicit-chain.lit",
+    "K010": "boundaries/finite-numeric-enumeration.lit"
+  },
+  "removed_open_records": [
+    "K004",
+    "K010",
+    "D001"
+  ],
+  "prior_records": "proof_journals/k004_k010_d001_prior_records.json",
+  "scope": "No Stmt/Obj/Fact AST fields or central execution-environment fields changed. K004 uses the user-authored chain; no automatic shortcut repair is claimed. No cart support or K005 interface choice was introduced.",
+  "skipped_gates": [
+    "all Rust tests",
+    "all repository examples",
+    "Lean and release packaging"
+  ],
+  "link_audit": {
+    "local_markdown_links_resolve": true,
+    "strategy_note_correction": {
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--leaf",
+        "DefStrategyStmt"
+      ],
+      "checks": 8,
+      "unexpected_failures": 0,
+      "note": "Corrected a stale link after concurrent promotion of the strategy proof-control fixture; no strategy kernel repair is claimed in this task."
+    }
+  }
+}

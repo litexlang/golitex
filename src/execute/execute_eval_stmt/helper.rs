@@ -38,7 +38,8 @@ pub fn flatten_fn_obj_args(fn_obj: &FnObj) -> Vec<Obj> {
 pub fn algo_call_key(fn_name: &str, evaluated_args: &[Obj]) -> Option<String> {
     let mut parts = Vec::with_capacity(evaluated_args.len());
     for arg in evaluated_args {
-        parts.push(number_literal_key(arg)?);
+        crate::rational_expression::ClosedNumericExpr::try_from_obj(arg)?;
+        parts.push(arg.ir().display_string());
     }
     Some(format!("{fn_name}({})", parts.join(",")))
 }
@@ -69,4 +70,26 @@ pub fn build_algo_param_subst(
     Some(map)
 }
 
-pub type ActiveAlgoCalls = HashSet<String>;
+// Per-evaluation state, never stored on Runtime/ExecEnv. Nested aggregates share
+// the same allowance instead of each receiving a fresh full range budget.
+pub const MAX_AGGREGATE_TERMS: usize = 1024;
+pub struct ActiveAlgoCalls {
+    calls: HashSet<String>,
+    pub aggregate_terms_remaining: usize,
+    pub aggregate_evaluations: Vec<super::aggregate_evaluation_result::AggregateEvaluationResult>,
+    pub function_evaluations: Vec<super::aggregate_evaluation_result::FunctionApplicationEvaluationResult>,
+    pub algo_evaluations: Vec<super::aggregate_evaluation_result::AlgoApplicationEvaluationResult>,
+    pub cited_equal_fact_ids: Vec<crate::runtime::FactId>,
+    pub proof_mode: bool,
+    pub function_proof_state: crate::execute::execute_fact_stmt::VerifyState,
+}
+impl ActiveAlgoCalls {
+    pub fn new() -> Self {
+        Self { calls: HashSet::new(), aggregate_terms_remaining: MAX_AGGREGATE_TERMS,
+            aggregate_evaluations: vec![], function_evaluations: vec![], algo_evaluations: vec![], cited_equal_fact_ids: vec![], proof_mode: false,
+            function_proof_state: crate::execute::execute_fact_stmt::VerifyState::top_level().without_well_defined_storage() }
+    }
+    pub fn contains(&self, key: &str) -> bool { self.calls.contains(key) }
+    pub fn insert(&mut self, key: String) { self.calls.insert(key); }
+    pub fn remove(&mut self, key: &str) { self.calls.remove(key); }
+}

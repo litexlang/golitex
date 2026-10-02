@@ -29,6 +29,7 @@ use super::text::text;
 impl NotEqualFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::ImaginaryUnitNonzero(_) => text("ImaginaryUnitNonzero", "i ≠ 0", "The reserved imaginary unit satisfies i² = -1 and is nonzero"),
             Self::PiNonzero(_) => text("PiNonzero", "π ≠ 0", "The real constant π is strictly positive, hence nonzero"),
             Self::ClosedDecimal(p) => p.rule_id_and_message(lang),
             Self::NotEqualSymmetry(p) => p.rule_id_and_message(lang),
@@ -535,4 +536,3 @@ impl MembershipContradictionBuiltinRuleProof {
         }
     }
 }
-

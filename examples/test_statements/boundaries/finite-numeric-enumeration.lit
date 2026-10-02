@@ -1,0 +1,6 @@
+# K010: retain the original target and every quantified assignment.
+# Formerly rejected at goal well-definedness; finite carrier evidence now suffices.
+
+by enumerate finite_set:
+    ? forall n {0, 1}:
+        n + 0 = n

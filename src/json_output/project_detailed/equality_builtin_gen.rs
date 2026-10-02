@@ -8,6 +8,16 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::AggregateIdentity(p) => super::aggregate_identity::project_aggregate_identity(p, runtime),
+        EqualitySearchProofByBuiltinRule::AggregateCalculation(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("AggregateCalculation")),
+            ("rewritten_left", string(p.rewritten_left.readable_string())), ("left_value", string(p.left_value.readable_string())),
+            ("rewritten_right", string(p.rewritten_right.readable_string())), ("right_value", string(p.right_value.readable_string())),
+            ("cited_equal_fact_ids", super::aggregate_evaluation::cites(&p.cited_equal_fact_ids)),
+            ("aggregate_evaluations", super::aggregate_evaluation::project_aggregate_evaluations(&p.aggregate_evaluations, runtime)),
+            ("function_evaluations", super::aggregate_evaluation::project_function_evaluations(&p.function_evaluations, runtime)),
+            ("algo_evaluations", super::aggregate_evaluation::project_algo_evaluations(&p.algo_evaluations, runtime)),
+        ]),
         EqualitySearchProofByBuiltinRule::Calculation(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("Calculation"))];
             let mode = match p {

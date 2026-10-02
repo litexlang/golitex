@@ -42,19 +42,51 @@ pub fn evaluate_fn_obj_with_algo(
         }
     }
 
-    let return_expr =
-        match dispatch_algo_return_expr(runtime, &fn_name, &normalized_args, active_calls)? {
+    let Some(call_key) = algo_call_key(&fn_name, &normalized_args) else {
+        return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
+    };
+    if active_calls.contains(&call_key) {
+        return Ok(Err(ExecEvalStmtFailed::CyclicAlgoCall));
+    }
+    active_calls.insert(call_key.clone());
+    let outcome = (|| {
+        let return_expr = match dispatch_algo_return_expr(runtime, &fn_name, &normalized_args)? {
             Ok(expr) => expr,
             Err(failed) => return Ok(Err(failed)),
         };
-    super::evaluate_obj::evaluate_obj(runtime, &return_expr, depth + 1, active_calls)
+        let definition_evidence = if active_calls.proof_mode {
+            let state = &active_calls.function_proof_state;
+            if !state.can_use_def_and_known_forall_and_known_strategy || state.remaining_deep_search_depth == 0 {
+                return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
+            }
+            let equal = crate::ast::fact::EqualFact { fact_id:runtime.global_ids.allocate_fact_id(),
+                left:Obj::FnObj(fn_obj.clone()),right:return_expr.clone(),line_file:None };
+            let wd = match runtime.verify_equal_fact_well_definedness(&equal,state.without_well_defined_storage())? {
+                crate::execute::execute_fact_stmt::VerifyEqualFactWellDefinedResult::Success(p) => p,
+                _ => return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed)),
+            };
+            let Some(searched) = runtime.search_equal_fact_proof_by_known_forall_fact(&equal,state.after_deep_search().without_well_defined_storage())?
+                else { return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed)); };
+            super::aggregate_evaluation_result::AlgoDefinitionEvidence::Checked(
+                crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::equal_fact_result_from_success(&equal,wd,searched))
+        } else { super::aggregate_evaluation_result::AlgoDefinitionEvidence::Display };
+        let value = match super::evaluate_obj::evaluate_obj(runtime, &return_expr, depth + 1, active_calls)? {
+            Ok(v) => v,Err(e) => return Ok(Err(e)),
+        };
+        active_calls.algo_evaluations.push(super::aggregate_evaluation_result::AlgoApplicationEvaluationResult {
+            application:Obj::FnObj(fn_obj.clone()),normalized_arguments:normalized_args,return_expression:return_expr,
+            definition_evidence,value:value.clone(),
+        });
+        Ok(Ok(value))
+    })();
+    active_calls.remove(&call_key);
+    outcome
 }
 
 fn dispatch_algo_return_expr(
     runtime: &mut Runtime,
     fn_name: &str,
     evaluated_args: &[Obj],
-    active_calls: &mut super::helper::ActiveAlgoCalls,
 ) -> RuntimeResult<Result<Obj, ExecEvalStmtFailed>> {
     let Some(algo) = runtime.def_algo_visible_in_stack(fn_name).cloned() else {
         return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
@@ -66,16 +98,7 @@ fn dispatch_algo_return_expr(
     if param_count != evaluated_args.len() {
         return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
     }
-    let Some(call_key) = algo_call_key(fn_name, evaluated_args) else {
-        return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
-    };
-    if active_calls.contains(&call_key) {
-        return Ok(Err(ExecEvalStmtFailed::CyclicAlgoCall));
-    }
-    active_calls.insert(call_key.clone());
-    let outcome = dispatch_stored_algo(runtime, &algo, evaluated_args);
-    active_calls.remove(&call_key);
-    outcome
+    dispatch_stored_algo(runtime, &algo, evaluated_args)
 }
 
 fn dispatch_stored_algo(

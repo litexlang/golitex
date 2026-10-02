@@ -214,7 +214,7 @@ impl Runtime {
                 Vec<FactWellDefinedProof>,
                 Box<ObjWellDefinedProof>,
                 Box<ObjWellDefinedProof>,
-                Option<VerifyFactResult>,
+                VerifyFactResult,
             ),
             FailToVerifyAnonymousFnObjWellDefined,
         >,
@@ -291,32 +291,26 @@ impl Runtime {
                 }
             };
 
-        let identity_body = super::helper::anonymous_fn_body_is_bound_param(value);
-        let body_in_ret_set = if identity_body {
-            None
-        } else {
-            let membership_fact = AtomicFact::InFact(InFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                element: value.equal_to.as_ref().clone(),
-                set: value.body.ret_set.as_ref().clone(),
-                line_file: None,
-            });
-            let checked = self.verify_required_atomic_fact(
-                membership_fact,
-                verify_state,
-                "anonymous function body must belong to the return set".to_string(),
-            )?;
-            if checked.is_failed() {
-                return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::BodyInRetSet {
-                    param_type_well_defined,
-                    dom_fact_well_defined,
-                    ret_set_well_defined,
-                    body_well_defined,
-                    failed: checked,
-                }));
-            }
-            Some(checked)
-        };
+        let membership_fact = AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: value.equal_to.as_ref().clone(),
+            set: value.body.ret_set.as_ref().clone(),
+            line_file: None,
+        });
+        let body_in_ret_set = self.verify_required_atomic_fact(
+            membership_fact,
+            verify_state,
+            "anonymous function body must belong to the return set".to_string(),
+        )?;
+        if body_in_ret_set.is_failed() {
+            return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::BodyInRetSet {
+                param_type_well_defined,
+                dom_fact_well_defined,
+                ret_set_well_defined,
+                body_well_defined,
+                failed: body_in_ret_set,
+            }));
+        }
 
         Ok(Ok((
             param_type_well_defined,
@@ -432,4 +426,3 @@ impl Runtime {
         Ok(Ok(succeeded))
     }
 }
-

@@ -18,6 +18,9 @@ pub mod by_equality_identities_wave14;
 pub mod by_equality_identities_wave15;
 pub mod by_closed_trig;
 pub mod search_equal_fact_by_calculation;
+pub mod search_equal_fact_by_aggregate_calculation;
+pub mod aggregate_identity_builtin_rule_proof;
+mod search_equal_fact_by_aggregate_identities;
 pub mod search_equal_fact_builtin_rule;
 pub mod search_equal_fact_builtin_rule_result;
 

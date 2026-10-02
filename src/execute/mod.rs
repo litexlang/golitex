@@ -41,6 +41,9 @@ mod exec_stmt_transaction_tests;
 #[path = "../../tests/unit/execute/statement_boundaries/tests.rs"]
 mod statement_boundary_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/execute/wd_obligations/tests.rs"]
+mod wd_obligation_tests;
+#[cfg(test)]
 #[path = "../../tests/unit/execute/special_property/tests.rs"]
 mod special_property_tests;
 #[cfg(test)]

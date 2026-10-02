@@ -56,11 +56,24 @@ pub enum InFactSearchProofByBuiltinRule {
     // sign: R → Z; gcd: (Z × Z) \ {(0, 0)} → N+; lcm: Z × Z → N;
     // exp: R → R+; factorial: N → N+. Standard-set supertypes also follow.
     NativeScalarCodomain(NativeScalarCodomainBuiltinRuleProof),
+    AggregateScalarCodomain(AggregateScalarCodomainBuiltinRuleProof),
+    // WD has already established the Cartesian/tuple shape. Dimensions are
+    // natural numbers and inherit the standard numeric supersets of N.
+    CartDimInNatural(CartDimInNaturalBuiltinRuleProof),
+    TupleDimInNatural(TupleDimInNaturalBuiltinRuleProof),
+    // A checked anonymous function inhabits its own declared FnSet, modulo
+    // binder renaming. Domain conditions and free owners must remain exact.
+    // Example: `fn(x R) R {x} $in fn(y R) R`.
+    AnonymousFnInDeclaredFnSet(AnonymousFnInDeclaredFnSetBuiltinRuleProof),
     // Membership lifts along the standard-set inclusion chain.
     // Mathematical property: if `x $in S` and `S $subset T` among standard sets,
     // then `x $in T`.
     // Example: prove `f(a) $in R` then lift to `f(a) $in C`.
     StandardSetSubsetMembership(StandardSetSubsetMembershipBuiltinRuleProof),
+    // A known member of a displayed finite set inherits a standard carrier
+    // when every listed member has evidence for that carrier.
+    // Example: `n $in {0, 1}` implies `n $in C`, without choosing a value of n.
+    FiniteSetSubsetMembership(FiniteSetSubsetMembershipBuiltinRuleProof),
     // Set-builder membership from base membership plus defining facts.
     // Example: prove `x $in {t R: t > 0}` from `x $in R` and `x > 0`.
     SetBuilderMembership(SetBuilderMembershipBuiltinRuleProof),
@@ -168,12 +181,27 @@ pub struct RealArithmeticClosureBuiltinRuleProof {}
 pub struct NativeScalarCodomainBuiltinRuleProof {
     pub codomain: StandardSet,
 }
+pub struct AggregateScalarCodomainBuiltinRuleProof {
+    pub iterand_return_set: Obj,
+    pub codomain: StandardSet,
+}
+
+pub struct CartDimInNaturalBuiltinRuleProof {}
+pub struct TupleDimInNaturalBuiltinRuleProof {}
+
+pub struct AnonymousFnInDeclaredFnSetBuiltinRuleProof {}
 
 // Subset-lift certificate: verify membership in a proper subset, then lift.
 // Example: source_set `R`, prove `f(a) $in R` (e.g. by FnApplicationInCodomain), goal `f(a) $in C`.
 pub struct StandardSetSubsetMembershipBuiltinRuleProof {
     pub source_set: StandardSet,
     pub source_membership_proof: VerifyFactResult,
+}
+
+pub struct FiniteSetSubsetMembershipBuiltinRuleProof {
+    pub source_set: Obj,
+    pub source_membership_proof: VerifyFactResult,
+    pub member_in_proofs: Vec<VerifyFactResult>,
 }
 
 pub struct SetBuilderMembershipBuiltinRuleProof {
@@ -293,6 +321,15 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
         match &fact.set {
+            Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => {
+                let Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) = &fact.element
+                    else { return Ok(None); };
+                Ok(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::fn_sets_alpha_equal(
+                    &function.body, signature,
+                ).then_some(InFactSearchProofByBuiltinRule::AnonymousFnInDeclaredFnSet(
+                    AnonymousFnInDeclaredFnSetBuiltinRuleProof {},
+                )))
+            }
             Obj::StandardSet(set) => {
                 self.search_in_fact_standard_set_builtin_rule(fact, set, verify_state)
             }
@@ -400,6 +437,12 @@ impl Runtime {
                     return Ok(Some(proof));
                 }
             }
+            Obj::ProductShape(ProductShape::CartDim(_))
+            | Obj::ProductShape(ProductShape::TupleDim(_)) => {
+                if let Some(proof) = product_dimension_codomain_proof(&fact.element, set) {
+                    return Ok(Some(proof));
+                }
+            }
             Obj::TrigOperator(TrigOperator::Sin(_))
             | Obj::TrigOperator(TrigOperator::Cos(_))
             | Obj::TrigOperator(TrigOperator::Tan(_))
@@ -423,13 +466,11 @@ impl Runtime {
             | Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_))
             | Obj::IteratedOperator(IteratedOperator::Product(_))
             | Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(_)) => {
+                if let Some(proof) = self.aggregate_scalar_codomain_proof(&fact.element, set) {
+                    return Ok(Some(proof));
+                }
                 if matches!(set, StandardSet::C) {
                     if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
-                        return Ok(Some(proof));
-                    }
-                }
-                if matches!(set, StandardSet::R) {
-                    if let Some(proof) = real_arithmetic_in_r_proof(fact) {
                         return Ok(Some(proof));
                     }
                 }
@@ -463,11 +504,11 @@ impl Runtime {
         }
 
         // B1 — verify membership in a proper subset, then lift along inclusion
-        if let Some(proof) = self.standard_set_subset_membership_proof(fact, verify_state)? {
+        if let Some(proof) = self.standard_set_subset_membership_proof(fact, verify_state.clone())? {
             return Ok(Some(proof));
         }
 
-        Ok(None)
+        self.finite_set_subset_membership_proof(fact, verify_state)
     }
 
     // Prove `x - 1 $in N` from known `x $in N` and `x >= 1`.
@@ -798,6 +839,72 @@ impl Runtime {
                     },
                 ),
             ));
+        }
+        Ok(None)
+    }
+
+    // Lift a known finite-carrier member after checking every listed value.
+    fn finite_set_subset_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let key = (AtomicName::Plain { name: IN.into() }, true);
+        let mut source_sets = Vec::new();
+        for env in self.execution_environments_stack.iter().rev() {
+            let Some(knowns) = env.facts.known_atomic_except_equality_facts.by_prop.get(&key) else {
+                continue;
+            };
+            for known in knowns {
+                if let AtomicFact::InFact(known_in) = known {
+                    if matches!(known_in.set, Obj::SetFormer(SetFormer::ListSet(_))) {
+                        source_sets.push(known_in.set.clone());
+                    }
+                }
+            }
+        }
+
+        // Source membership must use existing evidence. Member premises follow
+        // the ordinary bounded builtin policy: at most the caller's permitted
+        // leaf, whose children cannot reopen builtin/deep/rewrite search.
+        // Thus `n in {n}` alone cannot invent a carrier or recurse indefinitely.
+        let child = verify_state.after_builtin_rule();
+        for source_set in source_sets {
+            let source_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: fact.element.clone(),
+                set: source_set.clone(),
+                line_file: None,
+            }));
+            let source_membership_proof =
+                self.verify_builtin_rule_premise(&source_membership, child.clone())?;
+            if source_membership_proof.is_failed() {
+                continue;
+            }
+            let Obj::SetFormer(SetFormer::ListSet(list)) = &source_set else { unreachable!() };
+            let mut member_in_proofs = Vec::with_capacity(list.list.len());
+            for element in &list.list {
+                let member_in = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: element.as_ref().clone(),
+                    set: fact.set.clone(),
+                    line_file: None,
+                }));
+                let proof = self.verify_builtin_rule_premise(&member_in, verify_state.clone())?;
+                if proof.is_failed() {
+                    break;
+                }
+                member_in_proofs.push(proof);
+            }
+            if member_in_proofs.len() == list.list.len() {
+                return Ok(Some(InFactSearchProofByBuiltinRule::FiniteSetSubsetMembership(
+                    FiniteSetSubsetMembershipBuiltinRuleProof {
+                        source_set,
+                        source_membership_proof,
+                        member_in_proofs,
+                    },
+                )));
+            }
         }
         Ok(None)
     }
@@ -1454,6 +1561,54 @@ fn native_scalar_codomain_proof(
             NativeScalarCodomainBuiltinRuleProof { codomain },
         ),
     )
+}
+
+impl Runtime {
+    // Addition/multiplication close the declared scalar carrier. Range sums
+    // are nonempty; a finite-set sum may be empty and then equals zero.
+    fn aggregate_scalar_codomain_proof(&self, element: &Obj, target: &StandardSet)
+        -> Option<InFactSearchProofByBuiltinRule> {
+        let (func, product, nonempty) = match element {
+            Obj::IteratedOperator(IteratedOperator::Sum(s)) => (s.func.as_ref(), false, true),
+            Obj::IteratedOperator(IteratedOperator::Product(s)) => (s.func.as_ref(), true, true),
+            Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(s)) => (s.func.as_ref(), false, false),
+            Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(s)) => (s.func.as_ref(), true, false),
+            _ => return None,
+        };
+        let signature = self.resolve_callable_fn_set(func)?;
+        let Obj::StandardSet(ret) = signature.ret_set.as_ref() else { return None; };
+        let codomain = match ret {
+            StandardSet::NPos if product || nonempty => StandardSet::NPos,
+            StandardSet::N | StandardSet::NPos => StandardSet::N,
+            StandardSet::Z | StandardSet::ZStar | StandardSet::ZNeg => StandardSet::Z,
+            StandardSet::QPos if product || nonempty => StandardSet::QPos,
+            StandardSet::Q | StandardSet::QPos | StandardSet::QNeg | StandardSet::QStar => StandardSet::Q,
+            StandardSet::RPos if product || nonempty => StandardSet::RPos,
+            StandardSet::R | StandardSet::RPos | StandardSet::RNeg | StandardSet::RStar => StandardSet::R,
+            StandardSet::C | StandardSet::CStar => StandardSet::C,
+        };
+        standard_set_is_subset_eq(&codomain, target).then_some(InFactSearchProofByBuiltinRule::AggregateScalarCodomain(
+            AggregateScalarCodomainBuiltinRuleProof { iterand_return_set: signature.ret_set.as_ref().clone(), codomain },
+        ))
+    }
+}
+
+fn product_dimension_codomain_proof(
+    element: &Obj,
+    target: &StandardSet,
+) -> Option<InFactSearchProofByBuiltinRule> {
+    if !standard_set_is_subset_eq(&StandardSet::N, target) {
+        return None;
+    }
+    match element {
+        Obj::ProductShape(ProductShape::CartDim(_)) => Some(
+            InFactSearchProofByBuiltinRule::CartDimInNatural(CartDimInNaturalBuiltinRuleProof {}),
+        ),
+        Obj::ProductShape(ProductShape::TupleDim(_)) => Some(
+            InFactSearchProofByBuiltinRule::TupleDimInNatural(TupleDimInNaturalBuiltinRuleProof {}),
+        ),
+        _ => None,
+    }
 }
 
 // WD already forces complex operand domains; Add/Sub/Mul/... are closed in C.

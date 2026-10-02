@@ -269,7 +269,7 @@ impl TrustHaveStmt {
             out.push_str(&format!("{} {} {}", TRUST, HAVE, param_str));
         } else {
             out.push_str(&format!(
-                "{} {}{}{}\n{}",
+                "{} {} {}{}\n{}",
                 TRUST,
                 HAVE,
                 param_str,
@@ -1794,4 +1794,3 @@ impl ByStrongInducStmt {
     }
     impl_display_pair!();
 }
-

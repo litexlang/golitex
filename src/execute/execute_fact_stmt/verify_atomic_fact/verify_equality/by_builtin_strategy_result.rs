@@ -12,6 +12,7 @@ pub enum EqualitySearchProofByBuiltinStrategy {
     FiniteSetProductPointwiseEquality(FiniteSetProductPointwiseEqualityStrategySingleStep),
     ModCongruence(ModCongruenceStrategySingleStep),
     RationalWithNonzeroPremises(RationalWithNonzeroPremisesStrategySingleStep),
+    ComplexWithNonzeroPremises(ComplexWithNonzeroPremisesStrategySingleStep),
 }
 
 // cos(x) = 0 follows from (x - pi/2)/pi in Z. Requirements are either that
@@ -93,6 +94,13 @@ pub struct ModCongruenceStrategySingleStep {
 // `requirement_facts` are exactly those `d != 0` facts (ordered); each entry in
 // `proof_of_requirement_facts` is the successful verify result for the same index.
 pub struct RationalWithNonzeroPremisesStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Rational complex identities use i²=-1 only after every denominator / negative
+// power base has checked nonzero evidence. Example: 1/i = -i; never 1/i = -1.
+pub struct ComplexWithNonzeroPremisesStrategySingleStep {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

@@ -23,6 +23,9 @@ pub struct ExecEvalStmtSuccess {
     pub rewritten_object: Obj,
     pub cited_equal_fact_ids: Vec<FactId>,
     pub evaluated_object: Obj,
+    pub aggregate_evaluations: Vec<super::aggregate_evaluation_result::AggregateEvaluationResult>,
+    pub function_evaluations: Vec<super::aggregate_evaluation_result::FunctionApplicationEvaluationResult>,
+    pub algo_evaluations: Vec<super::aggregate_evaluation_result::AlgoApplicationEvaluationResult>,
 }
 
 pub enum ExecEvalStmtFailed {
@@ -37,6 +40,8 @@ pub enum ExecEvalStmtFailed {
     DepthExceeded,
     // Same algo call is already being evaluated on the active stack.
     CyclicAlgoCall,
+    AggregateBudgetExceeded,
+    AggregateRangeOverflow,
 }
 
 impl ExecCommandStmtResult {

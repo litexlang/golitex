@@ -1,0 +1,19 @@
+# Migration tracer: this struct used to fail WD at `1 / x` despite `x != 0`.
+# Old failure:
+# struct NonzeroCoordinate:
+#     x R
+#     y R
+#     <=>:
+#         x != 0
+#         1 / x = 1 / x
+# Run: target/release/litex -strict -f examples/stmt_nodes/definition/struct_ordered_conditions.lit
+struct NonzeroCoordinate:
+    x R
+    y R
+    <=>:
+        x != 0
+        1 / x = 1 / x
+forall p &NonzeroCoordinate:
+    1 / p.x = 1 / p.x
+have x R = 0
+x = 0

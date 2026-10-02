@@ -1,0 +1,5 @@
+# Must reject the instance: the declared header requires -1 $in N.
+struct Box<n N>:
+    value R
+    tag R
+let bad = &Box<-1>
