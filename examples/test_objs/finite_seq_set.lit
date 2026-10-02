@@ -6,13 +6,13 @@
 sketch:
     finite_seq(R, 0) = fn(x {}) R
 
-# P02: finite_seq(R, 1) = fn(x closed_range(0, 0)) R
+# P02: finite_seq(R, 1) = fn(x closed_range(1, 1)) R
 sketch:
-    finite_seq(R, 1) = fn(x closed_range(0, 0)) R
+    finite_seq(R, 1) = fn(x closed_range(1, 1)) R
 
-# P03: finite_seq(R, 3) = fn(x closed_range(0, 2)) R
+# P03: finite_seq(R, 3) = fn(x closed_range(1, 3)) R
 sketch:
-    finite_seq(R, 3) = fn(x closed_range(0, 2)) R
+    finite_seq(R, 3) = fn(x closed_range(1, 3)) R
 
 # P04: $is_set(S)
 sketch:

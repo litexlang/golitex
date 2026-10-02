@@ -10,9 +10,11 @@ Primary fixture: [fact.lit](../../fact.lit).
 
 ## Open issues
 
-- [ ] [K005: Negated existence is not derived from the checked universal exclusion](K005-finite-negated-existence/README.md)
+- [ ] [K005: Explicit by-contra cannot target negative existence](K005-finite-negated-existence/README.md)
 
-An additional [internal known-only verifier control](internal-known-only-control/README.md) failed a supplemental Rust gate and needs diagnosis. It is separate from the native CLI reproduction count.
+K005 is a category-2 local repair candidate whose scope remains under diagnosis; Codex owns the next action and checks under the maintainer's delegation. See the [classified suite todo](../../todo.md).
+
+The former internal `known_only` control now passes; its [recheck and historical failure](../../experience/problem_notes/known-only-control-recheck.md) remain in experience records, rather than the open bug inventory.
 
 Current restrictions and strict policy: [limitations.md](limitations.md).
 

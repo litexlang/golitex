@@ -1,26 +1,23 @@
 # Repository Module Example
 
-This configured project demonstrates ordered exports, submodules, and
-cross-file qualified names.
+This project imports directory `A`, then runs the root exports
+`explicit_export_selection.lit` and `main.lit` in order. `A/litex.config`
+exports `chap2.lit`, `chap3.lit`, and `main.lit` in order. Within `A`,
+`chap3.lit` cites `chap2::x`; the root cites `A::chap3::z`.
 
-The root `litex.config` exports submodule `A`,
-`explicit_export_selection.lit`, and then `main.lit`.
-`A/litex.config` exports `chap2.lit`, `chap3.lit`, and `main.lit` in order, so
-`chap3.lit` can cite `A::chap2::x` directly.
+Before migration, the example used `[hierarchy]`, a directory export, and a
+transactional `try:` assertion. The current language uses explicit imports,
+file-only exports, and a separate executable negative for the unlisted name.
+The runnable positive remains in `explicit_export_selection.lit`.
 
-The manifest is an explicit selection list. `unlisted_sidecar.lit` and the
-`notes/` directory remain beside it but do not enter discovery, execution, or
-the module namespace. The exported tracer checks that namespace boundary in a
-transactional `try` block, so a successful module run demonstrates that only
-declared exports were selected while every standalone example remains valid.
+`unlisted_sidecar.lit` and `notes/` remain unexported. From this project
+directory, an absolute release binary with
+`-strict -e 'unlisted_sidecar::unlisted_sidecar_value = 2'` must reject the
+unknown namespace. See the [acceptance commands](../README.md#acceptance).
 
-After `A` has loaded, `main.lit` checks `A::chap3::z = 1` through its canonical
-qualified name. Cross-module references always retain the module/export path.
-
-Selecting submodule `A` traces back to the root module, evaluates everything
-before `A`, and then evaluates all of `A`. Selecting an exported file follows
-the same recursive prefix order through that file.
-
-The public results include `explicit_export_selection_witness` and `answer`,
-both checked real objects equal to `1`. The exported example contains no
-`trust`, axiom, or abstract proposition boundary.
+`-r export_order_repo/A` runs `A` as its own project. `-f` uses the target's
+parent config and stops at the selected export; it does not search ancestor
+configs. Imports mount before root exports, following the current module
+contract. The checked public root results are
+`explicit_export_selection_witness` and `answer`, both equal to `1`.
+No trust, axiom, or abstract proposition boundary is introduced.

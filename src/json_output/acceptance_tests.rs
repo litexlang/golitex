@@ -97,12 +97,12 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
     CartWithEmptyFactorBuiltinRuleProof, ClosedRangeLiteralExpansionBuiltinRuleProof,
     ComplexAbsOfImagScaledBuiltinRuleProof, ComplexAbsOfNonnegRealBuiltinRuleProof,
     EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof,
-    FiniteSeqEqualsFnOnClosedRangeBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,
+    FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,
     ImgOfRealBuiltinRuleProof, ImgOfRealPlusImagScaledBuiltinRuleProof,
     LnOfEulerBuiltinRuleProof, PowerSetOfEmptyBuiltinRuleProof,
     PowerSetOfSingletonBuiltinRuleProof, RangeLiteralExpansionBuiltinRuleProof,
     ReOfRealBuiltinRuleProof, ReOfRealPlusImagScaledBuiltinRuleProof,
-    SeqEqualsFnOnNBuiltinRuleProof, SetMinusChainToUnionBuiltinRuleProof,
+    SeqEqualsFnOnNPosBuiltinRuleProof, SetMinusChainToUnionBuiltinRuleProof,
     UnionOverIntersectDistributiveBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave14::{
@@ -340,8 +340,8 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         EqualitySearchProofByBuiltinRule::UnionOverIntersectDistributive(UnionOverIntersectDistributiveBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::SetMinusChainToUnion(SetMinusChainToUnionBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::FnRangeOfConstantAnonymousFn(FnRangeOfConstantAnonymousFnBuiltinRuleProof {}),
-        EqualitySearchProofByBuiltinRule::SeqEqualsFnOnN(SeqEqualsFnOnNBuiltinRuleProof {}),
-        EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnClosedRange(FiniteSeqEqualsFnOnClosedRangeBuiltinRuleProof {}),
+        EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos(SeqEqualsFnOnNPosBuiltinRuleProof {}),
+        EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnOneBasedDomain(FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::IndexUnionEmptyIndex(IndexUnionEmptyIndexBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::IndexIntersectEmptyIndex(IndexIntersectEmptyIndexBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::IndexCartEmptyIndex(IndexCartEmptyIndexBuiltinRuleProof {}),

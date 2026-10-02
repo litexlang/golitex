@@ -1296,6 +1296,13 @@ follow named set aliases, equalities, or later membership facts.
 `template` defines a family whose parameters belong to the definition itself.
 Write an instance as `\name<args>`.
 
+The name uses the ordinary module/export forms: `\export::name<args>`,
+`\Module::export::name<args>`, or `\Module:::name<args>` when the imported
+module has one export. These forms preserve the same canonical template owner;
+knowing an export name does not make a missing template valid. The configured
+[qualified-template example](../examples/module_manager/qualified_template_names/main.lit)
+checks all three forms and their rejection boundaries.
+
 ```litex
 template<S set>:
     have carrier_copy set = S
@@ -1424,6 +1431,14 @@ from left to right in their temporary binder scope. After one fact is known to
 be well-defined, Litex records it there as an assumption and runs its sound
 inference. A positive concrete predicate may therefore expose its definition,
 including a universal clause needed by a later object obligation.
+
+The same ordering applies to the domains of `not forall` and
+`forall … <=>:` during their independent WD checks, including definition
+bodies and claim goals. A checked domain such as `y != 0` can guard a later
+`1 / y`. For an iff, only the common domain guards both branches; a condition
+on one branch does not justify objects on the other branch. These local
+assumptions do not prove the quantified fact or escape its binder scope.
+See [the executable guarded-quantifier example](../examples/wd/fact/guarded_quantifier_domains.lit).
 
 > **Migration example:** This retained block still fails at `search_proof` in the current checker; it is not a verified result.
 
@@ -2026,7 +2041,7 @@ runtime. This section gives each statement family one canonical home.
 > | `Register` | Register rewrite/infer properties of a user prop (no proof body). | `register reflexive:` / `symmetric:` / `transitive:` + one `? forall …` |
 > | `Witness` | Prove an exist / atomic-exist / nonempty goal by exhibiting witnesses. | `witness exist … from …:` / `witness $P(…) from …:` / `witness $is_nonempty_set(S) from e:` |
 > | `ProofBlock` | Nested local proof scope. | `claim: ? fact` … / `sketch:` … |
-> | `Command` | Non-proof session command. | `eval expr` (preview: closed-numeric rewrite + recursive eval including stored algo; no proof fact; recursive-algo examples deferred; tracer `examples/stmt_nodes/command/eval.lit`) |
+> | `Command` | Non-proof session command. | `eval expr` (preview: exact numbers, callable definitions, stored algorithms and bounded nested finite aggregates; displays `evaluated_object` and publishes no proof fact; tracers `examples/stmt_nodes/command/eval.lit` and `aggregate_eval.lit`) |
 >
 > **`Definition` / `DefineObj` (object names):**
 >
@@ -2580,6 +2595,12 @@ function.
 > recursively evaluates: closed-numeric simplify, and plain-Identifier function
 > calls through a stored algo (case match → return expr → evaluate again).
 > It does not store a proof fact. Dedicated recursive-algo tracers are deferred.
+>
+> Finite sums/products evaluate through checked function applications. Nested
+> aggregates share a total allowance of 1024 terms; bounds and values use exact
+> arithmetic. Named function equations and finite list/range sets are supported.
+> An unavailable enumeration or exhausted allowance fails. See
+> `examples/stmt_nodes/command/aggregate_eval.lit`.
 > Tracers: `examples/stmt_nodes/definition/def_algo.lit`,
 > `examples/stmt_nodes/command/eval.lit`.
 >
@@ -3051,6 +3072,28 @@ eval (1 + 2)^2
 
 `clear` is not a utility statement or a reserved word; it can be used as an
 ordinary definition name.
+
+Decimal literals normalize exactly: `2.400 = 2.4`, `2.000 = 2`, and
+`-0.000 = 0`. Their unequal counterparts are rejected. The reserved imaginary
+unit has builtin nonzero evidence in both orientations; `1 / i = -i` consumes
+that evidence for division WD and guarded complex normalization.
+
+```litex
+sum(1, 3, fn(k Z) Z {k}) = 6
+product(1, 3, fn(k Z) Z {k}) = 6
+sum(1, 3, fn(k Z) Q {1 / 3}) = 1
+eval sum(1, 3, fn(k Z) Z {k})
+```
+
+`eval` displays the value and stores no mathematical fact. A direct equality
+checks the same computation and publishes its proof. Both reject invalid
+argument domains, missing function domain conditions and reversed integer
+ranges. Empty finite-set sums/products are 0/1. A finite set without a known
+enumeration supports symbolic laws but does not automatically supply a number.
+Detailed output retains each argument, checked application, function equation,
+value and running fold. See the runnable
+[aggregate calculation](../examples/proof_nodes/equal/by_builtin_rule/aggregate_calculation.lit)
+and [symbolic identities](../examples/proof_nodes/equal/by_builtin_rule/aggregate_identities.lit).
 
 ### Statement index
 
@@ -4596,8 +4639,8 @@ forall a, b R+:
 > reals / imag-scaled; literal `range`/`closed_range` expansion;
 > `power_set({})`/`power_set({a})`; `family_union({})`; empty-factor `cart`;
 > union-over-intersect; set_minus chain; constant `fn_range` (literal
-> anonymous ok); `seq(S)=fn(x N) S` and
-> `finite_seq(S,n)=fn(x closed_range(0,n-1)) S`.
+> anonymous ok); `seq(S)=fn(x N+) S` and
+> `finite_seq(S,n)=fn(x N+: x <= n) S` (indices 1 through n; length 0 has empty domain).
 > Equality identities wave 14 / Obj P0–P2 (preview): WD fixes so basic
 > `ln(e)`, `tan(0)`, Pythagorean, `sum`/`product` Add/Mul, anonymous
 > `fn_range`, `finite_seq` finiteness, and reduce-single no longer need
@@ -4706,7 +4749,7 @@ logarithms, and even-power absolute-value rules remain real-only.
 | Power identities | `a^0=1`, `a^1=a`, `1^x=1`, and `0^x=0` for positive `x`; `a^(m+n)=a^m*a^n`; `(a^m)^n=a^(m*n)`; `(a*b)^x=a^x*b^x`; `a^(-n)=1/a^n` for nonzero `a` and positive-natural `n`. The exponent-addition, iterated-power, and product-power laws use the carrier branches stated above. |
 | Roots and inverse powers | `(sqrt(x))^2=x` for `x>=0`; `sqrt(a^2)=a` for `a>=0`; product and quotient roots require nonnegative inputs and a positive denominator. `x^(1/n)=z` is recognized from `x=z^n`, `n in N+`, and `z>=0`; equal nonzero integer powers of positive bases can recover equality of the bases. |
 | Logarithms | With valid positive arguments and a positive base unequal to one: `log(a,1)=0`, `log(a,a)=1`, product, quotient, reciprocal, and power laws; `log(a,a^b)=b`; `a^c=b` and `log(a,b)=c` are inverse shapes; change of base and powered-base formulas are supported when their denominators are well-defined. |
-| Integer-range `sum`/`product` | Empty and singleton ranges; last-term recurrence; adjacent partition; constant, pointwise congruence, addition/subtraction/negation and scalar laws; sum shift-reindexing. Products have the analogous singleton, last-term, and adjacent-partition laws. Bounds are closed integer endpoints, and pointwise facts are required on exactly the consumed range. |
+| Integer-range `sum`/`product` | Singleton ranges, last-term recurrence, adjacent partition, constants and pointwise congruence; sums also support addition/subtraction and scalar laws. Both support integer shift-reindexing. Bounds are closed integer endpoints with start <= end; source and target legality must be proved. Pointwise facts are required on the consumed range. Empty finite-set aggregates use their separate interface. |
 | `finite_set_sum` | Empty/displayed/closed-range expansion, constant and pointwise congruence, insertion or disjoint union, pointwise addition, scalar distribution, Cartesian double-sum/Fubini, unique-cover substitution, and bijective re-enumeration. |
 | `finite_set_product` | Empty/displayed/closed-range expansion, insert/remove, constant and pointwise congruence, pointwise multiplication, and bijective substitution. |
 | `reduce` | Ascending left-fold evaluation for literals; empty range returns the seed; nonempty ranges consume the first or last value; adjacent ordered partition; order-preserving interval translation; pointwise congruence; additive seed `0` and multiplicative seed `1` bridge to `sum` and `product`. |
@@ -4733,9 +4776,6 @@ relevant domain; provide the exact pointwise universal. The
 subtraction rule also requires one common additive carrier among `Z`, `Q`,
 `R`, and `C`, so it does not totalize natural-number subtraction.
 
-> **Migration example:** This retained block still fails at `search_proof` in the current checker; it is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 have f fn(index Z) R
 have g fn(index Z) R

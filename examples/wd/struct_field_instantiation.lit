@@ -1,0 +1,44 @@
+# Tracer: instantiated function fields retain their actual parameter domains.
+# Before: the named theorem failed WD with an undefined definition parameter A.
+# struct ProbeOp<A nonempty_set>:
+#     zero A
+#     add fn(x, y A) A
+# thm generic_reflexive:
+#     ? forall B nonempty_set, s &ProbeOp<B>, x, y B:
+#         s.add(x, y) = s.add(x, y)
+# Now: the same theorem and its concrete/nested forms verify.
+# Boundary: wrong argument types, missing guards and false laws still fail.
+# Run: target/release/litex -strict -f examples/wd/struct_field_instantiation.lit
+
+struct ProbeOp<A nonempty_set>:
+    zero A
+    add fn(x, y A) A
+
+thm generic_reflexive:
+    ? forall B nonempty_set, s &ProbeOp<B>, x, y B:
+        s.add(x, y) = s.add(x, y)
+
+thm real_reflexive:
+    ? forall s &ProbeOp<R>, x, y R:
+        s.add(x, y) = s.add(x, y)
+
+struct NestedOp<A nonempty_set>:
+    operation &ProbeOp<A>
+    tag N
+
+thm nested_reflexive:
+    ? forall B nonempty_set, s &NestedOp<B>, x, y B:
+        s.operation.add(x, y) = s.operation.add(x, y)
+
+struct PointEvaluator<A nonempty_set, point A>:
+    tag N
+    at fn(x {point}) A
+
+thm dependent_field_reflexive:
+    ? forall B nonempty_set, point B, s &PointEvaluator<B, point>:
+        s.at(point) = s.at(point)
+
+claim:
+    ? forall s &ProbeOp<R>:
+        s.add(0, 1) = s.add(0, 1)
+    by thm real_reflexive(s, 0, 1) => s.add(0, 1) = s.add(0, 1)

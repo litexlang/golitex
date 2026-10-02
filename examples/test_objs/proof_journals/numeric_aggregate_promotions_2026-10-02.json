@@ -1,0 +1,992 @@
+{
+  "schema_version": 1,
+  "task": "Four approved numeric and aggregate repairs",
+  "gate": {
+    "schema_version": 1,
+    "mode": "intended",
+    "built_from_current_source": true,
+    "binary_sha256": "ae0a5ab341d9ba3f609ebfd8f837da6e3f83e2b81db03981f0796b59eaf0e7d2",
+    "source_sha256": "01436c54280851982b0a716be5a42114e084bafe70eb5267b55744024e47db4e",
+    "ast_sha256": "e37538eb5d1e9797e450e306239e42e19a80608fa954a1fa46503c970b302802",
+    "objects": 7,
+    "positive_assertions": 35,
+    "observations": [
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 6,
+        "object": "number",
+        "file": "number.lit",
+        "kind": "positive",
+        "intended": "accept"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"0.1 + 0.2 = 0.4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"0.1 + 0.2 = 0.4\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "number",
+        "file": "negative/number__n01.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"2.5 $in Z\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"2.5 $in Z\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "number",
+        "file": "negative/number__n02.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"2.4 != 2.4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"2.4 != 2.4\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "number",
+        "file": "negative/number__n03.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "number",
+        "file": "gaps/number__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 6,
+        "object": "imaginary_unit",
+        "file": "imaginary_unit.lit",
+        "kind": "positive",
+        "intended": "accept"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"i $in R\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"i $in R\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "imaginary_unit",
+        "file": "negative/imaginary_unit__n01.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"i = 1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"i = 1\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "imaginary_unit",
+        "file": "negative/imaginary_unit__n02.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 7,
+        "object": "div",
+        "file": "div.lit",
+        "kind": "positive",
+        "intended": "accept"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"1 / 0\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"ArithmeticOperator\", \"failure\": {\"phase\": \"Div\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"1 / 0\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"0 != 0\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"0\", \"wd_id\": \"wd2\"}, {\"type\": \"by_known\", \"obj\": \"0\", \"wd_id\": \"wd2\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "div",
+        "file": "negative/div__n01.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"1 / x\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"ArithmeticOperator\", \"failure\": {\"phase\": \"Div\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"1 / x\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"x != 0\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"x\", \"wd_id\": \"wd3\"}, {\"type\": \"by_def\", \"family\": \"Literal\", \"kind\": \"Number\", \"obj\": \"0\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 2,
+        "object": "div",
+        "file": "negative/div__n02.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"6 / 2 = 4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"6 / 2 = 4\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "div",
+        "file": "negative/div__n03.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"1 / {}\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"ArithmeticOperator\", \"failure\": {\"phase\": \"Div\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"1 / {}\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"{} != 0\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"{}\", \"wd_id\": \"wd2\"}, {\"type\": \"by_def\", \"family\": \"Literal\", \"kind\": \"Number\", \"obj\": \"0\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "div",
+        "file": "negative/div__n04.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "div",
+        "file": "gaps/div__p08.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 4,
+        "object": "sum",
+        "file": "sum.lit",
+        "kind": "positive",
+        "intended": "accept"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"sum(3, 1, fn (k Z) Z{k})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"Sum\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"sum(3, 1, fn (k Z) Z{k})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"3 <= 1\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"3\", \"wd_id\": \"wd1\"}, {\"type\": \"by_known\", \"obj\": \"1\", \"wd_id\": \"wd2\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": [{\"requirement\": \"3 $in R\", \"verify\": {\"type\": \"atomic_except_equality\", \"success\": true, \"fact\": \"3 $in R\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"3\", \"wd_id\": \"wd1\"}, {\"type\": \"by_def\", \"family\": \"StandardSet\", \"kind\": \"StandardSet\", \"obj\": \"R\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}, \"searched_proof\": {\"type\": \"builtin_rule\", \"family\": \"InFact\", \"rule\": \"ClosedNumericMembership\"}}}, {\"requirement\": \"1 $in R\", \"verify\": {\"type\": \"atomic_except_equality\", \"success\": true, \"fact\": \"1 $in R\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"1\", \"wd_id\": \"wd2\"}, {\"type\": \"by_known\", \"obj\": \"R\", \"wd_id\": \"wd7\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}, \"searched_proof\": {\"type\": \"builtin_rule\", \"family\": \"InFact\", \"rule\": \"ClosedNumericMembership\"}}}]}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "sum",
+        "file": "negative/sum__n01.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"sum(1 / 2, 2, fn (k Z) Z{k})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"Sum\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"sum(1 / 2, 2, fn (k Z) Z{k})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"1 / 2 $in Z\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"1 / 2\", \"wd_id\": \"wd5\"}, {\"type\": \"by_def\", \"family\": \"StandardSet\", \"kind\": \"StandardSet\", \"obj\": \"Z\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "sum",
+        "file": "negative/sum__n02.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "parse",
+        "diagnostic": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `set`\", line: 2, path: Real(\"examples/test_objs/negative/sum__n03.lit\") }))",
+        "statements": 0,
+        "object": "sum",
+        "file": "negative/sum__n03.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"sum(1, 1, fn (k Z) Z{k}) = 2\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"sum(1, 1, fn (k Z) Z{k}) = 2\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "sum",
+        "file": "negative/sum__n04.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sum",
+        "file": "gaps/sum__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sum",
+        "file": "gaps/sum__p04.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 4,
+        "object": "product",
+        "file": "product.lit",
+        "kind": "positive",
+        "intended": "accept"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"product(3, 1, fn (k Z) Z{k})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"Product\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"product(3, 1, fn (k Z) Z{k})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"3 <= 1\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"3\", \"wd_id\": \"wd1\"}, {\"type\": \"by_known\", \"obj\": \"1\", \"wd_id\": \"wd2\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": [{\"requirement\": \"3 $in R\", \"verify\": {\"type\": \"atomic_except_equality\", \"success\": true, \"fact\": \"3 $in R\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"3\", \"wd_id\": \"wd1\"}, {\"type\": \"by_def\", \"family\": \"StandardSet\", \"kind\": \"StandardSet\", \"obj\": \"R\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}, \"searched_proof\": {\"type\": \"builtin_rule\", \"family\": \"InFact\", \"rule\": \"ClosedNumericMembership\"}}}, {\"requirement\": \"1 $in R\", \"verify\": {\"type\": \"atomic_except_equality\", \"success\": true, \"fact\": \"1 $in R\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"1\", \"wd_id\": \"wd2\"}, {\"type\": \"by_known\", \"obj\": \"R\", \"wd_id\": \"wd7\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}, \"searched_proof\": {\"type\": \"builtin_rule\", \"family\": \"InFact\", \"rule\": \"ClosedNumericMembership\"}}}]}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "product",
+        "file": "negative/product__n01.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "parse",
+        "diagnostic": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `set`\", line: 2, path: Real(\"examples/test_objs/negative/product__n02.lit\") }))",
+        "statements": 0,
+        "object": "product",
+        "file": "negative/product__n02.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"product(1, 1, fn (k Z) Z{k}) = 2\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"product(1, 1, fn (k Z) Z{k}) = 2\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "product",
+        "file": "negative/product__n03.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "product",
+        "file": "gaps/product__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "product",
+        "file": "gaps/product__p04.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 4,
+        "object": "sum_of_finite_set",
+        "file": "sum_of_finite_set.lit",
+        "kind": "positive",
+        "intended": "accept"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_sum(R, fn (x R) R{x})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"SumOfFiniteSet\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"finite_set_sum(R, fn (x R) R{x})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"$is_finite_set(R)\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"R\", \"wd_id\": \"wd1\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "negative/sum_of_finite_set__n01.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_sum({1}, fn (x {2}) Z{x})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"SumOfFiniteSet\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"finite_set_sum({1}, fn (x {2}) Z{x})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"{1} $subset {2}\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"{1}\", \"wd_id\": \"wd2\"}, {\"type\": \"by_def\", \"family\": \"SetFormer\", \"kind\": \"ListSet\", \"obj\": \"{2}\", \"child_obj_well_defined\": [{\"type\": \"by_def\", \"family\": \"Literal\", \"kind\": \"Number\", \"obj\": \"2\"}], \"requirement_fact_verified\": []}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "negative/sum_of_finite_set__n02.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"finite_set_sum({1, 2}, fn (x Z) Z{x}) = 4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_sum({1, 2}, fn (x Z) Z{x}) = 4\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "negative/sum_of_finite_set__n03.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_sum({1, 1}, fn (x Z) Z{x})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"SumOfFiniteSet\", \"failure\": {\"phase\": \"child\", \"obj\": \"{1, 1}\", \"failure\": {\"phase\": \"SetFormer\", \"failure\": {\"phase\": \"ListSet\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"{1, 1}\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"1 != 1\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"1\", \"wd_id\": \"wd1\"}, {\"type\": \"by_known\", \"obj\": \"1\", \"wd_id\": \"wd1\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "negative/sum_of_finite_set__n04.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "gaps/sum_of_finite_set__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "gaps/sum_of_finite_set__p04.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "gaps/sum_of_finite_set__p06.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 4,
+        "object": "product_of_finite_set",
+        "file": "product_of_finite_set.lit",
+        "kind": "positive",
+        "intended": "accept"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_product(R, fn (x R) R{x})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"ProductOfFiniteSet\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"finite_set_product(R, fn (x R) R{x})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"$is_finite_set(R)\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"R\", \"wd_id\": \"wd1\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "negative/product_of_finite_set__n01.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_product({1}, fn (x {2}) Z{x})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"ProductOfFiniteSet\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"finite_set_product({1}, fn (x {2}) Z{x})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"{1} $subset {2}\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"{1}\", \"wd_id\": \"wd2\"}, {\"type\": \"by_def\", \"family\": \"SetFormer\", \"kind\": \"ListSet\", \"obj\": \"{2}\", \"child_obj_well_defined\": [{\"type\": \"by_def\", \"family\": \"Literal\", \"kind\": \"Number\", \"obj\": \"2\"}], \"requirement_fact_verified\": []}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "negative/product_of_finite_set__n02.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"finite_set_product({2, 3}, fn (x Z) Z{x}) = 5\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_product({2, 3}, fn (x Z) Z{x}) = 5\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "negative/product_of_finite_set__n03.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_product({2, 2}, fn (x Z) Z{x})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"ProductOfFiniteSet\", \"failure\": {\"phase\": \"child\", \"obj\": \"{2, 2}\", \"failure\": {\"phase\": \"SetFormer\", \"failure\": {\"phase\": \"ListSet\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"{2, 2}\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"2 != 2\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"2\", \"wd_id\": \"wd1\"}, {\"type\": \"by_known\", \"obj\": \"2\", \"wd_id\": \"wd1\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "negative/product_of_finite_set__n04.lit",
+        "kind": "negative",
+        "intended": "reject"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "gaps/product_of_finite_set__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "gaps/product_of_finite_set__p04.lit",
+        "kind": "gap",
+        "intended": "accept"
+      },
+      {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "gaps/product_of_finite_set__p06.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    ],
+    "failures": [],
+    "known_gaps": [
+      {
+        "object": "number",
+        "file": "negative/number__n03.lit",
+        "intended": "reject",
+        "observed": "reject",
+        "issue": "number-N03"
+      },
+      {
+        "object": "number",
+        "file": "gaps/number__p03.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "number-P03"
+      },
+      {
+        "object": "div",
+        "file": "gaps/div__p08.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "div-P08"
+      },
+      {
+        "object": "sum",
+        "file": "gaps/sum__p03.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "sum-P03"
+      },
+      {
+        "object": "sum",
+        "file": "gaps/sum__p04.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "sum-P04"
+      },
+      {
+        "object": "product",
+        "file": "gaps/product__p03.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "product-P03"
+      },
+      {
+        "object": "product",
+        "file": "gaps/product__p04.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "product-P04"
+      },
+      {
+        "object": "sum_of_finite_set",
+        "file": "negative/sum_of_finite_set__n02.lit",
+        "intended": "reject",
+        "observed": "reject",
+        "issue": "sum_of_finite_set-N02"
+      },
+      {
+        "object": "sum_of_finite_set",
+        "file": "gaps/sum_of_finite_set__p03.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "sum_of_finite_set-P03"
+      },
+      {
+        "object": "sum_of_finite_set",
+        "file": "gaps/sum_of_finite_set__p04.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "sum_of_finite_set-P04"
+      },
+      {
+        "object": "sum_of_finite_set",
+        "file": "gaps/sum_of_finite_set__p06.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "sum_of_finite_set-P06"
+      },
+      {
+        "object": "product_of_finite_set",
+        "file": "negative/product_of_finite_set__n02.lit",
+        "intended": "reject",
+        "observed": "reject",
+        "issue": "product_of_finite_set-N02"
+      },
+      {
+        "object": "product_of_finite_set",
+        "file": "gaps/product_of_finite_set__p03.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "product_of_finite_set-P03"
+      },
+      {
+        "object": "product_of_finite_set",
+        "file": "gaps/product_of_finite_set__p04.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "product_of_finite_set-P04"
+      },
+      {
+        "object": "product_of_finite_set",
+        "file": "gaps/product_of_finite_set__p06.lit",
+        "intended": "accept",
+        "observed": "accept",
+        "issue": "product_of_finite_set-P06"
+      }
+    ],
+    "binary_stable": true,
+    "source_stable": true,
+    "ok": true
+  },
+  "promotions": [
+    {
+      "object": "number",
+      "gap": {
+        "id": "P03",
+        "file": "gaps/number__p03.lit",
+        "intended": "accept",
+        "issue": "number-P03",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"2.400 = 2.4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"2.400 = 2.4\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: number P03\n2.400 = 2.4\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "number",
+        "file": "gaps/number__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "number",
+      "gap": {
+        "id": "N03",
+        "file": "negative/number__n03.lit",
+        "intended": "reject",
+        "issue": "number-N03",
+        "baseline": {
+          "observed": "accept",
+          "phase": null,
+          "diagnostic": "{\"success\": true, \"statement\": \"2.400 != 2.4\", \"proof_method\": {\"type\": \"builtin_rule\", \"rule_name\": \"Closed decimal inequality\", \"message\": \"Both sides evaluate to different closed numbers\"}, \"stores\": [\"2.400 != 2.4\"], \"infers\": []}"
+        }
+      },
+      "source": "# N03: mathematically equal decimal spellings must not prove inequality.\n# Intended: reject. Current defect: accepts via Closed decimal inequality.\n2.400 != 2.4\n",
+      "observation": {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "search_proof",
+        "diagnostic": "{\"success\": false, \"statement\": \"2.4 != 2.4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"2.4 != 2.4\"}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "number",
+        "file": "negative/number__n03.lit",
+        "kind": "negative",
+        "intended": "reject"
+      }
+    },
+    {
+      "object": "div",
+      "gap": {
+        "id": "P08",
+        "file": "gaps/div__p08.lit",
+        "intended": "accept",
+        "issue": "div-P08",
+        "baseline": {
+          "observed": "reject",
+          "phase": "well_defined",
+          "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: div P08\n1 / i = -i\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "div",
+        "file": "gaps/div__p08.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "sum",
+      "gap": {
+        "id": "P03",
+        "file": "gaps/sum__p03.lit",
+        "intended": "accept",
+        "issue": "sum-P03",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"sum(1, 3, fn (x Z) Z{x}) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"sum(1, 3, fn (x Z) Z{x}) = 6\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: sum P03\nsum(1, 3, fn(x Z) Z {x}) = 6\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sum",
+        "file": "gaps/sum__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "sum",
+      "gap": {
+        "id": "P04",
+        "file": "gaps/sum__p04.lit",
+        "intended": "accept",
+        "issue": "sum-P04",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"sum(1, 3, fn (x Z) Z{2}) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"sum(1, 3, fn (x Z) Z{2}) = 6\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: sum P04\nsum(1, 3, fn(x Z) Z {2}) = 6\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sum",
+        "file": "gaps/sum__p04.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "product",
+      "gap": {
+        "id": "P03",
+        "file": "gaps/product__p03.lit",
+        "intended": "accept",
+        "issue": "product-P03",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"product(1, 3, fn (x Z) Z{x}) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"product(1, 3, fn (x Z) Z{x}) = 6\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: product P03\nproduct(1, 3, fn(x Z) Z {x}) = 6\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "product",
+        "file": "gaps/product__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "product",
+      "gap": {
+        "id": "P04",
+        "file": "gaps/product__p04.lit",
+        "intended": "accept",
+        "issue": "product-P04",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"product(1, 3, fn (x Z) Z{2}) = 8\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"product(1, 3, fn (x Z) Z{2}) = 8\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: product P04\nproduct(1, 3, fn(x Z) Z {2}) = 8\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "product",
+        "file": "gaps/product__p04.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "sum_of_finite_set",
+      "gap": {
+        "id": "P03",
+        "file": "gaps/sum_of_finite_set__p03.lit",
+        "intended": "accept",
+        "issue": "sum_of_finite_set-P03",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"finite_set_sum({1, 2}, fn (x Z) Z{x}) = 3\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_sum({1, 2}, fn (x Z) Z{x}) = 3\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: sum_of_finite_set P03\nfinite_set_sum({1, 2}, fn(x Z) Z {x}) = 3\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "gaps/sum_of_finite_set__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "sum_of_finite_set",
+      "gap": {
+        "id": "P04",
+        "file": "gaps/sum_of_finite_set__p04.lit",
+        "intended": "accept",
+        "issue": "sum_of_finite_set-P04",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"finite_set_sum({2, 1}, fn (x Z) Z{x}) = 3\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_sum({2, 1}, fn (x Z) Z{x}) = 3\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: sum_of_finite_set P04\nfinite_set_sum({2, 1}, fn(x Z) Z {x}) = 3\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "gaps/sum_of_finite_set__p04.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "sum_of_finite_set",
+      "gap": {
+        "id": "P06",
+        "file": "gaps/sum_of_finite_set__p06.lit",
+        "intended": "accept",
+        "issue": "sum_of_finite_set-P06",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"finite_set_sum(closed_range(3, 1), fn (x Z) Z{x}) = 0\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_sum(closed_range(3, 1), fn (x Z) Z{x}) = 0\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: sum_of_finite_set P06\nfinite_set_sum(closed_range(3, 1), fn(x Z) Z {x}) = 0\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "gaps/sum_of_finite_set__p06.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "sum_of_finite_set",
+      "gap": {
+        "id": "N02",
+        "file": "negative/sum_of_finite_set__n02.lit",
+        "intended": "reject",
+        "issue": "sum_of_finite_set-N02",
+        "baseline": {
+          "observed": "accept",
+          "phase": "success",
+          "diagnostic": ""
+        }
+      },
+      "source": "# Must reject: sum_of_finite_set N02\nlet s = finite_set_sum({1}, fn(x {2}) Z {x})\n",
+      "observation": {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_sum({1}, fn (x {2}) Z{x})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"SumOfFiniteSet\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"finite_set_sum({1}, fn (x {2}) Z{x})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"{1} $subset {2}\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"{1}\", \"wd_id\": \"wd2\"}, {\"type\": \"by_def\", \"family\": \"SetFormer\", \"kind\": \"ListSet\", \"obj\": \"{2}\", \"child_obj_well_defined\": [{\"type\": \"by_def\", \"family\": \"Literal\", \"kind\": \"Number\", \"obj\": \"2\"}], \"requirement_fact_verified\": []}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "sum_of_finite_set",
+        "file": "negative/sum_of_finite_set__n02.lit",
+        "kind": "negative",
+        "intended": "reject"
+      }
+    },
+    {
+      "object": "product_of_finite_set",
+      "gap": {
+        "id": "P03",
+        "file": "gaps/product_of_finite_set__p03.lit",
+        "intended": "accept",
+        "issue": "product_of_finite_set-P03",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"finite_set_product({2, 3}, fn (x Z) Z{x}) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_product({2, 3}, fn (x Z) Z{x}) = 6\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: product_of_finite_set P03\nfinite_set_product({2, 3}, fn(x Z) Z {x}) = 6\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "gaps/product_of_finite_set__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "product_of_finite_set",
+      "gap": {
+        "id": "P04",
+        "file": "gaps/product_of_finite_set__p04.lit",
+        "intended": "accept",
+        "issue": "product_of_finite_set-P04",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"finite_set_product({3, 2}, fn (x Z) Z{x}) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_product({3, 2}, fn (x Z) Z{x}) = 6\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: product_of_finite_set P04\nfinite_set_product({3, 2}, fn(x Z) Z {x}) = 6\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "gaps/product_of_finite_set__p04.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "product_of_finite_set",
+      "gap": {
+        "id": "P06",
+        "file": "gaps/product_of_finite_set__p06.lit",
+        "intended": "accept",
+        "issue": "product_of_finite_set-P06",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"finite_set_product({0, 2}, fn (x Z) Z{x}) = 0\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_product({0, 2}, fn (x Z) Z{x}) = 0\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: product_of_finite_set P06\nfinite_set_product({0, 2}, fn(x Z) Z {x}) = 0\n",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "gaps/product_of_finite_set__p06.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "product_of_finite_set",
+      "gap": {
+        "id": "N02",
+        "file": "negative/product_of_finite_set__n02.lit",
+        "intended": "reject",
+        "issue": "product_of_finite_set-N02",
+        "baseline": {
+          "observed": "accept",
+          "phase": "success",
+          "diagnostic": ""
+        }
+      },
+      "source": "# Must reject: product_of_finite_set N02\nlet s = finite_set_product({1}, fn(x {2}) Z {x})\n",
+      "observation": {
+        "observed": "reject",
+        "exit_code": 1,
+        "phase": "let",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_product({1}, fn (x {2}) Z{x})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"IteratedOperator\", \"failure\": {\"phase\": \"ProductOfFiniteSet\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"finite_set_product({1}, fn (x {2}) Z{x})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"{1} $subset {2}\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"{1}\", \"wd_id\": \"wd2\"}, {\"type\": \"by_def\", \"family\": \"SetFormer\", \"kind\": \"ListSet\", \"obj\": \"{2}\", \"child_obj_well_defined\": [{\"type\": \"by_def\", \"family\": \"Literal\", \"kind\": \"Number\", \"obj\": \"2\"}], \"requirement_fact_verified\": []}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "statements": 1,
+        "object": "product_of_finite_set",
+        "file": "negative/product_of_finite_set__n02.lit",
+        "kind": "negative",
+        "intended": "reject"
+      }
+    }
+  ]
+}

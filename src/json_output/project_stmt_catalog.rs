@@ -76,9 +76,10 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 "have_fn_cases",
                 &s.store_and_infer_result.stored_fact_ids,
             ),
-            ExecHaveFnEqualCaseByCaseStmtResult::Failed(_) => {
-                failed(runtime, "have fn … case by case", "have_fn_cases")
-            }
+            ExecHaveFnEqualCaseByCaseStmtResult::Failed(failure) => failed_with_details(
+                runtime, "have fn … case by case", "have_fn_cases",
+                super::project_detailed::project_cases_definition_failure(failure, runtime),
+            ),
         },
         ExecDefinitionStmtResult::HaveFnByForallExistUnique(r) => match r {
             ExecHaveFnByForallExistUniqueStmtResult::Success(s) => success_with_ids(
@@ -107,14 +108,23 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             ExecDefPropStmtResult::Success(s) => {
                 success_plain(runtime, s.statement.readable_string(), "def_prop")
             }
-            ExecDefPropStmtResult::Failed(_) => failed(runtime, "prop …", "def_prop"),
+            ExecDefPropStmtResult::Failed(f) => failed_with_details(
+                runtime, "prop …", "def_prop",
+                super::project_detailed::project_def_prop_failure(f, runtime),
+            ),
         },
         ExecDefinitionStmtResult::DefAbstractProp(s) => {
             success_plain(runtime, s.statement.readable_string(), "def_abstract_prop")
         }
         ExecDefinitionStmtResult::DefStruct(r) => match r {
             ExecDefStructStmtResult::Success(s) => {
-                success_plain(runtime, s.statement.readable_string(), "def_struct")
+                let mut stores = Vec::new();
+                let mut infers = Vec::new();
+                for published in &s.definition_facts {
+                    stores.extend(store_fact_texts(&published.store_and_infer.store));
+                    infers.extend(infer_fact_texts_from_store_and_infer(runtime, &published.store_and_infer));
+                }
+                success_parts(runtime, s.statement.readable_string(), "def_struct", stores, infers)
             }
             ExecDefStructStmtResult::Failed(_) => failed(runtime, "struct …", "def_struct"),
         },
@@ -544,13 +554,24 @@ fn project_command(c: &ExecCommandStmtResult, runtime: &Runtime) -> JsonValue {
     match c {
         ExecCommandStmtResult::Eval(r) => match r {
             ExecEvalStmtResult::Success(s) => {
-                success_plain(runtime, s.statement.readable_string(), "eval")
+                let mut value = success_plain(runtime, s.statement.readable_string(), "eval");
+                if let JsonValue::Object(fields) = &mut value {
+                    fields.insert(super::json_keys::localize_key("evaluated_object", output_language(runtime)),
+                        string(s.evaluated_object.readable_string()));
+                }
+                value
             }
             ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::WellDefined(failed_wd)) => failed_with_details(
                 runtime, "eval …", "eval", super::project_detailed::project_verify_obj_wd(failed_wd, runtime),
             ),
             ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::UnsupportedExpression) => failed_with_details(
                 runtime, "eval …", "eval", object(output_language(runtime), vec![("cause", string("unsupported_expression"))]),
+            ),
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::AggregateBudgetExceeded) => failed_with_details(
+                runtime, "eval …", "eval", object(output_language(runtime), vec![("cause", string("aggregate_budget_exceeded"))]),
+            ),
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::AggregateRangeOverflow) => failed_with_details(
+                runtime, "eval …", "eval", object(output_language(runtime), vec![("cause", string("aggregate_range_overflow"))]),
             ),
             ExecEvalStmtResult::Failed(_) => failed(runtime, "eval …", "eval"),
         },

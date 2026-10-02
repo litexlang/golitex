@@ -1258,6 +1258,11 @@ pub(super) fn project_atomic_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(br::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::SurjectiveImageOfFiniteSet(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("family",string("IsFiniteSetFact")),("rule",string("SurjectiveImageOfFiniteSet")),
+            ("cite_surjective_fact_id",string(p.cite_surjective_fact_id.to_string())),
+            ("domain_finite_proof",project_verify_fact(&p.domain_finite_proof,runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(br::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::ListSet(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -1378,6 +1383,12 @@ pub(super) fn project_atomic_builtin_rule(
             ("type", string("builtin_rule")), ("family", string("InFact")),
             ("rule", string("TupleDimInNatural")),
         ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::PositiveIntegerInNPos(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")),
+            ("rule", string("PositiveIntegerInNPos")),
+            ("integer_proof", project_verify_fact(&p.integer_proof, runtime)),
+            ("positive_proof", project_verify_fact(&p.positive_proof, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::NativeScalarCodomain(p)) => {
             object_for(runtime, vec![
                 ("type", string("builtin_rule")),
@@ -1396,6 +1407,11 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("source_membership_proof", project_verify_fact(&p.source_membership_proof, runtime)));
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::FoldScalarCodomain(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")), ("rule", string("FoldScalarCodomain")),
+            ("operation_return_set", string(p.operation_return_set.readable_string())),
+            ("codomain", string(p.codomain.ir().as_str())),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::AggregateScalarCodomain(p)) => {
             object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("AggregateScalarCodomain")),
                 ("iterand_return_set", string(p.iterand_return_set.readable_string())), ("codomain", string(format!("{:?}", p.codomain)))])
@@ -1841,6 +1857,13 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("right_normal", string(p.right_normal.clone())));
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ClosedRational(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")), ("rule", string("ClosedRational")),
+                ("left_normal", string(p.left_normal.readable_string())),
+                ("right_normal", string(p.right_normal.readable_string())),
+            ])
+        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::NotEqualSymmetry(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -1906,6 +1929,22 @@ pub(super) fn project_atomic_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::InequalityFromDifferenceNonzero(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("NotEqualFact")), ("rule", string("InequalityFromDifferenceNonzero")),
+            ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::InequalityFromSumNonzero(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("NotEqualFact")), ("rule", string("InequalityFromSumNonzero")),
+            ("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ComplexModulusNonzero(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("NotEqualFact")), ("rule", string("ComplexModulusNonzero")),
+            ("arg_nonzero_proof", project_verify_fact(&p.arg_nonzero_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::NonzeroFromSignedBound(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("family",string("NotEqualFact")),("rule",string("NonzeroFromSignedBound")),
+            ("cite_fact_id",string(p.cite_fact_id.to_string())),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::AbsNonzeroFromArg(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),

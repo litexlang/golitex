@@ -1,4 +1,4 @@
-use crate::ast::obj::{FnObj, FnObjHead, IdentifierObj, Literal, Obj, Number};
+use crate::ast::obj::{FnObj, FnObjHead, IdentifierObj, Literal, Number, Obj};
 use crate::ast::param::SetBoundParameterList;
 use crate::runtime::runtime_ids::IdentifierId;
 use std::collections::HashSet;
@@ -77,7 +77,8 @@ pub struct ActiveAlgoCalls {
     calls: HashSet<String>,
     pub aggregate_terms_remaining: usize,
     pub aggregate_evaluations: Vec<super::aggregate_evaluation_result::AggregateEvaluationResult>,
-    pub function_evaluations: Vec<super::aggregate_evaluation_result::FunctionApplicationEvaluationResult>,
+    pub function_evaluations:
+        Vec<super::aggregate_evaluation_result::FunctionApplicationEvaluationResult>,
     pub algo_evaluations: Vec<super::aggregate_evaluation_result::AlgoApplicationEvaluationResult>,
     pub cited_equal_fact_ids: Vec<crate::runtime::FactId>,
     pub proof_mode: bool,
@@ -85,11 +86,25 @@ pub struct ActiveAlgoCalls {
 }
 impl ActiveAlgoCalls {
     pub fn new() -> Self {
-        Self { calls: HashSet::new(), aggregate_terms_remaining: MAX_AGGREGATE_TERMS,
-            aggregate_evaluations: vec![], function_evaluations: vec![], algo_evaluations: vec![], cited_equal_fact_ids: vec![], proof_mode: false,
-            function_proof_state: crate::execute::execute_fact_stmt::VerifyState::top_level().without_well_defined_storage() }
+        Self {
+            calls: HashSet::new(),
+            aggregate_terms_remaining: MAX_AGGREGATE_TERMS,
+            aggregate_evaluations: vec![],
+            function_evaluations: vec![],
+            algo_evaluations: vec![],
+            cited_equal_fact_ids: vec![],
+            proof_mode: false,
+            function_proof_state: crate::execute::execute_fact_stmt::VerifyState::top_level()
+                .without_well_defined_storage(),
+        }
     }
-    pub fn contains(&self, key: &str) -> bool { self.calls.contains(key) }
-    pub fn insert(&mut self, key: String) { self.calls.insert(key); }
-    pub fn remove(&mut self, key: &str) { self.calls.remove(key); }
+    pub fn contains(&self, key: &str) -> bool {
+        self.calls.contains(key)
+    }
+    pub fn insert(&mut self, key: String) {
+        self.calls.insert(key);
+    }
+    pub fn remove(&mut self, key: &str) {
+        self.calls.remove(key);
+    }
 }

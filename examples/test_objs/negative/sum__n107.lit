@@ -1,0 +1,4 @@
+# N107: must reject: pointwise premise is required
+have n N+
+have f,g fn(k Z) R
+sum(1,n,f) = sum(1,n,g)

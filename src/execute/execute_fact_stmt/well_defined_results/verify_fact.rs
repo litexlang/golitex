@@ -230,7 +230,7 @@ impl Runtime {
         match self.try_store_inferred_fact_and_infer(fact)? {
             Some(ok) => Ok(ok),
             None => Err(crate::runtime::RuntimeError::InternalBug(
-                "inferred fact failed well-definedness check".to_string(),
+                format!("inferred fact {} failed well-definedness check", fact.ir()),
             )),
         }
     }

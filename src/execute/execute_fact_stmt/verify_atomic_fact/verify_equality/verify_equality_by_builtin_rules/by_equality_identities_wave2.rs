@@ -475,6 +475,9 @@ impl Runtime {
         let Some(other) = match_abs(right) else {
             return Ok(None);
         };
+        if let Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) = arg {
+            if neg.arg.ir() == other.ir() { return Ok(Some(AbsOfNegationBuiltinRuleProof {})); }
+        }
         // abs(0 - a) = abs(a)
         if let Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left: z, right: a })) = arg {
             if is_zero_obj(z.as_ref()) && a.as_ref().ir() == other.ir() {

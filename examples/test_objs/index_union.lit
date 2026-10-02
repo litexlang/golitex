@@ -2,12 +2,17 @@
 # Run: target/release/litex -f examples/test_objs/index_union.lit
 # Cases use discarded sketch scopes; no cross-case facts.
 
-# Retired empty-index positive: WD now requires a nonempty index.
-# # P03: index_union({}, N, A) = {}
-# sketch:
-#     have fn A(k {}) power_set(N) = {}
-#     index_union({}, N, A) = {}
-#
+# Empty-index rejection remains in negative/index_union__empty_index.lit.
+# P01: X = X
+sketch:
+    let A = fn(k {1, 2}) power_set(N) {{1}}
+    let X = index_union({1, 2}, N, A)
+    X = X
+
+# P04: $is_set(index_union({1}, N, A))
+sketch:
+    let A = fn(k {1}) power_set(N) {{1}}
+    $is_set(index_union({1}, N, A))
 
 # P05: $is_set(index_union({1}, N, A))
 sketch:

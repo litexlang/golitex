@@ -44,6 +44,15 @@ mod statement_boundary_tests;
 #[path = "../../tests/unit/execute/wd_obligations/tests.rs"]
 mod wd_obligation_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/execute/guarded_quantifier_wd/tests.rs"]
+mod guarded_quantifier_wd_tests;
+#[cfg(test)]
+#[path = "../../tests/unit/execute/function_application_wd_evidence/tests.rs"]
+mod function_application_wd_evidence_tests;
+#[cfg(test)]
+#[path = "../../tests/unit/execute/struct_field_instantiation/tests.rs"]
+mod struct_field_instantiation_tests;
+#[cfg(test)]
 #[path = "../../tests/unit/execute/special_property/tests.rs"]
 mod special_property_tests;
 #[cfg(test)]
@@ -69,6 +78,9 @@ mod induction_repair_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/local_rust_repairs/tests.rs"]
 mod local_rust_repair_tests;
+#[cfg(test)]
+#[path = "../../tests/unit/execute/legacy_small_capabilities/tests.rs"]
+mod legacy_small_capability_repair_tests;
 
 pub use exec_stmt_result::{
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
@@ -176,3 +188,6 @@ pub use release_one_struct_layer::{
 #[cfg(test)]
 #[path = "../../tests/unit/execute/soundness_boundaries/tests.rs"]
 mod soundness_boundaries;
+#[cfg(test)]
+#[path = "../../tests/unit/execute/sequence_struct_contracts/tests.rs"]
+mod sequence_struct_contract_tests;

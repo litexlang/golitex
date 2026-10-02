@@ -10,10 +10,65 @@ sketch:
 sketch:
     finite_set_sum({2}, fn(x Z) Z {x}) = 2
 
+# P03: finite_set_sum({1, 2}, fn(x Z) Z {x}) = 3
+sketch:
+    finite_set_sum({1, 2}, fn(x Z) Z {x}) = 3
+
+# P04: finite_set_sum({2, 1}, fn(x Z) Z {x}) = 3
+sketch:
+    finite_set_sum({2, 1}, fn(x Z) Z {x}) = 3
+
 # P05: finite_set_sum({1}, fn(x Z) Z {2}) = 2
 sketch:
     finite_set_sum({1}, fn(x Z) Z {2}) = 2
 
+# P06: finite_set_sum(closed_range(3, 1), fn(x Z) Z {x}) = 0
+sketch:
+    finite_set_sum(closed_range(3, 1), fn(x Z) Z {x}) = 0
+
 # P90: Nearest valid-domain control
 sketch:
     let s = finite_set_sum({1}, fn(x {1}) Z {x})
+
+# P101: known enumeration, half-open and closed ranges
+sketch:
+    have S finite_set = {1,2,3}
+    finite_set_sum(S,fn(k Z) Z {k}) = 6
+    finite_set_sum(range(1,4),fn(k Z) Z {k}) = 6
+    finite_set_sum(closed_range(1,3),fn(k Z) Z {k}) = 6
+
+# P102: empty callable predicate is vacuous
+sketch:
+    finite_set_sum({},fn(k Z:k!=0) R {1/k}) = 0
+
+# P103: symbolic constant and linearity
+sketch:
+    have S finite_set
+    have c R
+    have f,g fn(k S) R
+    finite_set_sum(S,fn(k S) R {c}) = finite_set_size(S)*c
+    finite_set_sum(S,fn(k S) R {f(k)+g(k)}) = finite_set_sum(S,f)+finite_set_sum(S,g)
+    finite_set_sum(S,fn(k S) R {f(k)-g(k)}) = finite_set_sum(S,f)-finite_set_sum(S,g)
+    finite_set_sum(S,fn(k S) R {c*f(k)}) = c*finite_set_sum(S,f)
+
+# P104: symbolic range bridge
+sketch:
+    have n N+
+    have f fn(k Z) R
+    finite_set_sum(closed_range(1,n),f) = sum(1,n,f)
+
+# P105: disjoint union
+sketch:
+    have A,B finite_set
+    have f fn(k union(A,B)) R
+    forall:
+        intersect(A,B) = {}
+        =>:
+            finite_set_sum(union(A,B),f) = finite_set_sum(A,f)+finite_set_sum(B,f)
+
+# P106: fractional algorithm arguments
+sketch:
+    algo flag(x R) R by cases:
+        case x = 0: 0
+        case x != 0: 1
+    finite_set_sum({1/3,2/3},flag) = 2

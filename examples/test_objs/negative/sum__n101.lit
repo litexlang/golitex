@@ -1,0 +1,2 @@
+# N101: must reject: wrong sum
+sum(1,3,fn(k Z) Z {k}) = 7

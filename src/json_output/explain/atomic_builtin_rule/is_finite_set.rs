@@ -16,6 +16,7 @@ use super::text::text;
 impl IsFiniteSetFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::SurjectiveImageOfFiniteSet(_) => text("SurjectiveImageOfFiniteSet", "Finite surjective image", "A surjection from a checked finite domain has finite codomain"),
             Self::ListSet(p) => p.rule_id_and_message(lang),
             Self::ClosedRange(p) => p.rule_id_and_message(lang),
             Self::Range(p) => p.rule_id_and_message(lang),
@@ -26,6 +27,7 @@ impl IsFiniteSetFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::SurjectiveImageOfFiniteSet(p) => Some(p.cite_surjective_fact_id),
             Self::ListSet(_) => None,
             Self::ClosedRange(_) => None,
             Self::Range(_) => None,

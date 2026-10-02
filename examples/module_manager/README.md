@@ -1,85 +1,71 @@
-# module-manager examples
+# Module-manager examples
 
-Small projects that exercise **config mount + LaunchCommand** under
-the Litex CLI. Design write-up:
-[`src/run/README.md`](../../src/run/README.md).
+Small projects exercise config mount and LaunchCommand under the release CLI.
+Current contracts: [module management](../../src/module_manager/README.md)
+and [launch flow](../../src/run/README.md).
 
 ## Layout
 
-```text
-repo/                 -r <this-dir>
-  litex.config        imports sibling ../lib_pkg as Lib
-  main.lit            root export
+| Project | Contract |
+| --- | --- |
+| `repo/` and `lib_pkg/` | Import a sibling module as `Lib`; use its qualified definitions and theorems. |
+| `export_order_repo/` | Import `A` before ordered root exports; preserve canonical module/export names. |
+| `trusted_template_prefix/` | Load an earlier checked generic template, then instantiate it from the later export. |
+| `import_alias_qualified_arithmetic/` | Qualified arithmetic using the `gf` import alias. |
+| `identifier_resolution/` | Distinct same-named exports and unknown-name rejection. |
+| `file_prefix/` | Selecting `a.lit` stops before the deliberately false `b.lit`. |
+| `file_extra/` | An unlisted `scratch.lit` requested with `-f` runs after all exports. It is not an export namespace. |
+| `cwd_eval/` | `-e` mounts the directory-local config first. |
+| `isolated/` | Run a file with no config. |
 
-lib_pkg/              external module imported by repo/
-  litex.config
-  base.lit
-
-export_order_repo/    -r ordered exports + submodule A (former 08_*)
-trusted_template_prefix/  -r trusted prefix then instantiate template (former 09_*)
-import_alias_qualified_arithmetic/  -f main with gf import alias
-identifier_resolution/  -strict -f main; distinct same-named exports and unknown-name regressions
-
-file_prefix/          -f a.lit  (listed export; later export must not run)
-  litex.config
-  a.lit
-  b.lit               intentionally failing if ever run
-
-file_extra/           intended: -f unlisted scratch after full mount
-  litex.config        (current binary requires export; see Known debt)
-  a.lit
-  scratch.lit
-
-cwd_eval/             cd here, then -e '1 = 1'
-  litex.config
-  main.lit
-
-isolated/             -f alone.lit with no litex.config
-  alone.lit
-```
+Legacy `[hierarchy]` headers were removed. Config directory dependencies belong
+in `[import]`; `[export]` contains ordered `.lit` files only. Within imported
+`A`, `chap2::x` refers to that module's own export; from the root, the same
+symbol is `A::chap2::x`.
 
 ## Acceptance
 
-```bash
-export BIN=target/debug/litex   # or target/release/litex
-
-$BIN -r examples/module_manager/repo
-$BIN -r examples/module_manager/export_order_repo
-$BIN -r examples/module_manager/trusted_template_prefix
-$BIN -f examples/module_manager/import_alias_qualified_arithmetic/main.lit
-$BIN -f examples/module_manager/file_prefix/a.lit
-$BIN -f examples/module_manager/isolated/alone.lit
-(cd examples/module_manager/cwd_eval && ../../../$BIN -e '1 = 1')
-```
-
-Each command above should exit `0`.
-
-Negative checks (expect non-zero):
+Run from the Git root. Every positive requires exit `0`, JSON `success: true`,
+and no session error. Use an absolute binary path for changed-directory runs.
 
 ```bash
-$BIN -f examples/module_manager/file_prefix/b.lit
-(cd examples/module_manager/file_prefix && ../../../$BIN -e '1 = 1')
+BIN="$PWD/target/release/litex"
+"$BIN" -strict -r examples/module_manager/repo
+"$BIN" -strict -r examples/module_manager/export_order_repo
+"$BIN" -strict -f examples/module_manager/trusted_template_prefix/main.lit
+"$BIN" -strict -f examples/module_manager/qualified_template_names/main.lit
+"$BIN" -strict -f examples/module_manager/file_prefix/a.lit
+"$BIN" -strict -f examples/module_manager/file_extra/scratch.lit
+"$BIN" -strict -f examples/module_manager/isolated/alone.lit
+(cd examples/module_manager/cwd_eval && "$BIN" -strict -e '1 = 1')
 ```
 
-## Known debt
-
-`file_extra/scratch.lit` is intentionally **not** listed in `[export]`. Design
-in `src/run/README.md` says `-f` should run all exports then the extra file;
-the current binary requires the `-f` target to be exported. Keep the fixture;
-do not treat it as a green acceptance case until that path is restored.
-
-## Run all positive cases
+Negative checks require exit `1` and JSON `success: false`:
 
 ```bash
-export PATH="/usr/bin:/bin:$PATH"
-BIN="${BIN:-target/debug/litex}"
-fail=0
-$BIN -r examples/module_manager/repo || fail=1
-$BIN -r examples/module_manager/export_order_repo || fail=1
-$BIN -r examples/module_manager/trusted_template_prefix || fail=1
-$BIN -f examples/module_manager/import_alias_qualified_arithmetic/main.lit || fail=1
-$BIN -f examples/module_manager/file_prefix/a.lit || fail=1
-$BIN -f examples/module_manager/isolated/alone.lit || fail=1
-(cd examples/module_manager/cwd_eval && ../../../$BIN -e '1 = 1') || fail=1
-exit $fail
+"$BIN" -strict -f examples/module_manager/file_prefix/b.lit
+(cd examples/module_manager/file_prefix && "$BIN" -strict -e '1 = 1')
+(cd examples/module_manager/export_order_repo && "$BIN" -strict -e 'unlisted_sidecar::unlisted_sidecar_value = 2')
 ```
+
+The last check executes the old `try:` assertion as a real subprocess negative.
+Unlisted `notes/` and `unlisted_sidecar.lit` remain in place; they never become
+exports merely because they exist beside the config. An explicit extra-file
+launch and an exported namespace are different operations.
+
+## Remaining qualified-use findings
+
+The migrated configs parse, but these unchanged positive sources still fail
+at later boundaries:
+
+```litex
+gf::main::a + gf::main::a = gf::main2::b  # compound qualified-object WD
+```
+
+Keep the assertions and their configured dependency owner. Its direct gate is
+`-strict -f examples/module_manager/import_alias_qualified_arithmetic/main.lit`.
+Config migration alone does not establish these capabilities.
+
+[`eval_mount_failure/check.py`](eval_mount_failure/check.py) checks that failed
+cwd mounts emit a structured `FailToImport` result without executing requested
+eval code, and that the healthy cwd-eval control still succeeds.

@@ -12,6 +12,11 @@ sketch:
     let x = 2 + 3
     x = 5
 
+# P03: a[2] = 2
+sketch:
+    let a = (1, 2)
+    a[2] = 2
+
 # P04: f(2) = 3
 sketch:
     have fn f(x R) R = x + 1

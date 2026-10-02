@@ -11,6 +11,12 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinRule>> {
+        if let Some(proof) = super::by_integer_range_builder::integer_range_builder(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::IntegerRangeBuilder(proof)));
+        }
+        if let Some(proof) = self.search_scalar_identity(fact, verify_state.clone())? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ScalarIdentity(proof)));
+        }
         if let Some(proof) = self.search_equal_fact_by_calculation(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::Calculation(proof)));
         }
@@ -466,9 +472,9 @@ fn map_equality_identities_wave13_proof(
         W::FnRangeOfConstantAnonymousFn(p) => {
             EqualitySearchProofByBuiltinRule::FnRangeOfConstantAnonymousFn(p)
         }
-        W::SeqEqualsFnOnN(p) => EqualitySearchProofByBuiltinRule::SeqEqualsFnOnN(p),
-        W::FiniteSeqEqualsFnOnClosedRange(p) => {
-            EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnClosedRange(p)
+        W::SeqEqualsFnOnNPos(p) => EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos(p),
+        W::FiniteSeqEqualsFnOnOneBasedDomain(p) => {
+            EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnOneBasedDomain(p)
         }
     }
 }

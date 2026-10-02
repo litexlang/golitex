@@ -1,0 +1,5 @@
+# Intentional negative: cwd config mount must fail before running requested -e code.
+# Before: -e returned exit 1 with no JSON after this export failed.
+# Now: exit 1, success false, session_error FailToImport, no eval statements executed.
+1 = 2
+# Gate from Git root: python3 examples/module_manager/eval_mount_failure/check.py

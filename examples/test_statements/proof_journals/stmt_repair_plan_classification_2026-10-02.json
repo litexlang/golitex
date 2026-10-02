@@ -1,0 +1,1044 @@
+{
+  "schema_version": 1,
+  "task": "Apply maintainer repair delegation to skills and Stmt plans",
+  "recorded_at": "2026-10-02T12:24:31.485084+00:00",
+  "user_workflow": {
+    "category_1": "Improve Litex authoring while preserving the mathematical goal; Codex completes authorized repair and verification.",
+    "category_2": "Evidence-backed bounded local Rust semantic repair; Codex completes implementation and checks without another maintainer permission or code-review round.",
+    "discussion_boundary": "Discuss nonlocal changes or unsettled contracts before implementation; exact AST/Env/Runtime authorization gates still apply.",
+    "unknown_scope": "Provisional, diagnose autonomously; do not guess locality."
+  },
+  "production_rust_changed_by_this_task": false,
+  "plans": [
+    "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+    "examples/test_statements/todo.md",
+    "todo/2026-10-2/k005-enumeration-and-k008-scope.md"
+  ],
+  "skills": [
+    "/Users/shenjiachen/.codex/skills/golitex-repository-policy/SKILL.md",
+    "/Users/shenjiachen/.codex/skills/golitex-repository-policy/references/task-sop.md",
+    "/Users/shenjiachen/.codex/skills/litex-kernel-engineer/SKILL.md",
+    "/Users/shenjiachen/.codex/skills/litex-example-migration/SKILL.md",
+    "/Users/shenjiachen/.codex/skills/decision-first-coding/SKILL.md",
+    "/Users/shenjiachen/.codex/skills/todo_writer/SKILL.md"
+  ],
+  "release_build_exit_code": 0,
+  "native_probes": {
+    "checked_at": "2026-10-02T12:02:08.427777+00:00",
+    "binary": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+    "binary_sha256": "9110ac583b94fdd8c826a4be9983527dde9bd52f5795c1912768aa1388e3445c",
+    "records": [
+      {
+        "name": "K005-original",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-f",
+          "examples/test_statements/bugs/fact/K005-finite-negated-existence/repro.lit"
+        ],
+        "exit_code": 1,
+        "output": {
+          "kind": "run",
+          "success": false,
+          "target": "file",
+          "path": "examples/test_statements/bugs/fact/K005-finite-negated-existence/repro.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall x {0}:\n    x != 1",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall x {0}:\n    x != 1"
+              ],
+              "infers": []
+            },
+            {
+              "success": false,
+              "statement": "not exist x {0} st {x = 1}",
+              "why_failed": {
+                "phase": "search_proof",
+                "goal": "not exist x {0} st {x = 1}"
+              },
+              "stores": [],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      },
+      {
+        "name": "K005-enumeration",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-e",
+          "by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\nnot exist x {0} st {x = 1}"
+        ],
+        "exit_code": 1,
+        "output": {
+          "kind": "run",
+          "success": false,
+          "target": "eval",
+          "path": null,
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "by enumerate",
+              "proof_method": {
+                "type": "by",
+                "rule_name": "By finite enumeration",
+                "message": "Prove by enumerating a finite set"
+              },
+              "stores": [
+                "forall x {0}:\n    x != 1"
+              ],
+              "infers": []
+            },
+            {
+              "success": false,
+              "statement": "not exist x {0} st {x = 1}",
+              "why_failed": {
+                "phase": "search_proof",
+                "goal": "not exist x {0} st {x = 1}"
+              },
+              "stores": [],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      },
+      {
+        "name": "known-citation-normal-state",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-e",
+          "have x R\ntrust x >= 1\nx >= 1"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "eval",
+          "path": null,
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "have x R",
+              "proof_method": {
+                "type": "define_obj",
+                "rule_name": "Have from nonempty set",
+                "message": "Introduce an object from a nonempty carrier / parameter type"
+              },
+              "stores": [
+                "x $in R"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "trust x >= 1",
+              "proof_method": {
+                "type": "trust",
+                "rule_name": "Trust facts",
+                "message": "Trust-store facts without proof"
+              },
+              "stores": [
+                "x >= 1"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "x >= 1",
+              "proof_method": {
+                "type": "cite_known",
+                "line": 2,
+                "cite": "x >= 1"
+              },
+              "stores": [
+                "x >= 1"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      }
+    ]
+  },
+  "known_only_recheck": {
+    "command": [
+      "cargo",
+      "test",
+      "--release",
+      "--lib",
+      "stored_facts_and_zero_depth_strategy_calculation_remain_available"
+    ],
+    "exit_code": 0,
+    "passed": 1,
+    "failed": 0,
+    "output": "    Finished `release` profile [optimized] target(s) in 45.02s\n     Running unittests src/lib.rs (target/release/deps/litex-c95878c5b5c21dbd)\n\nrunning 1 test\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::stored_facts_and_zero_depth_strategy_calculation_remain_available ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 531 filtered out; finished in 0.01s\n\n",
+    "source": "tests/unit/execute/builtin_entry_policy/tests.rs",
+    "former_open_note": "# Internal control: stored atomic citation under known_only\n\nStatus: needs diagnosis. This is an observed Rust verifier-control failure, not an additional confirmed failure of a native Litex input.\nTask: supplemental builtin-policy gate during K010 repair on 2026-10-02.\nScope: Fact verification with `VerifyState::known_only_no_wd()` in golitex.\n\nThe [existing Rust test](../../../../../tests/unit/execute/builtin_entry_policy/tests.rs) executes `have x R` and `trust x >= 1`, then asks the verifier to cite `x >= 1` with builtin/deep/rewrite search disabled. Both setup statements succeed, but the stored-fact verification returns a failed result. The control expects stored facts to remain usable under those flags.\n\n```bash\ncargo test --release --lib builtin_entry_policy_tests\n```\n\nCaptured result: 6 passed, 1 failed, exit 101. [observed.json](observed.json) retains the exact test source and failure. The failing test is `stored_facts_and_zero_depth_strategy_calculation_remain_available`.\n\nThis reproduction has no finite-list carriers. K010's new finite-membership rule therefore has no source candidate in it. That narrows the investigation but does not establish the cause or a pre-task baseline: the workspace also contains concurrent changes. Do not weaken the test or change proof-search flags merely to make this gate pass.\n\nNext step: compare the stored atomic citation and its argument-equality/WD evidence under ordinary and known-only states, then isolate the baseline in an independent checkout if needed. The example suite's CLI manifest cannot express an internal VerifyState override, so this record is separate from its one remaining native-input gap (K005).\n\nBack to [Fact folder](../README.md) and [issue index](../../README.md).\n",
+    "former_observation": {
+      "status": "needs_diagnosis",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--lib",
+        "builtin_entry_policy_tests"
+      ],
+      "exit_code": 101,
+      "passed": 6,
+      "failed": 1,
+      "failure_output": "running 7 tests\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::deep_budget_does_not_disable_builtin_entry_or_reenable_a_disabled_entry ... ok\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::missing_strict_positivity_and_invalid_wd_still_fail ... ok\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::stored_facts_and_zero_depth_strategy_calculation_remain_available ... FAILED\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::three_definition_layers_keep_their_independent_depth_boundary ... ok\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::builtin_premises_cannot_reenter_until_the_intermediate_fact_is_stored ... ok\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::premise_policy_is_shared_by_greater_and_equality_rules ... ok\ntest execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::builtin_premises_keep_checked_application_and_calculation_leaves ... ok\n\nfailures:\n\n---- execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::stored_facts_and_zero_depth_strategy_calculation_remain_available stdout ----\n\nthread 'execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::stored_facts_and_zero_depth_strategy_calculation_remain_available' (68301632) panicked at src/execute/execute_fact_stmt/../../../tests/unit/execute/builtin_entry_policy/tests.rs:92:5:\nassertion failed: !verify(&mut rt, \"x >= 1\",\n            VerifyState::top_level().known_only_no_wd()).is_failed()\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    execute::execute_fact_stmt::verify_state::builtin_entry_policy_tests::stored_facts_and_zero_depth_strategy_calculation_remain_available\n\ntest result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 505 filtered out; finished in 0.03s\n\nerror: test failed, to rerun pass `--lib`\n",
+      "source_at_capture": "fn stored_facts_and_zero_depth_strategy_calculation_remain_available() {\n    let mut rt = runtime();\n    exec_ok(&mut rt, \"have x R\");\n    exec_ok(&mut rt, \"trust x >= 1\");\n    assert!(\n        !verify(\n            &mut rt,\n            \"x >= 1\",\n            VerifyState::top_level().known_only_no_wd()\n        )\n        .is_failed()\n    );\n    for code in [\"1 + 1 = 2\", \"1 < 2\"] {\n        let goal = fact(&mut rt, code);\n        assert!(\n            !rt.verify_fact_in_strategy(&goal, StrategySearch { depth: 0 })\n                .unwrap()\n                .is_failed(),\n            \"{code}\"\n        );\n    }\n    let goal = fact(&mut rt, \"0 < x + x\");\n    assert!(\n        rt.verify_fact_in_strategy(&goal, StrategySearch { depth: 0 })\n            .unwrap()\n            .is_failed()\n    );\n}\n",
+      "baseline_without_current_task_changes": "not measured",
+      "note": "This internal-state control has no finite-list carrier inputs. The new finite rule has no source candidate here; its failure cause remains unconfirmed."
+    },
+    "conclusion": "The formerly failing exact internal control now passes. Remove its stale open record; no cause or fix attribution established. This did not rerun the entire seven-test builtin-policy suite.",
+    "unchanged_test_body_at_record": true,
+    "test_file_sha256_at_record": "cd02decc26a11ef438616c7ac1b99835012ac2bd783fe4ec1bb75538a9a47678"
+  },
+  "scope_note": "Shared workspace has concurrent edits. Native probes retain their actual binary hash. The Rust test was built separately; this task does not claim that its plan/skill changes fixed the control or revalidated the 50-leaf migration audit.",
+  "validation": {
+    "skills": [
+      {
+        "skill": "golitex-repository-policy",
+        "command": [
+          "python3",
+          "/Users/shenjiachen/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+          "/Users/shenjiachen/.codex/skills/golitex-repository-policy"
+        ],
+        "exit_code": 0,
+        "output": "Skill is valid!\n"
+      },
+      {
+        "skill": "litex-kernel-engineer",
+        "command": [
+          "python3",
+          "/Users/shenjiachen/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+          "/Users/shenjiachen/.codex/skills/litex-kernel-engineer"
+        ],
+        "exit_code": 0,
+        "output": "Skill is valid!\n"
+      },
+      {
+        "skill": "litex-example-migration",
+        "command": [
+          "python3",
+          "/Users/shenjiachen/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+          "/Users/shenjiachen/.codex/skills/litex-example-migration"
+        ],
+        "exit_code": 0,
+        "output": "Skill is valid!\n"
+      },
+      {
+        "skill": "decision-first-coding",
+        "command": [
+          "python3",
+          "/Users/shenjiachen/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+          "/Users/shenjiachen/.codex/skills/decision-first-coding"
+        ],
+        "exit_code": 0,
+        "output": "Skill is valid!\n"
+      },
+      {
+        "skill": "todo_writer",
+        "command": [
+          "python3",
+          "/Users/shenjiachen/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+          "/Users/shenjiachen/.codex/skills/todo_writer"
+        ],
+        "exit_code": 0,
+        "output": "Skill is valid!\n"
+      }
+    ],
+    "link_checks": {
+      "summary": {
+        "markdown_links_checked": 176,
+        "skill_routes_checked": 5,
+        "known_gaps": [
+          "K005"
+        ],
+        "prior_control_failure_preserved": true,
+        "stale_open_control_removed": true
+      },
+      "links": [
+        {
+          "source": "examples/test_statements/todo.md",
+          "target": "bugs/README.md"
+        },
+        {
+          "source": "examples/test_statements/todo.md",
+          "target": "experience/problem_notes/K004-explicit-recursive-increment-chain.md"
+        },
+        {
+          "source": "examples/test_statements/todo.md",
+          "target": "experience/problem_notes/K010-finite-numeric-carrier.md"
+        },
+        {
+          "source": "examples/test_statements/todo.md",
+          "target": "experience/problem_notes/D001-trust-have-display.md"
+        },
+        {
+          "source": "examples/test_statements/todo.md",
+          "target": "experience/problem_notes/K008-cart-excluded.md"
+        },
+        {
+          "source": "examples/test_statements/todo.md",
+          "target": "proof_journals/k005_enumeration_attempts.json"
+        },
+        {
+          "source": "examples/test_statements/todo.md",
+          "target": "proof_journals/stmt_repair_plan_classification_2026-10-02.json"
+        },
+        {
+          "source": "examples/test_statements/todo.md",
+          "target": "experience/problem_notes/known-only-control-recheck.md"
+        },
+        {
+          "source": "examples/test_statements/todo.md",
+          "target": "../../plan/迁移的plan/stmt-execution-legacy-parity-audit.md#修复分工与当前待办2026-10-02"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "fact/K005-finite-negated-existence/README.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../todo.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../experience/problem_notes/K001-callable-alias-direct.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../experience/problem_notes/K002-template-definition-facts.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../experience/problem_notes/K010-finite-numeric-carrier.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../experience/problem_notes/D001-trust-have-display.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../experience/problem_notes/K003-explicit-recursive-equation-chain.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../experience/problem_notes/K004-explicit-recursive-increment-chain.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../experience/problem_notes/statement-boundary-repairs.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../experience/problem_notes/K008-cart-excluded.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../experience/problem_notes/known-only-control-recheck.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "def_algo_by_induc_stmt/README.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "trust_have_stmt/README.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "have_obj_in_nonempty_set_stmt/README.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "axiom_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "by_for_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "by_thm_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "claim_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "def_abstract_prop_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "def_strategy_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "def_struct_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "fact/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "have_fn_by_induc_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "have_obj_equal_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "register_reflexive_prop_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "register_symmetric_prop_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "register_transitive_prop_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "release_axiom_of_choice_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "release_regularity_axiom_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "sketch_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "trust_have_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "trust_stmt/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "witness_atomic_fact/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "tooling/limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../proof_journals/bug_organization_verification.json"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../proof_journals/bug_organization.json"
+        },
+        {
+          "source": "examples/test_statements/bugs/README.md",
+          "target": "../proof_journals/k003_explicit_chain.json"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/README.md",
+          "target": "../../fact.lit"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/README.md",
+          "target": "K005-finite-negated-existence/README.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/README.md",
+          "target": "../../todo.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/README.md",
+          "target": "../../experience/problem_notes/known-only-control-recheck.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/README.md",
+          "target": "limitations.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/README.md",
+          "target": "../README.md"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "repro.lit"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "observed.json"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "../../../proof_journals/k005_enumeration_attempts.json"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "../../../proof_journals/stmt_repair_plan_classification_2026-10-02.json"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "../../../../../src/execute/execute_fact_stmt"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "../../../fact.lit"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "../../../negative/fact/false-equality.lit"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "../../../negative/fact/false-membership.lit"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "../../../negative/fact/false-forall.lit"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "../../../negative/fact/undefined-object.lit"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "../../../manifest.json"
+        },
+        {
+          "source": "examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md",
+          "target": "../../README.md"
+        },
+        {
+          "source": "examples/test_statements/experience/problem_notes/known-only-control-recheck.md",
+          "target": "../../../../tests/unit/execute/builtin_entry_policy/tests.rs"
+        },
+        {
+          "source": "examples/test_statements/experience/problem_notes/known-only-control-recheck.md",
+          "target": "../../proof_journals/stmt_repair_plan_classification_2026-10-02.json"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../examples/test_statements/todo.md"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../examples/test_statements/experience/problem_notes/known-only-control-recheck.md"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "和mechanics_of_proof有关.md"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_fact_stmt/exec_fact_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/submitted_fact_execution.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_unsafe_stmt/exec_trust_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/trust_execution/assumed_facts.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_unsafe_stmt/exec_trust_have_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/trust_execution/parameterized_assumptions.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_let_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/let_binding.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_have_obj_in_nonempty_set_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/object_membership.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_have_obj_equal_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/object_equality.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_have_obj_by_exist_facts_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/existential_elimination.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_obtain_obj_from_exist_fact_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/existential_elimination.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_obtain_obj_from_atomic_fact_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/existential_elimination.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_have_by_fn_preimage_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/preimage.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_have_by_replacement_axiom_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_have_fn_equal_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/function_equality.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_have_fn_equal_case_by_case_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/function_cases.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_have_fn_by_induc_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/function_induction.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_have_fn_by_forall_exist_unique_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/object/function_unique_existence.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_def_prop_stmt/exec_def_prop_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/proposition.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_def_abstract_prop_stmt/exec_def_abstract_prop_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/abstract_proposition.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_def_template_stmt/exec_def_template_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/template.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_def_struct_stmt/exec_def_struct_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/structure.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_def_algo_by_cases_stmt/exec_def_algo_by_cases_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/algorithm.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_def_algo_by_induc_stmt/exec_def_algo_by_induc_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/algorithm.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_def_thm_stmt/exec_def_thm_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/theorem.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_axiom_stmt/exec_axiom_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/definition_execution/axiom.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_def_strategy_stmt/exec_def_strategy_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/strategy_execution.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_thm_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/theorem_application.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_release_struct_def_stmt/exec_release_struct_def_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/structure_definition.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_release_obj_def_stmt/exec_release_obj_def_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_expand_range_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_zorn_lemma_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/zorn.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_axiom_of_choice_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/choice.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_regularity_axiom_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/regularity.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_cases_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/cases.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_contra_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/contradiction.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_enumerate_finite_set_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/enumeration.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_induc_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/induction.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_induc_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/induction.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_for_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/iteration.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_extension_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/extension.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_fn_extension_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_def_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/definition.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_by_stmt/exec_by_thm_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/theorem_application.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_register_stmt/exec_register_reflexive_prop_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/reflexivity.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_register_stmt/exec_register_symmetric_prop_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/symmetry.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_register_stmt/exec_register_transitive_prop_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_directives/transitivity.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_witness_stmt/exec_witness_exist_fact.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/witness_execution.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_witness_stmt/exec_witness_atomic_fact.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/witness_execution.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_witness_stmt/exec_witness_nonempty_set.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/witness_execution.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_proof_block_stmt/exec_claim_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_block_execution/claim.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_proof_block_stmt/exec_sketch_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/proof_block_execution/sketch.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../src/execute/execute_eval_stmt/exec_eval_stmt.rs"
+        },
+        {
+          "source": "plan/迁移的plan/stmt-execution-legacy-parity-audit.md",
+          "target": "../../scripts/memorial_legacy_src/execution/command_execution/evaluation.rs"
+        },
+        {
+          "source": "todo/2026-10-2/k005-enumeration-and-k008-scope.md",
+          "target": "../../examples/test_statements/bugs/fact/K005-finite-negated-existence/README.md"
+        },
+        {
+          "source": "todo/2026-10-2/k005-enumeration-and-k008-scope.md",
+          "target": "../../examples/test_statements/todo.md"
+        },
+        {
+          "source": "todo/2026-10-2/k005-enumeration-and-k008-scope.md",
+          "target": "../../examples/test_statements/experience/problem_notes/K008-cart-excluded.md"
+        },
+        {
+          "source": "todo/2026-10-2/k005-enumeration-and-k008-scope.md",
+          "target": "../../examples/test_statements/proof_journals/stmt_repair_plan_classification_2026-10-02.json"
+        },
+        {
+          "source": "todo/2026-10-2/k005-enumeration-and-k008-scope.md",
+          "target": "../../examples/test_statements/proof_journals/k005_enumeration_attempts.json"
+        },
+        {
+          "source": "/Users/shenjiachen/.codex/skills/golitex-repository-policy/SKILL.md",
+          "target": "references/task-sop.md#bug-repair-plan-ownership"
+        },
+        {
+          "source": "/Users/shenjiachen/.codex/skills/litex-kernel-engineer/SKILL.md",
+          "target": "../golitex-repository-policy/references/task-sop.md#bug-repair-plan-ownership"
+        },
+        {
+          "source": "/Users/shenjiachen/.codex/skills/litex-example-migration/SKILL.md",
+          "target": "../golitex-repository-policy/references/task-sop.md#bug-repair-plan-ownership"
+        },
+        {
+          "source": "/Users/shenjiachen/.codex/skills/decision-first-coding/SKILL.md",
+          "target": "../golitex-repository-policy/references/task-sop.md#bug-repair-plan-ownership"
+        },
+        {
+          "source": "/Users/shenjiachen/.codex/skills/todo_writer/SKILL.md",
+          "target": "../golitex-repository-policy/references/task-sop.md#bug-repair-plan-ownership"
+        }
+      ]
+    },
+    "skill_file_hashes": {
+      "/Users/shenjiachen/.codex/skills/golitex-repository-policy/SKILL.md": "38f03d926e047bc2f2fc49094c91a5f976590cc262c940860b9e8157ae1af00b",
+      "/Users/shenjiachen/.codex/skills/golitex-repository-policy/references/task-sop.md": "a5b1ba0e6be5ee04775a126aba9ba71b9f31fdd36cfd33d0918a1b2f10cb2785",
+      "/Users/shenjiachen/.codex/skills/litex-kernel-engineer/SKILL.md": "a111ff5de0e85ddc7f9c8a76c2f365f8d9134bd2926d249886af55e15e23a841",
+      "/Users/shenjiachen/.codex/skills/litex-example-migration/SKILL.md": "1d1a20b21681c9012d1088bdd07ad4b1109d9d4c12226d930671678140789300",
+      "/Users/shenjiachen/.codex/skills/decision-first-coding/SKILL.md": "498cba3e4567f73d56bbc5bc56bf494b78c89b8f06c940186d86a8bfc3311384",
+      "/Users/shenjiachen/.codex/skills/todo_writer/SKILL.md": "f5693d2e7d61cc4d275539a408f4ea1e6032cc2ee403b64024f56094f5ae2b1f"
+    },
+    "classification_checks": [
+      {
+        "case": "K004 explicit chain",
+        "result": "category 1, accepted historical evidence; no kernel change needed"
+      },
+      {
+        "case": "K010 finite numeric membership",
+        "result": "category 2, accepted historical evidence; acceptance responsibility remains Codex"
+      },
+      {
+        "case": "K005",
+        "result": "category 2 candidate under diagnosis; preserve original goal, no generic permission round for bounded repair"
+      },
+      {
+        "case": "Unknown root cause or repair scope",
+        "result": "provisional; investigate facts autonomously before assigning ownership"
+      },
+      {
+        "case": "Global forall projection / search policy / core owned-state or AST change",
+        "result": "concrete discussion before implementation; exact protected-structure authorization still required"
+      },
+      {
+        "case": "Read-only scan or implementation already awaiting acceptance",
+        "result": "preserve task scope and verification status; do not claim implementation or closure"
+      }
+    ],
+    "scope": "Skills and plan prose plus narrow diagnostic rechecks only; broad kernel/examples/Lean gates skipped because production Rust and Litex fixtures were not edited."
+  },
+  "retired_records": {
+    "bugs/fact/internal-known-only-control/README.md": "known_only_recheck.former_open_note",
+    "bugs/fact/internal-known-only-control/observed.json": "known_only_recheck.former_observation"
+  },
+  "completed_sop": "# Statement repair-plan delegation\n\nStatus: complete; durable receipt in examples/test_statements/proof_journals/stmt_repair_plan_classification_2026-10-02.json\n\n## Intent and anchors\n- Task: maintainer requests two repair categories in skills and the current Stmt plans on 2026-10-02.\n- Goal: distinguish Litex authoring improvements and independently justified local Rust repairs; discuss nonlocal semantic/architectural changes first.\n- Targets: shared task-SOP policy and routing skills; Stmt legacy-audit plan; statement-suite todo and K005 continuation.\n- Baseline: two separate Stmt tracking surfaces exist. K004 is an accepted explicit proof; K010 is an accepted local membership repair. K005 and an internal known-only test have unresolved records; B18 and broader migration checkpoints remain in the audit.\n- Non-goals: production Rust/AST/Env changes, blanket authorization for protected structs, forced classification of unknown causes, or claiming pending repairs complete.\n\n## Action protocol\n1. Add the two execution categories and discussion boundary to the shared plan policy; route consumers and preserve concrete core/AST authorization gates.\n2. Recheck the two statement-suite records using current release input and the exact internal Rust test; classify the audit backlog without overwriting another task's implementation status.\n3. Update source-owned plans with category, evidence status, owner, next action and escalation boundary; validate changed skills and links.\n- Tracer: K004's explicit equality chain is category 1; K010's finite numeric membership evidence is category 2; globally changing source replay/AST/state requires discussion.\n- Impact: L0 skill/plan prose. Diagnostic commands only; no kernel implementation this turn. Skip broad examples/kernel/Lean gates.\n\n## Completion evidence\n- [x] Shared rule clearly delegates categories 1/2 within authorized repair scope, retains positive/negative checks and requires discussion for nonlocal changes.\n- [x] Five skills validate and their routing references resolve; scope is Litex/golitex rather than unrelated generic software. 176 Markdown links checked.\n- [x] Current Stmt plans have both categories and honest unresolved statuses; K005 original conclusion remains intact.\n- [x] Current diagnostic results and plan locations retained in source-owned records; exact known-only control passes with the unchanged test body. Completed SOP and this task's draft are ready for immediate removal after the receipt snapshot.\n",
+  "completion": {
+    "completed_at": "2026-10-02T12:33:54.212785+00:00",
+    "diff_check_exit_code": 0,
+    "completed_task_ledger": "todo/2026-10-2/stmt-repair-plan-delegation.md",
+    "disposable_task_draft": "tmp/2026-10-02/stmt-repair-plan-delegation",
+    "persistent_k005_continuation": "todo/2026-10-2/k005-enumeration-and-k008-scope.md",
+    "status": "skill/plan update complete; K005 repair remains open"
+  }
+}

@@ -1,6 +1,6 @@
 use crate::ast::fact::AtomicFact;
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::store_fact_and_infer::InferAtomicExceptEqualityResult;
+use crate::store_fact_and_infer::{InferAtomicExceptEqualityResult, InferBuiltinDefinitionResult};
 
 impl Runtime {
     // Collect every non-equal atomic infer rule that fires for this fact.
@@ -10,6 +10,17 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
+        let consequences = self.builtin_atomic_definition_consequences(atomic_fact);
+        if !consequences.is_empty() {
+            let mut derived = Vec::new();
+            for fact in consequences {
+                derived.push(self.store_inferred_fact_and_infer(&fact)?);
+            }
+            rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
+                InferBuiltinDefinitionResult { source_fact_id: atomic_fact.fact_id(), derived },
+            ));
+        }
+
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(
                 "equality facts use infer_equal_fact, not infer_atomic_except_equality"

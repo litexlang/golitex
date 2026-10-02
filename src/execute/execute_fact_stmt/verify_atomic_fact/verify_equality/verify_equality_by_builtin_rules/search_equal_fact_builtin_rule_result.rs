@@ -94,12 +94,12 @@ use super::by_equality_identities_wave13::{
     CartWithEmptyFactorBuiltinRuleProof, ClosedRangeLiteralExpansionBuiltinRuleProof,
     ComplexAbsOfImagScaledBuiltinRuleProof, ComplexAbsOfNonnegRealBuiltinRuleProof,
     EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof,
-    FiniteSeqEqualsFnOnClosedRangeBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,
+    FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,
     ImgOfRealBuiltinRuleProof, ImgOfRealPlusImagScaledBuiltinRuleProof,
     LnOfEulerBuiltinRuleProof, PowerSetOfEmptyBuiltinRuleProof,
     PowerSetOfSingletonBuiltinRuleProof, RangeLiteralExpansionBuiltinRuleProof,
     ReOfRealBuiltinRuleProof, ReOfRealPlusImagScaledBuiltinRuleProof,
-    SeqEqualsFnOnNBuiltinRuleProof, SetMinusChainToUnionBuiltinRuleProof,
+    SeqEqualsFnOnNPosBuiltinRuleProof, SetMinusChainToUnionBuiltinRuleProof,
     UnionOverIntersectDistributiveBuiltinRuleProof,
 };
 use super::by_equality_identities_wave14::{
@@ -129,6 +129,8 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    IntegerRangeBuilder(super::by_integer_range_builder::IntegerRangeBuilderBuiltinRuleProof),
+    ScalarIdentity(super::by_scalar_identities::ScalarIdentityBuiltinRuleProof),
     AggregateIdentity(super::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof),
     AggregateCalculation(super::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof),
     Calculation(EqualitySearchProofByCalculation),
@@ -294,8 +296,8 @@ pub enum EqualitySearchProofByBuiltinRule {
     UnionOverIntersectDistributive(UnionOverIntersectDistributiveBuiltinRuleProof),
     SetMinusChainToUnion(SetMinusChainToUnionBuiltinRuleProof),
     FnRangeOfConstantAnonymousFn(FnRangeOfConstantAnonymousFnBuiltinRuleProof),
-    SeqEqualsFnOnN(SeqEqualsFnOnNBuiltinRuleProof),
-    FiniteSeqEqualsFnOnClosedRange(FiniteSeqEqualsFnOnClosedRangeBuiltinRuleProof),
+    SeqEqualsFnOnNPos(SeqEqualsFnOnNPosBuiltinRuleProof),
+    FiniteSeqEqualsFnOnOneBasedDomain(FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof),
     IndexUnionEmptyIndex(IndexUnionEmptyIndexBuiltinRuleProof),
     IndexIntersectEmptyIndex(IndexIntersectEmptyIndexBuiltinRuleProof),
     IndexCartEmptyIndex(IndexCartEmptyIndexBuiltinRuleProof),

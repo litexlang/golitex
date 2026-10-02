@@ -10,6 +10,14 @@ sketch:
 sketch:
     product(-2, -2, fn(x Z) Z {x}) = -2
 
+# P03: product(1, 3, fn(x Z) Z {x}) = 6
+sketch:
+    product(1, 3, fn(x Z) Z {x}) = 6
+
+# P04: product(1, 3, fn(x Z) Z {2}) = 8
+sketch:
+    product(1, 3, fn(x Z) Z {2}) = 8
+
 # P05: product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * 3
 sketch:
     product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * 3
@@ -17,3 +25,36 @@ sketch:
 # P06: product(0, 0, fn(x Z) Z {0}) = 0
 sketch:
     product(0, 0, fn(x Z) Z {0}) = 0
+
+# P101: negative factors, zero and exact fraction
+sketch:
+    product(-2,2,fn(k Z) Z {k}) = 0
+    product(1,3,fn(k Z) Q {1/2}) = 1/8
+
+# P102: nested sum and named function
+sketch:
+    product(1,3,fn(k N+) N+ {sum(1,k,fn(j N+) N+ {j})}) = 18
+    have fn square(k Z) Z = k*k
+    product(1,3,square) = 36
+    eval product(1,3,square)
+
+# P103: symbolic constant and adjacent partition
+sketch:
+    have n N+
+    have c R*
+    have f fn(k Z) R
+    product(1,n,fn(k Z) R* {c}) = c^n
+    product(1,n+1,f) = product(1,n,f)*product(n+1,n+1,f)
+
+# P104: pointwise congruence and legal shift
+sketch:
+    have f fn(k Z) R
+    forall a,b,t Z:
+        a <= b
+        a+t <= b+t
+        =>:
+            product(a,b,fn(k Z) R {f(k+t)}) = product(a+t,b+t,f)
+
+# P105: positive-natural closure
+sketch:
+    product(1,3,fn(k N+) N+ {k}) $in N+

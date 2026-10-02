@@ -49,9 +49,27 @@
           "candidate": "sketch:\n    sum(1, 3, fn(x Z) Z {x}) = 6",
           "result": "failed",
           "verifier_evidence": "... ... error\nlitex> "
+        },
+        {
+          "date": "2026-10-02",
+          "candidate": "sum(1, 3, fn(x Z) Z {x}) = 6",
+          "result": "accepted",
+          "verifier_evidence": {
+            "observed": "accept",
+            "exit_code": 0,
+            "phase": "success",
+            "diagnostic": "",
+            "statements": 1,
+            "object": "sum",
+            "file": "gaps/sum__p03.lit",
+            "kind": "gap",
+            "intended": "accept"
+          },
+          "gate": "numeric_aggregate_before_promotion.json"
         }
       ],
-      "status": "blocked"
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    sum(1, 3, fn(x Z) Z {x}) = 6\n"
     },
     {
       "id": "P04",
@@ -63,9 +81,27 @@
           "candidate": "sketch:\n    sum(1, 3, fn(x Z) Z {2}) = 6",
           "result": "failed",
           "verifier_evidence": "... ... error\nlitex> "
+        },
+        {
+          "date": "2026-10-02",
+          "candidate": "sum(1, 3, fn(x Z) Z {2}) = 6",
+          "result": "accepted",
+          "verifier_evidence": {
+            "observed": "accept",
+            "exit_code": 0,
+            "phase": "success",
+            "diagnostic": "",
+            "statements": 1,
+            "object": "sum",
+            "file": "gaps/sum__p04.lit",
+            "kind": "gap",
+            "intended": "accept"
+          },
+          "gate": "numeric_aggregate_before_promotion.json"
         }
       ],
-      "status": "blocked"
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    sum(1, 3, fn(x Z) Z {2}) = 6\n"
     },
     {
       "id": "P05",
@@ -98,6 +134,176 @@
       "status": "materialized",
       "accepted_litex": "sketch:\n    sum(0, 0, fn(x Z) Z {0}) = 0",
       "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P101",
+      "intent": "negative endpoints and exact fractions",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    sum(-2,2,fn(k Z) Z {k*k}) = 10\n    sum(1,3,fn(k Z) Q {1/3}) = 1\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    sum(-2,2,fn(k Z) Z {k*k}) = 10\n    sum(1,3,fn(k Z) Q {1/3}) = 1\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 7
+    },
+    {
+      "id": "P102",
+      "intent": "nested product and outer arithmetic",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    sum(1,3,fn(k N+) N+ {product(1,k,fn(j N+) N+ {j})}) = 9\n    sum(1,3,fn(k Z) Z {k}) + product(1,3,fn(k Z) Z {k}) = 12\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    sum(1,3,fn(k N+) N+ {product(1,k,fn(j N+) N+ {j})}) = 9\n    sum(1,3,fn(k Z) Z {k}) + product(1,3,fn(k Z) Z {k}) = 12\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 8
+    },
+    {
+      "id": "P103",
+      "intent": "named function expansion",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have fn square(k Z) Z = k*k\n    sum(1,3,square) = 14\n    eval sum(1,3,square)\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    have fn square(k Z) Z = k*k\n    sum(1,3,square) = 14\n    eval sum(1,3,square)\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 9
+    },
+    {
+      "id": "P104",
+      "intent": "binder substitution retains outer free value",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    sum(1,3,fn(x Z) Z {sum(1,2,fn(y Z) Z {x+y})}) = 21\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    sum(1,3,fn(x Z) Z {sum(1,2,fn(y Z) Z {x+y})}) = 21\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 10
+    },
+    {
+      "id": "P105",
+      "intent": "every index satisfies the callable predicate",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    sum(1,3,fn(k Z:k!=0) Z {1}) = 3\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    sum(1,3,fn(k Z:k!=0) Z {1}) = 3\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 11
+    },
+    {
+      "id": "P106",
+      "intent": "algorithm terms use proved case equations",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    algo flag(x R) R by cases:\n        case x = 0: 0\n        case x != 0: 1\n    sum(0,3,flag) = 3\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    algo flag(x R) R by cases:\n        case x = 0: 0\n        case x != 0: 1\n    sum(0,3,flag) = 3\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 12
+    },
+    {
+      "id": "P107",
+      "intent": "symbolic constant, addition, subtraction and scalar",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have n N+\n    have c R\n    have f,g fn(k Z) R\n    sum(1,n,fn(k Z) R {c}) = n*c\n    sum(1,n,fn(k Z) R {f(k)+g(k)}) = sum(1,n,f)+sum(1,n,g)\n    sum(1,n,fn(k Z) R {f(k)-g(k)}) = sum(1,n,f)-sum(1,n,g)\n    sum(1,n,fn(k Z) R {c*f(k)}) = c*sum(1,n,f)\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... ... ... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    have n N+\n    have c R\n    have f,g fn(k Z) R\n    sum(1,n,fn(k Z) R {c}) = n*c\n    sum(1,n,fn(k Z) R {f(k)+g(k)}) = sum(1,n,f)+sum(1,n,g)\n    sum(1,n,fn(k Z) R {f(k)-g(k)}) = sum(1,n,f)-sum(1,n,g)\n    sum(1,n,fn(k Z) R {c*f(k)}) = c*sum(1,n,f)\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 13
+    },
+    {
+      "id": "P108",
+      "intent": "symbolic adjacent partition and pointwise congruence",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have n N+\n    have f fn(k Z) R\n    sum(1,n+1,f) = sum(1,n,f)+sum(n+1,n+1,f)\n    sum(1,n,fn(k Z) Z {k+k}) = sum(1,n,fn(j Z) Z {2*j})\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    have n N+\n    have f fn(k Z) R\n    sum(1,n+1,f) = sum(1,n,f)+sum(n+1,n+1,f)\n    sum(1,n,fn(k Z) Z {k+k}) = sum(1,n,fn(j Z) Z {2*j})\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 14
+    },
+    {
+      "id": "P109",
+      "intent": "integer shift with legal source and target ranges",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have f fn(k Z) R\n    forall a,b,t Z:\n        a <= b\n        a+t <= b+t\n        =>:\n            sum(a,b,fn(k Z) R {f(k+t)}) = sum(a+t,b+t,f)\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... ... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    have f fn(k Z) R\n    forall a,b,t Z:\n        a <= b\n        a+t <= b+t\n        =>:\n            sum(a,b,fn(k Z) R {f(k+t)}) = sum(a+t,b+t,f)\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 15
+    },
+    {
+      "id": "P110",
+      "intent": "known numeric endpoint",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    have end Z = 3\n    sum(1,end,fn(k Z) Z {k}) = 6\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    have end Z = 3\n    sum(1,end,fn(k Z) Z {k}) = 6\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 16
     }
   ],
   "materialization": {
@@ -188,5 +394,12 @@
       "kind": "positive",
       "intended": "accept"
     }
+  },
+  "repairs_2026_10_02": {
+    "source_report": "numeric_aggregate_before_promotion.json",
+    "closed_issues": [
+      "sum-P03",
+      "sum-P04"
+    ]
   }
 }

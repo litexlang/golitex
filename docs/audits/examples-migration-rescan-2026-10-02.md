@@ -1,5 +1,7 @@
 # Examples migration rescan — 2026-10-02
 
+Follow-up repair checkpoint: [local fixes and current residuals](example-local-repairs-2026-10-02.md). The scan below is historical evidence.
+
 ## Scope and baseline
 
 This is an inspection and report requested by the user, using the classification

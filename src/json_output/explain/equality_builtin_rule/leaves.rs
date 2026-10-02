@@ -95,12 +95,12 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
     CartWithEmptyFactorBuiltinRuleProof, ClosedRangeLiteralExpansionBuiltinRuleProof,
     ComplexAbsOfImagScaledBuiltinRuleProof, ComplexAbsOfNonnegRealBuiltinRuleProof,
     EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof,
-    FiniteSeqEqualsFnOnClosedRangeBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,
+    FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,
     ImgOfRealBuiltinRuleProof, ImgOfRealPlusImagScaledBuiltinRuleProof,
     LnOfEulerBuiltinRuleProof, PowerSetOfEmptyBuiltinRuleProof,
     PowerSetOfSingletonBuiltinRuleProof, RangeLiteralExpansionBuiltinRuleProof,
     ReOfRealBuiltinRuleProof, ReOfRealPlusImagScaledBuiltinRuleProof,
-    SeqEqualsFnOnNBuiltinRuleProof, SetMinusChainToUnionBuiltinRuleProof,
+    SeqEqualsFnOnNPosBuiltinRuleProof, SetMinusChainToUnionBuiltinRuleProof,
     UnionOverIntersectDistributiveBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave14::{
@@ -2872,12 +2872,12 @@ impl FnRangeOfConstantAnonymousFnBuiltinRuleProof {
     }
 }
 
-impl SeqEqualsFnOnNBuiltinRuleProof {
+impl SeqEqualsFnOnNPosBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text("SeqEqualsFnOnN", "seq as fn on N", "A sequence equals its function on N")
+        text("SeqEqualsFnOnNPos", "seq as fn on N+", "A sequence equals its function on positive integers")
     }
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("SeqEqualsFnOnN", "序列即 N 上函数", "序列等于其在 N 上的函数")
+        text("SeqEqualsFnOnNPos", "序列即 N+ 上函数", "序列等于其在正整数上的函数")
     }
 
 
@@ -2889,12 +2889,12 @@ impl SeqEqualsFnOnNBuiltinRuleProof {
     }
 }
 
-impl FiniteSeqEqualsFnOnClosedRangeBuiltinRuleProof {
+impl FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        text("FiniteSeqEqualsFnOnClosedRange", "finite seq as fn", "A finite sequence equals its function on a closed range")
+        text("FiniteSeqEqualsFnOnOneBasedDomain", "finite seq as fn", "A finite sequence equals its function on indices 1 through its length")
     }
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("FiniteSeqEqualsFnOnClosedRange", "有限序列即函数", "有限序列等于其在闭区间上的函数")
+        text("FiniteSeqEqualsFnOnOneBasedDomain", "有限序列即函数", "有限序列等于其在 1 至长度上的函数")
     }
 
 

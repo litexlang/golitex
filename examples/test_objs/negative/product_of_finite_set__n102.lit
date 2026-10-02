@@ -1,0 +1,2 @@
+# N102: must reject: canonical duplicate elements fail displayed-set WD
+eval finite_set_product({1,1.00,2},fn(k Z) Z {k})

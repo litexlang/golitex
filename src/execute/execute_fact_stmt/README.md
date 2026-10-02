@@ -163,6 +163,17 @@ The same assume-after-WD pattern applies when *checking* WD of:
 `prop` body facts, `exist`/`exist!` body facts, and binder lists (FnSet /
 AnonymousFn `dom_facts`, SetBuilder facts) — earlier facts are stored in the
 local binder env before later WD so domain-restricted applications can pass.
+Independent `not forall` and `forall … <=>:` WD also assume each checked
+domain fact before later domains and conclusions. Only the common domain
+guards both iff branches: neither branch is assumed while checking the other.
+The binder environment stays in the WD proof and is never merged into the
+parent; WD alone does not prove the quantified proposition.
+
+Function-application signature candidates have no binder scope to retain.
+Their isolated checks disable new WD-cache storage: returned children and
+requirements carry full proofs or cite ancestor-owned ids. After selection,
+the caller records the successful application according to its original
+`store_well_defined_fact` setting. A failed candidate leaves no WD cache entry.
 
 Atomic / equality / or / exist search may then use `ByKnownForallFact` via
 `SearchProofByKnownForallFact` (`cite: ForallConclusionCite` = FactId +
@@ -317,3 +328,15 @@ producer/consumer and failure boundaries are in
 `tests/unit/execute/forall_source_replay/tests.rs`. Imported exist! theorem
 fixtures currently use source fallback because their facts are outside the
 existing KB codec subset. Supported cached definitions are tested separately.
+
+Builtin predicate domain WD checks carriers before admitting an assumption.
+Domain proof search retains its caller's budget and may cite stored equality
+paths, but does not expand equality peers: a function peer's binder WD can
+otherwise infer another order fact and reopen the same domain obligation.
+When ordinary search misses after completed WD, calculation/citation leaves
+reuse that evidence without restarting WD or proving the enclosing predicate. Function
+properties first try the exact FnSet membership; alternatives cite the actual
+declared signature and prove domain/codomain equalities. The legacy
+`fn(k N+: k <= n) B` prefix is admitted only on `closed_range(1,n)` with both
+endpoint equalities proved. Other restricted domains retain their rejection
+boundaries.

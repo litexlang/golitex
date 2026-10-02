@@ -1679,3 +1679,31 @@ must still match. A local `value` cannot replace `Other::facts::value`.
 The [constant-source tracer](../examples/stmt_nodes/definition/forall_source_replay.lit)
 contains the complete checked proof. Tests also reject an unproved source,
 an ordinary `exist` source and a source whose premise was dropped.
+
+### Can decimal aliases, complex reciprocals and finite aggregates be checked directly?
+
+Yes. Decimal literals are normalized exactly, so `2.400 = 2.4` succeeds and
+`2.400 != 2.4` is rejected. The dedicated builtin proves `i != 0` in either
+orientation; guarded complex calculation then checks `1 / i = -i`.
+`1 / i = -1` and division by `i - i` are rejected.
+
+The existing module-cache compatibility revision is now ABI 3. Imported ABI 1/2
+products rebuild once, because old cached theorem interfaces omit their proof
+body and must not preserve an earlier incorrect acceptance. The layout stays
+the same; standalone numeric decoding also normalizes old spellings.
+
+Finite `sum` and `product` instantiate each index, check the function domain,
+and fold exact values. Named functions, nested aggregates, exact fractions and
+displayed finite sets use the same calculation path. One evaluation shares a
+1024-term allowance across all nested aggregates; integer endpoint arithmetic
+is checked. A general finite set needs a known enumeration for numeric eval.
+Symbolic constant, linearity, pointwise, partition and shift identities use
+their own checked premises rather than enumerate an unknown endpoint. Source
+and target interval legality may need explicit hypotheses.
+
+`eval` displays the result and publishes no equality. A direct equality uses
+calculation evidence; Detailed output retains substitutions, each term and
+running totals. See the [numeric tracer](../examples/proof_nodes/equal/by_builtin_rule/numeric_normalization.lit),
+[complex tracer](../examples/proof_nodes/equal/by_builtin_rule/imaginary_division.lit),
+[aggregate calculation tracer](../examples/proof_nodes/equal/by_builtin_rule/aggregate_calculation.lit)
+and [symbolic identities](../examples/proof_nodes/equal/by_builtin_rule/aggregate_identities.lit).

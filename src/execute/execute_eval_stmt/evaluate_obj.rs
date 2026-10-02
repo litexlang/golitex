@@ -34,28 +34,45 @@ pub fn evaluate_obj(
     }
 
     match obj {
+        Obj::FiniteSetStat(_) | Obj::ProductShape(_) => super::evaluate_finite_objects::evaluate_finite_object(runtime,obj,depth,active_calls),
         Obj::ArithmeticOperator(op) => {
             evaluate_arithmetic_operator(runtime, op, depth, active_calls)
         }
-        Obj::IteratedOperator(op) => super::evaluate_aggregate::evaluate_aggregate(runtime, op, depth, active_calls),
+        Obj::IteratedOperator(op) => {
+            super::evaluate_aggregate::evaluate_aggregate(runtime, op, depth, active_calls)
+        }
         Obj::FnObj(fn_obj) => {
-            if let Some(expansion) = runtime.expanded_named_or_literal_anon_fn_application_body(fn_obj)? {
-                let application_well_defined = match runtime.verify_obj_well_definedness(obj,
-                    crate::execute::execute_by_stmt::proof_verify_state().without_well_defined_storage())? {
+            if let Some(expansion) =
+                runtime.expanded_named_or_literal_anon_fn_application_body(fn_obj)?
+            {
+                let application_well_defined = match runtime.verify_obj_well_definedness(
+                    obj,
+                    crate::execute::execute_by_stmt::proof_verify_state()
+                        .without_well_defined_storage(),
+                )? {
                     crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(p) => p,
                     failed => return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
                 };
-                let (body, cites) = runtime.rewrite_obj_by_known_closed_numeric_equal(&expansion.expanded_body);
+                let (body, cites) =
+                    runtime.rewrite_obj_by_known_closed_numeric_equal(&expansion.expanded_body);
                 active_calls.cited_equal_fact_ids.extend(cites);
-                let value = match evaluate_obj(runtime, &body, depth + 1, active_calls)? { Ok(v) => v, Err(e) => return Ok(Err(e)) };
-                active_calls.function_evaluations.push(super::aggregate_evaluation_result::FunctionApplicationEvaluationResult {
-                    application: obj.clone(), application_well_defined, expansion, value: value.clone(),
-                });
+                let value = match evaluate_obj(runtime, &body, depth + 1, active_calls)? {
+                    Ok(v) => v,
+                    Err(e) => return Ok(Err(e)),
+                };
+                active_calls.function_evaluations.push(
+                    super::aggregate_evaluation_result::FunctionApplicationEvaluationResult {
+                        application: obj.clone(),
+                        application_well_defined,
+                        expansion,
+                        value: value.clone(),
+                    },
+                );
                 Ok(Ok(value))
             } else {
                 evaluate_fn_obj_with_algo(runtime, fn_obj, depth, active_calls)
             }
-        },
+        }
         _ => Ok(Err(ExecEvalStmtFailed::UnsupportedExpression)),
     }
 }
@@ -115,38 +132,33 @@ fn evaluate_arithmetic_operator(
                 }))
             })
         }
-        ArithmeticOperator::Pow(a) => {
-            eval_bin(runtime, &a.base, &a.exponent, depth, active_calls, |l, r| {
+        ArithmeticOperator::Pow(a) => eval_bin(
+            runtime,
+            &a.base,
+            &a.exponent,
+            depth,
+            active_calls,
+            |l, r| {
                 Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
                     base: Box::new(l),
                     exponent: Box::new(r),
                 }))
-            })
-        }
+            },
+        ),
         ArithmeticOperator::Neg(a) => eval_un(runtime, &a.arg, depth, active_calls, |arg| {
-            Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg {
-                arg: Box::new(arg),
-            }))
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg { arg: Box::new(arg) }))
         }),
         ArithmeticOperator::Abs(a) => eval_un(runtime, &a.arg, depth, active_calls, |arg| {
-            Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs {
-                arg: Box::new(arg),
-            }))
+            Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg: Box::new(arg) }))
         }),
         ArithmeticOperator::Floor(a) => eval_un(runtime, &a.arg, depth, active_calls, |arg| {
-            Obj::ArithmeticOperator(ArithmeticOperator::Floor(Floor {
-                arg: Box::new(arg),
-            }))
+            Obj::ArithmeticOperator(ArithmeticOperator::Floor(Floor { arg: Box::new(arg) }))
         }),
         ArithmeticOperator::Ceil(a) => eval_un(runtime, &a.arg, depth, active_calls, |arg| {
-            Obj::ArithmeticOperator(ArithmeticOperator::Ceil(Ceil {
-                arg: Box::new(arg),
-            }))
+            Obj::ArithmeticOperator(ArithmeticOperator::Ceil(Ceil { arg: Box::new(arg) }))
         }),
         ArithmeticOperator::Sign(a) => eval_un(runtime, &a.arg, depth, active_calls, |arg| {
-            Obj::ArithmeticOperator(ArithmeticOperator::Sign(Sign {
-                arg: Box::new(arg),
-            }))
+            Obj::ArithmeticOperator(ArithmeticOperator::Sign(Sign { arg: Box::new(arg) }))
         }),
     }
 }

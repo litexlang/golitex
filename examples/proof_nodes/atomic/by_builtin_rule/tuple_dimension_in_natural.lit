@@ -1,0 +1,8 @@
+# Formerly rejected when the numeric return carrier was required:
+# have t cart(R, R) = (1, 2)
+# tuple_dim(t) $in N
+# Now: a checked tuple shape gives a natural dimension and numeric supersets.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/tuple_dimension_in_natural.lit
+# Boundary: tuple_dim(0) is rejected in predicate_domain_wd.
+have t cart(R, R) = (1, 2)
+tuple_dim(t) $in N

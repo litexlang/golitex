@@ -24,6 +24,8 @@ mod project_normal_tests;
 mod project_detailed_tests;
 #[cfg(test)]
 mod local_rust_repairs_tests;
+#[cfg(test)]
+mod guarded_wd_repairs_tests;
 
 pub use emit::{emit_run_compact, emit_run_detailed, emit_run_normal, stringify_normal};
 pub use project_compact::{project_run_compact, project_stmt_compact};

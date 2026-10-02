@@ -71,7 +71,7 @@ thm quadratic_surface_has_x_partial_derivative:
                     =>:
                         abs((quadratic_surface((x, point[2])) - quadratic_surface(point)) / (x - point[1]) - 2 * point[1]) < epsilon
                 by thm quadratic_surface_x_difference_quotient(point, x) => (quadratic_surface((x, point[2])) - quadratic_surface(point)) / (x - point[1]) = x + point[1]
-                (quadratic_surface((x, point[2])) - quadratic_surface(point)) / (x - point[1]) - 2 * point[1] = x - point[1]
+                (quadratic_surface((x, point[2])) - quadratic_surface(point)) / (x - point[1]) - 2 * point[1] = (x + point[1]) - 2 * point[1] = x - point[1]
                 abs((quadratic_surface((x, point[2])) - quadratic_surface(point)) / (x - point[1]) - 2 * point[1]) = abs(x - point[1]) < epsilon
             by def $x_partial_delta_controlled(quadratic_surface, point, 2 * point[1], epsilon, delta)
     by def $has_x_partial_derivative_at(quadratic_surface, point, 2 * point[1])
@@ -91,7 +91,7 @@ thm quadratic_surface_has_y_partial_derivative:
                     =>:
                         abs((quadratic_surface((point[1], y)) - quadratic_surface(point)) / (y - point[2]) - 2 * point[2]) < epsilon
                 by thm quadratic_surface_y_difference_quotient(point, y) => (quadratic_surface((point[1], y)) - quadratic_surface(point)) / (y - point[2]) = y + point[2]
-                (quadratic_surface((point[1], y)) - quadratic_surface(point)) / (y - point[2]) - 2 * point[2] = y - point[2]
+                (quadratic_surface((point[1], y)) - quadratic_surface(point)) / (y - point[2]) - 2 * point[2] = (y + point[2]) - 2 * point[2] = y - point[2]
                 abs((quadratic_surface((point[1], y)) - quadratic_surface(point)) / (y - point[2]) - 2 * point[2]) = abs(y - point[2]) < epsilon
             by def $y_partial_delta_controlled(quadratic_surface, point, 2 * point[2], epsilon, delta)
     by def $has_y_partial_derivative_at(quadratic_surface, point, 2 * point[2])
@@ -113,5 +113,5 @@ thm quadratic_gradient_is_coordinate_gradient:
     $has_y_partial_derivative_at(quadratic_surface, point, quadratic_gradient(point)[2])
     by def $is_coordinate_gradient_at(quadratic_surface, point, quadratic_gradient(point))
 
-quadratic_gradient((3, 4)) = (6, 8)
+quadratic_gradient((3, 4)) = (2 * 3, 2 * 4) = (6, 8)
 by thm quadratic_gradient_is_coordinate_gradient((3, 4)) => $is_coordinate_gradient_at(quadratic_surface, (3, 4), quadratic_gradient((3, 4)))

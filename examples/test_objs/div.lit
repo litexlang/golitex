@@ -32,3 +32,12 @@ sketch:
         x != 0
         =>:
             x / x = 1
+
+# P08: 1 / i = -i
+sketch:
+    1 / i = -i
+
+# P101: imaginary denominator remains guarded
+sketch:
+    1 / i = -i
+    1 / (2 * i) = -i / 2

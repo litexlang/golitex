@@ -21,3 +21,11 @@ sketch:
 sketch:
     let F = fn(x R) x
     $is_set(F)
+
+# P05: fn(x R) R {x} $in fn(y R) R
+sketch:
+    fn(x R) R {x} $in fn(y R) R
+
+# P06: fn(x, y R) R {x + y} $in fn(a, b R) R
+sketch:
+    fn(x, y R) R {x + y} $in fn(a, b R) R

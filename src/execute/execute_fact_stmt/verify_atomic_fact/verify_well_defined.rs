@@ -98,15 +98,19 @@ impl Runtime {
             let mut predicate_domain = Vec::new();
             let mut failed = None;
             for requirement in requirements {
-                let mut result = self.verify_fact(&requirement, verify_state.clone())?;
+                // Domain checks may cite existing equality paths and use the
+                // ordinary budgeted proof routes, but must not expand equality
+                // peers. A peer can be an anonymous function: WD of its binder
+                // infers an order fact whose domain would expand the same peer.
+                let mut domain_state = verify_state.clone();
+                domain_state.equality_class_search =
+                    crate::execute::execute_fact_stmt::EqualityClassSearchMode::StoredPathsOnly;
+                let mut result = self.verify_fact(&requirement, domain_state.clone())?;
                 if result.is_failed() {
-                    // WD can use existing calculation/citation leaves without
-                    // opening a strategy layer or assuming the requirement.
-                    // Example: known `x >= 1` still checks `1 $in R`.
-                    result = self.verify_fact_in_strategy(
-                        &requirement,
-                        crate::execute::execute_fact_stmt::StrategySearch { depth: 0 },
-                    )?;
+                    // Reuse completed WD and call only calculation/citation
+                    // leaves with the caller's restricted state. Re-running
+                    // strategy WD here would reset its recursion budget.
+                    result = self.complete_predicate_domain_leaf(result, domain_state)?;
                 }
                 if result.is_failed() {
                     failed = Some((requirement, result));
@@ -144,6 +148,46 @@ impl Runtime {
                 result: Box::new(result),
             },
         ))
+    }
+
+    fn complete_predicate_domain_leaf(
+        &mut self,
+        result: crate::execute::execute_fact_stmt::VerifyFactResult,
+        state: VerifyState,
+    ) -> RuntimeResult<crate::execute::execute_fact_stmt::VerifyFactResult> {
+        use crate::execute::execute_fact_stmt::VerifyFactResult;
+        use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
+            VerifyAtomicExceptEqualityFactResult, VerifyAtomicExceptEqualityFactFailed,
+            AtomicExceptEqualityFactSearchedProof, atomic_except_equality_fact_result_from_success,
+            atomic_except_equality_fact_result_from_search_fail,
+        };
+        match result {
+            VerifyFactResult::AtomicExceptEquality(result) => match *result {
+                VerifyAtomicExceptEqualityFactResult::Failed(
+                    VerifyAtomicExceptEqualityFactFailed::FailToSearchProof {
+                        fact,
+                        well_defined_proof,
+                    },
+                ) => {
+                    match self.search_atomic_except_equality_fact_proof_by_builtin_rule(
+                        &fact,
+                        state.known_only_no_wd(),
+                    )? {
+                        Some(proof) => Ok(atomic_except_equality_fact_result_from_success(
+                            &fact,
+                            well_defined_proof,
+                            AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(proof),
+                        )),
+                        None => Ok(atomic_except_equality_fact_result_from_search_fail(
+                            &fact,
+                            well_defined_proof,
+                        )),
+                    }
+                }
+                other => Ok(VerifyFactResult::AtomicExceptEquality(Box::new(other))),
+            },
+            other => Ok(other),
+        }
     }
 
     // For and/chain mixed storage: EqualFact uses equality WD then converts;

@@ -8,6 +8,24 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::IntegerRangeBuilder(p) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("rule",string("IntegerRangeBuilder")),
+            ("closed",crate::json_output::helper::bool_value(p.closed)),
+        ]),
+        EqualitySearchProofByBuiltinRule::ScalarIdentity(p) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_identities::ScalarIdentityBuiltinRuleProof as P;
+            let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
+            match p {
+                P::AbsZeroArgument { premise_proof, real_proof } => {
+                    entries.push(("premise_proof", super::searched::project_equal_searched(premise_proof,runtime)));
+                    entries.push(("real_proof", project_verify_fact(real_proof,runtime)));
+                },
+                P::FloorIntegerTranslation { integer_proof } | P::CeilIntegerTranslation { integer_proof } => {
+                    entries.push(("integer_proof", project_verify_fact(integer_proof,runtime)));
+                }, _ => {},
+            }
+            object_for(runtime,entries)
+        },
         EqualitySearchProofByBuiltinRule::AggregateIdentity(p) => super::aggregate_identity::project_aggregate_identity(p, runtime),
         EqualitySearchProofByBuiltinRule::AggregateCalculation(p) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("AggregateCalculation")),
@@ -841,13 +859,13 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             let _ = p;
             object_for(runtime, entries)
         },
-        EqualitySearchProofByBuiltinRule::SeqEqualsFnOnN(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("SeqEqualsFnOnN"))];
+        EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos(p) => {
+            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("SeqEqualsFnOnNPos"))];
             let _ = p;
             object_for(runtime, entries)
         },
-        EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnClosedRange(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("FiniteSeqEqualsFnOnClosedRange"))];
+        EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnOneBasedDomain(p) => {
+            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("FiniteSeqEqualsFnOnOneBasedDomain"))];
             let _ = p;
             object_for(runtime, entries)
         },

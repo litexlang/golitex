@@ -1,16 +1,12 @@
-# Tracer: litex.config is an explicit, ordered module-selection list.
-#
-# Before: an unlisted direct .lit file or directory made discovery fail before
-# any exported source could run.
-#
-# Now: only entries declared under [export] enter discovery and execution.
+# Tracer: only explicitly listed exports enter the current module namespace.
+# Before: the legacy example used an unsupported transactional try block:
+# try:
+#     unlisted_sidecar::unlisted_sidecar_value = 2
+# Now: keep the positive export runnable, and execute the rejection separately.
 have explicit_export_selection_witness R = 1
 
-try:
-    unlisted_sidecar::unlisted_sidecar_value = 2
-
-# Boundary: selecting an unexported file with project-aware -f remains an
-# error; explicit isolated execution is a separate contract.
-#
-# Evidence: this configured example retains unlisted_sidecar.lit and probes its
-# absent namespace inside try; it also retains an unlisted notes/ directory.
+# Boundary: unlisted_sidecar.lit and notes/ remain unexported.
+# Negative gate from this directory (expect exit 1 / success false):
+# target/release/litex -strict -e 'unlisted_sidecar::unlisted_sidecar_value = 2'
+# Use an absolute path to the binary when running from this directory.
+# Positive gate: target/release/litex -strict -r examples/module_manager/export_order_repo

@@ -1,0 +1,4 @@
+# N102: must reject: partition overlap
+have n N+
+have f fn(k Z) R
+product(1,n+1,f) = product(1,n,f)*product(n,n+1,f)

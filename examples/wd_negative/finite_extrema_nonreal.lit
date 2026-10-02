@@ -1,0 +1,3 @@
+# Both finite extrema must reject the reserved imaginary unit.
+let bad_max = finite_set_max({i})
+let bad_min = finite_set_min({i})

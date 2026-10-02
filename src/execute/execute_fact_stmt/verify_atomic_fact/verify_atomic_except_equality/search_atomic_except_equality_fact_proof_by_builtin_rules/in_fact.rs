@@ -1,6 +1,6 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, InFact, IsTupleFact, LessEqualFact, LessFact, NotInFact, SubsetFact,
+    AtomicFact, EqualFact, Fact, GreaterFact, InFact, IsTupleFact, LessEqualFact, LessFact, NotInFact, SubsetFact,
 };
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
@@ -56,7 +56,10 @@ pub enum InFactSearchProofByBuiltinRule {
     // sign: R → Z; gcd: (Z × Z) \ {(0, 0)} → N+; lcm: Z × Z → N;
     // exp: R → R+; factorial: N → N+. Standard-set supertypes also follow.
     NativeScalarCodomain(NativeScalarCodomainBuiltinRuleProof),
+    // Both integer membership and strict positivity are required.
+    PositiveIntegerInNPos(PositiveIntegerInNPosBuiltinRuleProof),
     AggregateScalarCodomain(AggregateScalarCodomainBuiltinRuleProof),
+    FoldScalarCodomain(FoldScalarCodomainBuiltinRuleProof),
     // WD has already established the Cartesian/tuple shape. Dimensions are
     // natural numbers and inherit the standard numeric supersets of N.
     CartDimInNatural(CartDimInNaturalBuiltinRuleProof),
@@ -178,11 +181,21 @@ pub struct RealArithmeticClosureBuiltinRuleProof {}
 
 // Input-domain evidence lives in the enclosing atomic fact's WD proof.
 // Record the native codomain even when the requested set is a proper superset.
+pub struct PositiveIntegerInNPosBuiltinRuleProof {
+    pub integer_proof: VerifyFactResult,
+    pub positive_proof: VerifyFactResult,
+}
+
 pub struct NativeScalarCodomainBuiltinRuleProof {
     pub codomain: StandardSet,
 }
 pub struct AggregateScalarCodomainBuiltinRuleProof {
     pub iterand_return_set: Obj,
+    pub codomain: StandardSet,
+}
+
+pub struct FoldScalarCodomainBuiltinRuleProof {
+    pub operation_return_set: Obj,
     pub codomain: StandardSet,
 }
 
@@ -391,6 +404,29 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
+        // This route produces premises. Calculation/citation callers may
+        // enter this dispatcher with ordinary builtin entry disabled; they
+        // must not reopen Z -> N -> N+ -> Z on a false numeric membership.
+        if verify_state.can_use_builtin_rule && matches!(set, StandardSet::NPos) {
+            let integer = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                fact_id: self.global_ids.allocate_fact_id(), element: fact.element.clone(),
+                set: Obj::StandardSet(StandardSet::Z), line_file: None,
+            }));
+            let integer_proof = self.verify_builtin_rule_premise(&integer, verify_state.clone())?;
+            if !integer_proof.is_failed() {
+                let positive = Fact::AtomicFact(AtomicFact::GreaterFact(GreaterFact {
+                    fact_id: self.global_ids.allocate_fact_id(), left: fact.element.clone(),
+                    right: Obj::Literal(Literal::Number(Number { normalized_value: "0".into() })), line_file: None,
+                }));
+                let positive_proof = self.verify_builtin_rule_premise(&positive, verify_state.clone())?;
+                if !positive_proof.is_failed() {
+                    return Ok(Some(InFactSearchProofByBuiltinRule::PositiveIntegerInNPos(
+                        PositiveIntegerInNPosBuiltinRuleProof { integer_proof, positive_proof },
+                    )));
+                }
+            }
+        }
+
         // A — match element constructor (set gates stay as arm guards)
         match &fact.element {
             Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
@@ -428,7 +464,11 @@ impl Runtime {
                     }
                 }
             }
-            Obj::ArithmeticOperator(ArithmeticOperator::Sign(_))
+            Obj::ArithmeticOperator(ArithmeticOperator::Floor(_))
+            | Obj::ArithmeticOperator(ArithmeticOperator::Ceil(_))
+            | Obj::ArithmeticOperator(ArithmeticOperator::Min(_))
+            | Obj::ArithmeticOperator(ArithmeticOperator::Max(_))
+            | Obj::ArithmeticOperator(ArithmeticOperator::Sign(_))
             | Obj::IntegerOperator(IntegerOperator::Gcd(_))
             | Obj::IntegerOperator(IntegerOperator::Lcm(_))
             | Obj::IntegerOperator(IntegerOperator::Factorial(_))
@@ -459,6 +499,23 @@ impl Runtime {
                 if matches!(set, StandardSet::C) {
                     if let Some(proof) = real_trig_in_c_proof(fact) {
                         return Ok(Some(proof));
+                    }
+                }
+            }
+            Obj::IteratedOperator(IteratedOperator::Reduce(_))
+            | Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(_)) => {
+                let operation = match &fact.element {
+                    Obj::IteratedOperator(IteratedOperator::Reduce(r)) => r.op.as_ref(),
+                    Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(r)) => r.op.as_ref(),
+                    _ => unreachable!(),
+                };
+                if let Some(signature) = self.resolve_callable_fn_set(operation) {
+                    if let Obj::StandardSet(codomain) = signature.ret_set.as_ref() {
+                        if standard_set_is_subset_eq(codomain, set) {
+                            return Ok(Some(InFactSearchProofByBuiltinRule::FoldScalarCodomain(
+                                FoldScalarCodomainBuiltinRuleProof { operation_return_set: signature.ret_set.as_ref().clone(), codomain: codomain.clone() },
+                            )));
+                        }
                     }
                 }
             }
@@ -1549,7 +1606,11 @@ fn native_scalar_codomain_proof(
     target: &StandardSet,
 ) -> Option<InFactSearchProofByBuiltinRule> {
     let codomain = match element {
-        Obj::ArithmeticOperator(ArithmeticOperator::Sign(_)) => StandardSet::Z,
+        Obj::ArithmeticOperator(ArithmeticOperator::Sign(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Floor(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Ceil(_)) => StandardSet::Z,
+        Obj::ArithmeticOperator(ArithmeticOperator::Min(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Max(_)) => StandardSet::R,
         Obj::IntegerOperator(IntegerOperator::Gcd(_))
         | Obj::IntegerOperator(IntegerOperator::Factorial(_)) => StandardSet::NPos,
         Obj::IntegerOperator(IntegerOperator::Lcm(_)) => StandardSet::N,
@@ -1566,7 +1627,7 @@ fn native_scalar_codomain_proof(
 impl Runtime {
     // Addition/multiplication close the declared scalar carrier. Range sums
     // are nonempty; a finite-set sum may be empty and then equals zero.
-    fn aggregate_scalar_codomain_proof(&self, element: &Obj, target: &StandardSet)
+    fn aggregate_scalar_codomain_proof(&mut self, element: &Obj, target: &StandardSet)
         -> Option<InFactSearchProofByBuiltinRule> {
         let (func, product, nonempty) = match element {
             Obj::IteratedOperator(IteratedOperator::Sum(s)) => (s.func.as_ref(), false, true),

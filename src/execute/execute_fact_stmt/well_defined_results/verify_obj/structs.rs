@@ -172,6 +172,7 @@ impl Runtime {
             ));
         };
 
+        let mut receiver = value.obj.as_ref().clone();
         for (index, field_name) in value.fields.iter().enumerate() {
             let plain = carrier.name.local_name().to_string();
             let Some(def) = self.def_struct_visible(&carrier.name) else {
@@ -180,19 +181,27 @@ impl Runtime {
                     format!("struct `{plain}` is not defined"),
                 ));
             };
-            let Some(field_def) = def.fields.iter().find(|f| f.binding.name == *field_name) else {
+            if !def.fields.iter().any(|f| f.binding.name == *field_name) {
                 return Ok(field_access_fail(
                     root,
                     format!("struct `{plain}` has no field `{field_name}`"),
                 ));
-            };
+            }
             let is_last = index + 1 == value.fields.len();
             if is_last {
                 break;
             }
-            match &field_def.field_type {
+            let Some(field_type) =
+                self.instantiate_struct_field_type(&receiver, &carrier, field_name)
+            else {
+                return Ok(field_access_fail(
+                    root,
+                    format!("cannot instantiate field `{field_name}` of struct `{plain}`"),
+                ));
+            };
+            match field_type {
                 Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(next)) => {
-                    carrier = next.clone()
+                    carrier = next
                 }
                 _ => {
                     return Ok(field_access_fail(
@@ -201,6 +210,12 @@ impl Runtime {
                     ));
                 }
             }
+            receiver = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(
+                FieldAccess {
+                    obj: value.obj.clone(),
+                    fields: value.fields[..=index].to_vec(),
+                },
+            ));
         }
 
         let stages = ObjWellDefinedByDefCommonStages::from_children(vec![receiver_wd]);
@@ -230,7 +245,7 @@ impl Runtime {
     // Nested field access: walk all fields; result carrier is the last field's
     // type when that type is `&Struct`.
     pub(in crate::execute) fn resolve_definition_struct_carrier(
-        &self,
+        &mut self,
         obj: &Obj,
     ) -> Option<StructObj> {
         if let Some(carrier) = self.defined_as_struct_visible_in_stack(obj) {
@@ -239,30 +254,12 @@ impl Runtime {
         let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) = obj else {
             return None;
         };
-        if access.fields.is_empty() {
-            return None;
-        }
-        let mut carrier = self.resolve_definition_struct_carrier(access.obj.as_ref())?;
-        for (index, field_name) in access.fields.iter().enumerate() {
-            let def = self.def_struct_visible(&carrier.name)?;
-            let field = def.fields.iter().find(|f| f.binding.name == *field_name)?;
-            let is_last = index + 1 == access.fields.len();
-            match &field.field_type {
-                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(next)) => {
-                    if is_last {
-                        return Some(next.clone());
-                    }
-                    carrier = next.clone();
-                }
-                _ => {
-                    if is_last {
-                        return None;
-                    }
-                    return None;
-                }
+        match self.resolve_field_access_field_type(access)? {
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier)) => {
+                Some(carrier)
             }
+            _ => None,
         }
-        None
     }
 
     pub(super) fn defined_as_struct_visible_in_stack(&self, obj: &Obj) -> Option<StructObj> {

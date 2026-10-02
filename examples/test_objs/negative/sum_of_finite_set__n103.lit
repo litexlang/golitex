@@ -1,0 +1,4 @@
+# N103: must reject: unknown finite enumeration cannot evaluate
+have S finite_set
+have f fn(k S) R
+eval finite_set_sum(S,f)

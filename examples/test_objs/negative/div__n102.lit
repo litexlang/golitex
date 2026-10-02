@@ -1,0 +1,2 @@
+# N102: must reject: zero complex denominator
+let bad = 1/(i-i)

@@ -1,0 +1,31 @@
+# Before this repair, the identical guarded not-forall / forall-iff definitions
+# below failed WD at `1 / y`: their checked domain facts were not staged.
+# Old failing source (now active below):
+# prop guarded_counterexample(x R):
+#     not forall y R:
+#         y != 0
+#         =>:
+#             1 / y != 1 / y
+# Run: target/release/litex -strict -f examples/wd/fact/guarded_quantifier_domains.lit
+# Negative controls: examples/wd_negative/quantifier_domain_*.lit
+
+prop guarded_counterexample(x R):
+    not forall y R:
+        y != 0
+        =>:
+            1 / y != 1 / y
+
+prop guarded_equivalence(x R):
+    forall y R:
+        y != 0
+        =>:
+            1 / y = 1 / y
+        <=>:
+            y = y
+
+claim:
+    ? not forall y R:
+        y != 0
+        =>:
+            1 / y != 1 / y
+    witness exist z R st {z != 0, 1 / z = 1 / z} from 1

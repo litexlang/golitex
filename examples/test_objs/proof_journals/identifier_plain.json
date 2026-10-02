@@ -49,9 +49,26 @@
           "candidate": "sketch:\n    let a = (1, 2)\n    a[2] = 2",
           "result": "failed",
           "verifier_evidence": "... ... ... error\nlitex> "
+        },
+        {
+          "candidate": "let a = (1, 2)\na[2] = 2",
+          "result": "accepted",
+          "verifier_evidence": {
+            "observed": "accept",
+            "exit_code": 0,
+            "phase": "success",
+            "diagnostic": "",
+            "statements": 2,
+            "object": "identifier_plain",
+            "file": "gaps/identifier_plain__p03.lit",
+            "kind": "gap",
+            "intended": "accept"
+          },
+          "gate": "numeric_aggregate_concurrent_promotions_2026-10-02.json"
         }
       ],
-      "status": "blocked"
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    let a = (1, 2)\n    a[2] = 2\n"
     },
     {
       "id": "P04",

@@ -49,9 +49,26 @@
           "candidate": "sketch:\n    sqrt(2) $in R*",
           "result": "failed",
           "verifier_evidence": "... ... error\nlitex> "
+        },
+        {
+          "candidate": "sqrt(2) $in R*",
+          "result": "accepted",
+          "verifier_evidence": {
+            "observed": "accept",
+            "exit_code": 0,
+            "phase": "success",
+            "diagnostic": "",
+            "statements": 1,
+            "object": "standard_set_r_star",
+            "file": "gaps/standard_set_r_star__p03.lit",
+            "kind": "gap",
+            "intended": "accept"
+          },
+          "gate": "numeric_aggregate_concurrent_promotions_2026-10-02.json"
         }
       ],
-      "status": "blocked"
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    sqrt(2) $in R*\n"
     },
     {
       "id": "P04",

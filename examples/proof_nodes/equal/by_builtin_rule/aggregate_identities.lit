@@ -5,6 +5,8 @@ forall n N+, c R:
 have n N+
 have c R
 have f, g fn(k Z) R
+have nonzero_constant R*
+product(1, n, fn(k Z) R* {nonzero_constant}) = nonzero_constant ^ n
 sum(1, n, fn(k Z) R {f(k) + g(k)}) = sum(1, n, f) + sum(1, n, g)
 sum(1, n, fn(k Z) R {f(k) - g(k)}) = sum(1, n, f) - sum(1, n, g)
 sum(1, n, fn(k Z) R {c * f(k)}) = c * sum(1, n, f)

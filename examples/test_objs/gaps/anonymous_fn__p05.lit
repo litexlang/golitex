@@ -1,2 +1,0 @@
-# Intended valid regression: anonymous_fn P05
-fn(x R) R {x + 1} $in fn(y R) R

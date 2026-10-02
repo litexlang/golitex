@@ -1,0 +1,2 @@
+# N101: must reject: wrong finite product
+finite_set_product({1,2,3},fn(k Z) Z {k}) = 7

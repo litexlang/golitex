@@ -1,0 +1,2 @@
+# N103: must reject: callable predicate fails
+let bad = finite_set_product({0,1},fn(k Z:k!=0) Z {1})

@@ -15,15 +15,28 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::IntegerRangeBuilder(_) => BuiltinRuleText {rule_id:"IntegerRangeBuilder",rule_name:"Integer range comprehension".into(),message:match lang {
+                OutputLanguage::English => "Integer membership with the exact lower and upper endpoint conditions",
+                OutputLanguage::Chinese => "整数成员及对应的上下界条件",
+            }.into()},
+            Self::ScalarIdentity(p) => BuiltinRuleText { rule_id:p.rule_id(), rule_name:p.rule_id().into(), message: match lang {
+                OutputLanguage::English => "Apply the scalar identity with checked domain and premises",
+                OutputLanguage::Chinese => "在已验证的定义域和前提下应用标量恒等式",
+            }.into() },
             Self::Calculation(p) => p.rule_id_and_message(lang),
-            Self::AggregateIdentity(_) => BuiltinRuleText {
-                rule_id: "AggregateIdentity", rule_name: "Finite aggregate identity".into(),
-                message: "Verified constant, linear, pointwise, partition or reindexing requirements".into(),
+            Self::AggregateIdentity(_) => {
+                let (name, message) = match lang {
+                    OutputLanguage::English => ("Finite aggregate identity", "Verified constant, linear, pointwise, partition or reindexing requirements"),
+                    OutputLanguage::Chinese => ("有限聚合恒等式", "已验证常量、线性、逐点相等、分拆或重编号所需的前提"),
+                };
+                BuiltinRuleText { rule_id:"AggregateIdentity", rule_name:name.into(), message:message.into() }
             },
-            Self::AggregateCalculation(_) => crate::json_output::explain::fallback::BuiltinRuleText {
-                rule_id: "AggregateCalculation",
-                rule_name: "Exact finite aggregate calculation".into(),
-                message: "Enumerate valid arguments, substitute checked function bodies and fold exact values".into(),
+            Self::AggregateCalculation(_) => {
+                let (name, message) = match lang {
+                    OutputLanguage::English => ("Exact finite aggregate calculation", "Enumerate valid arguments, substitute checked function bodies and fold exact values"),
+                    OutputLanguage::Chinese => ("有限聚合精确计算", "枚举合法指标，代入已检查的函数体，并精确累加或累乘"),
+                };
+                BuiltinRuleText { rule_id:"AggregateCalculation", rule_name:name.into(), message:message.into() }
             },
             Self::SinArcsinLeftInverse(p) => p.rule_id_and_message(lang),
             Self::CosArccosLeftInverse(p) => p.rule_id_and_message(lang),
@@ -187,8 +200,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::UnionOverIntersectDistributive(p) => p.rule_id_and_message(lang),
             Self::SetMinusChainToUnion(p) => p.rule_id_and_message(lang),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_id_and_message(lang),
-            Self::SeqEqualsFnOnN(p) => p.rule_id_and_message(lang),
-            Self::FiniteSeqEqualsFnOnClosedRange(p) => p.rule_id_and_message(lang),
+            Self::SeqEqualsFnOnNPos(p) => p.rule_id_and_message(lang),
+            Self::FiniteSeqEqualsFnOnOneBasedDomain(p) => p.rule_id_and_message(lang),
             Self::IndexUnionEmptyIndex(p) => p.rule_id_and_message(lang),
             Self::IndexIntersectEmptyIndex(p) => p.rule_id_and_message(lang),
             Self::IndexCartEmptyIndex(p) => p.rule_id_and_message(lang),

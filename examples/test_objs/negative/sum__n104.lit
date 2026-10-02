@@ -1,0 +1,2 @@
+# N104: must reject: single range work allowance
+eval sum(1,1025,fn(k Z) Z {1})

@@ -10,6 +10,14 @@ sketch:
 sketch:
     sum(-2, -2, fn(x Z) Z {x}) = -2
 
+# P03: sum(1, 3, fn(x Z) Z {x}) = 6
+sketch:
+    sum(1, 3, fn(x Z) Z {x}) = 6
+
+# P04: sum(1, 3, fn(x Z) Z {2}) = 6
+sketch:
+    sum(1, 3, fn(x Z) Z {2}) = 6
+
 # P05: sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + 3
 sketch:
     sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + 3
@@ -17,3 +25,65 @@ sketch:
 # P06: sum(0, 0, fn(x Z) Z {0}) = 0
 sketch:
     sum(0, 0, fn(x Z) Z {0}) = 0
+
+# P101: negative endpoints and exact fractions
+sketch:
+    sum(-2,2,fn(k Z) Z {k*k}) = 10
+    sum(1,3,fn(k Z) Q {1/3}) = 1
+
+# P102: nested product and outer arithmetic
+sketch:
+    sum(1,3,fn(k N+) N+ {product(1,k,fn(j N+) N+ {j})}) = 9
+    sum(1,3,fn(k Z) Z {k}) + product(1,3,fn(k Z) Z {k}) = 12
+
+# P103: named function expansion
+sketch:
+    have fn square(k Z) Z = k*k
+    sum(1,3,square) = 14
+    eval sum(1,3,square)
+
+# P104: binder substitution retains outer free value
+sketch:
+    sum(1,3,fn(x Z) Z {sum(1,2,fn(y Z) Z {x+y})}) = 21
+
+# P105: every index satisfies the callable predicate
+sketch:
+    sum(1,3,fn(k Z:k!=0) Z {1}) = 3
+
+# P106: algorithm terms use proved case equations
+sketch:
+    algo flag(x R) R by cases:
+        case x = 0: 0
+        case x != 0: 1
+    sum(0,3,flag) = 3
+
+# P107: symbolic constant, addition, subtraction and scalar
+sketch:
+    have n N+
+    have c R
+    have f,g fn(k Z) R
+    sum(1,n,fn(k Z) R {c}) = n*c
+    sum(1,n,fn(k Z) R {f(k)+g(k)}) = sum(1,n,f)+sum(1,n,g)
+    sum(1,n,fn(k Z) R {f(k)-g(k)}) = sum(1,n,f)-sum(1,n,g)
+    sum(1,n,fn(k Z) R {c*f(k)}) = c*sum(1,n,f)
+
+# P108: symbolic adjacent partition and pointwise congruence
+sketch:
+    have n N+
+    have f fn(k Z) R
+    sum(1,n+1,f) = sum(1,n,f)+sum(n+1,n+1,f)
+    sum(1,n,fn(k Z) Z {k+k}) = sum(1,n,fn(j Z) Z {2*j})
+
+# P109: integer shift with legal source and target ranges
+sketch:
+    have f fn(k Z) R
+    forall a,b,t Z:
+        a <= b
+        a+t <= b+t
+        =>:
+            sum(a,b,fn(k Z) R {f(k+t)}) = sum(a+t,b+t,f)
+
+# P110: known numeric endpoint
+sketch:
+    have end Z = 3
+    sum(1,end,fn(k Z) Z {k}) = 6

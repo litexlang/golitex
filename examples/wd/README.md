@@ -3,6 +3,22 @@
 Positive tracers for **already-implemented** Obj / Fact WD.
 Negatives stay in `../wd_negative/`.
 
+[Instantiated function fields](struct_field_instantiation.lit) check generic,
+concrete, nested and dependent header arguments in named theorem goals. Field
+types use the selected struct's actual parameters. This does not open nested
+struct laws; argument carriers and callable guards remain mandatory. Executable
+negative controls live in `tests/unit/execute/struct_field_instantiation/tests.rs`.
+
+[Finite extrema](finite_extrema_real_carrier.lit) require all three conditions:
+finiteness, nonemptiness, and `S $subset R`. Real literals, aliases and checked
+generic domains remain valid; `{i}` is rejected by the
+[non-real extrema control](../wd_negative/finite_extrema_nonreal.lit).
+
+[Finite-set fold domains](finite_set_fold_domain.lit) checks that the iterand's
+declared domain and predicates cover every set element. Wrong-domain and
+predicate counterexamples reject before binding. Associativity/commutativity
+enforcement remains a separate gap; ordered `reduce` may use subtraction.
+
 ```bash
 target/release/litex -f <this-file>
 ```
@@ -73,3 +89,16 @@ same ordering is used for forall, forall-iff, not-forall, and existential WD;
 this does not prove a quantified conclusion or leak its bound parameters.
 
 - [Original group left cancellation](fact/group_left_cancel.lit): dependent carriers and the complete original theorem proof.
+
+[Guarded quantifier domains](fact/guarded_quantifier_domains.lit) checks
+`not forall` and `forall … <=>:` definitions, plus a `claim` goal. A domain
+fact is checked before being assumed in the retained binder scope; later
+domains and conclusions may use it for WD. Neither iff branch is assumed
+while checking the other. Missing guards, zero denominators and iff cross-branch
+assumptions have executable controls in `../wd_negative/quantifier_domain_*.lit`.
+
+[Function application evidence](obj/application_evidence_ownership.lit) covers
+named, literal and field-headed calls with repeated composite arguments.
+Discarded candidate scopes cannot own WD ids in the returned proof. The Rust
+regression resolves child and projected WD citations after the statement ends,
+including reuse of an existing caller-owned cache entry.

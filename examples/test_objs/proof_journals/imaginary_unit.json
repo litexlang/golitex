@@ -102,6 +102,40 @@
       "status": "materialized",
       "accepted_litex": "sketch:\n    C_abs(i) = 1",
       "reusable_lesson": "Independent regression assertion; surrounding cases supply no assumptions."
+    },
+    {
+      "id": "P101",
+      "intent": "imaginary-unit nonzero builtin",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    i != 0\n    0 != i\n    i $in C*\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    i != 0\n    0 != i\n    i $in C*\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 7
+    },
+    {
+      "id": "P102",
+      "intent": "guarded imaginary inverse",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    i / i = 1\n    1 / i + i = 0\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    i / i = 1\n    1 / i + i = 0\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 8
     }
   ],
   "materialization": {

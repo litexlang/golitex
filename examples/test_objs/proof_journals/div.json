@@ -129,9 +129,44 @@
           "candidate": "sketch:\n    1 / i = -i",
           "result": "failed",
           "verifier_evidence": "... ... error\nlitex> "
+        },
+        {
+          "date": "2026-10-02",
+          "candidate": "1 / i = -i",
+          "result": "accepted",
+          "verifier_evidence": {
+            "observed": "accept",
+            "exit_code": 0,
+            "phase": "success",
+            "diagnostic": "",
+            "statements": 1,
+            "object": "div",
+            "file": "gaps/div__p08.lit",
+            "kind": "gap",
+            "intended": "accept"
+          },
+          "gate": "numeric_aggregate_before_promotion.json"
         }
       ],
-      "status": "blocked"
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    1 / i = -i\n"
+    },
+    {
+      "id": "P101",
+      "intent": "imaginary denominator remains guarded",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    1 / i = -i\n    1 / (2 * i) = -i / 2\n",
+          "result": "accepted",
+          "verifier_evidence": "... ... ... success\n",
+          "snapshot": "numeric_aggregate_sessions_2026-10-02.json"
+        }
+      ],
+      "status": "materialized",
+      "accepted_litex": "sketch:\n    1 / i = -i\n    1 / (2 * i) = -i / 2\n",
+      "reusable_lesson": "Source WD, exact calculation and dedicated symbolic premises are checked in an independent scope.",
+      "source_order": 9
     }
   ],
   "materialization": {
@@ -258,5 +293,11 @@
       "kind": "positive",
       "intended": "accept"
     }
+  },
+  "repairs_2026_10_02": {
+    "source_report": "numeric_aggregate_before_promotion.json",
+    "closed_issues": [
+      "div-P08"
+    ]
   }
 }

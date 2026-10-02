@@ -1,2 +1,0 @@
-# Intended valid regression: sum_of_finite_set P06
-finite_set_sum(closed_range(3, 1), fn(x Z) Z {x}) = 0

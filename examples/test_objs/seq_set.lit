@@ -2,13 +2,13 @@
 # Run: target/release/litex -f examples/test_objs/seq_set.lit
 # Cases use discarded sketch scopes; no cross-case facts.
 
-# P01: seq(R) = fn(x N) R
+# P01: seq(R) = fn(x N+) R
 sketch:
-    seq(R) = fn(x N) R
+    seq(R) = fn(x N+) R
 
-# P02: seq(N) = fn(x N) N
+# P02: seq(N) = fn(x N+) N
 sketch:
-    seq(N) = fn(x N) N
+    seq(N) = fn(x N+) N
 
 # P05: $is_set(S)
 sketch:

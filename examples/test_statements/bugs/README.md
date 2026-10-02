@@ -10,9 +10,11 @@ One reproduction remains open: K005's negative-existence conclusion. K001, K002,
 
 ## Open issue groups
 
-| Issue | Problem | Statement folders | Status |
+| Issue | Problem | Statement folders | Status / repair ownership |
 | --- | --- | --- | --- |
-| K005 | Negated existence is not derived from the checked universal exclusion | [Fact](fact/K005-finite-negated-existence/README.md) | open |
+| K005 | Explicit by-contra cannot target negative existence; automatic conversion is not required | [Fact](fact/K005-finite-negated-existence/README.md) | open; category 2 candidate, locality under diagnosis |
+
+The maintainer delegates Litex authoring improvements (category 1) and justified local Rust semantic repairs (category 2) to Codex. Nonlocal changes require discussion. Current scope, next action, acceptance and escalation are in the [suite todo](../todo.md); unknown scope stays provisional until investigated.
 
 ## Resolved issue groups
 
@@ -31,9 +33,9 @@ The [statement-boundary acceptance record](../experience/problem_notes/statement
 resolves K006 (strict template trust), both K007 binder-body variants, and both
 K009 conditional-enumeration variants. K008 is excluded by the user and has been removed from its bug folder; its [unsupported-domain boundary and decision](../experience/problem_notes/K008-cart-excluded.md) remain as explicit rejection coverage. Other historical issue folders remain linked from the manifest boundaries.
 
-## Internal verifier control requiring diagnosis
+## Rechecked internal verifier control
 
-The supplemental builtin-policy Rust gate has one observed failure: [stored atomic citation under known_only](fact/internal-known-only-control/README.md). It has no native CLI reproduction or confirmed cause yet and is counted separately from the one manifest gap.
+The formerly failing stored atomic citation under `known_only` now passes its exact Rust control (1 passed, 0 failed). Its stale open folder is removed; the [prior failure and current recheck](../experience/problem_notes/known-only-control-recheck.md) remain recorded. No causal repair attribution or complete seven-test suite acceptance is claimed.
 
 ## Related statement folders
 

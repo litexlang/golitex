@@ -6,6 +6,7 @@ use super::StoreFactAndInferResult;
 // proof arms). Verify keeps a single winning proof; infer pushes every hit into
 // the parent Vec and stores each rule's derived facts.
 pub enum InferAtomicExceptEqualityResult {
+    BuiltinDefinition(InferBuiltinDefinitionResult),
     // `$P(args)` → parameter-type obligations.
     NormalAtomicParamTypes(InferNormalAtomicParamTypesProjectedResult),
     // `$P(args)` → instantiated iff facts (one layer).
@@ -61,6 +62,11 @@ pub enum InferAtomicExceptEqualityResult {
 }
 
 pub struct InferNormalAtomicParamTypesProjectedResult {
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
+pub struct InferBuiltinDefinitionResult {
+    pub source_fact_id: FactId,
     pub derived: Vec<StoreFactAndInferResult>,
 }
 
@@ -167,6 +173,7 @@ pub struct InferSupersetElementwiseMembershipResult {
 impl InferAtomicExceptEqualityResult {
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
         match self {
+            Self::BuiltinDefinition(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
             Self::NormalAtomicParamTypes(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {

@@ -37,6 +37,10 @@ fn chinese_key(english_key: &str) -> &str {
         "fail_reason" => "失败原因",
         "stores" => "存储",
         "infers" => "推断",
+        "evaluated_object" => "求值结果",
+        "aggregate_evaluations" => "聚合计算",
+        "function_evaluations" => "函数计算",
+        "algo_evaluations" => "算法计算",
         // why / cite
         "type" => "类型",
         "rule_name" => "规则名",

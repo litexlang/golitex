@@ -77,22 +77,16 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 ])
             }
         },
-        ExecDefinitionStmtResult::HaveFnEqualCaseByCase(r) => project_success_failed_shell(
-            "have_fn_equal_case_by_case",
-            !r.is_failed(),
-            match r {
-                ExecHaveFnEqualCaseByCaseStmtResult::Success(s) => {
-                    Some(s.statement.readable_string())
-                }
-                _ => None,
-            },
-            match r {
-                ExecHaveFnEqualCaseByCaseStmtResult::Success(s) => {
-                    Some(project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime))
-                }
-                _ => None,
-            },
-            runtime),
+        ExecDefinitionStmtResult::HaveFnEqualCaseByCase(r) => match r {
+            ExecHaveFnEqualCaseByCaseStmtResult::Success(s) => project_success_failed_shell(
+                "have_fn_equal_case_by_case", true, Some(s.statement.readable_string()),
+                Some(project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime)), runtime,
+            ),
+            ExecHaveFnEqualCaseByCaseStmtResult::Failed(failure) => object_for(runtime, vec![
+                ("success", bool_value(false)), ("kind", string("have_fn_equal_case_by_case")),
+                ("failure", project_cases_definition_failure(failure, runtime)),
+            ]),
+        },
         ExecDefinitionStmtResult::HaveFnByForallExistUnique(r) => {
             use crate::execute::ExecHaveFnByForallExistUniqueStmtFailed;
             match r {
@@ -195,6 +189,14 @@ fn project_def_struct(result: &ExecDefStructStmtResult, runtime: &Runtime) -> Js
             ("success", bool_value(true)),
             ("kind", string("def_struct")),
             ("statement", string(s.statement.readable_string())),
+            ("definition_facts", JsonValue::Array(s.definition_facts.iter().map(|published|
+                object_for(runtime, vec![
+                    ("source_fact_id", string(published.source_fact_id.to_string())),
+                    ("fact_id", string(published.store_and_infer.store.primary_fact_id().to_string())),
+                    ("facts", JsonValue::Array(crate::json_output::helper::store_fact_texts(&published.store_and_infer.store)
+                        .into_iter().map(string).collect())),
+                ])
+            ).collect())),
             ("equivalent_facts", JsonValue::Array(s.field_scope.equivalent_facts.iter()
                 .zip(&s.statement.equivalent_facts)
                 .map(|(proof, fact)| object_for(runtime, vec![
@@ -394,11 +396,36 @@ fn project_def_prop(result: &ExecDefPropStmtResult, runtime: &Runtime) -> JsonVa
                 ),
             ),
                     ]),
-        ExecDefPropStmtResult::Failed(_) => object_for(runtime, vec![
+        ExecDefPropStmtResult::Failed(failed) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("def_prop")),
+            ("failure", project_def_prop_failure(failed, runtime)),
         ]),
     }
+}
+
+pub(in crate::json_output) fn project_def_prop_failure(
+    failed: &crate::execute::execute_def_prop_stmt::ExecDefPropStmtFailed,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_def_prop_stmt::ExecDefPropStmtFailed;
+    let (phase, failure) = match failed {
+        ExecDefPropStmtFailed::ParamType(wd) =>
+            ("parameter_type", project_verify_obj_wd(wd, runtime)),
+        ExecDefPropStmtFailed::AutoOpenStructLayer(failed) => (
+            "auto_open_struct_layer",
+            object_for(runtime, vec![
+                ("obj", string(failed.obj.readable_string())),
+                ("struct_obj", string(failed.struct_obj.readable_string())),
+                ("reason", string(&failed.reason)),
+            ]),
+        ),
+        ExecDefPropStmtFailed::IffFactWellDefined(wd) => (
+            "iff_fact_well_defined",
+            super::wd_failure::project_fact_wd_failure(wd, runtime),
+        ),
+    };
+    object_for(runtime, vec![("phase", string(phase)), ("failure", failure)])
 }
 
 fn project_def_abstract_prop(
@@ -943,6 +970,14 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                 ("kind", string("eval")),
                 ("source_well_defined", project_verify_obj_wd(failed, runtime)),
             ]),
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::AggregateBudgetExceeded) => object_for(runtime, vec![
+                ("success", bool_value(false)), ("kind", string("eval")),
+                ("cause", string("aggregate_budget_exceeded")),
+            ]),
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::AggregateRangeOverflow) => object_for(runtime, vec![
+                ("success", bool_value(false)), ("kind", string("eval")),
+                ("cause", string("aggregate_range_overflow")),
+            ]),
             ExecEvalStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("eval")),
@@ -994,4 +1029,31 @@ fn project_param_type_fact_check(
 #[allow(dead_code)]
 fn _store_only(node: &StoreFactAndInferResult, runtime: &Runtime) -> JsonValue {
     project_store_and_infer(node, runtime)
+}
+
+/// Failure payloads already produced by the cases executor, shared by both profiles.
+pub(in crate::json_output) fn project_cases_definition_failure(
+    failure: &crate::execute::ExecHaveFnEqualCaseByCaseStmtFailed, runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::ExecHaveFnEqualCaseByCaseStmtFailed as F;
+    let (phase, mut details) = match failure {
+        F::CaseCountMismatch => ("case_count", vec![]),
+        F::EmptyCases => ("empty_cases", vec![]),
+        F::FnSetWellDefined(wd) => ("fn_set_well_defined", vec![("well_defined", project_verify_obj_wd(wd, runtime))]),
+        F::Coverage(proof) => ("coverage", vec![("verification", project_verify_fact(proof, runtime))]),
+        F::Disjoint { i, j } => ("disjoint", vec![
+            ("case_index", JsonValue::Number((i + 1) as f64)),
+            ("other_case_index", JsonValue::Number((j + 1) as f64)),
+        ]),
+        F::CaseBodyWellDefined(i, wd) => ("case_body_well_defined", vec![
+            ("case_index", JsonValue::Number((i + 1) as f64)),
+            ("well_defined", project_verify_obj_wd(wd, runtime)),
+        ]),
+        F::CaseBodyInRetSet(i, proof) => ("case_body_in_return_set", vec![
+            ("case_index", JsonValue::Number((i + 1) as f64)),
+            ("verification", project_verify_fact(proof, runtime)),
+        ]),
+    };
+    details.insert(0, ("phase", string(phase)));
+    object_for(runtime, details)
 }

@@ -18,6 +18,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     MulInNaturalBuiltinRuleProof,
     NativeConstantMembershipBuiltinRuleProof,
     NativeScalarCodomainBuiltinRuleProof,
+    PositiveIntegerInNPosBuiltinRuleProof,
     CartDimInNaturalBuiltinRuleProof,
     TupleDimInNaturalBuiltinRuleProof,
     AnonymousFnInDeclaredFnSetBuiltinRuleProof,
@@ -50,9 +51,17 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInComplex(p) => p.rule_id_and_message(lang),
             Self::RealArithmeticClosure(p) => p.rule_id_and_message(lang),
             Self::NativeScalarCodomain(p) => p.rule_id_and_message(lang),
-            Self::AggregateScalarCodomain(_) => BuiltinRuleText {
-                rule_id: "AggregateScalarCodomain", rule_name: "Finite aggregate scalar carrier".into(),
-                message: "Checked summands or factors close the declared scalar carrier; empty sums include zero".into(),
+            Self::PositiveIntegerInNPos(p) => p.rule_id_and_message(lang),
+            Self::FoldScalarCodomain(_) => match lang {
+                OutputLanguage::English => text("FoldScalarCodomain", "Fold carrier", "The checked homogeneous operation and seed preserve the fold carrier"),
+                OutputLanguage::Chinese => text("FoldScalarCodomain", "Fold 的载体", "已验证的齐次运算与初值保持 fold 的载体"),
+            },
+            Self::AggregateScalarCodomain(_) => {
+                let (name, message) = match lang {
+                    OutputLanguage::English => ("Finite aggregate scalar carrier", "Checked summands or factors close the declared scalar carrier; empty sums include zero"),
+                    OutputLanguage::Chinese => ("有限聚合的数值载体", "合法求和项或因子在声明的数值载体内封闭；空求和须包含零"),
+                };
+                BuiltinRuleText { rule_id: "AggregateScalarCodomain", rule_name:name.into(), message:message.into() }
             },
             Self::CartDimInNatural(p) => p.rule_id_and_message(lang),
             Self::TupleDimInNatural(p) => p.rule_id_and_message(lang),
@@ -90,7 +99,9 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInComplex(_) => None,
             Self::RealArithmeticClosure(_) => None,
             Self::NativeScalarCodomain(_) => None,
+            Self::PositiveIntegerInNPos(_) => None,
             Self::AggregateScalarCodomain(_) => None,
+            Self::FoldScalarCodomain(_) => None,
             Self::CartDimInNatural(_) => None,
             Self::TupleDimInNatural(_) => None,
             Self::AnonymousFnInDeclaredFnSet(_) => None,
@@ -840,5 +851,15 @@ impl AnonymousFnInDeclaredFnSetBuiltinRuleProof {
             OutputLanguage::English => text("AnonymousFnInDeclaredFnSet", "Anonymous function in declared function set", "the checked function's signature matches the target modulo bound-name renaming"),
             OutputLanguage::Chinese => text("AnonymousFnInDeclaredFnSet", "匿名函数属于声明的函数集", "函数已通过良定检查，目标签名仅在绑定参数名称上不同"),
         }
+    }
+}
+
+impl PositiveIntegerInNPosBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        let (name, message) = match lang {
+            OutputLanguage::English => ("Positive integer membership", "An integer strictly greater than zero belongs to N+"),
+            OutputLanguage::Chinese => ("正整数成员", "整数且严格大于零的对象属于 N+"),
+        };
+        BuiltinRuleText { rule_id: "PositiveIntegerInNPos", rule_name: name.into(), message: message.into() }
     }
 }

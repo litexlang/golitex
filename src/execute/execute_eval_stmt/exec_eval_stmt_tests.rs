@@ -3,8 +3,8 @@ use crate::execute::execute_eval_stmt::{
     ExecCommandStmtResult, ExecEvalStmtFailed, ExecEvalStmtResult,
 };
 use crate::execute::ExecStmtResult;
-use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::knowledge_base::JsonValue;
+use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -39,7 +39,10 @@ fn assert_eval_number(runtime: &mut Runtime, code: &str, expected: &str) {
             }
             other => panic!("expected number {expected}, got {other:?}"),
         },
-        other => panic!("expected eval Success for `{code}`, failed={}", other.is_failed()),
+        other => panic!(
+            "expected eval Success for `{code}`, failed={}",
+            other.is_failed()
+        ),
     }
 }
 
@@ -51,11 +54,32 @@ fn eval_closed_pow_succeeds_with_nine() {
 
 #[test]
 fn normalized_decimal_and_guarded_imaginary_regressions() {
-    for code in ["2.400 = 2.4", "2.000 $in Z", "i != 0", "0 != i", "1 / i = -i", "i / i = 1"] {
-        assert!(!exec_one(&mut runtime_with_file_env(), code).is_failed(), "{code}");
+    for code in [
+        "2.400 = 2.4",
+        "2.000 $in Z",
+        "i != 0",
+        "0 != i",
+        "1 / i = -i",
+        "i / i = 1",
+        "1/3 != 2/3",
+    ] {
+        assert!(
+            !exec_one(&mut runtime_with_file_env(), code).is_failed(),
+            "{code}"
+        );
     }
-    for code in ["2.400 != 2.4", "i = 0", "1 / i = -1", "1 / (i - i) = 0"] {
-        assert!(exec_one(&mut runtime_with_file_env(), code).is_failed(), "{code}");
+    for code in [
+        "2.400 != 2.4",
+        "i = 0",
+        "1 / i = -1",
+        "1 / (i - i) = 0",
+        "1/3 != 2/6",
+        "1/0 != 1",
+    ] {
+        assert!(
+            exec_one(&mut runtime_with_file_env(), code).is_failed(),
+            "{code}"
+        );
     }
 }
 
@@ -65,84 +89,200 @@ fn aggregate_exact_nested_named_and_set_evaluation() {
     assert_eval_number(&mut rt, "eval sum(1,3,fn(k Z) Z {k})", "6");
     assert_eval_number(&mut rt, "eval product(1,3,fn(k Z) Z {k})", "6");
     assert_eval_number(&mut rt, "eval sum(1,3,fn(k Z) Q {1/3})", "1");
-    assert_eval_number(&mut rt, "eval sum(1,3,fn(k N+) N+ {product(1,k,fn(j N+) N+ {j})})", "9");
+    assert_eval_number(
+        &mut rt,
+        "eval sum(1,3,fn(k N+) N+ {product(1,k,fn(j N+) N+ {j})})",
+        "9",
+    );
     assert!(!exec_one(&mut rt, "have fn square(k Z) Z = k*k").is_failed());
     assert_eval_number(&mut rt, "eval sum(1,3,square)", "14");
     assert_eval_number(&mut rt, "eval finite_set_product({1,2,3},square)", "36");
-    assert!(exec_one(&mut rt, "eval finite_set_sum({1,1.00,2},fn(k Z) Z {k})").is_failed(),
-        "list-set WD requires provably distinct elements, including normalized decimal aliases");
+    assert!(
+        exec_one(&mut rt, "eval finite_set_sum({1,1.00,2},fn(k Z) Z {k})").is_failed(),
+        "list-set WD requires provably distinct elements, including normalized decimal aliases"
+    );
     assert_eval_number(&mut rt, "eval finite_set_sum({},fn(k Z) Z {k})", "0");
     assert_eval_number(&mut rt, "eval finite_set_product({},fn(k Z) Z {k})", "1");
-    for s in ["sum(1,3,square)=14", "product(1,3,square)=36", "sum(1,3,fn(x Z) Z {sum(1,2,fn(y Z) Z {x+y})})=21"] {
+    for s in [
+        "sum(1,3,square)=14",
+        "product(1,3,square)=36",
+        "sum(1,3,fn(x Z) Z {sum(1,2,fn(y Z) Z {x+y})})=21",
+    ] {
         assert!(!exec_one(&mut rt, s).is_failed(), "{s}");
     }
 }
 
 #[test]
 fn aggregate_domains_false_results_and_shared_budget_reject() {
-    for s in ["sum(1,3,fn(k Z) Z {k})=7", "product(1,3,fn(k Z) Z {k})=7",
+    for s in [
+        "sum(1,3,fn(k Z) Z {k})=7",
+        "product(1,3,fn(k Z) Z {k})=7",
         "let bad = finite_set_sum({1},fn(k {2}) Z {k})",
         "let bad = finite_set_product({1},fn(k {2}) Z {k})",
-        "eval sum(3,1,fn(k Z) Z {k})", "eval sum(-1,2,fn(k N) N {k})"] {
+        "eval sum(3,1,fn(k Z) Z {k})",
+        "eval sum(-1,2,fn(k N) N {k})",
+    ] {
         assert!(exec_one(&mut runtime_with_file_env(), s).is_failed(), "{s}");
     }
-    for s in ["eval sum(1,1025,fn(k Z) Z {1})", "eval sum(1,32,fn(k Z) Z {sum(1,32,fn(j Z) Z {1})})"] {
-        assert!(matches!(exec_one(&mut runtime_with_file_env(), s),
-            ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(ExecEvalStmtFailed::AggregateBudgetExceeded)))), "{s}");
+    for s in [
+        "eval sum(1,1025,fn(k Z) Z {1})",
+        "eval sum(1,32,fn(k Z) Z {sum(1,32,fn(j Z) Z {1})})",
+    ] {
+        assert!(
+            matches!(
+                exec_one(&mut runtime_with_file_env(), s),
+                ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
+                    ExecEvalStmtFailed::AggregateBudgetExceeded
+                )))
+            ),
+            "{s}"
+        );
     }
     assert!(matches!(exec_one(&mut runtime_with_file_env(), "eval sum(-170141183460469231731687303715884105727,170141183460469231731687303715884105727,fn(k Z) Z {1})"),
         ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(ExecEvalStmtFailed::AggregateRangeOverflow)))));
     let mut rt = runtime_with_file_env();
     assert!(exec_one(&mut rt, "let bad = finite_set_sum({1},fn(k {2}) Z {k})").is_failed());
-    assert!(!rt.top_exec_env().definitions.identifiers.contains_key("bad"), "failed execution must leave no runtime binding");
+    assert!(
+        !rt.top_exec_env()
+            .definitions
+            .identifiers
+            .contains_key("bad"),
+        "failed execution must leave no runtime binding"
+    );
 }
 
 #[test]
 fn aggregate_symbolic_reindex_contract() {
     let mut rt = runtime_with_file_env();
-    assert!(!exec_one(&mut rt,"have f fn(k Z) R").is_failed());
+    assert!(!exec_one(&mut rt, "have f fn(k Z) R").is_failed());
     let code = "forall a,b,t Z:\n    a<=b\n    a+t<=b+t\n    =>:\n        sum(a,b,fn(k Z) R {f(k+t)})=sum(a+t,b+t,f)";
-    let outcome = exec_one(&mut rt,code);
-    assert!(!outcome.is_failed(),"{}",crate::json_output::project_stmt_detailed(&outcome,&rt).stringify_pretty());
+    let outcome = exec_one(&mut rt, code);
+    assert!(
+        !outcome.is_failed(),
+        "{}",
+        crate::json_output::project_stmt_detailed(&outcome, &rt).stringify_pretty()
+    );
+    assert!(!exec_one(&mut rt, "have n N+").is_failed());
+    assert!(!exec_one(
+        &mut rt,
+        "forall:\n    3 <= n+2\n    =>:\n        sum(1,n,fn(k Z) R {f(k+2)}) = sum(3,n+2,f)"
+    )
+    .is_failed());
 }
 
 #[test]
 fn aggregate_display_evidence_and_fact_publication_boundary() {
     let mut rt = runtime_with_file_env();
-    assert!(!exec_one(&mut rt,"have fn square(k Z) Z = k*k").is_failed());
+    assert!(!exec_one(&mut rt, "have fn square(k Z) Z = k*k").is_failed());
     let before = rt.top_exec_env().facts.facts_by_id.len();
-    let result = exec_one(&mut rt,"eval sum(1,3,square)");
+    let result = exec_one(&mut rt, "eval sum(1,3,square)");
     assert!(!result.is_failed());
-    assert_eq!(rt.top_exec_env().facts.facts_by_id.len(),before,"eval publishes no mathematical facts");
-    let detail = crate::json_output::project_stmt_detailed(&result,&rt);
-    let aggregates = detail.as_object().unwrap().get("aggregate_evaluations").unwrap();
-    let JsonValue::Array(aggregates) = aggregates else { panic!("aggregate trace"); };
-    assert_eq!(aggregates.len(),1);
+    assert_eq!(
+        rt.top_exec_env().facts.facts_by_id.len(),
+        before,
+        "eval publishes no mathematical facts"
+    );
+    let detail = crate::json_output::project_stmt_detailed(&result, &rt);
+    let normal = crate::json_output::project_stmt_normal(&result, &rt);
+    assert_eq!(
+        normal
+            .as_object()
+            .unwrap()
+            .get("evaluated_object")
+            .unwrap()
+            .as_str().unwrap(),
+        "14"
+    );
+    let aggregates = detail
+        .as_object()
+        .unwrap()
+        .get("aggregate_evaluations")
+        .unwrap();
+    let JsonValue::Array(aggregates) = aggregates else {
+        panic!("aggregate trace");
+    };
+    assert_eq!(aggregates.len(), 1);
     let aggregate = aggregates[0].as_object().unwrap();
-    assert_eq!(aggregate.get("kind").unwrap().as_str().unwrap(),"sum");
-    let JsonValue::Array(terms) = aggregate.get("terms").unwrap() else { panic!("terms"); };
-    assert_eq!(terms.len(),3);
-    let totals:Vec<_> = terms.iter().map(|t|t.as_object().unwrap().get("accumulated_value").unwrap().as_str().unwrap()).collect();
-    assert_eq!(totals,vec!["1","5","14"]);
-    assert!(terms[0].as_object().unwrap().get("application_well_defined").is_some());
-    let direct = exec_one(&mut rt,"sum(1,3,square)=14");
+    assert_eq!(aggregate.get("kind").unwrap().as_str().unwrap(), "sum");
+    let JsonValue::Array(terms) = aggregate.get("terms").unwrap() else {
+        panic!("terms");
+    };
+    assert_eq!(terms.len(), 3);
+    let totals: Vec<_> = terms
+        .iter()
+        .map(|t| {
+            t.as_object()
+                .unwrap()
+                .get("accumulated_value")
+                .unwrap()
+                .as_str()
+                .unwrap()
+        })
+        .collect();
+    assert_eq!(totals, vec!["1", "5", "14"]);
+    assert!(terms[0]
+        .as_object()
+        .unwrap()
+        .get("application_well_defined")
+        .is_some());
+    let direct = exec_one(&mut rt, "sum(1,3,square)=14");
     assert!(!direct.is_failed());
-    assert!(rt.top_exec_env().facts.facts_by_id.len()>before,"direct equality owns proof publication");
-    let negative = exec_one(&mut rt,"sum(1,3,square)=15");
+    assert!(
+        rt.top_exec_env().facts.facts_by_id.len() > before,
+        "direct equality owns proof publication"
+    );
+    let negative = exec_one(&mut rt, "sum(1,3,square)=15");
     assert!(negative.is_failed());
+    let failed = exec_one(&mut rt, "eval sum(1,1025,square)");
+    assert!(failed.is_failed());
+    assert!(crate::json_output::project_stmt_normal(&failed, &rt)
+        .stringify_pretty()
+        .contains("aggregate_budget_exceeded"));
+    assert!(crate::json_output::project_stmt_detailed(&failed, &rt)
+        .stringify_pretty()
+        .contains("aggregate_budget_exceeded"));
+}
+
+#[test]
+fn aggregate_algorithm_terms_keep_checked_equations_and_eval_stores_empty() {
+    let mut rt = runtime_with_file_env();
+    assert!(!exec_one(
+        &mut rt,
+        "algo flag(x R) R by cases:\n    case x = 0: 0\n    case x != 0: 1"
+    )
+    .is_failed());
+    let before = rt.top_exec_env().facts.facts_by_id.len();
+    assert_eval_number(&mut rt, "eval sum(0,3,flag)", "3");
+    assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), before);
+    assert!(!exec_one(&mut rt, "sum(0,3,flag) = 3").is_failed());
+    assert!(!exec_one(&mut rt, "product(1,3,flag) = 1").is_failed());
+    assert!(!exec_one(&mut rt, "finite_set_sum({1/3,2/3},flag) = 2").is_failed());
+    assert!(exec_one(&mut rt, "sum(0,3,flag) = 4").is_failed());
 }
 
 #[test]
 fn aggregate_callable_predicates_and_scalar_carriers() {
-    for code in ["eval sum(1,3,fn(k Z:k!=0) Z {1})", "eval finite_set_sum({1,2},fn(k Z:k!=0) Z {1})",
+    for code in [
+        "eval sum(1,3,fn(k Z:k!=0) Z {1})",
+        "eval finite_set_sum({1,2},fn(k Z:k!=0) Z {1})",
         "eval finite_set_sum({},fn(k Z:k!=0) R {1/k})",
-        "product(1,3,fn(k N+) N+ {k}) $in N+"] {
-        assert!(!exec_one(&mut runtime_with_file_env(),code).is_failed(),"{code}");
+        "product(1,3,fn(k N+) N+ {k}) $in N+",
+    ] {
+        assert!(
+            !exec_one(&mut runtime_with_file_env(), code).is_failed(),
+            "{code}"
+        );
     }
-    for code in ["let bad = sum(0,3,fn(k Z:k!=0) Z {1})",
+    for code in [
+        "let bad = sum(0,3,fn(k Z:k!=0) Z {1})",
         "let bad = finite_set_sum({1},fn(k Z:k!=1) Z {0})",
-        "sum(1,1,fn(k Z) C {i}) $in R", "finite_set_sum({},fn(k N+) N+ {k}) $in N+"] {
-        assert!(exec_one(&mut runtime_with_file_env(),code).is_failed(),"{code}");
+        "sum(1,1,fn(k Z) C {i}) $in R",
+        "finite_set_sum({},fn(k N+) N+ {k}) $in N+",
+    ] {
+        assert!(
+            exec_one(&mut runtime_with_file_env(), code).is_failed(),
+            "{code}"
+        );
     }
 }
 
@@ -163,7 +303,10 @@ fn eval_after_closed_numeric_equal_rewrite() {
                 other => panic!("expected number 11, got {other:?}"),
             }
         }
-        other => panic!("expected eval Success after rewrite, failed={}", other.is_failed()),
+        other => panic!(
+            "expected eval Success after rewrite, failed={}",
+            other.is_failed()
+        ),
     }
 }
 

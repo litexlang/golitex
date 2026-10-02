@@ -10,6 +10,10 @@ sketch:
 sketch:
     42 $in N+
 
+# P03: 2.400 = 2.4
+sketch:
+    2.400 = 2.4
+
 # P04: 0.1 + 0.2 = 0.3
 sketch:
     0.1 + 0.2 = 0.3
@@ -25,3 +29,16 @@ sketch:
 # P07: 0.0001 = 1 / 10000
 sketch:
     0.0001 = 1 / 10000
+
+# P101: decimal integer and zero normalization
+sketch:
+    2.000 = 2
+    0.000 = 0
+    (-0.000) = 0
+    2.000 $in Z
+
+# P102: canonical decimals preserve order
+sketch:
+    2.400 <= 2.4
+    2.400 >= 2.4
+    2.400 - 2.4 = 0

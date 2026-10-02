@@ -18,6 +18,10 @@ sketch:
 sketch:
     fn(x R: x > 0) R {1 / x}(2) = 1 / 2
 
+# P05: fn(x R) R {x + 1} $in fn(y R) R
+sketch:
+    fn(x R) R {x + 1} $in fn(y R) R
+
 # P90: Nearest valid-domain control
 sketch:
     fn(x R) R {x}(-1) = -1

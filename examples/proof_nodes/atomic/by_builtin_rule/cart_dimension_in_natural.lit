@@ -1,0 +1,10 @@
+# Formerly rejected after ordered-predicate domain checks were restored:
+# have S set = cart(R, R)
+# cart_dim(S) $in N
+# cart_dim(S) >= 2
+# Now: a checked Cartesian shape gives a natural dimension and numeric supersets.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/cart_dimension_in_natural.lit
+# Boundary: cart_dim(A) for an unshaped set A is rejected in predicate_domain_wd.
+have S set = cart(R, R)
+cart_dim(S) $in N
+cart_dim(S) >= 2

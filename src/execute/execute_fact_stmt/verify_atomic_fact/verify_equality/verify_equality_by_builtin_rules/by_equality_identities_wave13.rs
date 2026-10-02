@@ -2,7 +2,7 @@
 //!
 //! One matcher ↔ one dedicated proof struct.
 
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, QuantifierFreeFact};
 use crate::ast::obj::{
     Abs, Add, AnonymousFn, ArithmeticOperator, Cart, ComplexAbs, ComplexOperator, Exp,
     ExpLogOperator, FamilyUnion, FiniteSeqSet, FnRange, FnSet, FunctionSpace, ImaginaryPart,
@@ -81,13 +81,14 @@ pub struct SetMinusChainToUnionBuiltinRuleProof {}
 // Example: fn_range(fn(x R) R {1}) = {1}.
 pub struct FnRangeOfConstantAnonymousFnBuiltinRuleProof {}
 
-// Builtin SeqEqualsFnOnN: seq(S) = fn(x N) S.
-pub struct SeqEqualsFnOnNBuiltinRuleProof {}
+// Builtin SeqEqualsFnOnNPos: seq(S) = fn(x N+) S.
+pub struct SeqEqualsFnOnNPosBuiltinRuleProof {}
 
-// Builtin FiniteSeqEqualsFnOnClosedRange:
-//   finite_seq(S, n) = fn(x closed_range(0, n-1)) S for literal n >= 1.
-// Example: finite_seq(R, 3) = fn(x closed_range(0, 2)) R.
-pub struct FiniteSeqEqualsFnOnClosedRangeBuiltinRuleProof {}
+// Builtin FiniteSeqEqualsFnOnOneBasedDomain:
+//   finite_seq(S, n) = fn(x N+: x <= n) S.
+// Also accepts the closed interval 1..n (and literal half-open 1..n+1).
+// Example: finite_seq(R, 3) = fn(x closed_range(1, 3)) R.
+pub struct FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof {}
 
 pub enum EqualityIdentitiesWave13BuiltinRuleProof {
     EulerEqualsExpOne(EulerEqualsExpOneBuiltinRuleProof),
@@ -107,8 +108,8 @@ pub enum EqualityIdentitiesWave13BuiltinRuleProof {
     UnionOverIntersectDistributive(UnionOverIntersectDistributiveBuiltinRuleProof),
     SetMinusChainToUnion(SetMinusChainToUnionBuiltinRuleProof),
     FnRangeOfConstantAnonymousFn(FnRangeOfConstantAnonymousFnBuiltinRuleProof),
-    SeqEqualsFnOnN(SeqEqualsFnOnNBuiltinRuleProof),
-    FiniteSeqEqualsFnOnClosedRange(FiniteSeqEqualsFnOnClosedRangeBuiltinRuleProof),
+    SeqEqualsFnOnNPos(SeqEqualsFnOnNPosBuiltinRuleProof),
+    FiniteSeqEqualsFnOnOneBasedDomain(FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof),
 }
 
 impl Runtime {
@@ -220,17 +221,17 @@ impl Runtime {
                     EqualityIdentitiesWave13BuiltinRuleProof::FnRangeOfConstantAnonymousFn(p),
                 ));
             }
-            if seq_equals_fn_on_n_shape(left, right) {
+            if seq_equals_fn_on_n_pos_shape(left, right) {
                 return Ok(Some(
-                    EqualityIdentitiesWave13BuiltinRuleProof::SeqEqualsFnOnN(
-                        SeqEqualsFnOnNBuiltinRuleProof {},
+                    EqualityIdentitiesWave13BuiltinRuleProof::SeqEqualsFnOnNPos(
+                        SeqEqualsFnOnNPosBuiltinRuleProof {},
                     ),
                 ));
             }
-            if finite_seq_equals_fn_on_closed_range_shape(left, right) {
+            if finite_seq_equals_fn_on_one_based_domain_shape(left, right) {
                 return Ok(Some(
-                    EqualityIdentitiesWave13BuiltinRuleProof::FiniteSeqEqualsFnOnClosedRange(
-                        FiniteSeqEqualsFnOnClosedRangeBuiltinRuleProof {},
+                    EqualityIdentitiesWave13BuiltinRuleProof::FiniteSeqEqualsFnOnOneBasedDomain(
+                        FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof {},
                     ),
                 ));
             }
@@ -712,7 +713,7 @@ fn single_param_fn_set(fs: &FnSet) -> Option<(&Obj, &Obj)> {
     Some((g.param_type.as_ref(), fs.ret_set.as_ref()))
 }
 
-fn seq_equals_fn_on_n_shape(left: &Obj, right: &Obj) -> bool {
+fn seq_equals_fn_on_n_pos_shape(left: &Obj, right: &Obj) -> bool {
     let (seq_set, fn_set) = match (left, right) {
         (
             Obj::SetFormer(SetFormer::SeqSet(SeqSet { set })),
@@ -727,10 +728,10 @@ fn seq_equals_fn_on_n_shape(left: &Obj, right: &Obj) -> bool {
     let Some((domain, ret)) = single_param_fn_set(fn_set) else {
         return false;
     };
-    matches!(domain, Obj::StandardSet(StandardSet::N)) && ret.ir() == seq_set.ir()
+    matches!(domain, Obj::StandardSet(StandardSet::NPos)) && ret.ir() == seq_set.ir()
 }
 
-fn finite_seq_equals_fn_on_closed_range_shape(left: &Obj, right: &Obj) -> bool {
+fn finite_seq_equals_fn_on_one_based_domain_shape(left: &Obj, right: &Obj) -> bool {
     let (fseq, fs) = match (left, right) {
         (
             Obj::SetFormer(SetFormer::FiniteSeqSet(FiniteSeqSet { set, n })),
@@ -743,25 +744,36 @@ fn finite_seq_equals_fn_on_closed_range_shape(left: &Obj, right: &Obj) -> bool {
         _ => return false,
     };
     let (carrier, n) = fseq;
-    let Some((domain, ret)) = single_param_fn_set(fs) else {
-        return false;
-    };
-    if ret.ir() != carrier.ir() {
+    if fs.ret_set.ir() != carrier.ir() || fs.set_bound_parameters.groups.len() != 1 {
         return false;
     }
-    let Some(n_val) = literal_i128(n) else {
-        return false;
-    };
-    if n_val < 1 {
+    let group = &fs.set_bound_parameters.groups[0];
+    if group.params.len() != 1 {
         return false;
     }
-    // closed_range(0, n-1)
+    let domain = group.param_type.as_ref();
+    if let Obj::StandardSet(StandardSet::NPos) = domain {
+        let [QuantifierFreeFact::AtomicFact(AtomicFact::LessEqualFact(bound))] =
+            fs.dom_facts.as_slice()
+        else {
+            return false;
+        };
+        let binder = Obj::Identifier(crate::ast::obj::IdentifierObj::from_bound_name(&group.params[0]));
+        return bound.left.ir() == binder.ir() && bound.right.ir() == n.ir();
+    }
+    if !fs.dom_facts.is_empty() {
+        return false;
+    }
     match domain {
         Obj::SetFormer(SetFormer::ClosedRange(ClosedRange { start, end })) => {
-            literal_i128(start.as_ref()) == Some(0) && literal_i128(end.as_ref()) == Some(n_val - 1)
+            literal_i128(start.as_ref()) == Some(1) && end.ir() == n.ir()
         }
         Obj::SetFormer(SetFormer::Range(Range { start, end })) => {
-            literal_i128(start.as_ref()) == Some(0) && literal_i128(end.as_ref()) == Some(n_val)
+            match (literal_i128(n), literal_i128(end.as_ref())) {
+                (Some(length), Some(stop)) => literal_i128(start.as_ref()) == Some(1)
+                    && length.checked_add(1) == Some(stop),
+                _ => false,
+            }
         }
         _ => false,
     }

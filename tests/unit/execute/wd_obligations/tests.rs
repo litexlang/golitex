@@ -36,6 +36,72 @@ fn check(rt: &mut Runtime, code: &str, expected: &[bool]) {
 }
 
 #[test]
+fn finite_extrema_require_real_elements_and_discard_failed_bindings() {
+    for operator in ["finite_set_max", "finite_set_min"] {
+        let mut rt = runtime();
+        check(&mut rt, &format!("let bad = {operator}({{i}})"), &[false]);
+        let run = rt.run_litex_code("bad = bad").unwrap();
+        assert!(!run.success);
+        assert!(format!("{:?}", run.session_error).contains("undefined name `bad`"));
+        check(
+            &mut rt,
+            &format!("{operator}({{i}}) = {operator}({{i}})"),
+            &[false],
+        );
+        check(&mut rt, "0 = 1", &[false]);
+    }
+}
+
+#[test]
+fn finite_extrema_preserve_real_aliases_and_checked_set_domains() {
+    let mut rt = runtime();
+    let run = rt.run_litex_code(include_str!(
+        "../../../../examples/wd/finite_extrema_real_carrier.lit"
+    )).unwrap();
+    assert!(run.success, "{:?}", run.session_error);
+    assert!(run.session_error.is_none());
+}
+
+#[test]
+fn finite_extrema_preserve_empty_and_infinite_set_rejections() {
+    for operator in ["finite_set_max", "finite_set_min"] {
+        for set in ["{}", "R"] {
+            check(&mut runtime(), &format!("let bad = {operator}({set})"), &[false]);
+        }
+    }
+}
+
+#[test]
+fn finite_set_fold_preserves_valid_domain_literals_and_named_iterands() {
+    let mut rt = runtime();
+    let mut result = rt.run_litex_code(include_str!(
+        "../../../../examples/wd/finite_set_fold_domain.lit"
+    )).unwrap();
+    result.attach_normal_json(&rt, "eval", None);
+    assert!(result.success, "{}", result.normal_json.as_deref().unwrap());
+    assert!(result.session_error.is_none());
+}
+
+#[test]
+fn finite_set_fold_requires_iterand_domain_and_predicate_coverage() {
+    for function in [
+        "fn(x {2}) Z {x}",
+        "fn(x Z: x > 0) Z {x}",
+    ] {
+        let mut rt = runtime();
+        check(
+            &mut rt,
+            &format!("let bad = finite_set_reduce({{0, 1}}, {function}, fn(a, b Z) Z {{a + b}}, 0)"),
+            &[false],
+        );
+        let result = rt.run_litex_code("bad = bad").unwrap();
+        assert!(!result.success);
+        assert!(format!("{:?}", result.session_error).contains("undefined name `bad`"));
+        check(&mut rt, "0 = 1", &[false]);
+    }
+}
+
+#[test]
 fn invalid_function_returns_fail_before_their_signature_can_prove_false_membership() {
     for definition in ["have fn f(x Z) N = x", "let f = fn(x Z) N {x}"] {
         let mut rt = runtime();

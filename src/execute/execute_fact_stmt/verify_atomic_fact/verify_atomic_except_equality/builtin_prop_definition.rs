@@ -134,22 +134,7 @@ impl Runtime {
         fact: &ProperSubsetFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        let left = fact.left.clone();
-        let right = fact.right.clone();
-        let requirements = vec![
-            Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left: left.clone(),
-                right: right.clone(),
-                line_file: None,
-            })),
-            Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left,
-                right,
-                line_file: None,
-            })),
-        ];
+        let requirements = self.proper_subset_definition_requirements(fact);
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.verify_definition_requirements(requirements, verify_state)?
         else {
@@ -169,22 +154,7 @@ impl Runtime {
         fact: &ProperSupersetFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        let left = fact.left.clone();
-        let right = fact.right.clone();
-        let requirements = vec![
-            Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left: right.clone(),
-                right: left.clone(),
-                line_file: None,
-            })),
-            Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left,
-                right,
-                line_file: None,
-            })),
-        ];
+        let requirements = self.proper_superset_definition_requirements(fact);
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.verify_definition_requirements(requirements, verify_state)?
         else {
@@ -303,22 +273,7 @@ impl Runtime {
         fact: &BijectiveFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        let requirements = vec![
-            Fact::AtomicFact(AtomicFact::InjectiveFact(InjectiveFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                domain: fact.domain.clone(),
-                codomain: fact.codomain.clone(),
-                function: fact.function.clone(),
-                line_file: None,
-            })),
-            Fact::AtomicFact(AtomicFact::SurjectiveFact(SurjectiveFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                domain: fact.domain.clone(),
-                codomain: fact.codomain.clone(),
-                function: fact.function.clone(),
-                line_file: None,
-            })),
-        ];
+        let requirements = self.bijective_definition_requirements(fact);
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.verify_definition_requirements(requirements, verify_state)?
         else {
@@ -382,6 +337,132 @@ impl Runtime {
         fact: &crate::ast::fact::PrimeFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+        let requirements = self.prime_definition_requirements(fact);
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_definition_requirements(requirements, verify_state)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(BuiltinPropDefinitionProof::Prime(
+            BuiltinPrimeDefinitionProof {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )))
+    }
+
+    // $coprime(a, b)  ⇔  (a != 0 or b != 0)  and  gcd(a, b) = 1
+    fn prove_coprime_by_definition(
+        &mut self,
+        fact: &CoprimeFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+        let requirements = self.coprime_definition_requirements(fact);
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_definition_requirements(requirements, verify_state)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(BuiltinPropDefinitionProof::Coprime(
+            BuiltinCoprimeDefinitionProof {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )))
+    }
+
+    // $dvd(x, y)  ⇔  x % y = 0  and  exist a Z: x = a * y
+    fn prove_dvd_by_definition(
+        &mut self,
+        fact: &DvdFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+        let requirements = self.dvd_definition_requirements(fact);
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_definition_requirements(requirements, verify_state)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(BuiltinPropDefinitionProof::Dvd(
+            BuiltinDvdDefinitionProof {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )))
+    }
+
+
+    /// Definition consequences of a checked positive predicate. The same
+    /// builders serve verification and inference, preserving order for WD.
+    pub(crate) fn builtin_atomic_definition_consequences(&mut self, fact: &AtomicFact) -> Vec<Fact> {
+        match fact {
+            AtomicFact::ProperSubsetFact(f) => self.proper_subset_definition_requirements(f),
+            AtomicFact::ProperSupersetFact(f) => self.proper_superset_definition_requirements(f),
+            AtomicFact::BijectiveFact(f) => self.bijective_definition_requirements(f),
+            AtomicFact::PrimeFact(f) => self.prime_definition_requirements(f),
+            AtomicFact::CoprimeFact(f) => self.coprime_definition_requirements(f),
+            AtomicFact::DvdFact(f) => self.dvd_definition_requirements(f),
+            _ => vec![],
+        }
+    }
+    fn proper_subset_definition_requirements(&mut self, fact: &ProperSubsetFact) -> Vec<Fact> {
+        let left = fact.left.clone();
+        let right = fact.right.clone();
+        let requirements = vec![
+            Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: left.clone(),
+                right: right.clone(),
+                line_file: None,
+            })),
+            Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left,
+                right,
+                line_file: None,
+            })),
+        ];
+        requirements
+    }
+    fn proper_superset_definition_requirements(&mut self, fact: &ProperSupersetFact) -> Vec<Fact> {
+        let left = fact.left.clone();
+        let right = fact.right.clone();
+        let requirements = vec![
+            Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: right.clone(),
+                right: left.clone(),
+                line_file: None,
+            })),
+            Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left,
+                right,
+                line_file: None,
+            })),
+        ];
+        requirements
+    }
+    fn bijective_definition_requirements(&mut self, fact: &BijectiveFact) -> Vec<Fact> {
+        let requirements = vec![
+            Fact::AtomicFact(AtomicFact::InjectiveFact(InjectiveFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                domain: fact.domain.clone(),
+                codomain: fact.codomain.clone(),
+                function: fact.function.clone(),
+                line_file: None,
+            })),
+            Fact::AtomicFact(AtomicFact::SurjectiveFact(SurjectiveFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                domain: fact.domain.clone(),
+                codomain: fact.codomain.clone(),
+                function: fact.function.clone(),
+                line_file: None,
+            })),
+        ];
+        requirements
+    }
+    fn prime_definition_requirements(&mut self, fact: &crate::ast::fact::PrimeFact) -> Vec<Fact> {
         let p = fact.value.clone();
         let two = number_literal("2");
         let zero = number_literal("0");
@@ -415,25 +496,9 @@ impl Runtime {
             )],
             line_file: None,
         });
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(vec![lower, trial], verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Prime(
-            BuiltinPrimeDefinitionProof {
-                requirement_facts,
-                proof_of_requirement_facts,
-            },
-        )))
+        vec![lower, trial]
     }
-
-    // $coprime(a, b)  ⇔  (a != 0 or b != 0)  and  gcd(a, b) = 1
-    fn prove_coprime_by_definition(
-        &mut self,
-        fact: &CoprimeFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    fn coprime_definition_requirements(&mut self, fact: &CoprimeFact) -> Vec<Fact> {
         let a = fact.left.clone();
         let b = fact.right.clone();
         let zero = number_literal("0");
@@ -465,25 +530,9 @@ impl Runtime {
             right: one,
             line_file: None,
         }));
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(vec![non_all_zero, gcd_one], verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Coprime(
-            BuiltinCoprimeDefinitionProof {
-                requirement_facts,
-                proof_of_requirement_facts,
-            },
-        )))
+        vec![non_all_zero, gcd_one]
     }
-
-    // $dvd(x, y)  ⇔  x % y = 0  and  exist a Z: x = a * y
-    fn prove_dvd_by_definition(
-        &mut self,
-        fact: &DvdFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    fn dvd_definition_requirements(&mut self, fact: &DvdFact) -> Vec<Fact> {
         let x = fact.left.clone();
         let y = fact.right.clone();
         let zero = number_literal("0");
@@ -514,17 +563,7 @@ impl Runtime {
             ))],
             line_file: None,
         });
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(vec![rem_zero, multiple], verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Dvd(
-            BuiltinDvdDefinitionProof {
-                requirement_facts,
-                proof_of_requirement_facts,
-            },
-        )))
+        vec![rem_zero, multiple]
     }
 
     fn verify_definition_requirements(

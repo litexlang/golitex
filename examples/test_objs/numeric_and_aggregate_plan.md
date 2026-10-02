@@ -4,7 +4,7 @@
 
 - 用户要求：修复十进制规范化；把 `i != 0` 做成 builtin rule；强化 `sum` 与 `product`；先对照 legacy 制定计划。
 - 日期：2026-10-02。实现工作区：golitex；验收与问题记录：`examples/test_objs`。
-- 本轮交付：源码对照、实现顺序、行为选择和验收计划。下面的“拟验收”代码与命令尚未实施或执行。
+- 本文件保留实施前的源码对照和验收计划。用户后续批准四阶段实现及选项 A；现已实现，当前结果见 [验收记录](acceptance.md)。下文标为“当前”的缺陷描述指制定计划时的基线，不代表修复后的状态。
 - 当前执行证据来自 [诊断记录](diagnosis_2026-10-02.md) 及 [带源码/二进制哈希的 journal](proof_journals/diagnosis_2026-10-02.json)。本轮没有重新构建或执行 legacy。
 - legacy 对照基线：commit `8ebce3f7a4a4c61250063c9eb9e69c9fb3cfa735`。下列六个归档文件逐字节与该 commit 的对应 `src/` 文件一致，已用 `git show` 独立检查：`object/numeric_constants.rs`、`verification/builtin_rules/complex_builtin.rs`、`execution/command_execution/evaluation.rs`、`verification/builtin_rules/equality_numeric/{iterated_ranges,finite_set_sum,finite_set_product}.rs`。
 
@@ -219,7 +219,7 @@ eval sum(1, 3, fn(k Z) Z {k})
 
 收益：保留 legacy 作者通过 eval 建立后续事实的工作方式，结果可被后续已知事实路径复用。代价：改变当前命令/publication 行为、输出和 no-facts 验收；需要审查 Facts 的状态管理契约与事务边界，若涉及受保护 Env/Runtime 合同则须另列具体变更。切换影响已有脚本与后续证明依赖，不能隐藏在 evaluator 迁移里。
 
-两种选项都能增强 sum/product；差异是计算命令的语义和事实生命周期。当前计划推荐 A，尚未把 B 当作用户已确认的决定。无限和/积、新求和语法、改变空 range 定义、重做反证搜索不属于这四阶段。
+两种选项都能增强 sum/product；差异是计算命令的语义和事实生命周期。用户已批准并实现 A：eval 展示精确值，直接等式保存验证证据。无限和/积、新求和语法、改变空 range 定义、重做反证搜索不属于这四阶段。
 
 ## 验收与实施门禁
 
@@ -256,4 +256,4 @@ Lean 编译能力与当前 verifier 成功是独立完成条件。如果实现�
 
 按 **Number 规范化 → i builtin 与复数除法链路 → 有限 range 求值及嵌套 → 符号规则和有限集合接口** 执行。定义域检查作为计算启用的前置条件，与所属阶段一起修复。
 
-每片完成必须满足：原样正确例子通过、最近错误例子拒绝、退出码与 JSON success 一致、成功证据可追溯、失败不发布事实、实际收集的 focused tests 通过、现有 gap/todo 只按已验证结果更新。以上能力当前仍是实施计划。
+每片完成必须满足：原样正确例子通过、最近错误例子拒绝、退出码与 JSON success 一致、成功证据可追溯、失败不发布事实、实际收集的 focused tests 通过、现有 gap/todo 只按已验证结果更新。实施结果、原始失败与仍需显式前提的边界保存在当前验收和 journal 中；旧 baseline 报告保留为历史证据。

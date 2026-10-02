@@ -1,0 +1,7 @@
+# Positive integer introduction produces premises; those premises cannot
+# reopen the same ordinary builtin entry. No trust is needed.
+forall z Z:
+    z > 0
+    =>:
+        z $in N+
+3 $in N+

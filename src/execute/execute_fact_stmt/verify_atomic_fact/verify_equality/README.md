@@ -210,5 +210,23 @@ free-variable and domain boundaries, WD rejection, oriented multi-edge paths,
 both peer sides, inherited builtin permission, no nested peer expansion from matching,
 unchanged caller stores, and Normal/Detailed provenance.
 
+## Exact numbers and aggregates
+
+Number construction, parsing and persisted-number decoding share exact decimal
+normalization. Guarded complex calculation retains proofs of every nonzero
+denominator, including the imaginary-unit builtin. Finite aggregate calculation
+shares the display evaluator, but algorithm terms must cite a checked function
+equation before contributing equality evidence. The evaluator checks function
+applications, substitutes by binding identity and records each fold step. Nested
+aggregates share a 1024-term allowance, checked integer bounds and a depth limit.
+Failed evaluation returns no equality evidence; `eval` publishes no fact.
+
+Symbolic aggregate identities are separate premise-bearing rules. They retain
+range legality, function coverage, pointwise comparisons or adjacency/disjointness
+as appropriate. Detailed output projects each dedicated rule and its supporting
+evidence. The maintained tracers are `examples/proof_nodes/equal/by_builtin_rule/`
+`numeric_normalization.lit`, `imaginary_division.lit`,
+`aggregate_calculation.lit` and `aggregate_identities.lit`.
+
 The [verification record](verification.md) gives the exact baseline, measured
 coverage, remaining failures, and current CLI/harness limitations.
