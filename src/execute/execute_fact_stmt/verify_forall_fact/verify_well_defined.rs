@@ -52,7 +52,7 @@ impl Runtime {
             FailToVerifyForallFactWellDefinedResult,
         >,
     > {
-        let param_type_well_defined = match self.verify_typed_parameters_well_definedness_or_fail(
+        let param_type_well_defined = match self.verify_and_define_wd_parameters(
             &fact.typed_parameters,
             verify_state.clone(),
         )? {
@@ -63,8 +63,6 @@ impl Runtime {
                 )));
             }
         };
-
-        self.define_typed_parameters_in_current_env(&fact.typed_parameters, None)?;
 
         let mut succeeded_dom = Vec::with_capacity(fact.dom_facts.len());
         for (failed_index, dom) in fact.dom_facts.iter().enumerate() {

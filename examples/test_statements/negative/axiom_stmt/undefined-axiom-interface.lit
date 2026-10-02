@@ -1,0 +1,6 @@
+# Expected rejection: undefined-axiom-interface
+# Owner: AxiomStmt
+
+axiom bad:
+    ? forall x R:
+        x = missing

@@ -43,6 +43,7 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `fact/` | Assert a fact | bare `1 + 1 = 2` |
 | `definition/let_obj.lit` | Equality binding | `let a = expr` |
 | `definition/have_obj_*.lit` | Introduce typed objs | `have x R` / `= expr` / `:` body |
+| `definition/parse_scope_transaction.lit` | Correct a previously failed declaration in the same Runtime | failed `have k N = -1`, then active `have k N = 1`; negative boundary in `tests/unit/run/binding_lifecycle/tests.rs` |
 | `definition/obtain_*.lit` | Name exist witnesses | `obtain a from exist …` / `$P` |
 | `definition/have_by_*.lit` | Preimage / Replacement | `have by fn_preimage:` / `replacement_axiom:` |
 | `definition/have_fn_*.lit` | Define named functions | `have fn … =` / `by cases` / `by induc` / `by exist!` |
@@ -56,11 +57,14 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `definition/def_strategy.lit` | Named strategy (proved forall) | `strategy name: ? forall …` + proof; later `$P` via known_strategy |
 | `definition/def_strategy_peel_sum.lit` | known_strategy peel | binary `$is_pos(a+b)` package → `$is_pos(a+b+c+d)` without intermediate sums |
 | `definition/release_*.lit` | Unpack packaged facts | `release thm` / `struct def` / `obj def` |
+| `definition/theorem_call_typed_arguments.lit` | Check explicit theorem argument types | `release thm` / `by thm … =>` with typed binders |
 | `release_and_expand/` | Expand range / release axioms | `expand:` / `release axiom_of_choice` / `release regularity_axiom` / `release zorn_lemma` |
 | `unsafe/` | Trust boundary | `trust:` / `trust have …:` |
 | `register/` | Prop rewrite laws | `register reflexive\|symmetric\|transitive:` |
 | `witness/` | Exhibit witnesses | `witness exist … from …:` etc. |
+| `witness/witness_type_soundness.lit` | Check concrete witness and predicate argument types | `witness exist` / `witness $P(args)` |
 | `by/` | Named proof methods | `by cases:` / `by contra:` / … |
+| `by/induction_base_scope.lit` | Separate induction base and step scopes | `by induc` / `by strong_induc` |
 | `proof_block/` | Nested scopes | `claim:` / `sketch:` |
 | `command/eval.lit` | Display eval: closed-numeric rewrite + algo | `eval 3!` / `eval sqrt(4)` / `eval a + 1` / `eval nonzero_flag(0) + 1` |
 | `command/eval_closed_numeric_complex.lit` | Nested closed-numeric display eval | `eval gcd(54,(-24))+3!*sqrt(4)` / rewrite `a+b*c` |
@@ -100,3 +104,10 @@ while IFS= read -r f; do
 done < <(find examples/stmt_nodes -name '*.lit' | sort)
 exit $fail
 ```
+
+### Induction binder recovery
+
+[by_induc_order.lit](by/by_induc_order.lit) covers order, nested arithmetic,
+and compound goals for `by induc` / `by strong_induc`. Recovery uses the
+parser-assigned identifier from the goal; it does not allocate a replacement
+binder or waive the base and successor proof obligations.

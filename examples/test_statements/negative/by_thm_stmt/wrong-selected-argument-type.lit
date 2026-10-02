@@ -1,0 +1,7 @@
+# Expected rejection: wrong-selected-argument-type
+# Owner: ByThmStmt
+
+thm t:
+    ? forall n N:
+        n = n
+by thm t(-1) => -1 = -1

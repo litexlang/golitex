@@ -1,0 +1,6 @@
+# Expected rejection: reject-then-correct-same-name
+# Owner: HaveObjEqualStmt
+
+have k N = -1
+have k N = 1
+k = 1

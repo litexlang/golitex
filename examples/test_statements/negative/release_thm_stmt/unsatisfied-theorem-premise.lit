@@ -1,0 +1,9 @@
+# Expected rejection: unsatisfied-theorem-premise
+# Owner: ReleaseThmStmt
+
+thm t:
+    ? forall x R:
+        x > 0
+        =>:
+            x != 0
+release thm t(0)

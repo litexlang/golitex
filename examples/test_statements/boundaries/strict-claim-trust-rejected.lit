@@ -1,0 +1,6 @@
+# Boundary: strict-claim-trust-rejected
+# Owner: ClaimStmt
+
+claim:
+    ? 1 = 1
+    trust 1 = 1

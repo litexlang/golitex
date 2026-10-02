@@ -1,0 +1,6 @@
+# Expected rejection: unbounded-carrier
+# Owner: ByForStmt
+
+by for:
+    ? forall x R:
+        x = x

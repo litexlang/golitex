@@ -1,0 +1,19 @@
+# Stmt: HaveObjInNonemptySetStmt
+# AST: Stmt::Definition::DefineObj::HaveObjInNonemptySetStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf HaveObjInNonemptySetStmt
+
+# case: arbitrary-real
+have arbitrary_r R
+arbitrary_r $in R
+
+# case: multiple-carriers
+have arbitrary_a, arbitrary_b N, arbitrary_c R
+arbitrary_a $in N
+arbitrary_b $in N
+arbitrary_c $in R
+
+# case: singleton-and-set-kind
+have singleton_member {7}
+singleton_member = 7
+have arbitrary_set set
+$is_set(arbitrary_set)

@@ -1,0 +1,4 @@
+# Expected rejection: nonmember-range
+# Owner: ExpandRangeStmt
+
+expand: 3 $in range(0, 2)

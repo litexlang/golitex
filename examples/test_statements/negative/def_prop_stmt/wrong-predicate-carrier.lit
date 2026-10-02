@@ -1,0 +1,6 @@
+# Expected rejection: wrong-predicate-carrier
+# Owner: DefPropStmt
+
+prop P(x N):
+    x = x
+by def $P(-1)

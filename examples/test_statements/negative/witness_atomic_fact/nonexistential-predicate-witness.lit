@@ -1,0 +1,6 @@
+# Expected rejection: nonexistential-predicate-witness
+# Owner: WitnessAtomicFact
+
+prop P(x R):
+    x = x
+witness $P(1) from 1

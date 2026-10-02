@@ -270,11 +270,10 @@ impl Runtime {
     ) -> RuntimeResult<Option<DivSharedPositiveDenomLessEqualStrategySingleStep>> {
 
         let Some(le) = as_le(fact) else { return Ok(None); };
-        let (Some(left), Some(right)) = (as_div(&le.left), as_div(&le.right)) else { return Ok(None); };
-        if left.1 != right.1 { return Ok(None); }
+        let Some((left, right, denominator)) = super::helper::common_division_parts(&le.left, &le.right) else { return Ok(None); };
         let requirements = vec![
-            self.strategy_less_fact(zero_obj(), left.1.clone(), le.line_file.clone()),
-            self.strategy_less_equal_fact(left.0, right.0, le.line_file.clone()),
+            self.strategy_less_fact(zero_obj(), denominator, le.line_file.clone()),
+            self.strategy_less_equal_fact(left, right, le.line_file.clone()),
         ];
 
         let Some((requirement_facts, proof_of_requirement_facts)) =
@@ -295,11 +294,10 @@ impl Runtime {
     ) -> RuntimeResult<Option<DivSharedNegativeDenomLessEqualStrategySingleStep>> {
 
         let Some(le) = as_le(fact) else { return Ok(None); };
-        let (Some(left), Some(right)) = (as_div(&le.left), as_div(&le.right)) else { return Ok(None); };
-        if left.1 != right.1 { return Ok(None); }
+        let Some((left, right, denominator)) = super::helper::common_division_parts(&le.left, &le.right) else { return Ok(None); };
         let requirements = vec![
-            self.strategy_less_fact(left.1.clone(), zero_obj(), le.line_file.clone()),
-            self.strategy_less_equal_fact(right.0, left.0, le.line_file.clone()),
+            self.strategy_less_fact(denominator, zero_obj(), le.line_file.clone()),
+            self.strategy_less_equal_fact(right, left, le.line_file.clone()),
         ];
 
         let Some((requirement_facts, proof_of_requirement_facts)) =
@@ -614,8 +612,16 @@ impl Runtime {
     }
 }
 
-fn as_le(fact: &AtomicFact) -> Option<&LessEqualFact> {
-    match fact { AtomicFact::LessEqualFact(f) => Some(f), _ => None }
+// Normalize the converse spelling locally; requirements still use the same
+// bounded strategy route. Example: a >= b becomes b <= a (and > becomes <).
+fn as_le(fact: &AtomicFact) -> Option<std::borrow::Cow<'_, LessEqualFact>> {
+    match fact {
+        AtomicFact::LessEqualFact(f) => Some(std::borrow::Cow::Borrowed(f)),
+        AtomicFact::GreaterEqualFact(f) => Some(std::borrow::Cow::Owned(LessEqualFact {
+            fact_id: f.fact_id, left: f.right.clone(), right: f.left.clone(), line_file: f.line_file.clone(),
+        })),
+        _ => None,
+    }
 }
 fn as_add(obj: &Obj) -> Option<(Obj, Obj)> {
     match obj { Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => Some((x.left.as_ref().clone(), x.right.as_ref().clone())), _ => None }

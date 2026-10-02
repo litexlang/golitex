@@ -1,0 +1,10 @@
+# Before: this power-law matcher required positive integer exponents.
+# forall a R+, m, n N:
+#     (a^m)^n = a^(m * n)
+# Natural exponents include zero; the positive-base precondition is retained.
+# Now: the general natural-exponent statement verifies.
+# Boundary: this rule does not admit a zero base or arbitrary complex powers.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/power_of_power_zero_exponent.lit
+
+forall a R+, m, n N:
+    (a^m)^n = a^(m * n)

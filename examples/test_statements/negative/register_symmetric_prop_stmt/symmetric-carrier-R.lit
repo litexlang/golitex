@@ -1,0 +1,11 @@
+# Expected rejection: symmetric-carrier-R
+# Owner: RegisterSymmetricPropStmt
+
+prop reg_symmetric_second(x, y R):
+    x = y
+register symmetric:
+    ? forall x, y R:
+        $reg_symmetric_second(x, y)
+        =>:
+            $reg_symmetric_second(y, x)
+$reg_symmetric_second(1, 1)

@@ -11,7 +11,7 @@ use crate::ast::fact::{
     AtomicFact, Fact, ForallFact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
 use crate::ast::obj::Obj;
-use crate::ast::param::ParamType;
+use crate::ast::param::{ParamType, TypedParameterList};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     ForallParamTypeRequirementProof, ProveForallInstantiationRequirementsProof,
 };
@@ -21,6 +21,40 @@ use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
 impl Runtime {
+    // Build the concrete type obligations before any caller assumes the
+    // instantiated theorem, predicate, or existential body. A complete
+    // substitution is needed when later carrier types mention earlier args.
+    pub(crate) fn type_facts_for_typed_arguments(
+        &mut self,
+        parameters: &TypedParameterList,
+        args: &[Obj],
+    ) -> Result<Vec<Fact>, String> {
+        let ids = parameters.ordered_param_ids();
+        if ids.len() != args.len() {
+            return Err(format!(
+                "expected {} typed argument(s), got {}",
+                ids.len(),
+                args.len()
+            ));
+        }
+        let subst: HashMap<IdentifierId, Obj> = ids.into_iter().zip(args.iter().cloned()).collect();
+        let mut obligations = Vec::with_capacity(args.len());
+        for group in &parameters.groups {
+            let param_type = self
+                .inst_param_type(&group.param_type, &subst)
+                .map_err(|error| error.to_string())?;
+            for param in &group.params {
+                let arg = subst.get(&param.id).expect("typed argument arity checked");
+                obligations.push(type_fact_for_instantiated_arg(
+                    arg.clone(),
+                    &param_type,
+                    self.global_ids.allocate_fact_id(),
+                ));
+            }
+        }
+        Ok(obligations)
+    }
+
     // Prove param-type obligations then dom obligations for a forall instantiation.
     // Soft miss: Ok(None). Operational failure: Err(...).
     pub(crate) fn prove_forall_instantiation_requirements(

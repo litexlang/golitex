@@ -1,0 +1,7 @@
+# Known gap: K006
+# Desired success: false
+# See todo.md; runner checks observed behavior explicitly.
+
+template<S set>:
+    trust have hidden R:
+        hidden = 1

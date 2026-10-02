@@ -1,0 +1,4 @@
+# Expected rejection: false-witness-body
+# Owner: WitnessExistFact
+
+witness exist x R st {x = 2} from 1

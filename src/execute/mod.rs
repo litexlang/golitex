@@ -154,3 +154,8 @@ pub use introduce_typed_parameters::{
 pub use release_one_struct_layer::{
     FailToReleaseOneStructLayer, ReleaseOneStructLayerProof, ReleaseOneStructLayerResult,
 };
+
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/soundness_boundaries/tests.rs"]
+mod soundness_boundaries;

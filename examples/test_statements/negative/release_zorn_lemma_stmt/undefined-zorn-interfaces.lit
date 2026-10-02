@@ -1,0 +1,5 @@
+# Expected rejection: undefined-zorn-interfaces
+# Owner: ReleaseZornLemmaStmt
+
+release zorn_lemma: set {1}, prop Missing, prop U, prop M:
+    1 = 1

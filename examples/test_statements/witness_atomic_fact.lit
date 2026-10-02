@@ -1,0 +1,19 @@
+# Stmt: WitnessAtomicFact
+# AST: Stmt::Witness::WitnessAtomicFact
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf WitnessAtomicFact
+
+# case: ordinary-predicate-witness
+prop witness_copy(a R):
+    exist x R st {x = a}
+witness $witness_copy(2) from 2
+
+# case: unique-predicate-witness
+prop witness_pair(a R):
+    exist x, y R st {x = a, y = a + 1}
+witness $witness_pair(3) from 3, 4
+
+# case: local-proof-body
+prop witness_local(a R):
+    exist x R st {x = a}
+witness $witness_local(4) from 4:
+    4 = 4

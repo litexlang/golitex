@@ -1,4 +1,4 @@
-//! Pipeline: count → exist WD → witness WD → local(proof → type → body → [exist!]) → store.
+//! Pipeline: count → exist WD → witness WD → witness type → local(proof → body → [exist!]) → store.
 //!
 //! Optional indented proof body runs in a local env (full Stmt, claim-style).
 //! Substituted body obligations are verified after the proof steps in that same local.
@@ -11,14 +11,11 @@
 
 use std::collections::HashMap;
 
-use crate::ast::fact::{
-    exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact, InFact, PlainExistFact,
-};
+use crate::ast::fact::{exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact, PlainExistFact};
 use crate::ast::obj::Obj;
-use crate::ast::param::ParamType;
 use crate::ast::stmt::{Stmt, WitnessExistFact, WitnessStmt};
 use crate::exec_env::exec_env::ExecEnv;
-use crate::execute::exec_stmt_result::{ExecStmtResult, ParamTypeFactCheckResult};
+use crate::execute::exec_stmt_result::ExecStmtResult;
 use crate::execute::execute_fact_stmt::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, VerifyFactResult,
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
@@ -62,9 +59,10 @@ pub enum ExecWitnessExistFactStmtFailed {
     WitnessCountMismatch,
     ExistFactWellDefined(FailToVerifyFactWellDefinedResult),
     WitnessObjWellDefined(VerifyObjWellDefinedResult),
+    WitnessTypeInstantiate(String),
+    WitnessType(VerifyFactResult),
     IntroduceBinders(crate::execute::introduce_typed_parameters::IntroduceTypedParametersFailed),
     ProofBody(ProofBlockBodyFailed),
-    WitnessType(VerifyFactResult),
     BodyCheck(VerifyFactResult),
     BodyInstantiate,
     Uniqueness(VerifyFactResult),
@@ -74,11 +72,11 @@ pub enum ExecWitnessExistFactStmtFailed {
 pub struct WitnessExistAmbientSuccess {
     pub exist_fact_well_defined: FactWellDefinedProof,
     pub witness_obj_well_defined: Vec<VerifyObjWellDefinedResult>,
+    pub witness_type_checks: Vec<VerifyFactResult>,
 }
 
 // Obligation stages after proof_steps inside the local env.
 pub struct WitnessExistObligationSuccess {
-    pub witness_type_checks: Vec<ParamTypeFactCheckResult>,
     pub body_checks: Vec<VerifyFactResult>,
     pub uniqueness_check: Option<VerifyFactResult>,
 }
@@ -142,7 +140,8 @@ impl Runtime {
         }
     }
 
-    // Shared by `witness exist` and `witness $P`: ambient WD, then local proof + obligations.
+    // Shared by `witness exist` and `witness $P`: ambient WD and concrete
+    // witness typing, then a local proof of the substituted body.
     // Before the proof body, bind exist params and store `param = witness` so the
     // body can mention binder names (legacy parity), e.g.
     //   witness exist m R st {m = 0} from 0:
@@ -271,9 +270,29 @@ impl Runtime {
             witness_obj_well_defined.push(wd);
         }
 
+        // This check must precede introduction of the existential binders.
+        // Otherwise their assumed types and `param = witness` can prove the
+        // very witness type being checked (e.g. x in {1}, x = 0 ⊢ 0 in {1}).
+        let type_facts = self
+            .type_facts_for_typed_arguments(&exist_fact.plain().typed_parameters, equal_tos)
+            .map_err(ExecWitnessExistFactStmtFailed::WitnessTypeInstantiate);
+        let type_facts = match type_facts {
+            Ok(facts) => facts,
+            Err(failed) => return Ok(Err(failed)),
+        };
+        let mut witness_type_checks = Vec::with_capacity(type_facts.len());
+        for fact in &type_facts {
+            let check = self.verify_fact(fact, verify_state.clone())?;
+            if check.is_failed() {
+                return Ok(Err(ExecWitnessExistFactStmtFailed::WitnessType(check)));
+            }
+            witness_type_checks.push(check);
+        }
+
         Ok(Ok(WitnessExistAmbientSuccess {
             exist_fact_well_defined,
             witness_obj_well_defined,
+            witness_type_checks,
         }))
     }
 
@@ -284,12 +303,6 @@ impl Runtime {
         need_uniqueness: bool,
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<WitnessExistObligationSuccess, ExecWitnessExistFactStmtFailed>> {
-        let witness_type_checks =
-            match self.verify_witness_param_type_checks(plain, equal_tos, verify_state.clone())? {
-                Ok(checks) => checks,
-                Err(failed) => return Ok(Err(failed)),
-            };
-
         let body_checks =
             match self.verify_witness_body_checks(plain, equal_tos, verify_state.clone())? {
                 Ok(checks) => checks,
@@ -311,49 +324,9 @@ impl Runtime {
         };
 
         Ok(Ok(WitnessExistObligationSuccess {
-            witness_type_checks,
             body_checks,
             uniqueness_check,
         }))
-    }
-
-    fn verify_witness_param_type_checks(
-        &mut self,
-        plain: &PlainExistFact,
-        equal_tos: &[Obj],
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Result<Vec<ParamTypeFactCheckResult>, ExecWitnessExistFactStmtFailed>> {
-        let mut out = Vec::with_capacity(equal_tos.len());
-        let mut witness_index = 0;
-        for group in &plain.typed_parameters.groups {
-            for _param in &group.params {
-                let witness = &equal_tos[witness_index];
-                witness_index += 1;
-                let check = match &group.param_type {
-                    ParamType::Set(_) => ParamTypeFactCheckResult::Set,
-                    ParamType::NonemptySet(_) => ParamTypeFactCheckResult::NonemptySet,
-                    ParamType::FiniteSet(_) => ParamTypeFactCheckResult::FiniteSet,
-                    ParamType::Obj(param_set) => {
-                        let fact_id = self.global_ids.allocate_fact_id();
-                        let fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                            fact_id,
-                            element: witness.clone(),
-                            set: param_set.clone(),
-                            line_file: None,
-                        }));
-                        let verify_result = self.verify_fact(&fact, verify_state.clone())?;
-                        if verify_result.is_failed() {
-                            return Ok(Err(ExecWitnessExistFactStmtFailed::WitnessType(
-                                verify_result,
-                            )));
-                        }
-                        ParamTypeFactCheckResult::Obj(verify_result)
-                    }
-                };
-                out.push(check);
-            }
-        }
-        Ok(Ok(out))
     }
 
     fn verify_witness_body_checks(

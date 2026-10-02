@@ -1,0 +1,81 @@
+# Stmt: DefTemplateStmt
+# AST: Stmt::Definition::DefTemplateStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf DefTemplateStmt
+
+# case: set-and-function-template
+template<S set>:
+    have template_copy set = S
+\template_copy<R> = R
+template<T set>:
+    have fn template_id(x T) T = x
+\template_id<R>(4) = 4
+
+# case: parametric-nonempty-binding
+template<S nonempty_set>:
+    have template_member S
+let template_selected = \template_member<R>
+
+# case: case-and-recursive-functions
+template<S set>:
+    have fn template_flag(x R) N by cases:
+        case x = 0: 0
+        case x != 0: 1
+\template_flag<R>(0) = 0
+template<T set>:
+    have fn template_count(n N) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: template_count(n - 1)
+\template_count<R>(1) = 0
+
+# case: existence-body-template
+witness exist x R st {x = 2} from 2
+template<S set>:
+    have template_existing R:
+        template_existing = 2
+
+# case: obtain-exist-template
+witness exist x R st {x = 3} from 3
+template<S set>:
+    obtain template_obtained from exist x R st {x = 3}
+
+# case: obtain-atomic-template
+prop template_has_copy(a R):
+    exist x R st {x = a}
+witness $template_has_copy(4) from 4
+template<S set>:
+    obtain template_atomic from $template_has_copy(4)
+
+# case: replacement-template
+prop template_image_rel(x, y set):
+    x = y
+forall x {1}, y, z set:
+    $template_image_rel(x, y)
+    $template_image_rel(x, z)
+    =>:
+        y = z
+template<S set>:
+    have by replacement_axiom: template_image from prop template_image_rel, set {1}
+
+# case: unique-function-template
+prop template_unique_source_rel(x, y R):
+    y = x + 1
+claim:
+    ? forall x R:
+        exist! y R st {$template_unique_source_rel(x, y)}
+    witness exist! y R st {$template_unique_source_rel(x, y)} from x + 1:
+        by def $template_unique_source_rel(x, x + 1)
+have fn template_unique_source by exist!:
+    ? forall x R:
+        exist! y R st {$template_unique_source_rel(x, y)}
+forall x R:
+    $template_unique_source_rel(x, template_unique_source(x))
+
+template<S set>:
+    have fn template_unique by exist!:
+        ? forall x R:
+            exist! y R st {$template_unique_source_rel(x, y)}
+
+# case: trust-have-template
+template<S set>:
+    trust have template_trusted R:
+        template_trusted = 5

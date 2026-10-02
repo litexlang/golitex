@@ -1,0 +1,15 @@
+# Stmt: ByInducStmt
+# AST: Stmt::By::ByInducStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ByInducStmt
+
+# case: zero-start-equality
+by induc n from 0:
+    ? n = n
+
+# case: positive-start-order
+by induc k from 2:
+    ? k >= 2
+
+# case: compound-goal-and-scopes
+by induc m from 0:
+    ? m = m or m > m

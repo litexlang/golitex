@@ -1,0 +1,5 @@
+# Expected rejection: false-base-case
+# Owner: ByStrongInducStmt
+
+by strong_induc n from 0:
+    ? n > 0

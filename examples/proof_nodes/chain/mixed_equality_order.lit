@@ -1,0 +1,23 @@
+# Before: each adjacent edge passed, but paths containing '=' had no endpoint conclusion.
+# Now: checked equality edges preserve weak/strict order in a unidirectional chain.
+# Boundary: a <= b >= c does not entail a <= c; weak edges never entail strict order.
+# Gate: target/release/litex -strict -f examples/proof_nodes/chain/mixed_equality_order.lit
+
+claim:
+    ? forall a, b, c, d R:
+        a >= b
+        b = c
+        c >= d
+        =>:
+            a >= d
+    a >= b = c >= d
+
+claim:
+    ? forall a, b, c, d R:
+        a = b
+        b = c
+        c < d
+        =>:
+            a = c
+            a < d
+    a = b = c < d

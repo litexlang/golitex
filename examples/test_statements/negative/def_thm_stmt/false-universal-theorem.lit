@@ -1,0 +1,6 @@
+# Expected rejection: false-universal-theorem
+# Owner: DefThmStmt
+
+thm bad:
+    ? forall x R:
+        x = 0

@@ -293,3 +293,24 @@ exit $fail
 ```
 
 Equality pipeline and evidence: [step-by-step README](../../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md).
+
+## Order and induction support
+
+The order strategy preserves denominator-sign obligations when one comparison
+side is zero, and accepts converse `>` / `>=` spellings without increasing
+its recursion budget. Real-order complements cite an existing opposite fact
+and include both real-carrier proofs in detailed output.
+
+- [Quotient signs](order/quotient_nonnegative.lit)
+- [Known real-order complements](order/from_known_order_complement.lit)
+- [Converse structural order](order/converse_structural_order.lit)
+- [Nonnegative integers as naturals](order/nonnegative_integer_carrier.lit)
+- [Products of powers with natural exponents](equal/by_builtin_rule/power_product_same_base_zero_exponent.lit)
+- [Iterated natural powers](equal/by_builtin_rule/power_of_power_zero_exponent.lit)
+- [Natural power of a product](equal/by_builtin_rule/power_of_product_natural_exponent.lit)
+
+These routes do not infer a negation from an unsuccessful proof search. A weak
+or unknown denominator sign cannot justify division by a potentially zero value.
+
+- [Mixed equality/order chains](chain/mixed_equality_order.lit): checked `a >= b = c >= d` stores `a >= d`; an all-equality subpath keeps equality. Opposite directions do not imply an endpoint comparison.
+- [Original AM-GM proof](order/am_gm.lit): quotient sign, real-order complement, and square comparison close the original contradiction proof without trust.

@@ -1,0 +1,23 @@
+# Stmt: ReleaseThmStmt
+# AST: Stmt::ReleaseAndExpand::ReleaseThmStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ReleaseThmStmt
+
+# case: bare-atomic-theorem
+thm release_one:
+    ? 1 = 1
+release thm release_one
+
+# case: all-universal-conclusions
+thm release_sides:
+    ? forall x R:
+        x + 0 = x
+        0 + x = x
+release thm release_sides(4)
+
+# case: typed-premise-call
+thm release_positive:
+    ? forall x R:
+        x > 0
+        =>:
+            x != 0
+release thm release_positive(2)

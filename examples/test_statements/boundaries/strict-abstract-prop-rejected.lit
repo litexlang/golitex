@@ -1,0 +1,4 @@
+# Boundary: strict-abstract-prop-rejected
+# Owner: DefAbstractPropStmt
+
+abstract_prop P(x)

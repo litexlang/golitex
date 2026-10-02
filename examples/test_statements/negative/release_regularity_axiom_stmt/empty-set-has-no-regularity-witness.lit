@@ -1,0 +1,4 @@
+# Expected rejection: empty-set-has-no-regularity-witness
+# Owner: ReleaseRegularityAxiomStmt
+
+release regularity_axiom({})

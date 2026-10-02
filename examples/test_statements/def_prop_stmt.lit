@@ -1,0 +1,22 @@
+# Stmt: DefPropStmt
+# AST: Stmt::Definition::DefPropStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf DefPropStmt
+
+# case: explicit-fold
+prop prop_pos(x R):
+    x > 0
+by def $prop_pos(1)
+
+# case: unfold-known-premise
+prop prop_zero(x R):
+    x = 0
+forall x R:
+    $prop_zero(x)
+    =>:
+        x = 0
+
+# case: multiargument-conjunction
+prop prop_pair(x, y R):
+    x = 1
+    y = 2
+by def $prop_pair(1, 2)

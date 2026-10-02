@@ -1,0 +1,5 @@
+# Expected rejection: missing-case
+# Owner: HaveFnEqualCaseByCaseStmt
+
+have fn f(x R) R by cases:
+    case x = 0: 0

@@ -12,21 +12,21 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin PowerProductSameBase: a^m * a^n = a^(m+n).
 // Mathematical property: product of powers with a common base adds exponents.
-// Example: with a R+, m N+, n N+: a^m * a^n = a^(m + n).
+// Example: with a R+, m N, n N: a^m * a^n = a^(m + n).
 pub struct PowerProductSameBaseBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 // Builtin PowerOfPower: (a^m)^n = a^(m*n).
 // Mathematical property: iterated exponentiation multiplies exponents.
-// Example: with a R+, m N+, n N+: (a^m)^n = a^(m * n).
+// Example: with a R+, m N, n N: (a^m)^n = a^(m * n).
 pub struct PowerOfPowerBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 // Builtin PowerOfProduct: (a*b)^n = a^n * b^n.
 // Mathematical property: power distributes over a product.
-// Example: with a R+, b R+, n N+: (a * b)^n = a^n * b^n.
+// Example: with a R+, b R+, n N: (a * b)^n = a^n * b^n.
 pub struct PowerOfProductBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
@@ -269,7 +269,7 @@ impl Runtime {
             }
             let exp_proof = self.verify_in_standard_set(
                 shared_exp.as_ref(),
-                StandardSet::NPos,
+                StandardSet::N,
                 verify_state.clone(),
             )?;
             if exp_proof.is_failed() {
@@ -387,9 +387,10 @@ impl Runtime {
             return Ok(None);
         }
         proofs.push(base_proof);
+        // A positive base also permits exponent zero; induction starts at 0.
         for exp in exponents {
             let exp_proof =
-                self.verify_in_standard_set(exp, StandardSet::NPos, verify_state.clone())?;
+                self.verify_in_standard_set(exp, StandardSet::N, verify_state.clone())?;
             if exp_proof.is_failed() {
                 return Ok(None);
             }

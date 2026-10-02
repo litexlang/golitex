@@ -1,7 +1,9 @@
 #[derive(Clone)]
 pub struct VerifyState {
     // Remaining budget shared by builtin-rule entry and deep entry
-    // (strategy / by-def / known-forall / rewrite). Top-level starts at 2.
+    // (strategy / by-def / known-forall / rewrite). Top-level starts at 3;
+    // deep search at round zero is blocked, while two nested premise steps
+    // remain available for ordinary builtin proofs.
     // Entering either phase requires round > 0 and passes with_one_less_round()
     // (round - 1). Premise-producing arms may after_builtin_rule() again
     // (round - 1, deep/rewrite off). Cite-only still runs at round 0 inside
@@ -37,7 +39,7 @@ pub enum EqualityClassSearchMode {
 }
 
 impl VerifyState {
-    pub const TOP_BUILTIN_RULE_ROUND: u8 = 2;
+    pub const TOP_BUILTIN_RULE_ROUND: u8 = 3;
 
     // Full top-level truth search (stmt entry / WD entry).
     pub fn top_level() -> Self {

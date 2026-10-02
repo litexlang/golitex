@@ -294,9 +294,10 @@ pub enum ExecReleaseThmStmtResult {
     Failed(ExecReleaseThmStmtFailed),
 }
 
-// Stage order: dom_proofs → local_env → stored conclusions.
+// Stage order: type_proofs → dom_proofs → local_env → stored conclusions.
 pub struct ExecReleaseThmStmtSuccess {
     pub thm_name: String,
+    pub type_proofs: Vec<VerifyFactResult>,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub local_env: Box<ExecEnv>,
     pub stored: Vec<StoreFactAndInferResult>,
@@ -305,6 +306,10 @@ pub struct ExecReleaseThmStmtSuccess {
 pub enum ExecReleaseThmStmtFailed {
     ThmNotFound(String),
     Shape(String),
+    Type {
+        index: usize,
+        result: VerifyFactResult,
+    },
     Dom {
         index: usize,
         result: VerifyFactResult,
@@ -331,9 +336,10 @@ pub enum ExecByThmStmtResult {
     Failed(ExecByThmStmtFailed),
 }
 
-// Stage order: release (into local) → selected_proof → local_env → stored.
+// Stage order: type_proofs → dom_proofs → selected_proof → local_env → stored.
 pub struct ExecByThmStmtSuccess {
     pub thm_name: String,
+    pub type_proofs: Vec<VerifyFactResult>,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub selected_proof: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
@@ -368,7 +374,10 @@ pub struct ExecByInducStmtSuccess {
 }
 
 pub enum ByInducBodySuccess {
-    Unstructured(ByInducCaseSuccess),
+    Unstructured {
+        base: ByInducCaseSuccess,
+        step: ByInducCaseSuccess,
+    },
     Structured {
         base: ByInducCaseSuccess,
         step: ByInducCaseSuccess,

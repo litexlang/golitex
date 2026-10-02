@@ -1,0 +1,10 @@
+# Known gap: K003
+# Desired success: true
+# See todo.md; runner checks observed behavior explicitly.
+
+have fn f(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: f(n - 1)
+f(0) = 0
+f(1) = 0
+f(2) = 0

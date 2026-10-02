@@ -1,0 +1,11 @@
+# Before, a failed earlier input `have k N = -1` left k occupied in
+# ParseScope even though exec_stmt discarded its temporary ExecEnv.
+# The active correction below then failed with "already bound".
+#
+# Current: the run transaction restores parse scopes on failure, so the
+# correction succeeds in the same Runtime. The executable failed-input
+# boundary is tested in tests/unit/run/binding_lifecycle/tests.rs.
+# Gate: target/release/litex -strict -f examples/stmt_nodes/definition/parse_scope_transaction.lit
+
+have k N = 1
+k = 1

@@ -1,0 +1,17 @@
+# Before (rejected by the previous implementation):
+# claim:
+#     ? forall A nonempty_set, a A:
+#         a = a
+#     a = a
+# Now: the active proof below verifies without trust.
+# Boundary: quantifier binders remain local; a = b is not implied by a,b in A.
+# Gate: target/release/litex -strict -f examples/wd/fact/dependent_parameters.lit
+
+claim:
+    ? forall A nonempty_set, a A:
+        a = a
+    a = a
+
+thm dependent_identity:
+    ? forall A nonempty_set, f fn(x A) A, a A:
+        f(a) = f(a)

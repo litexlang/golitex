@@ -1,0 +1,38 @@
+# Stmt: Fact
+# AST: Stmt::Fact
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf Fact
+
+# case: atomic-equality-order-membership
+1 + 2 = 3
+-2 < 0
+0 <= 0
+2 $in N
+{1} $subset {1, 2}
+
+# case: conjunction-disjunction-chain
+1 = 1 and 2 = 2
+1 = 1 or 1 = 2
+0 < 1 = 2 - 1 <= 2
+
+# case: quantified-existential-and-negated
+forall x R:
+    x = x
+exist x R st {x = 2}
+witness exist! x R st {x = 3} from 3
+exist! x R st {x = 3}
+claim:
+    ? forall:
+        not exist x {0} st {x = 1}
+        =>:
+            not exist x {0} st {x = 1}
+    not exist x {0} st {x = 1}
+witness exist x {0, 1} st {x != 0} from 1
+not forall x {0, 1}:
+    x = 0
+
+# case: forall-iff
+forall x R:
+    =>:
+        x = 0
+    <=>:
+        0 = x

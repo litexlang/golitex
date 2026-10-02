@@ -1,0 +1,6 @@
+# Expected rejection: wrong-template-arity
+# Owner: DefTemplateStmt
+
+template<S set>:
+    have carrier set = S
+\carrier<R, N> = R

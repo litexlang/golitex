@@ -1,0 +1,5 @@
+# Expected rejection: single-field-is-currently-unsupported
+# Owner: DefStructStmt
+
+struct Single:
+    x R

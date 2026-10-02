@@ -1,0 +1,4 @@
+# Expected rejection: wrong-witness-count
+# Owner: ObtainObjFromExistFact
+
+obtain a, b from exist x R st {x = 1}

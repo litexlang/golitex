@@ -1,0 +1,6 @@
+# Expected rejection: wrong-predicate-witness-type
+# Owner: WitnessAtomicFact
+
+prop P(a R):
+    exist n N st {n = a}
+witness $P(-1) from -1

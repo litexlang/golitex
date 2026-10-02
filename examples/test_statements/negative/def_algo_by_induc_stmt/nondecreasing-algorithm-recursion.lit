@@ -1,0 +1,6 @@
+# Expected rejection: nondecreasing-algorithm-recursion
+# Owner: DefAlgoByInducStmt
+
+algo f(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: f(n)

@@ -1,0 +1,27 @@
+# Stmt: ByEnumerateFiniteSetStmt
+# AST: Stmt::By::ByEnumerateFiniteSetStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ByEnumerateFiniteSetStmt
+
+# case: two-elements
+by enumerate finite_set:
+    ? forall x {1, 2}:
+        x > 0
+
+# case: two-independent-domains
+by enumerate finite_set:
+    ? forall x {1, 2}, y {3, 4}:
+        x < y
+
+# case: singleton-and-empty
+by enumerate finite_set:
+    ? forall x {0}:
+        x = 0
+by enumerate finite_set:
+    ? forall x {}:
+        x = x
+
+# case: constant-proof-body
+by enumerate finite_set:
+    ? forall n {0, 1}:
+        n = n
+    1 = 1

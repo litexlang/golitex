@@ -1,0 +1,4 @@
+# Expected rejection: false-existence
+# Owner: ObtainObjFromExistFact
+
+obtain a from exist x N st {x = -1}

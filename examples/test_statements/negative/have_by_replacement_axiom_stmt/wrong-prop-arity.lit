@@ -1,0 +1,6 @@
+# Expected rejection: wrong-prop-arity
+# Owner: HaveByReplacementAxiomStmt
+
+prop P(x set):
+    x = x
+have by replacement_axiom: Img from prop P, set {1}

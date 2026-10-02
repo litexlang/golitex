@@ -1,3 +1,4 @@
+use super::order_complement::FromKnownOrderComplementBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{AtomicFact, Fact, LessFact};
 use crate::ast::obj::{Add, ArithmeticOperator, Mul, Obj, Sub, TrigOperator};
@@ -19,6 +20,9 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    // Converse order, citing an existing opposite-direction comparison.
+    FromKnownGreater(FromKnownGreaterBuiltinRuleProof),
+    FromKnownOrderComplement(FromKnownOrderComplementBuiltinRuleProof),
     // Closed numeric comparison by evaluation.
     // Mathematical property: if both sides evaluate to decimals L, R with L < R,
     // then `left < right`.
@@ -281,6 +285,10 @@ pub struct MulRightPositiveMonotoneStrictBuiltinRuleProof {
 }
 
 
+pub struct FromKnownGreaterBuiltinRuleProof {
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
+}
+
 impl Runtime {
     // Builtin search for `a < b`.
     // B0: none (no known-cite / reflexivity for strict < here).
@@ -292,6 +300,12 @@ impl Runtime {
         fact: &LessFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+        if let Some(premise_proof) = self.known_greater_proof(&fact.right, &fact.left) {
+            return Ok(Some(LessFactSearchProofByBuiltinRule::FromKnownGreater(FromKnownGreaterBuiltinRuleProof { premise_proof })));
+        }
+        if let Some(proof) = self.known_order_complement(fact.clone().into(), verify_state.clone())? {
+            return Ok(Some(LessFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof)));
+        }
         if let Some(proof) = self.try_order_sign_from_positive_literal_bound(fact) {
             return Ok(Some(
                 LessFactSearchProofByBuiltinRule::OrderSignFromPositiveLiteralBound(proof),

@@ -1,0 +1,20 @@
+# Tracer: an explicit equality chain stores its endpoint equality.
+# Run: target/release/litex -strict -f examples/proof_nodes/chain/named_definition_endpoint.lit
+#
+# Direct jump (still rejected without the chain):
+# have x R = 2
+# have y R = x + 1
+# y = 3
+# Definition-residual rewrite stays disabled; use the explicit proof below.
+#
+# Verified chain: each adjacent equality is checked; inference stores y = 3.
+have x R = 2
+have y R = x + 1
+y = x + 1 = 3
+
+# Reuse the stored endpoint without separately asserting y = 3.
+y^2 = 9
+x + y = 5
+
+# Boundary: y = x + 1 = 4 fails and must not store y = 4.
+# The equality_search Rust tests check direct endpoint storage and rollback.

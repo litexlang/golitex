@@ -1,0 +1,25 @@
+# Stmt: DefAbstractPropStmt
+# AST: Stmt::Definition::DefAbstractPropStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf DefAbstractPropStmt
+
+# case: unary-abstract-implication
+abstract_prop abstract_mark(x)
+forall x R:
+    $abstract_mark(x)
+    =>:
+        $abstract_mark(x)
+
+# case: binary-abstract-implication
+abstract_prop abstract_link(x, y)
+forall x, y R:
+    $abstract_link(x, y)
+    =>:
+        $abstract_link(x, y)
+
+# case: separate-signatures
+abstract_prop abstract_first(x)
+abstract_prop abstract_second(x, y)
+forall x R:
+    $abstract_first(x)
+    =>:
+        $abstract_first(x)

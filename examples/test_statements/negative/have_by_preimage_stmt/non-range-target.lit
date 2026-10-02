@@ -1,0 +1,4 @@
+# Expected rejection: non-range-target
+# Owner: HaveByPreimageStmt
+
+have by fn_preimage: x from 1 $in {1}

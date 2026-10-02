@@ -1,0 +1,6 @@
+# Expected rejection: duplicate-field
+# Owner: DefStructStmt
+
+struct Bad:
+    x R
+    x R

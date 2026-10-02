@@ -1,0 +1,5 @@
+# Expected rejection: missing-impossible
+# Owner: ByContraStmt
+
+by contra:
+    ? 1 = 1

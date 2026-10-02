@@ -1,0 +1,148 @@
+[
+  {
+    "name": "conditional-for",
+    "source": "by for:\n    ? forall n range(0, 3):\n        n > 0\n        =>:\n            n != 0",
+    "exit_code": 1,
+    "output": {
+      "kind": "run",
+      "success": false,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": false,
+          "statement": "by for",
+          "why_failed": {
+            "type": "by",
+            "rule_name": "By for",
+            "message": "Prove inside a for-block",
+            "phase": "by_for"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "stderr": ""
+  },
+  {
+    "name": "conditional-enumerate",
+    "source": "by enumerate finite_set:\n    ? forall n {0, 1, 2}:\n        n > 0\n        =>:\n            n != 0",
+    "exit_code": 1,
+    "output": {
+      "kind": "run",
+      "success": false,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": false,
+          "statement": "by enumerate",
+          "why_failed": {
+            "type": "by",
+            "rule_name": "By finite enumeration",
+            "message": "Prove by enumerating a finite set",
+            "phase": "by_enumerate"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "stderr": ""
+  },
+  {
+    "name": "cart-reflexive",
+    "source": "by for:\n    ? forall p cart({1, 2}, {3, 4}):\n        p = p",
+    "exit_code": 1,
+    "output": {
+      "kind": "run",
+      "success": false,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": false,
+          "statement": "by for",
+          "why_failed": {
+            "type": "by",
+            "rule_name": "By for",
+            "message": "Prove inside a for-block",
+            "phase": "by_for"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "stderr": ""
+  },
+  {
+    "name": "for-constant-proof",
+    "source": "by for:\n    ? forall n range(0, 2):\n        n + 0 = n\n    1 = 1",
+    "exit_code": 0,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "by for",
+          "proof_method": {
+            "type": "by",
+            "rule_name": "By for",
+            "message": "Prove inside a for-block"
+          },
+          "stores": [
+            "forall n range(0, 2):\n    n + 0 = n"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "stderr": ""
+  },
+  {
+    "name": "enumerate-constant-proof",
+    "source": "by enumerate finite_set:\n    ? forall n {0, 1}:\n        n + 0 = n\n    1 = 1",
+    "exit_code": 1,
+    "output": {
+      "kind": "run",
+      "success": false,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": false,
+          "statement": "by enumerate",
+          "why_failed": {
+            "type": "by",
+            "rule_name": "By finite enumeration",
+            "message": "Prove by enumerating a finite set",
+            "phase": "by_enumerate"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "stderr": ""
+  }
+]

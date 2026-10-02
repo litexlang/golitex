@@ -467,9 +467,12 @@ impl Runtime {
         fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
-        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy
+            || verify_state.can_use_builtin_rule_round == 0
+        {
             return Ok(None);
         }
+        let premise_state = verify_state.with_one_less_round();
         for lookup_key in exist_shaped_fact_known_lookup_keys(fact) {
             let mut cites = Vec::new();
             for env in self.execution_environments_stack.iter().rev() {
@@ -480,7 +483,7 @@ impl Runtime {
             }
             for cite in cites {
                 if let Some(proof) =
-                    self.try_apply_forall_exist_conclusion_cite(fact, &cite, verify_state.clone())?
+                    self.try_apply_forall_exist_conclusion_cite(fact, &cite, premise_state.clone())?
                 {
                     return Ok(Some(proof));
                 }

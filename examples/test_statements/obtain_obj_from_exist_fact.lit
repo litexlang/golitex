@@ -1,0 +1,18 @@
+# Stmt: ObtainObjFromExistFact
+# AST: Stmt::Definition::DefineObj::ObtainObjFromExistFact
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ObtainObjFromExistFact
+
+# case: ordinary-existence
+witness exist x R st {x = 5} from 5
+obtain obtained_a from exist x R st {x = 5}
+obtained_a = 5
+
+# case: unique-existence
+witness exist! x R st {x = 6} from 6
+obtain obtained_b from exist! x R st {x = 6}
+obtained_b = 6
+
+# case: multiple-witnesses
+witness exist x, y R st {x = 2, y = 3} from 2, 3
+obtain obtained_c, obtained_d from exist x, y R st {x = 2, y = 3}
+obtained_c + obtained_d = 5

@@ -1,0 +1,34 @@
+# Stmt: HaveFnByInducStmt
+# AST: Stmt::Definition::HaveFnByInducStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf HaveFnByInducStmt
+
+# case: countdown-recursion
+have fn ind_count(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: ind_count(n - 1)
+ind_count(0) = 0
+ind_count(1) = 0
+ind_count(2) = ind_count(2 - 1) = ind_count(1) = 0
+
+# case: nonrecursive-step
+have fn ind_identity(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: n
+ind_identity(3) = 3
+
+# case: recursive-increment
+have fn ind_inc(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: ind_inc(n - 1) + 1
+ind_inc(0) = 0
+ind_inc(1 - 1) = ind_inc(0) = 0
+ind_inc(1) = ind_inc(1 - 1) + 1
+
+# case: nested-induction-cases
+have fn nested_count(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1:
+        case n = 1: 0
+        case n != 1: nested_count(n - 1)
+nested_count(0) = 0
+nested_count(1) = 0

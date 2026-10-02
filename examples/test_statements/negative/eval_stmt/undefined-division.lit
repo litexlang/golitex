@@ -1,0 +1,4 @@
+# Expected rejection: undefined-division
+# Owner: EvalStmt
+
+eval 1 / 0

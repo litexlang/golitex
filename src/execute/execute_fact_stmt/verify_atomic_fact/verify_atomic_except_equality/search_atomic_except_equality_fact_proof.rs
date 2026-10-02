@@ -37,7 +37,9 @@ impl Runtime {
             }
         }
 
-        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy
+            || verify_state.can_use_builtin_rule_round == 0
+        {
             return Ok(None);
         }
 

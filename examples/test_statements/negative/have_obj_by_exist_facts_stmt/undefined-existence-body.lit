@@ -1,0 +1,5 @@
+# Expected rejection: undefined-existence-body
+# Owner: HaveObjByExistFactsStmt
+
+have x R:
+    x = missing

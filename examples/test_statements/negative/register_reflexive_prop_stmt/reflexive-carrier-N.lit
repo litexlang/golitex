@@ -1,0 +1,9 @@
+# Expected rejection: reflexive-carrier-N
+# Owner: RegisterReflexivePropStmt
+
+prop reg_reflexive_third(x, y N):
+    x = y
+register reflexive:
+    ? forall x N:
+        $reg_reflexive_third(x, x)
+$reg_reflexive_third(1, 1)

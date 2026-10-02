@@ -1,0 +1,35 @@
+# Before (rejected by the previous implementation):
+# by induc k from 0:
+#     ? k >= k
+# Now: the active proof below verifies without trust.
+# Boundary: false base/step and noninteger starts remain rejected by showcase_regressions.
+# Gate: target/release/litex -strict -f examples/stmt_nodes/by/by_induc_order.lit
+
+by induc k from 0:
+    ? k >= k
+
+by strong_induc k from 0:
+    ? k <= k
+
+by induc k from 0:
+    ? 2^k = 2^k
+
+by induc k from 0:
+    ? k = k or k > k
+
+# Original showcase theorem: binder recovery, natural powers, and mixed order chains.
+claim:
+    ? forall n N:
+        2^n >= n + 1
+    by induc k from 0:
+        ? 2^k >= k + 1
+        ? from k = 0:
+            2^0 = 1 >= 0 + 1
+        ? induc:
+            0 <= k
+            0 <= k + 1
+            2^(k + 1) = 2^k * 2^1
+            2^1 = 2
+            2^k * 2 >= (k + 1) * 2
+            2^(k + 1) >= (k + 1) * 2 = (k + 1) + (k + 1) >= k + 1 + 1
+

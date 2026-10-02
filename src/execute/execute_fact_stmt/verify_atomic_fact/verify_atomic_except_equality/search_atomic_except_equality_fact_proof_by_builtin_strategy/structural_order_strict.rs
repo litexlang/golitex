@@ -424,8 +424,16 @@ impl Runtime {
     }
 }
 
-fn as_lt(fact: &AtomicFact) -> Option<&LessFact> {
-    match fact { AtomicFact::LessFact(f) => Some(f), _ => None }
+// Normalize the converse spelling locally; requirements still use the same
+// bounded strategy route. Example: a >= b becomes b <= a (and > becomes <).
+fn as_lt(fact: &AtomicFact) -> Option<std::borrow::Cow<'_, LessFact>> {
+    match fact {
+        AtomicFact::LessFact(f) => Some(std::borrow::Cow::Borrowed(f)),
+        AtomicFact::GreaterFact(f) => Some(std::borrow::Cow::Owned(LessFact {
+            fact_id: f.fact_id, left: f.right.clone(), right: f.left.clone(), line_file: f.line_file.clone(),
+        })),
+        _ => None,
+    }
 }
 fn as_add(obj: &Obj) -> Option<(Obj, Obj)> {
     match obj { Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => Some((x.left.as_ref().clone(), x.right.as_ref().clone())), _ => None }

@@ -1,0 +1,18 @@
+# Stmt: HaveObjEqualStmt
+# AST: Stmt::Definition::DefineObj::HaveObjEqualStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf HaveObjEqualStmt
+
+# case: natural-positive-tracer
+have typed_n N = 1
+typed_n = 1
+typed_n $in N
+
+# case: multiple-values
+have typed_a, typed_b R = 2, 3
+typed_a + typed_b = 5
+
+# case: set-and-refined-carrier
+have typed_s set = {2, 4}
+2 $in typed_s
+have typed_q Q = 1 / 2
+typed_q > 0

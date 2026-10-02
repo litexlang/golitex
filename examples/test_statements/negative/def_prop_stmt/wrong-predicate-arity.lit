@@ -1,0 +1,6 @@
+# Expected rejection: wrong-predicate-arity
+# Owner: DefPropStmt
+
+prop P(x R):
+    x = 0
+by def $P(0, 0)

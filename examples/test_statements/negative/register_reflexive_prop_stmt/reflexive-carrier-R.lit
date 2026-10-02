@@ -1,0 +1,9 @@
+# Expected rejection: reflexive-carrier-R
+# Owner: RegisterReflexivePropStmt
+
+prop reg_reflexive_second(x, y R):
+    x = y
+register reflexive:
+    ? forall x R:
+        $reg_reflexive_second(x, x)
+$reg_reflexive_second(1, 1)

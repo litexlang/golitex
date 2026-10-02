@@ -1,0 +1,4 @@
+# Expected rejection: undefined-view-target
+# Owner: ReleaseStructDefStmt
+
+release struct def missing

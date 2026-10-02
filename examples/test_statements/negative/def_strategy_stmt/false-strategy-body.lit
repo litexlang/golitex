@@ -1,0 +1,8 @@
+# Expected rejection: false-strategy-body
+# Owner: DefStrategyStmt
+
+prop P(x R):
+    x = 0
+strategy bad:
+    ? forall x R:
+        $P(x)

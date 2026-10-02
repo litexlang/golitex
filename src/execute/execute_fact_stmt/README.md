@@ -175,7 +175,8 @@ conclusion and alpha-compares to the goal before instantiation requirements.
 `VerifyState` non-equality atomic search phases (after WD):
 
 1. **By known**: `search_atomic_except_equality_fact_proof_by_known` first
-   tries stored atomic facts, then definition-time shape memory. It returns
+   tries stored atomic facts, then registered shape memory in the definition
+   table. It returns
    the existing `AtomicExceptEqualityFactSearchedProof` variants directly:
    `ByKnownAtomicFact` or `ByKnownSpecialProperty`. Both ordinary truth search
    and strategy known-first use this entry; neither consumes builtin rounds
@@ -185,7 +186,7 @@ conclusion and alpha-compares to the goal before instantiation requirements.
    cite-only arms still run at the decremented round, including zero.
 3. **Deep**: when enabled, try bounded builtin/user strategies, prop
    definition, known forall, then enabled builtin/known rewrites. Top-level
-   builtin round starts at 2. Strategy children use their own depth budget
+   builtin round starts at 3. Strategy children use their own depth budget
    and cannot enter definition, forall or rewrite search.
 
 Equality retains its own identity / builtin / equality-class / constructor /
@@ -203,12 +204,14 @@ remains available to prove additional domain premises and records its selected
 signature citation alongside those premise proofs. Source rows are never
 borrowed from an equal function's object key.
 
-The legacy generic `store_atomic_fact` currently also registers function and
-sequence shape rows from stored memberships/equalities, contrary to the table's
-"definition-time only" comment. Tightening those writers requires separating ordinary known signature facts
-from definition metadata in the WD and fallback readers. That wider migration
-awaits a scope decision; it need not change WD result/cache fields.
-This query refactor leaves the writers unchanged.
+This stage preserves existing registration into the definition table, including
+function and sequence shape rows registered by generic `store_atomic_fact`
+from stored memberships/equalities. Consequently, reading this table alone
+does not guarantee that every source row came from a definition statement,
+despite its "definition-time only" declaration comment. A broader fact-based
+condition mechanism, and separation of ordinary signature facts from definition
+metadata in WD and fallback readers, are deferred to a later stage.
+This query refactor changes neither the writers nor WD result/cache fields.
 
 Fixed cite-only builtin premises use
 `lookup_atomic_except_equality_fact_proof_by_known`: stored atomic facts first,

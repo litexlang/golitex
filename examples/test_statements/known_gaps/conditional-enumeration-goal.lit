@@ -1,0 +1,9 @@
+# Known gap: K009-enumerate
+# Desired success: true
+# See todo.md; runner checks observed behavior explicitly.
+
+by enumerate finite_set:
+    ? forall n {0, 1, 2}:
+        n > 0
+        =>:
+            n != 0

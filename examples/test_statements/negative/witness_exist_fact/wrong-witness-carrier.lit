@@ -1,0 +1,4 @@
+# Expected rejection: wrong-witness-carrier
+# Owner: WitnessExistFact
+
+witness exist n N st {n = -1} from -1

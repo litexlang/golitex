@@ -1,0 +1,5 @@
+# Expected rejection: nonexhaustive-algorithm
+# Owner: DefAlgoByCasesStmt
+
+algo f(x R) R by cases:
+    case x = 0: 0

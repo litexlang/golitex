@@ -1,0 +1,8 @@
+# Boundary: colon-selected-theorem-call-rejected
+# Owner: ByThmStmt
+
+thm t:
+    ? forall x R:
+        x = x
+by thm t(1):
+    1 = 1

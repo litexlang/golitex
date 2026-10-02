@@ -1,0 +1,14 @@
+# Stmt: WitnessExistFact
+# AST: Stmt::Witness::WitnessExistFact
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf WitnessExistFact
+
+# case: ordinary-concrete-witness
+witness exist x R st {x = 1} from 1
+
+# case: unique-concrete-witness
+witness exist! x N st {x = 0} from 0
+
+# case: multiple-witnesses-with-local-proof
+witness exist x, y R st {x = 2, y = 3} from 2, 3:
+    2 = 2
+    3 = 3

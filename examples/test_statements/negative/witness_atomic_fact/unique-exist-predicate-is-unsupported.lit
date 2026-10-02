@@ -1,0 +1,6 @@
+# Expected rejection: unique-exist-predicate-is-unsupported
+# Owner: WitnessAtomicFact
+
+prop P(a R):
+    exist! x R st {x = a}
+witness $P(3) from 3

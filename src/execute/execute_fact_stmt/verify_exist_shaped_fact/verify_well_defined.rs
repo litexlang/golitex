@@ -45,7 +45,7 @@ impl Runtime {
             FailToVerifyExistShapedFactWellDefinedResult,
         >,
     > {
-        let param_type_well_defined = match self.verify_typed_parameters_well_definedness_or_fail(
+        let param_type_well_defined = match self.verify_and_define_wd_parameters(
             &plain.typed_parameters,
             verify_state.clone(),
         )? {
@@ -56,8 +56,6 @@ impl Runtime {
                 )));
             }
         };
-
-        self.define_typed_parameters_in_current_env(&plain.typed_parameters, None)?;
 
         let mut succeeded_body = Vec::with_capacity(plain.facts.len());
         for (failed_index, qf) in plain.facts.iter().enumerate() {

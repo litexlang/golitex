@@ -1,3 +1,4 @@
+use super::order_complement::FromKnownOrderComplementBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::GreaterEqualFact;
 use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, Sub};
@@ -11,6 +12,9 @@ use crate::execute::execute_fact_stmt::VerifyFactResult;
 
 // Builtin rules for `a >= b`.
 pub enum GreaterEqualFactSearchProofByBuiltinRule {
+    // Converse order, citing an existing opposite-direction comparison.
+    FromKnownLessEqual(FromKnownLessEqualBuiltinRuleProof),
+    FromKnownOrderComplement(FromKnownOrderComplementBuiltinRuleProof),
     // Closed numeric comparison by evaluation.
     // Mathematical property: if both sides evaluate to decimals L, R with L >= R,
     // then `left >= right`.
@@ -75,6 +79,10 @@ pub struct FiniteSetSizeAtLeastOneBuiltinRuleProof {
 }
 
 
+pub struct FromKnownLessEqualBuiltinRuleProof {
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
+}
+
 impl Runtime {
     // Builtin search for `a >= b`.
     // B0: reflexivity + known `>`. A: match Obj shapes. B1: closed decimal.
@@ -84,6 +92,12 @@ impl Runtime {
         fact: &GreaterEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<GreaterEqualFactSearchProofByBuiltinRule>> {
+        if let Some(premise_proof) = self.known_less_equal_proof(&fact.right, &fact.left) {
+            return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::FromKnownLessEqual(FromKnownLessEqualBuiltinRuleProof { premise_proof })));
+        }
+        if let Some(proof) = self.known_order_complement(fact.clone().into(), verify_state.clone())? {
+            return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof)));
+        }
         // B0 — non-shape
         if fact.left.ir() == fact.right.ir() {
             return Ok(Some(

@@ -1,0 +1,11 @@
+# Expected rejection: unary-order-interface
+# Owner: ReleaseZornLemmaStmt
+
+prop P(x set):
+    x = x
+prop U(x, y set):
+    x = y
+prop M(x set):
+    x = x
+release zorn_lemma: set {1}, prop P, prop U, prop M:
+    1 = 1

@@ -1,0 +1,6 @@
+# Expected rejection: nonenumerable-domain
+# Owner: ByEnumerateFiniteSetStmt
+
+by enumerate finite_set:
+    ? forall x R:
+        x = x

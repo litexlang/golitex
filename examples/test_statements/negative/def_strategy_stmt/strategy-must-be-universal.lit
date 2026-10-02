@@ -1,0 +1,5 @@
+# Expected rejection: strategy-must-be-universal
+# Owner: DefStrategyStmt
+
+strategy bad:
+    ? 1 = 1

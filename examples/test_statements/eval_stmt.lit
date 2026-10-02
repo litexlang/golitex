@@ -1,0 +1,27 @@
+# Stmt: EvalStmt
+# AST: Stmt::Command::EvalStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf EvalStmt
+
+# case: closed-numeric-evaluation
+eval (1 + 2)^2
+eval 1 / 2
+eval abs(-3)
+eval 3!
+eval sqrt(4)
+
+# case: named-value-evaluation
+have eval_a R = 10
+eval eval_a + 1
+
+# case: algorithm-evaluation
+algo eval_flag(x R) N by cases:
+    case x = 0: 0
+    case x != 0: 1
+eval eval_flag(0)
+eval eval_flag(2) + 1
+
+# case: recursive-algorithm-evaluation
+algo recursive_eval(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: recursive_eval(n - 1)
+eval recursive_eval(2)

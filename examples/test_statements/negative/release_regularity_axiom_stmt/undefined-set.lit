@@ -1,0 +1,4 @@
+# Expected rejection: undefined-set
+# Owner: ReleaseRegularityAxiomStmt
+
+release regularity_axiom(Missing)

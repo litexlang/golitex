@@ -1,0 +1,37 @@
+{
+  "source": "algo recursive_eval(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: recursive_eval(n - 1)\neval recursive_eval(2)",
+  "exit_code": 0,
+  "output": {
+    "kind": "run",
+    "success": true,
+    "target": "eval",
+    "path": null,
+    "detail": "normal",
+    "language": "en",
+    "statement_results": [
+      {
+        "success": true,
+        "statement": "algo recursive_eval(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: recursive_eval(n - 1)",
+        "proof_method": {
+          "type": "definition",
+          "rule_name": "Define algo by induction",
+          "message": "Define an algorithm by induction"
+        },
+        "stores": [],
+        "infers": []
+      },
+      {
+        "success": true,
+        "statement": "eval recursive_eval(2)",
+        "proof_method": {
+          "type": "command",
+          "rule_name": "Eval",
+          "message": "Evaluate a closed numeric / algo expression"
+        },
+        "stores": [],
+        "infers": []
+      }
+    ],
+    "session_error": null
+  }
+}

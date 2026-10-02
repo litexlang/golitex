@@ -1,0 +1,48 @@
+# Before (rejected by the previous implementation):
+# forall a, b R:
+#     not a <= b
+#     =>:
+#         a > b
+# Now: the active proof below verifies without trust.
+# Boundary: requires an actual known complement and real carriers; absence of a proof is not negation.
+# Gate: target/release/litex -strict -f examples/proof_nodes/order/from_known_order_complement.lit
+
+forall a, b R:
+    not a <= b
+    =>:
+        a > b
+
+forall a, b R:
+    a > b
+    =>:
+        not a <= b
+
+forall a, b R:
+    not a >= b
+    =>:
+        a < b
+
+forall a, b R:
+    a < b
+    =>:
+        not a >= b
+
+forall a, b R:
+    not a < b
+    =>:
+        a >= b
+
+forall a, b R:
+    a >= b
+    =>:
+        not a < b
+
+forall a, b R:
+    not a > b
+    =>:
+        a <= b
+
+forall a, b R:
+    a <= b
+    =>:
+        not a > b

@@ -1,0 +1,8 @@
+# Expected rejection: wrong-law-shape
+# Owner: RegisterReflexivePropStmt
+
+prop P(x, y set):
+    x = y
+register reflexive:
+    ? forall x set:
+        x = x

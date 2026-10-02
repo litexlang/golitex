@@ -1,0 +1,4 @@
+# Expected rejection: unknown-definition
+# Owner: ByDefStmt
+
+by def $Missing(1)

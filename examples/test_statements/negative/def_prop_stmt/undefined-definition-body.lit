@@ -1,0 +1,5 @@
+# Expected rejection: undefined-definition-body
+# Owner: DefPropStmt
+
+prop P(x R):
+    x = missing

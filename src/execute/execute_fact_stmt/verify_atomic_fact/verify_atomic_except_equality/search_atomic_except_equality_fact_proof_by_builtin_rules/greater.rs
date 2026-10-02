@@ -1,3 +1,4 @@
+use super::order_complement::FromKnownOrderComplementBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{AtomicFact, Fact, GreaterFact, InFact};
 use crate::ast::obj::{
@@ -12,6 +13,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `a > b`.
 pub enum GreaterFactSearchProofByBuiltinRule {
+    FromKnownOrderComplement(FromKnownOrderComplementBuiltinRuleProof),
     // Closed numeric comparison by evaluation.
     // Mathematical property: if both sides evaluate to decimals L, R with L > R,
     // then `left > right`.
@@ -87,6 +89,9 @@ impl Runtime {
         fact: &GreaterFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<GreaterFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.known_order_complement(fact.clone().into(), verify_state.clone())? {
+            return Ok(Some(GreaterFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof)));
+        }
         if let Some(premise_proof) = self.known_less_proof(&fact.right, &fact.left) {
             return Ok(Some(GreaterFactSearchProofByBuiltinRule::FromKnownLess(
                 FromKnownLessBuiltinRuleProof { premise_proof },

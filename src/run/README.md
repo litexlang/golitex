@@ -24,6 +24,37 @@ Shared flags (where allowed): `-session` (keep last env → REPL), `-strict`
 (forbid `trust` / `trust have` / `abstract_prop`), `-lang en|zh` (JSON /
 status output language; default `en`).
 
+## Source-string transaction order
+
+`run_litex_code` tokenizes the complete source first, then parses and executes
+one top-level `TokenBlock` before parsing the next. A claim/thm/sketch and its
+complete nested proof form one block; parsing never executes part of a proof.
+
+Each block uses temporary copies of the existing parse scopes. The lexical
+depth is unchanged: index 0 must remain the file root for export qualification.
+`exec_stmt` already discards its temporary execution environment on failure,
+but that cannot undo names registered earlier by the parser. The run boundary
+therefore keeps the temporary parse scopes only after successful execution;
+soft failure or a parse/execution error restores the original scopes. Global
+IDs keep increasing and are never restored or reused.
+
+```text
+have k N = -1  # verification fails; k is removed from parse visibility
+have k N = 1   # parsed after rollback, so k can be defined successfully
+k = 1
+```
+
+The overall run above still reports failure for the first statement, while
+the successful correction is committed. Soft failures continue to the next
+block. A parse/execution error stops the run and is reported in `session_error`,
+alongside the already executed statement results. Earlier successful blocks
+remain committed. For example, `let a = 1` followed by `let b =` commits a
+and restores the failed b binding. A tokenizer error anywhere still prevents
+all execution because tokenization happens before the block loop.
+
+Acceptance: `cargo test --release binding_lifecycle_tests -- --nocapture` and
+`target/release/litex -strict -f examples/stmt_nodes/definition/parse_scope_transaction.lit`.
+
 ## Shared mount contract
 
 When a config is non-empty:

@@ -1,0 +1,7 @@
+# Expected rejection: local-name-does-not-escape
+# Owner: ClaimStmt
+
+claim:
+    ? 1 = 1
+    let local = 1
+local = 1

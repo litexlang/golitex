@@ -1,0 +1,3843 @@
+{
+  "schema_version": 1,
+  "statements": [
+    {
+      "leaf": "Fact",
+      "ast_path": [
+        "Fact"
+      ],
+      "payload": "Fact",
+      "file": "fact.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "atomic-equality-order-membership",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "conjunction-disjunction-chain",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "quantified-existential-and-negated",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "forall-iff",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "false-equality",
+          "file": "negative/fact/false-equality.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "search_proof"
+            ]
+          }
+        },
+        {
+          "name": "false-membership",
+          "file": "negative/fact/false-membership.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "search_proof"
+            ]
+          }
+        },
+        {
+          "name": "false-forall",
+          "file": "negative/fact/false-forall.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "search_proof"
+            ]
+          }
+        },
+        {
+          "name": "undefined-object",
+          "file": "negative/fact/undefined-object.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `missing`"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "TrustStmt",
+      "ast_path": [
+        "Trust",
+        "TrustStmt"
+      ],
+      "payload": "TrustStmt",
+      "file": "trust_stmt.lit",
+      "file_strict": false,
+      "cases": [
+        {
+          "name": "inline-trust",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "block-trust-and-reuse",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "quantified-trust",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "undefined-trusted-object",
+          "file": "negative/trust_stmt/undefined-trusted-object.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `missing`"
+          }
+        },
+        {
+          "name": "ill-defined-trusted-expression",
+          "file": "negative/trust_stmt/ill-defined-trusted-expression.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "trust"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "TrustHaveStmt",
+      "ast_path": [
+        "Trust",
+        "TrustHaveStmt"
+      ],
+      "payload": "TrustHaveStmt",
+      "file": "trust_have_stmt.lit",
+      "file_strict": false,
+      "cases": [
+        {
+          "name": "single-name-and-fact",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "multiple-dependent-names",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "typed-natural",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "undefined-carrier",
+          "file": "negative/trust_have_stmt/undefined-carrier.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `Missing`"
+          }
+        },
+        {
+          "name": "undefined-body-symbol",
+          "file": "negative/trust_have_stmt/undefined-body-symbol.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `missing`"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "LetObjStmt",
+      "ast_path": [
+        "Definition",
+        "DefineObj",
+        "LetObjStmt"
+      ],
+      "payload": "LetObjStmt",
+      "file": "let_obj_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "numeric-substitution",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "set-alias-and-membership",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "callable-alias",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "duplicate-name",
+          "file": "negative/let_obj_stmt/duplicate-name.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "name `x` is already bound in an enclosing parse scope"
+          }
+        },
+        {
+          "name": "undefined-value",
+          "file": "negative/let_obj_stmt/undefined-value.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `missing`"
+          }
+        },
+        {
+          "name": "zero-divisor",
+          "file": "negative/let_obj_stmt/zero-divisor.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "let"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "HaveObjInNonemptySetStmt",
+      "ast_path": [
+        "Definition",
+        "DefineObj",
+        "HaveObjInNonemptySetStmt"
+      ],
+      "payload": "HaveObjInNonemptySetOrParamTypeStmt",
+      "file": "have_obj_in_nonempty_set_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "arbitrary-real",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "multiple-carriers",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "singleton-and-set-kind",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "empty-carrier",
+          "file": "negative/have_obj_in_nonempty_set_stmt/empty-carrier.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_in_nonempty"
+            ]
+          }
+        },
+        {
+          "name": "undefined-carrier",
+          "file": "negative/have_obj_in_nonempty_set_stmt/undefined-carrier.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `Missing`"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "HaveObjEqualStmt",
+      "ast_path": [
+        "Definition",
+        "DefineObj",
+        "HaveObjEqualStmt"
+      ],
+      "payload": "HaveObjEqualStmt",
+      "file": "have_obj_equal_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "natural-positive-tracer",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "multiple-values",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "set-and-refined-carrier",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "negative-natural-tracer",
+          "file": "negative/have_obj_equal_stmt/negative-natural-tracer.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_equal"
+            ]
+          }
+        },
+        {
+          "name": "wrong-value-count",
+          "file": "negative/have_obj_equal_stmt/wrong-value-count.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_equal"
+            ]
+          }
+        },
+        {
+          "name": "zero-outside-positive-finite-carrier",
+          "file": "negative/have_obj_equal_stmt/zero-outside-positive-finite-carrier.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_equal"
+            ]
+          }
+        },
+        {
+          "name": "reject-then-correct-same-name",
+          "file": "negative/have_obj_equal_stmt/reject-then-correct-same-name.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false,
+              true,
+              true
+            ],
+            "failed_phase": [
+              "have_equal"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "HaveObjByExistFactsStmt",
+      "ast_path": [
+        "Definition",
+        "DefineObj",
+        "HaveObjByExistFactsStmt"
+      ],
+      "payload": "HaveObjByExistFactsStmt",
+      "file": "have_obj_by_exist_facts_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "known-existence",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "two-witnesses",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "natural-witness",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "impossible-natural-existence",
+          "file": "negative/have_obj_by_exist_facts_stmt/impossible-natural-existence.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_by_exist"
+            ]
+          }
+        },
+        {
+          "name": "undefined-existence-body",
+          "file": "negative/have_obj_by_exist_facts_stmt/undefined-existence-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `missing`"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ObtainObjFromExistFact",
+      "ast_path": [
+        "Definition",
+        "DefineObj",
+        "ObtainObjFromExistFact"
+      ],
+      "payload": "ObtainObjFromExistFact",
+      "file": "obtain_obj_from_exist_fact.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "ordinary-existence",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "unique-existence",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "multiple-witnesses",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "wrong-witness-count",
+          "file": "negative/obtain_obj_from_exist_fact/wrong-witness-count.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "obtain_exist"
+            ]
+          }
+        },
+        {
+          "name": "false-existence",
+          "file": "negative/obtain_obj_from_exist_fact/false-existence.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "obtain_exist"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ObtainObjFromAtomicFact",
+      "ast_path": [
+        "Definition",
+        "DefineObj",
+        "ObtainObjFromAtomicFact"
+      ],
+      "payload": "ObtainObjFromAtomicFact",
+      "file": "obtain_obj_from_atomic_fact.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "ordinary-prop-exist",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "unique-prop-exist",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "two-prop-witnesses",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "nonexistential-prop",
+          "file": "negative/obtain_obj_from_atomic_fact/nonexistential-prop.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "obtain_atomic"
+            ]
+          }
+        },
+        {
+          "name": "wrong-prop-argument-type",
+          "file": "negative/obtain_obj_from_atomic_fact/wrong-prop-argument-type.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "obtain_atomic"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "HaveByPreimageStmt",
+      "ast_path": [
+        "Definition",
+        "DefineObj",
+        "HaveByPreimageStmt"
+      ],
+      "payload": "HaveByPreimageStmt",
+      "file": "have_by_preimage_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "one-coordinate",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "two-coordinates",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "natural-carrier",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "non-range-target",
+          "file": "negative/have_by_preimage_stmt/non-range-target.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_by_preimage"
+            ]
+          }
+        },
+        {
+          "name": "wrong-arity",
+          "file": "negative/have_by_preimage_stmt/wrong-arity.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "have_by_preimage"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "HaveByReplacementAxiomStmt",
+      "ast_path": [
+        "Definition",
+        "DefineObj",
+        "HaveByReplacementAxiomStmt"
+      ],
+      "payload": "HaveByReplacementAxiomStmt",
+      "file": "have_by_replacement_axiom_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "finite-identity-image",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "empty-identity-image",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "singleton-identity-image",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "wrong-prop-arity",
+          "file": "negative/have_by_replacement_axiom_stmt/wrong-prop-arity.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "have_by_replacement"
+            ]
+          }
+        },
+        {
+          "name": "unknown-prop",
+          "file": "negative/have_by_replacement_axiom_stmt/unknown-prop.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_by_replacement"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "HaveFnEqualStmt",
+      "ast_path": [
+        "Definition",
+        "HaveFnEqualStmt"
+      ],
+      "payload": "HaveFnEqualStmt",
+      "file": "have_fn_equal_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "unary-polynomial",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "binary-and-dependent-carrier",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "local-function",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "wrong-codomain",
+          "file": "negative/have_fn_equal_stmt/wrong-codomain.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_fn_equal"
+            ]
+          }
+        },
+        {
+          "name": "wrong-call-arity",
+          "file": "negative/have_fn_equal_stmt/wrong-call-arity.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "well_defined"
+            ]
+          }
+        },
+        {
+          "name": "ill-defined-function-body",
+          "file": "negative/have_fn_equal_stmt/ill-defined-function-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_fn_equal"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "HaveFnEqualCaseByCaseStmt",
+      "ast_path": [
+        "Definition",
+        "HaveFnEqualCaseByCaseStmt"
+      ],
+      "payload": "HaveFnEqualCaseByCaseStmt",
+      "file": "have_fn_equal_case_by_case_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "zero-and-nonzero",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "natural-domain",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "real-identity-in-two-cases",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "missing-case",
+          "file": "negative/have_fn_equal_case_by_case_stmt/missing-case.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_fn_cases"
+            ]
+          }
+        },
+        {
+          "name": "wrong-case-codomain",
+          "file": "negative/have_fn_equal_case_by_case_stmt/wrong-case-codomain.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_fn_cases"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "HaveFnByInducStmt",
+      "ast_path": [
+        "Definition",
+        "HaveFnByInducStmt"
+      ],
+      "payload": "HaveFnByInducStmt",
+      "file": "have_fn_by_induc_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "countdown-recursion",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "nonrecursive-step",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "recursive-increment",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "nested-induction-cases",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "nondecreasing-recursion",
+          "file": "negative/have_fn_by_induc_stmt/nondecreasing-recursion.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_fn_induc"
+            ]
+          }
+        },
+        {
+          "name": "bad-base-carrier",
+          "file": "negative/have_fn_by_induc_stmt/bad-base-carrier.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_fn_induc"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "HaveFnByForallExistUniqueStmt",
+      "ast_path": [
+        "Definition",
+        "HaveFnByForallExistUniqueStmt"
+      ],
+      "payload": "HaveFnByForallExistUniqueStmt",
+      "file": "have_fn_by_forall_exist_unique_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "identity-from-unique",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "successor-from-unique",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "shift-from-unique",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "ordinary-existence-is-insufficient",
+          "file": "negative/have_fn_by_forall_exist_unique_stmt/ordinary-existence-is-insufficient.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "`have fn \u2026 by exist!`: the only forall then fact must be `exist!`"
+          }
+        },
+        {
+          "name": "false-unique-natural",
+          "file": "negative/have_fn_by_forall_exist_unique_stmt/false-unique-natural.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "have_fn_forall_exist_unique"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "DefPropStmt",
+      "ast_path": [
+        "Definition",
+        "DefPropStmt"
+      ],
+      "payload": "DefPropStmt",
+      "file": "def_prop_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "explicit-fold",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "unfold-known-premise",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "multiargument-conjunction",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "undefined-definition-body",
+          "file": "negative/def_prop_stmt/undefined-definition-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `missing`"
+          }
+        },
+        {
+          "name": "wrong-predicate-arity",
+          "file": "negative/def_prop_stmt/wrong-predicate-arity.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "by_def"
+            ]
+          }
+        },
+        {
+          "name": "wrong-predicate-carrier",
+          "file": "negative/def_prop_stmt/wrong-predicate-carrier.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "by_def"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "DefAbstractPropStmt",
+      "ast_path": [
+        "Definition",
+        "DefAbstractPropStmt"
+      ],
+      "payload": "DefAbstractPropStmt",
+      "file": "def_abstract_prop_stmt.lit",
+      "file_strict": false,
+      "cases": [
+        {
+          "name": "unary-abstract-implication",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "binary-abstract-implication",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "separate-signatures",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "abstract-is-not-truth",
+          "file": "negative/def_abstract_prop_stmt/abstract-is-not-truth.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "search_proof"
+            ]
+          }
+        },
+        {
+          "name": "duplicate-signature",
+          "file": "negative/def_abstract_prop_stmt/duplicate-signature.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "name `P` is already bound in an enclosing parse scope"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "DefTemplateStmt",
+      "ast_path": [
+        "Definition",
+        "DefTemplateStmt"
+      ],
+      "payload": "DefTemplateStmt",
+      "file": "def_template_stmt.lit",
+      "file_strict": false,
+      "cases": [
+        {
+          "name": "set-and-function-template",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "parametric-nonempty-binding",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "case-and-recursive-functions",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "existence-body-template",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "obtain-exist-template",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "obtain-atomic-template",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "replacement-template",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "unique-function-template",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "trust-have-template",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "two-template-bodies",
+          "file": "negative/def_template_stmt/two-template-bodies.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "template definition expects exactly one body statement"
+          }
+        },
+        {
+          "name": "wrong-template-arity",
+          "file": "negative/def_template_stmt/wrong-template-arity.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "well_defined"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "DefStructStmt",
+      "ast_path": [
+        "Definition",
+        "DefStructStmt"
+      ],
+      "payload": "DefStructStmt",
+      "file": "def_struct_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "plain-fields-and-view",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "parametric-fields",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "laws-and-auto-open",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "undefined-field-carrier",
+          "file": "negative/def_struct_stmt/undefined-field-carrier.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `Missing`"
+          }
+        },
+        {
+          "name": "duplicate-field",
+          "file": "negative/def_struct_stmt/duplicate-field.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "duplicate struct field `x`"
+          }
+        },
+        {
+          "name": "single-field-is-currently-unsupported",
+          "file": "negative/def_struct_stmt/single-field-is-currently-unsupported.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "struct definition expects at least two fields"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "DefAlgoByCasesStmt",
+      "ast_path": [
+        "Definition",
+        "DefAlgoByCasesStmt"
+      ],
+      "payload": "DefAlgoByCasesStmt",
+      "file": "def_algo_by_cases_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "flag-proof-and-evaluation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "natural-algorithm",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "binary-algorithm",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "nonexhaustive-algorithm",
+          "file": "negative/def_algo_by_cases_stmt/nonexhaustive-algorithm.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "def_algo_cases"
+            ]
+          }
+        },
+        {
+          "name": "bad-algorithm-result",
+          "file": "negative/def_algo_by_cases_stmt/bad-algorithm-result.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "def_algo_cases"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "DefAlgoByInducStmt",
+      "ast_path": [
+        "Definition",
+        "DefAlgoByInducStmt"
+      ],
+      "payload": "DefAlgoByInducStmt",
+      "file": "def_algo_by_induc_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "countdown-mathematical-equation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "identity-evaluation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "increment-mathematical-equation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "nested-induction-cases",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "recursive-computation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "nondecreasing-algorithm-recursion",
+          "file": "negative/def_algo_by_induc_stmt/nondecreasing-algorithm-recursion.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "def_algo_induc"
+            ]
+          }
+        },
+        {
+          "name": "wrong-base-value",
+          "file": "negative/def_algo_by_induc_stmt/wrong-base-value.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "def_algo_induc"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "DefThmStmt",
+      "ast_path": [
+        "Definition",
+        "DefThmStmt"
+      ],
+      "payload": "DefThmStmt",
+      "file": "def_thm_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "bodyless-atomic",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "bodyless-universal",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "proof-body-witness",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "false-bodyless-theorem",
+          "file": "negative/def_thm_stmt/false-bodyless-theorem.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "def_thm"
+            ]
+          }
+        },
+        {
+          "name": "false-universal-theorem",
+          "file": "negative/def_thm_stmt/false-universal-theorem.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "def_thm"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "AxiomStmt",
+      "ast_path": [
+        "Definition",
+        "AxiomStmt"
+      ],
+      "payload": "AxiomStmt",
+      "file": "axiom_stmt.lit",
+      "file_strict": false,
+      "cases": [
+        {
+          "name": "explicit-background-interface",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "arithmetic-interface",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "selected-axiom-call",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "axiom-must-be-forall",
+          "file": "negative/axiom_stmt/axiom-must-be-forall.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "axiom: goal must be a single `forall` fact"
+          }
+        },
+        {
+          "name": "undefined-axiom-interface",
+          "file": "negative/axiom_stmt/undefined-axiom-interface.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `missing`"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "DefStrategyStmt",
+      "ast_path": [
+        "Definition",
+        "DefStrategyStmt"
+      ],
+      "payload": "DefStrategyStmt",
+      "file": "def_strategy_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "strategy-from-definition",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "strategy-for-zero",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "strategy-two-arguments",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "false-strategy-body",
+          "file": "negative/def_strategy_stmt/false-strategy-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "def_strategy"
+            ]
+          }
+        },
+        {
+          "name": "strategy-must-be-universal",
+          "file": "negative/def_strategy_stmt/strategy-must-be-universal.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "strategy: goal must be a single `forall` fact"
+          }
+        },
+        {
+          "name": "proof-control-in-strategy-is-unsupported",
+          "file": "negative/def_strategy_stmt/proof-control-in-strategy-is-unsupported.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "def_strategy"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ReleaseThmStmt",
+      "ast_path": [
+        "ReleaseAndExpand",
+        "ReleaseThmStmt"
+      ],
+      "payload": "ReleaseThmStmt",
+      "file": "release_thm_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "bare-atomic-theorem",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "all-universal-conclusions",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "typed-premise-call",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "wrong-theorem-type",
+          "file": "negative/release_thm_stmt/wrong-theorem-type.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "release_thm"
+            ]
+          }
+        },
+        {
+          "name": "unsatisfied-theorem-premise",
+          "file": "negative/release_thm_stmt/unsatisfied-theorem-premise.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "release_thm"
+            ]
+          }
+        },
+        {
+          "name": "unknown-theorem",
+          "file": "negative/release_thm_stmt/unknown-theorem.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "release_thm"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ReleaseStructDefStmt",
+      "ast_path": [
+        "ReleaseAndExpand",
+        "ReleaseStructDefStmt"
+      ],
+      "payload": "ReleaseStructDefStmt",
+      "file": "release_struct_def_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "nested-law-opening",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "explicit-direct-opening",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "parameterized-opening",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "scalar-has-no-view",
+          "file": "negative/release_struct_def_stmt/scalar-has-no-view.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "release_struct"
+            ]
+          }
+        },
+        {
+          "name": "undefined-view-target",
+          "file": "negative/release_struct_def_stmt/undefined-view-target.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `missing`"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ReleaseObjDefStmt",
+      "ast_path": [
+        "ReleaseAndExpand",
+        "ReleaseObjDefStmt"
+      ],
+      "payload": "ReleaseObjDefStmt",
+      "file": "release_obj_def_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "let-definition",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "typed-equality-definition",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "function-definition",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "undefined-object-definition",
+          "file": "negative/release_obj_def_stmt/undefined-object-definition.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `missing`"
+          }
+        },
+        {
+          "name": "expression-not-name",
+          "file": "negative/release_obj_def_stmt/expression-not-name.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "release obj def expects an identifier"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ExpandRangeStmt",
+      "ast_path": [
+        "ReleaseAndExpand",
+        "ExpandRangeStmt"
+      ],
+      "payload": "ExpandRangeStmt",
+      "file": "expand_range_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "half-open-range",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "closed-range",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "ellipsis-singleton-range",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "not-a-numeric-range",
+          "file": "negative/expand_range_stmt/not-a-numeric-range.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "expand: expected `e $in range(\u2026)`, `e $in closed_range(\u2026)`, or `e $in a...b`"
+          }
+        },
+        {
+          "name": "nonmember-range",
+          "file": "negative/expand_range_stmt/nonmember-range.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "expand_range"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ReleaseZornLemmaStmt",
+      "ast_path": [
+        "ReleaseAndExpand",
+        "ReleaseZornLemmaStmt"
+      ],
+      "payload": "ReleaseZornLemmaStmt",
+      "file": "release_zorn_lemma_stmt.lit",
+      "file_strict": false,
+      "cases": [
+        {
+          "name": "conditional-poset-interface",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "renamed-poset-interface",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "undefined-zorn-interfaces",
+          "file": "negative/release_zorn_lemma_stmt/undefined-zorn-interfaces.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "release_zorn"
+            ]
+          }
+        },
+        {
+          "name": "unary-order-interface",
+          "file": "negative/release_zorn_lemma_stmt/unary-order-interface.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "failed_phase": [
+              "release_zorn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ReleaseAxiomOfChoiceStmt",
+      "ast_path": [
+        "ReleaseAndExpand",
+        "ReleaseAxiomOfChoiceStmt"
+      ],
+      "payload": "ReleaseAxiomOfChoiceStmt",
+      "file": "release_axiom_of_choice_stmt.lit",
+      "file_strict": false,
+      "cases": [
+        {
+          "name": "conditional-family-choice",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "renamed-family-choice",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "singleton-nonempty-family",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "family-with-empty-member",
+          "file": "negative/release_axiom_of_choice_stmt/family-with-empty-member.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "release_choice"
+            ]
+          }
+        },
+        {
+          "name": "undefined-family",
+          "file": "negative/release_axiom_of_choice_stmt/undefined-family.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `Missing`"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ReleaseRegularityAxiomStmt",
+      "ast_path": [
+        "ReleaseAndExpand",
+        "ReleaseRegularityAxiomStmt"
+      ],
+      "payload": "ReleaseRegularityAxiomStmt",
+      "file": "release_regularity_axiom_stmt.lit",
+      "file_strict": false,
+      "cases": [
+        {
+          "name": "singleton-regularity",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "pair-regularity",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "triple-regularity",
+          "strict": false,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "undefined-set",
+          "file": "negative/release_regularity_axiom_stmt/undefined-set.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `Missing`"
+          }
+        },
+        {
+          "name": "wrong-arity",
+          "file": "negative/release_regularity_axiom_stmt/wrong-arity.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "release regularity_axiom: expected exactly one set argument, got 2"
+          }
+        },
+        {
+          "name": "empty-set-has-no-regularity-witness",
+          "file": "negative/release_regularity_axiom_stmt/empty-set-has-no-regularity-witness.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "release_regularity"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ByCasesStmt",
+      "ast_path": [
+        "By",
+        "ByCasesStmt"
+      ],
+      "payload": "ByCasesStmt",
+      "file": "by_cases_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "single-exhaustive-case",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "two-cases-from-premise",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "case-proof-bodies",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "nonexhaustive-cases",
+          "file": "negative/by_cases_stmt/nonexhaustive-cases.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "by_cases"
+            ]
+          }
+        },
+        {
+          "name": "false-case-conclusion",
+          "file": "negative/by_cases_stmt/false-case-conclusion.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_cases"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ByContraStmt",
+      "ast_path": [
+        "By",
+        "ByContraStmt"
+      ],
+      "payload": "ByContraStmt",
+      "file": "by_contra_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "equality-contradiction",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "membership-contradiction",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "nonzero-contradiction",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "fake-contradiction",
+          "file": "negative/by_contra_stmt/fake-contradiction.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_contra"
+            ]
+          }
+        },
+        {
+          "name": "missing-impossible",
+          "file": "negative/by_contra_stmt/missing-impossible.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "by contra: expects a `? <fact>` goal block and `impossible ...` tail"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ByEnumerateFiniteSetStmt",
+      "ast_path": [
+        "By",
+        "ByEnumerateFiniteSetStmt"
+      ],
+      "payload": "ByEnumerateFiniteSetStmt",
+      "file": "by_enumerate_finite_set_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "two-elements",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "two-independent-domains",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "singleton-and-empty",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "constant-proof-body",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "false-enumerated-instance",
+          "file": "negative/by_enumerate_finite_set_stmt/false-enumerated-instance.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_enumerate"
+            ]
+          }
+        },
+        {
+          "name": "nonenumerable-domain",
+          "file": "negative/by_enumerate_finite_set_stmt/nonenumerable-domain.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_enumerate"
+            ]
+          }
+        },
+        {
+          "name": "false-proof-body",
+          "file": "negative/by_enumerate_finite_set_stmt/false-proof-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_enumerate"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ByInducStmt",
+      "ast_path": [
+        "By",
+        "ByInducStmt"
+      ],
+      "payload": "ByInducStmt",
+      "file": "by_induc_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "zero-start-equality",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "positive-start-order",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "compound-goal-and-scopes",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "false-base-case",
+          "file": "negative/by_induc_stmt/false-base-case.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_induc"
+            ]
+          }
+        },
+        {
+          "name": "false-step-case",
+          "file": "negative/by_induc_stmt/false-step-case.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_induc"
+            ]
+          }
+        },
+        {
+          "name": "noninteger-start",
+          "file": "negative/by_induc_stmt/noninteger-start.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_induc"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ByStrongInducStmt",
+      "ast_path": [
+        "By",
+        "ByStrongInducStmt"
+      ],
+      "payload": "ByStrongInducStmt",
+      "file": "by_strong_induc_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "zero-start-equality",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "positive-start-order",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "compound-goal-and-scopes",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "false-base-case",
+          "file": "negative/by_strong_induc_stmt/false-base-case.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_strong_induc"
+            ]
+          }
+        },
+        {
+          "name": "false-step-case",
+          "file": "negative/by_strong_induc_stmt/false-step-case.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_strong_induc"
+            ]
+          }
+        },
+        {
+          "name": "noninteger-start",
+          "file": "negative/by_strong_induc_stmt/noninteger-start.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_strong_induc"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ByForStmt",
+      "ast_path": [
+        "By",
+        "ByForStmt"
+      ],
+      "payload": "ByForStmt",
+      "file": "by_for_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "half-open-finite-range",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "closed-range",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "multiple-ranges",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "constant-proof-body",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "false-range-instance",
+          "file": "negative/by_for_stmt/false-range-instance.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_for"
+            ]
+          }
+        },
+        {
+          "name": "unbounded-carrier",
+          "file": "negative/by_for_stmt/unbounded-carrier.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_for"
+            ]
+          }
+        },
+        {
+          "name": "false-proof-body",
+          "file": "negative/by_for_stmt/false-proof-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_for"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ByExtensionStmt",
+      "ast_path": [
+        "By",
+        "ByExtensionStmt"
+      ],
+      "payload": "ByExtensionStmt",
+      "file": "by_extension_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "inline-reflexive-set",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "reordered-list-set",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "empty-set",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "unequal-sets",
+          "file": "negative/by_extension_stmt/unequal-sets.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_extension"
+            ]
+          }
+        },
+        {
+          "name": "non-equality-goal",
+          "file": "negative/by_extension_stmt/non-equality-goal.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "by extension: goal expects an equality fact"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ByFnExtensionStmt",
+      "ast_path": [
+        "By",
+        "ByFnExtensionStmt"
+      ],
+      "payload": "ByFnExtensionStmt",
+      "file": "by_fn_extension_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "unary-alpha-renaming",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "binary-alpha-renaming",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "natural-function-equality",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "different-functions",
+          "file": "negative/by_fn_extension_stmt/different-functions.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              true,
+              false
+            ],
+            "failed_phase": [
+              "by_fn_extension"
+            ]
+          }
+        },
+        {
+          "name": "different-carriers",
+          "file": "negative/by_fn_extension_stmt/different-carriers.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              true,
+              false
+            ],
+            "failed_phase": [
+              "by_fn_extension"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ByDefStmt",
+      "ast_path": [
+        "By",
+        "ByDefStmt"
+      ],
+      "payload": "ByDefStmt",
+      "file": "by_def_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "inline-predicate-fold",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "block-predicate-fold",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "builtin-subset-fold",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "false-definition-instance",
+          "file": "negative/by_def_stmt/false-definition-instance.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "by_def"
+            ]
+          }
+        },
+        {
+          "name": "unknown-definition",
+          "file": "negative/by_def_stmt/unknown-definition.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_def"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ByThmStmt",
+      "ast_path": [
+        "By",
+        "ByThmStmt"
+      ],
+      "payload": "ByThmStmt",
+      "file": "by_thm_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "selected-universal-result",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "selected-positive-result",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "block-selected-result",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "selected-fact-not-returned",
+          "file": "negative/by_thm_stmt/selected-fact-not-returned.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "by_thm"
+            ]
+          }
+        },
+        {
+          "name": "wrong-selected-argument-type",
+          "file": "negative/by_thm_stmt/wrong-selected-argument-type.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "by_thm"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "RegisterReflexivePropStmt",
+      "ast_path": [
+        "Register",
+        "RegisterReflexivePropStmt"
+      ],
+      "payload": "RegisterReflexivePropStmt",
+      "file": "register_reflexive_prop_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "reflexive-carrier-set",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "subset-relation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "conjunctive-relation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "wrong-law-shape",
+          "file": "negative/register_reflexive_prop_stmt/wrong-law-shape.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register reflexive: then fact must be a positive user-defined prop fact"
+          }
+        },
+        {
+          "name": "extra-registration-proof",
+          "file": "negative/register_reflexive_prop_stmt/extra-registration-proof.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register reflexive: indented proof body is not supported; prove the forall first, then register"
+          }
+        },
+        {
+          "name": "reflexive-carrier-R",
+          "file": "negative/register_reflexive_prop_stmt/reflexive-carrier-R.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register reflexive: each forall parameter type must be set"
+          }
+        },
+        {
+          "name": "reflexive-carrier-N",
+          "file": "negative/register_reflexive_prop_stmt/reflexive-carrier-N.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register reflexive: each forall parameter type must be set"
+          }
+        },
+        {
+          "name": "false-shaped-law",
+          "file": "negative/register_reflexive_prop_stmt/false-shaped-law.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "register_reflexive"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "RegisterSymmetricPropStmt",
+      "ast_path": [
+        "Register",
+        "RegisterSymmetricPropStmt"
+      ],
+      "payload": "RegisterSymmetricPropStmt",
+      "file": "register_symmetric_prop_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "symmetric-carrier-set",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "relation-with-carrier-clause",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "conjunctive-relation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "wrong-law-shape",
+          "file": "negative/register_symmetric_prop_stmt/wrong-law-shape.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register symmetric: forall must bind at least two parameters"
+          }
+        },
+        {
+          "name": "extra-registration-proof",
+          "file": "negative/register_symmetric_prop_stmt/extra-registration-proof.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register symmetric: indented proof body is not supported; prove the forall first, then register"
+          }
+        },
+        {
+          "name": "symmetric-carrier-R",
+          "file": "negative/register_symmetric_prop_stmt/symmetric-carrier-R.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register symmetric: each forall parameter type must be set"
+          }
+        },
+        {
+          "name": "symmetric-carrier-N",
+          "file": "negative/register_symmetric_prop_stmt/symmetric-carrier-N.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register symmetric: each forall parameter type must be set"
+          }
+        },
+        {
+          "name": "false-shaped-law",
+          "file": "negative/register_symmetric_prop_stmt/false-shaped-law.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "register_symmetric"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "RegisterTransitivePropStmt",
+      "ast_path": [
+        "Register",
+        "RegisterTransitivePropStmt"
+      ],
+      "payload": "RegisterTransitivePropStmt",
+      "file": "register_transitive_prop_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "transitive-carrier-set",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "subset-relation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "conjunctive-relation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "wrong-law-shape",
+          "file": "negative/register_transitive_prop_stmt/wrong-law-shape.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register transitive: forall must bind exactly three parameters"
+          }
+        },
+        {
+          "name": "extra-registration-proof",
+          "file": "negative/register_transitive_prop_stmt/extra-registration-proof.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register transitive: indented proof body is not supported; prove the forall first, then register"
+          }
+        },
+        {
+          "name": "transitive-carrier-R",
+          "file": "negative/register_transitive_prop_stmt/transitive-carrier-R.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register transitive: each forall parameter type must be set"
+          }
+        },
+        {
+          "name": "transitive-carrier-N",
+          "file": "negative/register_transitive_prop_stmt/transitive-carrier-N.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "register transitive: each forall parameter type must be set"
+          }
+        },
+        {
+          "name": "false-shaped-law",
+          "file": "negative/register_transitive_prop_stmt/false-shaped-law.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "register_transitive"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "WitnessExistFact",
+      "ast_path": [
+        "Witness",
+        "WitnessExistFact"
+      ],
+      "payload": "WitnessExistFact",
+      "file": "witness_exist_fact.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "ordinary-concrete-witness",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "unique-concrete-witness",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "multiple-witnesses-with-local-proof",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "wrong-witness-carrier",
+          "file": "negative/witness_exist_fact/wrong-witness-carrier.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "witness_exist"
+            ]
+          }
+        },
+        {
+          "name": "wrong-witness-arity",
+          "file": "negative/witness_exist_fact/wrong-witness-arity.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "witness_exist"
+            ]
+          }
+        },
+        {
+          "name": "false-witness-body",
+          "file": "negative/witness_exist_fact/false-witness-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "witness_exist"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "WitnessAtomicFact",
+      "ast_path": [
+        "Witness",
+        "WitnessAtomicFact"
+      ],
+      "payload": "WitnessAtomicFact",
+      "file": "witness_atomic_fact.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "ordinary-predicate-witness",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "unique-predicate-witness",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "local-proof-body",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "wrong-predicate-witness-type",
+          "file": "negative/witness_atomic_fact/wrong-predicate-witness-type.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "witness_atomic"
+            ]
+          }
+        },
+        {
+          "name": "nonexistential-predicate-witness",
+          "file": "negative/witness_atomic_fact/nonexistential-predicate-witness.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "witness_atomic"
+            ]
+          }
+        },
+        {
+          "name": "unique-exist-predicate-is-unsupported",
+          "file": "negative/witness_atomic_fact/unique-exist-predicate-is-unsupported.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "witness_atomic"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "WitnessNonemptySet",
+      "ast_path": [
+        "Witness",
+        "WitnessNonemptySet"
+      ],
+      "payload": "WitnessNonemptySet",
+      "file": "witness_nonempty_set.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "singleton-member",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "list-set-member",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "local-body-member",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "empty-set-witness",
+          "file": "negative/witness_nonempty_set/empty-set-witness.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "witness_nonempty"
+            ]
+          }
+        },
+        {
+          "name": "nonmember-witness",
+          "file": "negative/witness_nonempty_set/nonmember-witness.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "witness_nonempty"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ClaimStmt",
+      "ast_path": [
+        "ProofBlock",
+        "ClaimStmt"
+      ],
+      "payload": "ClaimStmt",
+      "file": "claim_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "bodyless-claim",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "universal-local-function",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "witness-body-claim",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "false-bodyless-claim",
+          "file": "negative/claim_stmt/false-bodyless-claim.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "claim"
+            ]
+          }
+        },
+        {
+          "name": "local-name-does-not-escape",
+          "file": "negative/claim_stmt/local-name-does-not-escape.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "undefined name `local`"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "SketchStmt",
+      "ast_path": [
+        "ProofBlock",
+        "SketchStmt"
+      ],
+      "payload": "SketchStmt",
+      "file": "sketch_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "arithmetic-sketch",
+          "strict": true,
+          "expect": {
+            "success": true,
+            "empty_effects": true
+          }
+        },
+        {
+          "name": "local-declarations",
+          "strict": true,
+          "expect": {
+            "success": true,
+            "empty_effects": true
+          }
+        },
+        {
+          "name": "nested-proof",
+          "strict": true,
+          "expect": {
+            "success": true,
+            "empty_effects": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "false-sketch-body",
+          "file": "negative/sketch_stmt/false-sketch-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "sketch"
+            ]
+          }
+        },
+        {
+          "name": "sketch-name-does-not-escape",
+          "file": "negative/sketch_stmt/sketch-name-does-not-escape.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true
+            ],
+            "session_error_contains": "undefined name `local`"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "EvalStmt",
+      "ast_path": [
+        "Command",
+        "EvalStmt"
+      ],
+      "payload": "EvalStmt",
+      "file": "eval_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "closed-numeric-evaluation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "named-value-evaluation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "algorithm-evaluation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "recursive-algorithm-evaluation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "noncomputable-set",
+          "file": "negative/eval_stmt/noncomputable-set.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "eval"
+            ]
+          }
+        },
+        {
+          "name": "undefined-eval-value",
+          "file": "negative/eval_stmt/undefined-eval-value.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "undefined name `missing`"
+          }
+        },
+        {
+          "name": "undefined-division",
+          "file": "negative/eval_stmt/undefined-division.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "eval"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "template_bodies": [
+    "HaveObjInNonemptySetStmt",
+    "HaveObjEqualStmt",
+    "HaveObjByExistFactsStmt",
+    "HaveByReplacementAxiomStmt",
+    "TrustHaveStmt",
+    "ObtainObjFromExistFact",
+    "ObtainObjFromAtomicFact",
+    "HaveFnEqualStmt",
+    "HaveFnEqualCaseByCaseStmt",
+    "HaveFnByInducStmt",
+    "HaveFnByForallExistUniqueStmt"
+  ],
+  "boundaries": [
+    {
+      "leaf": "TrustStmt",
+      "name": "strict-trust-rejected",
+      "file": "boundaries/strict-trust-rejected.lit",
+      "strict": true,
+      "expect": {
+        "success": false,
+        "statement_success": [],
+        "session_error_contains": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+      }
+    },
+    {
+      "leaf": "TrustHaveStmt",
+      "name": "strict-trust-have-rejected",
+      "file": "boundaries/strict-trust-have-rejected.lit",
+      "strict": true,
+      "expect": {
+        "success": false,
+        "statement_success": [],
+        "session_error_contains": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+      }
+    },
+    {
+      "leaf": "DefAbstractPropStmt",
+      "name": "strict-abstract-prop-rejected",
+      "file": "boundaries/strict-abstract-prop-rejected.lit",
+      "strict": true,
+      "expect": {
+        "success": false,
+        "statement_success": [],
+        "session_error_contains": "Runtime(InvalidArguments(\"`abstract_prop` is forbidden under Litex `-strict`\"))"
+      }
+    },
+    {
+      "leaf": "AxiomStmt",
+      "name": "strict-axiom-interface-allowed",
+      "file": "boundaries/strict-axiom-interface-allowed.lit",
+      "strict": true,
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "leaf": "ReleaseRegularityAxiomStmt",
+      "name": "strict-regularity-allowed",
+      "file": "boundaries/strict-regularity-allowed.lit",
+      "strict": true,
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "leaf": "ReleaseAxiomOfChoiceStmt",
+      "name": "strict-choice-allowed",
+      "file": "boundaries/strict-choice-allowed.lit",
+      "strict": true,
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "leaf": "ByThmStmt",
+      "name": "colon-selected-theorem-call-rejected",
+      "file": "boundaries/colon-selected-theorem-call-rejected.lit",
+      "strict": true,
+      "expect": {
+        "success": false,
+        "statement_success": [
+          true
+        ],
+        "session_error_contains": "by thm: expected bare call or `=> <atomic fact>`"
+      }
+    },
+    {
+      "leaf": "EvalStmt",
+      "name": "evaluation-exports-no-facts",
+      "file": "boundaries/evaluation-exports-no-facts.lit",
+      "strict": true,
+      "expect": {
+        "success": true,
+        "empty_effects": true
+      }
+    },
+    {
+      "leaf": "ClaimStmt",
+      "name": "strict-claim-trust-rejected",
+      "file": "boundaries/strict-claim-trust-rejected.lit",
+      "strict": true,
+      "expect": {
+        "success": false,
+        "statement_success": [],
+        "session_error_contains": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+      }
+    },
+    {
+      "leaf": "SketchStmt",
+      "name": "strict-sketch-trust-rejected",
+      "file": "boundaries/strict-sketch-trust-rejected.lit",
+      "strict": true,
+      "expect": {
+        "success": false,
+        "statement_success": [],
+        "session_error_contains": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+      }
+    }
+  ],
+  "known_gaps": [
+    {
+      "id": "K001",
+      "leaf": "LetObjStmt",
+      "file": "known_gaps/callable-alias-direct.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          true,
+          true,
+          false
+        ],
+        "failed_phase": [
+          "search_proof"
+        ]
+      }
+    },
+    {
+      "id": "K002",
+      "leaf": "DefTemplateStmt",
+      "file": "known_gaps/template-member-carrier.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          true,
+          false
+        ],
+        "failed_phase": [
+          "search_proof"
+        ]
+      }
+    },
+    {
+      "id": "K003",
+      "leaf": "HaveFnByInducStmt",
+      "file": "known_gaps/recursive-direct-equation.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          true,
+          true,
+          true,
+          false
+        ],
+        "failed_phase": [
+          "search_proof"
+        ]
+      }
+    },
+    {
+      "id": "K004",
+      "leaf": "HaveFnByInducStmt",
+      "file": "known_gaps/recursive-call-under-addition.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          true,
+          true,
+          true,
+          true,
+          false
+        ],
+        "failed_phase": [
+          "search_proof"
+        ]
+      }
+    },
+    {
+      "id": "K005",
+      "leaf": "Fact",
+      "file": "known_gaps/finite-negated-existence.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          true,
+          false
+        ],
+        "failed_phase": [
+          "search_proof"
+        ]
+      }
+    },
+    {
+      "id": "K006",
+      "leaf": "DefTemplateStmt",
+      "file": "known_gaps/strict-template-trust-have.lit",
+      "strict": true,
+      "desired_success": false,
+      "observed": {
+        "success": true
+      }
+    },
+    {
+      "id": "K007-for",
+      "leaf": "ByForStmt",
+      "file": "known_gaps/for-binder-proof-body.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          false
+        ],
+        "failed_phase": [
+          "by_for"
+        ]
+      }
+    },
+    {
+      "id": "K007-enumerate",
+      "leaf": "ByEnumerateFiniteSetStmt",
+      "file": "known_gaps/enumeration-binder-proof-body.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          false
+        ],
+        "failed_phase": [
+          "by_enumerate"
+        ]
+      }
+    },
+    {
+      "id": "K008",
+      "leaf": "ByForStmt",
+      "file": "known_gaps/finite-cartesian-domain.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          false
+        ],
+        "failed_phase": [
+          "by_for"
+        ]
+      }
+    },
+    {
+      "id": "K009-for",
+      "leaf": "ByForStmt",
+      "file": "known_gaps/conditional-for-goal.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          false
+        ],
+        "failed_phase": [
+          "by_for"
+        ]
+      }
+    },
+    {
+      "id": "K009-enumerate",
+      "leaf": "ByEnumerateFiniteSetStmt",
+      "file": "known_gaps/conditional-enumeration-goal.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          false
+        ],
+        "failed_phase": [
+          "by_enumerate"
+        ]
+      }
+    },
+    {
+      "id": "K010",
+      "leaf": "ByEnumerateFiniteSetStmt",
+      "file": "known_gaps/enumeration-arithmetic-carrier.lit",
+      "strict": true,
+      "desired_success": true,
+      "observed": {
+        "success": false,
+        "statement_success": [
+          false
+        ],
+        "failed_phase": [
+          "by_enumerate"
+        ]
+      }
+    }
+  ]
+}

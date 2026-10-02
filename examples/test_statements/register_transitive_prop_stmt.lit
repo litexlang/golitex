@@ -1,0 +1,37 @@
+# Stmt: RegisterTransitivePropStmt
+# AST: Stmt::Register::RegisterTransitivePropStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf RegisterTransitivePropStmt
+
+# case: transitive-carrier-set
+prop reg_transitive_first(x, y set):
+    x = y
+register transitive:
+    ? forall x, y, z set:
+        $reg_transitive_first(x, y)
+        $reg_transitive_first(y, z)
+        =>:
+            $reg_transitive_first(x, z)
+$reg_transitive_first(1, 1)
+
+# case: subset-relation
+prop reg_transitive_second(x, y set):
+    x $subset y
+register transitive:
+    ? forall x, y, z set:
+        $reg_transitive_second(x, y)
+        $reg_transitive_second(y, z)
+        =>:
+            $reg_transitive_second(x, z)
+$reg_transitive_second({1}, {1})
+
+# case: conjunctive-relation
+prop reg_transitive_third(x, y set):
+    x = y
+    y = x
+register transitive:
+    ? forall x, y, z set:
+        $reg_transitive_third(x, y)
+        $reg_transitive_third(y, z)
+        =>:
+            $reg_transitive_third(x, z)
+$reg_transitive_third(1, 1)

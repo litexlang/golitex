@@ -1,0 +1,35 @@
+# Stmt: RegisterSymmetricPropStmt
+# AST: Stmt::Register::RegisterSymmetricPropStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf RegisterSymmetricPropStmt
+
+# case: symmetric-carrier-set
+prop reg_symmetric_first(x, y set):
+    x = y
+register symmetric:
+    ? forall x, y set:
+        $reg_symmetric_first(x, y)
+        =>:
+            $reg_symmetric_first(y, x)
+$reg_symmetric_first(1, 1)
+
+# case: relation-with-carrier-clause
+prop reg_symmetric_second(x, y set):
+    x = y
+    $is_set(x)
+register symmetric:
+    ? forall x, y set:
+        $reg_symmetric_second(x, y)
+        =>:
+            $reg_symmetric_second(y, x)
+$reg_symmetric_second(1, 1)
+
+# case: conjunctive-relation
+prop reg_symmetric_third(x, y set):
+    x = y
+    y = x
+register symmetric:
+    ? forall x, y set:
+        $reg_symmetric_third(x, y)
+        =>:
+            $reg_symmetric_third(y, x)
+$reg_symmetric_third(1, 1)

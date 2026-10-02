@@ -1,0 +1,6 @@
+# Expected rejection: false-case-conclusion
+# Owner: ByCasesStmt
+
+by cases:
+    ? 1 = 2
+    case 1 = 1

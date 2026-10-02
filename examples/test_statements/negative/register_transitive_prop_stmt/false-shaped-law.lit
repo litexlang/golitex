@@ -1,0 +1,10 @@
+# Expected rejection: false shaped RegisterTransitivePropStmt law
+
+prop P(x, y set):
+    x != y
+register transitive:
+    ? forall x, y, z set:
+        $P(x, y)
+        $P(y, z)
+        =>:
+            $P(x, z)

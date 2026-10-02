@@ -1,6 +1,7 @@
 //! Explain + cite for `LessFactSearchProofByBuiltinRule`.
 
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::{
+    FromKnownGreaterBuiltinRuleProof,
     LessFactSearchProofByBuiltinRule, FiniteSetSizeProperSubsetLtBuiltinRuleProof, AddLeftCongruenceStrictBuiltinRuleProof,
     AddRightCongruenceStrictBuiltinRuleProof, ArccotPrincipalLowerBoundBuiltinRuleProof,
     ArccotPrincipalUpperBoundBuiltinRuleProof, ArctanPrincipalLowerBoundBuiltinRuleProof,
@@ -28,6 +29,8 @@ use super::text::text;
 impl LessFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::FromKnownGreater(p) => p.rule_id_and_message(lang),
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message(lang),
             Self::ClosedNumericComparison(p) => p.rule_id_and_message(lang),
             Self::SubtractOneLess(p) => p.rule_id_and_message(lang),
             Self::ArctanPrincipalLowerBound(p) => p.rule_id_and_message(lang),
@@ -67,6 +70,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::FromKnownGreater(p) => p.premise_proof.cite_fact_id(),
+            Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),
             Self::LessTransitivity(_) => None,
             Self::LessFromPosDifference(p) => p.premise_proof.cite_fact_id(),
             Self::PosDifferenceFromLess(p) => p.premise_proof.cite_fact_id(),
@@ -919,6 +924,15 @@ impl OrderFlipMulMinusOneToLessBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl FromKnownGreaterBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text("FromKnownGreater", "Known converse order", "The opposite-direction comparison is already known"),
+            OutputLanguage::Chinese => text("FromKnownGreater", "已知反向序关系", "引用已知的反向比较事实"),
         }
     }
 }

@@ -1,0 +1,8 @@
+# Expected rejection: wrong-law-shape
+# Owner: RegisterTransitivePropStmt
+
+prop P(x, y set):
+    x = y
+register transitive:
+    ? forall x set:
+        x = x

@@ -77,9 +77,13 @@ impl Runtime {
             right: other_side.clone(),
             line_file: parent_fact.line_file.clone(),
         };
-        // Unfolding preserves the caller's rewrite permission and remaining
-        // budget. A restricted caller must not regain either here.
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = VerifyState {
+            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
+            can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
+            can_use_rewrite: false,
+            store_well_defined_fact: false,
+            equality_class_search: verify_state.equality_class_search,
+};
         let residual_equal = self.verify_equal_fact(&residual, child_state)?;
         if residual_equal.is_failed() {
             return Ok(None);

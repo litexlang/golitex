@@ -1,0 +1,6 @@
+# Expected rejection: bad-base-carrier
+# Owner: HaveFnByInducStmt
+
+have fn f(n N) N by induc n from 0:
+    case n = 0: -1
+    case n >= 1: 0

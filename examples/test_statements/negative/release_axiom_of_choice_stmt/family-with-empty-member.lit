@@ -1,0 +1,6 @@
+# Expected rejection: family-with-empty-member
+# Owner: ReleaseAxiomOfChoiceStmt
+
+release axiom_of_choice: set {{}}:
+    forall A {{}}:
+        $is_nonempty_set(A)

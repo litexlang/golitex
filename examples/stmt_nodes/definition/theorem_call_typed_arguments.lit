@@ -1,0 +1,15 @@
+# Stmt: ReleaseThmStmt / By.ByThmStmt
+# Gate: target/release/litex -strict -f examples/stmt_nodes/definition/theorem_call_typed_arguments.lit
+# Before: `only_natural(-1)` was accepted and released `-1 >= 0`.
+# Now: each instantiated parameter type is proved before any conclusion.
+
+thm only_natural:
+    ? forall n N:
+        n >= 0
+
+release thm only_natural(0)
+by thm only_natural(1) => 1 >= 0
+
+# These calls must be rejected when run separately:
+# release thm only_natural(-1)
+# by thm only_natural(-1) => -1 >= 0

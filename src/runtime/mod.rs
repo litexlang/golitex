@@ -8,6 +8,7 @@
 
 pub mod error;
 pub mod internal_names;
+mod parse_scope_transaction;
 #[cfg(test)]
 mod internal_names_tests;
 pub mod real_or_virtual_path;

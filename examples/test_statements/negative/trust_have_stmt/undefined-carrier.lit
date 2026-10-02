@@ -1,0 +1,5 @@
+# Expected rejection: undefined-carrier
+# Owner: TrustHaveStmt
+
+trust have x Missing:
+    x = x

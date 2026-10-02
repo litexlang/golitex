@@ -1,0 +1,24 @@
+# Stmt: ByThmStmt
+# AST: Stmt::By::ByThmStmt
+# Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ByThmStmt
+
+# case: selected-universal-result
+thm select_sides:
+    ? forall x R:
+        x + 0 = x
+        0 + x = x
+by thm select_sides(2) => 2 + 0 = 0 + 2
+
+# case: selected-positive-result
+thm select_nonzero:
+    ? forall x R:
+        x > 0
+        =>:
+            x != 0
+by thm select_nonzero(3) => 3 != 0
+
+# case: block-selected-result
+thm select_id:
+    ? forall x R:
+        x = x
+by thm select_id(4) => 4 = 4

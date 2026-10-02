@@ -1,0 +1,7 @@
+# Expected rejection: wrong-theorem-type
+# Owner: ReleaseThmStmt
+
+thm t:
+    ? forall n N:
+        n = n
+release thm t(-1)

@@ -1,0 +1,7 @@
+# Known gap: K008
+# Desired success: true
+# See todo.md; runner checks observed behavior explicitly.
+
+by for:
+    ? forall p cart({1, 2}, {3, 4}):
+        p = p
