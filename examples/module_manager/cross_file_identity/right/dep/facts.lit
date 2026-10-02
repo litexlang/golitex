@@ -1,0 +1,1 @@
+have fn ident(x R) R = x + 1

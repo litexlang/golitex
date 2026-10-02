@@ -25,3 +25,9 @@ algo recursive_eval(n N) N by induc n from 0:
     case n = 0: 0
     case n >= 1: recursive_eval(n - 1)
 eval recursive_eval(2)
+
+# case: checked-natural-domain
+algo eval_identity(x N) N by cases:
+    case x = x: x
+eval eval_identity(0)
+eval eval_identity(2) + 1

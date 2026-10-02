@@ -4,6 +4,13 @@ This is a focused review of the 50 reachable `Stmt` leaves, not a proof of sound
 
 The [suite runner](../../examples/test_statements/run.py) exercised 361 checks over all 50 leaves with this binary: 360 matched their current expectations. The one mismatch, K004 (recursive call under addition), **now succeeds** although its gap record expects failure; that is a stale expectation after concurrent implementation work, not a new rejection. The other 11 gap reproductions matched their recorded failing behavior. The [issue index](../../examples/test_statements/bugs/README.md) has exact fixtures and controls for K001–K010, including both variants of K007 and K009.
 
+Subsequent statement-boundary repair: the user requested strict-template rejection,
+conditional finite-set enumeration, nested by proof methods, and source WD before
+eval. Those routes now have [acceptance evidence](../../examples/test_statements/experience/problem_notes/statement-boundary-repairs.md).
+Cartesian-domain enumeration remains explicitly unsupported by user decision;
+the Manual promise was narrowed. The discrepancies below describe the original
+binary checkpoint above and are retained as historical evidence.
+
 ## High-risk behavior now correct
 
 `by def` does **not** simply ask the general verifier to accept its target. [Its executor](../../src/execute/execute_by_stmt/exec_by_def_stmt.rs) calls `search_atomic_except_equality_fact_proof_by_definition` even if the fact is already known, and then stores the fact only after that route succeeds. The current binary accepts:
@@ -22,6 +29,7 @@ The earlier [soundness audit](statement-soundness-2026-10-01.md) identified four
 
 ### 1. `-strict` misses `trust have` inside a template (trust boundary)
 
+<!-- litex:skip-test -->
 ```litex
 template<S set>:
     trust have fabricated R:
@@ -44,6 +52,7 @@ by enumerate finite_set:
 Both `by enumerate finite_set` and `by for` reject this true conditional goal; the standalone `forall` control succeeds. [The shared enumerator](../../src/execute/execute_by_stmt/enumerate_forall.rs) verifies each instantiated `then_fact` without using or deciding `dom_facts`. Legacy enumeration and iteration first checked each instantiated domain fact, assumed it when true, and skipped a case only after proving its negation (`src/execution/proof_directives/{enumeration,iteration}.rs` at the pinned commit). See [K009](../../examples/test_statements/bugs/by_enumerate_finite_set_stmt/K009-conditional-enumeration-goal/README.md).
 
 <!-- litex:skip-test -->
+<!-- litex:skip-test -->
 ```litex
 by for:
     ? forall p cart({0, 1}, {2, 3}):
@@ -65,6 +74,8 @@ The current parser accepts the block but the executor rejects the nested `by def
 
 ### 4. `eval` does not check the input expression's domain (command behavior)
 
+<!-- litex:skip-test -->
+<!-- litex:skip-test -->
 ```litex
 algo identity(x N) N by cases:
     case x = x: x

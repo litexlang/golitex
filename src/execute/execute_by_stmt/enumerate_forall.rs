@@ -5,7 +5,7 @@ use crate::ast::fact::{negate_atomic_fact, EqualFact, Fact, ForallFact};
 use crate::ast::obj::Obj;
 use crate::ast::stmt::Stmt;
 use crate::execute::execute_fact_stmt::{
-    AssumeDomFactResult, VerifyFactResult, VerifyFactWellDefinedResult,
+    AssumeDomFactResult, ProveAndStoreThenFactResult, VerifyFactResult, VerifyFactWellDefinedResult,
 };
 use crate::execute::execute_proof_block_stmt::{run_proof_body_stmts, ProofBlockBodyFailed};
 use crate::runtime::{Runtime, RuntimeResult};
@@ -124,8 +124,8 @@ pub(super) fn exec_enumerate_forall_goal(
                         index, then_index, result: proof,
                     }));
                 }
-                then_proofs.push(proof);
-                rt.store_fact_and_infer(&instantiated)?;
+                let store_and_infer = rt.store_fact_and_infer(&instantiated)?;
+                then_proofs.push(ProveAndStoreThenFactResult { verify_result: proof, store_and_infer });
             }
             Ok(Ok((introduced_params, binding_assumptions,
                 EnumerateAssignmentOutcome::Proved {

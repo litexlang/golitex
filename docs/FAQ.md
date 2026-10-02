@@ -577,6 +577,12 @@ No. Cross-module references always use canonical qualified names such as
 `A` may still be both a module head and a local object. Interactive terminal
 imports are also qualified-only and are not valid inside Litex source.
 
+Import aliases belong to the importing package's `litex.config`. Two packages
+can each use `Common = "./dep"` for different directories; references resolve
+through their own manifest and the normalized path. Two aliases for the same
+directory share the same module. Alias duplication within one manifest is
+still rejected. The global display label is separate from this local alias.
+
 A practical rule of thumb is:
 
 - use automatic `forall` matching for short, local, common facts whose intended
@@ -1014,6 +1020,23 @@ template<s set>:
 The reading is: first fix an arbitrary set `s`; in that temporary context,
 `carrier_copy` is definable as `s`; because this works for every `s set`, the
 family can later be called as `\carrier_copy<R>`, `\carrier_copy<Z>`, and so on.
+
+A checked template also publishes the facts supplied by its ordinary body
+definition, with the angle-bracket parameters universally quantified and
+header conditions retained as premises. For example:
+
+```litex
+template<S nonempty_set>:
+    have member S
+\member<R> $in R
+```
+
+The template stores `forall S nonempty_set: \member<S> $in S`, so ordinary
+known-universal search supplies the instantiated membership. The same rule
+applies to object equations and selected-witness properties, function
+signatures and guarded equations, unique-existence selection, and replacement
+facts. It publishes the definition stores, not the temporary scope's assumptions
+or proof intermediate steps. See the [acceptance example](../examples/stmt_nodes/definition/template_definition_facts.lit).
 
 The simplest reason is the one above: a Litex function input must range over a
 particular domain set. But `set` is not itself a particular domain set. It is a
@@ -1626,3 +1649,21 @@ Calculation uses the reserved literal `i² = -1`, so `i*i = -1` and
 cancellation still needs nonzero premises. Indexed union, intersection and
 Cartesian product require a nonempty index at WD. Naming an empty family
 function does not enable an empty-index identity.
+
+
+### Do enumeration, nested proof methods, and eval check the same boundaries?
+
+Finite enumeration checks each conditional instance, skipping only a proved
+false atomic premise and otherwise proving the conclusions under local
+premises. Quantified names remain available to nested proof steps. The domain
+must be a displayed finite list set or a concrete integer range; `cart(...)`
+enumeration is not supported. `by` proof bodies run nested statements through
+the same checked, transactional entry as claim/witness bodies, and publish only
+the enclosing target. A nested template cannot bypass `-strict` with
+`trust have`. `eval` checks source-expression well-definedness before rewriting
+or executing an algorithm; it displays a result without asserting it as a fact.
+
+The runnable [finite-set proof tracer](../examples/stmt_nodes/by/finite_set_conditional_proof_steps.lit)
+and [eval domain tracer](../examples/stmt_nodes/command/eval_source_domain.lit)
+show these boundaries. False conclusions under true premises and out-of-domain
+calls are executable rejection controls in the statement suite.

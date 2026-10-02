@@ -67,7 +67,7 @@ fn nested_by_steps_preserve_helper_scope_and_failure_rollback() {
     check(&mut rt, "by extension:\n    ? {1} = {1}\n    have helper N = 1\n    by def {1} $subset {1}\nhave helper N = 2", &[true, true]);
     check(&mut rt, "by extension:\n    ? {1} = {1}\n    have discarded N = 1\n    0 = 1\nhave discarded N = 2", &[false, true]);
     check(&mut rt, "by cases:\n    ? 1 = 1\n    case 1 = 1:\n        by extension {1} = {1}", &[true]);
-    check(&mut rt, "by contra:\n    ? 1 = 1\n    impossible 1 != 1\n    by extension {1} = {1}", &[true]);
+    check(&mut rt, "by contra:\n    ? 1 = 1\n    by extension {1} = {1}\n    impossible 1 != 1", &[true]);
     check(&mut rt, "have fn f(x R) R = x\nhave fn g(x R) R = x\nby fn_extension:\n    ? f = g\n    by extension {1} = {1}", &[true, true, true]);
 }
 
@@ -82,4 +82,34 @@ fn eval_checks_source_domain_before_rewrite_or_execution() {
     }
     check(&mut rt, "eval identity(0)\neval identity(2) + 1\neval 1 / 2", &[true, true, true]);
     check(&mut rt, "0 = 1", &[false]);
+}
+
+#[test]
+fn statement_boundary_json_retains_nested_proofs_and_wd_failure() {
+    let mut rt = runtime(true);
+    let run = rt.run_litex_code("by enumerate finite_set:\n    ? forall n {0, 1}:\n        n > 0\n        =>:\n            n != 0\n    by extension {1} = {1}").unwrap();
+    assert!(run.success);
+    let detailed = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
+    for field in ["assignments", "binding_assumptions", "skipped_false_premise", "negated_premise", "proof_steps", "by_extension", "then_proofs", "store_and_infer"] {
+        assert!(detailed.contains(field), "missing {field}: {detailed}");
+    }
+    check(&mut rt, "algo identity(x N) N by cases:\n    case x = x: x", &[true]);
+    let run = rt.run_litex_code("eval identity(-1)").unwrap();
+    let normal = crate::json_output::project_stmt_normal(&run.statement_results[0], &rt).stringify();
+    assert!(normal.contains("well_defined") && normal.contains("identity(-1)"), "{normal}");
+    let run = rt.run_litex_code("eval identity(1)").unwrap();
+    let detailed = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
+    assert!(detailed.contains("source_well_defined"), "{detailed}");
+}
+
+#[test]
+fn run_examples_statement_boundary_tracers() {
+    for (strict, code) in [
+        (true, include_str!("../../../../examples/stmt_nodes/by/finite_set_conditional_proof_steps.lit")),
+        (true, include_str!("../../../../examples/stmt_nodes/command/eval_source_domain.lit")),
+        (false, include_str!("../../../../examples/stmt_nodes/unsafe/template_strict_policy.lit")),
+    ] {
+        let run = runtime(strict).run_litex_code(code).unwrap();
+        assert!(run.success && run.session_error.is_none(), "{code}\n{:?}", run.session_error);
+    }
 }

@@ -52,6 +52,7 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `definition/def_abstract_prop.lit` | Abstract predicate | `abstract_prop P(x, y)` |
 | `definition/def_struct*.lit` | Struct carrier | `struct Point:` fields |
 | `definition/def_template*.lit` | Parameterized def | `template<A set>:` one body |
+| [definition/template_definition_facts.lit](definition/template_definition_facts.lit) | Publish template definition facts | `forall` over template arguments, with body and header premises retained |
 | `definition/def_thm.lit` | Named theorem | `thm name: ? fact` + proof |
 | `definition/axiom.lit` | Named axiom (trusted forall) | `axiom name: ? forall …` |
 | `definition/def_strategy.lit` | Named strategy (proved forall) | `strategy name: ? forall …` + proof; later `$P` via known_strategy |
@@ -66,6 +67,9 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `by/` | Named proof methods | `by cases:` / `by contra:` / … |
 | `by/induction_base_scope.lit` | Separate induction base and step scopes | `by induc` / `by strong_induc` |
 | `proof_block/` | Nested scopes | `claim:` / `sketch:` |
+| `by/finite_set_conditional_proof_steps.lit` | Conditional enumeration and nested proof steps | finite list guards, live binder names, and local nested `by def` |
+| `unsafe/template_strict_policy.lit` | Strict template trust policy | ordinary run accepts; strict rejects template trust-have |
+| `command/eval_source_domain.lit` | Source WD before eval | valid natural-domain calls compute; invalid calls reject |
 | `command/eval.lit` | Display eval: closed-numeric rewrite + algo | `eval 3!` / `eval sqrt(4)` / `eval a + 1` / `eval nonzero_flag(0) + 1` |
 | `command/eval_closed_numeric_complex.lit` | Nested closed-numeric display eval | `eval gcd(54,(-24))+3!*sqrt(4)` / rewrite `a+b*c` |
 

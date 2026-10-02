@@ -16,3 +16,9 @@ by contra:
 by contra:
     ? 1 != 0
     impossible 1 = 0
+
+# case: nested-extension-step
+by contra:
+    ? 1 = 1
+    by extension {1} = {1}
+    impossible 1 != 1

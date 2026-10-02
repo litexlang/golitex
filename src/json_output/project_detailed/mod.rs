@@ -21,3 +21,5 @@ pub use entry::{project_run_detailed, project_stmt_detailed};
 pub(in crate::json_output) use induction::{project_induc_failure, project_strong_induc_failure, project_induc_definition_failure};
 
 pub(in crate::json_output) use theorem::{project_release_thm_failure, project_by_thm_failure, project_def_thm_failure};
+
+pub(in crate::json_output) use wd::project_verify_obj_wd;

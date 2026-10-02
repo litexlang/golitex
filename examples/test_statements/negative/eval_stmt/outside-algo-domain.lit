@@ -1,0 +1,3 @@
+algo identity(x N) N by cases:
+    case x = x: x
+eval identity(-1)

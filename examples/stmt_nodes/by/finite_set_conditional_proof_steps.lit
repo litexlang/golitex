@@ -1,0 +1,40 @@
+# Tracer: finite displayed domains, conditional premises, and nested proof steps.
+# Before (rejected):
+# by enumerate finite_set:
+#     ? forall n {0, 1, 2}:
+#         n > 0
+#         =>:
+#             n != 0
+# Former behavior: by_enumerate failed because the zero assignment required 0 != 0.
+#
+# Now: skip the proved-false zero premise; check the positive branches locally.
+prop enumeration_positive(x R):
+    x > 0
+
+by enumerate finite_set:
+    ? forall n {0, 1, 2}:
+        n > 0
+        =>:
+            n != 0
+    by def $enumeration_positive(n)
+
+by for:
+    ? forall n {0, 1, 2}:
+        n > 0
+        =>:
+            n != 0
+    n = n
+
+# Before (rejected):
+# by extension:
+#     ? {1} = {1}
+#     by def {1} $subset {1}
+# Former behavior: nested by def was rejected as a non-fact proof step.
+by extension:
+    ? {1} = {1}
+    by def {1} $subset {1}
+
+# Boundary: false conclusions under true premises, failed nested steps, and
+# cart(...) domains reject. Helpers and quantified names remain local.
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/by/finite_set_conditional_proof_steps.lit
+# Tests: execute::statement_boundary_tests; examples/test_statements/manifest.json.

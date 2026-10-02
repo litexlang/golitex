@@ -25,3 +25,13 @@ by enumerate finite_set:
     ? forall n {0, 1}:
         n = n
     1 = 1
+
+# case: conditional-nested-binder-body
+prop enum_positive(x R):
+    x > 0
+by enumerate finite_set:
+    ? forall n {0, 1, 2}:
+        n > 0
+        =>:
+            n != 0
+    by def $enum_positive(n)

@@ -27,7 +27,7 @@ pub(super) fn project_obj_wd_proof(proof: &ObjWellDefinedProof, runtime: &Runtim
     }
 }
 
-pub(super) fn project_verify_obj_wd(
+pub(in crate::json_output) fn project_verify_obj_wd(
     result: &VerifyObjWellDefinedResult,
     runtime: &Runtime,
 ) -> JsonValue {

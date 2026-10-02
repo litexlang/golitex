@@ -3,9 +3,9 @@
 Task: detailed per-statement tests requested on 2026-10-01.
 The authoritative inventory is `src/ast/stmt.rs`: 50 reachable statement
 leaves, including `Stmt::Fact`. Each leaf has one primary `.lit` file with
-multiple runnable scenarios. There are 162 positive scenarios,
-127 negative scenarios, 12 additional boundary/regression checks, and 10 gap
-reproductions covering 8 open issue groups. Each scenario runs independently;
+multiple runnable scenarios. There are 169 positive scenarios,
+130 negative scenarios, 19 additional boundary/regression checks, and 3 gap
+reproductions covering 3 open issue groups. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
 ## Run
@@ -96,7 +96,9 @@ to make another test pass. Zorn and choice fixtures make obligations explicit
 inside conditional claims. Current strict mode permits named axioms and
 choice/regularity release; these are explicitly asserted boundaries.
 
-The template trust bypass under `-strict` is a separate recorded problem.
+The template trust bypass under `-strict` is a resolved rejection regression.
+Conditional enumeration and binder-reference cases are ordinary boundaries;
+Cartesian-domain enumeration remains explicitly unsupported.
 Inference and membership lines retained after declarations are test assertions
 of stored consequences. They deliberately exercise subsequent use.
 
@@ -145,14 +147,14 @@ recursive `.lit` file in this directory as a positive example.
 | `ReleaseZornLemmaStmt` | [release_zorn_lemma_stmt.lit](release_zorn_lemma_stmt.lit) | 2 | 2 |
 | `ReleaseAxiomOfChoiceStmt` | [release_axiom_of_choice_stmt.lit](release_axiom_of_choice_stmt.lit) | 3 | 2 |
 | `ReleaseRegularityAxiomStmt` | [release_regularity_axiom_stmt.lit](release_regularity_axiom_stmt.lit) | 3 | 3 |
-| `ByCasesStmt` | [by_cases_stmt.lit](by_cases_stmt.lit) | 3 | 2 |
-| `ByContraStmt` | [by_contra_stmt.lit](by_contra_stmt.lit) | 3 | 2 |
-| `ByEnumerateFiniteSetStmt` | [by_enumerate_finite_set_stmt.lit](by_enumerate_finite_set_stmt.lit) | 4 | 3 |
+| `ByCasesStmt` | [by_cases_stmt.lit](by_cases_stmt.lit) | 4 | 2 |
+| `ByContraStmt` | [by_contra_stmt.lit](by_contra_stmt.lit) | 4 | 2 |
+| `ByEnumerateFiniteSetStmt` | [by_enumerate_finite_set_stmt.lit](by_enumerate_finite_set_stmt.lit) | 5 | 4 |
 | `ByInducStmt` | [by_induc_stmt.lit](by_induc_stmt.lit) | 3 | 3 |
 | `ByStrongInducStmt` | [by_strong_induc_stmt.lit](by_strong_induc_stmt.lit) | 3 | 3 |
-| `ByForStmt` | [by_for_stmt.lit](by_for_stmt.lit) | 4 | 3 |
-| `ByExtensionStmt` | [by_extension_stmt.lit](by_extension_stmt.lit) | 3 | 2 |
-| `ByFnExtensionStmt` | [by_fn_extension_stmt.lit](by_fn_extension_stmt.lit) | 3 | 2 |
+| `ByForStmt` | [by_for_stmt.lit](by_for_stmt.lit) | 5 | 4 |
+| `ByExtensionStmt` | [by_extension_stmt.lit](by_extension_stmt.lit) | 4 | 2 |
+| `ByFnExtensionStmt` | [by_fn_extension_stmt.lit](by_fn_extension_stmt.lit) | 4 | 2 |
 | `ByDefStmt` | [by_def_stmt.lit](by_def_stmt.lit) | 3 | 2 |
 | `ByThmStmt` | [by_thm_stmt.lit](by_thm_stmt.lit) | 3 | 2 |
 | `RegisterReflexivePropStmt` | [register_reflexive_prop_stmt.lit](register_reflexive_prop_stmt.lit) | 3 | 5 |
@@ -163,4 +165,4 @@ recursive `.lit` file in this directory as a positive example.
 | `WitnessNonemptySet` | [witness_nonempty_set.lit](witness_nonempty_set.lit) | 3 | 2 |
 | `ClaimStmt` | [claim_stmt.lit](claim_stmt.lit) | 3 | 2 |
 | `SketchStmt` | [sketch_stmt.lit](sketch_stmt.lit) | 3 | 2 |
-| `EvalStmt` | [eval_stmt.lit](eval_stmt.lit) | 4 | 3 |
+| `EvalStmt` | [eval_stmt.lit](eval_stmt.lit) | 5 | 4 |

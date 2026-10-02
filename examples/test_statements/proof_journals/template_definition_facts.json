@@ -1,0 +1,70 @@
+{
+  "task": "template definition facts",
+  "date": "2026-10-02",
+  "baseline": "6e8e808013a64d46a14a2cbcd3e395b63498aef4",
+  "current_cli_contract": "-f / -e; exit status agrees with top-level JSON success",
+  "baseline_reproduction": {
+    "source": "template<S nonempty_set>:\n    have member S\n\\member<R> $in R\n",
+    "command": "target/release/litex -lang en -strict -f examples/test_statements/bugs/def_template_stmt/K002-template-member-carrier/repro.lit",
+    "exit_code": 1,
+    "success": false,
+    "statement_success": [
+      true,
+      false
+    ],
+    "failed_phase": "search_proof"
+  },
+  "material_attempts": [
+    {
+      "id": "body-stores-only",
+      "observed": "Body forall facts were stored, but membership and selected-witness equations still failed; existing constructor matcher intentionally did not peel template arguments.",
+      "repair": "Match same canonical template identities and their object arguments at the known-forall parameter matcher."
+    },
+    {
+      "id": "domain-comparison-header",
+      "source": "template<a R: a > 0>:\n    have positive R+ = a\n",
+      "observed": "Existing parser rejects the terminal > as part of a comparison chain, with expected object, got colon.",
+      "scope": "Existing parser limitation retained; use the already-supported predicate header for conditional storage acceptance."
+    },
+    {
+      "id": "recursive-value-probe",
+      "observed": "Direct recursive scalar result and a chain replacing n - 1 with 0 were unsupported in the existing proof search.",
+      "accepted_shape": "Use the explicit displayed recursive argument equality, then the defining step chain, as in the existing induction regression."
+    }
+  ],
+  "accepted_checkpoint": {
+    "command": "cargo test --release --lib execute::execute_def_template_stmt::tests -- --nocapture",
+    "passed": 10,
+    "failed": 0,
+    "families": [
+      "have member",
+      "typed object equality and set kinds",
+      "existence-based object",
+      "obtain exist",
+      "obtain atomic",
+      "replacement",
+      "function formula",
+      "function cases",
+      "function induction",
+      "function unique existence",
+      "trust have"
+    ],
+    "boundaries": [
+      "template domain retained",
+      "invalid empty-set argument",
+      "arbitrary-member uniqueness rejected",
+      "wrong carrier rejected",
+      "guarded branch false equation",
+      "strict trust rejection",
+      "failed template and claim rollback",
+      "root/imported file identity"
+    ],
+    "source": "tests/unit/execute/template_definition_facts/tests.rs"
+  },
+  "acceptance_artifact": {
+    "path": "examples/stmt_nodes/definition/template_definition_facts.lit",
+    "source": "# Tracer: automatic template definition facts\n#\n# Before (did not work):\n# template<S nonempty_set>:\n#     have member S\n# \\member<R> $in R\n# Former behavior: declaration succeeded; membership failed at search_proof (K002).\n#\n# Now (verified by focused Rust regressions; file gate recorded in journal):\ntemplate<S nonempty_set>:\n    have member S\n\\member<R> $in R\nforall T nonempty_set:\n    \\member<T> $in T\n\ntemplate<S set: $is_nonempty_set(S)>:\n    have guarded S\n\\guarded<R> $in R\n\ntemplate<S nonempty_set>:\n    have nonempty nonempty_set = S\n$is_nonempty_set(\\nonempty<R>)\ntemplate<n N>:\n    have finite finite_set = {n}\n$is_finite_set(\\finite<2>)\ntemplate<S set>:\n    have carrier set = S\n\\carrier<R> = R\ntemplate<S nonempty_set, a S>:\n    have selected S = a\n\\selected<R, 2> $in R\n\\selected<R, 2> = 2\n\nwitness exist x R st {x = 2} from 2\ntemplate<S set>:\n    have existing R:\n        existing = 2\n\\existing<R> = 2\ntemplate<S set>:\n    obtain obtained from exist x R st {x = 2}\n\\obtained<R> = 2\nprop has_copy(a R):\n    exist x R st {x = a}\nwitness $has_copy(4) from 4\ntemplate<S set>:\n    obtain atomic from $has_copy(4)\n\\atomic<R> = 4\n\nprop image_rel(x, y set):\n    x = y\nforall x {1}, y, z set:\n    $image_rel(x, y)\n    $image_rel(x, z)\n    =>:\n        y = z\ntemplate<S set>:\n    have by replacement_axiom: image from prop image_rel, set {1}\nby def $image_rel(1, 1)\n1 $in \\image<R>\nforall y \\image<R>:\n    exist x {1} st {$image_rel(x, y)}\n\ntemplate<S set>:\n    have fn ident(x S) S = x\n\\ident<R> $in fn(x R) R\n\\ident<R>(4) = 4\ntemplate<T set>:\n    have fn flag(x R) N by cases:\n        case x = 0: 0\n        case x != 0: 1\n\\flag<R> $in fn(x R) N\n\\flag<R>(0) = 0\n\\flag<R>(1) = 1\ntemplate<b N>:\n    have fn count(n N) N by induc n from 0:\n        case n = 0: b\n        case n >= 1: count(n - 1) + 1\n\\count<2> $in fn(n N) N\n\\count<2>(1 - 1) = 2\n\\count<2>(1) = \\count<2>(1 - 1) + 1 = 3\n\\count<7>(1 - 1) = 7\n\\count<7>(1) = \\count<7>(1 - 1) + 1 = 8\n\nprop successor_rel(x, y R):\n    y = x + 1\nclaim:\n    ? forall x R:\n        exist! y R st {$successor_rel(x, y)}\n    witness exist! y R st {$successor_rel(x, y)} from x + 1:\n        by def $successor_rel(x, x + 1)\ntemplate<S set>:\n    have fn chosen by exist!:\n        ? forall x R:\n            exist! y R st {$successor_rel(x, y)}\n\\chosen<R> $in fn(x R) R\n$successor_rel(2, \\chosen<R>(2))\nforall x, y R:\n    $successor_rel(x, y)\n    =>:\n        y = \\chosen<R>(x)\n\n# Boundary: empty/mismatched arguments, unconditional case equations, and\n# arbitrary-member uniqueness remain rejected. Failed scopes discard exports.\n# Trust bodies remain nonstrict; see the dedicated Rust rejection control.\n# Evidence: target/release/litex -strict -f examples/stmt_nodes/definition/template_definition_facts.lit\n# Tests: tests/unit/execute/template_definition_facts/tests.rs\n",
+    "file_gate": "pending"
+  },
+  "gates": []
+}

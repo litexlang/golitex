@@ -70,6 +70,15 @@ then:
 `[import std]` is path sugar only (`std_root/Name`).
 `-session` keeps the last target/eval env open and enters REPL.
 
+Import aliases are package-local. Before calling `mount_module`, the loader
+chooses a free global display label (`alias`, or a free `alias__mN` on collision).
+The source alias stays in its original config; canonical path → module ID
+continues to determine ownership and same-path merging. This applies equally
+to cold imports and cache hits, including a changed dependency traversal order.
+See [the actual dependency fixture](../../examples/module_manager/cross_file_identity/README.md)
+and `cross_file_identity_tests` for correct values, wrong-owner rejection,
+same-path aliases, authored suffix collisions and real cache skips.
+
 ## Non-goals
 
 - Topological sort file (config order + recursion is enough)

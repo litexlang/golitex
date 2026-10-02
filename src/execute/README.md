@@ -1,5 +1,24 @@
 # Statement execution
 
+## Template definition facts
+
+A successful template retains its local body evidence and publishes only the
+facts recorded by the body's successful definition stores and their ordinary
+inference. `store_template_definition_facts` substitutes the body binding by
+the definition-owned template instance, prefixes the template parameters and
+domain premises, and calls `store_fact_and_infer` in the enclosing statement
+transaction. Existing universal conclusions are flattened with the outer
+binders; case and function-domain premises remain present. Each published
+result links its new store evidence to a `source_fact_id` in the retained local
+environment. No parameter assumption, WD probe, or proof-scope intermediate
+fact is exported by scanning the environment.
+
+For `template<S nonempty_set>: have member S`, publication stores
+`forall S nonempty_set: \member<S> $in S`. Known-forall matching binds template
+arguments structurally only when the canonical template identities agree.
+The [acceptance example](../../examples/stmt_nodes/definition/template_definition_facts.lit)
+and `tests/unit/execute/template_definition_facts/tests.rs` cover this contract.
+
 ## Hard rule: only `exec_stmt`
 
 ```text
@@ -9,8 +28,12 @@ exec_xxx_stmt / execute_fact_statement  →  only called from inside execute,
 ```
 
 Never call branch `exec_*_stmt` functions from outside
-`crate::execute`. Nested proof/WD uses `verify_*` / `store_*`,
-not another `exec_stmt`.
+`crate::execute`. Verifier-only work uses `verify_*` / `store_*`.
+Nested source statements use `run_proof_body_stmts`, which calls the same
+transactional `exec_stmt` inside the enclosing child proof scope. A failed
+step fails that proof; helper definitions never merge into the outer scope.
+This is shared by claim/witness and by-method proof bodies. Strategy bodies
+retain their separate fact-only contract.
 
 ## Result shape
 
@@ -164,3 +187,18 @@ remain with the existing premise-checking strategy. Indexed union,
 intersection and product explicitly require a nonempty index set in WD,
 for named and anonymous families alike. Definition-unfold residuals keep
 `can_use_rewrite: false`; explicit chains retain their checked endpoints.
+
+
+## Enumeration and eval boundaries
+
+The strict gate inspects both ordinary trust statements and the trust-have
+body of a template before execution. Nested statements pass through this gate.
+Finite enumeration introduces the original binders and one concrete assignment
+as local equality assumptions. Its per-assignment evidence selects either a
+proved false atomic antecedent or a checked local proof under the antecedents.
+It retains parameter introduction, assumptions, proof steps, conclusion checks
+and stores, and the closed local environment. Displayed list sets and concrete
+integer ranges are enumerable; Cartesian-product domains are unsupported.
+`eval` checks the source object's WD before rewriting or executing it. Its
+success carries the source WD proof; a domain failure retains the typed WD
+result. Evaluation output is not stored as a mathematical fact.

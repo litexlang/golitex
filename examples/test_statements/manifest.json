@@ -1005,7 +1005,7 @@
           "expect": {
             "success": false,
             "statement_success": [],
-            "session_error_contains": "`have fn \u2026 by exist!`: the only forall then fact must be `exist!`"
+            "session_error_contains": "`have fn … by exist!`: the only forall then fact must be `exist!`"
           }
         },
         {
@@ -1895,7 +1895,7 @@
           "expect": {
             "success": false,
             "statement_success": [],
-            "session_error_contains": "expand: expected `e $in range(\u2026)`, `e $in closed_range(\u2026)`, or `e $in a...b`"
+            "session_error_contains": "expand: expected `e $in range(…)`, `e $in closed_range(…)`, or `e $in a...b`"
           }
         },
         {
@@ -2131,6 +2131,13 @@
           "expect": {
             "success": true
           }
+        },
+        {
+          "name": "nested-extension-step",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
         }
       ],
       "negative": [
@@ -2191,6 +2198,13 @@
         },
         {
           "name": "nonzero-contradiction",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "nested-extension-step",
           "strict": true,
           "expect": {
             "success": true
@@ -2261,6 +2275,13 @@
           "expect": {
             "success": true
           }
+        },
+        {
+          "name": "conditional-nested-binder-body",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
         }
       ],
       "negative": [
@@ -2295,6 +2316,20 @@
         {
           "name": "false-proof-body",
           "file": "negative/by_enumerate_finite_set_stmt/false-proof-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_enumerate"
+            ]
+          }
+        },
+        {
+          "name": "false-conditional-conclusion",
+          "file": "negative/by_enumerate_finite_set_stmt/false-conditional-conclusion.lit",
           "strict": true,
           "expect": {
             "success": false,
@@ -2499,6 +2534,13 @@
           "expect": {
             "success": true
           }
+        },
+        {
+          "name": "conditional-binder-body",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
         }
       ],
       "negative": [
@@ -2543,6 +2585,20 @@
               "by_for"
             ]
           }
+        },
+        {
+          "name": "false-conditional-conclusion",
+          "file": "negative/by_for_stmt/false-conditional-conclusion.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_for"
+            ]
+          }
         }
       ]
     },
@@ -2572,6 +2628,13 @@
         },
         {
           "name": "empty-set",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "nested-definition-step",
           "strict": true,
           "expect": {
             "success": true
@@ -2631,6 +2694,13 @@
         },
         {
           "name": "natural-function-equality",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "nested-extension-step",
           "strict": true,
           "expect": {
             "success": true
@@ -3477,6 +3547,13 @@
           "expect": {
             "success": true
           }
+        },
+        {
+          "name": "checked-natural-domain",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
         }
       ],
       "negative": [
@@ -3511,6 +3588,21 @@
           "expect": {
             "success": false,
             "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "eval"
+            ]
+          }
+        },
+        {
+          "name": "outside-algo-domain",
+          "file": "negative/eval_stmt/outside-algo-domain.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
               false
             ],
             "failed_phase": [
@@ -3668,26 +3760,96 @@
           true
         ]
       }
-    }
-  ],
-  "known_gaps": [
+    },
     {
-      "id": "K002",
+      "name": "resolved-K006",
       "leaf": "DefTemplateStmt",
-      "file": "bugs/def_template_stmt/K002-template-member-carrier/repro.lit",
+      "file": "bugs/def_template_stmt/K006-strict-template-trust-have/repro.lit",
       "strict": true,
-      "desired_success": true,
-      "observed": {
+      "expect": {
         "success": false,
+        "statement_success": [],
+        "session_error_contains": "forbidden under"
+      }
+    },
+    {
+      "name": "resolved-K007-for",
+      "leaf": "ByForStmt",
+      "file": "bugs/by_for_stmt/K007-for-binder-proof-body/repro.lit",
+      "strict": true,
+      "expect": {
+        "success": true,
         "statement_success": [
-          true,
-          false
-        ],
-        "failed_phase": [
-          "search_proof"
+          true
         ]
       }
     },
+    {
+      "name": "resolved-K007-enumerate",
+      "leaf": "ByEnumerateFiniteSetStmt",
+      "file": "bugs/by_enumerate_finite_set_stmt/K007-enumeration-binder-proof-body/repro.lit",
+      "strict": true,
+      "expect": {
+        "success": true,
+        "statement_success": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "unsupported-K008",
+      "leaf": "ByForStmt",
+      "file": "bugs/by_for_stmt/K008-finite-cartesian-domain/repro.lit",
+      "strict": true,
+      "expect": {
+        "success": false,
+        "statement_success": [
+          false
+        ],
+        "failed_phase": [
+          "by_for"
+        ]
+      }
+    },
+    {
+      "name": "resolved-K009-for",
+      "leaf": "ByForStmt",
+      "file": "bugs/by_for_stmt/K009-conditional-for-goal/repro.lit",
+      "strict": true,
+      "expect": {
+        "success": true,
+        "statement_success": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "resolved-K009-enumerate",
+      "leaf": "ByEnumerateFiniteSetStmt",
+      "file": "bugs/by_enumerate_finite_set_stmt/K009-conditional-enumeration-goal/repro.lit",
+      "strict": true,
+      "expect": {
+        "success": true,
+        "statement_success": [
+          true
+        ]
+      }
+    },
+    {
+      "leaf": "DefTemplateStmt",
+      "name": "resolved-K002-template-member-carrier",
+      "file": "bugs/def_template_stmt/K002-template-member-carrier/repro.lit",
+      "strict": true,
+      "expect": {
+        "success": true,
+        "statement_success": [
+          true,
+          true
+        ]
+      }
+    }
+  ],
+  "known_gaps": [
     {
       "id": "K004",
       "leaf": "HaveFnByInducStmt",
@@ -3722,96 +3884,6 @@
         ],
         "failed_phase": [
           "search_proof"
-        ]
-      }
-    },
-    {
-      "id": "K006",
-      "leaf": "DefTemplateStmt",
-      "file": "bugs/def_template_stmt/K006-strict-template-trust-have/repro.lit",
-      "strict": true,
-      "desired_success": false,
-      "observed": {
-        "success": true
-      }
-    },
-    {
-      "id": "K007-for",
-      "leaf": "ByForStmt",
-      "file": "bugs/by_for_stmt/K007-for-binder-proof-body/repro.lit",
-      "strict": true,
-      "desired_success": true,
-      "observed": {
-        "success": false,
-        "statement_success": [
-          false
-        ],
-        "failed_phase": [
-          "by_for"
-        ]
-      }
-    },
-    {
-      "id": "K007-enumerate",
-      "leaf": "ByEnumerateFiniteSetStmt",
-      "file": "bugs/by_enumerate_finite_set_stmt/K007-enumeration-binder-proof-body/repro.lit",
-      "strict": true,
-      "desired_success": true,
-      "observed": {
-        "success": false,
-        "statement_success": [
-          false
-        ],
-        "failed_phase": [
-          "by_enumerate"
-        ]
-      }
-    },
-    {
-      "id": "K008",
-      "leaf": "ByForStmt",
-      "file": "bugs/by_for_stmt/K008-finite-cartesian-domain/repro.lit",
-      "strict": true,
-      "desired_success": true,
-      "observed": {
-        "success": false,
-        "statement_success": [
-          false
-        ],
-        "failed_phase": [
-          "by_for"
-        ]
-      }
-    },
-    {
-      "id": "K009-for",
-      "leaf": "ByForStmt",
-      "file": "bugs/by_for_stmt/K009-conditional-for-goal/repro.lit",
-      "strict": true,
-      "desired_success": true,
-      "observed": {
-        "success": false,
-        "statement_success": [
-          false
-        ],
-        "failed_phase": [
-          "by_for"
-        ]
-      }
-    },
-    {
-      "id": "K009-enumerate",
-      "leaf": "ByEnumerateFiniteSetStmt",
-      "file": "bugs/by_enumerate_finite_set_stmt/K009-conditional-enumeration-goal/repro.lit",
-      "strict": true,
-      "desired_success": true,
-      "observed": {
-        "success": false,
-        "statement_success": [
-          false
-        ],
-        "failed_phase": [
-          "by_enumerate"
         ]
       }
     },

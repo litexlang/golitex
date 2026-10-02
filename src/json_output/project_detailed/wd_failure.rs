@@ -55,10 +55,10 @@ fn common(f: &FailToVerifyObjWellDefinedByDefCommon, rt: &Runtime) -> JsonValue 
 
 pub(super) fn project_obj_wd_failure(f: &FailToVerifyObjWellDefinedResult, rt: &Runtime) -> JsonValue {
     match f {
-        FailToVerifyObjWellDefinedResult::Identifier(p) => node(rt, "Identifier", None, project_leaf_FailToVerifyIdentifierObjWellDefined(p, rt)),
-        FailToVerifyObjWellDefinedResult::FnObj(p) => node(rt, "FnObj", None, project_leaf_FailToVerifyFnObjObjWellDefined(p, rt)),
+        FailToVerifyObjWellDefinedResult::Identifier(p) => node(rt, "Identifier", None, project_leaf_fail_to_verify_identifier_obj_well_defined(p, rt)),
+        FailToVerifyObjWellDefinedResult::FnObj(p) => node(rt, "FnObj", None, project_leaf_fail_to_verify_fn_obj_obj_well_defined(p, rt)),
         FailToVerifyObjWellDefinedResult::Literal(p) => node(rt, "Literal", None, project_fail_to_verify_literal_obj_well_defined_result(p, rt)),
-        FailToVerifyObjWellDefinedResult::StandardSet(p) => node(rt, "StandardSet", None, project_leaf_FailToVerifyStandardSetObjWellDefined(p, rt)),
+        FailToVerifyObjWellDefinedResult::StandardSet(p) => node(rt, "StandardSet", None, project_leaf_fail_to_verify_standard_set_obj_well_defined(p, rt)),
         FailToVerifyObjWellDefinedResult::ArithmeticOperator(p) => node(rt, "ArithmeticOperator", None, project_fail_to_verify_arithmetic_operator_obj_well_defined_result(p, rt)),
         FailToVerifyObjWellDefinedResult::IntegerOperator(p) => node(rt, "IntegerOperator", None, project_fail_to_verify_integer_operator_obj_well_defined_result(p, rt)),
         FailToVerifyObjWellDefinedResult::TrigOperator(p) => node(rt, "TrigOperator", None, project_fail_to_verify_trig_operator_obj_well_defined_result(p, rt)),
@@ -77,10 +77,10 @@ pub(super) fn project_obj_wd_failure(f: &FailToVerifyObjWellDefinedResult, rt: &
 
 fn project_fail_to_verify_literal_obj_well_defined_result(f: &FailToVerifyLiteralObjWellDefinedResult, rt: &Runtime) -> JsonValue {
     match f {
-        FailToVerifyLiteralObjWellDefinedResult::Number(p) => node(rt, "Number", None, project_leaf_FailToVerifyNumberObjWellDefined(p, rt)),
-        FailToVerifyLiteralObjWellDefinedResult::ImaginaryUnit(p) => node(rt, "ImaginaryUnit", None, project_leaf_FailToVerifyImaginaryUnitObjWellDefined(p, rt)),
-        FailToVerifyLiteralObjWellDefinedResult::EulerNumber(p) => node(rt, "EulerNumber", None, project_leaf_FailToVerifyEulerNumberObjWellDefined(p, rt)),
-        FailToVerifyLiteralObjWellDefinedResult::Pi(p) => node(rt, "Pi", None, project_leaf_FailToVerifyPiObjWellDefined(p, rt)),
+        FailToVerifyLiteralObjWellDefinedResult::Number(p) => node(rt, "Number", None, project_leaf_fail_to_verify_number_obj_well_defined(p, rt)),
+        FailToVerifyLiteralObjWellDefinedResult::ImaginaryUnit(p) => node(rt, "ImaginaryUnit", None, project_leaf_fail_to_verify_imaginary_unit_obj_well_defined(p, rt)),
+        FailToVerifyLiteralObjWellDefinedResult::EulerNumber(p) => node(rt, "EulerNumber", None, project_leaf_fail_to_verify_euler_number_obj_well_defined(p, rt)),
+        FailToVerifyLiteralObjWellDefinedResult::Pi(p) => node(rt, "Pi", None, project_leaf_fail_to_verify_pi_obj_well_defined(p, rt)),
     }
 }
 
@@ -148,17 +148,17 @@ fn project_fail_to_verify_set_operator_obj_well_defined_result(f: &FailToVerifyS
         FailToVerifySetOperatorObjWellDefinedResult::SetMinus(p) => node(rt, "SetMinus", None, common(&p.0, rt)),
         FailToVerifySetOperatorObjWellDefinedResult::FamilyUnion(p) => node(rt, "FamilyUnion", None, common(&p.0, rt)),
         FailToVerifySetOperatorObjWellDefinedResult::FamilyIntersect(p) => node(rt, "FamilyIntersect", None, common(&p.0, rt)),
-        FailToVerifySetOperatorObjWellDefinedResult::IndexUnion(p) => node(rt, "IndexUnion", None, project_leaf_FailToVerifyIndexUnionObjWellDefined(p, rt)),
-        FailToVerifySetOperatorObjWellDefinedResult::IndexIntersect(p) => node(rt, "IndexIntersect", None, project_leaf_FailToVerifyIndexIntersectObjWellDefined(p, rt)),
+        FailToVerifySetOperatorObjWellDefinedResult::IndexUnion(p) => node(rt, "IndexUnion", None, project_leaf_fail_to_verify_index_union_obj_well_defined(p, rt)),
+        FailToVerifySetOperatorObjWellDefinedResult::IndexIntersect(p) => node(rt, "IndexIntersect", None, project_leaf_fail_to_verify_index_intersect_obj_well_defined(p, rt)),
         FailToVerifySetOperatorObjWellDefinedResult::PowerSet(p) => node(rt, "PowerSet", None, common(&p.0, rt)),
-        FailToVerifySetOperatorObjWellDefinedResult::IndexCart(p) => node(rt, "IndexCart", None, project_leaf_FailToVerifyIndexCartObjWellDefined(p, rt)),
+        FailToVerifySetOperatorObjWellDefinedResult::IndexCart(p) => node(rt, "IndexCart", None, project_leaf_fail_to_verify_index_cart_obj_well_defined(p, rt)),
     }
 }
 
 fn project_fail_to_verify_set_former_obj_well_defined_result(f: &FailToVerifySetFormerObjWellDefinedResult, rt: &Runtime) -> JsonValue {
     match f {
         FailToVerifySetFormerObjWellDefinedResult::ListSet(p) => node(rt, "ListSet", None, common(&p.0, rt)),
-        FailToVerifySetFormerObjWellDefinedResult::SetBuilder(p) => node(rt, "SetBuilder", None, project_leaf_FailToVerifySetBuilderObjWellDefined(p, rt)),
+        FailToVerifySetFormerObjWellDefinedResult::SetBuilder(p) => node(rt, "SetBuilder", None, project_leaf_fail_to_verify_set_builder_obj_well_defined(p, rt)),
         FailToVerifySetFormerObjWellDefinedResult::Range(p) => node(rt, "Range", None, common(&p.0, rt)),
         FailToVerifySetFormerObjWellDefinedResult::ClosedRange(p) => node(rt, "ClosedRange", None, common(&p.0, rt)),
         FailToVerifySetFormerObjWellDefinedResult::FiniteSeqSet(p) => node(rt, "FiniteSeqSet", None, common(&p.0, rt)),
@@ -181,9 +181,9 @@ fn project_fail_to_verify_product_shape_obj_well_defined_result(f: &FailToVerify
 
 fn project_fail_to_verify_function_space_obj_well_defined_result(f: &FailToVerifyFunctionSpaceObjWellDefinedResult, rt: &Runtime) -> JsonValue {
     match f {
-        FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(p) => node(rt, "FnSet", None, project_leaf_FailToVerifyFnSetObjWellDefined(p, rt)),
-        FailToVerifyFunctionSpaceObjWellDefinedResult::AnonymousFn(p) => node(rt, "AnonymousFn", None, project_leaf_FailToVerifyAnonymousFnObjWellDefined(p, rt)),
-        FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(p) => node(rt, "FnRange", None, project_leaf_FailToVerifyFnRangeObjWellDefined(p, rt)),
+        FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(p) => node(rt, "FnSet", None, project_leaf_fail_to_verify_fn_set_obj_well_defined(p, rt)),
+        FailToVerifyFunctionSpaceObjWellDefinedResult::AnonymousFn(p) => node(rt, "AnonymousFn", None, project_leaf_fail_to_verify_anonymous_fn_obj_well_defined(p, rt)),
+        FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(p) => node(rt, "FnRange", None, project_leaf_fail_to_verify_fn_range_obj_well_defined(p, rt)),
     }
 }
 
@@ -213,70 +213,58 @@ fn project_fail_to_verify_structish_obj_well_defined_result(f: &FailToVerifyStru
     }
 }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyFnObjObjWellDefined(p: &FailToVerifyFnObjObjWellDefined, rt: &Runtime) -> JsonValue {
+fn project_leaf_fail_to_verify_fn_obj_obj_well_defined(p: &FailToVerifyFnObjObjWellDefined, rt: &Runtime) -> JsonValue {
     match p {
         FailToVerifyFnObjObjWellDefined::NotInFunctionSet => message(rt, "no matching function signature"),
         FailToVerifyFnObjObjWellDefined::Domain(p) => common(p, rt),
     }
 }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyIndexUnionObjWellDefined(p: &FailToVerifyIndexUnionObjWellDefined, rt: &Runtime) -> JsonValue {
+fn project_leaf_fail_to_verify_index_union_obj_well_defined(p: &FailToVerifyIndexUnionObjWellDefined, rt: &Runtime) -> JsonValue {
     match p {
         FailToVerifyIndexUnionObjWellDefined::NotInFunctionSet => message(rt, "no matching function signature"),
         FailToVerifyIndexUnionObjWellDefined::Domain(p) => common(p, rt),
     }
 }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyIndexIntersectObjWellDefined(p: &FailToVerifyIndexIntersectObjWellDefined, rt: &Runtime) -> JsonValue {
+fn project_leaf_fail_to_verify_index_intersect_obj_well_defined(p: &FailToVerifyIndexIntersectObjWellDefined, rt: &Runtime) -> JsonValue {
     match p {
         FailToVerifyIndexIntersectObjWellDefined::NotInFunctionSet => message(rt, "no matching function signature"),
         FailToVerifyIndexIntersectObjWellDefined::Domain(p) => common(p, rt),
     }
 }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyIndexCartObjWellDefined(p: &FailToVerifyIndexCartObjWellDefined, rt: &Runtime) -> JsonValue {
+fn project_leaf_fail_to_verify_index_cart_obj_well_defined(p: &FailToVerifyIndexCartObjWellDefined, rt: &Runtime) -> JsonValue {
     match p {
         FailToVerifyIndexCartObjWellDefined::NotInFunctionSet => message(rt, "no matching function signature"),
         FailToVerifyIndexCartObjWellDefined::Domain(p) => common(p, rt),
     }
 }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyFnRangeObjWellDefined(p: &FailToVerifyFnRangeObjWellDefined, rt: &Runtime) -> JsonValue {
+fn project_leaf_fail_to_verify_fn_range_obj_well_defined(p: &FailToVerifyFnRangeObjWellDefined, rt: &Runtime) -> JsonValue {
     match p {
         FailToVerifyFnRangeObjWellDefined::NotInFunctionSet => message(rt, "no matching function signature"),
         FailToVerifyFnRangeObjWellDefined::Domain(p) => common(p, rt),
     }
 }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyStandardSetObjWellDefined(p: &FailToVerifyStandardSetObjWellDefined, rt: &Runtime) -> JsonValue { match p { FailToVerifyStandardSetObjWellDefined::Others(text) => message(rt, text) } }
+fn project_leaf_fail_to_verify_standard_set_obj_well_defined(p: &FailToVerifyStandardSetObjWellDefined, rt: &Runtime) -> JsonValue { match p { FailToVerifyStandardSetObjWellDefined::Others(text) => message(rt, text) } }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyNumberObjWellDefined(p: &FailToVerifyNumberObjWellDefined, rt: &Runtime) -> JsonValue { match p { FailToVerifyNumberObjWellDefined::Others(text) => message(rt, text) } }
+fn project_leaf_fail_to_verify_number_obj_well_defined(p: &FailToVerifyNumberObjWellDefined, rt: &Runtime) -> JsonValue { match p { FailToVerifyNumberObjWellDefined::Others(text) => message(rt, text) } }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyImaginaryUnitObjWellDefined(p: &FailToVerifyImaginaryUnitObjWellDefined, rt: &Runtime) -> JsonValue { match p { FailToVerifyImaginaryUnitObjWellDefined::Others(text) => message(rt, text) } }
+fn project_leaf_fail_to_verify_imaginary_unit_obj_well_defined(p: &FailToVerifyImaginaryUnitObjWellDefined, rt: &Runtime) -> JsonValue { match p { FailToVerifyImaginaryUnitObjWellDefined::Others(text) => message(rt, text) } }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyEulerNumberObjWellDefined(p: &FailToVerifyEulerNumberObjWellDefined, rt: &Runtime) -> JsonValue { match p { FailToVerifyEulerNumberObjWellDefined::Others(text) => message(rt, text) } }
+fn project_leaf_fail_to_verify_euler_number_obj_well_defined(p: &FailToVerifyEulerNumberObjWellDefined, rt: &Runtime) -> JsonValue { match p { FailToVerifyEulerNumberObjWellDefined::Others(text) => message(rt, text) } }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyPiObjWellDefined(p: &FailToVerifyPiObjWellDefined, rt: &Runtime) -> JsonValue { match p { FailToVerifyPiObjWellDefined::Others(text) => message(rt, text) } }
+fn project_leaf_fail_to_verify_pi_obj_well_defined(p: &FailToVerifyPiObjWellDefined, rt: &Runtime) -> JsonValue { match p { FailToVerifyPiObjWellDefined::Others(text) => message(rt, text) } }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyIdentifierObjWellDefined(p: &FailToVerifyIdentifierObjWellDefined, rt: &Runtime) -> JsonValue {
+fn project_leaf_fail_to_verify_identifier_obj_well_defined(p: &FailToVerifyIdentifierObjWellDefined, rt: &Runtime) -> JsonValue {
     match p {
         FailToVerifyIdentifierObjWellDefined::Undefined { obj } => object_for(rt, vec![("phase", string("undefined")), ("obj", string(obj.readable_string()))]),
         FailToVerifyIdentifierObjWellDefined::Others(text) => message(rt, text),
     }
 }
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifySetBuilderObjWellDefined(p: &FailToVerifySetBuilderObjWellDefined, rt: &Runtime) -> JsonValue {
+fn project_leaf_fail_to_verify_set_builder_obj_well_defined(p: &FailToVerifySetBuilderObjWellDefined, rt: &Runtime) -> JsonValue {
     match p {
         FailToVerifySetBuilderObjWellDefined::ParamSet { obj, failed } => object_for(rt, vec![("phase", string("parameter_set")), ("obj", string(obj.readable_string())), ("failure", project_obj_wd_failure(failed, rt))]),
         FailToVerifySetBuilderObjWellDefined::Fact { failed_index, failed, .. } => node(rt, "fact", Some(*failed_index), project_fact_wd_failure(failed, rt)),
@@ -284,8 +272,7 @@ fn project_leaf_FailToVerifySetBuilderObjWellDefined(p: &FailToVerifySetBuilderO
     }
 }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyFnSetObjWellDefined(p: &FailToVerifyFnSetObjWellDefined, rt: &Runtime) -> JsonValue {
+fn project_leaf_fail_to_verify_fn_set_obj_well_defined(p: &FailToVerifyFnSetObjWellDefined, rt: &Runtime) -> JsonValue {
     match p {
         FailToVerifyFnSetObjWellDefined::ParamTypeCitesEarlierBinder { failed_index } => object_for(rt, vec![("phase", string("parameter_dependency")), ("index", JsonValue::Number(*failed_index as f64))]),
         FailToVerifyFnSetObjWellDefined::ParamType { failed_index, failed_obj, failed, .. } => object_for(rt, vec![("phase", string("parameter_type")), ("index", JsonValue::Number(*failed_index as f64)), ("obj", string(failed_obj.readable_string())), ("failure", project_obj_wd_failure(failed, rt))]),
@@ -295,8 +282,7 @@ fn project_leaf_FailToVerifyFnSetObjWellDefined(p: &FailToVerifyFnSetObjWellDefi
     }
 }
 
-#[allow(non_snake_case)]
-fn project_leaf_FailToVerifyAnonymousFnObjWellDefined(p: &FailToVerifyAnonymousFnObjWellDefined, rt: &Runtime) -> JsonValue {
+fn project_leaf_fail_to_verify_anonymous_fn_obj_well_defined(p: &FailToVerifyAnonymousFnObjWellDefined, rt: &Runtime) -> JsonValue {
     match p {
         FailToVerifyAnonymousFnObjWellDefined::ParamTypeCitesEarlierBinder { failed_index } => object_for(rt, vec![("phase", string("parameter_dependency")), ("index", JsonValue::Number(*failed_index as f64))]),
         FailToVerifyAnonymousFnObjWellDefined::ParamType { failed_index, failed_obj, failed, .. } => object_for(rt, vec![("phase", string("parameter_type")), ("index", JsonValue::Number(*failed_index as f64)), ("obj", string(failed_obj.readable_string())), ("failure", project_obj_wd_failure(failed, rt))]),

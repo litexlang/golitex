@@ -1,0 +1,17 @@
+# Tracer: eval checks source-expression WD before executing an algorithm.
+# Before (wrongly accepted):
+# algo domain_identity(x N) N by cases:
+#     case x = x: x
+# eval domain_identity(-1)
+# Former behavior: exit 0 even though -1 is outside N.
+#
+# Now: valid calls evaluate; the same invalid call is an executable negative
+# fixture under examples/test_statements/negative/eval_stmt/outside-algo-domain.lit.
+algo domain_identity(x N) N by cases:
+    case x = x: x
+eval domain_identity(0)
+eval domain_identity(2) + 1
+
+# Boundary: output is display evaluation, not a new proof fact.
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/command/eval_source_domain.lit
+# Tests: execute::statement_boundary_tests::eval_checks_source_domain_before_rewrite_or_execution.

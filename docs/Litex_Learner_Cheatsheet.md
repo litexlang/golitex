@@ -289,9 +289,26 @@ explicit construction or control structure.
 | Known existential | <code>obtain ... from ...</code> | Open its witness in a local context |
 | Exhaustive alternatives | <code>by cases</code> | Prove every available branch |
 | Contradiction-shaped goal | <code>by contra</code> | Assume the opposite and finish with <code>impossible</code> |
-| Bounded finite/universal goal | <code>by for</code> or <code>by enumerate ...</code> | Iterate a supported finite domain |
+| Bounded finite/universal goal | <code>by for</code> or <code>by enumerate ...</code> | Iterate a displayed finite set or concrete integer range; <code>cart(...)</code> is unsupported |
 | Inductive invariant | <code>by induc</code> or <code>by strong_induc</code> | Give base and step cases |
 | Set equality | <code>by extension</code> | Prove both membership directions |
+
+Conditional enumeration uses its premises in each local assignment. Nested
+proof methods and binder names are allowed in proof bodies; helpers stay local.
+`eval expr` checks the expression's mathematical domains before computing.
+Strict mode rejects `trust have` inside templates as well as ordinary trust.
+
+Templates publish their body definition facts under their parameters and
+conditions. Instance properties can be used directly:
+
+```litex
+template<S nonempty_set>:
+    have member S
+\member<R> $in R
+```
+
+This uses the stored `forall S nonempty_set: \member<S> $in S`. A conditional
+header or function case keeps its premises; selection does not assert uniqueness.
 
 ### Local claims
 

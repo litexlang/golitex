@@ -1,0 +1,6 @@
+release obj def Common::facts::ident
+have fn ident(x R) R = Common::facts::ident(x)
+thm ready:
+    ? forall x R:
+        ident(x) = x + 1
+    Common::facts::ident(x) = x + 1

@@ -23,6 +23,16 @@ Normal output explains the checked native codomain (for example `Z` for
 `codomain: "Z"`. The enclosing atomic result retains the input WD proof.
 Closed numeric expressions keep the existing calculation-membership route.
 
+## Template definition facts
+
+Successful templates expose their published universal definition facts in
+Normal `stores` / `infers`. Instance membership can report `cite_forall` with
+the stored parameterized fact. Detailed template output includes
+`definition_facts`, whose entries retain `source_fact_id` and the enclosing
+`store_and_infer` evidence. The source fact belongs to the retained Rust local
+environment; that environment is omitted from JSON. Chinese output localizes
+these keys as `定义事实`, `来源命题编号`, and `存储与推理`.
+
 ## Equality provenance
 
 Structural identity is `they_are_the_same` in Normal output. Detailed output
@@ -313,3 +323,17 @@ Detailed evidence distinguishes `closed_decimal`, `rational` and
 `same_free_param_shape` / `compound_obj`; reuse of a checked stored equality
 can cite `alpha_endpoints`, with its original FactId, orientation and both
 endpoint identity proofs. This does not change stored IR keys.
+
+
+## Statement boundary evidence
+
+Detailed finite enumeration includes `assignments`: parameter WD and binding
+assumptions, premise assumptions, and an outcome. `skipped_false_premise`
+contains the premise index and its checked negation; `proved` contains ordinary
+nested statement `proof_steps` and each conclusion's verification/store results.
+Detailed by-method bodies preserve ordinary `ExecStmtResult` branches, including
+nested proof methods. The lexical `local_env` remains omitted from JSON.
+Detailed eval success includes `source_well_defined` before its rewritten and
+evaluated objects. A failed eval WD is also exposed in Normal
+`why_failed.failure`, including the offending source expression and failed WD
+stage; its command phase remains `eval`.

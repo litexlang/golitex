@@ -1,0 +1,39 @@
+{
+  "kind": "litex_kb_manifest",
+  "abi": "2",
+  "fingerprint": "75a317d709bb633b",
+  "self_mod_id": 2,
+  "mod_id_to_path": [
+    [
+      0,
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/module_manager/cross_file_identity/left/dep"
+    ],
+    [
+      1,
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/module_manager/cross_file_identity/left"
+    ],
+    [
+      2,
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/module_manager/cross_file_identity/right/dep"
+    ]
+  ],
+  "exports": [
+    {
+      "export_file_id": 0,
+      "name": "facts",
+      "relative_path": "facts.lit",
+      "global_ids_at_enter": {
+        "next_fact_id": 196,
+        "next_well_definedness_id": 37,
+        "next_prop_rewrite_property_id": 1,
+        "next_identifier_id": 7
+      },
+      "global_ids_at_leave": {
+        "next_fact_id": 210,
+        "next_well_definedness_id": 45,
+        "next_prop_rewrite_property_id": 1,
+        "next_identifier_id": 9
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+# Tracer: template trust-have uses the common strict rejection gate.
+# Before (wrongly accepted under -strict):
+# template<S set>:
+#     trust have template_assumed R:
+#         template_assumed = 1
+# Former behavior: exit 0 under -strict because only the outer template was checked.
+#
+# Now: this source stays legal in an ordinary run; -strict rejects it before
+# introducing template parameters or storing the definition.
+template<S set>:
+    trust have template_assumed R:
+        template_assumed = 1
+
+# Boundary: ordinary checked templates still pass strict; named axioms retain
+# their existing explicit trust contract.
+# Evidence: target/release/litex -lang en -f examples/stmt_nodes/unsafe/template_strict_policy.lit
+# Rejection: same command with -strict exits 1 with forbidden trust-have.
+# Tests: execute::statement_boundary_tests::strict_rejects_template_trust_at_top_level_and_in_proof_bodies.

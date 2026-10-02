@@ -174,7 +174,10 @@ impl Runtime {
         let family = parse_obj(self, &mut tb)?;
         let has_proof_body = parse_optional_trailing_proof_colon(&mut tb, "release axiom_of_choice")?;
         let proof = if has_proof_body {
-            self.parse_body_stmts(&tb.body)?
+            self.push_parse_scope();
+            let proof = self.parse_body_stmts(&tb.body);
+            self.pop_parse_scope();
+            proof?
         } else {
             if !tb.body.is_empty() {
                 return Err(tb.parse_error(
@@ -218,7 +221,10 @@ impl Runtime {
         let maximal_prop_name = self.parse_release_atomic_prop_name(&mut tb)?;
         let has_proof_body = parse_optional_trailing_proof_colon(&mut tb, "release zorn_lemma")?;
         let proof = if has_proof_body {
-            self.parse_body_stmts(&tb.body)?
+            self.push_parse_scope();
+            let proof = self.parse_body_stmts(&tb.body);
+            self.pop_parse_scope();
+            proof?
         } else {
             if !tb.body.is_empty() {
                 return Err(tb.parse_error(
