@@ -244,12 +244,13 @@ impl Runtime {
         Option<crate::store_fact_and_infer::StoreFactAndInferResult>,
     > {
         let verify_state = VerifyState {
-            can_use_builtin_rule_round: VerifyState::TOP_BUILTIN_RULE_ROUND,
+            can_use_builtin_rule: true,
+            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
             equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-};
+        };
         let wd = self.verify_fact_well_definedness(fact, verify_state)?;
         if wd.is_failed() {
             return Ok(None);

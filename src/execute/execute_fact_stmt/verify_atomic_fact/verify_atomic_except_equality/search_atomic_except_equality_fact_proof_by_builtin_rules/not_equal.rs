@@ -20,6 +20,8 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
+    // The real constant pi is strictly positive, hence nonzero. Example: pi / pi = 1.
+    PiNonzero(PiNonzeroBuiltinRuleProof),
     // Closed decimal evaluation yields unequal normals.
     // Mathematical property: if both sides evaluate to normalized decimals
     // `L` and `R` with `L != R`, then the objects are unequal.
@@ -95,6 +97,8 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     // Example: trust `x $in A`; trust `y $notin A`; prove `x != y`.
     MembershipContradiction(MembershipContradictionBuiltinRuleProof),
 }
+
+pub struct PiNonzeroBuiltinRuleProof {}
 
 pub struct ClosedDecimalNotEqualBuiltinRuleProof {
     pub left_normal: String,
@@ -174,6 +178,12 @@ impl Runtime {
         fact: &NotEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
+        if (matches!(&fact.left, Obj::Literal(Literal::Pi(_))) && is_zero_obj(&fact.right))
+            || (matches!(&fact.right, Obj::Literal(Literal::Pi(_))) && is_zero_obj(&fact.left))
+        {
+            return Ok(Some(NotEqualFactSearchProofByBuiltinRule::PiNonzero(PiNonzeroBuiltinRuleProof {})));
+        }
+
         // B0 — non-shape
         if let (Some(left), Some(right)) = (
             evaluate_obj_to_normalized_decimal_number(&fact.left),
@@ -465,7 +475,7 @@ impl Runtime {
             right: zero_obj(),
             line_file: None,
         }));
-        let arg_nonzero_proof = self.verify_fact(&goal, verify_state)?;
+        let arg_nonzero_proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
         if arg_nonzero_proof.is_failed() {
             return Ok(None);
         }
@@ -486,7 +496,7 @@ impl Runtime {
             right: right.clone(),
             line_file: None,
         }));
-        let operands_unequal_proof = self.verify_fact(&goal, verify_state)?;
+        let operands_unequal_proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
         if operands_unequal_proof.is_failed() {
             return Ok(None);
         }
@@ -540,7 +550,7 @@ impl Runtime {
             set: set.clone(),
             line_file: None,
         }));
-        let nonempty_proof = self.verify_fact(&goal, verify_state)?;
+        let nonempty_proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
         if nonempty_proof.is_failed() {
             return Ok(None);
         }
@@ -575,11 +585,11 @@ impl Runtime {
             right: n.clone(),
             line_file: None,
         }));
-        let in_proof = self.verify_fact(&in_n, verify_state.clone())?;
+        let in_proof = self.verify_builtin_rule_premise(&in_n, verify_state.clone())?;
         if in_proof.is_failed() {
             return Ok(None);
         }
-        let le_proof = self.verify_fact(&one_le, verify_state)?;
+        let le_proof = self.verify_builtin_rule_premise(&one_le, verify_state)?;
         if le_proof.is_failed() {
             return Ok(None);
         }
@@ -607,7 +617,7 @@ impl Runtime {
                 set: Obj::StandardSet(carrier),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&goal, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&goal, verify_state.clone())?;
             if !proof.is_failed() {
                 proofs.push(proof);
                 exponent_ok = true;
@@ -623,7 +633,7 @@ impl Runtime {
             right: zero_obj(),
             line_file: None,
         }));
-        let base_proof = self.verify_fact(&base_nz, verify_state)?;
+        let base_proof = self.verify_builtin_rule_premise(&base_nz, verify_state)?;
         if base_proof.is_failed() {
             return Ok(None);
         }
@@ -651,7 +661,7 @@ impl Runtime {
                 right: zero_obj(),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&goal, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&goal, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(None);
             }
@@ -730,7 +740,7 @@ impl Runtime {
             right: arg.clone(),
             line_file: None,
         }));
-        let arg_positive_proof = self.verify_fact(&goal, verify_state)?;
+        let arg_positive_proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
         if arg_positive_proof.is_failed() {
             return Ok(None);
         }
@@ -763,7 +773,7 @@ impl Runtime {
                 right: zero_obj(),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&goal, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&goal, verify_state.clone())?;
             if !proof.is_failed() {
                 return Ok(Some(
                     NotEqualFactSearchProofByBuiltinRule::SquareSumNonzeroFromComponent(
@@ -792,7 +802,7 @@ impl Runtime {
                 right: neg_b.clone(),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&goal, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&goal, verify_state.clone())?;
             if !proof.is_failed() {
                 return Ok(Some(
                     NotEqualFactSearchProofByBuiltinRule::AddNonzeroFromNotEqualNegation(
@@ -835,7 +845,7 @@ impl Runtime {
                     set: set.clone(),
                     line_file: None,
                 }));
-                let in_proof = self.verify_fact(&in_goal, verify_state.clone())?;
+                let in_proof = self.verify_builtin_rule_premise(&in_goal, verify_state.clone())?;
                 if in_proof.is_failed() {
                     continue;
                 }
@@ -845,7 +855,7 @@ impl Runtime {
                     set,
                     line_file: None,
                 }));
-                let not_in_proof = self.verify_fact(&not_in_goal, verify_state.clone())?;
+                let not_in_proof = self.verify_builtin_rule_premise(&not_in_goal, verify_state.clone())?;
                 if not_in_proof.is_failed() {
                     continue;
                 }

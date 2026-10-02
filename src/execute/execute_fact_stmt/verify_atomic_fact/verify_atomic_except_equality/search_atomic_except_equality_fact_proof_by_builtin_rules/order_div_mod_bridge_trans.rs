@@ -358,7 +358,7 @@ impl Runtime {
             return Ok(None);
         }
         let numerators_order = make_less_equal_fact(left_num, right_num, self);
-        let numerators_order_proof = self.verify_fact(&numerators_order, verify_state)?;
+        let numerators_order_proof = self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
         if numerators_order_proof.is_failed() {
             return Ok(None);
         }
@@ -393,7 +393,7 @@ impl Runtime {
             return Ok(None);
         }
         let numerators_order = make_less_fact(left_num, right_num, self);
-        let numerators_order_proof = self.verify_fact(&numerators_order, verify_state)?;
+        let numerators_order_proof = self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
         if numerators_order_proof.is_failed() {
             return Ok(None);
         }
@@ -585,7 +585,7 @@ impl Runtime {
             right: right_set.clone(),
             line_file: fact.line_file.clone(),
         }.into();
-        let proper_subset_proof = self.verify_fact(&proper_subset, verify_state.clone())?;
+        let proper_subset_proof = self.verify_builtin_rule_premise(&proper_subset, verify_state.clone())?;
         if !proper_subset_proof.is_failed() {
             return Ok(Some(LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(
                 FiniteSetSizeProperSubsetLtBuiltinRuleProof {
@@ -601,7 +601,7 @@ impl Runtime {
             right: right_set.clone(),
             line_file: fact.line_file.clone(),
         }.into();
-        let subset_proof = self.verify_fact(&subset, verify_state.clone())?;
+        let subset_proof = self.verify_builtin_rule_premise(&subset, verify_state.clone())?;
         if subset_proof.is_failed() { return Ok(None); }
         let not_equal: Fact = NotEqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -609,7 +609,7 @@ impl Runtime {
             right: right_set.clone(),
             line_file: fact.line_file.clone(),
         }.into();
-        let not_equal_proof = self.verify_fact(&not_equal, verify_state)?;
+        let not_equal_proof = self.verify_builtin_rule_premise(&not_equal, verify_state)?;
         if not_equal_proof.is_failed() { return Ok(None); }
         Ok(Some(LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(
             FiniteSetSizeProperSubsetLtBuiltinRuleProof {
@@ -632,7 +632,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::Z),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
     pub(crate) fn verify_in_natural(
@@ -646,7 +646,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::N),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
     pub(super) fn verify_is_finite_set(
@@ -659,7 +659,7 @@ impl Runtime {
             set: set.clone(),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
     pub(super) fn verify_is_nonempty_set(
@@ -672,7 +672,7 @@ impl Runtime {
             set: set.clone(),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
     pub(super) fn verify_subset(
@@ -687,7 +687,7 @@ impl Runtime {
             right: right.clone(),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
     pub(super) fn known_order_edges(&self) -> Vec<(FactId, Obj, Obj, bool)> {

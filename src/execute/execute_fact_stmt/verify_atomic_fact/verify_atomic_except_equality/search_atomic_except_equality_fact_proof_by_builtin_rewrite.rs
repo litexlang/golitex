@@ -188,12 +188,13 @@ impl Runtime {
             return Ok(None);
         };
         let residual_state = VerifyState {
-            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
+            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
             equality_class_search: verify_state.equality_class_search,
-};
+        };
         let proof_of_rewritten_fact = self.verify_atomic_fact(&rewritten, residual_state)?;
         if proof_of_rewritten_fact.is_failed() {
             return Ok(None);
@@ -224,12 +225,13 @@ impl Runtime {
             .collect();
         let adjacency = self.visible_equivalence_class_adjacency();
         let residual_state = VerifyState {
-            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
+            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
             equality_class_search: verify_state.equality_class_search,
-};
+        };
 
         for (arg_index, arg) in args.iter().enumerate() {
             let from_ir = arg.ir();
@@ -292,20 +294,22 @@ impl Runtime {
             .cloned()
             .collect();
         let equal_child_state = VerifyState {
-            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
+            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: false,
             store_well_defined_fact: false,
             equality_class_search: verify_state.equality_class_search,
-};
+        };
         let residual_state = VerifyState {
-            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
+            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
             can_use_def_and_known_forall_and_known_strategy: verify_state
                 .can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
             equality_class_search: verify_state.equality_class_search,
-};
+        };
 
         let mut rewritten_args = args.clone();
         let mut unfold_equal_proofs = Vec::new();
@@ -365,12 +369,13 @@ impl Runtime {
             return Ok(None);
         };
         let residual_state = VerifyState {
-            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
+            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
             equality_class_search: verify_state.equality_class_search,
-};
+        };
         let proof_of_alternate_fact = self.verify_atomic_fact(&alternate, residual_state)?;
         if proof_of_alternate_fact.is_failed() {
             return Ok(None);

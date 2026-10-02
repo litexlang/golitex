@@ -3,6 +3,7 @@
 //! local inference — not a second open-ended proof search.
 
 mod exec_fact_stmt;
+mod helper;
 mod result;
 mod strategy_search;
 mod verify;

@@ -78,3 +78,19 @@ rejection and rollback, live Eval/root/imported identities, and Normal/Detailed
 JSON. Release successes require exit 0, top-level `success: true`, and no
 `session_error`. Current results are recorded in the
 [journal](../../proof_journals/template_definition_facts.json).
+
+Verified checkpoint: ten focused tests and 226 related binding/search,
+transaction, induction, and JSON tests pass. The registered `run_examples`
+filter runs three tracer tests, including this feature's full strict source.
+All 122 executable fences in the touched documentation and solution records
+pass. The complete statement suite runs 371 checks over 50 leaves without
+unexpected failures; K004, K005, and K010 remain recorded gaps. The statement
+fixture integration test also passes.
+
+The additional direct template scan passes 12 of 13 artifacts. Its remaining
+`let_template_struct_aliases.lit` failure was already listed in the
+[baseline equality audit](../../../../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verification.md#remaining-baseline-failures).
+Two declaration-binding module checks pass. The unchanged
+`trusted_template_prefix/litex.config` still uses the obsolete `[hierarchy]`
+section and fails at launch before execution; its diagnostic and source are
+preserved in the journal. Those separate artifacts were not rewritten.

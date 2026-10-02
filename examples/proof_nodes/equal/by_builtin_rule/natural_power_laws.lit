@@ -1,0 +1,18 @@
+# Before: these three rules unnecessarily demanded a positive real base.
+# Now: use the existing natural-power domain C x N, with actual carrier proofs.
+# Existing convention: a^0=1, including 0^0. Zero negative powers remain invalid.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/natural_power_laws.lit
+forall a R, m, n N:
+    a^(m + n) = a^m * a^n
+forall a, b C, m, n N:
+    a^(m + n) = a^m * a^n
+    (a^m)^n = a^(m * n)
+    (a * b)^n = a^n * b^n
+# Builtin premises cite existing facts; compute literal memberships first.
+(-2) $in C
+0 $in C
+0 $in N
+forall k N:
+    (-2)^k * (-2)^0 = (-2)^(k + 0)
+    0^k * 0^0 = 0^(k + 0)
+0^0 = 1

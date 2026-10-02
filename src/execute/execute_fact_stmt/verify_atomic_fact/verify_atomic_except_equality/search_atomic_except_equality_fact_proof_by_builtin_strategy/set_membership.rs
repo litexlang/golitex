@@ -1,5 +1,5 @@
 use super::result::*;
-use crate::ast::fact::{AtomicFact, Fact, InFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::ast::obj::{
     FnObj, FnObjHead, FunctionSpace, IntervalObj, Obj, ProductShape, SetFormer, SetOperator,
     StandardSet, StructAndFieldAccessObj,
@@ -13,6 +13,29 @@ use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
 impl Runtime {
+    pub(super) fn search_literal_tuple_projection_membership_strategy(
+        &mut self,
+        fact: &AtomicFact,
+        ctx: StrategySearch,
+    ) -> RuntimeResult<Option<LiteralTupleProjectionMembershipStrategySingleStep>> {
+        if !ctx.can_use_strategy() { return Ok(None); }
+        let Some(inf) = as_in(fact) else { return Ok(None) };
+        let Obj::ProductShape(ProductShape::ObjAtIndex(projection)) = &inf.element else { return Ok(None) };
+        let Obj::ProductShape(ProductShape::Tuple(tuple)) = projection.obj.as_ref() else { return Ok(None) };
+        let Obj::Literal(crate::ast::obj::Literal::Number(index)) = projection.index.as_ref() else { return Ok(None) };
+        let Some(index) = index.normalized_value.parse::<usize>().ok().and_then(|i| i.checked_sub(1)) else { return Ok(None) };
+        let Some(component) = tuple.args.get(index) else { return Ok(None) };
+        let component = component.as_ref().clone();
+        let equal: Fact = EqualFact {
+            fact_id: self.global_ids.allocate_fact_id(), left: inf.element.clone(),
+            right: component.clone(), line_file: inf.line_file.clone(),
+        }.into();
+        let member = self.strategy_in_fact(component, inf.set.clone(), inf.line_file.clone());
+        finish(self, vec![equal, member], ctx, |requirement_facts, proof_of_requirement_facts| {
+            LiteralTupleProjectionMembershipStrategySingleStep { requirement_facts, proof_of_requirement_facts }
+        })
+    }
+
     pub(super) fn search_cart_membership_strategy(
         &mut self,
         fact: &AtomicFact,

@@ -132,7 +132,7 @@ impl Runtime {
             return Ok(None);
         }
         let numerators_order = make_less_equal_fact(right_num, left_num, self);
-        let numerators_order_proof = self.verify_fact(&numerators_order, verify_state)?;
+        let numerators_order_proof = self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
         if numerators_order_proof.is_failed() {
             return Ok(None);
         }
@@ -167,7 +167,7 @@ impl Runtime {
             return Ok(None);
         }
         let numerators_order = make_less_fact(right_num, left_num, self);
-        let numerators_order_proof = self.verify_fact(&numerators_order, verify_state)?;
+        let numerators_order_proof = self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
         if numerators_order_proof.is_failed() {
             return Ok(None);
         }
@@ -200,7 +200,7 @@ impl Runtime {
             mul_obj(&fact.left, denominator),
         ] {
             let bound = make_less_equal_fact(&product, numerator, self);
-            let product_bound_proof = self.verify_fact(&bound, verify_state.clone())?;
+            let product_bound_proof = self.verify_builtin_rule_premise(&bound, verify_state.clone())?;
             if product_bound_proof.is_failed() {
                 continue;
             }
@@ -233,7 +233,7 @@ impl Runtime {
             }
             let quotient = div_obj(&fact.left, denominator);
             let bound = make_less_equal_fact(&quotient, other, self);
-            let quotient_bound_proof = self.verify_fact(&bound, verify_state.clone())?;
+            let quotient_bound_proof = self.verify_builtin_rule_premise(&bound, verify_state.clone())?;
             if quotient_bound_proof.is_failed() {
                 continue;
             }
@@ -414,7 +414,7 @@ impl Runtime {
             return Ok(None);
         }
         let strict = make_less_fact(base, &fact.right, self);
-        let strict_proof = self.verify_fact(&strict, verify_state)?;
+        let strict_proof = self.verify_builtin_rule_premise(&strict, verify_state)?;
         if strict_proof.is_failed() {
             return Ok(None);
         }
@@ -446,7 +446,7 @@ impl Runtime {
         }
         let successor = add_obj(&fact.right, &one_obj());
         let strict = make_less_fact(&fact.left, &successor, self);
-        let strict_proof = self.verify_fact(&strict, verify_state)?;
+        let strict_proof = self.verify_builtin_rule_premise(&strict, verify_state)?;
         if strict_proof.is_failed() {
             return Ok(None);
         }
@@ -480,7 +480,7 @@ impl Runtime {
             return Ok(None);
         }
         let strict = make_less_fact(&fact.left, base, self);
-        let strict_proof = self.verify_fact(&strict, verify_state)?;
+        let strict_proof = self.verify_builtin_rule_premise(&strict, verify_state)?;
         if strict_proof.is_failed() {
             return Ok(None);
         }
@@ -517,7 +517,7 @@ impl Runtime {
             return Ok(None);
         }
         let strict = make_less_fact(diff_right, diff_left, self);
-        let strict_proof = self.verify_fact(&strict, verify_state)?;
+        let strict_proof = self.verify_builtin_rule_premise(&strict, verify_state)?;
         if strict_proof.is_failed() {
             return Ok(None);
         }
@@ -553,7 +553,7 @@ impl Runtime {
             right: zero_obj(),
             line_file: None,
         }));
-        let even_proof = self.verify_fact(&even_goal, verify_state)?;
+        let even_proof = self.verify_builtin_rule_premise(&even_goal, verify_state)?;
         if even_proof.is_failed() {
             return Ok(None);
         }
@@ -699,7 +699,7 @@ impl Runtime {
             set: set.clone(),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
     fn known_surjection_triples(&self) -> Vec<(FactId, Obj, Obj)> {

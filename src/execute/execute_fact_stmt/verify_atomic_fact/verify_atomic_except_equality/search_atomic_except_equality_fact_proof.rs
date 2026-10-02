@@ -5,15 +5,15 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Cheap phase: known atomic → known special property → builtin rule.
-    // Deep phase (can_use_def_and_known_forall_and_known_strategy, round > 0):
-    //   with_one_less_round() once, then
+    // Deep phase (can_use_def_and_known_forall_and_known_strategy, remaining_deep_search_depth > 0):
+    //   after_deep_search() once, then
     //   verify_by_strategy → by definition → known forall →
     //   (can_use_rewrite) builtin rewrite → known rewrite.
     //
-    // Entering builtin / deep each requires round > 0 and passes round - 1.
-    // Premise-producing arms also self-gate on the decremented round; cite-only
-    // still runs at round 0 inside that call. Strategy cite-only bypasses this
-    // entry and calls by_builtin_rule directly.
+    // Builtin entry uses its boolean; only deep entry consumes the depth budget.
+    // Premise-producing arms disable ordinary recursive builtin entry; known
+    // and calculation leaves remain available. Strategy cite-only bypasses
+    // this entry and calls by_builtin_rule directly.
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_atomic_except_equality_fact_proof(
         &mut self,
@@ -26,10 +26,10 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
-        if verify_state.can_use_builtin_rule_round > 0 {
+        if verify_state.can_use_builtin_rule {
             if let Some(result) = self.search_atomic_except_equality_fact_proof_by_builtin_rule(
                 fact,
-                verify_state.with_one_less_round(),
+                verify_state.clone(),
             )? {
                 return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
                     result,
@@ -38,12 +38,12 @@ impl Runtime {
         }
 
         if !verify_state.can_use_def_and_known_forall_and_known_strategy
-            || verify_state.can_use_builtin_rule_round == 0
+            || verify_state.remaining_deep_search_depth == 0
         {
             return Ok(None);
         }
 
-        let deep_state = verify_state.with_one_less_round();
+        let deep_state = verify_state.after_deep_search();
 
         if let Some(result) = self.verify_by_strategy_atomic_except_equality(fact)? {
             return Ok(Some(result));

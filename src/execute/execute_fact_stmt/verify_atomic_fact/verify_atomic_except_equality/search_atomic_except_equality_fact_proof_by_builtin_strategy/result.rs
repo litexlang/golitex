@@ -3,6 +3,7 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::runtime::FactId;
 
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
+    LiteralTupleProjectionMembership(LiteralTupleProjectionMembershipStrategySingleStep),
     PosAddPosIsPos(PosAddPosIsPosStrategySingleStep),
     NonnegativeSumIsNonnegative(NonnegativeSumIsNonnegativeStrategySingleStep),
     StrictAdditiveLeftStrict(StrictAdditiveLeftStrictStrategySingleStep),
@@ -119,6 +120,14 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     AnonymousFnNonemptyFromCodomain(AnonymousFnNonemptyFromCodomainStrategySingleStep),
     FiniteSeqSetNonemptyFromCodomain(FiniteSeqSetNonemptyFromCodomainStrategySingleStep),
     SeqSetNonemptyFromCodomain(SeqSetNonemptyFromCodomainStrategySingleStep),
+}
+
+// A literal tuple's kth projection has the selected component's carrier.
+// Requirements: tuple[k] = component, then component in the requested set.
+// Example: (1,2)[1] in C, from (1,2)[1] = 1 and 1 in C.
+pub struct LiteralTupleProjectionMembershipStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 // Strategy: strict positive sum

@@ -114,7 +114,7 @@ impl Runtime {
             right: reduce.start.as_ref().clone(),
             line_file: None,
         }));
-        let proof = self.verify_fact(&premise, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }
@@ -141,7 +141,7 @@ impl Runtime {
             right: sum.start.as_ref().clone(),
             line_file: None,
         }));
-        let proof = self.verify_fact(&premise, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }
@@ -168,7 +168,7 @@ impl Runtime {
             right: product.start.as_ref().clone(),
             line_file: None,
         }));
-        let proof = self.verify_fact(&premise, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }

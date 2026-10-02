@@ -5,9 +5,13 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::{CodeSource, Runtime};
 
 #[test]
-fn member_definition_exports_a_known_forall_with_body_evidence() {
-    let mut rt = runtime(false);
-    let result = rt.run_litex_code("template<S nonempty_set>:\n    have member S\n\\member<R> $in R\nforall T nonempty_set:\n    \\member<T> $in T\n").unwrap();
+fn run_examples_member_definition_exports_a_known_forall_with_body_evidence() {
+    let mut rt = runtime(true);
+    let code = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/examples/stmt_nodes/definition/template_definition_facts.lit"
+    ));
+    let result = rt.run_litex_code(code).unwrap();
     assert!(result.success, "{:?}", result.session_error);
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
         ExecDefTemplateStmtResult::Success(template),

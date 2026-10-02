@@ -1,0 +1,6 @@
+# Before: proving pi != 0 required a prior explicit order fact.
+# Now: native pi has a nonzero constant certificate, also usable by division WD.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/not_equal_pi_nonzero.lit
+pi != 0
+0 != pi
+pi / pi = 1

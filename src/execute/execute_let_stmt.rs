@@ -34,12 +34,13 @@ impl Runtime {
         let_stmt: &LetObjStmt,
     ) -> RuntimeResult<ExecLetObjStmtResult> {
         let verify_state = VerifyState {
-            can_use_builtin_rule_round: VerifyState::TOP_BUILTIN_RULE_ROUND,
+            can_use_builtin_rule: true,
+            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
             equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-};
+        };
         let value_well_defined = self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
         if value_well_defined.is_failed() {
             return Ok(ExecLetObjStmtResult::Failed(value_well_defined));

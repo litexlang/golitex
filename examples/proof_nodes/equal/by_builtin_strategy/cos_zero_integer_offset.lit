@@ -1,0 +1,14 @@
+# Before: even cos(3*pi/2) = 0 had no zero-point rule.
+# Now: prove the integer offset, retaining its membership/equality evidence.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_strategy/cos_zero_integer_offset.lit
+# Boundary: cos(0)=0 and cos(pi)=0 must fail; no integer premise is invented.
+cos(pi / 2) = 0
+cos(3 * pi / 2) = 0
+cos(-pi / 2) = 0
+cos(5 * pi / 2) = 0
+forall k Z:
+    cos((k + 1/2) * pi) = 0
+forall x R:
+    (x - pi/2) / pi $in Z
+    =>:
+        cos(x) = 0

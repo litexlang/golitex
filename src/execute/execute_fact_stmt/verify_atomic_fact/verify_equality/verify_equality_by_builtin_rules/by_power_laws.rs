@@ -12,21 +12,21 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin PowerProductSameBase: a^m * a^n = a^(m+n).
 // Mathematical property: product of powers with a common base adds exponents.
-// Example: with a R+, m N, n N: a^m * a^n = a^(m + n).
+// Example: with a C, m N, n N: a^m * a^n = a^(m + n).
 pub struct PowerProductSameBaseBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 // Builtin PowerOfPower: (a^m)^n = a^(m*n).
 // Mathematical property: iterated exponentiation multiplies exponents.
-// Example: with a R+, m N, n N: (a^m)^n = a^(m * n).
+// Example: with a C, m N, n N: (a^m)^n = a^(m * n).
 pub struct PowerOfPowerBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 // Builtin PowerOfProduct: (a*b)^n = a^n * b^n.
 // Mathematical property: power distributes over a product.
-// Example: with a R+, b R+, n N: (a * b)^n = a^n * b^n.
+// Example: with a C, b C, n N: (a * b)^n = a^n * b^n.
 pub struct PowerOfProductBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
@@ -139,7 +139,7 @@ impl Runtime {
             if exp1.ir() != e1.ir() || exp2.ir() != e2.ir() {
                 continue;
             }
-            let Some(proof_of_requirement_facts) = self.verify_power_law_pos_base_nat_exps(
+            let Some(proof_of_requirement_facts) = self.verify_power_law_complex_base_nat_exps(
                 combined_base.as_ref(),
                 &[e1, e2],
                 verify_state.clone(),
@@ -194,7 +194,7 @@ impl Runtime {
         if !exp_match {
             return Ok(None);
         }
-        let Some(proof_of_requirement_facts) = self.verify_power_law_pos_base_nat_exps(
+        let Some(proof_of_requirement_facts) = self.verify_power_law_complex_base_nat_exps(
             combined_base.as_ref(),
             &[inner_exp, outer_exp.as_ref()],
             verify_state,
@@ -256,12 +256,10 @@ impl Runtime {
             }
             let mut proofs = Vec::new();
             for base in [b1, b2] {
-                let proof =
-                    self.verify_in_standard_set(base, StandardSet::RPos, verify_state.clone())?;
-                if proof.is_failed() {
+                let Some(proof) = self.verify_power_law_numeric_base(base, verify_state.clone())? else {
                     proofs.clear();
                     break;
-                }
+                };
                 proofs.push(proof);
             }
             if proofs.len() != 2 {
@@ -374,20 +372,18 @@ impl Runtime {
         Ok(None)
     }
 
-    fn verify_power_law_pos_base_nat_exps(
+    fn verify_power_law_complex_base_nat_exps(
         &mut self,
         base: &Obj,
         exponents: &[&Obj],
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<Vec<VerifyFactResult>>> {
         let mut proofs = Vec::new();
-        let base_proof =
-            self.verify_in_standard_set(base, StandardSet::RPos, verify_state.clone())?;
-        if base_proof.is_failed() {
+        let Some(base_proof) = self.verify_power_law_numeric_base(base, verify_state.clone())? else {
             return Ok(None);
-        }
+        };
         proofs.push(base_proof);
-        // A positive base also permits exponent zero; induction starts at 0.
+        // Natural powers are defined on C, including exponent zero (0^0 = 1).
         for exp in exponents {
             let exp_proof =
                 self.verify_in_standard_set(exp, StandardSet::N, verify_state.clone())?;
@@ -397,6 +393,26 @@ impl Runtime {
             proofs.push(exp_proof);
         }
         Ok(Some(proofs))
+    }
+
+    // Every listed standard numeric carrier is a subset of C. A cited R (or
+    // R+) membership is sufficient for the natural-power schema itself; do
+    // not reopen builtin search merely to coerce that evidence to C.
+    fn verify_power_law_numeric_base(
+        &mut self,
+        base: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<VerifyFactResult>> {
+        for carrier in [
+            StandardSet::C, StandardSet::R, StandardSet::RPos, StandardSet::RNeg,
+            StandardSet::RStar, StandardSet::CStar, StandardSet::Q, StandardSet::Z,
+            StandardSet::N, StandardSet::NPos, StandardSet::QPos, StandardSet::QNeg,
+            StandardSet::QStar, StandardSet::ZNeg, StandardSet::ZStar,
+        ] {
+            let proof = self.verify_in_standard_set(base, carrier, verify_state.clone())?;
+            if !proof.is_failed() { return Ok(Some(proof)); }
+        }
+        Ok(None)
     }
 
     fn verify_in_standard_set(
@@ -411,7 +427,7 @@ impl Runtime {
             set: Obj::StandardSet(set),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
     fn verify_nonzero(
@@ -425,7 +441,7 @@ impl Runtime {
             right: zero_obj(),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 }
 

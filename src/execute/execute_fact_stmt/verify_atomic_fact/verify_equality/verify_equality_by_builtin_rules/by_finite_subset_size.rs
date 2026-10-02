@@ -18,7 +18,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<FiniteSetEqualFromSubsetSizeBuiltinRuleProof>> {
-        let child = verify_state.after_builtin_rule();
+        let child = verify_state.clone();
         // The checked cardinality equality carries both finite-set WD proofs.
         // Requiring separately stored is_finite facts would lose compositions
         // where finiteness was proved inside the cardinality object's WD.
@@ -33,7 +33,7 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         }
         .into();
-        let size_equal_proof = self.verify_fact(&size_equal, child.clone())?;
+        let size_equal_proof = self.verify_builtin_rule_premise(&size_equal, child.clone())?;
         if size_equal_proof.is_failed() {
             return Ok(None);
         }
@@ -45,7 +45,7 @@ impl Runtime {
                 line_file: fact.line_file.clone(),
             }
             .into();
-            let subset_proof = self.verify_fact(&subset, child.clone())?;
+            let subset_proof = self.verify_builtin_rule_premise(&subset, child.clone())?;
             if subset_proof.is_failed() {
                 continue;
             }

@@ -333,7 +333,7 @@ impl Runtime {
         let mut member_in_proofs = Vec::with_capacity(members.len());
         for element in members {
             let premise = in_fact(element.as_ref(), right, self);
-            let proof = self.verify_fact(&premise, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&premise, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(None);
             }
@@ -354,12 +354,12 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
         let left_premise = subset_fact(left_operand, ambient, self);
-        let left_operand_subset_proof = self.verify_fact(&left_premise, verify_state.clone())?;
+        let left_operand_subset_proof = self.verify_builtin_rule_premise(&left_premise, verify_state.clone())?;
         if left_operand_subset_proof.is_failed() {
             return Ok(None);
         }
         let right_premise = subset_fact(right_operand, ambient, self);
-        let right_operand_subset_proof = self.verify_fact(&right_premise, verify_state)?;
+        let right_operand_subset_proof = self.verify_builtin_rule_premise(&right_premise, verify_state)?;
         if right_operand_subset_proof.is_failed() {
             return Ok(None);
         }
@@ -380,7 +380,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
         let premise = subset_fact(left_operand, ambient, self);
-        let left_operand_subset_proof = self.verify_fact(&premise, verify_state)?;
+        let left_operand_subset_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if left_operand_subset_proof.is_failed() {
             return Ok(None);
         }
@@ -400,7 +400,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
         let premise = subset_fact(right_operand, ambient, self);
-        let right_operand_subset_proof = self.verify_fact(&premise, verify_state)?;
+        let right_operand_subset_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if right_operand_subset_proof.is_failed() {
             return Ok(None);
         }
@@ -436,7 +436,7 @@ impl Runtime {
                     continue;
                 }
                 let premise = subset_fact(left, right, self);
-                let proof = self.verify_fact(&premise, verify_state.clone())?;
+                let proof = self.verify_builtin_rule_premise(&premise, verify_state.clone())?;
                 if proof.is_failed() {
                     ok = false;
                     break;
@@ -471,7 +471,7 @@ impl Runtime {
         let mut proofs = Vec::new();
         if let Some(required_start) = required_start {
             let premise = in_fact(start, &Obj::StandardSet(required_start), self);
-            let proof = self.verify_fact(&premise, verify_state)?;
+            let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
             if proof.is_failed() {
                 return Ok(None);
             }
@@ -494,7 +494,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
         let premise = subset_fact(left_base, right_base, self);
-        let base_subset_proof = self.verify_fact(&premise, verify_state)?;
+        let base_subset_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if base_subset_proof.is_failed() {
             return Ok(None);
         }
@@ -513,7 +513,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
         let premise = subset_fact(left_operand, right_operand, self);
-        let left_operand_subset_proof = self.verify_fact(&premise, verify_state)?;
+        let left_operand_subset_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if left_operand_subset_proof.is_failed() {
             return Ok(None);
         }
@@ -542,7 +542,7 @@ impl Runtime {
                 continue;
             }
             let premise = subset_fact(left_factor.as_ref(), right_factor.as_ref(), self);
-            let proof = self.verify_fact(&premise, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&premise, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(None);
             }
@@ -594,12 +594,12 @@ impl Runtime {
                 }
                 let left_premise = subset_fact(first_left, first_right, self);
                 let left_to_middle_proof =
-                    self.verify_fact(&left_premise, verify_state.clone())?;
+                    self.verify_builtin_rule_premise(&left_premise, verify_state.clone())?;
                 if left_to_middle_proof.is_failed() {
                     continue;
                 }
                 let right_premise = subset_fact(second_left, second_right, self);
-                let middle_to_right_proof = self.verify_fact(&right_premise, verify_state.clone())?;
+                let middle_to_right_proof = self.verify_builtin_rule_premise(&right_premise, verify_state.clone())?;
                 if middle_to_right_proof.is_failed() {
                     continue;
                 }

@@ -279,7 +279,7 @@ impl Runtime {
             return Ok(None);
         }
         let args_order = make_less_equal_fact(left_arg, right_arg, self);
-        let args_order_proof = self.verify_fact(&args_order, verify_state)?;
+        let args_order_proof = self.verify_builtin_rule_premise(&args_order, verify_state)?;
         if args_order_proof.is_failed() {
             return Ok(None);
         }
@@ -316,7 +316,7 @@ impl Runtime {
             return Ok(None);
         }
         let args_order = make_less_equal_fact(left_arg, right_arg, self);
-        let args_order_proof = self.verify_fact(&args_order, verify_state)?;
+        let args_order_proof = self.verify_builtin_rule_premise(&args_order, verify_state)?;
         if args_order_proof.is_failed() {
             return Ok(None);
         }
@@ -401,7 +401,7 @@ impl Runtime {
             return Ok(None);
         }
         let args_order = make_less_fact(left_arg, right_arg, self);
-        let args_order_proof = self.verify_fact(&args_order, verify_state)?;
+        let args_order_proof = self.verify_builtin_rule_premise(&args_order, verify_state)?;
         if args_order_proof.is_failed() {
             return Ok(None);
         }
@@ -438,7 +438,7 @@ impl Runtime {
             return Ok(None);
         }
         let args_order = make_less_fact(left_arg, right_arg, self);
-        let args_order_proof = self.verify_fact(&args_order, verify_state)?;
+        let args_order_proof = self.verify_builtin_rule_premise(&args_order, verify_state)?;
         if args_order_proof.is_failed() {
             return Ok(None);
         }
@@ -493,7 +493,7 @@ impl Runtime {
             return Ok(None);
         }
         let arg_lt_one = make_less_fact(arg, &one_obj(), self);
-        let arg_lt_one_proof = self.verify_fact(&arg_lt_one, verify_state)?;
+        let arg_lt_one_proof = self.verify_builtin_rule_premise(&arg_lt_one, verify_state)?;
         if arg_lt_one_proof.is_failed() {
             return Ok(None);
         }
@@ -515,7 +515,7 @@ impl Runtime {
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_equal_fact(&zero_obj(), obj, self);
         // Premise of a builtin rule: cite-only / known, no nested premise-producing rules.
-        self.verify_fact(&goal, verify_state.after_builtin_rule())
+        self.verify_builtin_rule_premise(&goal, verify_state.clone())
     }
 
     pub(crate) fn verify_order_nonpositive(
@@ -524,7 +524,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_equal_fact(obj, &zero_obj(), self);
-        self.verify_fact(&goal, verify_state.after_builtin_rule())
+        self.verify_builtin_rule_premise(&goal, verify_state.clone())
     }
 
     pub(crate) fn verify_order_positive(
@@ -533,7 +533,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(&zero_obj(), obj, self);
-        self.verify_fact(&goal, verify_state.after_builtin_rule())
+        self.verify_builtin_rule_premise(&goal, verify_state.clone())
     }
 
     pub(crate) fn verify_order_negative(
@@ -542,7 +542,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(obj, &zero_obj(), self);
-        self.verify_fact(&goal, verify_state.after_builtin_rule())
+        self.verify_builtin_rule_premise(&goal, verify_state.clone())
     }
 
     pub(crate) fn verify_order_gt_one(
@@ -551,7 +551,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(&one_obj(), obj, self);
-        self.verify_fact(&goal, verify_state.after_builtin_rule())
+        self.verify_builtin_rule_premise(&goal, verify_state.clone())
     }
 
     pub(crate) fn verify_order_nonzero(
@@ -565,7 +565,7 @@ impl Runtime {
             right: zero_obj(),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state.after_builtin_rule())
+        self.verify_builtin_rule_premise(&goal, verify_state.clone())
     }
 
     pub(crate) fn verify_in_positive_natural(
@@ -579,7 +579,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::NPos),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
 

@@ -166,7 +166,7 @@ are projected into `by_exist`. Matching is shared
 same-shape compounds (`FnObj`, arithmetic, `FieldAccess`, …) via
 `ByStructure` child proofs (legacy-aligned); otherwise instantiate the
 pattern under the subst so far and prove `pattern_after_subst = goal` by
-equal search with `VerifyState::known_only_no_wd()` (no builtin budget,
+equal search with `VerifyState::known_only_no_wd()` (builtin entry disabled,
 no deep phase, no rewrite, no WD store; certificate type
 `StrictEqualArgProof`). Nested param occurrences inside compound objs are
 bound during that structural recursion. Exist apply also instantiates the
@@ -178,18 +178,25 @@ conclusion and alpha-compares to the goal before instantiation requirements.
    tries stored atomic facts, then the object-keyed special-property fact index. It returns
    the existing `AtomicExceptEqualityFactSearchedProof` variants directly:
    `ByKnownAtomicFact` or `ByKnownSpecialProperty`. Both ordinary truth search
-   and strategy known-first use this entry; neither consumes builtin rounds
-   or strategy depth.
-2. **Builtin rule**: enter when `can_use_builtin_rule_round > 0`, passing
-   `with_one_less_round()`. Premise-producing arms may decrement again;
-   cite-only arms still run at the decremented round, including zero.
+   and strategy known-first use this entry; neither needs builtin entry
+   or consumes strategy depth.
+2. **Builtin rule**: enter when `can_use_builtin_rule` is true. The shared
+   `verify_builtin_rule_premise` entry disables ordinary builtin, deep and
+   rewrite search for premise truth. Direct known-citation and calculation
+   leaves remain available. One checked function-body substitution may finish
+   by known equality or calculation; it cannot unfold another definition.
+   Premise WD inherits the caller's permissions without storing WD.
 3. **Deep**: when enabled, try bounded builtin/user strategies, prop
-   definition, known forall, then enabled builtin/known rewrites. Top-level
-   builtin round starts at 3. Strategy children use their own depth budget
+   definition, known forall, then enabled builtin/known rewrites. The independent
+   `remaining_deep_search_depth` starts at 3 and is decremented by
+   `after_deep_search()`. Strategy children use their own depth budget (16)
    and cannot enter definition, forall or rewrite search.
 
 Equality retains its own identity / builtin / equality-class / constructor /
-deep pipeline; this change concerns non-equality atomics only.
+deep pipeline; both pipelines share the builtin-entry permission and premise policy.
+
+The [builtin-entry verification receipt](builtin_entry_verification.md) records
+the migration boundary, runnable tracer, and release comparison results.
 
 `ByKnownSpecialProperty` reads only exact-object rows from
 `special_properties`, across visible environments. It never
@@ -224,7 +231,7 @@ definition. An ordinary later struct membership is indexed as Membership only:
 it neither selects default field names nor releases struct laws. Sequence
 memberships remain real indexed facts rather than definition-only shape rows.
 Statement failure discards all three property kinds with its temporary env;
-known-property queries remain read-only and retain their existing fuel boundary.
+known-property queries remain read-only and retain their existing search permissions.
 
 Fixed cite-only builtin premises use
 `lookup_atomic_except_equality_fact_proof_by_known`: stored atomic facts first,

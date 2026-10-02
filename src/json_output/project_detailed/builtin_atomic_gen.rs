@@ -1799,6 +1799,9 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("right_resolved", string(p.right_resolved.clone())));
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::PiNonzero(_)) => {
+            object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("PiNonzero"))])
+        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ClosedDecimal(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),

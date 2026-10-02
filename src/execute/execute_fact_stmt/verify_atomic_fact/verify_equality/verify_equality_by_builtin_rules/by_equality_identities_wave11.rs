@@ -214,7 +214,7 @@ impl Runtime {
                 right: container.clone(),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&premise, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&premise, verify_state.clone())?;
             if proof.is_failed() {
                 continue;
             }
@@ -249,7 +249,7 @@ impl Runtime {
                 right: outer.left.as_ref().clone(),
                 line_file: None,
             }));
-            let proof = self.verify_fact(&premise, verify_state.clone())?;
+            let proof = self.verify_builtin_rule_premise(&premise, verify_state.clone())?;
             if proof.is_failed() {
                 continue;
             }
@@ -279,7 +279,7 @@ impl Runtime {
             right: zero_obj(),
             line_file: None,
         }));
-        let proof = self.verify_fact(&premise, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }
@@ -309,7 +309,7 @@ impl Runtime {
             right: other.clone(),
             line_file: None,
         }));
-        let proof = self.verify_fact(&premise, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }
@@ -340,7 +340,7 @@ impl Runtime {
             right: other.clone(),
             line_file: None,
         }));
-        let proof = self.verify_fact(&premise, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }
@@ -374,7 +374,7 @@ impl Runtime {
             right: larg.clone(),
             line_file: None,
         }));
-        let arg_pos_proof = self.verify_fact(&arg_pos, verify_state)?;
+        let arg_pos_proof = self.verify_builtin_rule_premise(&arg_pos, verify_state)?;
         if arg_pos_proof.is_failed() {
             return Ok(None);
         }

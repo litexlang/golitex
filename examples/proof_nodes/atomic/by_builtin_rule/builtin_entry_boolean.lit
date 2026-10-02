@@ -1,0 +1,24 @@
+# Node: builtin entry permission and explicit premises
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/builtin_entry_boolean.lit
+# Before: the builtin round also bounded deep search; an unstated subset could
+# be verified inside the power-set rule below:
+# have fn shift(x Z) Z = x + 1
+# fn_range(shift) $in power_set(Z)
+# Now: prove the subset explicitly before the builtin rule cites it.
+# Boundary: ordinary nested builtin search and a second function unfold remain
+# disabled in builtin premises; Rust builtin_entry_policy tests enforce this.
+
+forall x R:
+    x >= 1
+    =>:
+        0 < x
+        0 < x + x
+        0 < (x + x) + (x + x)
+
+sum(3, 3, fn(x Z) Z {x}) = 3
+
+have fn shift(x Z) Z = x + 1
+
+fn_range(shift) $subset Z
+
+fn_range(shift) $in power_set(Z)

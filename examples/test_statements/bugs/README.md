@@ -29,9 +29,7 @@ K003 requires an explicit recursive equality chain and is no longer an open bug.
 
 The [statement-boundary acceptance record](../experience/problem_notes/statement-boundary-repairs.md)
 resolves K006 (strict template trust), both K007 binder-body variants, and both
-K009 conditional-enumeration variants. K008 is covered as an unsupported cart
-domain rather than an open repair. Historical issue folders remain linked from
-the manifest boundaries.
+K009 conditional-enumeration variants. K008 is excluded by the user and has been removed from its bug folder; its [unsupported-domain boundary and decision](../experience/problem_notes/K008-cart-excluded.md) remain as explicit rejection coverage. Other historical issue folders remain linked from the manifest boundaries.
 
 ## Additional output issue
 
@@ -52,6 +50,7 @@ D001's original source executes successfully; its printed statement loses a sepa
 These are separate from the open bug count. Existing rejection controls stay in `negative/` and `boundaries/`; the matching statement folder explains the limitation and links its evidence.
 
 - [AxiomStmt](axiom_stmt/limitations.md)
+- [ByForStmt](by_for_stmt/limitations.md)
 - [ByThmStmt](by_thm_stmt/limitations.md)
 - [ClaimStmt](claim_stmt/limitations.md)
 - [DefAbstractPropStmt](def_abstract_prop_stmt/limitations.md)

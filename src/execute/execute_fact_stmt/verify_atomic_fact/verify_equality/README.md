@@ -11,9 +11,9 @@ needed for identity and peer comparison.
    anything. `verify_equal_fact` therefore checks both sides before truth search.
 2. Equal IR and structural alpha equality identify the same object without a
    mathematical rule or a stored fact. They belong to `ByTheyAreTheSame`, which
-   is available even when builtin fuel is zero.
+   is available even when builtin entry is disabled.
 3. Mathematical identities and calculation belong to `ByBuiltinRule` and retain
-   their existing fuel requirements.
+   the caller's builtin-entry permission.
 4. Stored equality gives alternative objects on which those checks may work.
    One `ByEquivalenceClass` stage first looks for an entirely stored path, then
    tries one cheap comparison between members of the two endpoint classes.
@@ -29,7 +29,7 @@ verify_equal_fact(goal, state)
   -> WD left, then right
   -> search_equal_fact_proof(goal, state)
        -> ByTheyAreTheSame
-       -> ByBuiltinRule (if the caller has builtin fuel)
+       -> ByBuiltinRule (if can_use_builtin_rule is true)
        -> ByEquivalenceClass
             -> stored path
             -> peer comparison (if permitted)
@@ -87,10 +87,10 @@ The second form supports two aliases whose literal FnSet members differ only
 by bound names. The right BFS runs from `c` to `d`; the returned proof reverses
 both edge order and direction to certify `d` to `c`.
 
-The bridge runs WD, then identity, budgeted builtin, or constructor matching.
+The bridge runs WD, then identity, permitted builtin, or constructor matching.
 It never starts object-definition, strategy, forall, or rewrite search. It
-inherits the caller's fuel instead of obtaining a fresh top-level budget.
-At zero builtin fuel, identity and matching remain available.
+inherits the caller's builtin permission.
+With builtin entry disabled, identity and matching remain available.
 
 `VerifyState::for_equality_peer_comparison` sets
 `EqualityClassSearchMode::StoredPathsOnly`, disables deep search and rewrite,
@@ -181,9 +181,9 @@ target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/
 ```
 
 The CLI gate requires exit 0, top-level `success: true`, no `session_error`,
-and successful statement results. Focused Rust tests check zero-fuel identity,
+and successful statement results. Focused Rust tests check identity with builtin entry disabled,
 free-variable and domain boundaries, WD rejection, oriented multi-edge paths,
-both peer sides, inherited fuel, no nested peer expansion from matching,
+both peer sides, inherited builtin permission, no nested peer expansion from matching,
 unchanged caller stores, and Normal/Detailed provenance.
 
 The [verification record](verification.md) gives the exact baseline, measured

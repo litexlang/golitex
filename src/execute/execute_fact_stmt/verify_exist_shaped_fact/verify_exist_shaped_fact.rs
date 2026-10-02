@@ -468,11 +468,11 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
         if !verify_state.can_use_def_and_known_forall_and_known_strategy
-            || verify_state.can_use_builtin_rule_round == 0
+            || verify_state.remaining_deep_search_depth == 0
         {
             return Ok(None);
         }
-        let premise_state = verify_state.with_one_less_round();
+        let premise_state = verify_state.after_deep_search();
         for lookup_key in exist_shaped_fact_known_lookup_keys(fact) {
             let mut cites = Vec::new();
             for env in self.execution_environments_stack.iter().rev() {

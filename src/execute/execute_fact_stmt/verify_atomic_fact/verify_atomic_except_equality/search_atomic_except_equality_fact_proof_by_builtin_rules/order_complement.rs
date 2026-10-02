@@ -39,7 +39,7 @@ impl Runtime {
                 fact_id: self.global_ids.allocate_fact_id(),
                 element: element.clone(), set: Obj::StandardSet(StandardSet::R), line_file: None,
             }.into();
-            let proof = self.verify_fact(&membership, verify_state.without_well_defined_storage())?;
+            let proof = self.verify_builtin_rule_premise(&membership, verify_state.without_well_defined_storage())?;
             if proof.is_failed() { return Ok(None); }
             real_carrier_proofs.push(proof);
         }

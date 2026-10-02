@@ -101,7 +101,7 @@ same-name definition into an imported predicate, template, or struct.
 - Full `alpha_normalize` rewrite of binder objs is still absent (single body
   only). **Structural alpha equality** for `FnSet`, `AnonymousFn` and
   `SetBuilder` is the equality-specific `ByTheyAreTheSame` stage. It is
-  independent of builtin fuel: binders may differ; free structure must match.
+  independent of builtin permission: binders may differ; free structure must match.
   Named shapes are reached through `ByEquivalenceClass` stored paths and one
   restricted peer proof. See [the equality structure](execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md). Example: `R -> R = R -> R`,
   `{x R: x > 0} = {y R: y > 0}`. Membership reuse goes through known `$in` +

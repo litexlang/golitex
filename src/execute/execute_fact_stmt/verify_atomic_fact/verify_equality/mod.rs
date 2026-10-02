@@ -9,6 +9,8 @@ pub mod search_equal_fact_by_extremum_equality;
 pub mod search_equal_fact_by_finite_set_product_pointwise;
 pub mod search_equal_fact_by_mod_congruence;
 pub mod search_equal_fact_by_rational_with_nonzero_premises;
+pub mod search_equal_fact_by_cos_zero_integer_offset;
+pub mod search_equal_fact_by_tuple_components;
 pub mod search_equal_fact_proof_by_builtin_rewrite;
 pub mod search_equal_fact_proof_by_matching_one_arg_by_one;
 pub mod search_equal_fact_proof_by_equivalence_class;
@@ -37,3 +39,7 @@ pub use search_equal_fact_proof_by_matching_one_arg_by_one::EqualFactSearchedPro
 #[cfg(test)]
 #[path = "../../../../../tests/unit/execute/equality_search/tests.rs"]
 mod equality_search_tests;
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/showcase_local_rules/tests.rs"]
+mod showcase_local_rules_tests;

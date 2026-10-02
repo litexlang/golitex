@@ -314,7 +314,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         let premise = less_equal_fact(left_l, right_l, self);
-        let premise_proof = self.verify_fact(&premise, verify_state)?;
+        let premise_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if premise_proof.is_failed() {
             return Ok(None);
         }
@@ -332,7 +332,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         let premise = less_equal_fact(left_r, right_r, self);
-        let premise_proof = self.verify_fact(&premise, verify_state)?;
+        let premise_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if premise_proof.is_failed() {
             return Ok(None);
         }
@@ -371,7 +371,7 @@ impl Runtime {
             return Ok(None);
         }
         let order_premise = less_equal_fact(left_a, right_b, self);
-        let order_premise_proof = self.verify_fact(&order_premise, verify_state)?;
+        let order_premise_proof = self.verify_builtin_rule_premise(&order_premise, verify_state)?;
         if order_premise_proof.is_failed() {
             return Ok(None);
         }
@@ -397,7 +397,7 @@ impl Runtime {
             return Ok(None);
         }
         let order_premise = less_equal_fact(left_a, right_b, self);
-        let order_premise_proof = self.verify_fact(&order_premise, verify_state)?;
+        let order_premise_proof = self.verify_builtin_rule_premise(&order_premise, verify_state)?;
         if order_premise_proof.is_failed() {
             return Ok(None);
         }
@@ -422,13 +422,13 @@ impl Runtime {
         };
         let bound = &fact.right;
         let upper = less_equal_fact(arg.as_ref(), bound, self);
-        let upper_proof = self.verify_fact(&upper, verify_state.clone())?;
+        let upper_proof = self.verify_builtin_rule_premise(&upper, verify_state.clone())?;
         if upper_proof.is_failed() {
             return Ok(None);
         }
         let neg_x = negate_obj(arg.as_ref());
         let neg_upper = less_equal_fact(&neg_x, bound, self);
-        let neg_upper_proof = self.verify_fact(&neg_upper, verify_state)?;
+        let neg_upper_proof = self.verify_builtin_rule_premise(&neg_upper, verify_state)?;
         if neg_upper_proof.is_failed() {
             return Ok(None);
         }
@@ -524,7 +524,7 @@ impl Runtime {
     ) -> RuntimeResult<crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult>
     {
         let goal = less_equal_fact(&zero_obj(), obj, self);
-        self.verify_fact(&goal, verify_state)
+        self.verify_builtin_rule_premise(&goal, verify_state)
     }
 
 

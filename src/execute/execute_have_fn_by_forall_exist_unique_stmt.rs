@@ -87,12 +87,13 @@ impl Runtime {
         stmt: &HaveFnByForallExistUniqueStmt,
     ) -> RuntimeResult<ExecHaveFnByForallExistUniqueStmtResult> {
         let verify_state = VerifyState {
-            can_use_builtin_rule_round: VerifyState::TOP_BUILTIN_RULE_ROUND,
+            can_use_builtin_rule: true,
+            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
             equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-};
+        };
 
         if self.identifier_defined_in_stack(&stmt.name.name) {
             return Err(RuntimeError::InternalBug(format!(

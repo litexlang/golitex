@@ -282,11 +282,11 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         })
         .into();
-        let lo_proof = self.verify_fact(&lo, verify_state.clone())?;
+        let lo_proof = self.verify_builtin_rule_premise(&lo, verify_state.clone())?;
         if lo_proof.is_failed() {
             return Ok(None);
         }
-        let hi_proof = self.verify_fact(&hi, verify_state)?;
+        let hi_proof = self.verify_builtin_rule_premise(&hi, verify_state)?;
         if hi_proof.is_failed() {
             return Ok(None);
         }
@@ -315,11 +315,11 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         })
         .into();
-        let lo_proof = self.verify_fact(&lo, verify_state.clone())?;
+        let lo_proof = self.verify_builtin_rule_premise(&lo, verify_state.clone())?;
         if lo_proof.is_failed() {
             return Ok(None);
         }
-        let hi_proof = self.verify_fact(&hi, verify_state)?;
+        let hi_proof = self.verify_builtin_rule_premise(&hi, verify_state)?;
         if hi_proof.is_failed() {
             return Ok(None);
         }

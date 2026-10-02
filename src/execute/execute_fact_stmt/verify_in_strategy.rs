@@ -183,12 +183,12 @@ impl Runtime {
         ctx: StrategySearch,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
         // Same-object evidence is available independently of strategy depth
-        // and builtin fuel, just as at the ordinary equality entry.
+        // and builtin permission, just as at the ordinary equality entry.
         if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(fact) {
             return Ok(Some(proof.into()));
         }
         let cite_state = VerifyState::strategy_wd();
-        // Cite-only / calculation equality arms under can_use_builtin_rule_round=0.
+        // Cite-only / calculation equality arms under can_use_builtin_rule=false.
         if let Some(result) = self.search_equal_fact_builtin_rule(fact, cite_state.clone())? {
             return Ok(Some(EqualFactSearchedProof::ByBuiltinRule(result)));
         }

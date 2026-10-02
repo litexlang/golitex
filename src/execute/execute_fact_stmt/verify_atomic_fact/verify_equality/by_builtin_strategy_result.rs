@@ -5,10 +5,35 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 // Calculation builtins). Each variant owns its requirement facts and their
 // VerifyFactResult proofs.
 pub enum EqualitySearchProofByBuiltinStrategy {
+    CosZeroIntegerOffset(CosZeroIntegerOffsetStrategySingleStep),
+    TupleComponentEquality(TupleComponentEqualityStrategySingleStep),
+    ArithmeticCongruence(ArithmeticCongruenceStrategySingleStep),
     ExtremumEquality(ExtremumEqualityStrategySingleStep),
     FiniteSetProductPointwiseEquality(FiniteSetProductPointwiseEqualityStrategySingleStep),
     ModCongruence(ModCongruenceStrategySingleStep),
     RationalWithNonzeroPremises(RationalWithNonzeroPremisesStrategySingleStep),
+}
+
+// cos(x) = 0 follows from (x - pi/2)/pi in Z. Requirements are either that
+// membership itself, or an equality to an integer witness followed by its Z
+// membership. Example: cos(3*pi/2) = 0, with offset = 1 and 1 in Z.
+pub struct CosZeroIntegerOffsetStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Equal-length tuples are equal when every corresponding component is equal.
+// Example: (1 + 3, 2 + 4) = (4, 6), with two checked calculation children.
+pub struct TupleComponentEqualityStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Same arithmetic constructor, with every operand equality proved separately.
+// Example: (1,2)[1] + (3,4)[1] = 1 + 3, using checked tuple projections.
+pub struct ArithmeticCongruenceStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 // Prove an equality about min/max (or similar extremum) by discharging both

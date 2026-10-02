@@ -5,7 +5,7 @@ use crate::ast::obj::{FunctionSpace, Obj, SetFormer};
 
 // First truth-search stage, after the caller has established WD. Exact IR
 // identity wins first; otherwise compare binder shapes without any proof search.
-// Example: fn(x R) R = fn(y R) R, even with zero builtin fuel. Free identifiers
+// Example: fn(x R) R = fn(y R) R, even with builtin entry disabled. Free identifiers
 // must retain their identities; only bound identifiers may be renamed.
 pub fn search_equal_fact_proof_by_they_are_the_same(
     fact: &EqualFact,

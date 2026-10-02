@@ -11,7 +11,7 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 #[test]
-fn zero_fuel_definition_codomain_and_range_work_with_fresh_and_cached_wd() {
+fn builtin_disabled_definition_codomain_and_range_work_with_fresh_and_cached_wd() {
     for cached in [false, true] {
         for goal in ["id(a) $in R", "id(a) $in fn_range(id)"] {
             let mut rt = runtime();
@@ -23,7 +23,7 @@ fn zero_fuel_definition_codomain_and_range_work_with_fresh_and_cached_wd() {
             let before = memory_sizes(&rt);
             let target = atomic(&mut rt, goal);
             let result = rt
-                .verify_fact(&Fact::AtomicFact(target), zero_fuel())
+                .verify_fact(&Fact::AtomicFact(target), builtin_disabled())
                 .unwrap();
             assert_special(result, goal);
             assert_eq!(
@@ -42,7 +42,7 @@ fn cached_literal_application_uses_definition_without_reproving_the_domain() {
     exec_ok(&mut rt, "id(1) = id(1)");
     let target = atomic(&mut rt, "id(1) $in R");
     assert_special(
-        rt.verify_fact(&Fact::AtomicFact(target), zero_fuel())
+        rt.verify_fact(&Fact::AtomicFact(target), builtin_disabled())
             .unwrap(),
         "cached literal",
     );
@@ -88,7 +88,7 @@ fn structurally_inapplicable_signature_does_not_hide_a_later_definition() {
         let source = rt.fact_by_id_in_stack(proof.cite_property_fact_id()).unwrap();
         assert!(source.readable_string().contains("id $in fn"));
         assert_special(
-            rt.verify_fact(&Fact::AtomicFact(target), zero_fuel()).unwrap(),
+            rt.verify_fact(&Fact::AtomicFact(target), builtin_disabled()).unwrap(),
             "later applicable definition",
         );
     }
@@ -107,7 +107,7 @@ fn stored_fact_wins_over_definition_property_in_both_entries() {
             rt.verify_fact_in_strategy(&target, StrategySearch { depth: 0 })
                 .unwrap()
         } else {
-            rt.verify_fact(&target, zero_fuel()).unwrap()
+            rt.verify_fact(&target, builtin_disabled()).unwrap()
         };
         let VerifyFactResult::AtomicExceptEquality(result) = result else {
             panic!("atomic")
@@ -177,7 +177,7 @@ fn property_return_match_can_cite_a_stored_set_equality() {
     let target = atomic(&mut rt, "id(a) $in carrier");
     let before = memory_sizes(&rt);
     assert_special(
-        rt.verify_fact(&Fact::AtomicFact(target), zero_fuel())
+        rt.verify_fact(&Fact::AtomicFact(target), builtin_disabled())
             .unwrap(),
         "stored return equality",
     );
@@ -222,8 +222,8 @@ fn fixed_builtin_premises_retain_definition_evidence_without_storing_the_premise
     exec_ok(&mut rt, "have a R");
     let before = memory_sizes(&rt);
     let target = atomic(&mut rt, "positive(a) >= 1");
-    let mut state = zero_fuel();
-    state.can_use_builtin_rule_round = 1;
+    let mut state = builtin_disabled();
+    state.can_use_builtin_rule = true;
     let result = rt.verify_fact(&Fact::AtomicFact(target), state).unwrap();
     assert!(!result.is_failed());
     let VerifyFactResult::AtomicExceptEquality(result) = result else {
@@ -319,7 +319,7 @@ fn scoped_definitions_expire_when_their_environment_is_popped() {
     exec_ok(&mut rt, "have a R");
     let target = atomic(&mut rt, "local(a) $in R");
     assert_special(
-        rt.verify_fact(&Fact::AtomicFact(target.clone()), zero_fuel())
+        rt.verify_fact(&Fact::AtomicFact(target.clone()), builtin_disabled())
             .unwrap(),
         "local property",
     );
@@ -500,8 +500,8 @@ fn equality_antisymmetry_retains_both_read_only_order_citations() {
     }
     let target = Fact::AtomicFact(atomic(&mut rt, "a = b"));
     let before = memory_sizes(&rt);
-    let mut state = zero_fuel();
-    state.can_use_builtin_rule_round = 1;
+    let mut state = builtin_disabled();
+    state.can_use_builtin_rule = true;
     let VerifyFactResult::Equality(result) = rt.verify_fact(&target, state).unwrap() else {
         panic!("equality")
     };
@@ -531,7 +531,7 @@ fn runtime() -> Runtime {
     })
 }
 
-fn zero_fuel() -> VerifyState {
+fn builtin_disabled() -> VerifyState {
     VerifyState::top_level().known_only_no_wd()
 }
 

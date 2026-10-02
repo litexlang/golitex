@@ -262,7 +262,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::R),
             line_file: None,
         }));
-        let proof = self.verify_fact(&premise, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }
@@ -290,7 +290,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::R),
             line_file: None,
         }));
-        let proof = self.verify_fact(&premise, verify_state)?;
+        let proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if proof.is_failed() {
             return Ok(None);
         }

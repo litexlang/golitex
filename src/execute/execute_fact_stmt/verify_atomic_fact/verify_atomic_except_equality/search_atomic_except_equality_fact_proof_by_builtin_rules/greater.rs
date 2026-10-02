@@ -212,7 +212,7 @@ impl Runtime {
             right: right_l.clone(),
             line_file: None,
         }));
-        let premise_proof = self.verify_fact(&premise, verify_state)?;
+        let premise_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if premise_proof.is_failed() {
             return Ok(None);
         }
@@ -235,7 +235,7 @@ impl Runtime {
             right: right_r.clone(),
             line_file: None,
         }));
-        let premise_proof = self.verify_fact(&premise, verify_state)?;
+        let premise_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if premise_proof.is_failed() {
             return Ok(None);
         }
@@ -263,7 +263,7 @@ impl Runtime {
             right: right_b.clone(),
             line_file: None,
         }));
-        let order_premise_proof = self.verify_fact(&order_premise, verify_state)?;
+        let order_premise_proof = self.verify_builtin_rule_premise(&order_premise, verify_state)?;
         if order_premise_proof.is_failed() {
             return Ok(None);
         }
@@ -294,7 +294,7 @@ impl Runtime {
             right: right_b.clone(),
             line_file: None,
         }));
-        let order_premise_proof = self.verify_fact(&order_premise, verify_state)?;
+        let order_premise_proof = self.verify_builtin_rule_premise(&order_premise, verify_state)?;
         if order_premise_proof.is_failed() {
             return Ok(None);
         }
@@ -319,7 +319,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::RPos),
             line_file: None,
         }));
-        let membership_proof = self.verify_fact(&premise, verify_state)?;
+        let membership_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
         if membership_proof.is_failed() {
             return Ok(None);
         }

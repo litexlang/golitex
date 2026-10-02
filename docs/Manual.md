@@ -402,7 +402,7 @@ Before builtin or strategy search, non-equality atomic goals use the shared
 `by_known` entry: stored atomic facts first, then `known_special_property`.
 For a well-defined function application, an exact-object definition-time
 signature can establish membership in its substituted return set or in
-`fn_range(f)`, without proving a new premise or using builtin/strategy fuel.
+`fn_range(f)`, without proving a new premise, enabling builtin entry, or consuming strategy depth.
 Normal output identifies this route as `known_special_property`; Detailed
 output carries the definition citation and stored equality matches. Fixed
 builtin premises can retain the same evidence as nested proofs.
@@ -871,6 +871,7 @@ preimage. The range itself is a subset of the defined codomain.
 have fn shift(x Z) Z = x + 1
 
 shift(2) $in fn_range(shift)
+fn_range(shift) $subset Z
 fn_range(shift) $in power_set(Z)
 
 have by fn_preimage: source from shift(2) $in fn_range(shift)
@@ -1852,11 +1853,11 @@ by def {1, 2} $superset {1}
 > **Preview:** FnSet, AnonymousFn and SetBuilder structural alpha equality
 > belongs to the equality-specific `ByTheyAreTheSame` stage, after WD and before
 > builtin rules. Bound names may differ; free identifiers, types and bodies
-> must correspond. This stage also runs with zero builtin fuel.
+> must correspond. This stage also runs with builtin entry disabled.
 > Known `$in` reuses the same argument-equality pipeline. Its unified
 > `ByEquivalenceClass` stage can cite stored paths and compare peers once using
 > identity, permitted builtin rules, or restricted constructor matching. Peer
-> comparison cannot recursively expand another class or replenish builtin fuel.
+> comparison cannot recursively expand another class or enable a disabled builtin entry.
 > See the [equality pipeline](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md).
 
 ```litex
@@ -3267,7 +3268,7 @@ bridge fact is needed.
 
 ### Explicit definitions and `by def` (preview)
 
-At the outer verification round, an ordinary positive concrete predicate may
+At the top-level verification entry, an ordinary positive concrete predicate may
 be proved from its definition before Litex tries known `forall` facts or user
 strategies. Litex instantiates the `prop`, verifies every clause with the full
 verifier, and accepts the positive predicate only after all clauses succeed.

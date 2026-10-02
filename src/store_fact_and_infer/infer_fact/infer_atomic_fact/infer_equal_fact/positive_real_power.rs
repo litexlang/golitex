@@ -50,12 +50,13 @@ impl Runtime {
             return Ok(None);
         };
         let verify_state = VerifyState {
-            can_use_builtin_rule_round: VerifyState::TOP_BUILTIN_RULE_ROUND,
+            can_use_builtin_rule: true,
+            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: false,
             equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-};
+        };
         let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
         }));

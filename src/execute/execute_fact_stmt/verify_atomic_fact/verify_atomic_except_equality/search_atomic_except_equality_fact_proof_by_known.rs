@@ -5,7 +5,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Both callers have already established object WD. This phase does not
-    // consume builtin or strategy fuel, and preserves the selected proof route.
+    // enable builtin entry or consume strategy depth, and preserves the selected proof route.
     pub(in crate::execute) fn search_atomic_except_equality_fact_proof_by_known(
         &mut self,
         fact: &AtomicFact,
