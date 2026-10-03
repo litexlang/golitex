@@ -235,7 +235,27 @@ fn proof_output_and_strict_conversion_keep_the_new_route() {
     assert!(project_stmt_normal(&result, &rt)
         .stringify()
         .contains("known_special_property"));
-    let proof = known(&mut rt, "tuple_dim(p) = 2");
+    // Cartesian membership already inferred this dimension equality. Ordinary
+    // search must cite that stored path before trying SpecialProperty again.
+    let goal = equal(&mut rt, "tuple_dim(p) = 2");
+    let before = store_sizes(&rt);
+    let VerifyEqualityResult::Success(stored) = known_with_wd(&mut rt, "tuple_dim(p) = 2") else {
+        panic!("stored dimension equality")
+    };
+    let EqualFactSearchedProof::ByEquivalenceClass(
+        EqualFactSearchedProofByEquivalenceClass::KnownPath(path),
+    ) = stored.searched_proof else {
+        panic!("dimension equality must reuse its stored evidence")
+    };
+    check_path(&rt, &path, &goal.left, &goal.right);
+
+    // Check the property certificate's strict conversion at its own entry,
+    // independently of which earlier search stage now wins for this goal.
+    let proof = rt
+        .search_equal_fact_proof_by_known_special_property(&goal)
+        .unwrap()
+        .expect("Cartesian shape still supplies its dimension certificate");
+    assert_eq!(store_sizes(&rt), before);
     assert!(matches!(
         strict_equal_arg_proof_from_searched(EqualFactSearchedProof::ByKnownSpecialProperty(proof)),
         Some(StrictEqualArgProof::ByKnownSpecialProperty(_))

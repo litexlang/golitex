@@ -1,0 +1,8 @@
+# CosDifference: real difference-angle identity.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/cos_difference.lit
+# Previously rejected, exact legacy-positive source:
+# forall x,y R:
+#     cos(x-y) = cos(x)*cos(y)+sin(x)*sin(y)
+forall x,y R:
+    cos(x-y) = cos(x)*cos(y)+sin(x)*sin(y)
+# Boundary: the subtraction formula fails in Rust regressions.

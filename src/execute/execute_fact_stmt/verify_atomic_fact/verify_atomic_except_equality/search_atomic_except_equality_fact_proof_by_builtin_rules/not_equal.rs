@@ -20,6 +20,7 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
+    PeriodicTrigNonzero(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_periodic_trig::PeriodicTrigNonzeroBuiltinRuleProof),
     NonzeroFromSignedBound(NonzeroFromSignedBoundBuiltinRuleProof),
     InequalityFromDifferenceNonzero(InequalityFromDifferenceNonzeroBuiltinRuleProof),
     InequalityFromSumNonzero(InequalityFromSumNonzeroBuiltinRuleProof),
@@ -202,6 +203,13 @@ impl Runtime {
         fact: &NotEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
+        for (value, zero) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            if is_zero_obj(zero) {
+                if let Some(proof) = self.periodic_trig_nonzero(value, verify_state.clone())? {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(proof)));
+                }
+            }
+        }
         if (matches!(&fact.left, Obj::Literal(Literal::ImaginaryUnit(_))) && is_zero_obj(&fact.right))
             || (matches!(&fact.right, Obj::Literal(Literal::ImaginaryUnit(_))) && is_zero_obj(&fact.left))
         {

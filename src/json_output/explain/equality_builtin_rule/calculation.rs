@@ -7,6 +7,10 @@ use crate::launch_command::OutputLanguage;
 impl EqualitySearchProofByCalculation {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedRational { .. } => BuiltinRuleText {
+                rule_id: "Calculation", rule_name: "Exact rational calculation".into(),
+                message: "Both sides evaluate to the same exact rational number".into(),
+            },
             Self::ClosedDecimal { .. } => BuiltinRuleText {
                 rule_id: "Calculation",
                 rule_name: "Calculation".to_string(),
@@ -27,6 +31,10 @@ impl EqualitySearchProofByCalculation {
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedRational { .. } => BuiltinRuleText {
+                rule_id: "Calculation", rule_name: "精确有理数计算".into(),
+                message: "两边都算出同一个精确有理数".into(),
+            },
             Self::ClosedDecimal { .. } => BuiltinRuleText {
                 rule_id: "Calculation",
                 rule_name: "计算".to_string(),

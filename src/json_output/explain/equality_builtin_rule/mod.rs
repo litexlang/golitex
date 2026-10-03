@@ -16,6 +16,16 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::CartesianSize(_) => BuiltinRuleText {
+                rule_id: "CartesianSize",
+                rule_name: match lang { OutputLanguage::English => "Finite Cartesian cardinality", OutputLanguage::Chinese => "有限笛卡尔积的基数" }.into(),
+                message: match lang { OutputLanguage::English => "The cardinality of a Cartesian product is the product of the checked finite factor cardinalities", OutputLanguage::Chinese => "笛卡尔积的基数等于各个已验证有限因子的基数乘积" }.into(),
+            },
+            Self::ReducePartition(_) => BuiltinRuleText {
+                rule_id: "ReducePartition",
+                rule_name: match lang { OutputLanguage::English => "Adjacent left-fold partition", OutputLanguage::Chinese => "左折叠的相邻分段" }.into(),
+                message: match lang { OutputLanguage::English => "Continue the same left fold from the first segment's result, with checked adjacent bounds and matching functions, operation and seed", OutputLanguage::Chinese => "检查相邻边界及一致的函数、运算和初值后，从第一段结果继续同一个左折叠" }.into(),
+            },
             Self::ReduceLastStep(_) => BuiltinRuleText {rule_id:"ReduceLastStep",rule_name:match lang {OutputLanguage::English=>"Last fold step",OutputLanguage::Chinese=>"折叠的末端一步"}.into(),message:match lang {OutputLanguage::English=>"The nonempty left fold applies its operation to the preceding fold and final term",OutputLanguage::Chinese=>"非空左折叠将运算应用于前段折叠结果和最后一项"}.into()},
             Self::FiniteMapSize(p) => BuiltinRuleText {rule_id:p.rule_id(),rule_name:match lang {OutputLanguage::English=>"Finite map cardinality",OutputLanguage::Chinese=>"有限映射的基数"}.into(),message:match lang {OutputLanguage::English=>"Consume the stored bijection or injection certificate to compare finite cardinalities",OutputLanguage::Chinese=>"消费已存双射或单射证书比较有限基数"}.into()},
             Self::ReduceProduct(_) => BuiltinRuleText {rule_id:"ReduceProduct",rule_name:match lang {OutputLanguage::English=>"Multiplication fold",OutputLanguage::Chinese=>"乘法折叠"}.into(),message:match lang {OutputLanguage::English=>"A multiplication fold with seed one equals the product over the same interval",OutputLanguage::Chinese=>"初值为一的乘法折叠等于相同区间上的乘积"}.into()},
@@ -23,16 +33,18 @@ impl EqualitySearchProofByBuiltinRule {
                 rule_id:p.rule_id(), rule_name:match lang {OutputLanguage::English=>"Elementary arithmetic identity",OutputLanguage::Chinese=>"基本算术恒等式"}.into(),
                 message:match lang {OutputLanguage::English=>"Apply the arithmetic identity with checked domains and stored premises",OutputLanguage::Chinese=>"依据已验证的定义域和已存前提应用算术恒等式"}.into(),
             },
-            Self::TrigComplexIdentity(p) => BuiltinRuleText {
-                rule_id:p.rule_id(), rule_name:match lang {OutputLanguage::English=>"Trigonometric or complex coordinate identity",OutputLanguage::Chinese=>"三角或复坐标恒等式"}.into(),
-                message:match lang {OutputLanguage::English=>"Apply the trigonometric or complex coordinate identity with checked premises",OutputLanguage::Chinese=>"依据已验证的前提应用三角或复坐标恒等式"}.into(),
-            },
+            Self::TrigComplexIdentity(p) => scalar_identities::trig_complex(p, lang),
             Self::IntegerRangeBuilder(p) => BuiltinRuleText {rule_id:p.rule_id(),rule_name:"Integer range comprehension".into(),message:match lang {
                 OutputLanguage::English => "Integer membership with the exact lower and upper endpoint conditions",
                 OutputLanguage::Chinese => "整数成员及对应的上下界条件",
             }.into()},
             Self::ScalarIdentity(p) => scalar_identities::explain(p,lang),
             Self::Calculation(p) => p.rule_id_and_message(lang),
+            Self::AggregateIdentity(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductFreshInsertion(_)) => BuiltinRuleText {
+                rule_id: "FiniteSetProductFreshInsertion",
+                rule_name: match lang { OutputLanguage::English => "Fresh insertion into a finite product", OutputLanguage::Chinese => "有限乘积插入新元素" }.into(),
+                message: match lang { OutputLanguage::English => "Checked freshness, agreement of the restricted callback, and the inserted factor", OutputLanguage::Chinese => "已验证元素不在原集合中、限制回调逐点一致及插入因子相等" }.into(),
+            },
             Self::AggregateIdentity(_) => {
                 let (name, message) = match lang {
                     OutputLanguage::English => ("Finite aggregate identity", "Verified constant, linear, pointwise, partition or reindexing requirements"),

@@ -1,0 +1,10 @@
+# CartesianSize: finite factor cardinalities multiply, for any supported arity.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/cartesian_size.lit
+# Previously rejected, exact legacy-positive source:
+# forall A,B finite_set:
+#     finite_set_size(cart(A,B)) = finite_set_size(A)*finite_set_size(B)
+forall A,B finite_set:
+    finite_set_size(cart(A,B)) = finite_set_size(A)*finite_set_size(B)
+forall A,B,D finite_set:
+    finite_set_size(cart(A,B,D)) = finite_set_size(A)*finite_set_size(B)*finite_set_size(D)
+# Boundary: sum instead of product, omitted factor, or unproved finiteness fail in Rust regressions.

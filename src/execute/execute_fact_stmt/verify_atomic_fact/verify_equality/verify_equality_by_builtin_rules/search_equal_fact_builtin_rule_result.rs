@@ -135,6 +135,8 @@ pub enum EqualitySearchProofByBuiltinRule {
     TrigComplexIdentity(super::by_trig_complex_identities::TrigComplexIdentityProof),
     ReduceProduct(super::by_reduce_product::ReduceProductBuiltinRuleProof),
     ReduceLastStep(super::by_reduce_last_step::ReduceLastStepProof),
+    ReducePartition(super::by_reduce_partition::ReducePartitionProof),
+    CartesianSize(super::by_cartesian_size::CartesianSizeProof),
     FiniteMapSize(super::by_finite_map_size::FiniteMapSizeProof),
     AggregateIdentity(super::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof),
     AggregateCalculation(super::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof),
@@ -347,6 +349,8 @@ pub enum EqualitySearchProofByBuiltinRule {
 // Payload: ClosedDecimal stores both normal forms; Rational stores none
 // (legacy compares monomial vectors, not reconstructed Obj normals).
 pub enum EqualitySearchProofByCalculation {
+    // Exact closed fractions, including signed integer powers.
+    ClosedRational { left_normal: String, right_normal: String },
     // Both sides evaluate to the same normalized decimal.
     // Example: `1 + 1 = 2` with normals `"2"` and `"2"`.
     ClosedDecimal {

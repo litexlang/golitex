@@ -186,22 +186,27 @@ pub fn compare_number_strings(
 use crate::ast::obj::Obj;
 use crate::rational_expression::evaluate_obj_to_normalized_decimal_number;
 
-// Evaluate both sides to normalized decimals and compare.
+// Compare closed numeric values exactly, preserving the decimal fast path.
 // Returns (cmp, left_normal, right_normal).
 // Example: `1 + 1` vs `3` → (Less, "2", "3").
-pub fn compare_closed_objs_by_normalized_decimal(
+pub fn compare_closed_numeric_objs(
     left: &Obj,
     right: &Obj,
 ) -> Option<(NumberCompareResult, String, String)> {
-    let left_number = evaluate_obj_to_normalized_decimal_number(left)?;
-    let right_number = evaluate_obj_to_normalized_decimal_number(right)?;
-    let cmp = compare_number_strings(
-        &left_number.normalized_value,
-        &right_number.normalized_value,
-    );
+    if let (Some(left_number), Some(right_number)) = (
+        evaluate_obj_to_normalized_decimal_number(left),
+        evaluate_obj_to_normalized_decimal_number(right),
+    ) {
+        let cmp = compare_number_strings(&left_number.normalized_value, &right_number.normalized_value);
+        return Some((cmp, left_number.normalized_value, right_number.normalized_value));
+    }
+    // Positive normalized denominators make checked cross-products sound.
+    // Example: 1/3 < 1/2; no float or rounded decimal participates.
+    let left = super::exact_rational::EvalRational::from_obj(left)?;
+    let right = super::exact_rational::EvalRational::from_obj(right)?;
     Some((
-        cmp,
-        left_number.normalized_value,
-        right_number.normalized_value,
+        left.compare(&right)?,
+        left.to_obj().readable_string(),
+        right.to_obj().readable_string(),
     ))
 }

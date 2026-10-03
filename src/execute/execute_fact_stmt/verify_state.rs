@@ -117,12 +117,3 @@ impl VerifyState {
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/builtin_entry_policy/tests.rs"]
 mod builtin_entry_policy_tests;
-
-pub struct VerifyState {
-    level: VerifyStateLevel
-    can_rewrite: bool,
-}
-
-pub enum VerifyStateLevel {
-    
-}

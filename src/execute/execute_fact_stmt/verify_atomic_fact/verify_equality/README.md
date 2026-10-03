@@ -12,14 +12,17 @@ needed for identity and peer comparison.
 2. Equal IR and structural alpha equality identify the same object without a
    mathematical rule or a stored fact. They belong to `ByTheyAreTheSame`, which
    is available even when builtin entry is disabled.
-3. Mathematical identities and calculation belong to `ByBuiltinRule` and retain
+3. Already stored equality paths are read before mathematical rules or
+   structural-property inference. They keep `ByEquivalenceClass::KnownPath`
+   evidence and start no new proof search.
+4. Mathematical identities and calculation belong to `ByBuiltinRule` and retain
    the caller's builtin-entry permission.
-4. Stored equality gives alternative objects on which those checks may work.
-   One `ByEquivalenceClass` stage first looks for an entirely stored path, then
-   tries one cheap comparison between members of the two endpoint classes.
-5. Every stored step needs its generating equality's `FactId`; every new step
+5. Stored equality also gives alternative objects on which those checks may work.
+   The later `ByEquivalenceClass` fallback handles alpha endpoints and
+   restricted comparison between members of the two endpoint classes.
+6. Every stored step needs its generating equality's `FactId`; every new step
    needs its own proof. A shared class handle is a search index, not evidence.
-6. These are search changes. `exec_stmt` still owns statement transactions, and
+7. These are search changes. `exec_stmt` still owns statement transactions, and
    the existing fact-statement pipeline stores and infers only after verification.
 
 ## Entry and search order
@@ -29,6 +32,7 @@ verify_equal_fact(goal, state)
   -> WD left, then right
   -> search_equal_fact_proof(goal, state)
        -> ByTheyAreTheSame
+       -> ByEquivalenceClass::KnownPath (read stored edges only)
        -> ByKnownSpecialProperty (finite tuple evidence reads)
        -> ByBuiltinRule (if can_use_builtin_rule is true)
        -> ByEquivalenceClass
@@ -41,10 +45,12 @@ verify_equal_fact(goal, state)
 ```
 
 The strategy subtree has its own existing entry in `verify_in_strategy.rs`.
-It checks `ByTheyAreTheSame`, then the same `ByKnownSpecialProperty` reader,
+It checks identity/stored paths with the same pure lookup, then the same `ByKnownSpecialProperty` reader,
 then keeps its existing cite-only /
 calculation builtin entry, unified class search, and nested strategy order.
 Moving identity out of builtin must not remove it from this second entry.
+The [stored-equality priority tracer](../../../../../examples/proof_nodes/equal/by_equivalence_class/stored_equality_before_builtin.lit)
+releases the geo dot-symmetry theorem and reads its exact conclusion.
 
 ## Known tuple properties
 

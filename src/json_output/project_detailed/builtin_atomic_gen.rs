@@ -16,6 +16,14 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative)
+        | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("ComplexModulusNonnegative")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("NotEqualFact")), ("rule", string("PeriodicTrigNonzero")),
+            ("coefficient", string(p.coefficient.to_string())), ("integer_requirements", project_verify_facts(&p.integer_requirements, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::FromKnownGreater(p)) => {
             object_for(runtime, vec![
                 ("type", string("builtin_rule")), ("family", string("LessFact")),
@@ -165,6 +173,16 @@ pub(super) fn project_atomic_builtin_rule(
             ];
             entries.push(("minuend", string(p.minuend.readable_string())));
             object_for(runtime, entries)
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::SubtractPositiveClosedLess(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("LessFact")),
+                ("rule", string("SubtractPositiveClosedLess")),
+                ("minuend", string(p.minuend.readable_string())),
+                ("subtrahend", string(p.subtrahend.readable_string())),
+                ("normalized_subtrahend", string(&p.normalized_subtrahend)),
+            ])
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ArctanPrincipalLowerBound(p)) => {
             let mut entries = vec![

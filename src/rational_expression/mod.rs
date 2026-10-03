@@ -6,6 +6,8 @@ mod decimal_comparison;
 mod denominator_clearing;
 mod exact_division;
 pub mod exact_rational;
+pub(crate) mod exact_complex;
+pub(crate) mod pi_multiple;
 pub(crate) mod helper;
 mod monomial;
 mod monomial_collection;
@@ -19,7 +21,7 @@ pub use decimal_arithmetic::{
     two_objs_equal_by_closed_decimal_calculation,
 };
 pub use decimal_comparison::{
-    compare_closed_objs_by_normalized_decimal, compare_number_strings, NumberCompareResult,
+    compare_closed_numeric_objs, compare_number_strings, NumberCompareResult,
 };
 pub use normalization::{
     algebraic_normalization_nonzero_requirements, objs_equal_by_rational_expression_evaluation,

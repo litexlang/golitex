@@ -8,6 +8,10 @@ multiple runnable scenarios. There are 172 positive scenarios,
 K-number gap reproduction. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
+Latest current-worktree completion scan: [2026-10-03 audit](audit_2026-10-03.md).
+All 377 CLI checks and the actual-AST integration pass; separate open kernel
+observations and semantic boundaries remain listed in that report.
+
 ## Run
 
 From the repository root:

@@ -16,7 +16,8 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     NumericUpperBoundWeakenLtBuiltinRuleProof, PosDifferenceFromLessBuiltinRuleProof,
     PositiveEvenGtOneBuiltinRuleProof, PowPositiveFromPositiveBaseBuiltinRuleProof,
     ProductBothPositiveBuiltinRuleProof, SqrtMonotoneIncreasingBuiltinRuleProof,
-    SqrtPositiveBuiltinRuleProof, SubtractOneLessBuiltinRuleProof, SumBothPositiveBuiltinRuleProof,
+    SqrtPositiveBuiltinRuleProof, SubtractOneLessBuiltinRuleProof,
+    SubtractPositiveClosedLessBuiltinRuleProof, SumBothPositiveBuiltinRuleProof,
     SumLeftNonnegativeRightStrictBuiltinRuleProof, SumLeftStrictRightNonnegativeBuiltinRuleProof,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_flip_mul_minus_one::OrderFlipMulMinusOneToLessBuiltinRuleProof;
@@ -33,6 +34,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::FromKnownOrderComplement(p) => p.rule_id_and_message(lang),
             Self::ClosedNumericComparison(p) => p.rule_id_and_message(lang),
             Self::SubtractOneLess(p) => p.rule_id_and_message(lang),
+            Self::SubtractPositiveClosedLess(p) => p.rule_id_and_message(lang),
             Self::ArctanPrincipalLowerBound(p) => p.rule_id_and_message(lang),
             Self::ArctanPrincipalUpperBound(p) => p.rule_id_and_message(lang),
             Self::ArccotPrincipalLowerBound(p) => p.rule_id_and_message(lang),
@@ -147,6 +149,23 @@ impl SubtractOneLessBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl SubtractPositiveClosedLessBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text(
+                "SubtractPositiveClosedLess",
+                "Subtract a positive constant",
+                "Subtracting a closed exact positive value yields a smaller real value",
+            ),
+            OutputLanguage::Chinese => text(
+                "SubtractPositiveClosedLess",
+                "减去正的常数",
+                "实数减去可精确计算的正数，结果严格更小",
+            ),
         }
     }
 }

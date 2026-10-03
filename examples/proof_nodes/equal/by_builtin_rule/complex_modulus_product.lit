@@ -1,0 +1,8 @@
+# ComplexModulusProduct: |z*w|=|z|*|w| over C, including zero.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/complex_modulus_product.lit
+# Previously rejected, exact legacy-positive source:
+# forall z,w C:
+#     C_abs(z*w) = C_abs(z)*C_abs(w)
+forall z,w C:
+    C_abs(z*w) = C_abs(z)*C_abs(w)
+# Boundary: additive formula or a changed factor fails in Rust regressions.

@@ -29,6 +29,10 @@ use super::text::text;
 impl NotEqualFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::PeriodicTrigNonzero(_) => match lang {
+                OutputLanguage::English => text("PeriodicTrigNonzero", "Nonzero periodic trigonometric value", "The exact pi coefficient and checked integer terms exclude sine/cosine zeros"),
+                OutputLanguage::Chinese => text("PeriodicTrigNonzero", "周期三角值非零", "精确 pi 系数和已验证的整数项排除了正弦或余弦的零点"),
+            },
             Self::NonzeroFromSignedBound(_) => text("NonzeroFromSignedBound", "Nonzero from signed bound", "A checked bound strictly separates the value from zero"),
             Self::ImaginaryUnitNonzero(_) => match lang {
                 OutputLanguage::English => text("ImaginaryUnitNonzero", "i ≠ 0", "The reserved imaginary unit satisfies i² = -1 and is nonzero"),

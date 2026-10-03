@@ -24,8 +24,10 @@ field names and proof explanations, including `"语言": "zh"`. See [`docs/cli.m
 ## How does equality reuse known equal objects?
 
 After well-definedness, equality first checks exact IR or structural alpha
-identity, then finite known tuple-property reads, then permitted mathematical builtin rules. Its single class-search
-stage first follows stored equality paths. If needed, it compares members of
+identity and already stored equality paths, then finite known tuple-property
+reads, then permitted mathematical builtin rules. Stored paths retain their
+generating FactIds and win before a rule can introduce new proof obligations,
+including inside strategy search. The later class-search fallback can compare members of
 the two endpoint classes using identity, permitted builtin rules, or constructor
 matching, and records the left path, new proof, and right path. This also lets
 known membership cross alpha-equivalent named function sets. The peer proof
@@ -52,7 +54,9 @@ disabled. See the [runnable example](../examples/proof_nodes/chain/named_definit
 ## Can definition-time properties be used with builtin entry disabled?
 
 Yes. After an atomic goal passes well-definedness, the shared `by_known`
-entry tries stored atomic facts first, then `known_special_property`.
+entry first reads stored atomic facts using only identity/stored-path argument
+matches. Only a miss opens the existing parameter-transforming search, then
+`known_special_property`.
 For a well-defined application, the latter can match its function's recorded
 signature to establish codomain or `fn_range` membership. It only reads
 the general Membership/Equality fact index, substitutes arguments, and cites
