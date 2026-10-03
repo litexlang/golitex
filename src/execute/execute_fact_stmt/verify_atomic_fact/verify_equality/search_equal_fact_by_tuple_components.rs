@@ -4,20 +4,19 @@ use super::by_builtin_strategy_result::{
 use super::helper::corresponding_arg_pairs;
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::{Obj, ProductShape};
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Scalar coordinate expressions may need a projection/calculation at an
     // operand. This only peels matching arithmetic nodes, within the existing
-    // strategy depth; it does not unfold functions or rewrite other shapes.
+    // strategy premise ceiling; it does not unfold functions or rewrite other shapes.
     pub fn search_equal_fact_by_arithmetic_congruence(
         &mut self,
         fact: &EqualFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<ArithmeticCongruenceStrategySingleStep>> {
-        if !ctx.can_use_strategy()
-            || !matches!(
+        if !matches!(
                 (&fact.left, &fact.right),
                 (Obj::ArithmeticOperator(_), Obj::ArithmeticOperator(_))
             )
@@ -58,11 +57,8 @@ impl Runtime {
     pub fn search_equal_fact_by_tuple_components(
         &mut self,
         fact: &EqualFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<TupleComponentEqualityStrategySingleStep>> {
-        if !ctx.can_use_strategy() {
-            return Ok(None);
-        }
         let (
             Obj::ProductShape(ProductShape::Tuple(left)),
             Obj::ProductShape(ProductShape::Tuple(right)),

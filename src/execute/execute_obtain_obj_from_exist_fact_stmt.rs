@@ -88,7 +88,7 @@ impl Runtime {
         match self.apply_obtain_from_known_exist_family(
             &stmt.fact,
             &stmt.equal_tos,
-        )? {
+         crate::execute::execute_fact_stmt::VerifyState::top_level())? {
             Ok(store_and_infer_result) => Ok(ExecObtainObjFromExistFactStmtResult::Success(
                 ExecObtainObjFromExistFactStmtSuccessResult {
                     statement: stmt.clone(),
@@ -108,7 +108,7 @@ impl Runtime {
         &mut self,
         family: &ExistShapedFact,
         equal_tos: &[BoundName],
-    ) -> RuntimeResult<Result<StoreHaveObjAndInferResult, ExecObtainObjFromExistFactStmtFailed>>
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Result<StoreHaveObjAndInferResult, ExecObtainObjFromExistFactStmtFailed>>
     {
         if matches!(family, ExistShapedFact::NotExist(_)) {
             return Ok(Err(ExecObtainObjFromExistFactStmtFailed::NotExistSource));
@@ -128,7 +128,7 @@ impl Runtime {
             self.build_obtain_renamed_params_and_subst(plain, equal_tos)?;
 
         let mut store_and_infer_result =
-            self.define_typed_parameters_in_current_env(&renamed_params, None)?;
+            self.define_typed_parameters_in_current_env(&renamed_params, None, verify_state)?;
 
         for body_fact in &plain.facts {
             let instantiated = self
@@ -139,7 +139,7 @@ impl Runtime {
                     ))
                 })?;
             let as_fact = quantifier_free_fact_to_fact(instantiated);
-            let stored = self.store_fact_and_infer(&as_fact)?;
+            let stored = self.store_fact_and_infer(&as_fact, verify_state)?;
             store_and_infer_result
                 .stored_fact_ids
                 .extend(stored.stored_fact_ids());
@@ -147,7 +147,7 @@ impl Runtime {
 
         if matches!(family, ExistShapedFact::ExistUnique(_)) {
             let uniqueness = self.build_exist_unique_uniqueness_forall_fact(plain)?;
-            let stored = self.store_fact_and_infer(&Fact::ForallFact(uniqueness))?;
+            let stored = self.store_fact_and_infer(&Fact::ForallFact(uniqueness), verify_state)?;
             store_and_infer_result
                 .stored_fact_ids
                 .extend(stored.stored_fact_ids());

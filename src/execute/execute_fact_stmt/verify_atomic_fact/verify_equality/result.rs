@@ -88,6 +88,7 @@ pub struct StrictEqualWithFact {
 
 // Equal search routes allowed when matching forall conclusion args.
 pub enum StrictEqualArgProof {
+    ByClosedCalculation(super::super::closed_calculation_proof::ClosedEqualityCalculationProof),
     ByTheyAreTheSame(TheyAreTheSameProof),
     ByKnownSpecialProperty(EqualFactSearchProofByKnownSpecialProperty),
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
@@ -126,6 +127,7 @@ impl VerifyEqualityResult {
 // MatchingOneArgByOne = constructor peel (not rewrite).
 // Rewrite stages replace legacy opaque resolve_obj (ClosedNumeric only).
 pub enum EqualFactSearchedProof {
+    ByClosedCalculation(super::super::closed_calculation_proof::ClosedEqualityCalculationProof),
     ByTheyAreTheSame(TheyAreTheSameProof),
     ByKnownSpecialProperty(EqualFactSearchProofByKnownSpecialProperty),
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
@@ -151,7 +153,17 @@ pub struct EqualFactSearchedProofByKnownForallViaSymmetry {
 pub enum EqualFactSearchedProofByEquivalenceClass {
     KnownPath(KnownEqualityPathProof),
     AlphaEndpoints(KnownEqualityAlphaEndpointsProof),
+    AlphaPaths(KnownEqualityAlphaPathsProof),
     ViaPeers(EqualityViaPeersProof),
+}
+
+// Stored paths joined only by structural identity/alpha, with no searched bridge.
+pub struct KnownEqualityAlphaPathsProof {
+    pub left_path: KnownEqualityPathProof,
+    pub left: Obj,
+    pub right: Obj,
+    pub identity: TheyAreTheSameProof,
+    pub right_path: KnownEqualityPathProof,
 }
 
 // A cited checked equality, with structural alpha identity at both endpoints.
@@ -180,14 +192,10 @@ pub struct EqualityViaPeersProof {
 pub struct PeerEqualitySuccess {
     pub fact: EqualFact,
     pub well_defined_proof: EqualFactWellDefinedProof,
-    pub searched_proof: PeerEqualitySearchedProof,
+    pub searched_proof: Box<EqualFactSearchedProof>,
 }
 
-pub enum PeerEqualitySearchedProof {
-    ByTheyAreTheSame(TheyAreTheSameProof),
-    ByBuiltinRule(EqualitySearchProofByBuiltinRule),
-    ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
-}
+
 
 impl KnownEqualityPathProof {
     pub fn new(path: Vec<(Obj, Obj, FactId)>) -> Self {
@@ -209,9 +217,9 @@ impl PeerEqualitySuccess {
     pub fn new(
         fact: EqualFact,
         well_defined_proof: EqualFactWellDefinedProof,
-        searched_proof: PeerEqualitySearchedProof,
+        searched_proof: EqualFactSearchedProof,
     ) -> Self {
-        Self { fact, well_defined_proof, searched_proof }
+        Self { fact, well_defined_proof, searched_proof: Box::new(searched_proof) }
     }
 }
 
@@ -227,17 +235,11 @@ impl From<TheyAreTheSameProof> for EqualFactSearchedProof {
     fn from(proof: TheyAreTheSameProof) -> Self { Self::ByTheyAreTheSame(proof) }
 }
 
-impl From<TheyAreTheSameProof> for PeerEqualitySearchedProof {
-    fn from(proof: TheyAreTheSameProof) -> Self { Self::ByTheyAreTheSame(proof) }
-}
 
-impl From<EqualitySearchProofByBuiltinRule> for PeerEqualitySearchedProof {
-    fn from(proof: EqualitySearchProofByBuiltinRule) -> Self { Self::ByBuiltinRule(proof) }
-}
 
-impl From<EqualFactSearchedProofByMatchingOneArgByOne> for PeerEqualitySearchedProof {
-    fn from(proof: EqualFactSearchedProofByMatchingOneArgByOne) -> Self { Self::ByMatchingOneArgByOne(proof) }
-}
+
+
+
 
 pub fn equal_fact_result_from_wd_fail(
     reason: FailToVerifyEqualFactWellDefinedResult,
@@ -277,6 +279,7 @@ pub fn strict_equal_arg_proof_from_searched(
     proof: EqualFactSearchedProof,
 ) -> Option<StrictEqualArgProof> {
     match proof {
+        EqualFactSearchedProof::ByClosedCalculation(p) => Some(StrictEqualArgProof::ByClosedCalculation(p)),
         EqualFactSearchedProof::ByTheyAreTheSame(p) => Some(StrictEqualArgProof::ByTheyAreTheSame(p)),
         EqualFactSearchedProof::ByKnownSpecialProperty(p) => Some(StrictEqualArgProof::ByKnownSpecialProperty(p)),
         EqualFactSearchedProof::ByBuiltinRule(p) => Some(StrictEqualArgProof::ByBuiltinRule(p)),

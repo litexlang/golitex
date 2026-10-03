@@ -1,0 +1,8 @@
+# CosHalfPiShift: the minus sign is essential.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/cos_half_pi_shift.lit
+# Previously rejected, exact legacy-positive source:
+# forall x R:
+#     cos(x+pi/2) = -sin(x)
+forall x R:
+    cos(x+pi/2) = -sin(x)
+# Boundary: cos(x+pi/2)=sin(x) rejects in Rust tests.

@@ -38,9 +38,6 @@ impl Runtime {
         goal: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
-        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
-            return Ok(None);
-        }
         let candidates = self.visible_forall_atomic_conclusion_candidates(goal);
         for cite in candidates {
             if let Some(proof) =

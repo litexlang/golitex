@@ -1,0 +1,19 @@
+# Tracer: even-power order requires a real base.
+# Before (incorrect admission):
+# 0 <= i^2
+# i^2 $in N
+# Former behavior: exponent parity alone admitted these false statements.
+# Now: real squares retain weak and strict positivity with real-base evidence.
+forall x R:
+    0 <= x^2
+    0 <= x*x
+
+forall x R:
+    x != 0
+    =>:
+        0 < x^2
+        0 < x*x
+
+# Boundary: complex squares are not automatically nonnegative or positive.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/even_power_real_carrier.lit
+# Executable rejection and evidence checks: field_arithmetic_carrier_strategy tests.

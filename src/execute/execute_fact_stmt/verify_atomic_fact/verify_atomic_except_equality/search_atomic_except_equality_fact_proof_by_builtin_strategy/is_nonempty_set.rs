@@ -1,14 +1,14 @@
 use super::result::*;
 use crate::ast::fact::{AtomicFact, IsNonemptySetFact};
 use crate::ast::obj::{FunctionSpace, IntervalObj, Obj, ProductShape, SetFormer, SetOperator};
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub(super) fn search_closed_range_nonempty_from_endpoint_order_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<ClosedRangeNonemptyFromEndpointOrderStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::ClosedRange(r)) = set else { return Ok(None); };
@@ -30,7 +30,7 @@ impl Runtime {
     pub(super) fn search_range_nonempty_from_endpoint_order_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RangeNonemptyFromEndpointOrderStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::Range(r)) = set else { return Ok(None); };
@@ -52,7 +52,7 @@ impl Runtime {
     pub(super) fn search_interval_nonempty_from_endpoint_order_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntervalNonemptyFromEndpointOrderStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::IntervalObj(interval)) = set else { return Ok(None); };
@@ -75,7 +75,7 @@ impl Runtime {
     pub(super) fn search_union_nonempty_from_left_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<UnionNonemptyFromLeftStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Union(u)) = set else { return Ok(None); };
@@ -93,7 +93,7 @@ impl Runtime {
     pub(super) fn search_union_nonempty_from_right_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<UnionNonemptyFromRightStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Union(u)) = set else { return Ok(None); };
@@ -111,7 +111,7 @@ impl Runtime {
     pub(super) fn search_cart_nonempty_from_all_factors_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<CartNonemptyFromAllFactorsStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::ProductShape(ProductShape::Cart(cart)) = set else { return Ok(None); };
@@ -132,7 +132,7 @@ impl Runtime {
     pub(super) fn search_fn_set_nonempty_from_codomain_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<FnSetNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) = set else { return Ok(None); };
@@ -150,7 +150,7 @@ impl Runtime {
     pub(super) fn search_anonymous_fn_nonempty_from_codomain_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<AnonymousFnNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = set else { return Ok(None); };
@@ -168,7 +168,7 @@ impl Runtime {
     pub(super) fn search_finite_seq_set_nonempty_from_codomain_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<FiniteSeqSetNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::FiniteSeqSet(seq)) = set else { return Ok(None); };
@@ -186,7 +186,7 @@ impl Runtime {
     pub(super) fn search_seq_set_nonempty_from_codomain_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SeqSetNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::SeqSet(seq)) = set else { return Ok(None); };

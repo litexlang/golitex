@@ -1,0 +1,10 @@
+# ReduceTranslation: translate both endpoints and the corresponding callback.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/reduce_translation.lit
+# Previously rejected, exact legacy-positive source:
+# have op fn(a,b R)R
+# have f fn(k Z)R
+# reduce(3,5,f,op,0) = reduce(0,2,fn(k Z)R {f(3+k)},op,0)
+have op fn(a,b R)R
+have f fn(k Z)R
+reduce(3,5,f,op,0) = reduce(0,2,fn(k Z)R {f(3+k)},op,0)
+# Boundary: wrong shift, interval length, operation or seed reject in Rust tests.

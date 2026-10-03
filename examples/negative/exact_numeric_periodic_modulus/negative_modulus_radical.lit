@@ -1,0 +1,2 @@
+# Must reject: mathematical/domain boundary, never a positive corpus case.
+C_abs(1 + i) = -sqrt(2)

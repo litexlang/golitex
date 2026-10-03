@@ -129,7 +129,7 @@ pub fn evaluate_aggregate(
         IteratedOperator::FiniteSetReduce(r) => {
             // The source WD includes associativity and commutativity, so this
             // finite enumeration cannot change the mathematical value.
-            match runtime.verify_obj_well_definedness(&source,context.function_proof_state.clone().without_well_defined_storage())? {
+            match runtime.verify_obj_well_definedness(&source,context.function_proof_state.clone())? {
                 VerifyObjWellDefinedResult::Success(_)=>{},failed=>return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
             }
             let enumeration=checked!(enumerate_set(runtime,&r.set,depth,context));
@@ -151,7 +151,7 @@ fn evaluate_fold_application(runtime:&mut Runtime,function:&Obj,args:Vec<Obj>,de
     -> RuntimeResult<Result<FunctionApplicationEvaluationResult,ExecEvalStmtFailed>> {
     let Some(application)=fold_application(function,args) else {return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));};
     let application_obj=Obj::FnObj(application.clone());
-    let application_well_defined=match runtime.verify_obj_well_definedness(&application_obj,context.function_proof_state.clone().without_well_defined_storage())? {
+    let application_well_defined=match runtime.verify_obj_well_definedness(&application_obj,context.function_proof_state.clone())? {
         VerifyObjWellDefinedResult::Success(p)=>p,failed=>return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
     };
     let Some(expansion)=runtime.expanded_named_or_literal_anon_fn_application_body(&application)? else {return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));};
@@ -345,7 +345,7 @@ fn evaluate_terms(
         };
         let application_well_defined = match runtime.verify_obj_well_definedness(
             &Obj::FnObj(application.clone()),
-            proof_verify_state().without_well_defined_storage(),
+            proof_verify_state(),
         )? {
             VerifyObjWellDefinedResult::Success(p) => p,
             failed => return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),

@@ -37,7 +37,14 @@ pub enum PredicateSignatureWellDefinedProof {
 pub struct AtomicFactWellDefinedProof {
     pub well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
     pub predicate_signature: PredicateSignatureWellDefinedProof,
-    pub predicate_domain: Vec<PredicateDomainWellDefinedProof>,
+    pub predicate_domain: PredicateDomainProof,
+}
+
+// Reusing a checked proposition also reuses its predicate-domain evidence.
+// Arguments and the visible signature are still checked before this dispatch.
+pub enum PredicateDomainProof {
+    ByKnownFact(super::AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
+    ByRequirements(Vec<PredicateDomainWellDefinedProof>),
 }
 
 pub struct PredicateDomainWellDefinedProof {

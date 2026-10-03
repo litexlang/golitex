@@ -30,8 +30,13 @@ signature and its arity. An undefined or wrong-arity user predicate fails at
 is distinct from an argument-object WD failure. Equality stays on its separate
 WD path; mixed conjunction/chain evidence uses the intrinsic signature case.
 
-Builtin atomic WD then records `predicate_domain`, whose entries contain the
-required carrier/signature fact and its verification evidence. A failed
+Atomic WD then records `predicate_domain`. Fresh checks use an array whose
+entries contain the required carrier/signature fact and its verification
+evidence. Reusing an already checked atomic fact instead produces
+`{type: "by_known_fact_domain", cite: ...}`; the citation includes its FactId
+and identity/stored-path argument matches. Arguments and the visible signature
+are still checked before this reuse, and a new assumption is not stored until
+its WD has succeeded. A failed
 domain entry retains the completed argument, signature and earlier domain
 stages. This prevents malformed builtin predicates from becoming assumptions
 merely because their conclusions repeat the same fact.
@@ -445,3 +450,37 @@ projection convention and omits that environment. All six leaves have English
 and Chinese Normal explanations. Producer/consumer and permission checks are
 in `tests/unit/execute/legacy_next_capabilities/tests.rs`; the dedicated runnable
 tracers are indexed in `examples/proof_nodes/README.md`.
+
+`SinHalfPiShift` and `CosHalfPiShift` are real-domain identity leaves.
+`ReduceFirstStep` records `nonempty` and five structural `matches`, keeping
+the seed as the first operation argument. `ReduceTranslation` records the
+integer `shift`, endpoint/operation/seed matches, the fresh `parameter`, two
+interval `assumptions`, checked `function_expansions`, and `pointwise` evidence.
+Its proof IR retains the binder local environment; the projection follows the
+existing aggregate convention and omits it.
+
+`ReducePointwise` records four interval/operation/seed matches and a
+`certificate` of type `by_known_forall_fact`: the complete matched `fact`,
+real stored `cite_fact_id`, and `parameter_renamings`. It consumes an exact
+already checked whole proposition, including optional interval domain facts;
+it neither opens general forall search nor publishes global function equality.
+`FiniteSetProductMemberRemoval` records membership/set `premises`, restricted
+callback `pointwise` evidence and `factor_expansions` / `factor_equal` for the
+removed value. Zero factors remain valid. All six leaves have English/Chinese
+Normal explanations. The consumer regressions are in
+`tests/unit/execute/legacy_final_capabilities/tests.rs`.
+
+## Direct closed calculation
+
+Both equality and non-equality searched-proof enums have `ByClosedCalculation`.
+Normal output explains exact closed evaluation in English/Chinese. Detailed
+output uses `type: "by_closed_calculation"`, with `kind` identifying equality,
+order polarity, membership or non-membership. Equality/disequality retain a
+`values` object (decimal/rational normal forms, exact complex coordinates, or
+canonical radical objects). Radical equality/disequality uses
+`representation: "radical"` and `left_normal`/`right_normal`, for example
+`sqrt(12)+sqrt(27)=5*sqrt(3)` retains `5 * sqrt (3)` on both sides;
+order retains `left_normal`, `right_normal`, and the actual `comparison`;
+membership retains `value` and `set`. Calculation carries no fabricated FactId.
+Existing stored citations and identity/alpha paths keep their existing labels.
+The Direct entry result also distinguishes `NotFound`, which is not a proof.

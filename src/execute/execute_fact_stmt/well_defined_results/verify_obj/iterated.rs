@@ -500,14 +500,14 @@ impl Runtime {
         if signature.dom_facts.is_empty() { return Ok(()); }
         if matches!(domain, AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::ListSet(s))) if s.list.is_empty()) { return Ok(()); }
         if let Some((arguments, endpoint_equalities)) = self.explicit_aggregate_predicate_arguments(domain) {
-            for equality in endpoint_equalities { requirements.push(self.verify_fact(&equality,state.without_well_defined_storage())?); }
+            for equality in endpoint_equalities { requirements.push(self.verify_fact(&equality,state)?); }
             let original = signature.set_bound_parameters.groups.iter().flat_map(|g| &g.params).next().expect("unary");
             for argument in arguments {
                 let substitution = std::collections::HashMap::from([(original.id,argument)]);
                 for condition in &signature.dom_facts {
                     let instantiated = self.inst_fact(&crate::instantiate::quantifier_free_fact_to_fact(condition.clone()),&substitution)
                         .map_err(|e|crate::runtime::RuntimeError::InternalBug(format!("aggregate argument substitution: {e}")))?;
-                    requirements.push(self.verify_fact(&instantiated,state.without_well_defined_storage())?);
+                    requirements.push(self.verify_fact(&instantiated,state)?);
                 }
             }
             return Ok(());
@@ -539,7 +539,7 @@ impl Runtime {
         let coverage = ForallFact { fact_id:self.global_ids.allocate_fact_id(),
             typed_parameters:TypedParameterList { groups:vec![TypedParameterGroup { params:vec![parameter],param_type:ParamType::Obj(parameter_set) }] },
             dom_facts,then_facts,line_file:None };
-        requirements.push(self.verify_forall_fact(&coverage,state.without_well_defined_storage())?);
+        requirements.push(self.verify_forall_fact(&coverage,state)?);
         Ok(())
     }
 

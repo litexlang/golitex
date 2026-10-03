@@ -8,6 +8,24 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::ReduceFirstStep(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("ReduceFirstStep")),
+            ("nonempty", super::reduce_rules::project_nonempty(&p.nonempty, runtime)),
+            ("matches", super::reduce_rules::project_matches(&p.matches, runtime)),
+        ]),
+        EqualitySearchProofByBuiltinRule::ReduceTranslation(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("ReduceTranslation")),
+            ("shift", string(p.shift.readable_string())), ("matches", super::reduce_rules::project_matches(&p.matches, runtime)),
+            ("parameter", string(p.parameter.to_string())),
+            ("assumptions", JsonValue::Array(p.assumptions.iter().map(|a| string(a.readable_string())).collect())),
+            ("function_expansions", super::aggregate_identity::project_expansions(&p.function_expansions, runtime)),
+            ("pointwise", super::reduce_rules::project_match(&p.pointwise, runtime)),
+        ]),
+        EqualitySearchProofByBuiltinRule::ReducePointwise(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("ReducePointwise")),
+            ("matches", super::reduce_rules::project_matches(&p.matches, runtime)),
+            ("certificate", super::reduce_rules::project_pointwise_certificate(&p.certificate, runtime)),
+        ]),
         EqualitySearchProofByBuiltinRule::CartesianSize(p) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("CartesianSize")),
             ("factor_finiteness", project_verify_facts(&p.factor_finiteness, runtime)),
@@ -24,17 +42,6 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof as P;
             let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
             match p {
-                P::PeriodicTrig(p) => {
-                    entries.push(("coefficient", string(p.coefficient.to_string())));
-                    entries.push(("integer_requirements", project_verify_facts(&p.integer_requirements, runtime)));
-                    entries.push(("value", string(p.value.to_string())));
-                },
-                P::NumericComplexModulus(p) => {
-                    entries.push(("real", string(p.real.to_string())));
-                    entries.push(("imaginary", string(p.imaginary.to_string())));
-                    entries.push(("squared_modulus", string(p.squared_modulus.to_string())));
-                    entries.push(("value", string(p.value.to_string())));
-                },
                 P::ModNegation {requirements} | P::ModNaturalPower {requirements} => entries.push(("requirements",project_verify_facts(requirements,runtime))),
                 P::PositivePowerZero {premise,requirements} | P::PositivePowerCancellation {premise,requirements} | P::SqrtKnownSquare {premise,requirements} => {
                     entries.push(("premise",super::searched::project_equal_searched(premise,runtime)));
@@ -47,6 +54,17 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof as P;
             let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
             match p {
+                P::PeriodicTrig(p) => {
+                    entries.push(("coefficient", string(p.coefficient.readable_string())));
+                    entries.push(("integer_requirements", project_verify_facts(&p.integer_requirements, runtime)));
+                    entries.push(("value", string(p.value.readable_string())));
+                },
+                P::NumericComplexModulus(p) => {
+                    entries.push(("real", string(p.real.readable_string())));
+                    entries.push(("imaginary", string(p.imaginary.readable_string())));
+                    entries.push(("squared_modulus", string(p.squared_modulus.readable_string())));
+                    entries.push(("value", string(p.value.readable_string())));
+                },
                 P::ComplexPowerCoordinates {natural} => entries.push(("natural",project_verify_fact(natural,runtime))),
                 P::ComplexModulusZero {premise,complex} => {
                     entries.push(("premise",super::searched::project_equal_searched(premise,runtime)));
@@ -66,6 +84,16 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_identities::ScalarIdentityBuiltinRuleProof as P;
             let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
             match p {
+                P::FiniteSetMaxSelection(p) => {
+                    entries.push(("selected_index", JsonValue::Number(p.selected_index as f64)));
+                    entries.push(("selected_member", string(p.selected_member.readable_string())));
+                    entries.push(("comparisons", project_extremum_comparisons(&p.comparisons, runtime)));
+                },
+                P::FiniteSetMinSelection(p) => {
+                    entries.push(("selected_index", JsonValue::Number(p.selected_index as f64)));
+                    entries.push(("selected_member", string(p.selected_member.readable_string())));
+                    entries.push(("comparisons", project_extremum_comparisons(&p.comparisons, runtime)));
+                },
                 P::AbsZeroArgument(p) => {
                     entries.push(("premise_proof", super::searched::project_equal_searched(&p.premise_proof,runtime)));
                     entries.push(("real_proof", project_verify_fact(&p.real_proof,runtime)));
@@ -1045,4 +1073,26 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             object_for(runtime, entries)
         },
     }
+}
+
+fn project_extremum_comparisons(
+    comparisons: &[crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_identities::ExactExtremumComparison],
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::rational_expression::NumberCompareResult;
+    let mut values = Vec::new();
+    for comparison in comparisons {
+        let ordering = match comparison.ordering {
+            NumberCompareResult::Less => "less",
+            NumberCompareResult::Equal => "equal",
+            NumberCompareResult::Greater => "greater",
+        };
+        values.push(object_for(runtime, vec![
+            ("member", string(comparison.member.readable_string())),
+            ("member_normal", string(comparison.member_normal.readable_string())),
+            ("selected_normal", string(comparison.selected_normal.readable_string())),
+            ("ordering", string(ordering)),
+        ]));
+    }
+    JsonValue::Array(values)
 }

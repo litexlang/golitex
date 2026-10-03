@@ -13,7 +13,7 @@ fn runtime() -> Runtime {
 #[test]
 fn positive_closed_decrements_verify_for_real_and_integer_binders() {
     for carrier in ["R", "Z"] {
-        for offset in ["2", "0.25", "(1 + 1)", "(4 / 2)"] {
+        for offset in ["2", "0.25", "(1 + 1)", "(4 / 2)", "(1 / 3)"] {
             let code = format!("forall x {carrier}:\n    x - {offset} < x\n");
             let run = runtime().run_litex_code(&code).unwrap();
             assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
@@ -39,15 +39,15 @@ fn zero_negative_unknown_offsets_and_nonreal_order_do_not_pass() {
 
 #[test]
 fn fibonacci_uses_the_original_two_step_recursive_domain() {
-    let code = "have fn fib(n Z: n >= 0) R by induc n from 0:\n    case n < 2: 1\n    case n >= 2: fib(n - 2) + fib(n - 1)\nfib(0) = 1\nfib(1) = 1\nfib(2) = fib(0) + fib(1) = 2\n";
+    let code = "have fn fib(n Z: n >= 0) R by induc n from 0:\n    case n < 2: 1\n    case n >= 2: fib(n - 2) + fib(n - 1)\nfib(0) = 1\nfib(1) = 1\nfib(2) = fib(2 - 2) + fib(2 - 1)\nfib(2 - 2) = fib(0)\nfib(2 - 1) = fib(1)\nfib(2) = fib(0) + fib(1) = 2\n";
     let run = runtime().run_litex_code(code).unwrap();
     assert!(run.session_error.is_none(), "{:?}", run.session_error);
     assert!(run.success);
 }
 
 #[test]
-fn equal_and_increasing_recursive_measures_are_rejected() {
-    for recursive_arg in ["n", "n + 2", "n - (-2)"] {
+fn nondecreasing_and_noninteger_recursive_measures_are_rejected() {
+    for recursive_arg in ["n", "n + 2", "n - (-2)", "n - (1 / 3)"] {
         let code = format!("have fn bad(n Z: n >= 0) R by induc n from 0:\n    case n < 2: 0\n    case n >= 2: bad({recursive_arg})\n");
         let run = runtime().run_litex_code(&code).unwrap();
         assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);

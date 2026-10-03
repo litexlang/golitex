@@ -24,10 +24,11 @@ impl Runtime {
             rt.verify_forall_fact_well_definedness_in_local(fact, verify_state.clone())
         })?;
         match stages {
-            Ok((param_type_well_defined, dom, then)) => {
+            Ok((param_type_well_defined, auto_opened_struct_layers, dom, then)) => {
                 Ok(VerifyForallFactWellDefinedResult::Success(
                     ForallFactWellDefinedProof {
                         param_type_well_defined,
+                        auto_opened_struct_layers,
                         dom,
                         then,
                         local_env,
@@ -46,6 +47,7 @@ impl Runtime {
         Result<
             (
                 Vec<ParamTypeWellDefinedProof>,
+                Option<Vec<crate::execute::release_one_struct_layer::ReleaseOneStructLayerProof>>,
                 Vec<FactWellDefinedProof>,
                 Vec<FactWellDefinedProof>,
             ),
@@ -64,13 +66,25 @@ impl Runtime {
             }
         };
 
+        // A direct &Struct binder carries its definition-owned laws during
+        // WD as it does during proof introduction. Keep the same one-layer
+        // boundary: nested struct fields still require explicit release.
+        let auto_opened_struct_layers = match self.auto_open_struct_layers_for_typed_parameters(
+            &fact.typed_parameters, verify_state,
+        )? {
+            Ok(opened) => opened,
+            Err((_, failed)) => return Ok(Err(
+                FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer(failed),
+            )),
+        };
+
         let mut succeeded_dom = Vec::with_capacity(fact.dom_facts.len());
         for (failed_index, dom) in fact.dom_facts.iter().enumerate() {
             match self.verify_fact_well_definedness(dom, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     // Assume each dom before then-WD so domain-restricted
                     // applications (e.g. `f(x)` under `x > 0`) can pass.
-                    let _ = self.store_fact_and_infer(dom)?;
+                    let _ = self.store_fact_and_infer(dom, verify_state)?;
                     succeeded_dom.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {
@@ -101,7 +115,7 @@ impl Runtime {
             }
         }
 
-        Ok(Ok((param_type_well_defined, succeeded_dom, succeeded_then)))
+        Ok(Ok((param_type_well_defined, auto_opened_struct_layers, succeeded_dom, succeeded_then)))
     }
 }
 

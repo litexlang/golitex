@@ -26,3 +26,7 @@ sketch:
 sketch:
     forall a, b Z:
         lcm(a, b) = lcm(b, a)
+
+# P121: closed exact elementary calculation
+sketch:
+    lcm((1/3)*6,8)=8

@@ -104,7 +104,7 @@ impl Runtime {
             }
         };
 
-        let store_and_infer = self.store_built_release_facts(&built)?;
+        let store_and_infer = self.store_built_release_facts(&built, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
         let released = finalize_kind(is_induc, built.kind);
 
         Ok(ExecReleaseObjDefStmtResult::Success(

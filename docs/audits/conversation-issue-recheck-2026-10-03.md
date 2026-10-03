@@ -1,5 +1,9 @@
 # Conversation issue recheck — 2026-10-03
 
+> Historical checkpoint. The later [current-source status update](conversation-issue-status-update-2026-10-03.md)
+> supersedes its present-tense status: release now builds, but only 81/99 owning Obj files and
+> 356/377 Stmt checks pass; imaginary contradiction remains unstable. The evidence below is retained.
+
 Task: recheck every problem found in this conversation and summarize restored
 and remaining behavior. Scope: diagnostics and records only. This task changed
 no kernel, mathematical example, config, AST, or Env/Runtime contract.

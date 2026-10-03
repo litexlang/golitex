@@ -110,15 +110,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> RuntimeResult<ExecHaveFnByInducStmtResult> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search:
-                crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
         if stmt.cases.is_empty() {
             return Ok(ExecHaveFnByInducStmtResult::Failed(
@@ -138,7 +130,7 @@ impl Runtime {
         }
 
         let (inner, local_env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause)?;
+            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
 
             let measure_wd = rt.verify_obj_well_definedness(&stmt.measure, verify_state.clone())?;
             if measure_wd.is_failed() {
@@ -182,7 +174,7 @@ impl Runtime {
                 )));
             }
 
-            if let Err(msg) = rt.register_restricted_recursive_fn(stmt) {
+            if let Err(msg) = rt.register_restricted_recursive_fn(stmt, crate::execute::execute_fact_stmt::VerifyState::top_level()) {
                 return Ok(Err(ExecHaveFnByInducStmtFailed::Shape(msg)));
             }
 
@@ -205,7 +197,7 @@ impl Runtime {
             Err(failed) => return Ok(ExecHaveFnByInducStmtResult::Failed(failed)),
         };
 
-        let store_and_infer_result = match self.store_have_fn_by_induc_facts(stmt, &fn_set) {
+        let store_and_infer_result = match self.store_have_fn_by_induc_facts(stmt, &fn_set, crate::execute::execute_fact_stmt::VerifyState::top_level()) {
             Ok(r) => r,
             Err(RuntimeError::InternalBug(msg)) if msg.starts_with("flatten induc:") => {
                 return Ok(ExecHaveFnByInducStmtResult::Failed(
@@ -239,7 +231,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
         fn_set: &FnSet,
-    ) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
         if self.identifier_defined_in_stack(&stmt.name.name) {
             return Err(crate::runtime::RuntimeError::InternalBug(format!(
                 "identifier `{}` is already defined in this ExecEnv",
@@ -257,7 +249,7 @@ impl Runtime {
         let flat = flatten_induc_to_case_by_case(self, stmt).map_err(|msg| {
             crate::runtime::RuntimeError::InternalBug(format!("flatten induc: {msg}"))
         })?;
-        self.store_piecewise_fn_membership_and_case_foralls(&flat, fn_set)
+        self.store_piecewise_fn_membership_and_case_foralls(&flat, fn_set, verify_state)
     }
 
     fn verify_in_z(
@@ -275,7 +267,7 @@ impl Runtime {
         self.verify_fact(&fact, verify_state)
     }
 
-    fn register_restricted_recursive_fn(&mut self, stmt: &HaveFnByInducStmt) -> Result<(), String> {
+    fn register_restricted_recursive_fn(&mut self, stmt: &HaveFnByInducStmt, verify_state: crate::execute::execute_fact_stmt::VerifyState) -> Result<(), String> {
         if self.identifier_defined_in_stack(&stmt.name.name) {
             // Already occupied at parse; ensure ExecEnv definition row exists.
         } else {
@@ -337,7 +329,7 @@ impl Runtime {
             line_file: Some(stmt.line_file.clone()),
         }));
         let _ = self
-            .store_fact_and_infer(&membership)
+            .store_fact_and_infer(&membership, verify_state)
             .map_err(|e| format!("recursive membership store: {e:?}"))?;
         Ok(())
     }
@@ -420,7 +412,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InducCasesDisjointSuccess>> {
         let (proof, local_env) = self.run_in_local_env_and_take_env(|rt| {
-            let assumption_stored = rt.store_fact_and_infer(&and_chain_as_fact(assumed))?;
+            let assumption_stored = rt.store_fact_and_infer(&and_chain_as_fact(assumed), verify_state)?;
             for atom in flatten_and_chain_atoms(rt, other)? {
                 let Some(negated) = negate_atomic_fact(&atom, rt.global_ids.allocate_fact_id())
                 else {
@@ -454,7 +446,7 @@ impl Runtime {
         for (case_index, case) in cases.iter().enumerate() {
             let (inner, local_env) = self.run_in_local_env_and_take_env(|rt| {
                 let assumption_stored =
-                    rt.store_fact_and_infer(&and_chain_as_fact(&case.case_fact))?;
+                    rt.store_fact_and_infer(&and_chain_as_fact(&case.case_fact), verify_state)?;
                 let body = match &case.body {
                     HaveFnByInducCaseBody::EqualTo(equal_to) => {
                         // Binders already live on the outer induc local; only

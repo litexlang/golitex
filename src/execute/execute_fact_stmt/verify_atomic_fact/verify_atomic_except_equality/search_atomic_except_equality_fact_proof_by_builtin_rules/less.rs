@@ -28,6 +28,9 @@ pub enum LessFactSearchProofByBuiltinRule {
     // then `left < right`.
     // Examples: `1 < 2`, `1 + 1 < 5`.
     ClosedNumericComparison(ClosedNumericComparisonBuiltinRuleProof),
+    // pi is positive, so exact rational coefficients determine order.
+    // Example: -pi/2 < pi/4 < pi/2.
+    PiMultipleComparison(PiMultipleComparisonBuiltinRuleProof),
     // Subtract-one is strictly below the minuend.
     // Mathematical property: for any object `x`, `x - 1 < x`.
     // Example: prove `n - 1 < n` (used by inductive recursive domain checks).
@@ -137,6 +140,15 @@ pub struct ClosedNumericComparisonBuiltinRuleProof {
     pub left_normal: String,
     pub right_normal: String,
 }
+pub struct PiMultipleComparisonBuiltinRuleProof {
+    pub left_coefficient: Obj,
+    pub right_coefficient: Obj,
+}
+impl PiMultipleComparisonBuiltinRuleProof {
+    fn new(left_coefficient: Obj, right_coefficient: Obj) -> Self {
+        Self { left_coefficient, right_coefficient }
+    }
+}
 
 pub struct FiniteSetSizeProperSubsetLtBuiltinRuleProof {
     pub inclusion_proof: FiniteProperInclusionProof,
@@ -189,6 +201,7 @@ pub struct ProductBothPositiveBuiltinRuleProof {
 }
 
 pub struct EvenPowPositiveFromNonzeroBuiltinRuleProof {
+    pub base_in_real_proof: VerifyFactResult,
     pub base_nonzero_proof: VerifyFactResult,
 }
 
@@ -342,6 +355,20 @@ impl Runtime {
             }
         }
 
+        if let (Some(left), Some(right)) = (
+            crate::rational_expression::pi_multiple::pi_coefficient(&fact.left),
+            crate::rational_expression::pi_multiple::pi_coefficient(&fact.right),
+        ) {
+            use crate::rational_expression::exact_rational::EvalRational;
+            if let (Some(left), Some(right)) = (EvalRational::from_obj(&left), EvalRational::from_obj(&right)) {
+                if left.compare(&right) == Some(NumberCompareResult::Less) {
+                    return Ok(Some(LessFactSearchProofByBuiltinRule::PiMultipleComparison(
+                        PiMultipleComparisonBuiltinRuleProof::new(left.to_obj(), right.to_obj()),
+                    )));
+                }
+            }
+        }
+
         // Pure shape cites that do not nest verify_fact.
         match (&fact.left, &fact.right) {
             (
@@ -409,10 +436,6 @@ impl Runtime {
                 ));
             }
             _ => {}
-        }
-
-        if !verify_state.can_use_builtin_rule {
-            return Ok(None);
         }
         let verify_state = verify_state.clone();
 

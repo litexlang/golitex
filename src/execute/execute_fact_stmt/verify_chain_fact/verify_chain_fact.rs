@@ -42,12 +42,11 @@ impl Runtime {
     }
 
     fn search_chain_fact_by_known_forall(&mut self, goal: &ChainFact, verify_state: VerifyState) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
-        if !verify_state.can_use_def_and_known_forall_and_known_strategy
-            || verify_state.remaining_deep_search_depth == 0
+        if !verify_state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
         {
             return Ok(None);
         }
-        let premise_state = verify_state.after_deep_search();
+        let premise_state = verify_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
         let key = chain_forall_conclusion_index_key(goal);
         let mut cites = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {

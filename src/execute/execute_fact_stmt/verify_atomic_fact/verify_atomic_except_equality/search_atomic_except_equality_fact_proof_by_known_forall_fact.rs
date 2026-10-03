@@ -4,7 +4,7 @@
 //! (same pipeline as `=`). See that file for stages and a worked example.
 //!
 //! Called from `search_atomic_except_equality_fact_proof` when
-//! `verify_state.can_use_forall_fact` is true, after known_strategy.
+//! the shared DefinitionAndForall stage admits it with a restricted premise state.
 
 use crate::ast::fact::AtomicFact;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;

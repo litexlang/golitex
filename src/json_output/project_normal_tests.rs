@@ -93,15 +93,15 @@ fn normal_json_calculation_one_plus_two_english() {
         .expect("proof_method");
     assert_eq!(
         why.get("type").and_then(|v| v.as_str().ok()),
-        Some("builtin_rule")
+        Some("by_closed_calculation")
     );
     assert_eq!(
         why.get("rule_name").and_then(|v| v.as_str().ok()),
-        Some("Calculation")
+        Some("Closed calculation")
     );
     assert_eq!(
         why.get("message").and_then(|v| v.as_str().ok()),
-        Some("Both sides evaluate to the same number")
+        Some("Exact evaluation of closed expressions without proof search")
     );
     assert!(why.get("rule").is_none());
     assert!(why.get("variant").is_none());
@@ -124,15 +124,15 @@ fn normal_json_calculation_one_plus_two_chinese() {
         .expect("证明方法");
     assert_eq!(
         why.get("类型").and_then(|v| v.as_str().ok()),
-        Some("内置规则")
+        Some("封闭计算")
     );
     assert_eq!(
         why.get("规则名").and_then(|v| v.as_str().ok()),
-        Some("计算")
+        Some("封闭计算")
     );
     assert_eq!(
         why.get("说明").and_then(|v| v.as_str().ok()),
-        Some("两边都算出同一个数")
+        Some("精确计算封闭表达式，不递归搜索证明")
     );
 }
 

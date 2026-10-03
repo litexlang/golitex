@@ -220,7 +220,14 @@ and the result has the exact `done` carrier. Generated named values retain
 partially apply it. The paired boundary is `f(a)(b)`, which remains a different
 and invalid source application shape.
 
-`24_DependentAnonymousFunction.lit` extends that telescope to carriers which
+`24_DependentAnonymousFunction.lit` is retained historical compiler input. Its
+first two declarations are rejected by the current Litex parser: function
+parameter domains and complete return objects cannot reference parameters of
+the same signature. The paired generated Lean proof records the former
+compiler capability and does not establish current source-language acceptance.
+The following description applies to that former compilation:
+
+The tracer extends that telescope to carriers which
 actually mention earlier parameters. Both dependent parameter sets and
 argument-indexed return sets lower to `FnTelescope`, so every dependency is
 fed by the exact source argument plus its checked membership proof. Compound

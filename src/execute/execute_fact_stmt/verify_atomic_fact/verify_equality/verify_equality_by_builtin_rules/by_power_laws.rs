@@ -59,7 +59,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<PowerLawEqualityBuiltinRuleProof>> {
-        let child = verify_state.without_well_defined_storage();
+        let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if let Some(proof) =
                 self.try_power_product_same_base(left, right, child.clone())?

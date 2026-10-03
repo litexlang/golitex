@@ -632,3 +632,7 @@ fn apply_fn_one_arg(f: &Obj, arg: Obj) -> Option<Obj> {
         _ => None,
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/builtin_prop_migration/tests.rs"]
+mod builtin_prop_migration_tests;

@@ -5,14 +5,14 @@ use crate::ast::line_file::SourceLine;
 use crate::ast::obj::{
     ArithmeticOperator, FiniteSetStat, IntegerOperator, Obj, SetFormer, SetOperator, StandardSet,
 };
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub(super) fn search_finite_set_size_in_numeric_carrier_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<FiniteSetSizeInNumericCarrierStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(target) = &inf.set else { return Ok(None); };
@@ -30,7 +30,7 @@ impl Runtime {
     pub(super) fn search_finite_extremum_source_in_carrier_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<FiniteExtremumSourceInCarrierStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(target) = &inf.set else { return Ok(None); };
@@ -54,7 +54,7 @@ impl Runtime {
     pub(super) fn search_refined_numeric_carrier_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RefinedNumericCarrierStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(target) = &inf.set else { return Ok(None); };
@@ -71,7 +71,7 @@ impl Runtime {
     pub(super) fn search_real_arithmetic_carrier_closure_add_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RealArithmeticCarrierClosureAddStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::R) = &inf.set else { return Ok(None); };
@@ -86,7 +86,7 @@ impl Runtime {
     pub(super) fn search_real_arithmetic_carrier_closure_sub_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RealArithmeticCarrierClosureSubStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::R) = &inf.set else { return Ok(None); };
@@ -101,7 +101,7 @@ impl Runtime {
     pub(super) fn search_real_arithmetic_carrier_closure_mul_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RealArithmeticCarrierClosureMulStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::R) = &inf.set else { return Ok(None); };
@@ -116,7 +116,7 @@ impl Runtime {
     pub(super) fn search_real_arithmetic_carrier_closure_div_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RealArithmeticCarrierClosureDivStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::R) = &inf.set else { return Ok(None); };
@@ -131,7 +131,7 @@ impl Runtime {
     pub(super) fn search_real_arithmetic_carrier_closure_pow_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RealArithmeticCarrierClosurePowStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::R) = &inf.set else { return Ok(None); };
@@ -146,7 +146,7 @@ impl Runtime {
     pub(super) fn search_rational_arithmetic_carrier_closure_add_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RationalArithmeticCarrierClosureAddStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Q) = &inf.set else { return Ok(None); };
@@ -161,7 +161,7 @@ impl Runtime {
     pub(super) fn search_rational_arithmetic_carrier_closure_sub_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RationalArithmeticCarrierClosureSubStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Q) = &inf.set else { return Ok(None); };
@@ -176,7 +176,7 @@ impl Runtime {
     pub(super) fn search_rational_arithmetic_carrier_closure_mul_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RationalArithmeticCarrierClosureMulStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Q) = &inf.set else { return Ok(None); };
@@ -191,7 +191,7 @@ impl Runtime {
     pub(super) fn search_rational_arithmetic_carrier_closure_div_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RationalArithmeticCarrierClosureDivStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Q) = &inf.set else { return Ok(None); };
@@ -206,7 +206,7 @@ impl Runtime {
     pub(super) fn search_rational_arithmetic_carrier_closure_pow_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RationalArithmeticCarrierClosurePowStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Q) = &inf.set else { return Ok(None); };
@@ -224,7 +224,7 @@ impl Runtime {
     pub(super) fn search_rational_arithmetic_carrier_closure_abs_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RationalArithmeticCarrierClosureAbsStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Q) = &inf.set else { return Ok(None); };
@@ -239,7 +239,7 @@ impl Runtime {
     pub(super) fn search_integer_arithmetic_carrier_closure_add_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntegerArithmeticCarrierClosureAddStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Z) = &inf.set else { return Ok(None); };
@@ -254,7 +254,7 @@ impl Runtime {
     pub(super) fn search_integer_arithmetic_carrier_closure_sub_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntegerArithmeticCarrierClosureSubStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Z) = &inf.set else { return Ok(None); };
@@ -269,7 +269,7 @@ impl Runtime {
     pub(super) fn search_integer_arithmetic_carrier_closure_mul_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntegerArithmeticCarrierClosureMulStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Z) = &inf.set else { return Ok(None); };
@@ -284,7 +284,7 @@ impl Runtime {
     pub(super) fn search_integer_arithmetic_carrier_closure_mod_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntegerArithmeticCarrierClosureModStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Z) = &inf.set else { return Ok(None); };
@@ -299,7 +299,7 @@ impl Runtime {
     pub(super) fn search_integer_arithmetic_carrier_closure_pow_nat_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntegerArithmeticCarrierClosurePowNatStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Z) = &inf.set else { return Ok(None); };
@@ -317,7 +317,7 @@ impl Runtime {
     pub(super) fn search_integer_arithmetic_carrier_closure_abs_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntegerArithmeticCarrierClosureAbsStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::Z) = &inf.set else { return Ok(None); };
@@ -332,7 +332,7 @@ impl Runtime {
     pub(super) fn search_natural_arithmetic_carrier_closure_add_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<NaturalArithmeticCarrierClosureAddStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::N) = &inf.set else { return Ok(None); };
@@ -347,7 +347,7 @@ impl Runtime {
     pub(super) fn search_natural_arithmetic_carrier_closure_mul_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<NaturalArithmeticCarrierClosureMulStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::N) = &inf.set else { return Ok(None); };
@@ -362,7 +362,7 @@ impl Runtime {
     pub(super) fn search_natural_arithmetic_carrier_closure_sub_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<NaturalArithmeticCarrierClosureSubStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::N) = &inf.set else { return Ok(None); };
@@ -381,7 +381,7 @@ impl Runtime {
     pub(super) fn search_natural_arithmetic_carrier_closure_pow_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<NaturalArithmeticCarrierClosurePowStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::N) = &inf.set else { return Ok(None); };
@@ -396,7 +396,7 @@ impl Runtime {
     pub(super) fn search_natural_arithmetic_carrier_closure_abs_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<NaturalArithmeticCarrierClosureAbsStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::N) = &inf.set else { return Ok(None); };
@@ -409,7 +409,7 @@ impl Runtime {
     }
 
     pub(super) fn search_positive_natural_carrier_add_left_pos_strategy(
-        &mut self, fact: &AtomicFact, ctx: StrategySearch,
+        &mut self, fact: &AtomicFact, ctx: VerifyState,
     ) -> RuntimeResult<Option<PositiveNaturalCarrierAddLeftPosStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::NPos) = &inf.set else { return Ok(None); };
@@ -425,7 +425,7 @@ impl Runtime {
     }
 
     pub(super) fn search_positive_natural_carrier_add_right_pos_strategy(
-        &mut self, fact: &AtomicFact, ctx: StrategySearch,
+        &mut self, fact: &AtomicFact, ctx: VerifyState,
     ) -> RuntimeResult<Option<PositiveNaturalCarrierAddRightPosStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::NPos) = &inf.set else { return Ok(None); };
@@ -441,7 +441,7 @@ impl Runtime {
     }
 
     pub(super) fn search_positive_natural_carrier_mul_strategy(
-        &mut self, fact: &AtomicFact, ctx: StrategySearch,
+        &mut self, fact: &AtomicFact, ctx: VerifyState,
     ) -> RuntimeResult<Option<PositiveNaturalCarrierMulStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::NPos) = &inf.set else { return Ok(None); };
@@ -454,7 +454,7 @@ impl Runtime {
     }
 
     pub(super) fn search_positive_natural_carrier_pow_strategy(
-        &mut self, fact: &AtomicFact, ctx: StrategySearch,
+        &mut self, fact: &AtomicFact, ctx: VerifyState,
     ) -> RuntimeResult<Option<PositiveNaturalCarrierPowStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::NPos) = &inf.set else { return Ok(None); };
@@ -470,7 +470,7 @@ impl Runtime {
     }
 
     pub(super) fn search_positive_natural_carrier_abs_strategy(
-        &mut self, fact: &AtomicFact, ctx: StrategySearch,
+        &mut self, fact: &AtomicFact, ctx: VerifyState,
     ) -> RuntimeResult<Option<PositiveNaturalCarrierAbsStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::NPos) = &inf.set else { return Ok(None); };
@@ -486,7 +486,7 @@ impl Runtime {
     }
 
     pub(super) fn search_positive_natural_carrier_finite_set_size_strategy(
-        &mut self, fact: &AtomicFact, ctx: StrategySearch,
+        &mut self, fact: &AtomicFact, ctx: VerifyState,
     ) -> RuntimeResult<Option<PositiveNaturalCarrierFiniteSetSizeStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(StandardSet::NPos) = &inf.set else { return Ok(None); };

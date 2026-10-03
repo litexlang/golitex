@@ -301,7 +301,9 @@ the checked reduction back to the source `ℂ` expression uses the closed
 uses `FnTelescope` for quantified and named `f(a,b)`, including ordered domain
 requirements, and keeps the whole named carrier as `@f`. Example 24 adds
 dependent parameter and return carriers plus compound anonymous `R -> R`
-values. Anonymous bodies replay their exact occurrence, owned binder scope,
+values in the former source language. Its first two source declarations now
+fail parsing under the fixed-function-carrier rule; the paired generated Lean
+file remains historical compilation evidence. Anonymous bodies replay their exact occurrence, owned binder scope,
 parameter premise, and typed return-membership closure; direct calls also
 validate the verifier's exact `FunctionHead` child. Other construction
 carriers and operators outside `+`, `-`, `*`, and `/` remain fail-closed.

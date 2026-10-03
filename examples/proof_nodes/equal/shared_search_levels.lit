@@ -1,0 +1,22 @@
+# Shared VerifyState levels: stored paths, finite constructor descent, then
+# one definition step with builtin leaves. No trust or automatic nested def.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/shared_search_levels.lit
+# Before: nested search stages could reopen their own permissions.
+# have fn wrapped(x Z) Z = bump(x)
+# wrapped(3) = 4
+# Boundary: this last goal needs an explicit intermediate definition result.
+# Rust tests also reject 1/0 = 1/0 and a third projection of a pair.
+
+have a R = 1
+have b R = a
+have c R = b
+c = 1
+have fn f(x R) R = x
+have fn g(x R) R = x
+f(g(a)) = f(g(b))
+have p cart(R,R)
+p = (p[1],p[2])
+have fn bump(x Z) Z = x+1
+have fn wrapped(x Z) Z = bump(x)
+bump(3) = 4
+wrapped(3) = 4

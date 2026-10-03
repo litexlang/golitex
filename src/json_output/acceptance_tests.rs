@@ -532,7 +532,7 @@ fn acceptance_normal_success_shape_and_no_rule_id() {
     assert_eq!(obj_field(&json, "success"), &JsonValue::Bool(true));
     assert!(obj_field(&json, "statement").as_str().ok().unwrap().contains("="));
     let why = obj_field(&json, "proof_method").as_object().unwrap();
-    assert_eq!(why.get("type").and_then(|x| x.as_str().ok()), Some("builtin_rule"));
+    assert_eq!(why.get("type").and_then(|x| x.as_str().ok()), Some("by_closed_calculation"));
     assert!(why.get("rule_name").is_some());
     assert!(why.get("message").is_some());
     assert!(why.get("rule").is_none());
@@ -561,9 +561,9 @@ fn acceptance_chinese_keys_and_messages_end_to_end() {
     let json = project_stmt_normal(&exec_one(&mut rt, "1 + 2 = 3"), &rt);
     assert_eq!(obj_field(&json, "成功"), &JsonValue::Bool(true));
     let why = obj_field(&json, "证明方法").as_object().unwrap();
-    assert_eq!(why.get("规则名").and_then(|x| x.as_str().ok()), Some("计算"));
-    assert_eq!(why.get("说明").and_then(|x| x.as_str().ok()), Some("两边都算出同一个数"));
-    assert_eq!(why.get("类型").and_then(|x| x.as_str().ok()), Some("内置规则"));
+    assert_eq!(why.get("规则名").and_then(|x| x.as_str().ok()), Some("封闭计算"));
+    assert_eq!(why.get("说明").and_then(|x| x.as_str().ok()), Some("精确计算封闭表达式，不递归搜索证明"));
+    assert_eq!(why.get("类型").and_then(|x| x.as_str().ok()), Some("封闭计算"));
 }
 
 #[test]

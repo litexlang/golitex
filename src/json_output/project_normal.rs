@@ -322,6 +322,7 @@ fn why_from_atomic_except_searched(
     runtime: &Runtime,
 ) -> JsonValue {
     match searched {
+        AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(_) => searched_proof_why_json(runtime, "closed_calculation"),
         AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
             cite_from_fact_id(runtime, p.cite_fact_id)
         }
@@ -364,6 +365,7 @@ fn why_from_atomic_except_searched(
 
 fn why_from_equal_searched(searched: &EqualFactSearchedProof, runtime: &Runtime) -> JsonValue {
     match searched {
+        EqualFactSearchedProof::ByClosedCalculation(_) => searched_proof_why_json(runtime, "closed_calculation"),
         EqualFactSearchedProof::ByTheyAreTheSame(_) => {
             searched_proof_why_json(runtime, "they_are_the_same")
         }

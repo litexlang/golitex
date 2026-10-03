@@ -10,7 +10,7 @@ use super::strategy_gen::project_atomic_builtin_strategy;
 use super::verify::project_verify_fact;
 use super::wd::project_equal_wd_proof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::{TheyAreTheSameProof, SameFreeParamShapeProof};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{KnownEqualityPathProof, PeerEqualitySearchedProof};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{KnownEqualityPathProof};
 use crate::ast::fact::Fact;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
@@ -47,6 +47,7 @@ pub(super) fn project_atomic_except_searched(
     runtime: &Runtime,
 ) -> JsonValue {
     match searched {
+        AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(p) => super::closed_calculation::project_atomic_calculation(p, runtime),
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(r) => {
             project_atomic_builtin_rule(r, runtime)
         }
@@ -82,6 +83,7 @@ pub(super) fn project_equal_searched(
     runtime: &Runtime,
 ) -> JsonValue {
     match searched {
+        EqualFactSearchedProof::ByClosedCalculation(p) => super::closed_calculation::project_equal_calculation(p, runtime),
         EqualFactSearchedProof::ByTheyAreTheSame(p) => project_they_are_the_same(p, runtime),
         EqualFactSearchedProof::ByKnownSpecialProperty(p) =>
             super::known_tuple::project_equal_known_tuple(p, runtime),
@@ -138,12 +140,16 @@ fn project_equivalence_class(
             fields.push(("left_identity", project_they_are_the_same(&p.left_identity, runtime)));
             fields.push(("right_identity", project_they_are_the_same(&p.right_identity, runtime)));
         }
+        EqualFactSearchedProofByEquivalenceClass::AlphaPaths(p) => {
+            fields.push(("kind", string("alpha_paths")));
+            fields.push(("left_path", project_known_equality_path(&p.left_path, runtime)));
+            fields.push(("left", string(p.left.readable_string())));
+            fields.push(("right", string(p.right.readable_string())));
+            fields.push(("identity", project_they_are_the_same(&p.identity, runtime)));
+            fields.push(("right_path", project_known_equality_path(&p.right_path, runtime)));
+        }
         EqualFactSearchedProofByEquivalenceClass::ViaPeers(p) => {
-            let searched = match &p.bridge.searched_proof {
-                PeerEqualitySearchedProof::ByTheyAreTheSame(same) => project_they_are_the_same(same, runtime),
-                PeerEqualitySearchedProof::ByBuiltinRule(rule) => project_equality_builtin_rule(rule, runtime),
-                PeerEqualitySearchedProof::ByMatchingOneArgByOne(matching) => project_matching_one_arg(matching, runtime),
-            };
+            let searched = project_equal_searched(&p.bridge.searched_proof, runtime);
             fields.push(("kind", string("via_peers")));
             fields.push(("left_path", project_known_equality_path(&p.left_path, runtime)));
             fields.push(("bridge", object_for(runtime, vec![
@@ -415,7 +421,7 @@ fn project_equality_builtin_rewrite(
     }
 }
 
-fn project_known_atomic(
+pub(super) fn project_known_atomic(
     proof: &AtomicExceptEqualityFactSearchProofByKnownAtomicFact,
     runtime: &Runtime,
 ) -> JsonValue {

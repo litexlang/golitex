@@ -3,6 +3,8 @@ use crate::ast::fact::EqualFact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
+use super::result::{equal_fact_result_from_success, EqualFactSearchedProof};
+use super::well_defined_result::VerifyEqualFactWellDefinedResult;
 
 // Pointwise / constructor-wise equality: same outer shape ⇒ prove each
 // corresponding child equal. Port of legacy same_shape_and_corresponding_args_match
@@ -26,9 +28,9 @@ use crate::runtime::{Runtime, RuntimeResult};
 //   f(x)(a) = h(y)(b) with f = h, x = y, a = b
 // peels shared application layers then prefixes in one certificate.
 //
-// Child searches use can_use_forall_fact = false, can_use_rewrite = false
-// (this stage itself is not a rewrite). Nested peel is still available because
-// MatchingOneArgByOne is scheduled before the rewrite gate.
+// This is one finite constructor traversal. Nested nodes use this same rule;
+// leaf obligations keep the caller's fixed ceiling. They never reopen the
+// KnownSpecialProperty stage just because another constructor was peeled.
 pub struct EqualFactSearchedProofByMatchingOneArgByOne {
     pub corresponding_arg_equal_proofs: Vec<VerifyFactResult>,
 }
@@ -54,10 +56,19 @@ impl Runtime {
                 right: right_arg,
                 line_file: fact.line_file.clone(),
             };
-            let proof = self.verify_equal_fact(&child, child_verify_state.clone())?;
-            if proof.is_failed() {
-                return Ok(None);
-            }
+            let wd = match self.verify_equal_fact_well_definedness(&child, child_verify_state)? {
+                VerifyEqualFactWellDefinedResult::Success(wd) => wd,
+                VerifyEqualFactWellDefinedResult::Failed(_) => return Ok(None),
+            };
+            let searched = if let Some(proof) = self.search_equal_fact_proof(&child, child_verify_state)? {
+                proof
+            } else {
+                let Some(nested) = self.search_equal_fact_proof_by_matching_one_arg_by_one(
+                    &child, child_verify_state,
+                )? else { return Ok(None); };
+                EqualFactSearchedProof::ByMatchingOneArgByOne(nested)
+            };
+            let proof = equal_fact_result_from_success(&child, wd, searched);
             corresponding_arg_equal_proofs.push(proof);
         }
 

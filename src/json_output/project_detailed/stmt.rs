@@ -200,6 +200,13 @@ fn project_def_struct(result: &ExecDefStructStmtResult, runtime: &Runtime) -> Js
                         .into_iter().map(string).collect())),
                 ])
             ).collect())),
+            ("fields", JsonValue::Array(s.field_scope.fields.iter()
+                .zip(&s.statement.fields)
+                .map(|(proof, field)| object_for(runtime, vec![
+                    ("name", string(&field.binding.name)),
+                    ("well_defined", project_obj_wd_proof(&proof.well_defined, runtime)),
+                    ("local_definition", project_have_store_ids(&proof.defined.stored_fact_ids, runtime)),
+                ])).collect())),
             ("equivalent_facts", JsonValue::Array(s.field_scope.equivalent_facts.iter()
                 .zip(&s.statement.equivalent_facts)
                 .map(|(proof, fact)| object_for(runtime, vec![

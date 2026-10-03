@@ -23,3 +23,17 @@ sketch:
 sketch:
     forall x R:
         cos(-x) = cos(x)
+
+# P04: exact numeric/periodic/modulus repair; original source retained in the dated journal
+sketch:
+    cos(-pi) = -1
+
+# P91: exact numeric/periodic/modulus boundary
+sketch:
+    have k Z
+    cos(pi + 2 * k * pi) = -1
+
+# P92: exact numeric/periodic/modulus boundary
+sketch:
+    have k Z
+    cos(pi / 2 + k * pi)=0

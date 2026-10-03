@@ -1,0 +1,7 @@
+# Previously rejected under the shared stage ceiling:
+# not 4 $in {1, 2, 3}
+# Nonmembership checks every element disequality; the empty set has no children.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_strategy/list_set_nonmembership.lit
+# Executable present-element and ill-defined empty-set controls: finite_list_membership_strategy tests.
+not 4 $in {1, 2, 3}
+not 4 $in {}

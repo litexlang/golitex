@@ -26,3 +26,15 @@ sketch:
 sketch:
     forall x Z:
         ceil(x) = x
+
+# P121: closed exact elementary calculation
+sketch:
+    ceil(-7/3)=-2
+
+# P122: closed exact elementary calculation
+sketch:
+    ceil(7/3)=3
+
+# P123: closed exact elementary calculation
+sketch:
+    ceil(-6/3)=-2

@@ -29,3 +29,31 @@ sketch:
 # P07: sqrt(sqrt(16)) = 2
 sketch:
     sqrt(sqrt(16)) = 2
+
+# P121: closed exact elementary calculation
+sketch:
+    sqrt(1/9)=1/3
+
+# P122: closed exact elementary calculation
+sketch:
+    sqrt(4/9)=2/3
+
+# P123: closed exact elementary calculation
+sketch:
+    sqrt(8)=2*sqrt(2)
+
+# P124: closed exact elementary calculation
+sketch:
+    sqrt(12)+sqrt(27)=5*sqrt(3)
+
+# P125: closed exact elementary calculation
+sketch:
+    sqrt(1/2)=sqrt(2)/2
+
+# P126: closed exact elementary calculation
+sketch:
+    sqrt(2)*sqrt(8)=4
+
+# P127: closed exact elementary calculation
+sketch:
+    1/sqrt(2)=sqrt(2)/2

@@ -1,0 +1,267 @@
+{
+  "schema": "litex-function-signature-scopes/v1",
+  "date": "2026-10-03",
+  "source": "Maintainer explicitly requested deferred function-parameter registration and fixed input/output carriers.",
+  "problem": "Function binders were visible while parsing their own domains and return objects; WD allowed parameter-dependent returns.",
+  "invariant": "Own function parameters may appear only in domain conditions and bodies, not in any parameter domain or anywhere in the complete return object. Enclosing parameters remain usable.",
+  "implementation": {
+    "parser": "src/parse/object/primary.rs:parse_fn_set_signature",
+    "body_binding": "src/parse/param.rs:occupy_set_bound_parameters_as_parse",
+    "derived_unique_existence": "src/parse/statements/have_fn.rs:check_have_fn_by_exist_forall_shape",
+    "wd": "src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs",
+    "protected_fields_changed": false
+  },
+  "before_evidence": {
+    "kind": "controlled pre-change kernel regression",
+    "test": "execute::exec_stmt_transaction_tests::fn_set_obj_param_domain_must_not_cite_earlier_binder",
+    "result": "passed in frozen control; explicitly accepted let G = fn(S power_set(R)) fn(x S) R",
+    "initial_build": "The original shared tree first had 3 unrelated compilation errors; this task did not modify those files."
+  },
+  "attempts": [
+    {
+      "code": "let F = fn(S power_set(R)) fn(x S) R",
+      "expected_success": false,
+      "exit_code": 1,
+      "success": false,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `S`\", line: 1, path: Eval }))"
+    },
+    {
+      "code": "let F = fn(S power_set(R), x S) R",
+      "expected_success": false,
+      "exit_code": 1,
+      "success": false,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `S`\", line: 1, path: Eval }))"
+    },
+    {
+      "code": "let F = fn(x R) {x}",
+      "expected_success": false,
+      "exit_code": 1,
+      "success": false,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `x`\", line: 1, path: Eval }))"
+    },
+    {
+      "code": "fn(x R: x > 0) R {x + 1}(2) = 3",
+      "expected_success": true,
+      "exit_code": 0,
+      "success": true,
+      "session_error": null
+    },
+    {
+      "file": "examples/wd/fixed_function_signature_scopes.lit",
+      "exit_code": 0,
+      "success": true,
+      "statements": 12
+    },
+    {
+      "file": "examples/wd/obj/return_and_struct_domains.lit",
+      "exit_code": 0,
+      "success": true,
+      "statements": 16
+    }
+  ],
+  "accepted_source": {
+    "file": "examples/wd/fixed_function_signature_scopes.lit",
+    "code": "# Tracer: function parameter domains and return sets use the enclosing scope.\n#\n# Before (accepted by the former parser and WD):\n# let dependent = fn(S power_set(R)) fn(x S) R\n# Former behavior: the return object could capture the outer function's S.\n#\n# Now: a fixed nested return carrier remains valid.\nlet fixed = fn(S power_set(R)) fn(x R) R\nfixed = fixed\n\n# Disjoint signatures may reuse a spelling, with different binding identities.\nlet independent = fn(x R) fn(x R) R\nindependent = independent\n\n# Domain conditions and bodies still use the signature's own parameters.\nhave fn guarded(x R: x > 0) R = x + 1\nguarded(2) = 3\nfn(x R: x > 0) R {x + 1}(2) = 3\nlet compared = fn(x R, y Z: y > x) R\ncompared = compared\n\n# An enclosing quantifier's carrier is fixed for the inner function.\nforall A nonempty_set:\n    fn(x A) A {x} = fn(y A) A {y}\n\n# Preserve a precise output property separately from the fixed return set.\nhave fn singleton_identity(x R) R = x\nforall a R:\n    singleton_identity(a) $in {a}\n\n# Boundary: fn(S power_set(R), x S) R and dependent return sets reject at parse.\n# WD independently rejects such objects when constructed without the parser.\n# Evidence: target/release/litex -strict -f examples/wd/fixed_function_signature_scopes.lit\n# Require exit 0, JSON success:true, and session_error:null (current CLI has no -runner).\n# Tests: cargo test --release function_signature_scope_tests -- --nocapture\n",
+    "command": "target/release/litex -strict -f examples/wd/fixed_function_signature_scopes.lit",
+    "exit_code": 0,
+    "success": true,
+    "session_error": null
+  },
+  "regressions": {
+    "command": "cargo test --release --lib function_signature_scope -- --nocapture",
+    "passed": 6,
+    "failed": 0,
+    "alpha_gate": {
+      "name": "final-alpha-test",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--lib",
+        "alpha_preserves_free_ids_carriers_conditions_and_binder_dependencies",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 661 filtered out; finished in 0.00s"
+      ]
+    }
+  },
+  "controlled_kernel_comparison": {
+    "protocol": "Freeze the shared source tree in the allocated task draft area. Run release lib tests with only the function delta removed, then apply only the final function delta and rerun the same manifest and target directory. Migrate the alpha test to construct its forbidden AST explicitly while testing source rejection separately.",
+    "before": {
+      "passed": 593,
+      "failed": 59,
+      "total": 652
+    },
+    "after": {
+      "passed": 599,
+      "failed": 59,
+      "total": 658
+    },
+    "introduced_failures": [],
+    "identical_failure_names": [
+      "execute::exact_numeric_periodic_modulus::finite_rational_extrema_selection_certificate",
+      "execute::example_small_repair_tests::example_small_cases_and_fact_wd_report_nested_reason_in_both_profiles",
+      "execute::exec_stmt_transaction_tests::by_fn_extension_proves_named_fn_equality",
+      "execute::exec_stmt_transaction_tests::not_in_and_set_algebra_builtin_rules",
+      "execute::exec_stmt_transaction_tests::rational_sum_of_two_fractions_with_product_denominator",
+      "execute::exec_stmt_transaction_tests::second_wd_of_same_obj_hits_known_memory_after_merge",
+      "execute::exec_stmt_transaction_tests::struct_obj_membership_checks_equivalent_laws",
+      "execute::exec_stmt_transaction_tests::struct_obj_membership_literal_tuple_succeeds",
+      "execute::exec_stmt_transaction_tests::template_have_fn_by_induc_object_definition_unfold",
+      "execute::execute_by_stmt::builtin_thm::tests::builtin_theorem_catalogue_has_twenty_five_native_tracers",
+      "execute::execute_by_stmt::showcase_regressions::induction_recovers_order_and_nested_arithmetic_binders",
+      "execute::execute_by_stmt::showcase_regressions::original_showcase_amgm_and_group_left_cancel",
+      "execute::execute_by_stmt::showcase_regressions::positive_base_power_laws_allow_zero_natural_exponent",
+      "execute::execute_eval_stmt::exec_eval_stmt_tests::aggregate_algorithm_terms_keep_checked_equations_and_eval_stores_empty",
+      "execute::execute_eval_stmt::exec_eval_stmt_tests::aggregate_callable_predicates_and_scalar_carriers",
+      "execute::execute_eval_stmt::exec_eval_stmt_tests::aggregate_exact_nested_named_and_set_evaluation",
+      "execute::execute_eval_stmt::exec_eval_stmt_tests::aggregate_symbolic_reindex_contract",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_search_tests::fixed_builtin_premises_retain_definition_evidence_without_storing_the_premise",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::positive_closed_decrement_tests::fibonacci_uses_the_original_two_step_recursive_domain",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::both_classes_supply_alpha_peers_with_complete_paths_and_no_store",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::identity_and_alpha_work_without_builtin_entry",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::known_tuple::cart_alias_supplies_shape_without_explicit_membership_bridge",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::known_tuple::function_projection_and_wd_work_fresh_cached_and_in_strategy",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::known_tuple::named_function_alias_is_not_a_special_cased_geometry_name",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::membership_uses_unified_equality_and_json_keeps_the_bridge",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::strategy_entry_keeps_zero_depth_identity_calculation_and_named_alpha",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::showcase_local_rules_tests::cosine_integer_offset_positive_and_evidence",
+      "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::showcase_local_rules_tests::full_add2_chain_and_projection_boundaries",
+      "execute::finite_set_cardinality_rule_tests::finite_set_cardinality_rule_detailed_retains_winning_route_and_premises",
+      "execute::finite_set_cardinality_rule_tests::finite_set_cardinality_rule_finiteness_order_alias_and_candidate_fallback",
+      "execute::finite_set_cardinality_rule_tests::finite_set_cardinality_rule_normal_explains_actual_certificates_in_both_languages",
+      "execute::finite_set_cardinality_rule_tests::finite_set_cardinality_rule_symbolic_composition",
+      "execute::induction_repair_tests::induction_examples_cover_the_maintained_acceptance_sources",
+      "execute::induction_repair_tests::induction_goal_wd_uses_the_induction_domain_without_ih",
+      "execute::induction_repair_tests::induction_nested_cases_use_parent_guards_and_keep_chain_components",
+      "execute::induction_repair_tests::induction_recovers_binders_inside_collections_functions_and_sets",
+      "execute::legacy_next_capabilities::builtin_permission_and_depth_are_inherited",
+      "execute::legacy_next_capabilities::finite_product_fresh_insertion",
+      "execute::legacy_next_capabilities::normal_bilingual_contract",
+      "execute::legacy_next_capabilities::ordered_reduce_partition",
+      "execute::legacy_small_capability_repair_tests::legacy_small_elementary_arithmetic",
+      "execute::legacy_small_capability_repair_tests::legacy_small_fold_carrier_composition",
+      "execute::legacy_small_capability_repair_tests::legacy_small_ordered_reduce",
+      "execute::legacy_small_capability_repair_tests::legacy_small_unordered_fold_laws",
+      "execute::local_rust_repair_tests::ordinary_chain_cases_and_algo_keep_disjointness_and_publication_checks",
+      "execute::obtain_binding_tests::registered_and_imported_exports_preserve_obtained_witness_identity",
+      "execute::order_stage_a_remainder_tests::order_stage_a_finite_set_max_min_members",
+      "execute::order_stage_a_remainder_tests::order_stage_a_finite_set_size_union_and_surjection",
+      "execute::showcase_local_repair_tests::declared_field_types_close_nested_calls_without_releasing_laws",
+      "execute::showcase_local_repair_tests::original_showcase_sections_use_the_repaired_paths",
+      "execute::showcase_local_repair_tests::positive_natural_predecessor_keeps_both_cited_premises_and_allows_recursion",
+      "execute::special_property_tests::ordinary_struct_membership_does_not_select_a_default_field_view",
+      "execute::statement_boundary_tests::finite_guards_skip_only_proved_false_premises_and_reject_false_conclusions",
+      "execute::statement_boundary_tests::finite_numeric_carriers_verify_symbolic_arithmetic_and_each_assignment",
+      "execute::statement_boundary_tests::finite_proof_bodies_keep_binders_premises_and_nested_proof_evidence",
+      "execute::statement_boundary_tests::nested_by_steps_preserve_helper_scope_and_failure_rollback",
+      "execute::statement_boundary_tests::run_examples_statement_boundary_tracers",
+      "execute::statement_boundary_tests::statement_boundary_json_retains_nested_proofs_and_wd_failure",
+      "execute::wd_obligation_tests::finite_set_fold_preserves_valid_domain_literals_and_named_iterands"
+    ]
+  },
+  "broader_gate_limits": {
+    "live_kernel": "The later shared working tree had 662 tests and 64 failures; other source/test changes occurred during this task. The frozen comparison, not this moving snapshot, isolates the task delta.",
+    "registered_examples": {
+      "name": "registered-examples-tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "run_examples",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 101,
+      "summaries": [
+        "test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 656 filtered out; finished in 2.51s",
+        "error: test failed, to rerun pass `--lib`"
+      ]
+    },
+    "statement_integration": {
+      "name": "final-statement-tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--test",
+        "test_statements"
+      ],
+      "exit_code": 101,
+      "summaries": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        "error: test failed, to rerun pass `--test test_statements`"
+      ]
+    },
+    "standalone_examples": {
+      "folders": [
+        "wd",
+        "proof_nodes",
+        "infer",
+        "knowledge_base",
+        "stmt_nodes",
+        "_internal/regression"
+      ],
+      "total": 763,
+      "passed": 660,
+      "failed": 103,
+      "note": "This broad scan is not green; do not claim all failures are caused by or fixed by the function rule."
+    },
+    "markdown": {
+      "total": 423,
+      "passed": 259,
+      "failed": 164,
+      "changed_function_fences": "Manual fences at lines 924 and 936 and Learner Cheatsheet function fence passed; the broad scan includes retained historical failure reports."
+    },
+    "cli_contract": "Current CLI rejects -compact/-isolated/-runner/-before. Actual gates use existing JSON kind:run, success:true, session_error:null and process exit 0.",
+    "lean": "Example 24 is retained historical compiler input; its first two declarations are rejected by the current parser. Generated Lean files were not changed or regenerated."
+  },
+  "compatibility": {
+    "ordinary_quantifier_and_template_dependencies": "unchanged",
+    "function_bodies_and_domain_conditions": "still parameter-dependent",
+    "disjoint_same_spelling_binders": "independent IDs; simultaneously visible enclosing names remain non-shadowable",
+    "specific_output_properties": "fixed return carrier plus separately proved membership; singleton_identity(a) in {a} verifies without trust"
+  },
+  "task_file_sha256": {
+    "src/parse/object/primary.rs": "50552e5d741e4d99a888dde8362bf2d06e8878ccb702a7cbb17763b5131c1476",
+    "src/parse/param.rs": "9b82339b7d48ab8cd3d02699408ba42322fba036d64895ec9800a62eca81e0e9",
+    "src/parse/statements/have_fn.rs": "941efbe01af5d600122539a46edbb0f71bb258ad42f86de0a54cbc3f47e5d354",
+    "src/parse/statements/def_algo.rs": "2229ec6a414872f9638fac3948c2594ec997a7e1fac47f8d1ca68f8a4d6527d8",
+    "src/parse/mod.rs": "288c339f87adba11d10a52fa52dd7b2d690da16753ceda891358c395af80efde",
+    "src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs": "a31a55d9b8fe002e2266d913d881516419996185db2d3d38cf3f953c7bacaae3",
+    "src/execute/execute_fact_stmt/well_defined_results/verify_obj/helper.rs": "e847871b52fead8b8ca3b9cd4c057e8a1e701d384d6436ec739bf4ad3f3a87ae",
+    "src/execute/exec_stmt_transaction_tests.rs": "a531512b2fd8dcea963657e25cdb00ed5f72af51f134ed7391871403b07b4032",
+    "src/ast/param.rs": "54db729dad4a3351e37b0854eebcce73b596c6bb0b1deed0b76a03af650c41e2",
+    "tests/unit/execute/wd_obligations/tests.rs": "9cdd1614cd77bde014fbddfd3dfd9816c60a1661dd62d17597e208e11fecf14b",
+    "tests/unit/execute/equality_search/tests.rs": "5c66d0b76d2111a640a88fc8e5668da98b4f14fd4133076f2d43192310b2d8bd",
+    "tests/unit/parse/function_signature_scopes.rs": "ede9760c9d1fbadb18c5267d0d79153cfd345ff558b7b5050b209d0a1d19f418",
+    "examples/wd/fixed_function_signature_scopes.lit": "1b613095d0c9e587cb455ff3c0a25b723ce35f1439c11b1b6c820ca7acfca775",
+    "examples/wd/obj/return_and_struct_domains.lit": "1c87eeae3d1ce07390a40c3c97515553f8bb21890ae24ec6e0b62fa57253df74",
+    "docs/Manual.md": "0e164f5b3d9546da05dbbb6da22189a78358587be9a6c77392d5ecd36f2eb8b9",
+    "docs/FAQ.md": "6921ccdb7052aa9e52442503901327fa837f6351013c90e34605474f6e3b03fa",
+    "docs/Litex_Learner_Cheatsheet.md": "0cf17c240094dd3dd05e4f3fdb0c08f4de9f4440c4f77e5bd83d928d20ec26c7",
+    "src/parse/README.md": "9f95e7b778d698dc6912151e7501262fcbb34bd31482b2d1daf37863f8ffbd3c",
+    "examples/wd/README.md": "44e52bcd6e3758e5c8c9fcc0b8456e05b7c0203570c3e4d92670517c923cd5c0",
+    "lean/README.md": "bc84f1467bd723f2b02ed8f6fd2ad205bde6ac57480415b37b4c4b4e65baf6ec",
+    "lean/examples/README.md": "719fc40582d89ea8adc366e58352802f73b8835c96565add550c536ca66b84ea",
+    "lean/examples/24_DependentAnonymousFunction.lit": "93db20b0974baf6803ca3bf4f3d9a866031408804bfd2eaf2c2b91dc79c46552"
+  },
+  "gate_log_sha256": {
+    "final-focused-tests.log": "a3aa7a19517b86f54fda90bbe883418d9b92a6f808e763779381460c7ea8c1fd",
+    "final-alpha-test.log": "00ce55aafea5ba016c073f8f4f3ec6572d86c42d5e44d8d31edb8d8a97320d6f",
+    "comparison-tests.log": "20c616096950baf85e95dc243197f470ba4103bf4c2283a470aac7a2b24f4282",
+    "frozen-after-tests.log": "c18d633dfc1585881174c08a8b2d8816b6cec1b08258840cf44cb05a3f18d05e",
+    "docs-gate.log": "a783aaac01df2f1eb9e080adbff0f14d763eeb9c060e1dd35cbc0fecece866e3",
+    "examples-scan.json": "098d754d7b090e0ee0336649ea5b87650d2ef2890ffafe75003f09b5a7236e92",
+    "final-build.log": "7c5d0f8328d281ef349988f2d9d81843f20d1f3404db2bd3c6c0e92f56217268"
+  },
+  "hygiene": {
+    "draft_area": "tmp/2026-10-03/fixed-function-signature-scopes",
+    "durable_journal": "examples/wd/proof_journals/fixed_function_signature_scopes_2026-10-03.json",
+    "disposable_comparison_project_and_target": "removed after recording identical baseline/after failure lists",
+    "task_created_files_outside_allowed_locations": []
+  }
+}

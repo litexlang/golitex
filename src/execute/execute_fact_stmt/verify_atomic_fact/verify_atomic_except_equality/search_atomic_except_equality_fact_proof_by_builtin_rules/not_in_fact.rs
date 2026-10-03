@@ -4,7 +4,7 @@ use crate::ast::fact::{
 use crate::ast::obj::{
     IntervalObj, Obj, OneSideInfinityIntervalObj, SetFormer, SetOperator, StandardSet,
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::normalized_decimal_inhabits_standard_set;
+use crate::rational_expression::closed_scalar_membership::normalized_decimal_inhabits_standard_set;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::evaluate_obj_to_normalized_decimal_number;

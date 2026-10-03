@@ -64,7 +64,7 @@ impl Runtime {
                     // Assume each body fact before later ones (same as forall dom
                     // and prop body): e.g. `a != 0 or b != 0` before `l = line(a,b,c)`.
                     let as_fact = quantifier_free_fact_to_fact(qf.clone());
-                    let _ = self.store_fact_and_infer(&as_fact)?;
+                    let _ = self.store_fact_and_infer(&as_fact, verify_state)?;
                     succeeded_body.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(failed_body) => {

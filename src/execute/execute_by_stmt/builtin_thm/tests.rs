@@ -176,7 +176,7 @@ fn complex_calculation_retains_typed_route_and_rejects_invalid_identities() {
         let result = execute(&mut rt, code);
         assert!(!result.is_failed(), "{code}");
         let json = project_stmt_detailed(&result, &rt).stringify();
-        assert!(json.contains("Calculation") && json.contains("complex_imaginary_unit"), "{json}");
+        assert!(json.contains("by_closed_calculation") && json.contains("left_imaginary") && json.contains("right_imaginary"), "{json}");
     }
     for code in ["i*i=1", "i^3=i", "(1+i)*(1-i)=0", "i/0=i/0", "1/0=1/0", "0/0=1"] {
         let mut rt = runtime();

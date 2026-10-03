@@ -33,6 +33,25 @@ cover flattened definition publication, existential alpha matching and `obtain`.
 Rust `sequence_struct_contract` tests retain bad indices, guards, carriers,
 false conclusions, source evidence and scope boundaries.
 
+Displayed finite-set strategies have separate tracers for
+[membership](atomic/by_builtin_strategy/list_set_membership.lit) and
+[nonmembership](atomic/by_builtin_strategy/list_set_nonmembership.lit).
+Their strict gates require exit 0, JSON `success: true` and no `session_error`.
+`finite_list_membership_strategy` tests retain false and ill-defined controls,
+the inherited search ceiling, stored citations and all requirement certificates.
+
+The [field-expression strategy](atomic/by_builtin_strategy/field_arithmetic_carrier_closure.lit)
+retains its constructor tree and terminal proof requirements over Q/R.
+Scalar soundness has maintained tracers for
+[real operand closure](atomic/by_builtin_rule/real_arithmetic_operand_carriers.lit),
+[real even powers](atomic/by_builtin_rule/even_power_real_carrier.lit),
+[exact scalar carriers](atomic/by_builtin_rule/closed_exact_scalar_membership.lit),
+[complex inequality](atomic/by_builtin_rule/closed_complex_not_equal.lit) and
+[real-valued complex order](atomic/by_builtin_rule/closed_complex_real_order.lit).
+Their strict CLI gates require exit 0, success true and no session_error.
+`field_arithmetic_carrier_strategy` tests check the real-base evidence,
+coordinate evidence, domain/false controls and inherited child ceilings.
+
 ## Fundamental equality examples
 
 Exact decimal normalization, guarded imaginary division and finite aggregates
@@ -423,3 +442,24 @@ domains, callback restrictions, boundary/order/seed preservation, bilingual
 Normal output, Detailed evidence and inherited builtin permission/depth.
 The exact three-binary comparison is in
 `proof_journals/legacy-next-capability-repairs.json`.
+
+The remaining five families have dedicated tracers for
+[sine quarter-turn](equal/by_builtin_rule/sin_half_pi_shift.lit),
+[cosine quarter-turn](equal/by_builtin_rule/cos_half_pi_shift.lit),
+[first left-fold step](equal/by_builtin_rule/reduce_first_step.lit),
+[integer fold translation](equal/by_builtin_rule/reduce_translation.lit),
+[stored pointwise fold congruence](equal/by_builtin_rule/reduce_pointwise.lit), and
+[member removal from a finite product](equal/by_builtin_rule/finite_product_member_removal.lit).
+Pointwise congruence cites an exact stored whole forall, with its binder
+renaming and optional interval domain. Translation preserves index order;
+first-step recurrence preserves operation argument order; member removal
+requires actual membership and a checked restriction of the callback.
+Focused domain, permission and output checks live in
+`tests/unit/execute/legacy_final_capabilities/tests.rs`, with before/after
+receipts in `proof_journals/legacy-final-capability-repairs.json`.
+
+The level-0 Direct route is exercised by
+[`equal/direct_closed_calculation.lit`](equal/direct_closed_calculation.lit).
+It covers finite enumeration without preliminary numeric memberships and exact
+fraction calculations; Rust permission tests also cover failure, WD, evidence,
+and the prohibition on recursive search or symbolic substitution.

@@ -104,12 +104,7 @@ impl Runtime {
         }
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
-                if verify_state.store_well_defined_fact {
-                    let wd_id = self.global_ids.allocate_well_definedness_id();
-                    self.top_exec_env_mut()
-                        .well_defined_objects
-                        .record(root.clone(), wd_id);
-                }
+
                 Ok(VerifyObjWellDefinedResult::Success(
                     ObjWellDefinedProof::ByDef {
                         obj: root,
@@ -221,12 +216,7 @@ impl Runtime {
         let stages = ObjWellDefinedByDefCommonStages::from_children(vec![receiver_wd]);
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
-                if verify_state.store_well_defined_fact {
-                    let wd_id = self.global_ids.allocate_well_definedness_id();
-                    self.top_exec_env_mut()
-                        .well_defined_objects
-                        .record(root.clone(), wd_id);
-                }
+
                 Ok(VerifyObjWellDefinedResult::Success(
                     ObjWellDefinedProof::ByDef {
                         obj: root,
@@ -412,16 +402,7 @@ impl Runtime {
         let root = Obj::InstantiatedTemplateObj(value.clone());
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
-                if verify_state.store_well_defined_fact {
-                    let wd_id = self.global_ids.allocate_well_definedness_id();
-                    self.top_exec_env_mut()
-                        .well_defined_objects
-                        .record(root.clone(), wd_id);
-                    // Have-fn template bodies: register the surface as callable so
-                    // `\T<a>(x)` reuses ordinary InFunctionSet application WD.
-                    // Have-obj bodies: store `\T<a> = subst(rhs)` for definitional use.
-                    self.maybe_register_instantiated_template_definitional_facts(value)?;
-                }
+
                 Ok(VerifyObjWellDefinedResult::Success(
                     ObjWellDefinedProof::ByDef {
                         obj: root,
@@ -475,7 +456,7 @@ impl Runtime {
     fn maybe_register_instantiated_template_definitional_facts(
         &mut self,
         value: &InstantiatedTemplateObj,
-    ) -> RuntimeResult<()> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<()> {
         let Some(def) = self.def_template_visible(&value.template_name).cloned() else {
             return Ok(());
         };
@@ -508,28 +489,28 @@ impl Runtime {
                     set: Obj::FunctionSpace(FunctionSpace::FnSet(anon.body.clone())),
                     line_file: None,
                 }));
-                self.store_fact_and_infer(&membership)?;
+                self.store_fact_and_infer(&membership, verify_state)?;
                 let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                     fact_id: self.global_ids.allocate_fact_id(),
                     left: surface,
                     right: Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)),
                     line_file: None,
                 }));
-                self.store_fact_and_infer(&defining_equal)?;
+                self.store_fact_and_infer(&defining_equal, verify_state)?;
             }
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(have_fn) => {
                 self.store_instantiated_template_fn_set_membership(
                     value,
                     &have_fn.fn_set_clause,
                     &subst,
-                )?;
+                 verify_state)?;
             }
             TemplateDefEnum::HaveFnByInducStmt(have_fn) => {
                 self.store_instantiated_template_fn_set_membership(
                     value,
                     &have_fn.fn_set_clause,
                     &subst,
-                )?;
+                 verify_state)?;
             }
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
                 // Same three facts as plain `have fn by exist!` / `release obj def`,
@@ -541,7 +522,7 @@ impl Runtime {
                             let Ok(inst) = self.inst_fact(&fact, &subst) else {
                                 return Ok(());
                             };
-                            self.store_fact_and_infer(&inst)?;
+                            self.store_fact_and_infer(&inst, verify_state)?;
                         }
                     }
                     Err(_) => {}
@@ -560,7 +541,7 @@ impl Runtime {
                     right: expanded_rhs,
                     line_file: None,
                 }));
-                self.store_fact_and_infer(&defining_equal)?;
+                self.store_fact_and_infer(&defining_equal, verify_state)?;
             }
             TemplateDefEnum::HaveByReplacementAxiomStmt(stmt) => {
                 // Same three facts as plain `have … by replacement_axiom` / release:
@@ -580,7 +561,7 @@ impl Runtime {
                 let intro = Fact::ForallFact(self.replacement_intro_forall(&stmt_inst, &img));
                 let elim = Fact::ForallFact(self.replacement_elim_forall(&stmt_inst, &img));
                 for fact in [type_fact, intro, elim] {
-                    self.store_fact_and_infer(&fact)?;
+                    self.store_fact_and_infer(&fact, verify_state)?;
                 }
             }
             _ => {}
@@ -593,7 +574,7 @@ impl Runtime {
         value: &InstantiatedTemplateObj,
         clause: &crate::ast::stmt::FnSetClause,
         subst: &HashMap<IdentifierId, Obj>,
-    ) -> RuntimeResult<()> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<()> {
         let fn_set = crate::ast::obj::FnSet {
             set_bound_parameters: clause.set_bound_parameters.clone(),
             dom_facts: clause.dom_facts.clone(),
@@ -613,7 +594,7 @@ impl Runtime {
             set: inst_set,
             line_file: None,
         }));
-        self.store_fact_and_infer(&membership)?;
+        self.store_fact_and_infer(&membership, verify_state)?;
         Ok(())
     }
 }

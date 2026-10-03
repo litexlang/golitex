@@ -30,7 +30,7 @@ pub struct AtomicExceptEqualityFactSearchProofByKnownSymmetry {
 }
 
 impl Runtime {
-    // Search registered Reflexivity then Symmetry (gated by can_use_rewrite).
+    // Search registered Reflexivity then Symmetry (admitted once by the shared rewrite gate).
     pub fn search_atomic_except_equality_fact_proof_by_known_rewrite(
         &mut self,
         fact: &AtomicFact,
@@ -87,14 +87,7 @@ impl Runtime {
             else {
                 continue;
             };
-            let residual_state = VerifyState {
-                can_use_builtin_rule: verify_state.can_use_builtin_rule,
-                remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
-                can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
-                can_use_rewrite: false,
-                store_well_defined_fact: false,
-                equality_class_search: verify_state.equality_class_search,
-            };
+            let residual_state = verify_state.without_rewrite();
             let proof_of_alternate_fact =
                 self.verify_atomic_fact(&alternate_atomic, residual_state)?;
             if proof_of_alternate_fact.is_failed() {

@@ -27,3 +27,15 @@ sketch:
 sketch:
     i * i = -1
     re(i * i) = re(-1) = -1
+
+# P121: closed exact elementary calculation
+sketch:
+    re((1+2*i)*(3-i))=5
+
+# P122: closed exact elementary calculation
+sketch:
+    re((1+2*i)/(3-i))=1/10
+
+# P123: closed exact elementary calculation
+sketch:
+    re((1+i)^(-1))=1/2

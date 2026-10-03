@@ -31,4 +31,8 @@ mod statements;
 #[path = "../../tests/unit/parse/input_integrity.rs"]
 mod input_integrity_tests;
 
+#[cfg(test)]
+#[path = "../../tests/unit/parse/function_signature_scopes.rs"]
+mod function_signature_scope_tests;
+
 pub use statements::prop_registration_shape;

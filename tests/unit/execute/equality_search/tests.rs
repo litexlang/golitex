@@ -2,7 +2,7 @@ use super::by_they_are_the_same::{SameFreeParamShapeProof, TheyAreTheSameProof};
 use super::result::*;
 use crate::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::ast::stmt::Stmt;
-use crate::execute::execute_fact_stmt::{EqualityClassSearchMode, VerifyFactResult, VerifyState};
+use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::execute::ExecStmtResult;
 use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
@@ -24,15 +24,12 @@ fn identity_and_alpha_work_without_builtin_entry() {
         ("{x R: x > 0} = {y R: y > 0}", "set"),
     ] {
         let mut runtime = runtime();
-        let result = verify(
-            &mut runtime,
-            code,
-            VerifyState::top_level().known_only_no_wd(),
-        );
-        let VerifyEqualityResult::Success(success) = result else {
-            panic!("{code}")
-        };
-        let EqualFactSearchedProof::ByTheyAreTheSame(proof) = success.searched_proof else {
+        let fact = equal(&mut runtime, code);
+        assert!(!runtime.verify_equal_fact_well_definedness(&fact, VerifyState::top_level()).unwrap().is_failed());
+        let proof = runtime.search_equal_fact_proof(
+            &fact, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct),
+        ).unwrap().expect("identity truth proof");
+        let EqualFactSearchedProof::ByTheyAreTheSame(proof) = proof else {
             panic!("identity must own its route: {code}");
         };
         assert!(matches!(
@@ -64,38 +61,43 @@ fn alpha_preserves_free_ids_carriers_conditions_and_binder_dependencies() {
         "fn(x R) R = fn(y R) N",
         "fn(x R) R {x + a} = fn(y R) R {y + b}",
         "{x R: x > 0} = {y R: y > 1}",
-        "fn(u R, v {u}) R = fn(w R, z {0}) R",
     ] {
         let result = verify(
             &mut runtime,
             code,
-            VerifyState::top_level().known_only_no_wd(),
+            VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty),
         );
         assert!(result.is_failed(), "must reject {code}");
     }
-    // The alpha leaf respects dependent binder correspondence. This existing
-    // dependent-singleton shape still fails WD; identity must not bypass it.
-    let dependent = equal(&mut runtime, "fn(u R, v {u}) R = fn(w R, z {w}) R");
-    assert!(
-        super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same(&dependent)
-            .is_some()
-    );
-    assert!(matches!(
-        verify(
-            &mut runtime,
-            "fn(u R, v {u}) R = fn(w R, z {w}) R",
-            VerifyState::top_level()
-        ),
-        VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(_))
-    ));
-    let wrong = equal(&mut runtime, "fn(u R, v {u}) R = fn(w R, z {0}) R");
-    assert!(
-        super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same(&wrong).is_none()
-    );
+    // Source dependencies now fail in parse. Construct the forbidden AST
+    // explicitly to keep the alpha leaf and WD boundary independently tested.
+    for code in [
+        "fn(u R, v {u}) R = fn(w R, z {w}) R",
+        "fn(u R, v {u}) R = fn(w R, z {0}) R",
+    ] {
+        let blocks = Tokenizer::new().tokenize(code, runtime.current_file.clone()).unwrap();
+        assert!(runtime.parse(&blocks).is_err(), "{code}");
+    }
+    let mut dependent = equal(&mut runtime, "fn(u R, v R) R = fn(w R, z R) R");
+    for endpoint in [&mut dependent.left, &mut dependent.right] {
+        let crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(signature)) = endpoint else { panic!("fn set") };
+        let binder = &signature.set_bound_parameters.groups[0].params[0];
+        signature.set_bound_parameters.groups[1].param_type = Box::new(crate::ast::obj::Obj::SetFormer(
+            crate::ast::obj::SetFormer::ListSet(crate::ast::obj::ListSet {
+                list: vec![Box::new(crate::ast::obj::Obj::Identifier(crate::ast::obj::IdentifierObj::plain(binder.id, binder.name.clone())))],
+            }),
+        ));
+    }
+    assert!(super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same(&dependent).is_some());
+    let VerifyFactResult::Equality(result) = runtime.verify_equal_fact(&dependent, VerifyState::top_level()).unwrap() else { panic!("equality") };
+    assert!(matches!(*result, VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(_))));
+    let mut wrong = equal(&mut runtime, "fn(u R, v R) R = fn(w R, z {0}) R");
+    wrong.left = dependent.left;
+    assert!(super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same(&wrong).is_none());
     assert!(verify(
         &mut runtime,
         "fn(u R, v R) R {u} = fn(w R, z R) R {z}",
-        VerifyState::top_level().known_only_no_wd()
+        VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty)
     )
     .is_failed());
 }
@@ -120,7 +122,7 @@ fn known_path_keeps_oriented_fact_ids_and_needs_no_peer_search() {
     let proof = runtime
         .search_equal_fact_proof_by_equivalence_class(
             &goal,
-            VerifyState::top_level().for_equality_peer_comparison(),
+            VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
         )
         .unwrap()
         .unwrap();
@@ -132,7 +134,7 @@ fn known_path_keeps_oriented_fact_ids_and_needs_no_peer_search() {
 }
 
 #[test]
-fn both_classes_supply_alpha_peers_with_complete_paths_and_no_store() {
+fn stored_alpha_paths_are_available_at_level_zero_without_peer_search() {
     let mut runtime = runtime();
     for code in [
         "let a = fn(x R) R",
@@ -144,15 +146,9 @@ fn both_classes_supply_alpha_peers_with_complete_paths_and_no_store() {
     }
     let goal = equal(&mut runtime, "b = d");
     let before = store_sizes(&runtime);
-    let proof = runtime
-        .search_equal_fact_proof_by_equivalence_class(
-            &goal,
-            VerifyState::top_level().known_only_no_wd(),
-        )
-        .unwrap()
-        .unwrap();
-    let EqualFactSearchedProofByEquivalenceClass::ViaPeers(proof) = proof else {
-        panic!("peer bridge")
+    let proof = runtime.lookup_known_obj_equality(&goal.left, &goal.right).unwrap();
+    let EqualFactSearchedProof::ByEquivalenceClass(EqualFactSearchedProofByEquivalenceClass::AlphaPaths(proof)) = proof else {
+        panic!("finite alpha path")
     };
     assert_eq!(proof.left_path.path.len(), 2);
     assert_eq!(proof.right_path.path.len(), 2);
@@ -160,18 +156,15 @@ fn both_classes_supply_alpha_peers_with_complete_paths_and_no_store() {
         &runtime,
         &proof.left_path,
         &goal.left,
-        &proof.bridge.fact.left,
+        &proof.left,
     );
     check_path(
         &runtime,
         &proof.right_path,
-        &proof.bridge.fact.right,
+        &proof.right,
         &goal.right,
     );
-    assert!(matches!(
-        proof.bridge.searched_proof,
-        PeerEqualitySearchedProof::ByTheyAreTheSame(_)
-    ));
+    assert!(matches!(proof.identity, TheyAreTheSameProof::SameFreeParamShape(_)));
     assert_eq!(
         store_sizes(&runtime),
         before,
@@ -184,16 +177,17 @@ fn both_classes_supply_alpha_peers_with_complete_paths_and_no_store() {
 
 #[test]
 fn peer_builtin_inherits_permission_and_handles_both_orientations() {
-    for code in ["a = 2", "2 = a"] {
+    for code in ["a = x^2-1", "x^2-1 = a"] {
         let mut runtime = runtime();
-        exec_ok(&mut runtime, "let a = 1 + 1");
+        exec_ok(&mut runtime, "have x R");
+        exec_ok(&mut runtime, "let a = (x+1)*(x-1)");
         let goal = equal(&mut runtime, code);
         let before = store_sizes(&runtime);
         assert!(
             runtime
                 .search_equal_fact_proof_by_equivalence_class(
                     &goal,
-                    VerifyState::top_level().known_only_no_wd(),
+                    VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty),
                 )
                 .unwrap()
                 .is_none(),
@@ -207,8 +201,8 @@ fn peer_builtin_inherits_permission_and_handles_both_orientations() {
             panic!("peer bridge")
         };
         assert!(matches!(
-            proof.bridge.searched_proof,
-            PeerEqualitySearchedProof::ByBuiltinRule(_)
+            *proof.bridge.searched_proof,
+            EqualFactSearchedProof::ByBuiltinRule(_)
         ));
         check_path(
             &runtime,
@@ -256,35 +250,24 @@ fn matching_inside_a_bridge_cannot_expand_another_peer() {
         panic!("peer")
     };
     assert!(matches!(
-        proof.bridge.searched_proof,
-        PeerEqualitySearchedProof::ByMatchingOneArgByOne(_)
+        *proof.bridge.searched_proof,
+        EqualFactSearchedProof::ByMatchingOneArgByOne(_)
     ));
 }
 
 #[test]
-fn peer_mode_survives_all_child_state_transitions() {
-    let state = VerifyState::top_level().for_equality_peer_comparison();
-    for child in [
-        state.clone(),
-        state.after_builtin_rule(),
-        state.known_only_no_wd(),
-        state.after_deep_search(),
-        state.without_well_defined_storage(),
-    ] {
-        assert_eq!(
-            child.equality_class_search,
-            EqualityClassSearchMode::StoredPathsOnly
-        );
-        assert!(!child.store_well_defined_fact);
-        assert!(!child.can_use_rewrite);
-        assert!(!child.can_use_def_and_known_forall_and_known_strategy);
-        assert!(!child.can_use_builtin_rule || state.can_use_builtin_rule);
-        assert!(child.remaining_deep_search_depth <= state.remaining_deep_search_depth);
+fn peer_child_permissions_cannot_reenter_the_peer_stage() {
+    use crate::execute::execute_fact_stmt::VerifyStateLevel::*;
+    let state = VerifyState::top_level().for_premises(Strategy).unwrap();
+    for child in [state, state.for_premises(BuiltinRule).unwrap(), state.capped_at(Direct)] {
+        assert!(!child.allows(Strategy));
+        assert!(child.after_rewrite().is_none());
+        assert!(child.level() <= state.level());
     }
 }
 
 #[test]
-fn membership_uses_unified_equality_and_json_keeps_the_bridge() {
+fn membership_cites_finite_alpha_endpoints_in_both_wd_and_truth() {
     let mut runtime = runtime();
     exec_ok(&mut runtime, "let g = fn(x R) R");
     exec_ok(&mut runtime, "have fn f(t R) R = t");
@@ -292,18 +275,18 @@ fn membership_uses_unified_equality_and_json_keeps_the_bridge() {
     let json = project_stmt_detailed(&result, &runtime).stringify();
     for marker in [
         "by_equivalence_class",
-        "via_peers",
+        "alpha_endpoints",
         "by_they_are_the_same",
         "same_free_param_shape",
         "fn_set",
         "cite_fact_id",
-        "right_path",
+        "right_identity",
         "well_defined",
     ] {
         assert!(json.contains(marker), "missing {marker} in {json}");
     }
     assert!(!json.contains("ByEqualToObjWithFreeParamsLookup"));
-    assert_eq!(json.matches("via_peers").count(), 1);
+    assert!(!json.contains("via_peers"));
     assert!(exec(&mut runtime, "f $in fn(t R) N").is_failed());
 }
 
@@ -328,11 +311,11 @@ fn normal_identity_output_is_not_a_builtin_in_either_language() {
 }
 
 #[test]
-fn strategy_entry_keeps_zero_depth_identity_calculation_and_named_alpha() {
-    use crate::execute::execute_fact_stmt::StrategySearch;
+fn builtin_ceiling_keeps_identity_calculation_and_stored_alpha_paths() {
+    use crate::execute::execute_fact_stmt::VerifyStateLevel;
     for (code, expected) in [
         ("fn(x R) R = fn(y R) R", "identity"),
-        ("1 + 1 = 2", "builtin"),
+        ("1 + 1 = 2", "calculation"),
         ("g = h", "class"),
     ] {
         let mut runtime = runtime();
@@ -340,7 +323,7 @@ fn strategy_entry_keeps_zero_depth_identity_calculation_and_named_alpha() {
         exec_ok(&mut runtime, "let h = fn(y R) R");
         let goal = Fact::AtomicFact(AtomicFact::EqualFact(equal(&mut runtime, code)));
         let VerifyFactResult::Equality(result) = runtime
-            .verify_fact_in_strategy(&goal, StrategySearch { depth: 0 })
+            .verify_fact(&goal, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
             .unwrap()
         else {
             panic!("equality")
@@ -351,7 +334,7 @@ fn strategy_entry_keeps_zero_depth_identity_calculation_and_named_alpha() {
         assert!(matches!(
             (expected, success.searched_proof),
             ("identity", EqualFactSearchedProof::ByTheyAreTheSame(_))
-                | ("builtin", EqualFactSearchedProof::ByBuiltinRule(_))
+                | ("calculation", EqualFactSearchedProof::ByClosedCalculation(_))
                 | ("class", EqualFactSearchedProof::ByEquivalenceClass(_))
         ));
     }
@@ -364,7 +347,7 @@ fn explicit_definition_chain_stores_endpoint_before_later_verification() {
     exec_ok(&mut runtime, "have y R = x + 1");
     // Even with builtin entry enabled, definition residuals must keep rewrite disabled.
     let mut state = VerifyState::top_level();
-    state.can_use_builtin_rule = true;
+    state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
     assert!(verify(&mut runtime, "y = 3", state).is_failed());
 
     exec_ok(&mut runtime, "y = x + 1 = 3");
@@ -376,8 +359,8 @@ fn explicit_definition_chain_stores_endpoint_before_later_verification() {
         check_path(&runtime, &stored, &goal.left, &goal.right);
         let before = store_sizes(&runtime);
         let state = VerifyState::top_level()
-            .known_only_no_wd()
-            .for_equality_peer_comparison();
+            .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty)
+            .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
         let VerifyEqualityResult::Success(success) = verify(&mut runtime, code, state) else {
             panic!("stored endpoint must need no calculation or rewrite");
         };
@@ -495,7 +478,7 @@ fn check_path(
 #[test]
 fn compound_alpha_identity_preserves_ranges_bodies_and_free_ids_at_builtin_disabled() {
     let mut rt = runtime();
-    let state = VerifyState { can_use_builtin_rule: false, ..VerifyState::top_level().known_only_no_wd() };
+    let state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty);
     let fact = equal(&mut rt, "sum(1, 2, fn(x Z) R {x}) = sum(1, 2, fn(y Z) R {y})");
     assert!(rt.search_equal_fact_proof(&fact, state.clone()).unwrap().is_some());
     exec_ok(&mut rt, "have a R, b R");

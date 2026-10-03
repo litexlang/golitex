@@ -205,3 +205,15 @@ mod showcase_local_repair_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/legacy_next_capabilities/tests.rs"]
 mod legacy_next_capabilities;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/legacy_final_capabilities/tests.rs"]
+mod legacy_final_capabilities;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/exact_numeric_periodic_modulus/tests.rs"]
+mod exact_numeric_periodic_modulus;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/closed_exact_elementary_calculation/tests.rs"]
+mod closed_exact_elementary_calculation;

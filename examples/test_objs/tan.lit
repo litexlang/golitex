@@ -9,3 +9,30 @@ sketch:
 # P05: tan(arctan(2)) = 2
 sketch:
     tan(arctan(2)) = 2
+
+# P02: exact numeric/periodic/modulus repair; original source retained in the dated journal
+sketch:
+    tan(pi) = 0
+
+# P03: exact numeric/periodic/modulus repair; original source retained in the dated journal
+sketch:
+    tan(pi / 4) = 1
+
+# P04: exact numeric/periodic/modulus repair; original source retained in the dated journal
+sketch:
+    tan(-pi / 4) = -1
+
+# P91: exact numeric/periodic/modulus boundary
+sketch:
+    have k Z
+    tan(pi + 2 * k * pi)=0
+
+# P92: exact numeric/periodic/modulus boundary
+sketch:
+    have k, j Z
+    tan((k+j+1)*pi)=0
+
+# P93: exact numeric/periodic/modulus boundary
+sketch:
+    have k Z
+    tan(pi / 3 + k * pi)=sqrt(3)

@@ -841,7 +841,7 @@ impl EvenPowNonnegativeBuiltinRuleProof {
         text(
             "EvenPowNonnegative",
             "Even power ≥ 0",
-            "An even power is nonnegative",
+            "An even power of a checked real base is nonnegative",
         )
     }
 
@@ -849,7 +849,7 @@ impl EvenPowNonnegativeBuiltinRuleProof {
         text(
             "EvenPowNonnegative",
             "偶次幂 ≥ 0",
-            "偶次幂非负",
+            "已验证的实数底数的偶次幂非负",
         )
     }
 

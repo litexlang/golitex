@@ -1,3 +1,4 @@
+use crate::rational_expression::closed_scalar_membership::{normalized_decimal_inhabits_standard_set, exact_complex_inhabits_standard_set};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, GreaterFact, InFact, IsTupleFact, LessEqualFact, LessFact, NotInFact, SubsetFact,
@@ -28,6 +29,7 @@ pub enum InFactSearchProofByBuiltinRule {
     // decimal inhabits the matching standard set (N/Z/Q/R/C families).
     // Examples: `2 $in N`, `1 + 1 $in C`, `-3 $in Z`.
     ClosedNumericMembership(ClosedNumericMembershipBuiltinRuleProof),
+    ClosedExactScalarMembership(ClosedExactScalarMembershipBuiltinRuleProof),
     // Well-defined complex arithmetic expressions inhabit C.
     // Mathematical property: after child WD, `+ - * / …` over C-carriers stay in C.
     // Example: prove `(x + 1) $in C` (used when Add/Mul WD asks for `$in C`).
@@ -52,6 +54,10 @@ pub enum InFactSearchProofByBuiltinRule {
     // Mathematical property: after child WD, `+ - * / abs …` over R-carriers stay in R.
     // Example: prove `(x + y) $in R`, `abs(x) $in R`.
     RealArithmeticClosure(RealArithmeticClosureBuiltinRuleProof),
+    // General arithmetic requires actual real operands, rather than only C WD.
+    RealOperandArithmeticClosure(RealOperandArithmeticClosureBuiltinRuleProof),
+    // Pow WD currently proves an integer exponent; its base must also be real.
+    RealIntegerPower(RealIntegerPowerBuiltinRuleProof),
     // Negation, absolute value, addition, subtraction and multiplication of
     // checked integers stay in Z. Division requires a separate contract.
     IntegerArithmeticClosure(IntegerArithmeticClosureBuiltinRuleProof),
@@ -190,6 +196,16 @@ pub struct ComplexCoordinateInRealBuiltinRuleProof {}
 pub struct ComplexCoordinateInComplexBuiltinRuleProof {}
 
 pub struct RealArithmeticClosureBuiltinRuleProof {}
+pub struct RealOperandArithmeticClosureBuiltinRuleProof {
+    pub operand_proofs: Vec<VerifyFactResult>,
+}
+pub struct RealIntegerPowerBuiltinRuleProof {
+    pub base_in_real_proof: VerifyFactResult,
+}
+pub struct ClosedExactScalarMembershipBuiltinRuleProof {
+    pub real_value: Obj,
+    pub imaginary_value: Obj,
+}
 pub struct IntegerArithmeticClosureBuiltinRuleProof { pub operand_proofs: Vec<VerifyFactResult> }
 
 // Input-domain evidence lives in the enclosing atomic fact's WD proof.
@@ -431,11 +447,14 @@ impl Runtime {
         if let Some(proof) = closed_numeric_membership_proof(fact) {
             return Ok(Some(proof));
         }
+        if let Some(proof) = closed_exact_scalar_membership_proof(fact) {
+            return Ok(Some(proof));
+        }
 
         // This route produces premises. Calculation/citation callers may
         // enter this dispatcher with ordinary builtin entry disabled; they
         // must not reopen Z -> N -> N+ -> Z on a false numeric membership.
-        if verify_state.can_use_builtin_rule && matches!(set, StandardSet::NPos) {
+        if matches!(set, StandardSet::NPos) {
             let integer = Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: self.global_ids.allocate_fact_id(), element: fact.element.clone(),
                 set: Obj::StandardSet(StandardSet::Z), line_file: None,
@@ -515,6 +534,9 @@ impl Runtime {
                 }
                 if matches!(set, StandardSet::R) {
                     if let Some(proof) = real_arithmetic_in_r_proof(fact) {
+                        return Ok(Some(proof));
+                    }
+                    if let Some(proof) = self.real_operand_arithmetic_in_r_proof(fact, verify_state.clone())? {
                         return Ok(Some(proof));
                     }
                 }
@@ -843,6 +865,51 @@ impl Runtime {
         ))
     }
 
+    // Real operand certificates distinguish real closure from complex WD.
+    // Example: x*x is real for x in R; (i+1)*2 cannot use this rule.
+    fn real_operand_arithmetic_in_r_proof(
+        &mut self,
+        fact: &InFact,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let operands: Vec<&Obj> = match &fact.element {
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(v)) => vec![&v.left, &v.right],
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(v)) => vec![&v.left, &v.right],
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(v)) => vec![&v.arg],
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(v)) => vec![&v.left, &v.right],
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(v)) => vec![&v.left, &v.right],
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(v)) => vec![&v.base],
+            _ => return Ok(None),
+        };
+        let mut operand_proofs = Vec::with_capacity(operands.len());
+        for operand in operands {
+            let requirement = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: operand.clone(),
+                set: Obj::StandardSet(StandardSet::R),
+                line_file: fact.line_file.clone(),
+            }));
+            let proof = self.verify_builtin_rule_premise(&requirement, state)?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            operand_proofs.push(proof);
+        }
+        if matches!(fact.element, Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))) {
+            // Every supported Pow WD branch proves exponent in N or Z; the
+            // nonzero condition for negative powers is also in the parent WD.
+            // This rule must not be used without that enclosing WD certificate.
+            return Ok(Some(InFactSearchProofByBuiltinRule::RealIntegerPower(
+                RealIntegerPowerBuiltinRuleProof {
+                    base_in_real_proof: operand_proofs.remove(0),
+                },
+            )));
+        }
+        Ok(Some(InFactSearchProofByBuiltinRule::RealOperandArithmeticClosure(
+            RealOperandArithmeticClosureBuiltinRuleProof { operand_proofs },
+        )))
+    }
+
     // Prove `a + b $in N` from `a $in N` and `b $in N`.
     // Example: known `m $in N`, `n $in N` prove `m + n $in N`.
     fn add_in_natural_proof(
@@ -972,10 +1039,7 @@ impl Runtime {
         let Obj::StandardSet(target) = &fact.set else {
             return Ok(None);
         };
-        let mut source_state = verify_state.clone();
-        source_state.can_use_def_and_known_forall_and_known_strategy = false;
-        source_state.can_use_rewrite = false;
-        source_state.store_well_defined_fact = false;
+        let source_state = verify_state.without_rewrite();
         for source in proper_subsets_in_membership_proof_order(target) {
             let probe = Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: self.global_ids.allocate_fact_id(),
@@ -1024,7 +1088,7 @@ impl Runtime {
         // the ordinary bounded builtin policy: at most the caller's permitted
         // leaf, whose children cannot reopen builtin/deep/rewrite search.
         // Thus `n in {n}` alone cannot invent a carrier or recurse indefinitely.
-        let child = verify_state.after_builtin_rule();
+        let child = verify_state;
         for source_set in source_sets {
             let source_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: self.global_ids.allocate_fact_id(),
@@ -1677,24 +1741,16 @@ fn closed_numeric_membership_proof(fact: &InFact) -> Option<InFactSearchProofByB
     ))
 }
 
-pub(super) fn normalized_decimal_inhabits_standard_set(v: &str, set: &StandardSet) -> bool {
-    let v = v.trim();
-    let is_integer = !v.contains('.');
-    let is_negative = v.starts_with('-');
-    let is_zero = v == "0";
-    let is_positive = !is_negative && !is_zero;
-    let is_nonzero = !is_zero;
-    match set {
-        StandardSet::N => is_integer && !is_negative,
-        StandardSet::NPos => is_integer && is_positive,
-        StandardSet::Z => is_integer,
-        StandardSet::ZStar => is_integer && is_nonzero,
-        StandardSet::ZNeg => is_integer && is_negative,
-        StandardSet::Q | StandardSet::R | StandardSet::C => true,
-        StandardSet::QPos | StandardSet::RPos => is_positive,
-        StandardSet::QNeg | StandardSet::RNeg => is_negative,
-        StandardSet::QStar | StandardSet::RStar | StandardSet::CStar => is_nonzero,
-    }
+fn closed_exact_scalar_membership_proof(fact: &InFact) -> Option<InFactSearchProofByBuiltinRule> {
+    use crate::rational_expression::exact_complex::exact_complex_coordinates;
+    let Obj::StandardSet(set) = &fact.set else { return None };
+    let (real, imaginary) = exact_complex_coordinates(&fact.element)?;
+    let admitted = exact_complex_inhabits_standard_set(&real, &imaginary, set);
+    admitted.then_some(InFactSearchProofByBuiltinRule::ClosedExactScalarMembership(
+        ClosedExactScalarMembershipBuiltinRuleProof {
+            real_value: real.to_obj(), imaginary_value: imaginary.to_obj(),
+        },
+    ))
 }
 
 // The normal verify pipeline has already checked the constructor's domain.
@@ -1804,27 +1860,19 @@ fn complex_arithmetic_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBui
     }
 }
 
-// WD already forces real operand domains; Add/Sub/Mul/Abs/... are closed in R.
-// Example: prove `(x + y) $in R`, `abs(x) $in R`.
+// Only intrinsically real-valued constructors belong here. General field
+// arithmetic and integer powers have complex WD branches: proving their WD
+// cannot establish an R result. Operand strategies/exact calculation own them.
+// Example: abs(x) is real after its domain WD; i + 1 is not real.
 fn real_arithmetic_in_r_proof(fact: &InFact) -> Option<InFactSearchProofByBuiltinRule> {
     let Obj::StandardSet(StandardSet::R) = &fact.set else {
         return None;
     };
     match &fact.element {
-        Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
-        | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_))
-        | Obj::ArithmeticOperator(ArithmeticOperator::Neg(_))
-        | Obj::ArithmeticOperator(ArithmeticOperator::Mul(_))
-        | Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
-        | Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))
-        | Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
         | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
         | Obj::ExpLogOperator(ExpLogOperator::Log(_))
-        | Obj::ExpLogOperator(ExpLogOperator::Ln(_))
-        | Obj::IteratedOperator(IteratedOperator::Sum(_))
-        | Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_))
-        | Obj::IteratedOperator(IteratedOperator::Product(_))
-        | Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(_)) => Some(
+        | Obj::ExpLogOperator(ExpLogOperator::Ln(_)) => Some(
             InFactSearchProofByBuiltinRule::RealArithmeticClosure(
                 RealArithmeticClosureBuiltinRuleProof {},
             ),

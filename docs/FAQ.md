@@ -468,15 +468,23 @@ well-defined. Reversing those two facts still fails. The same ordered check is
 used at definition time and whenever the instantiated struct carrier is
 checked; the temporary facts never leak into the surrounding environment.
 
-With ordinary builtin entry disabled, equality still checks identity, stored
-paths, and constructor matching. Peer comparison keeps the caller's builtin
-permission and cannot expand another peer class, start deep search, or store WD.
-A builtin premise can use one checked named or literal function-body substitution;
-the resulting equality must finish with identity, stored evidence, constructor
-matching, or calculation. It cannot recursively unfold another function body.
-Definition and known-`forall` search retain a separate depth budget of 3;
-builtin strategies retain their own depth of 16. See the
-[runnable builtin-entry example](../examples/proof_nodes/atomic/by_builtin_rule/builtin_entry_boolean.lit).
+Equality and other atomic facts share a search-level ceiling. Stored facts,
+identity/alpha and stored equality paths, followed by closed exact calculation,
+form level 0 (`Direct`). Special-property premises
+use level 0; builtin premises use level 1; strategy and definition/forall
+premises use level 2. Rewrite is available once at the highest level and keeps
+the residual goal's level. WD remains mandatory and inherits the current
+ceiling. Independent strategy/deep recursion budgets have been removed.
+
+Direct computation does not consult stored numeric representatives or unfold
+functions. It evaluates closed numeric equality, real order and standard-set
+membership, and records exact values under `by_closed_calculation`. For example,
+`1/3 < 1/2` is available to a restricted premise. Given `a = 2`, the goal
+`a+1=3` still needs a separate substitution route. WD is always checked before
+truth search: `1/0=1/0` remains invalid. The finite enumeration example in the
+[Direct tracer](../examples/proof_nodes/equal/direct_closed_calculation.lit)
+works without first asserting the numeric memberships. This does not settle
+all remaining composition/geo failures; see the [current receipt](../src/execute/execute_fact_stmt/builtin_entry_verification.md).
 
 Separately, a full equality goal reuses the same constructor matcher while
 allowing each corresponding child equality to use the bounded builtin/equality
@@ -748,8 +756,11 @@ fails well-definedness before equality checking. The preview remains symbolic:
 `eval` and Python extraction reject native trigonometric expressions explicitly.
 The current parser also accepts real `arcsin`, `arccos`, `arctan`, and
 `arccot`, with domain and principal-range rules described in the
-[manual](Manual.md#native-real-trigonometry-beta-preview). This is not a
-complex-trigonometry or numerical-evaluation interface. Lean compilation is
+[manual](Manual.md#native-real-trigonometry-beta-preview). Exact rational
+coefficients of `pi` can establish principal-range comparisons without decimal
+approximations. Quarter-angle inverse examples use the forward value and an
+explicit right-inverse equality chain; `arccot(-1)=3*pi/4` follows the `(0,pi)`
+branch. This is not a complex-trigonometry or numerical-evaluation interface. Lean compilation is
 not connected to the current Cargo build; see the [CLI boundary](cli.md#lean-compiler-boundary).
 
 ## Does the native `C` scalar system turn every number into a complex value?
@@ -854,21 +865,23 @@ mathematics: objects belong to sets, structures are subsets of Cartesian
 products with named views, predicates express properties, and proofs grow a
 verified context of facts.
 
-The design keeps some dependent-looking forms because ordinary mathematics
-needs them. Later parameter domains may depend on earlier parameters, as in
-`fn(c1, c2 q) q`. A return set may also depend on the current function
-parameters and is instantiated at application. For example, after
-`have g fn(S power_set(R)) fn(x S) R`, the partial application `g(R)` has the
-instantiated carrier `fn(x R) R`.
+Function parameter domains and return sets are fixed relative to the current
+signature. They may use an already-bound enclosing carrier, as in
+`forall q set` followed by `fn(c1, c2 q) q`, but may not use parameters of
+that same function. Thus `fn(S power_set(R), x S) R` and
+`fn(S power_set(R)) fn(x S) R` are rejected during parsing. Domain conditions
+and function bodies can depend on the parameters, as in
+`fn(x R: x > 0) R {x + 1}`. A more precise result property is expressed as a
+separate fact, not an argument-indexed return set.
 
-This is controlled set-valued dependency, not full dependent type theory.
-`template` supports families such as structures, sequence spaces, and quotient
-constructions indexed by an arbitrary carrier or by hypotheses. Litex still
-does not expose universe-polymorphic type families, proof-indexed computational
-types, or proof terms as ordinary computational data. The choice is pragmatic:
-the project is testing whether a fact-oriented, readable, set-theoretic
-interface can cover a large amount of day-to-day mathematics with a smaller
-user-facing language.
+The parser delays function parameter registration while parsing their carriers
+and removes that temporary visibility while parsing the complete return
+object. WD enforces the same boundary independently. Ordinary `forall` and
+`exist` binders retain sequential dependencies; `template` supports families
+such as structures, sequence spaces, and quotient constructions indexed by an
+arbitrary carrier or by hypotheses. Litex still does not expose
+universe-polymorphic type families, proof-indexed computational types, or proof
+terms as ordinary computational data.
 
 For a concrete quotient-group construction, see the quotient-group section in
 the Manual.
@@ -1716,3 +1729,48 @@ running totals. See the [numeric tracer](../examples/proof_nodes/equal/by_builti
 [complex tracer](../examples/proof_nodes/equal/by_builtin_rule/imaginary_division.lit),
 [aggregate calculation tracer](../examples/proof_nodes/equal/by_builtin_rule/aggregate_calculation.lit)
 and [symbolic identities](../examples/proof_nodes/equal/by_builtin_rule/aggregate_identities.lit).
+
+
+### Can negative powers, fraction comparisons and periodic trig values be checked directly?
+
+Yes. `2^(-3)=1/8`, `1/3<1/2` and `min(1/3,1/2)=1/3` use exact
+calculation. The nonzero-base and denominator requirements remain checked;
+zero to a negative power or division by zero rejects. The rational fallback
+uses bounded checked integers and refuses overflow rather than approximate.
+
+```litex
+have k Z
+tan(pi + 2 * k * pi) = 0
+sin(pi / 6 + 2 * k * pi) = 1 / 2
+C_abs(3 - 4 * i) = 5
+C_abs(-4 * i + 3) = 5
+```
+
+The period rule checks integer membership; `have k R` alone is insufficient.
+Tangent poles and cotangent poles remain undefined. Numeric complex modulus
+accepts both summand orders and signs, computes exact coordinates and selects
+the nonnegative root. `eval C_abs(1+i)` displays `sqrt(2)` and publishes no
+fact. Detailed output records the period's integer evidence or the modulus's
+coordinates and squared value. See the [period tracer](../examples/proof_nodes/equal/by_builtin_rule/periodic_trig_exact_values.lit)
+and [modulus tracer](../examples/proof_nodes/equal/by_builtin_rule/numeric_complex_modulus.lit).
+
+### Are fraction rounding, numeric radicals, complex parts and rational logs calculations or rules?
+
+Closed expressions use the pure calculation leaf. For example:
+
+```litex
+floor(-7 / 3) = -3
+sqrt(12) + sqrt(27) = 5 * sqrt(3)
+img((1 + 2 * i) / (3 - i)) = 7 / 10
+log(8, 4) = 2 / 3
+eval log(1 / 3, 27)
+```
+
+The same arithmetic supplies `eval` results without publishing equality facts.
+Symbolic laws keep their existing premise-bearing builtin rule or strategy.
+All input domains are checked before computing. Square roots keep the
+nonnegative principal value, and numeric logarithms use exact prime-exponent
+ratios. Unsupported radical inversion, factorization exhaustion and arithmetic
+overflow decline calculation. No decimal approximation proves an equality.
+The four [closed calculation tracers](../examples/test_objs/experience/problem_notes/closed_exact_elementary_calculation_2026-10-03.md)
+and their paired executable negatives record these boundaries.

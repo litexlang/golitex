@@ -1,0 +1,21 @@
+# Direct (level 0): stored evidence, then closed exact calculation.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/direct_closed_calculation.lit
+# Before: the original enumeration failed in WD without preliminary numeric
+# memberships. Preserve the rejected source; the same source is active below.
+# by enumerate finite_set:
+#     ? forall x {1, 2}:
+#         x > 0
+# Boundary: Rust tests reject false arithmetic, division by zero and unknown
+# functions, and assert Direct cannot unfold definitions or use SP.
+
+by enumerate finite_set:
+    ? forall x {1, 2}:
+        x > 0
+
+1 + 1 = 2
+1/3 + 1/3 = 2/3
+1/3 < 1/2
+1/3 != 1/2
+not 1/3 $in Z
+1/3 $in Q+
+(-1) $in Z-

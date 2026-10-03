@@ -59,7 +59,7 @@ impl Runtime {
 
         let mut store_and_infer_results = Vec::with_capacity(stmt.facts.len());
         for fact in &stmt.facts {
-            store_and_infer_results.push(self.store_fact_and_infer(fact)?);
+            store_and_infer_results.push(self.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?);
         }
 
         Ok(ExecTrustStmtResult::Success(ExecTrustStmtSuccessResult {
@@ -71,12 +71,5 @@ impl Runtime {
 }
 
 pub(super) fn trust_verify_state() -> VerifyState {
-    VerifyState {
-        can_use_builtin_rule: true,
-        remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-        can_use_def_and_known_forall_and_known_strategy: true,
-        can_use_rewrite: true,
-        store_well_defined_fact: true,
-        equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-    }
+    VerifyState::top_level()
 }

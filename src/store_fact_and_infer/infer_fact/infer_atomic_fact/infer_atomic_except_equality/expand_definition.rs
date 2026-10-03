@@ -14,14 +14,14 @@ impl Runtime {
     pub(super) fn infer_normal_atomic_fact_rules(
         &mut self,
         normal: &NormalAtomicFact,
-    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
-        if let Some(param_types) = self.infer_normal_atomic_param_types(normal)? {
+        if let Some(param_types) = self.infer_normal_atomic_param_types(normal, verify_state)? {
             rules.push(InferAtomicExceptEqualityResult::NormalAtomicParamTypes(
                 param_types,
             ));
         }
-        if let Some(expand) = self.infer_normal_atomic_expand_definition(normal)? {
+        if let Some(expand) = self.infer_normal_atomic_expand_definition(normal, verify_state)? {
             rules.push(InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(
                 expand,
             ));
@@ -38,7 +38,7 @@ impl Runtime {
     fn infer_normal_atomic_param_types(
         &mut self,
         normal: &NormalAtomicFact,
-    ) -> RuntimeResult<Option<InferNormalAtomicParamTypesProjectedResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferNormalAtomicParamTypesProjectedResult>> {
         if self.def_abstract_prop_visible(&normal.predicate).is_some() {
             return Ok(None);
         }
@@ -64,7 +64,7 @@ impl Runtime {
             else {
                 continue;
             };
-            derived.push(self.store_inferred_fact_and_infer(&obligation)?);
+            derived.push(self.store_inferred_fact_and_infer(&obligation, verify_state)?);
         }
         if derived.is_empty() {
             return Ok(None);
@@ -77,7 +77,7 @@ impl Runtime {
     fn infer_normal_atomic_expand_definition(
         &mut self,
         normal: &NormalAtomicFact,
-    ) -> RuntimeResult<Option<InferExpandDefinitionResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferExpandDefinitionResult>> {
         if self.def_abstract_prop_visible(&normal.predicate).is_some() {
             return Ok(None);
         }
@@ -101,7 +101,7 @@ impl Runtime {
             let Ok(instantiated) = self.inst_fact(iff_fact, &subst) else {
                 continue;
             };
-            derived.push(self.store_inferred_fact_and_infer(&instantiated)?);
+            derived.push(self.store_inferred_fact_and_infer(&instantiated, verify_state)?);
         }
         if derived.is_empty() {
             return Ok(None);

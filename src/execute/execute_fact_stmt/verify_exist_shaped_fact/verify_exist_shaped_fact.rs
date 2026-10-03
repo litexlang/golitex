@@ -94,6 +94,9 @@ impl Runtime {
         fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ExistShapedFactSearchProofByBuiltinRule>> {
+        let Some(verify_state) = verify_state.for_premises(
+            crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
+        ) else { return Ok(None); };
         if let Some(proof) =
             self.search_exist_builtin_bijective_preimage(fact, verify_state.clone())?
         {
@@ -168,7 +171,7 @@ impl Runtime {
             return Ok(None);
         };
         let line_file = fact.plain().line_file.clone();
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = verify_state;
         let mut requirement_facts = Vec::with_capacity(free_operands.len());
         let mut proof_of_requirement_facts = Vec::with_capacity(free_operands.len());
         let mut seen = Vec::new();
@@ -208,7 +211,7 @@ impl Runtime {
             return Ok(None);
         };
         let line_file = fact.plain().line_file.clone();
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = verify_state;
         let premise: Fact = InFact {
             fact_id: self.global_ids.allocate_fact_id(),
             element: member,
@@ -235,7 +238,7 @@ impl Runtime {
             return Ok(None);
         };
         let line_file = fact.plain().line_file.clone();
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = verify_state;
         let premise: Fact = IsNonemptySetFact {
             fact_id: self.global_ids.allocate_fact_id(),
             set,
@@ -262,7 +265,7 @@ impl Runtime {
             return Ok(None);
         };
         let line_file = fact.plain().line_file.clone();
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = verify_state;
         let premise: Fact = InFact {
             fact_id: self.global_ids.allocate_fact_id(),
             element: rational,
@@ -290,7 +293,7 @@ impl Runtime {
             return Ok(None);
         };
         let line_file = fact.plain().line_file.clone();
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = verify_state;
         let premise: Fact = InFact {
             fact_id: self.global_ids.allocate_fact_id(),
             element: rational,
@@ -318,7 +321,7 @@ impl Runtime {
             return Ok(None);
         };
         let line_file = fact.plain().line_file.clone();
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = verify_state;
         let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
         }));
@@ -379,7 +382,7 @@ impl Runtime {
             return Ok(None);
         };
         let line_file = fact.plain().line_file.clone();
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = verify_state;
         let premise: Fact = InFact {
             fact_id: self.global_ids.allocate_fact_id(),
             element: bound,
@@ -406,7 +409,7 @@ impl Runtime {
             return Ok(None);
         };
         let line_file = fact.plain().line_file.clone();
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = verify_state;
         let requirement_facts: Vec<Fact> = vec![
             InFact {
                 fact_id: self.global_ids.allocate_fact_id(),
@@ -476,12 +479,11 @@ impl Runtime {
         fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
-        if !verify_state.can_use_def_and_known_forall_and_known_strategy
-            || verify_state.remaining_deep_search_depth == 0
+        if !verify_state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
         {
             return Ok(None);
         }
-        let premise_state = verify_state.after_deep_search();
+        let premise_state = verify_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
         for lookup_key in exist_shaped_fact_known_lookup_keys(fact) {
             let mut cites = Vec::new();
             for env in self.execution_environments_stack.iter().rev() {

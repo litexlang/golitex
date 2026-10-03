@@ -250,4 +250,19 @@ impl Runtime {
             other => other,
         })
     }
+
+    // Reopen exactly the bindings used by the function's domain conditions;
+    // parameter domains and the return carrier have already been parsed.
+    pub(super) fn occupy_set_bound_parameters_as_parse(
+        &mut self,
+        tb: &TokenBlock,
+        params: &crate::ast::param::SetBoundParameterList,
+    ) -> RuntimeResult<()> {
+        for group in &params.groups {
+            for param in &group.params {
+                self.occupy_bound_name_as_parse(tb, param)?;
+            }
+        }
+        Ok(())
+    }
 }

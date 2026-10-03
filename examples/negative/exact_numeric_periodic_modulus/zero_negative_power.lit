@@ -1,0 +1,2 @@
+# Must reject: mathematical/domain boundary, never a positive corpus case.
+let x = 0^(-1)

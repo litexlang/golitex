@@ -108,7 +108,7 @@ impl Runtime {
 
         let mut body_store_and_infer_results = Vec::with_capacity(rewritten_body.len());
         for fact in &rewritten_body {
-            body_store_and_infer_results.push(self.store_fact_and_infer(fact)?);
+            body_store_and_infer_results.push(self.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?);
         }
 
         Ok(ExecTrustHaveStmtResult::Success(

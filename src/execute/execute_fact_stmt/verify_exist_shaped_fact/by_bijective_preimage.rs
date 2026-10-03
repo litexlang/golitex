@@ -16,9 +16,6 @@ impl Runtime {
         fact: &ExistShapedFact,
         state: VerifyState,
     ) -> RuntimeResult<Option<ExistShapedBuiltinBijectivePreimage>> {
-        if !state.can_use_builtin_rule {
-            return Ok(None);
-        }
         let ExistShapedFact::ExistUnique(plain) = fact else {
             return Ok(None);
         };

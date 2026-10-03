@@ -70,14 +70,7 @@ impl Runtime {
             right: other_side.clone(),
             line_file: parent_fact.line_file.clone(),
         };
-        let child_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
-            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
-            can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-            equality_class_search: verify_state.equality_class_search,
-        };
+        let child_state = verify_state.without_rewrite();
         let residual_equal = self.verify_equal_fact(&residual, child_state)?;
         if residual_equal.is_failed() {
             return Ok(None);
@@ -100,15 +93,8 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<(usize, Obj)>> {
         // Case guards often need arithmetic rewrite (e.g. `1 - 1 = 0`).
-        // Do not inherit residual child's `can_use_rewrite: false`.
-        let case_guard_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
-            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
-            can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
-            can_use_rewrite: true,
-            store_well_defined_fact: false,
-            equality_class_search: verify_state.equality_class_search,
-        };
+        // Guards inherit the definition stage premise ceiling; never restore rewrite.
+        let case_guard_state = verify_state.without_rewrite();
         for (i, (case_fact, equal_to)) in stmt.cases.iter().zip(stmt.equal_tos.iter()).enumerate() {
             let Ok(inst_case) = self.inst_and_chain_atomic(case_fact, subst) else {
                 continue;

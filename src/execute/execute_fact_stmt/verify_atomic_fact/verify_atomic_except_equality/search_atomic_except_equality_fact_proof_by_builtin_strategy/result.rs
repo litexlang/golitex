@@ -1,8 +1,11 @@
 use crate::ast::fact::Fact;
+use crate::ast::obj::StandardSet;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::runtime::FactId;
 
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
+    ListSetMembership(ListSetMembershipStrategySingleStep),
+    ListSetNonMembership(ListSetNonMembershipStrategySingleStep),
     LiteralTupleProjectionMembership(LiteralTupleProjectionMembershipStrategySingleStep),
     PosAddPosIsPos(PosAddPosIsPosStrategySingleStep),
     NonnegativeSumIsNonnegative(NonnegativeSumIsNonnegativeStrategySingleStep),
@@ -67,6 +70,7 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     RationalArithmeticCarrierClosureDiv(RationalArithmeticCarrierClosureDivStrategySingleStep),
     RationalArithmeticCarrierClosurePow(RationalArithmeticCarrierClosurePowStrategySingleStep),
     RationalArithmeticCarrierClosureAbs(RationalArithmeticCarrierClosureAbsStrategySingleStep),
+    FieldArithmeticCarrierClosure(FieldArithmeticCarrierClosureStrategySingleStep),
     IntegerArithmeticCarrierClosureAdd(IntegerArithmeticCarrierClosureAddStrategySingleStep),
     IntegerArithmeticCarrierClosureSub(IntegerArithmeticCarrierClosureSubStrategySingleStep),
     IntegerArithmeticCarrierClosureMul(IntegerArithmeticCarrierClosureMulStrategySingleStep),
@@ -120,6 +124,42 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     AnonymousFnNonemptyFromCodomain(AnonymousFnNonemptyFromCodomainStrategySingleStep),
     FiniteSeqSetNonemptyFromCodomain(FiniteSeqSetNonemptyFromCodomainStrategySingleStep),
     SeqSetNonemptyFromCodomain(SeqSetNonemptyFromCodomainStrategySingleStep),
+}
+
+// A displayed finite set contains x iff one displayed element equals x.
+// Example: {1, 2} in {{}, {1, 2}} reduces to {1, 2} = {1, 2}.
+pub struct ListSetMembershipStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Nonmembership requires disequality to every displayed element.
+// Example: not 4 in {1, 2, 3} reduces to 4 != 1, 4 != 2, 4 != 3.
+pub struct ListSetNonMembershipStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Q and R are closed under these field operations. Each leaf records its
+// carrier requirement; division also records its nonzero-denominator premise.
+pub struct FieldArithmeticCarrierClosureStrategySingleStep {
+    pub carrier: StandardSet,
+    pub constructor_tree: FieldArithmeticCarrierConstructorTree,
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub enum FieldArithmeticCarrierConstructorTree {
+    Leaf { requirement_index: usize },
+    Add { left: Box<Self>, right: Box<Self> },
+    Sub { left: Box<Self>, right: Box<Self> },
+    Neg { argument: Box<Self> },
+    Mul { left: Box<Self>, right: Box<Self> },
+    Div {
+        left: Box<Self>,
+        right: Box<Self>,
+        nonzero_requirement_index: usize,
+    },
 }
 
 // A literal tuple's kth projection has the selected component's carrier.

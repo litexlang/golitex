@@ -83,7 +83,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualityIdentitiesWave7BuiltinRuleProof>> {
-        let child = verify_state.without_well_defined_storage();
+        let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if gcd_divides_argument_shape(left, right) {
                 return Ok(Some(EqualityIdentitiesWave7BuiltinRuleProof::GcdDividesArgument(

@@ -130,7 +130,7 @@ impl Runtime {
         match self.apply_obtain_from_known_exist_family(
             &projected_exist,
             &stmt.equal_tos,
-        )? {
+         crate::execute::execute_fact_stmt::VerifyState::top_level())? {
             Ok(store_and_infer_result) => Ok(ExecObtainObjFromAtomicFactStmtResult::Success(
                 ExecObtainObjFromAtomicFactStmtSuccessResult {
                     statement: stmt.clone(),

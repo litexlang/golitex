@@ -131,7 +131,7 @@ fn valid_projection_returns_use_parameter_types_and_checked_domain_conditions() 
         "have fn f(x Z) Z = x\nf(-1) = -1",
         "have fn f(x N) Z = x\nf(0) = 0",
         "let f = fn(x Z) Z {x}\nf(-1) = -1",
-        "have fn f(x R) {x} = x\nf(2) = 2",
+        "have fn f(x R) R = x\nf(2) $in {2}",
         "have fn f(x Z, y N) N = y\nf(-1, 0) = 0",
     ] {
         check(&mut runtime(), source, &[true, true]);

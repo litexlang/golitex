@@ -50,14 +50,13 @@ pub fn evaluate_fn_obj_with_algo(
     }
     active_calls.insert(call_key.clone());
     let outcome = (|| {
-        let return_expr = match dispatch_algo_return_expr(runtime, &fn_name, &normalized_args)? {
+        let return_expr = match dispatch_algo_return_expr(runtime, &fn_name, &normalized_args, active_calls.function_proof_state)? {
             Ok(expr) => expr,
             Err(failed) => return Ok(Err(failed)),
         };
         let definition_evidence = if active_calls.proof_mode {
             let state = &active_calls.function_proof_state;
-            if !state.can_use_def_and_known_forall_and_known_strategy
-                || state.remaining_deep_search_depth == 0
+            if !state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
             {
                 return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
             }
@@ -68,7 +67,7 @@ pub fn evaluate_fn_obj_with_algo(
                 line_file: None,
             };
             let wd = match runtime
-                .verify_equal_fact_well_definedness(&equal, state.without_well_defined_storage())?
+                .verify_equal_fact_well_definedness(&equal, *state)?
             {
                 crate::execute::execute_fact_stmt::VerifyEqualFactWellDefinedResult::Success(p) => {
                     p
@@ -77,7 +76,7 @@ pub fn evaluate_fn_obj_with_algo(
             };
             let Some(searched) = runtime.search_equal_fact_proof_by_known_forall_fact(
                 &equal,
-                state.after_deep_search().without_well_defined_storage(),
+                state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
             )?
             else {
                 return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
@@ -91,7 +90,7 @@ pub fn evaluate_fn_obj_with_algo(
         // it for sibling terms after the returned expression has been checked.
         let caller_state = active_calls.function_proof_state.clone();
         if active_calls.proof_mode {
-            active_calls.function_proof_state = caller_state.after_deep_search();
+            active_calls.function_proof_state = caller_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
         }
         let evaluated_return =
             super::evaluate_obj::evaluate_obj(runtime, &return_expr, depth + 1, active_calls);
@@ -119,6 +118,7 @@ fn dispatch_algo_return_expr(
     runtime: &mut Runtime,
     fn_name: &str,
     evaluated_args: &[Obj],
+    verify_state: VerifyState,
 ) -> RuntimeResult<Result<Obj, ExecEvalStmtFailed>> {
     let Some(algo) = runtime.def_algo_visible_in_stack(fn_name).cloned() else {
         return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
@@ -134,23 +134,15 @@ fn dispatch_algo_return_expr(
     if param_count != evaluated_args.len() {
         return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
     }
-    dispatch_stored_algo(runtime, &algo, evaluated_args)
+    dispatch_stored_algo(runtime, &algo, evaluated_args, verify_state)
 }
 
 fn dispatch_stored_algo(
     runtime: &mut Runtime,
     algo: &StoredDefAlgo,
     evaluated_args: &[Obj],
+    verify_state: VerifyState,
 ) -> RuntimeResult<Result<Obj, ExecEvalStmtFailed>> {
-    let verify_state = VerifyState {
-        can_use_builtin_rule: true,
-        remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-        can_use_def_and_known_forall_and_known_strategy: true,
-        can_use_rewrite: true,
-        store_well_defined_fact: false,
-        equality_class_search:
-            crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-    };
     match algo {
         StoredDefAlgo::ByCases(stmt) => {
             dispatch_algo_by_cases(runtime, stmt, evaluated_args, verify_state)

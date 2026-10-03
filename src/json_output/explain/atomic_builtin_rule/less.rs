@@ -33,6 +33,10 @@ impl LessFactSearchProofByBuiltinRule {
             Self::FromKnownGreater(p) => p.rule_id_and_message(lang),
             Self::FromKnownOrderComplement(p) => p.rule_id_and_message(lang),
             Self::ClosedNumericComparison(p) => p.rule_id_and_message(lang),
+            Self::PiMultipleComparison(_) => match lang {
+                OutputLanguage::English => text("PiMultipleComparison", "Exact pi coefficient order", "pi is positive and the exact left rational coefficient is smaller"),
+                OutputLanguage::Chinese => text("PiMultipleComparison", "pi 系数精确比较", "pi 为正且左边的精确有理系数更小"),
+            },
             Self::SubtractOneLess(p) => p.rule_id_and_message(lang),
             Self::SubtractPositiveClosedLess(p) => p.rule_id_and_message(lang),
             Self::ArctanPrincipalLowerBound(p) => p.rule_id_and_message(lang),
@@ -375,7 +379,7 @@ impl EvenPowPositiveFromNonzeroBuiltinRuleProof {
         text(
             "EvenPowPositiveFromNonzero",
             "Even power > 0",
-            "An even power of a nonzero value is positive",
+            "An even power of a checked nonzero real base is positive",
         )
     }
 
@@ -383,7 +387,7 @@ impl EvenPowPositiveFromNonzeroBuiltinRuleProof {
         text(
             "EvenPowPositiveFromNonzero",
             "偶次幂 > 0",
-            "非零数的偶次幂为正",
+            "已验证的非零实数底数的偶次幂为正",
         )
     }
 

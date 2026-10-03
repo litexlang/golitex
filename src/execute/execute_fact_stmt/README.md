@@ -198,42 +198,49 @@ are projected into `by_exist`. Matching is shared
 same-shape compounds (`FnObj`, arithmetic, `FieldAccess`, …) via
 `ByStructure` child proofs (legacy-aligned); otherwise instantiate the
 pattern under the subst so far and prove `pattern_after_subst = goal` by
-equal search with `VerifyState::known_only_no_wd()` (builtin entry disabled,
-no deep phase, no rewrite, no WD store; certificate type
-`StrictEqualArgProof`). Nested param occurrences inside compound objs are
+truth-only equality search at `VerifyStateLevel::Direct` (identity/alpha,
+stored paths and closed calculation; certificate type `StrictEqualArgProof`). Nested param occurrences inside compound objs are
 bound during that structural recursion. Exist apply also instantiates the
 conclusion and alpha-compares to the goal before instantiation requirements.
 
-`VerifyState` non-equality atomic search phases (after WD):
+`VerifyState` now has exactly `level` and `can_rewrite`. Equality and other
+atomic facts use one `search_atomic_fact` schedule; family wrappers retain
+their own evidence types. `verify_*` checks WD first, whereas `search_*` assumes
+the target's WD is already established.
 
-1. **By known**: `search_atomic_except_equality_fact_proof_by_known` first
-   tries stored atomic facts with identity/stored-path-only parameter lookup.
-   Only a miss enters parameter-transforming known search and then the
-   object-keyed special-property fact index. It returns
-   the existing `AtomicExceptEqualityFactSearchedProof` variants directly:
-   `ByKnownAtomicFact` or `ByKnownSpecialProperty`. Both ordinary truth search
-   and strategy known-first use this entry; neither needs builtin entry
-   or consumes strategy depth.
-2. **Builtin rule**: enter when `can_use_builtin_rule` is true. The shared
-   `verify_builtin_rule_premise` entry disables ordinary builtin, deep and
-   rewrite search for premise truth. Direct known-citation and calculation
-   leaves remain available. One checked function-body substitution may finish
-   by known equality or calculation; it cannot unfold another definition.
-   Premise WD inherits the caller's permissions without storing WD.
-3. **Deep**: when enabled, try bounded builtin/user strategies, prop
-   definition, known forall, then enabled builtin/known rewrites. The independent
-   `remaining_deep_search_depth` starts at 3 and is decremented by
-   `after_deep_search()`. Strategy children use their own depth budget (16)
-   and cannot enter definition, forall or rewrite search.
+| Target stage | Premise ceiling |
+|---|---|
+| Direct (0): identity/alpha, stored facts/paths, then closed calculation | No new search |
+| KnownSpecialProperty (1) | Direct (0) |
+| BuiltinRule (2) | KnownSpecialProperty (1) |
+| Strategy (3), including new peer bridges | BuiltinRule (2) |
+| DefinitionAndForall (4) | BuiltinRule (2) |
+| Rewrite, only at (4, true) | (4, false) |
 
-Equality retains its own identity / stored-path / known-special-property / builtin / equality-class / constructor /
-deep pipeline; both pipelines share the builtin-entry permission and premise policy.
-Ordinary equality and strategy equality share the pure identity/stored-path
-lookup before trying any rule that produces new premises. The early lookup
-keeps `ByEquivalenceClass::KnownPath` evidence and never compares new peers.
+Family dispatch preserves permissions. Rule admission derives the premise
+state once; recursive WD and inference receive that state rather than creating
+a new root. Constructor congruence may traverse a finite syntax tree with a
+fixed leaf ceiling. Stored alpha paths do not start peer searches.
 
-The [builtin-entry verification receipt](builtin_entry_verification.md) records
-the migration boundary, runnable tracer, and release comparison results.
+Exploratory WD returns evidence without recording reusable WD objects. The
+existing accepted-fact commit records checked atomic subjects in the current
+transaction, excluding named identifiers and quantified binder internals.
+A stored atomic fact can supply its predicate-domain evidence by an explicit
+citation, after argument WD and visible predicate signature checks.
+
+Direct is implemented by `search_atomic_fact_proof_by_known_fact_or_closed_calculation`,
+returning `DirectAtomicFactSearchResult::{ByKnownFact, ByClosedCalculation, NotFound}`.
+The closed calculator is a pure free function with no Runtime or state parameter.
+It supports classified closed decimals, exact rational/complex values, real order
+and standard-set membership/non-membership; symbolic normalization, constructor
+shape calculations and user definitions retain their existing higher routes.
+The existing `lookup_known_*` interfaces remain citation/identity only.
+Detailed output retains `by_closed_calculation` and exact values, rather than
+labelling computed proofs as citations or builtin rules.
+See the [verification receipt](builtin_entry_verification.md) and
+[Direct tracer](../../../examples/proof_nodes/equal/direct_closed_calculation.lit).
+Remaining composition and geo failures are tracked separately.
+No independent strategy/deep depth budget remains.
 
 The function codomain/range leaves of `ByKnownSpecialProperty` read exact-object rows from
 `special_properties`, across visible environments. The shared tuple reader

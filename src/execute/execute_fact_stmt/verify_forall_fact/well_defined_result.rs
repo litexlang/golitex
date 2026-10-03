@@ -22,9 +22,10 @@ pub enum FailToVerifyForallFactWellDefinedResult {
     },
 }
 
-// Stage order: param types → dom facts → then facts (local binder env).
+// Stage order: param types/bindings → one struct layer → dom facts → then facts.
 pub struct ForallFactWellDefinedProof {
     pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::release_one_struct_layer::ReleaseOneStructLayerProof>>,
     pub dom: Vec<FactWellDefinedProof>,
     pub then: Vec<FactWellDefinedProof>,
     pub local_env: Box<ExecEnv>,

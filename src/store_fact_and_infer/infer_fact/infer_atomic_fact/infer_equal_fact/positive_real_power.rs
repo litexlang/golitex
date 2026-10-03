@@ -13,20 +13,20 @@ impl Runtime {
     pub(super) fn infer_equal_fact_positive_real_power(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> RuntimeResult<Option<InferEqualFactPositiveRealPowerResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferEqualFactPositiveRealPowerResult>> {
         let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
         if let Some(r) = self.infer_positive_real_power_membership_to_equal_side(
             &equal_fact.left,
             &equal_fact.right,
             equal_fact,
-        )? {
+         verify_state)? {
             derived.push(r);
         }
         if let Some(r) = self.infer_positive_real_power_membership_to_equal_side(
             &equal_fact.right,
             &equal_fact.left,
             equal_fact,
-        )? {
+         verify_state)? {
             derived.push(r);
         }
         if derived.is_empty() {
@@ -42,20 +42,12 @@ impl Runtime {
         maybe_power: &Obj,
         target: &Obj,
         equal_fact: &EqualFact,
-    ) -> RuntimeResult<Option<StoreFactAndInferResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<StoreFactAndInferResult>> {
         if maybe_power.ir() == target.ir() {
             return Ok(None);
         }
         let Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow)) = maybe_power else {
             return Ok(None);
-        };
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: false,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
         };
         let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
@@ -91,7 +83,7 @@ impl Runtime {
             line_file: equal_fact.line_file.clone(),
         });
         let Some(stored) =
-            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(target_in_r_pos))?
+            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(target_in_r_pos), verify_state)?
         else {
             return Ok(None);
         };

@@ -1,6 +1,8 @@
-use crate::ast::obj::{Number, Obj, ArithmeticOperator, Literal};
-use crate::rational_expression::NumberCompareResult;
+use crate::ast::obj::{ArithmeticOperator, ComplexOperator, ExpLogOperator, IntegerOperator, Literal, Number, Obj};
 use crate::rational_expression::helper::{div_objs, obj_from_number};
+use crate::rational_expression::NumberCompareResult;
+use super::integer_factorization::factor_positive_integer;
+use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EvalRational {
@@ -65,12 +67,63 @@ impl EvalRational {
             Obj::ArithmeticOperator(ArithmeticOperator::Min(min)) => {
                 let left = Self::from_obj(&min.left)?;
                 let right = Self::from_obj(&min.right)?;
-                if left.compare(&right)? == NumberCompareResult::Greater { Some(right) } else { Some(left) }
+                if left.compare(&right)? == NumberCompareResult::Greater {
+                    Some(right)
+                } else {
+                    Some(left)
+                }
             }
             Obj::ArithmeticOperator(ArithmeticOperator::Max(max)) => {
                 let left = Self::from_obj(&max.left)?;
                 let right = Self::from_obj(&max.right)?;
-                if left.compare(&right)? == NumberCompareResult::Less { Some(right) } else { Some(left) }
+                if left.compare(&right)? == NumberCompareResult::Less {
+                    Some(right)
+                } else {
+                    Some(left)
+                }
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Floor(floor)) => {
+                let value = Self::from_obj(&floor.arg)?;
+                Self::new(value.numerator.checked_div_euclid(value.denominator)?, 1)
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Ceil(ceil)) => {
+                let value = Self::from_obj(&ceil.arg)?;
+                let floor = value.numerator.checked_div_euclid(value.denominator)?;
+                let ceil = if value.numerator % value.denominator == 0 {
+                    floor
+                } else {
+                    floor.checked_add(1)?
+                };
+                Self::new(ceil, 1)
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)) => {
+                Self::new(Self::from_obj(&sign.arg)?.numerator.signum(), 1)
+            }
+            Obj::IntegerOperator(operator) => exact_integer_operator(operator),
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(sqrt)) => {
+                Self::from_obj(&sqrt.arg)?.exact_sqrt()
+            }
+            Obj::ExpLogOperator(ExpLogOperator::Log(log)) => {
+                let base = Self::from_obj(&log.base)?;
+                let argument = Self::from_obj(&log.arg)?;
+                exact_rational_log(&base, &argument)
+            }
+            Obj::ExpLogOperator(ExpLogOperator::Exp(exp)) => {
+                if !Self::from_obj(&exp.arg)?.is_zero() { return None; }
+                Self::new(1, 1)
+            }
+            Obj::ExpLogOperator(ExpLogOperator::Ln(ln)) => {
+                if Self::from_obj(&ln.arg)? != Self::new(1, 1)? { return None; }
+                Self::new(0, 1)
+            }
+            Obj::ComplexOperator(ComplexOperator::RealPart(part)) => {
+                Some(super::exact_complex::exact_complex_coordinates(&part.arg)?.0)
+            }
+            Obj::ComplexOperator(ComplexOperator::ImaginaryPart(part)) => {
+                Some(super::exact_complex::exact_complex_coordinates(&part.arg)?.1)
+            }
+            Obj::ComplexOperator(ComplexOperator::ComplexAbs(abs)) => {
+                super::exact_complex::exact_modulus_radicand(&abs.arg)?.2.exact_sqrt()
             }
             _ => None,
         }
@@ -197,38 +250,140 @@ impl EvalRational {
         let common = gcd_i128(self.denominator, other.denominator)?;
         let left = self.numerator.checked_mul(other.denominator / common)?;
         let right = other.numerator.checked_mul(self.denominator / common)?;
-        Some(if left < right { NumberCompareResult::Less } else if left > right { NumberCompareResult::Greater } else { NumberCompareResult::Equal })
+        Some(if left < right {
+            NumberCompareResult::Less
+        } else if left > right {
+            NumberCompareResult::Greater
+        } else {
+            NumberCompareResult::Equal
+        })
     }
 
-    pub(crate) fn is_zero(&self) -> bool { self.numerator == 0 }
+    pub(crate) fn is_zero(&self) -> bool {
+        self.numerator == 0
+    }
 
-    pub(crate) fn is_negative(&self) -> bool { self.numerator < 0 }
+    pub(crate) fn is_negative(&self) -> bool {
+        self.numerator < 0
+    }
 
-    pub(crate) fn parts(&self) -> (i128, i128) { (self.numerator, self.denominator) }
+    pub(crate) fn parts(&self) -> (i128, i128) {
+        (self.numerator, self.denominator)
+    }
 
     pub(crate) fn modulo_integer(&self, period: i128) -> Option<Self> {
+        if period <= 0 {
+            return None;
+        }
         let modulus = self.denominator.checked_mul(period)?;
         Self::new(self.numerator.rem_euclid(modulus), self.denominator)
     }
 
     pub(crate) fn exact_sqrt(&self) -> Option<Self> {
-        if self.is_negative() { return None; }
-        Self::new(integer_square_root(self.numerator)?, integer_square_root(self.denominator)?)
+        if self.is_negative() {
+            return None;
+        }
+        Self::new(
+            integer_square_root(self.numerator)?,
+            integer_square_root(self.denominator)?,
+        )
     }
 }
 
-fn integer_square_root(value: i128) -> Option<i128> {
-    if value < 0 { return None; }
-    if value < 2 { return Some(value); }
+pub(crate) fn integer_square_root(value: i128) -> Option<i128> {
+    if value < 0 {
+        return None;
+    }
+    if value < 2 {
+        return Some(value);
+    }
     let mut low = 1;
     let mut high = value;
     while low <= high {
         let middle = low + (high - low) / 2;
         let quotient = value / middle;
-        if quotient == middle && value % middle == 0 { return Some(middle); }
-        if middle > quotient { high = middle - 1; } else { low = middle + 1; }
+        if quotient == middle && value % middle == 0 {
+            return Some(middle);
+        }
+        if middle > quotient {
+            high = middle - 1;
+        } else {
+            low = middle + 1;
+        }
     }
     None
+}
+
+// Integer-only operations accept a rational syntax tree only when its exact
+// value is integral. Example: gcd((1/3)*6,8)=2; gcd(1/3,8) stays undefined.
+fn exact_integer_operator(operator: &IntegerOperator) -> Option<EvalRational> {
+    let integer = |obj: &Obj| EvalRational::from_obj(obj)?.to_i128_if_integer();
+    let value = match operator {
+        IntegerOperator::Mod(value) => {
+            integer(&value.left)?.checked_rem_euclid(integer(&value.right)?)?
+        }
+        IntegerOperator::Quot(value) => {
+            let divisor = integer(&value.right)?;
+            if divisor <= 0 { return None; }
+            integer(&value.left)?.checked_div_euclid(divisor)?
+        }
+        IntegerOperator::Gcd(value) => {
+            let left = integer(&value.left)?;
+            let right = integer(&value.right)?;
+            if left == 0 && right == 0 { return None; }
+            gcd_i128(left, right)?
+        }
+        IntegerOperator::Lcm(value) => {
+            let left = integer(&value.left)?;
+            let right = integer(&value.right)?;
+            if left == 0 || right == 0 { 0 } else {
+                (left / gcd_i128(left, right)?).checked_mul(right)?.checked_abs()?
+            }
+        }
+        IntegerOperator::Factorial(value) => {
+            let argument = integer(&value.arg)?;
+            if argument < 0 { return None; }
+            let mut product = 1i128;
+            for factor in 2..=argument { product = product.checked_mul(factor)?; }
+            product
+        }
+    };
+    EvalRational::new(value, 1)
+}
+
+// Positive rational numbers have unique prime valuations. log(b,x)=r exactly
+// when every valuation of x is r times that of b, with b>0, b!=1, x>0.
+// Example: log(8,4)=2/3; log(1/3,27)=-3. No approximate log or search premises.
+fn exact_rational_log(base: &EvalRational, argument: &EvalRational) -> Option<EvalRational> {
+    if base.numerator <= 0 || argument.numerator <= 0
+        || base.numerator == base.denominator {
+        return None;
+    }
+    if argument.numerator == argument.denominator { return EvalRational::new(0, 1); }
+    if base == argument { return EvalRational::new(1, 1); }
+    let valuations = |value: &EvalRational| -> Option<BTreeMap<i128, i128>> {
+        let mut result = BTreeMap::new();
+        for (prime, exponent) in factor_positive_integer(value.numerator)? {
+            result.insert(prime, exponent);
+        }
+        for (prime, exponent) in factor_positive_integer(value.denominator)? {
+            result.insert(prime, -exponent);
+        }
+        Some(result)
+    };
+    let base_factors = valuations(base)?;
+    let argument_factors = valuations(argument)?;
+    let (&prime, &base_exponent) = base_factors.iter().next()?;
+    let ratio = EvalRational::new(*argument_factors.get(&prime).unwrap_or(&0), base_exponent)?;
+    for (&prime, &exponent) in &base_factors {
+        let argument_exponent = *argument_factors.get(&prime).unwrap_or(&0);
+        if ratio.numerator.checked_mul(exponent)?
+            != ratio.denominator.checked_mul(argument_exponent)? {
+            return None;
+        }
+    }
+    if argument_factors.keys().any(|prime| !base_factors.contains_key(prime)) { return None; }
+    Some(ratio)
 }
 
 pub fn evaluate_obj_to_exact_rational_for_eval(obj: &Obj) -> Option<EvalRational> {

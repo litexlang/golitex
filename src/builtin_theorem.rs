@@ -128,5 +128,14 @@ impl BuiltinTheoremId {
 
 pub fn is_reserved_builtin_name(name: &str) -> bool {
     BuiltinTheoremId::from_name(name).is_some()
-        || matches!(name, "is_real_least_upper_bound" | "is_real_greatest_lower_bound")
+        || builtin_certificate_arity(name).is_some()
+}
+
+// Opaque legacy predicates produced by completeness and consumed by its
+// projection theorems. Recognizing their signature never proves their truth.
+pub fn builtin_certificate_arity(name: &str) -> Option<usize> {
+    match name {
+        "is_real_least_upper_bound" | "is_real_greatest_lower_bound" => Some(2),
+        _ => None,
+    }
 }

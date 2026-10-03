@@ -56,12 +56,7 @@ impl Runtime {
         obj: Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
-        if verify_state.store_well_defined_fact {
-            let wd_id = self.global_ids.allocate_well_definedness_id();
-            self.top_exec_env_mut()
-                .well_defined_objects
-                .record(obj.clone(), wd_id);
-        }
+
         let by_def = match &obj {
             Obj::Identifier(_) => {
                 ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new())
@@ -125,10 +120,7 @@ impl Runtime {
                     Ok(mut stages) => {
                         stages.child_obj_well_defined.insert(0, head_wd);
                         let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
-                        if verify_state.store_well_defined_fact {
-                            let wd_id = self.global_ids.allocate_well_definedness_id();
-                            self.top_exec_env_mut().well_defined_objects.record(root.clone(), wd_id);
-                        }
+
                         return Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
                             obj: root,
                             proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
@@ -188,12 +180,7 @@ impl Runtime {
                         child_obj_well_defined,
                         requirement_fact_verified,
                     };
-                    if verify_state.store_well_defined_fact {
-                        let wd_id = self.global_ids.allocate_well_definedness_id();
-                        self.top_exec_env_mut()
-                            .well_defined_objects
-                            .record(root.clone(), wd_id);
-                    }
+
                     return Ok(VerifyObjWellDefinedResult::Success(
                         ObjWellDefinedProof::ByDef {
                             obj: root,
@@ -270,12 +257,7 @@ impl Runtime {
                     child_obj_well_defined: child_proofs,
                     requirement_fact_verified: stages.requirement_fact_verified,
                 };
-                if verify_state.store_well_defined_fact {
-                    let wd_id = self.global_ids.allocate_well_definedness_id();
-                    self.top_exec_env_mut()
-                        .well_defined_objects
-                        .record(root.clone(), wd_id);
-                }
+
                 Ok(VerifyObjWellDefinedResult::Success(
                     ObjWellDefinedProof::ByDef {
                         obj: root,
@@ -374,12 +356,7 @@ impl Runtime {
                         child_obj_well_defined: child_proofs,
                         requirement_fact_verified: stages.requirement_fact_verified,
                     };
-                    if verify_state.store_well_defined_fact {
-                        let wd_id = self.global_ids.allocate_well_definedness_id();
-                        self.top_exec_env_mut()
-                            .well_defined_objects
-                            .record(root.clone(), wd_id);
-                    }
+
                     return Ok(VerifyObjWellDefinedResult::Success(
                         ObjWellDefinedProof::ByDef {
                             obj: root,
@@ -492,7 +469,7 @@ impl Runtime {
             // Existing ancestor ids remain usable; success records the whole
             // application in the caller's environment after candidate selection.
             rt.verify_fn_obj_against_fn_set_in_local(
-                value, fn_set, verify_state.without_well_defined_storage(),
+                value, fn_set, verify_state,
             )
         })?;
         Ok(proof)
@@ -645,12 +622,7 @@ impl Runtime {
                 ),
             });
         }
-        if verify_state.store_well_defined_fact {
-            let wd_id = self.global_ids.allocate_well_definedness_id();
-            self.top_exec_env_mut()
-                .well_defined_objects
-                .record(root.clone(), wd_id);
-        }
+
         Ok(VerifyObjWellDefinedResult::Success(
             ObjWellDefinedProof::ByDef {
                 obj: root,

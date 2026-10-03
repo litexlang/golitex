@@ -30,8 +30,9 @@ pub struct TypedParameterList {
 // Unlike TypedParameterList (which may use ParamType::Set / NonemptySet / FiniteSet),
 // these groups fix the domain to an ordinary Obj `S`. Syntax `x S` means introduce `x`
 // with fact `x $in S`; `S` must be a fixed set expression and must not freely mention
-// an earlier binder of the same FnSet / AnonymousFn signature (dependence goes in
-// `: dom_facts` or the return set / curry). `S` may be N, R, a user set, power_set(...),
+// any binder of the same FnSet / AnonymousFn signature. The return set obeys the
+// same rule; only `: dom_facts` and function bodies may use these parameters.
+// `S` may be N, R, a user set, power_set(...),
 // cart(...), etc.
 //
 // Contrast with `forall S set, x S`: that is allowed because `S set` is a binder

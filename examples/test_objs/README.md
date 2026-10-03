@@ -17,10 +17,23 @@ The approved numeric and aggregate repairs add exact decimal normalization,
 imaginary nonzero and guarded division, bounded nested sum/product calculation
 and symbolic identities. The [2026-10-03 audit](audit_2026-10-03.md) is a retained
 historical snapshot. The subsequent [F authoring repairs](experience/problem_notes/f_authoring_repairs_2026-10-03.md)
-promote 23 explicit checked proofs and four recovered folds, leaving **44 gaps**
-in the live manifest, with **551 positive cases**. Source and binary identities,
+promote 23 explicit checked proofs and four recovered folds, leaving 44 gaps and 551 positive cases at that point. The [exact numeric,
+periodic trig and modulus repair](experience/problem_notes/exact_numeric_periodic_modulus_2026-10-03.md)
+closes 14 more gaps and adds 21 positive and five negative cases. That round left **586 positive cases, 289 negatives and 30 remaining gaps**. Source and binary identities,
 gates and any concurrent-build limitations are recorded separately in
 [acceptance](acceptance.md) and the authoring journal. No test adds trust.
+
+The [remaining elementary follow-up](experience/problem_notes/remaining_elementary_gaps_2026-10-03.md)
+closes the eight finite-rational-extremum, quarter-angle-inverse and log goals
+left after the fourteen numeric/periodic/modulus closures. The live manifest
+now contains **594 positive cases, 289 negatives and 22 remaining gaps**. Inverse
+and log cases retain their checked intermediate proofs and principal ranges.
+
+
+The latest full scan also finds [39 owning-file regressions](current_source_regressions_2026-10-03.md)
+after concurrent kernel changes: 37 rejections and two protocol failures.
+They are separate from the direct-gap inventory. Focused feature success does
+not make this complete corpus green; consult the dated source/binary receipts.
 
 ## Run
 
@@ -73,7 +86,7 @@ journals record ordinary persistent sessions and final clean-file gates instead.
   needed to exercise real export and import ownership.
 - `negative/`: individually executable must-reject cases. Some currently
   expose defects; the manifest and todo identify those explicitly.
-- `gaps/`: the 44 remaining direct positive reproductions. Solved sources are
+- `gaps/`: remaining direct positive reproductions. Solved sources are
   archived in proof journals and promoted to their owning positive files.
 - `fixtures/`: small maintained library for qualified-identifier tests.
 - `coverage.json`: AST path, file, case and observed-gap inventory.

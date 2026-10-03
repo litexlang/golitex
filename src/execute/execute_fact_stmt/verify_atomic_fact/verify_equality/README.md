@@ -29,26 +29,19 @@ needed for identity and peer comparison.
 
 ```text
 verify_equal_fact(goal, state)
-  -> WD left, then right
-  -> search_equal_fact_proof(goal, state)
-       -> ByTheyAreTheSame
-       -> ByEquivalenceClass::KnownPath (read stored edges only)
-       -> ByKnownSpecialProperty (finite tuple evidence reads)
-       -> ByBuiltinRule (if can_use_builtin_rule is true)
-       -> ByEquivalenceClass
-            -> stored path
-            -> peer comparison (if permitted)
-       -> existing tail:
-            restricted state: Matching -> miss
-            full state: ObjectDefinition -> Strategy -> Matching
-                        -> KnownForall -> Rewrite -> miss
+  -> WD left, then right with the same ceiling
+  -> search_equal_fact_proof -> shared search_atomic_fact
+       0 identity/alpha, stored paths/facts
+       1 special properties and finite constructor descent (leaves 0)
+       2 builtin rules (premises 1)
+       3 strategies and searched peer bridges (premises 2)
+       4 object definitions and known forall (premises 2)
+       rewrite at (4,true) -> residual at (4,false)
 ```
 
-The strategy subtree has its own existing entry in `verify_in_strategy.rs`.
-It checks identity/stored paths with the same pure lookup, then the same `ByKnownSpecialProperty` reader,
-then keeps its existing cite-only /
-calculation builtin entry, unified class search, and nested strategy order.
-Moving identity out of builtin must not remove it from this second entry.
+There is no separate strategy search state or depth budget. A pure stored
+alpha-path citation belongs to level 0; a newly proved peer bridge belongs to
+level 3 and cannot reenter that stage.
 The [stored-equality priority tracer](../../../../../examples/proof_nodes/equal/by_equivalence_class/stored_equality_before_builtin.lit)
 releases the geo dot-symmetry theorem and reads its exact conclusion.
 
@@ -236,3 +229,49 @@ evidence. The maintained tracers are `examples/proof_nodes/equal/by_builtin_rule
 
 The [verification record](verification.md) gives the exact baseline, measured
 coverage, remaining failures, and current CLI/harness limitations.
+
+
+## Exact numeric and periodic leaves
+
+`rational_expression::exact_rational` owns checked signed integer powers and
+closed rational arithmetic; calculation retains `ClosedRational` normal forms.
+Order predicates share `compare_closed_numeric_objs`, with the existing decimal
+path followed by exact positive-denominator comparison. Whole-fact WD precedes
+these leaves, so normalization cannot cancel an unproved zero denominator.
+
+The existing trig/complex builtin family consumes two local producers:
+`by_periodic_trig` splits a syntactic pi coefficient into an exact constant and
+linear symbolic terms, reduces the constant modulo the mathematical period and
+checks each surviving integer term through `verify_builtin_rule_premise` using
+inherited state. Its sine/cosine nonzero certificate independently supplies
+tangent/cotangent WD. It neither increases recursion budgets nor adds facts.
+`by_numeric_complex_modulus` consumes exact numeric coordinate arithmetic and
+checks the nonnegative principal root against the squared modulus. Detailed
+and Normal projections consume the same winning proof payloads.
+
+The primary tracer is
+`examples/proof_nodes/equal/by_builtin_rule/periodic_trig_exact_values.lit`.
+Paired pole, noninteger-period, zero denominator and negative-root controls are
+in `examples/negative/exact_numeric_periodic_modulus/`. This checkout contains
+no active Lean compiler under `src/`; these additions make no Lean replay claim.
+
+### Direct calculation at level 0
+
+`search_atomic_fact` first consumes `DirectAtomicFactSearchResult`. Raw equality
+lookup still returns identity/alpha or stored paths. A new closed numeric hit
+becomes `EqualFactSearchedProof::ByClosedCalculation`, also supported by
+`StrictEqualArgProof`, with exact normal forms/coordinates retained in Detailed
+JSON. Symbolic `Rational`/`Complex` normalization stays in the builtin stage.
+The pure calculator does not read known numeric representatives or unfold
+functions; WD remains a separate mandatory stage at the caller's ceiling.
+
+The elementary closed producers additionally support fraction rounding/sign,
+integer operations on exactly integral expressions, perfect rational roots,
+bounded square-free radical arithmetic, rational complex projections and rational
+logarithms via exact prime valuations. `ClosedValuePair::Radical` retains both
+canonical objects in Detailed output (`representation: radical`); Normal keeps
+the existing closed-calculation explanation. Radical order and general radical
+field inversion are not added. Pure leaf tests separately retain symbolic,
+undefined and exhausted misses; public statement tests check WD and display
+evaluation. See `tests/unit/execute/closed_exact_elementary_calculation/tests.rs`
+and the four `closed_*_calculation.lit` tracers.

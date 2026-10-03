@@ -1,0 +1,30 @@
+# Focused gate: target/release/litex -strict -f examples/wd/positive_closed_decrement_recursive.lit
+# Before: only literal-one subtraction matched, so this ordinary obligation failed:
+# forall x Z:
+#     x - 2 < x
+# The original recursive domain was then rejected at n - 2 < n:
+# have fn fib(n Z: n >= 0) R by induc n from 0:
+#     case n < 2: 1
+#     case n >= 2: fib(n - 2) + fib(n - 1)
+
+forall x Z:
+    x - 2 < x
+forall x R:
+    x - (1 + 1) < x
+    x - (1 / 3) < x
+
+have fn fib(n Z: n >= 0) R by induc n from 0:
+    case n < 2: 1
+    case n >= 2: fib(n - 2) + fib(n - 1)
+fib(0) = 1
+fib(1) = 1
+fib(2) = fib(2 - 2) + fib(2 - 1)
+fib(2 - 2) = fib(0)
+fib(2 - 1) = fib(1)
+fib(2) = fib(0) + fib(1) = 2
+
+# Boundary: positivity is required; an unknown c is not assumed positive.
+# forall x, c R:
+#     x - c < x
+# Executable zero/negative/nonreal/unknown and nondecreasing-recursion controls:
+# cargo test --release positive_closed_decrement -- --nocapture

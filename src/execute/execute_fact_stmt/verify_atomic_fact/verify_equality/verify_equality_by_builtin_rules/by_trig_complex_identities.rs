@@ -9,6 +9,8 @@ use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum TrigComplexIdentityProof {
+    SinHalfPiShift(SinHalfPiShiftProof),
+    CosHalfPiShift(CosHalfPiShiftProof),
     PeriodicTrig(super::by_periodic_trig::PeriodicTrigBuiltinRuleProof),
     NumericComplexModulus(super::by_numeric_complex_modulus::NumericComplexModulusBuiltinRuleProof),
     SinNegation,
@@ -37,9 +39,13 @@ pub enum TrigComplexIdentityProof {
         domains: Vec<VerifyFactResult>,
     },
 }
+pub struct SinHalfPiShiftProof;
+pub struct CosHalfPiShiftProof;
 impl TrigComplexIdentityProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::SinHalfPiShift(_) => "SinHalfPiShift",
+            Self::CosHalfPiShift(_) => "CosHalfPiShift",
             Self::PeriodicTrig(_) => "PeriodicTrig",
             Self::NumericComplexModulus(_) => "NumericComplexModulus",
             Self::SinNegation => "SinNegation",
@@ -80,6 +86,20 @@ impl Runtime {
             }
             for sine in [true, false] {
                 if let Some(arg) = trig_arg(left, sine) {
+                    // Real quarter-turn: sin(x+pi/2)=cos(x), cos(x+pi/2)=-sin(x).
+                    // The whole equality WD establishes real arguments and defined arithmetic.
+                    if let Obj::ArithmeticOperator(A::Add(sum)) = arg {
+                        for (x, shift) in [(&*sum.left, &*sum.right), (&*sum.right, &*sum.left)] {
+                            let Some(coefficient) = crate::rational_expression::pi_multiple::pi_coefficient(shift) else { continue; };
+                            if !crate::rational_expression::objs_equal_by_rational_expression_evaluation(&coefficient, &number("0.5")) { continue; }
+                            let expected = if sine { cos(x) } else {
+                                Obj::ArithmeticOperator(A::Neg(crate::ast::obj::Neg { arg: Box::new(sin(x)) }))
+                            };
+                            if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
+                                return Ok(Some(if sine { P::SinHalfPiShift(SinHalfPiShiftProof) } else { P::CosHalfPiShift(CosHalfPiShiftProof) }));
+                            }
+                        }
+                    }
                     // Difference-angle identities over the real arguments checked by WD.
                     // sin(x-y)=sin(x)cos(y)-cos(x)sin(y), with the dual cosine sum.
                     if let Obj::ArithmeticOperator(A::Sub(difference)) = arg {

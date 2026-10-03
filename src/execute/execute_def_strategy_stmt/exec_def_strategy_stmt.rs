@@ -122,7 +122,7 @@ fn exec_def_strategy_forall_body(
                 "strategy: forall domain fact is not well-defined".to_string(),
             )));
         }
-        let _ = runtime.store_fact_and_infer(dom)?;
+        let _ = runtime.store_fact_and_infer(dom, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
     }
 
     let proof_steps = match run_proof_body_stmts(runtime, proof)? {

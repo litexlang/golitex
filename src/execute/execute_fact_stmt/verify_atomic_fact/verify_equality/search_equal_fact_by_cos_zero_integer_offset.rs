@@ -5,7 +5,8 @@ use crate::ast::obj::{
     Add, ArithmeticOperator, Cos, Div, Literal, Mul, Neg, Number, Obj, StandardSet, Sub,
     TrigOperator,
 };
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
+use crate::rational_expression::pi_multiple::pi_coefficient;
 use crate::rational_expression::{
     evaluate_obj_to_normalized_decimal_number, objs_equal_by_rational_expression_evaluation,
 };
@@ -17,11 +18,8 @@ impl Runtime {
     pub fn search_equal_fact_by_cos_zero_integer_offset(
         &mut self,
         fact: &EqualFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<CosZeroIntegerOffsetStrategySingleStep>> {
-        if !ctx.can_use_strategy() {
-            return Ok(None);
-        }
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             let Obj::TrigOperator(TrigOperator::Cos(Cos { arg })) = left else {
                 continue;
@@ -111,43 +109,6 @@ fn divide(left: Obj, right: Obj) -> Obj {
         right: Box::new(right),
     }))
 }
-fn multiply(left: Obj, right: Obj) -> Obj {
-    Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-        left: Box::new(left),
-        right: Box::new(right),
-    }))
-}
-
-// Local syntactic extraction, not a new algebra normalizer. Any proposed
-// coefficient is checked through an ordinary strategy equality subgoal.
-fn pi_coefficient(angle: &Obj) -> Option<Obj> {
-    match angle {
-        Obj::Literal(Literal::Pi(_)) => Some(number("1")),
-        Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right })) => {
-            if let Some(c) = pi_coefficient(left) {
-                Some(multiply(c, right.as_ref().clone()))
-            } else {
-                pi_coefficient(right).map(|c| multiply(left.as_ref().clone(), c))
-            }
-        }
-        Obj::ArithmeticOperator(ArithmeticOperator::Div(Div { left, right })) => {
-            pi_coefficient(left).map(|c| divide(c, right.as_ref().clone()))
-        }
-        Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg { arg })) => pi_coefficient(arg)
-            .map(|c| Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg { arg: Box::new(c) }))),
-        Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) => {
-            Some(Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
-                left: Box::new(pi_coefficient(left)?),
-                right: Box::new(pi_coefficient(right)?),
-            })))
-        }
-        Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })) => {
-            Some(subtract(pi_coefficient(left)?, pi_coefficient(right)?))
-        }
-        _ => None,
-    }
-}
-
 fn collect_arithmetic_subterms(obj: &Obj, result: &mut Vec<Obj>) {
     result.push(obj.clone());
     match obj {

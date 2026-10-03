@@ -124,7 +124,7 @@ pub(super) fn exec_enumerate_forall_goal(
                         index, then_index, result: proof,
                     }));
                 }
-                let store_and_infer = rt.store_fact_and_infer(&instantiated)?;
+                let store_and_infer = rt.store_fact_and_infer(&instantiated, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
                 then_proofs.push(ProveAndStoreThenFactResult { verify_result: proof, store_and_infer });
             }
             Ok(Ok((introduced_params, binding_assumptions,
@@ -158,6 +158,6 @@ fn assume_enumeration_fact(
         VerifyFactWellDefinedResult::Success(proof) => proof,
         failed => return Ok(Err(EnumerateForallFailed::GoalWd(failed))),
     };
-    let store_and_infer = runtime.store_fact_and_infer(fact)?;
+    let store_and_infer = runtime.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
     Ok(Ok(AssumeDomFactResult { well_defined, store_and_infer }))
 }

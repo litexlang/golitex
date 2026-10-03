@@ -57,14 +57,7 @@ impl Runtime {
         &mut self,
         stmt: &WitnessNonemptySet,
     ) -> RuntimeResult<ExecWitnessNonemptySetStmtResult> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
         let obj_well_defined =
             self.verify_obj_well_definedness(&stmt.obj, verify_state.clone())?;
@@ -117,7 +110,7 @@ impl Runtime {
             set: stmt.set.clone(),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let store_and_infer_result = self.store_fact_and_infer(&nonempty_fact)?;
+        let store_and_infer_result = self.store_fact_and_infer(&nonempty_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
 
         Ok(ExecWitnessNonemptySetStmtResult::Success(
             ExecWitnessNonemptySetStmtSuccessResult {

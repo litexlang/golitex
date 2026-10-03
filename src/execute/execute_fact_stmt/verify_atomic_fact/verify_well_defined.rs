@@ -4,7 +4,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::Veri
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
     PredicateSignatureWellDefinedFailure, PredicateSignatureWellDefinedProof,
-    VerifyAtomicFactWellDefinedResult,
+    VerifyAtomicFactWellDefinedResult, PredicateDomainProof,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::VerifyObjWellDefinedResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -47,7 +47,15 @@ impl Runtime {
         };
         let predicate_signature = match user_signature {
             Some((predicate, actual_arity)) => {
-                let signature = if let Some(def) = self.def_prop_visible(predicate) {
+                let builtin_arity = match predicate {
+                    crate::ast::names::AtomicName::Plain { name } => {
+                        crate::builtin_theorem::builtin_certificate_arity(name)
+                    }
+                    _ => None,
+                };
+                let signature = if builtin_arity.is_some() {
+                    PredicateSignatureWellDefinedProof::Builtin
+                } else if let Some(def) = self.def_prop_visible(predicate) {
                     PredicateSignatureWellDefinedProof::Prop {
                         predicate: predicate.clone(),
                         arity: def
@@ -72,18 +80,20 @@ impl Runtime {
                         },
                     ));
                 };
-                let (PredicateSignatureWellDefinedProof::Prop { arity, .. }
-                | PredicateSignatureWellDefinedProof::AbstractProp { arity, .. }) = &signature
-                else {
-                    unreachable!("resolved user predicate signature")
+                let arity = match &signature {
+                    PredicateSignatureWellDefinedProof::Prop { arity, .. }
+                    | PredicateSignatureWellDefinedProof::AbstractProp { arity, .. } => *arity,
+                    PredicateSignatureWellDefinedProof::Builtin => {
+                        builtin_arity.expect("resolved builtin certificate signature")
+                    }
                 };
-                if *arity != actual_arity {
+                if arity != actual_arity {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
                         FailToVerifyAtomicFactWellDefinedResult::Predicate {
                             well_defined_of_each_parameter: succeeded_args,
                             reason: PredicateSignatureWellDefinedFailure::Arity {
                                 predicate: predicate.clone(),
-                                expected: *arity,
+                                expected: arity,
                                 actual: actual_arity,
                             },
                         },
@@ -93,25 +103,24 @@ impl Runtime {
             }
             _ => PredicateSignatureWellDefinedProof::Builtin,
         };
+        if let Some(cite) = self.lookup_known_atomic_fact(fact) {
+            return Ok(VerifyAtomicFactWellDefinedResult::Success(AtomicFactWellDefinedProof {
+                well_defined_of_each_parameter: succeeded_args,
+                predicate_signature,
+                predicate_domain: PredicateDomainProof::ByKnownFact(cite),
+            }));
+        }
         let mut first_failure = None;
         for requirements in self.atomic_predicate_domain_requirement_routes(fact) {
             let mut predicate_domain = Vec::new();
             let mut failed = None;
             for requirement in requirements {
-                // Domain checks may cite existing equality paths and use the
-                // ordinary budgeted proof routes, but must not expand equality
-                // peers. A peer can be an anonymous function: WD of its binder
-                // infers an order fact whose domain would expand the same peer.
-                let mut domain_state = verify_state.clone();
-                domain_state.equality_class_search =
-                    crate::execute::execute_fact_stmt::EqualityClassSearchMode::StoredPathsOnly;
-                let mut result = self.verify_fact(&requirement, domain_state.clone())?;
-                if result.is_failed() {
-                    // Reuse completed WD and call only calculation/citation
-                    // leaves with the caller's restricted state. Re-running
-                    // strategy WD here would reset its recursion budget.
-                    result = self.complete_predicate_domain_leaf(result, domain_state)?;
-                }
+                // Domain obligations inherit the caller's ceiling; peer/strategy
+                // expansion cannot be reopened while checking a predicate domain.
+                let domain_state = verify_state.capped_at(
+                    crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
+                );
+                let result = self.verify_fact(&requirement, domain_state)?;
                 if result.is_failed() {
                     failed = Some((requirement, result));
                     break;
@@ -133,7 +142,7 @@ impl Runtime {
                 AtomicFactWellDefinedProof {
                     well_defined_of_each_parameter: succeeded_args,
                     predicate_signature,
-                    predicate_domain,
+                    predicate_domain: PredicateDomainProof::ByRequirements(predicate_domain),
                 },
             ));
         }
@@ -150,45 +159,7 @@ impl Runtime {
         ))
     }
 
-    fn complete_predicate_domain_leaf(
-        &mut self,
-        result: crate::execute::execute_fact_stmt::VerifyFactResult,
-        state: VerifyState,
-    ) -> RuntimeResult<crate::execute::execute_fact_stmt::VerifyFactResult> {
-        use crate::execute::execute_fact_stmt::VerifyFactResult;
-        use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
-            VerifyAtomicExceptEqualityFactResult, VerifyAtomicExceptEqualityFactFailed,
-            AtomicExceptEqualityFactSearchedProof, atomic_except_equality_fact_result_from_success,
-            atomic_except_equality_fact_result_from_search_fail,
-        };
-        match result {
-            VerifyFactResult::AtomicExceptEquality(result) => match *result {
-                VerifyAtomicExceptEqualityFactResult::Failed(
-                    VerifyAtomicExceptEqualityFactFailed::FailToSearchProof {
-                        fact,
-                        well_defined_proof,
-                    },
-                ) => {
-                    match self.search_atomic_except_equality_fact_proof_by_builtin_rule(
-                        &fact,
-                        state.known_only_no_wd(),
-                    )? {
-                        Some(proof) => Ok(atomic_except_equality_fact_result_from_success(
-                            &fact,
-                            well_defined_proof,
-                            AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(proof),
-                        )),
-                        None => Ok(atomic_except_equality_fact_result_from_search_fail(
-                            &fact,
-                            well_defined_proof,
-                        )),
-                    }
-                }
-                other => Ok(VerifyFactResult::AtomicExceptEquality(Box::new(other))),
-            },
-            other => Ok(other),
-        }
-    }
+
 
     // For and/chain mixed storage: EqualFact uses equality WD then converts;
     // other atomics use atomic-except-equality WD.

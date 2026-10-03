@@ -36,46 +36,7 @@ impl Runtime {
     // A builtin premise may cite a stored function body and check one beta
     // substitution. Its residual is known/calculation-only, so this does not
     // reopen definition or ordinary builtin search.
-    pub(crate) fn search_builtin_premise_application_equality(
-        &mut self,
-        fact: &EqualFact,
-        state: VerifyState,
-    ) -> RuntimeResult<Option<EqualitySearchProofByObjectDefinition>> {
-        for (app_side, other_side) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
-            let Obj::FnObj(app) = app_side else {
-                continue;
-            };
-            let Some(expansion) = self.expanded_named_or_literal_anon_fn_application_body(app)? else {
-                continue;
-            };
-            let residual = EqualFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left: expansion.expanded_body.clone(),
-                right: other_side.clone(),
-                line_file: fact.line_file.clone(),
-            };
-            let residual_equal = self.verify_builtin_rule_premise_with_wd_state(
-                &residual.into(),
-                state.after_builtin_rule(),
-                state.without_well_defined_storage(),
-            )?;
-            if residual_equal.is_failed() {
-                continue;
-            }
-            return Ok(Some(
-                EqualitySearchProofByObjectDefinition::ByFnApplication(
-                    EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(
-                        ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof {
-                            function_equal: expansion.function_equal,
-                            expanded_body: expansion.expanded_body,
-                            residual_equal,
-                        },
-                    ),
-                ),
-            ));
-        }
-        Ok(None)
-    }
+
 
     pub(crate) fn try_unfold_named_have_fn_equal_application(
         &mut self,
@@ -99,14 +60,7 @@ impl Runtime {
             right: other_side.clone(),
             line_file: parent_fact.line_file.clone(),
         };
-        let child_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
-            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
-            can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-            equality_class_search: verify_state.equality_class_search,
-        };
+        let child_state = verify_state.without_rewrite();
         let residual_equal = self.verify_equal_fact(&residual, child_state)?;
         if residual_equal.is_failed() {
             return Ok(None);

@@ -202,8 +202,17 @@ pub fn compare_closed_numeric_objs(
     }
     // Positive normalized denominators make checked cross-products sound.
     // Example: 1/3 < 1/2; no float or rounded decimal participates.
-    let left = super::exact_rational::EvalRational::from_obj(left)?;
-    let right = super::exact_rational::EvalRational::from_obj(right)?;
+    let real_value = |obj: &Obj| {
+        if let Some(value) = super::exact_rational::EvalRational::from_obj(obj) {
+            return Some(value);
+        }
+        let (real, imaginary) = super::exact_complex::exact_complex_coordinates(obj)?;
+        if imaginary.is_zero() { Some(real) } else { None }
+    };
+    // Complex syntax may evaluate to a real value (i^2 = -1); a nonzero
+    // imaginary part cannot receive an order certificate.
+    let left = real_value(left)?;
+    let right = real_value(right)?;
     Some((
         left.compare(&right)?,
         left.to_obj().readable_string(),

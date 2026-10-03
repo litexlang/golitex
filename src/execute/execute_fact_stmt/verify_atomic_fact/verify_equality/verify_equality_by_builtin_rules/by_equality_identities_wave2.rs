@@ -3,7 +3,7 @@
 //! One matcher ↔ one dedicated proof struct.
 
 use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, LessEqualFact, LessFact,
+    AtomicFact, EqualFact, Fact, LessEqualFact, LessFact, NotEqualFact, GreaterFact,
 };
 use crate::ast::obj::{
     Abs, Add, ArithmeticOperator, Div, ExpLogOperator, IntegerOperator, Literal, Log, Mod, Mul,
@@ -66,17 +66,17 @@ pub struct AbsSquareBuiltinRuleProof {}
 
 // --- log ---
 
-// Builtin LogBaseSelf: log(b,b) = 1 when 1 < b.
+// Builtin LogBaseSelf: log(b,b) = 1 when b > 0 and b != 1.
 pub struct LogBaseSelfBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-// Builtin LogOfOne: log(b,1) = 0 when 1 < b.
+// Builtin LogOfOne: log(b,1) = 0 when b > 0 and b != 1.
 pub struct LogOfOneBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-// Builtin LogOfPowerSameBase: log(b, b^x) = x when 1 < b.
+// Builtin LogOfPowerSameBase: log(b, b^x) = x when b > 0 and b != 1.
 pub struct LogOfPowerSameBaseBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
@@ -167,7 +167,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualityIdentitiesWave2BuiltinRuleProof>> {
-        let child = verify_state.without_well_defined_storage();
+        let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if let Some(p) = self.try_one_to_any_power(left, right)? {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::OneToAnyPower(p)));
@@ -573,12 +573,9 @@ impl Runtime {
         if base.ir() != arg.ir() || !is_one_obj(right) {
             return Ok(None);
         }
-        let proof = self.verify_order_gt_one(base, verify_state)?;
-        if proof.is_failed() {
-            return Ok(None);
-        }
+        let Some(proof_of_requirement_facts) = self.verify_log_algebra_base(base, verify_state)? else { return Ok(None); };
         Ok(Some(LogBaseSelfBuiltinRuleProof {
-            proof_of_requirement_facts: vec![proof],
+            proof_of_requirement_facts,
         }))
     }
 
@@ -594,12 +591,9 @@ impl Runtime {
         if !is_one_obj(arg) || !is_zero_obj(right) {
             return Ok(None);
         }
-        let proof = self.verify_order_gt_one(base, verify_state)?;
-        if proof.is_failed() {
-            return Ok(None);
-        }
+        let Some(proof_of_requirement_facts) = self.verify_log_algebra_base(base, verify_state)? else { return Ok(None); };
         Ok(Some(LogOfOneBuiltinRuleProof {
-            proof_of_requirement_facts: vec![proof],
+            proof_of_requirement_facts,
         }))
     }
 
@@ -618,13 +612,33 @@ impl Runtime {
         if pbase.ir() != base.ir() || pexp.ir() != right.ir() {
             return Ok(None);
         }
-        let proof = self.verify_order_gt_one(base, verify_state)?;
-        if proof.is_failed() {
-            return Ok(None);
-        }
+        let Some(proof_of_requirement_facts) = self.verify_log_algebra_base(base, verify_state)? else { return Ok(None); };
         Ok(Some(LogOfPowerSameBaseBuiltinRuleProof {
-            proof_of_requirement_facts: vec![proof],
+            proof_of_requirement_facts,
         }))
+    }
+
+    // Algebraic log identities hold on both positive base ranges, excluding 1.
+    // Example: log(1/2,(1/2)^(-3))=-3; monotonicity keeps its own sign premise.
+    fn verify_log_algebra_base(&mut self, base: &Obj, state: VerifyState) -> RuntimeResult<Option<Vec<VerifyFactResult>>> {
+        let positive_requirement: Fact = GreaterFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: base.clone(),
+            right: Obj::Literal(Literal::Number(Number::new("0".into()))),
+            line_file: None,
+        }.into();
+        let positive = self.verify_builtin_rule_premise(&positive_requirement, state.clone())?;
+        let positive = if positive.is_failed() {
+            self.verify_positive(base, state.clone())?
+        } else { positive };
+        if positive.is_failed() { return Ok(None); }
+        let requirement: Fact = NotEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: base.clone(), right: Obj::Literal(Literal::Number(Number::new("1".into()))), line_file: None,
+        }.into();
+        let nonunit = self.verify_builtin_rule_premise(&requirement, state)?;
+        if nonunit.is_failed() { return Ok(None); }
+        Ok(Some(vec![positive, nonunit]))
     }
 
     fn try_log_arg_power(

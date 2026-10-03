@@ -33,14 +33,7 @@ impl Runtime {
         &mut self,
         let_stmt: &LetObjStmt,
     ) -> RuntimeResult<ExecLetObjStmtResult> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
         let value_well_defined = self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
         if value_well_defined.is_failed() {
             return Ok(ExecLetObjStmtResult::Failed(value_well_defined));
@@ -69,7 +62,7 @@ impl Runtime {
             right: let_stmt.value.clone(),
             line_file: Some(let_stmt.line_file.clone()),
         }));
-        let store_and_infer_result = self.store_fact_and_infer(&equal_fact)?;
+        let store_and_infer_result = self.store_fact_and_infer(&equal_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
 
         Ok(ExecLetObjStmtResult::Success(ExecLetObjStmtSuccessResult {
             statement: let_stmt.clone(),

@@ -128,13 +128,13 @@ impl Runtime {
                 return Ok(Err(IntroduceTypedParametersFailed::ParamType(failed)));
             }
             param_type_well_defined.push(proof);
-            let defined = self.define_typed_parameters_in_current_env(&one, shared_have.clone())?;
+            let defined = self.define_typed_parameters_in_current_env(&one, shared_have.clone(), verify_state)?;
             stored_fact_ids.extend(defined.stored_fact_ids);
         }
 
         let defined_params = StoreHaveObjAndInferResult { stored_fact_ids };
         let auto_opened_struct_layers =
-            match self.auto_open_struct_layers_for_typed_parameters(typed_parameters)? {
+            match self.auto_open_struct_layers_for_typed_parameters(typed_parameters, verify_state)? {
                 Ok(layers) => layers,
                 Err((opened_before_fail, failed)) => {
                     return Ok(Err(IntroduceTypedParametersFailed::AutoOpenStructLayer {
@@ -194,7 +194,7 @@ impl Runtime {
         &mut self,
         typed_parameters: &TypedParameterList,
         shared_have: Option<SharedHaveDefinition>,
-    ) -> RuntimeResult<StoreHaveObjAndInferResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<StoreHaveObjAndInferResult> {
         let mut stored_fact_ids = Vec::new();
         for group in &typed_parameters.groups {
             for identifier in &group.params {
@@ -256,7 +256,7 @@ impl Runtime {
                         }))
                     }
                 };
-                let store_result = self.store_fact_and_infer(&type_fact)?;
+                let store_result = self.store_fact_and_infer(&type_fact, verify_state)?;
                 stored_fact_ids.extend(store_result.stored_fact_ids());
             }
         }

@@ -4,6 +4,7 @@ mod builtin_atomic_gen;
 mod entry;
 mod induction;
 mod equality_builtin_gen;
+mod reduce_rules;
 mod aggregate_evaluation;
 mod aggregate_identity;
 mod exist_builtin_gen;
@@ -28,3 +29,5 @@ pub(in crate::json_output) use theorem::{project_release_thm_failure, project_by
 pub(in crate::json_output) use wd::project_verify_obj_wd;
 pub(in crate::json_output) use verify::project_verify_fact;
 pub(in crate::json_output) use stmt::{project_def_prop_failure, project_cases_definition_failure};
+
+mod closed_calculation;

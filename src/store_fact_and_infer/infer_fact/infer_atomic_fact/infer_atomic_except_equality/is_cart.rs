@@ -9,7 +9,7 @@ impl Runtime {
     pub(super) fn infer_is_cart_dimension_lower_bound(
         &mut self,
         is_cart: &IsCartFact,
-    ) -> RuntimeResult<InferIsCartDimensionLowerBoundResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<InferIsCartDimensionLowerBoundResult> {
         let lower_bound = AtomicFact::GreaterEqualFact(GreaterEqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: Obj::ProductShape(ProductShape::CartDim(CartDim {
@@ -21,7 +21,7 @@ impl Runtime {
             line_file: is_cart.line_file.clone(),
         });
         let derived = Box::new(
-            self.store_inferred_fact_and_infer(&Fact::AtomicFact(lower_bound))?,
+            self.store_inferred_fact_and_infer(&Fact::AtomicFact(lower_bound), verify_state)?,
         );
         Ok(InferIsCartDimensionLowerBoundResult { derived })
     }

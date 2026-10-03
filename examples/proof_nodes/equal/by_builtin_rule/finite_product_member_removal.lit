@@ -1,0 +1,8 @@
+# FiniteSetProductMemberRemoval: membership and the checked callback restriction are essential.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/finite_product_member_removal.lit
+# Previously rejected, exact legacy-positive source:
+# forall S finite_set,a S,f fn(x S)R:
+#     finite_set_product(S,f) = finite_set_product(set_minus(S,{a}),fn(x set_minus(S,{a}))R {f(x)})*f(a)
+forall S finite_set,a S,f fn(x S)R:
+    finite_set_product(S,f) = finite_set_product(set_minus(S,{a}),fn(x set_minus(S,{a}))R {f(x)})*f(a)
+# Boundary: missing membership, wrong callback/factor or unproved finiteness reject in Rust tests.

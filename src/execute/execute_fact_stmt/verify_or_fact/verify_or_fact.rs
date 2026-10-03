@@ -127,7 +127,7 @@ impl Runtime {
                 };
             let negated_fact = Fact::AtomicFact(negated_atomic);
             let store_and_infer: StoreFactAndInferResult =
-                self.store_fact_and_infer(&negated_fact)?;
+                self.store_fact_and_infer(&negated_fact, verify_state)?;
             assumed_negated_branches.push(AssumeNegatedOrBranchResult {
                 branch_index,
                 negated_fact,
@@ -189,12 +189,11 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        if !verify_state.can_use_def_and_known_forall_and_known_strategy
-            || verify_state.remaining_deep_search_depth == 0
+        if !verify_state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
         {
             return Ok(None);
         }
-        let premise_state = verify_state.after_deep_search();
+        let premise_state = verify_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
         let lookup_key = or_fact_index_key(fact);
         let mut candidates = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {

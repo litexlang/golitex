@@ -70,7 +70,7 @@ impl Runtime {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     // Checked antecedents guard later domains and conclusions.
                     // This binder environment is retained as evidence, not merged.
-                    let _ = self.store_fact_and_infer(&quantifier_free_fact_to_fact(dom.clone()))?;
+                    let _ = self.store_fact_and_infer(&quantifier_free_fact_to_fact(dom.clone()), verify_state)?;
                     succeeded_dom.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {

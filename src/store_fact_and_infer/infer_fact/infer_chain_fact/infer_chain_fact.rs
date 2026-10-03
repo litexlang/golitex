@@ -8,14 +8,14 @@ impl Runtime {
     pub(crate) fn infer_chain_fact(
         &mut self,
         chain_fact: &ChainFact,
-    ) -> RuntimeResult<InferChainFactResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<InferChainFactResult> {
         let adjacent_atomics = self.chain_adjacent_atomics(chain_fact)?;
         let mut adjacent_infers = Vec::with_capacity(adjacent_atomics.len());
         for atomic in &adjacent_atomics {
-            adjacent_infers.push(self.infer_atomic_fact(atomic)?);
+            adjacent_infers.push(self.infer_atomic_fact(atomic, verify_state)?);
         }
         let transitive_closures =
-            self.infer_chain_transitive_closures(chain_fact, adjacent_infers.len())?;
+            self.infer_chain_transitive_closures(chain_fact, adjacent_infers.len(), verify_state)?;
         Ok(InferChainFactResult {
             adjacent_infers,
             transitive_closures,

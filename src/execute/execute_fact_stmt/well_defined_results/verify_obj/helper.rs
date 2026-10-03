@@ -211,8 +211,8 @@ pub(super) fn set_bound_params_to_arg_map(
     map
 }
 
-// FnSet / AnonymousFn obj carriers must be fixed sets: a later group's
-// `param_type` must not freely mention an earlier binder of the same signature.
+// FnSet / AnonymousFn obj carriers must be fixed sets: no group's
+// `param_type` may freely mention any binder of the same signature.
 // Example reject: `fn(x R, y S(x))`.
 //
 // Why forall may look similar but is allowed: `forall S set, x S` uses binder
@@ -221,24 +221,33 @@ pub(super) fn set_bound_params_to_arg_map(
 // domain object. A set-theoretic function signature must fix each ordinary
 // domain set up front, so SetBoundParameterList forbids the same dependence.
 // Kind telescopes stay on introduce_typed_parameters (sequential). Return sets
-// and `: dom_facts` may still cite parameters after binders are introduced.
+// obey the fixed-carrier rule too; only `: dom_facts` and bodies cite parameters.
 //
 // Returns the failing group index when a citation is found.
-pub(super) fn set_bound_param_type_cites_earlier_binder(
+pub(super) fn set_bound_param_type_cites_binder(
     list: &SetBoundParameterList,
 ) -> Option<usize> {
-    let mut earlier_binders = HashSet::new();
-    let empty_bound = HashSet::new();
     for (index, group) in list.groups.iter().enumerate() {
-        let mut free = HashSet::new();
-        collect_free_plain_ids(group.param_type.as_ref(), &empty_bound, &mut free);
-        for id in &free {
-            if earlier_binders.contains(id) {
-                return Some(index);
-            }
+        if fn_carrier_parameter_reference(group.param_type.as_ref(), list).is_some() {
+            return Some(index);
         }
+    }
+    None
+}
+
+// Domains and the complete return object must be closed over the signature's
+// own parameters, including references nested in another fn or set builder.
+pub(super) fn fn_carrier_parameter_reference(
+    carrier: &Obj,
+    params: &SetBoundParameterList,
+) -> Option<String> {
+    let mut free = HashSet::new();
+    collect_free_plain_ids(carrier, &HashSet::new(), &mut free);
+    for group in &params.groups {
         for param in &group.params {
-            earlier_binders.insert(param.id);
+            if free.contains(&param.id) {
+                return Some(param.name.clone());
+            }
         }
     }
     None

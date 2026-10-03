@@ -29,3 +29,7 @@ sketch:
 # P07: -7 = 3 * quot(-7, 3) + (-7) % 3
 sketch:
     -7 = 3 * quot(-7, 3) + (-7) % 3
+
+# P121: closed exact elementary calculation
+sketch:
+    quot((1/3)*(-21),3)=-3

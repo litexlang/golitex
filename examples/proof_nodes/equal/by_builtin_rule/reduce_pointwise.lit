@@ -1,0 +1,22 @@
+# ReducePointwise: retain the whole stored forall certificate and its binder renaming.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/reduce_pointwise.lit
+# Previously rejected, exact legacy-positive source:
+# forall f,g fn(k Z)R,op fn(a,b R)R:
+#     forall k Z:
+#         f(k)=g(k)
+#     =>:
+#         reduce(1,3,f,op,0)=reduce(1,3,g,op,0)
+forall f,g fn(k Z)R,op fn(a,b R)R:
+    forall k Z:
+        f(k)=g(k)
+    =>:
+        reduce(1,3,f,op,0)=reduce(1,3,g,op,0)
+forall h,j fn(k Z)R,operation fn(a,b R)R:
+    forall t Z:
+        1<=t
+        t<=3
+        =>:
+            h(t)=j(t)
+    =>:
+        reduce(1,3,h,operation,0)=reduce(1,3,j,operation,0)
+# Boundary: missing certificate, insufficient interval or changed operation/seed reject in Rust tests.

@@ -77,14 +77,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
     ) -> RuntimeResult<ExecHaveFnEqualCaseByCaseStmtResult> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
         if stmt.cases.is_empty() {
             return Ok(ExecHaveFnEqualCaseByCaseStmtResult::Failed(
@@ -137,7 +130,7 @@ impl Runtime {
             }
         }
 
-        let store_and_infer_result = self.store_have_fn_case_by_case_facts(stmt, &fn_set)?;
+        let store_and_infer_result = self.store_have_fn_case_by_case_facts(stmt, &fn_set, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
 
         Ok(ExecHaveFnEqualCaseByCaseStmtResult::Success(
             ExecHaveFnEqualCaseByCaseStmtSuccessResult {
@@ -157,7 +150,7 @@ impl Runtime {
     ) -> RuntimeResult<Result<HaveFnCasesCoverageSuccess, ExecHaveFnEqualCaseByCaseStmtFailed>>
     {
         let (inner, local_env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause)?;
+            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause, verify_state)?;
             let or_fact = Fact::OrFact(OrFact {
                 fact_id: rt.global_ids.allocate_fact_id(),
                 facts: stmt.cases.clone(),
@@ -221,9 +214,9 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<bool> {
         let (ok, _env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause)?;
+            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause, verify_state)?;
             let assumed_fact = and_chain_as_fact(assumed);
-            let _ = rt.store_fact_and_infer(&assumed_fact)?;
+            let _ = rt.store_fact_and_infer(&assumed_fact, verify_state)?;
             for atom in flatten_and_chain_atoms(rt, other)? {
                 let Some(negated) = negate_atomic_fact(&atom, rt.global_ids.allocate_fact_id()) else {
                     continue;
@@ -261,8 +254,8 @@ impl Runtime {
     ) -> RuntimeResult<Result<HaveFnCaseReturnCheckSuccess, ExecHaveFnEqualCaseByCaseStmtFailed>>
     {
         let (inner, local_env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause)?;
-            let _ = rt.store_fact_and_infer(&and_chain_as_fact(case_fact))?;
+            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause, verify_state)?;
+            let _ = rt.store_fact_and_infer(&and_chain_as_fact(case_fact), verify_state)?;
 
             let body_well_defined =
                 rt.verify_obj_well_definedness(equal_to, verify_state.clone())?;
@@ -307,11 +300,11 @@ impl Runtime {
     pub(crate) fn introduce_fn_set_clause_binders(
         &mut self,
         clause: &FnSetClause,
-    ) -> RuntimeResult<()> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<()> {
         let typed = set_bound_to_typed(&clause.set_bound_parameters);
-        let _ = self.define_typed_parameters_in_current_env(&typed, None)?;
+        let _ = self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
         for dom in &clause.dom_facts {
-            let _ = self.store_fact_and_infer(&quantifier_free_fact_to_fact(dom.clone()))?;
+            let _ = self.store_fact_and_infer(&quantifier_free_fact_to_fact(dom.clone()), verify_state)?;
         }
         Ok(())
     }
@@ -320,7 +313,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set: &FnSet,
-    ) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
         if self.identifier_defined_in_stack(&stmt.name.name) {
             return Err(RuntimeError::InternalBug(format!(
                 "identifier `{}` is already defined in this ExecEnv",
@@ -334,7 +327,7 @@ impl Runtime {
                 Rc::new(stmt.clone()),
             )),
         );
-        self.store_piecewise_fn_membership_and_case_foralls(stmt, fn_set)
+        self.store_piecewise_fn_membership_and_case_foralls(stmt, fn_set, verify_state)
     }
 
     // Shared by `by cases` and `by induc`: membership + one forall equation per leaf case.
@@ -343,7 +336,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set: &FnSet,
-    ) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
         let function_ident =
             self.identifier_obj_for_stored_mention(&stmt.name);
         let function_obj = Obj::Identifier(function_ident.clone());
@@ -355,7 +348,7 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
+        let mut stored_fact_ids = self.store_fact_and_infer(&membership, verify_state)?.stored_fact_ids();
 
         let typed = set_bound_to_typed(&stmt.fn_set_clause.set_bound_parameters);
         let mut args = Vec::new();
@@ -399,7 +392,7 @@ impl Runtime {
                 then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(equal_atomic)],
                 line_file: Some(stmt.line_file.clone()),
             });
-            let stored = self.store_fact_and_infer(&forall)?;
+            let stored = self.store_fact_and_infer(&forall, verify_state)?;
             case_defining_fact_ids.push(forall_id);
             stored_fact_ids.extend(stored.stored_fact_ids());
         }

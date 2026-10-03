@@ -22,7 +22,7 @@ pub(super) fn project_atomic_builtin_rule(
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("NotEqualFact")), ("rule", string("PeriodicTrigNonzero")),
-            ("coefficient", string(p.coefficient.to_string())), ("integer_requirements", project_verify_facts(&p.integer_requirements, runtime)),
+            ("coefficient", string(p.coefficient.readable_string())), ("integer_requirements", project_verify_facts(&p.integer_requirements, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::FromKnownGreater(p)) => {
             object_for(runtime, vec![
@@ -155,6 +155,11 @@ pub(super) fn project_atomic_builtin_rule(
             }
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::PiMultipleComparison(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("PiMultipleComparison")),
+            ("left_coefficient", string(p.left_coefficient.readable_string())),
+            ("right_coefficient", string(p.right_coefficient.readable_string())),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ClosedNumericComparison(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -266,6 +271,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessFact")),
                 ("rule", string("EvenPowPositiveFromNonzero")),
             ];
+            entries.push(("base_in_real_proof", project_verify_fact(&p.base_in_real_proof, runtime)));
             entries.push(("base_nonzero_proof", project_verify_fact(&p.base_nonzero_proof, runtime)));
             object_for(runtime, entries)
         },
@@ -566,6 +572,9 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("membership_proof", project_verify_fact(&p.membership_proof, runtime)));
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::NativeEulerGreaterOne(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterFact")), ("rule", string("NativeEulerGreaterOne")),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::NativeEulerGreaterZero(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -839,7 +848,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("LessEqualFact")),
                 ("rule", string("EvenPowNonnegative")),
             ];
-            let _ = p;
+            entries.push(("base_in_real_proof", project_verify_fact(&p.base_in_real_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::PowNonnegFromPositiveBase(p)) => {
@@ -1393,6 +1402,23 @@ pub(super) fn project_atomic_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::ClosedExactScalarMembership(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")),
+            ("family", string("InFact")),
+            ("rule", string("ClosedExactScalarMembership")),
+            ("real_value", string(p.real_value.readable_string())),
+            ("imaginary_value", string(p.imaginary_value.readable_string())),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealOperandArithmeticClosure(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")),
+            ("rule", string("RealOperandArithmeticClosure")),
+            ("operand_proofs", project_verify_facts(&p.operand_proofs, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealIntegerPower(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")),
+            ("rule", string("RealIntegerPower")),
+            ("base_in_real_proof", project_verify_fact(&p.base_in_real_proof, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::AnonymousFnInDeclaredFnSet(_)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("InFact")),
             ("rule", string("AnonymousFnInDeclaredFnSet")),
@@ -1909,6 +1935,16 @@ pub(super) fn project_atomic_builtin_rule(
                 ("type", string("builtin_rule")), ("rule", string("ClosedRational")),
                 ("left_normal", string(p.left_normal.readable_string())),
                 ("right_normal", string(p.right_normal.readable_string())),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ClosedComplex(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")), ("family", string("NotEqualFact")),
+                ("rule", string("ClosedComplex")),
+                ("left_real", string(p.left_real.readable_string())),
+                ("left_imaginary", string(p.left_imaginary.readable_string())),
+                ("right_real", string(p.right_real.readable_string())),
+                ("right_imaginary", string(p.right_imaginary.readable_string())),
             ])
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::NotEqualSymmetry(p)) => {

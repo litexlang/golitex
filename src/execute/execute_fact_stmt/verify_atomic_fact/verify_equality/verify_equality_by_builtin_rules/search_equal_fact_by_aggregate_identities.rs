@@ -18,9 +18,6 @@ impl Runtime {
         fact: &EqualFact,
         state: VerifyState,
     ) -> RuntimeResult<Option<AggregateIdentityBuiltinRuleProof>> {
-        if !state.can_use_builtin_rule {
-            return Ok(None);
-        }
         for (aggregate_side, other) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             let Some(aggregate) = aggregate_view(aggregate_side) else {
                 continue;
@@ -35,6 +32,9 @@ impl Runtime {
                 return Ok(Some(p));
             }
             if let Some(p) = self.aggregate_product_fresh_insertion(&aggregate, other, fact, &state)? {
+                return Ok(Some(p));
+            }
+            if let Some(p) = self.aggregate_product_member_removal(&aggregate, other, fact, &state)? {
                 return Ok(Some(p));
             }
             if let Some(p) = self.aggregate_linearity_identity(&aggregate, other, fact, &state)? {
@@ -362,6 +362,45 @@ impl Runtime {
                     FiniteSetProductFreshInsertionProof { premises, pointwise, factor_expansions, factor_equal },
                 )));
             }
+        }
+        Ok(None)
+    }
+
+    fn aggregate_product_member_removal(
+        &mut self,
+        aggregate: &AggregationView,
+        other: &Obj,
+        fact: &EqualFact,
+        state: &VerifyState,
+    ) -> RuntimeResult<Option<AggregateIdentityBuiltinRuleProof>> {
+        // For a in S, product(S,f)=product(S\{a},g)*f(a), where g=f on S\{a}.
+        // This multiplication identity remains valid when f(a)=0.
+        if !aggregate.product { return Ok(None); }
+        let AggregationDomain::FiniteSet(set) = aggregate.domain else { return Ok(None); };
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) = other else { return Ok(None); };
+        for (base_obj, factor) in [(&*mul.left, &*mul.right), (&*mul.right, &*mul.left)] {
+            let Some(base) = aggregate_view(base_obj) else { continue; };
+            if !base.product { continue; }
+            let AggregationDomain::FiniteSet(Obj::SetOperator(SetOperator::SetMinus(minus))) = base.domain else { continue; };
+            let Obj::SetFormer(SetFormer::ListSet(list)) = &*minus.right else { continue; };
+            if list.list.len() != 1 { continue; }
+            let element = &*list.list[0];
+            let member: Fact = InFact { fact_id: self.global_ids.allocate_fact_id(), element: element.clone(), set: set.clone(), line_file: fact.line_file.clone() }.into();
+            let same_set = equality(self, set.clone(), *minus.left.clone(), fact);
+            let Some(premises) = self.aggregate_identity_premises(vec![member, same_set], state)? else { continue; };
+            let Some(pointwise) = self.aggregate_pointwise_proof(base.domain, fact, state, |rt, index, expansions| {
+                let Some(a) = function_at(rt, aggregate.func, index, expansions)? else { return Ok(None); };
+                let Some(b) = function_at(rt, base.func, index, expansions)? else { return Ok(None); };
+                Ok(Some((a, b)))
+            })? else { continue; };
+            let mut factor_expansions = Vec::new();
+            let Some(value) = function_at(self, aggregate.func, element, &mut factor_expansions)? else { continue; };
+            let goal = equality(self, value, factor.clone(), fact);
+            let factor_equal = self.verify_builtin_rule_premise(&goal, *state)?;
+            if factor_equal.is_failed() { continue; }
+            return Ok(Some(AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(
+                FiniteSetProductMemberRemovalProof { premises, pointwise, factor_expansions, factor_equal },
+            )));
         }
         Ok(None)
     }
@@ -730,9 +769,9 @@ impl Runtime {
                     param_type: ParamType::Obj(parameter_set),
                 }],
             };
-            rt.define_typed_parameters_in_current_env(&parameters, None)?;
+            rt.define_typed_parameters_in_current_env(&parameters, None, *state)?;
             for assumption in &assumptions {
-                rt.store_fact_and_infer(assumption)?;
+                rt.store_fact_and_infer(assumption, *state)?;
             }
             let mut expansions = Vec::new();
             let Some((left, right)) = build(rt, &index, &mut expansions)? else {
@@ -750,20 +789,19 @@ impl Runtime {
             }
             // This rule explicitly consumes a known pointwise forall. It does
             // not restart general definition/strategy/rewrite truth search.
-            if !state.can_use_def_and_known_forall_and_known_strategy
-                || state.remaining_deep_search_depth == 0
+            if !state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
             {
                 return Ok(None);
             }
             let wd = match rt
-                .verify_equal_fact_well_definedness(&goal, state.without_well_defined_storage())?
+                .verify_equal_fact_well_definedness(&goal, *state)?
             {
                 VerifyEqualFactWellDefinedResult::Success(p) => p,
                 _ => return Ok(None),
             };
             let Some(searched) = rt.search_equal_fact_proof_by_known_forall_fact(
                 &goal,
-                state.after_deep_search().without_well_defined_storage(),
+                state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
             )?
             else {
                 return Ok(None);

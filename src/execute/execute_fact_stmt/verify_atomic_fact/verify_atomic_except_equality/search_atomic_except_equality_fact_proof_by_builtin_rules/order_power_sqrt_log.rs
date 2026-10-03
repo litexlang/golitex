@@ -35,7 +35,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         if is_one_obj(&fact.left) {
-            if let Some(premise_proof) = self.known_in_positive_natural_proof(&fact.right) {
+            if let Some(premise_proof) = self.search_in_positive_natural_premise(&fact.right, verify_state)? {
                 return Ok(Some(
                     LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(
                         FromKnownInPositiveNaturalBuiltinRuleProof { premise_proof },
@@ -85,20 +85,12 @@ impl Runtime {
             Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right }))
                 if left.as_ref().ir() == right.as_ref().ir() =>
             {
-                Ok(Some(
-                    LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(
-                        EvenPowNonnegativeBuiltinRuleProof {},
-                    ),
-                ))
+                self.even_pow_nonnegative_proof(left.as_ref(), verify_state)
             }
-            Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base: _, exponent }))
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base, exponent }))
                 if is_even_integer_literal(exponent.as_ref()) =>
             {
-                Ok(Some(
-                    LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(
-                        EvenPowNonnegativeBuiltinRuleProof {},
-                    ),
-                ))
+                self.even_pow_nonnegative_proof(base.as_ref(), verify_state)
             }
             Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base, exponent })) => {
                 if let Some(proof) = self
@@ -337,6 +329,10 @@ impl Runtime {
         base: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+        let base_in_real_proof = self.verify_even_power_real_base(base, verify_state.clone())?;
+        if base_in_real_proof.is_failed() {
+            return Ok(None);
+        }
         let base_nonzero_proof = self.verify_order_nonzero(base, verify_state)?;
         if base_nonzero_proof.is_failed() {
             return Ok(None);
@@ -344,10 +340,41 @@ impl Runtime {
         Ok(Some(
             LessFactSearchProofByBuiltinRule::EvenPowPositiveFromNonzero(
                 EvenPowPositiveFromNonzeroBuiltinRuleProof {
+                    base_in_real_proof,
                     base_nonzero_proof,
                 },
             ),
         ))
+    }
+
+    // Even powers are nonnegative over R; complex WD alone is insufficient.
+    // Example: x in R gives 0 <= x^2, but i^2 = -1 must not use this rule.
+    fn even_pow_nonnegative_proof(
+        &mut self,
+        base: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
+        let base_in_real_proof = self.verify_even_power_real_base(base, verify_state)?;
+        if base_in_real_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(
+            EvenPowNonnegativeBuiltinRuleProof { base_in_real_proof },
+        )))
+    }
+
+    fn verify_even_power_real_base(
+        &mut self,
+        base: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactResult> {
+        let fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: base.clone(),
+            set: Obj::StandardSet(StandardSet::R),
+            line_file: None,
+        }));
+        self.verify_builtin_rule_premise(&fact, verify_state)
     }
 
     fn pow_positive_from_positive_base_proof(

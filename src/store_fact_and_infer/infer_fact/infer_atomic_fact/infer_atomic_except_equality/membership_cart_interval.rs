@@ -19,21 +19,21 @@ impl Runtime {
     pub(super) fn infer_in_fact_cart_interval_rules(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
-        if let Some(r) = self.infer_in_fact_cart(in_fact)? {
+        if let Some(r) = self.infer_in_fact_cart(in_fact, verify_state)? {
             rules.push(r);
         }
-        if let Some(r) = self.infer_in_fact_range(in_fact)? {
+        if let Some(r) = self.infer_in_fact_range(in_fact, verify_state)? {
             rules.push(r);
         }
-        if let Some(r) = self.infer_in_fact_closed_range(in_fact)? {
+        if let Some(r) = self.infer_in_fact_closed_range(in_fact, verify_state)? {
             rules.push(r);
         }
-        if let Some(r) = self.infer_in_fact_real_interval(in_fact)? {
+        if let Some(r) = self.infer_in_fact_real_interval(in_fact, verify_state)? {
             rules.push(r);
         }
-        if let Some(r) = self.infer_in_fact_one_side_real_interval(in_fact)? {
+        if let Some(r) = self.infer_in_fact_one_side_real_interval(in_fact, verify_state)? {
             rules.push(r);
         }
         Ok(rules)
@@ -44,7 +44,7 @@ impl Runtime {
     fn infer_in_fact_cart(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::ProductShape(ProductShape::Cart(cart)) = &in_fact.set else {
             return Ok(None);
         };
@@ -62,7 +62,7 @@ impl Runtime {
                 set: in_fact.element.clone(),
                 line_file: lf.clone(),
             }),
-        ))? {
+        ), verify_state)? {
             derived.push(ok);
         }
 
@@ -78,7 +78,7 @@ impl Runtime {
                 })),
                 line_file: lf.clone(),
             }),
-        ))? {
+        ), verify_state)? {
             derived.push(ok);
         }
 
@@ -104,7 +104,7 @@ impl Runtime {
                     set: factor.as_ref().clone(),
                     line_file: lf.clone(),
                 }),
-            ))? {
+            ), verify_state)? {
                 derived.push(ok);
             }
         }
@@ -122,7 +122,7 @@ impl Runtime {
     fn infer_in_fact_range(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetFormer(SetFormer::Range(r)) = &in_fact.set else {
             return Ok(None);
         };
@@ -131,7 +131,7 @@ impl Runtime {
             r.start.as_ref().clone(),
             r.end.as_ref().clone(),
             false,
-        )?;
+         verify_state)?;
         Ok(Some(InferAtomicExceptEqualityResult::InFactRange(
             InferInFactRangeResult { derived },
         )))
@@ -140,7 +140,7 @@ impl Runtime {
     fn infer_in_fact_closed_range(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetFormer(SetFormer::ClosedRange(c)) = &in_fact.set else {
             return Ok(None);
         };
@@ -149,7 +149,7 @@ impl Runtime {
             c.start.as_ref().clone(),
             c.end.as_ref().clone(),
             true,
-        )?;
+         verify_state)?;
         Ok(Some(
             InferAtomicExceptEqualityResult::InFactClosedRange(InferInFactClosedRangeResult {
                 derived,
@@ -163,7 +163,7 @@ impl Runtime {
         start: Obj,
         end: Obj,
         end_inclusive: bool,
-    ) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
         let mut derived = Vec::new();
@@ -176,7 +176,7 @@ impl Runtime {
                 set: Obj::StandardSet(StandardSet::Z),
                 line_file: lf.clone(),
             },
-        )))?);
+        )), verify_state)?);
 
         let lower_id = self.global_ids.allocate_fact_id();
         derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
@@ -186,7 +186,7 @@ impl Runtime {
                 right: element.clone(),
                 line_file: lf.clone(),
             }),
-        ))?);
+        ), verify_state)?);
 
         if end_inclusive {
             let upper_id = self.global_ids.allocate_fact_id();
@@ -197,7 +197,7 @@ impl Runtime {
                     right: end.clone(),
                     line_file: lf.clone(),
                 }),
-            ))?);
+            ), verify_state)?);
         } else {
             let upper_id = self.global_ids.allocate_fact_id();
             derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
@@ -207,7 +207,7 @@ impl Runtime {
                     right: end.clone(),
                     line_file: lf.clone(),
                 }),
-            ))?);
+            ), verify_state)?);
         }
 
         if let Some(singleton) =
@@ -221,7 +221,7 @@ impl Runtime {
                     right: singleton,
                     line_file: lf,
                 }),
-            ))?);
+            ), verify_state)?);
         }
 
         Ok(derived)
@@ -254,7 +254,7 @@ impl Runtime {
     fn infer_in_fact_real_interval(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetFormer(SetFormer::IntervalObj(interval)) = &in_fact.set else {
             return Ok(None);
         };
@@ -284,7 +284,7 @@ impl Runtime {
                 set: Obj::StandardSet(StandardSet::R),
                 line_file: lf.clone(),
             },
-        )))?);
+        )), verify_state)?);
 
         if left_closed {
             let lower_id = self.global_ids.allocate_fact_id();
@@ -295,7 +295,7 @@ impl Runtime {
                     right: element.clone(),
                     line_file: lf.clone(),
                 }),
-            ))?);
+            ), verify_state)?);
         } else {
             let lower_id = self.global_ids.allocate_fact_id();
             derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
@@ -305,7 +305,7 @@ impl Runtime {
                     right: element.clone(),
                     line_file: lf.clone(),
                 }),
-            ))?);
+            ), verify_state)?);
         }
 
         if right_closed {
@@ -317,7 +317,7 @@ impl Runtime {
                     right: end,
                     line_file: lf,
                 }),
-            ))?);
+            ), verify_state)?);
         } else {
             let upper_id = self.global_ids.allocate_fact_id();
             derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
@@ -327,7 +327,7 @@ impl Runtime {
                     right: end,
                     line_file: lf,
                 }),
-            ))?);
+            ), verify_state)?);
         }
 
         Ok(Some(
@@ -340,7 +340,7 @@ impl Runtime {
     fn infer_in_fact_one_side_real_interval(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(interval)) = &in_fact.set else {
             return Ok(None);
         };
@@ -356,7 +356,7 @@ impl Runtime {
                 set: Obj::StandardSet(StandardSet::R),
                 line_file: lf.clone(),
             },
-        )))?);
+        )), verify_state)?);
 
         // Lower* = ray (a, +∞) / [a, +∞); Upper* = (−∞, a) / (−∞, a].
         let bound_id = self.global_ids.allocate_fact_id();
@@ -386,7 +386,7 @@ impl Runtime {
                 line_file: lf,
             }),
         };
-        derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(bound))?);
+        derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(bound), verify_state)?);
 
         Ok(Some(
             InferAtomicExceptEqualityResult::InFactOneSideRealInterval(

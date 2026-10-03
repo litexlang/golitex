@@ -118,12 +118,7 @@ impl Runtime {
         wrap: impl FnOnce(P) -> ObjWellDefinedProofByDef,
         proof: P,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
-        if verify_state.store_well_defined_fact {
-            let wd_id = self.global_ids.allocate_well_definedness_id();
-            self.top_exec_env_mut()
-                .well_defined_objects
-                .record(obj.clone(), wd_id);
-        }
+
         Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
             obj,
             proof: wrap(proof),
@@ -145,11 +140,21 @@ impl Runtime {
         >,
     > {
         if let Some(failed_index) =
-            super::helper::set_bound_param_type_cites_earlier_binder(&value.set_bound_parameters)
+            super::helper::set_bound_param_type_cites_binder(&value.set_bound_parameters)
         {
             return Ok(Err(
-                FailToVerifyFnSetObjWellDefined::ParamTypeCitesEarlierBinder { failed_index },
+                FailToVerifyFnSetObjWellDefined::Others(format!(
+                    "function parameter domain at group {failed_index} must not reference this function's parameters"
+                )),
             ));
+        }
+
+        if let Some(name) = super::helper::fn_carrier_parameter_reference(
+            &value.ret_set, &value.set_bound_parameters,
+        ) {
+            return Ok(Err(FailToVerifyFnSetObjWellDefined::Others(format!(
+                "function return set must not reference parameter `{name}`"
+            ))));
         }
 
         let param_type_well_defined =
@@ -169,7 +174,7 @@ impl Runtime {
             };
 
         let typed = set_bound_parameters_to_typed_parameter_list(&value.set_bound_parameters);
-        self.define_typed_parameters_in_current_env(&typed, None)?;
+        self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
 
         let dom_fact_well_defined = match self.verify_quantifier_free_facts_well_defined(
             &value.dom_facts,
@@ -219,14 +224,22 @@ impl Runtime {
             FailToVerifyAnonymousFnObjWellDefined,
         >,
     > {
-        if let Some(failed_index) = super::helper::set_bound_param_type_cites_earlier_binder(
+        if let Some(failed_index) = super::helper::set_bound_param_type_cites_binder(
             &value.body.set_bound_parameters,
         ) {
             return Ok(Err(
-                FailToVerifyAnonymousFnObjWellDefined::ParamTypeCitesEarlierBinder {
-                    failed_index,
-                },
+                FailToVerifyAnonymousFnObjWellDefined::Others(format!(
+                    "function parameter domain at group {failed_index} must not reference this function's parameters"
+                )),
             ));
+        }
+
+        if let Some(name) = super::helper::fn_carrier_parameter_reference(
+            &value.body.ret_set, &value.body.set_bound_parameters,
+        ) {
+            return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::Others(format!(
+                "function return set must not reference parameter `{name}`"
+            ))));
         }
 
         let param_type_well_defined =
@@ -246,7 +259,7 @@ impl Runtime {
             };
 
         let typed = set_bound_parameters_to_typed_parameter_list(&value.body.set_bound_parameters);
-        self.define_typed_parameters_in_current_env(&typed, None)?;
+        self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
 
         let dom_fact_well_defined = match self.verify_quantifier_free_facts_well_defined(
             &value.body.dom_facts,
@@ -348,7 +361,7 @@ impl Runtime {
                 param_type: ParamType::Obj(value.param_set.as_ref().clone()),
             }],
         };
-        self.define_typed_parameters_in_current_env(&typed, None)?;
+        self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
 
         let fact_well_defined =
             match self.verify_quantifier_free_facts_well_defined(&value.facts, verify_state)? {
@@ -415,7 +428,7 @@ impl Runtime {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     // Assume earlier facts in binder scopes (FnSet/AnonymousFn dom,
                     // SetBuilder facts) before later WD checks.
-                    let _ = self.store_fact_and_infer(&as_fact)?;
+                    let _ = self.store_fact_and_infer(&as_fact, verify_state)?;
                     succeeded.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(failed) => {

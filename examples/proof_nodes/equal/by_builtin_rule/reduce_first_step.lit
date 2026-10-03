@@ -1,0 +1,14 @@
+# ReduceFirstStep: preserve seed/term order; no associativity or commutativity.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/reduce_first_step.lit
+# Previously rejected, exact legacy-positive source:
+# have op fn(a,b R)R
+# have f fn(k Z)R
+# reduce(1,3,f,op,0) = reduce(2,3,f,op,op(0,f(1)))
+have op fn(a,b R)R
+have f fn(k Z)R
+reduce(1,3,f,op,0) = reduce(2,3,f,op,op(0,f(1)))
+forall a,b Z,g fn(k Z)R,operation fn(x,y R)R,s R:
+    a<=b
+    =>:
+        reduce(a,b,g,operation,s) = reduce(a+1,b,g,operation,operation(s,g(a)))
+# Boundary: wrong order, empty interval, changed function/operation/seed reject in Rust tests.

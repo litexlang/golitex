@@ -11,7 +11,7 @@ impl Runtime {
     // Cite a known non-equality atomic by proving each known_arg = goal_arg.
     //
     // Candidates: same prop name, polarity, and arity (no equality-class filter).
-    // Arg equality search: can_use_forall_fact = false, can_use_rewrite = false.
+    // Argument obligations use KnownFact: only identity/alpha and stored paths.
     // Nested MatchingOneArgByOne is still available there (scheduled before rewrite).
     //
     // Example: known `a > 0`, `a = b`, goal `b > 0`.
@@ -26,7 +26,7 @@ impl Runtime {
         }
 
         // Arg equality: known / peel only (no nested builtin / deep search).
-        let equality_state = verify_state.known_only_no_wd();
+        let equality_state = verify_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct);
 
         let lookup_key = (fact.prop_name(), atomic_fact_has_positive_polarity(fact));
         let goal_args = atomic_fact_args_ref(fact);

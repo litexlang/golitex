@@ -119,7 +119,7 @@ fn exec_one_case_branch(
                         result: proof,
                     }));
                 }
-                let stored = rt.store_fact_and_infer(then_fact)?;
+                let stored = rt.store_fact_and_infer(then_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
                 conclusion_fact_ids.push(Some(stored.primary_fact_id()));
                 checks.push(proof);
             }

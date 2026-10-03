@@ -44,6 +44,15 @@ impl Runtime {
         if let Some(proof) = self.search_reduce_partition(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::ReducePartition(proof)));
         }
+        if let Some(proof) = self.search_reduce_first_step(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceFirstStep(proof)));
+        }
+        if let Some(proof) = self.search_reduce_translation(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceTranslation(proof)));
+        }
+        if let Some(proof) = self.search_reduce_pointwise(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReducePointwise(proof)));
+        }
         if let Some(proof) = self.search_equal_fact_by_aggregate_identities(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::AggregateIdentity(proof)));
         }

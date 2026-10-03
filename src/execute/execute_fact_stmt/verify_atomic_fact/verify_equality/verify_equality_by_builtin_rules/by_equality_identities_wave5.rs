@@ -82,7 +82,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualityIdentitiesWave5BuiltinRuleProof>> {
-        let child = verify_state.without_well_defined_storage();
+        let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if let Some(p) = self.try_quot_by_one(left, right)? {
                 return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::QuotByOne(p)));

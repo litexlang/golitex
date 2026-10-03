@@ -118,7 +118,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualityIdentitiesWave13BuiltinRuleProof>> {
-        let child = verify_state.without_well_defined_storage();
+        let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if euler_equals_exp_one_shape(left, right) {
                 return Ok(Some(

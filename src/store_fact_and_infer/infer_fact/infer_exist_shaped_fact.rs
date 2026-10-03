@@ -21,7 +21,7 @@ impl Runtime {
     pub(crate) fn infer_exist_shaped_fact(
         &mut self,
         fact: &Fact,
-    ) -> RuntimeResult<InferExistShapedFactResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<InferExistShapedFactResult> {
         let Some(family) = exist_shaped_fact_from_fact(fact) else {
             return Err(crate::runtime::RuntimeError::InternalBug(
                 "infer_exist_shaped_fact: expected exist-shaped fact".to_string(),
@@ -32,10 +32,10 @@ impl Runtime {
                 InferPlainExistFactResult::NoInfer,
             )),
             ExistShapedFact::ExistUnique(plain) => Ok(InferExistShapedFactResult::ExistUnique(
-                self.infer_exist_unique_fact(&plain)?,
+                self.infer_exist_unique_fact(&plain, verify_state)?,
             )),
             ExistShapedFact::NotExist(plain) => Ok(InferExistShapedFactResult::NotExist(
-                self.infer_not_exist_fact(&plain)?,
+                self.infer_not_exist_fact(&plain, verify_state)?,
             )),
         }
     }
@@ -46,7 +46,7 @@ impl Runtime {
     fn infer_exist_unique_fact(
         &mut self,
         plain: &PlainExistFact,
-    ) -> RuntimeResult<InferExistUniqueFactResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<InferExistUniqueFactResult> {
         let n: usize = plain
             .typed_parameters
             .groups
@@ -58,7 +58,7 @@ impl Runtime {
         }
         let uniqueness = self.build_exist_unique_component_uniqueness_forall_fact(plain)?;
         let derived = Box::new(
-            self.store_inferred_fact_and_infer(&Fact::ForallFact(uniqueness))?,
+            self.store_inferred_fact_and_infer(&Fact::ForallFact(uniqueness), verify_state)?,
         );
         Ok(InferExistUniqueFactResult::UniquenessForall(
             InferExistUniqueUniquenessForallResult { derived },
@@ -71,11 +71,11 @@ impl Runtime {
     fn infer_not_exist_fact(
         &mut self,
         plain: &PlainExistFact,
-    ) -> RuntimeResult<InferNotExistFactResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<InferNotExistFactResult> {
         let Some(forall) = self.not_exist_to_demorgan_forall(plain)? else {
             return Ok(InferNotExistFactResult::NoInfer);
         };
-        let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall))?);
+        let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall), verify_state)?);
         Ok(InferNotExistFactResult::DemorganForall(
             InferNotExistDemorganForallResult { derived },
         ))

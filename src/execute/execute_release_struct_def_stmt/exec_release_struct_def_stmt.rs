@@ -75,14 +75,7 @@ impl Runtime {
             set: Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
         let membership = self.verify_fact(&membership_fact, verify_state)?;
         if membership.is_failed() {
             return Ok(ExecReleaseStructDefStmtResult::Failed(
@@ -90,7 +83,7 @@ impl Runtime {
             ));
         }
 
-        match self.release_one_struct_layer(&stmt.obj, &struct_obj)? {
+        match self.release_one_struct_layer(&stmt.obj, &struct_obj, crate::execute::execute_fact_stmt::VerifyState::top_level())? {
             ReleaseOneStructLayerResult::Success(release) => Ok(
                 ExecReleaseStructDefStmtResult::Success(ExecReleaseStructDefStmtSuccess {
                     statement: stmt.clone(),

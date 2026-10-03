@@ -1,0 +1,35 @@
+# Tracer: function parameter domains and return sets use the enclosing scope.
+#
+# Before (accepted by the former parser and WD):
+# let dependent = fn(S power_set(R)) fn(x S) R
+# Former behavior: the return object could capture the outer function's S.
+#
+# Now: a fixed nested return carrier remains valid.
+let fixed = fn(S power_set(R)) fn(x R) R
+fixed = fixed
+
+# Disjoint signatures may reuse a spelling, with different binding identities.
+let independent = fn(x R) fn(x R) R
+independent = independent
+
+# Domain conditions and bodies still use the signature's own parameters.
+have fn guarded(x R: x > 0) R = x + 1
+guarded(2) = 3
+fn(x R: x > 0) R {x + 1}(2) = 3
+let compared = fn(x R, y Z: y > x) R
+compared = compared
+
+# An enclosing quantifier's carrier is fixed for the inner function.
+forall A nonempty_set:
+    fn(x A) A {x} = fn(y A) A {y}
+
+# Preserve a precise output property separately from the fixed return set.
+have fn singleton_identity(x R) R = x
+forall a R:
+    singleton_identity(a) $in {a}
+
+# Boundary: fn(S power_set(R), x S) R and dependent return sets reject at parse.
+# WD independently rejects such objects when constructed without the parser.
+# Evidence: target/release/litex -strict -f examples/wd/fixed_function_signature_scopes.lit
+# Require exit 0, JSON success:true, and session_error:null (current CLI has no -runner).
+# Tests: cargo test --release function_signature_scope_tests -- --nocapture

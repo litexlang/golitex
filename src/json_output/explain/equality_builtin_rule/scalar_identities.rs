@@ -4,8 +4,16 @@ use crate::launch_command::OutputLanguage;
 
 pub(super) fn explain(proof: &P, lang: OutputLanguage) -> BuiltinRuleText {
     let (en, zh, message_en, message_zh) = match proof {
-        T::PeriodicTrig(_) => ("Exact periodic trigonometric value", "精确周期三角值", "Reduce the exact pi coefficient using checked integer periods", "依据已验证的整数周期归约精确 pi 系数"),
-        T::NumericComplexModulus(_) => ("Exact numeric complex modulus", "数字复数模长精确计算", "Compute exact real/imaginary coordinates and take the nonnegative principal root", "精确计算实部与虚部并取非负主根"),
+        P::FiniteSetMaxSelection(_) => (
+            "Exact finite-set maximum", "有限集合最大值精确选取",
+            "Select an original rational member and certify every member is no greater",
+            "选取原有理数成员并证明每个成员不大于它",
+        ),
+        P::FiniteSetMinSelection(_) => (
+            "Exact finite-set minimum", "有限集合最小值精确选取",
+            "Select an original rational member and certify every member is no smaller",
+            "选取原有理数成员并证明每个成员不小于它",
+        ),
         P::AbsZeroArgument(_) => (
             "Zero absolute value",
             "绝对值为零",
@@ -72,6 +80,10 @@ pub(super) fn trig_complex(
 ) -> BuiltinRuleText {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof as T;
     let (en, zh, message_en, message_zh) = match proof {
+        T::SinHalfPiShift(_) => ("Sine quarter-turn shift", "正弦的半 pi 平移", "sin(x+pi/2)=cos(x) for checked real x", "经验证的实数 x 满足 sin(x+pi/2)=cos(x)"),
+        T::CosHalfPiShift(_) => ("Cosine quarter-turn shift", "余弦的半 pi 平移", "cos(x+pi/2)=-sin(x) for checked real x", "经验证的实数 x 满足 cos(x+pi/2)=-sin(x)"),
+        T::PeriodicTrig(_) => ("Exact periodic trigonometric value", "精确周期三角值", "Reduce the exact pi coefficient using checked integer periods", "依据已验证的整数周期归约精确 pi 系数"),
+        T::NumericComplexModulus(_) => ("Exact numeric complex modulus", "数字复数模长精确计算", "Compute exact real/imaginary coordinates and take the nonnegative principal root", "精确计算实部与虚部并取非负主根"),
         T::SinDifference => ("Sine difference formula", "正弦差角公式", "sin(x-y)=sin(x)cos(y)-cos(x)sin(y) for checked real arguments", "经验证的实数参数满足 sin(x-y)=sin(x)cos(y)-cos(x)sin(y)"),
         T::CosDifference => ("Cosine difference formula", "余弦差角公式", "cos(x-y)=cos(x)cos(y)+sin(x)sin(y) for checked real arguments", "经验证的实数参数满足 cos(x-y)=cos(x)cos(y)+sin(x)sin(y)"),
         T::ComplexModulusProduct => ("Multiplicativity of complex modulus", "复数模的乘法公式", "C_abs(z*w)=C_abs(z)*C_abs(w) for checked complex arguments", "经验证的复数参数满足 C_abs(z*w)=C_abs(z)*C_abs(w)"),

@@ -86,13 +86,13 @@ impl Runtime {
     pub(super) fn store_built_release_facts(
         &mut self,
         built: &BuiltReleaseFacts,
-    ) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
         let mut out = Vec::with_capacity(built.facts.len());
         for fact in &built.facts {
             if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = fact {
                 self.record_default_struct_view(in_fact);
             }
-            out.push(self.store_fact_and_infer(fact)?);
+            out.push(self.store_fact_and_infer(fact, verify_state)?);
         }
         Ok(out)
     }

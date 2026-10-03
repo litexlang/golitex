@@ -221,13 +221,13 @@ impl Runtime {
 
 impl Runtime {
     // Infer-produced fact: WD must succeed, then store_fact + infer_fact.
-    // WD success is stored into ExecEnv (store_well_defined_fact).
+    // WD evidence is checked at the caller ceiling before the inferred fact commits.
     // Example: membership projection stores `a $in R` through this path.
     pub(crate) fn store_inferred_fact_and_infer(
         &mut self,
         fact: &Fact,
-    ) -> RuntimeResult<crate::store_fact_and_infer::StoreFactAndInferResult> {
-        match self.try_store_inferred_fact_and_infer(fact)? {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<crate::store_fact_and_infer::StoreFactAndInferResult> {
+        match self.try_store_inferred_fact_and_infer(fact, verify_state)? {
             Some(ok) => Ok(ok),
             None => Err(crate::runtime::RuntimeError::InternalBug(
                 format!("inferred fact {} failed well-definedness check", fact.ir()),
@@ -240,21 +240,13 @@ impl Runtime {
     pub(crate) fn try_store_inferred_fact_and_infer(
         &mut self,
         fact: &Fact,
-    ) -> RuntimeResult<
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<
         Option<crate::store_fact_and_infer::StoreFactAndInferResult>,
     > {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
         let wd = self.verify_fact_well_definedness(fact, verify_state)?;
         if wd.is_failed() {
             return Ok(None);
         }
-        Ok(Some(self.store_fact_and_infer(fact)?))
+        Ok(Some(self.store_fact_and_infer(fact, verify_state)?))
     }
 }

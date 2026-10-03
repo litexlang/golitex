@@ -6,6 +6,28 @@
 sketch:
     arccot(0) = pi / 2
 
+# P02: arccot(1)=arccot(cot(pi/4))=pi/4
+sketch:
+    0 $in R
+    pi $in R
+    pi/4 $in R
+    sin(pi/4)!=0
+    cot(pi/4)=1
+    0<pi/4
+    pi/4<pi
+    arccot(1)=arccot(cot(pi/4))=pi/4
+
 # P03: cot(arccot(3)) = 3
 sketch:
     cot(arccot(3)) = 3
+
+# P04: arccot(-1)=arccot(cot(3*pi/4))=3*pi/4
+sketch:
+    0 $in R
+    pi $in R
+    3*pi/4 $in R
+    sin(3*pi/4)!=0
+    cot(3*pi/4)=-1
+    0<3*pi/4
+    3*pi/4<pi
+    arccot(-1)=arccot(cot(3*pi/4))=3*pi/4

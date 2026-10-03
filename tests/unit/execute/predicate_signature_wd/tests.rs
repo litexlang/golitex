@@ -112,3 +112,28 @@ fn valid_signatures_remain_valid_in_nested_quantifiers_and_existence() {
     let run = rt.run_litex_code("prop relation(a, b R):\n    a = b\nforall x R:\n    $relation(x, x)\n    =>:\n        $relation(x, x)\nwitness exist u R st {$relation(u, 0)} from 0\nobtain u from exist u R st {$relation(u, 0)}\nby def $relation(u, 0)\nu = 0\n").unwrap();
     assert!(run.success, "{:?}", run.session_error);
 }
+
+#[test]
+fn legacy_real_bound_certificate_signatures_work_without_granting_truth() {
+    for (theorem, predicate) in [
+        ("real_least_upper_bound_exists", "is_real_least_upper_bound"),
+        ("real_greatest_lower_bound_exists", "is_real_greatest_lower_bound"),
+    ] {
+        let mut rt = runtime(true);
+        let source = format!("release thm {theorem}({{0}}, 0)\nexist L R st {{${predicate}({{0}}, L)}}\n");
+        let run = rt.run_litex_code(&source).unwrap();
+        assert!(run.success, "{}", crate::json_output::emit_run_detailed(&run, &rt, "test", None));
+
+        for source in [format!("${predicate}({{0}}, 0)\n"), format!("by def ${predicate}({{0}}, 0)\n")] {
+            let mut fresh = runtime(true);
+            assert!(!fresh.run_litex_code(&source).unwrap().success, "signature must not grant a certificate: {source}");
+        }
+        for source in [format!("${predicate}({{0}})\n"), format!("not ${predicate}({{0}}, 0, 1)\n")] {
+            let run = runtime(true).run_litex_code(&source).unwrap();
+            assert!(run.session_error.is_none());
+            assert!(!run.success);
+            let output = crate::json_output::project_stmt_detailed(&run.statement_results[0], &runtime(true)).stringify();
+            assert!(output.contains("arity"), "{source}: {output}");
+        }
+    }
+}

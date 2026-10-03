@@ -13,34 +13,34 @@ impl Runtime {
     pub(super) fn infer_equal_fact_cart_tuple_shape(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> RuntimeResult<Option<InferEqualFactCartTupleShapeResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferEqualFactCartTupleShapeResult>> {
         let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
         if let Obj::ProductShape(ProductShape::Cart(cart)) = &equal_fact.left {
             derived.extend(self.infer_equal_fact_cart_from_known_side(
                 cart,
                 &equal_fact.right,
                 equal_fact,
-            )?);
+             verify_state)?);
         }
         if let Obj::ProductShape(ProductShape::Cart(cart)) = &equal_fact.right {
             derived.extend(self.infer_equal_fact_cart_from_known_side(
                 cart,
                 &equal_fact.left,
                 equal_fact,
-            )?);
+             verify_state)?);
         }
         if let Obj::ProductShape(ProductShape::Tuple(tuple)) = &equal_fact.left {
             derived.extend(self.infer_equal_fact_tuple_from_known_side(
                 tuple,
                 &equal_fact.right,
                 equal_fact,
-            )?);
+             verify_state)?);
         } else if let Obj::ProductShape(ProductShape::Tuple(tuple)) = &equal_fact.right {
             derived.extend(self.infer_equal_fact_tuple_from_known_side(
                 tuple,
                 &equal_fact.left,
                 equal_fact,
-            )?);
+             verify_state)?);
         }
         if derived.is_empty() {
             return Ok(None);
@@ -54,7 +54,7 @@ impl Runtime {
         known_cart: &Cart,
         target: &Obj,
         equal_fact: &EqualFact,
-    ) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
         let is_cart = AtomicFact::IsCartFact(IsCartFact {
             fact_id: self.global_ids.allocate_fact_id(),
             set: target.clone(),
@@ -71,8 +71,8 @@ impl Runtime {
             line_file: equal_fact.line_file.clone(),
         });
         Ok(vec![
-            self.store_inferred_fact_and_infer(&Fact::AtomicFact(is_cart))?,
-            self.store_inferred_fact_and_infer(&Fact::AtomicFact(dim_equal))?,
+            self.store_inferred_fact_and_infer(&Fact::AtomicFact(is_cart), verify_state)?,
+            self.store_inferred_fact_and_infer(&Fact::AtomicFact(dim_equal), verify_state)?,
         ])
     }
 
@@ -82,7 +82,7 @@ impl Runtime {
         known_tuple: &Tuple,
         target: &Obj,
         equal_fact: &EqualFact,
-    ) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
         if known_tuple.args.len() < 2 {
             return Ok(Vec::new());
         }
@@ -102,8 +102,8 @@ impl Runtime {
             line_file: equal_fact.line_file.clone(),
         });
         Ok(vec![
-            self.store_inferred_fact_and_infer(&Fact::AtomicFact(is_tuple))?,
-            self.store_inferred_fact_and_infer(&Fact::AtomicFact(dim_equal))?,
+            self.store_inferred_fact_and_infer(&Fact::AtomicFact(is_tuple), verify_state)?,
+            self.store_inferred_fact_and_infer(&Fact::AtomicFact(dim_equal), verify_state)?,
         ])
     }
 }

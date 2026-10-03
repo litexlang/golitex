@@ -1,0 +1,24 @@
+# Node: direct closed calculation; exact radical
+# Before (rejected by the baseline release):
+# sqrt(1/9)=1/3
+# Former behavior: JSON success=false and process exit 1.
+# Now: the same assertion and its exact eval are supported.
+# Boundary: false results and ill-defined inputs still reject; see
+# examples/negative/closed_exact_elementary_calculation/.
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/closed_radical_calculation.lit
+
+sqrt(1/9)=1/3
+sqrt(4/9)=2/3
+sqrt(8)=2*sqrt(2)
+sqrt(12)+sqrt(27)=5*sqrt(3)
+sqrt(12)-sqrt(27)=-sqrt(3)
+sqrt(1/2)=sqrt(2)/2
+sqrt(2)*sqrt(8)=4
+sqrt(2)*sqrt(3)=sqrt(6)
+1/sqrt(2)=sqrt(2)/2
+sqrt(2)^3=2*sqrt(2)
+(3-2*sqrt(2))*(3+2*sqrt(2))=1
+sqrt(2)+sqrt(3) != sqrt(5)
+eval sqrt(1/9)
+eval sqrt(12)+sqrt(27)
+eval 1/sqrt(2)
