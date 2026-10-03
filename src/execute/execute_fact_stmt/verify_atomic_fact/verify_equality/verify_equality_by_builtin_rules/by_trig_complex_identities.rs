@@ -9,11 +9,16 @@ use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum TrigComplexIdentityProof {
+    PeriodicTrig(super::by_periodic_trig::PeriodicTrigBuiltinRuleProof),
+    NumericComplexModulus(super::by_numeric_complex_modulus::NumericComplexModulusBuiltinRuleProof),
     SinNegation,
     CosNegation,
     SinPiShift,
     CosPiShift,
     SinDoubleAngle,
+    SinDifference,
+    CosDifference,
+    ComplexModulusProduct,
     ComplexReconstruction,
     RealPartAddition,
     ImaginaryPartAddition,
@@ -35,11 +40,16 @@ pub enum TrigComplexIdentityProof {
 impl TrigComplexIdentityProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::PeriodicTrig(_) => "PeriodicTrig",
+            Self::NumericComplexModulus(_) => "NumericComplexModulus",
             Self::SinNegation => "SinNegation",
             Self::CosNegation => "CosNegation",
             Self::SinPiShift => "SinPiShift",
             Self::CosPiShift => "CosPiShift",
             Self::SinDoubleAngle => "SinDoubleAngle",
+            Self::SinDifference => "SinDifference",
+            Self::CosDifference => "CosDifference",
+            Self::ComplexModulusProduct => "ComplexModulusProduct",
             Self::ComplexReconstruction => "ComplexReconstruction",
             Self::RealPartAddition => "RealPartAddition",
             Self::ImaginaryPartAddition => "ImaginaryPartAddition",
@@ -59,9 +69,36 @@ impl Runtime {
     ) -> RuntimeResult<Option<TrigComplexIdentityProof>> {
         use TrigComplexIdentityProof as P;
         // Trig/coordinate operators have already passed the whole equality WD.
+        if let Some(proof) = super::by_numeric_complex_modulus::numeric_complex_modulus(fact) {
+            return Ok(Some(P::NumericComplexModulus(proof)));
+        }
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            if let Some(proof) = self.periodic_trig_value(left, state.clone())? {
+                if crate::rational_expression::objs_equal_by_rational_expression_evaluation(&proof.value, right) {
+                    return Ok(Some(P::PeriodicTrig(proof)));
+                }
+            }
             for sine in [true, false] {
                 if let Some(arg) = trig_arg(left, sine) {
+                    // Difference-angle identities over the real arguments checked by WD.
+                    // sin(x-y)=sin(x)cos(y)-cos(x)sin(y), with the dual cosine sum.
+                    if let Obj::ArithmeticOperator(A::Sub(difference)) = arg {
+                        let (x, y) = (&*difference.left, &*difference.right);
+                        let expected = if sine {
+                            Obj::ArithmeticOperator(A::Sub(crate::ast::obj::Sub {
+                                left: Box::new(mul(sin(x), cos(y))),
+                                right: Box::new(mul(cos(x), sin(y))),
+                            }))
+                        } else {
+                            Obj::ArithmeticOperator(A::Add(crate::ast::obj::Add {
+                                left: Box::new(mul(cos(x), cos(y))),
+                                right: Box::new(mul(sin(x), sin(y))),
+                            }))
+                        };
+                        if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
+                            return Ok(Some(if sine { P::SinDifference } else { P::CosDifference }));
+                        }
+                    }
                     if let Some(x) = neg_arg(arg) {
                         let target = if sine { neg_arg(right) } else { Some(right) };
                         if target
@@ -90,6 +127,16 @@ impl Runtime {
                                 return Ok(Some(P::SinDoubleAngle));
                             }
                         }
+                    }
+                }
+            }
+            // The complex modulus is multiplicative: |z*w|=|z|*|w|.
+            // The complete equality WD checks both complex arguments.
+            if let Obj::ComplexOperator(C::ComplexAbs(abs)) = left {
+                if let Obj::ArithmeticOperator(A::Mul(product)) = &*abs.arg {
+                    let expected = mul(modulus(&product.left), modulus(&product.right));
+                    if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
+                        return Ok(Some(P::ComplexModulusProduct));
                     }
                 }
             }
@@ -315,4 +362,7 @@ fn cos(x: &Obj) -> Obj {
     Obj::TrigOperator(T::Cos(crate::ast::obj::Cos {
         arg: Box::new(x.clone()),
     }))
+}
+fn modulus(x: &Obj) -> Obj {
+    Obj::ComplexOperator(C::ComplexAbs(ComplexAbs { arg: Box::new(x.clone()) }))
 }

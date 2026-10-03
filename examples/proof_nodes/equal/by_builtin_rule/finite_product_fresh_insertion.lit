@@ -1,0 +1,12 @@
+# FiniteSetProductFreshInsertion: freshness and the checked callback restriction are essential.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/finite_product_fresh_insertion.lit
+# Previously rejected, exact legacy-positive source:
+# forall S finite_set,a R,f fn(x union(S,{a}))R:
+#     not a $in S
+#     =>:
+#         finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R {f(x)})*f(a)
+forall S finite_set,a R,f fn(x union(S,{a}))R:
+    not a $in S
+    =>:
+        finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R {f(x)})*f(a)
+# Boundary: omitted freshness, wrong callback/factor or unproved finiteness fail in Rust regressions.

@@ -207,7 +207,9 @@ conclusion and alpha-compares to the goal before instantiation requirements.
 `VerifyState` non-equality atomic search phases (after WD):
 
 1. **By known**: `search_atomic_except_equality_fact_proof_by_known` first
-   tries stored atomic facts, then the object-keyed special-property fact index. It returns
+   tries stored atomic facts with identity/stored-path-only parameter lookup.
+   Only a miss enters parameter-transforming known search and then the
+   object-keyed special-property fact index. It returns
    the existing `AtomicExceptEqualityFactSearchedProof` variants directly:
    `ByKnownAtomicFact` or `ByKnownSpecialProperty`. Both ordinary truth search
    and strategy known-first use this entry; neither needs builtin entry
@@ -224,8 +226,11 @@ conclusion and alpha-compares to the goal before instantiation requirements.
    `after_deep_search()`. Strategy children use their own depth budget (16)
    and cannot enter definition, forall or rewrite search.
 
-Equality retains its own identity / known-special-property / builtin / equality-class / constructor /
+Equality retains its own identity / stored-path / known-special-property / builtin / equality-class / constructor /
 deep pipeline; both pipelines share the builtin-entry permission and premise policy.
+Ordinary equality and strategy equality share the pure identity/stored-path
+lookup before trying any rule that produces new premises. The early lookup
+keeps `ByEquivalenceClass::KnownPath` evidence and never compares new peers.
 
 The [builtin-entry verification receipt](builtin_entry_verification.md) records
 the migration boundary, runnable tracer, and release comparison results.

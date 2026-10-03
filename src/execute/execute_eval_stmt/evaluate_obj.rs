@@ -34,6 +34,9 @@ pub fn evaluate_obj(
     }
 
     match obj {
+        Obj::ComplexOperator(_) => Ok(match crate::rational_expression::exact_complex::exact_modulus_value(obj) {
+            Some(value) => Ok(value), None => Err(ExecEvalStmtFailed::UnsupportedExpression),
+        }),
         Obj::FiniteSetStat(_) | Obj::ProductShape(_) => super::evaluate_finite_objects::evaluate_finite_object(runtime,obj,depth,active_calls),
         Obj::ArithmeticOperator(op) => {
             evaluate_arithmetic_operator(runtime, op, depth, active_calls)

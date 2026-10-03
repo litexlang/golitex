@@ -11,6 +11,29 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 #[test]
+fn stored_atomic_lookup_precedes_parameter_special_property_search() {
+    let mut rt = runtime();
+    exec_ok(&mut rt, "have x, y R");
+    exec_ok(&mut rt, "have p cart(R,R) = (x,y)");
+    let target = atomic(&mut rt, "p[1] $in R");
+    let before = memory_sizes(&rt);
+    let proof = rt
+        .search_atomic_except_equality_fact_proof_by_known(&target, builtin_disabled())
+        .unwrap()
+        .unwrap();
+    let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof) = proof else {
+        panic!("cartesian membership already stored its coordinate carrier")
+    };
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
+    assert!(proof.why_parameters_of_known_fact_are_equal_to_givens.iter().all(|proof| {
+        matches!(proof, EqualFactSearchedProof::ByTheyAreTheSame(_)
+            | EqualFactSearchedProof::ByEquivalenceClass(_))
+    }), "stored candidate must win without a new tuple-projection proof");
+    assert!(rt.fact_by_id_in_stack(proof.cite_fact_id).is_some());
+    assert_eq!(memory_sizes(&rt), before);
+}
+
+#[test]
 fn builtin_disabled_definition_codomain_and_range_work_with_fresh_and_cached_wd() {
     for cached in [false, true] {
         for goal in ["id(a) $in R", "id(a) $in fn_range(id)"] {

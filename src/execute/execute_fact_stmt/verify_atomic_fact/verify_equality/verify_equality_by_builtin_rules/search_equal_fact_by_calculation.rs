@@ -32,6 +32,18 @@ impl Runtime {
             }
         }
 
+        if let (Some(left), Some(right)) = (
+            crate::rational_expression::exact_rational::EvalRational::from_obj(&fact.left),
+            crate::rational_expression::exact_rational::EvalRational::from_obj(&fact.right),
+        ) {
+            if left == right {
+                return Ok(Some(EqualitySearchProofByCalculation::ClosedRational {
+                    left_normal: left.to_obj().readable_string(),
+                    right_normal: right.to_obj().readable_string(),
+                }));
+            }
+        }
+
         if objs_equal_by_rational_expression_evaluation(&fact.left, &fact.right)
             && algebraic_normalization_nonzero_requirements(&fact.left, &fact.right).is_empty()
         {

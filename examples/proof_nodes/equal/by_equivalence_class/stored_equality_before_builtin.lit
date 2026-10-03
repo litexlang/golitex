@@ -1,0 +1,19 @@
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/stored_equality_before_builtin.lit
+# Previous minimal release-and-read reproduction took about 14 seconds;
+# its actual geo-prefix variant timed out. The equality was already stored:
+# by thm dot_symmetric(vec(ga,gb),vec(gc,gd))
+# dot(vec(ga,gb),vec(gc,gd)) = dot(vec(gc,gd),vec(ga,gb))
+# Now the final assertion can cite the stored equality before builtin search.
+# This fixes stored-path priority, not the pending complete search-level migration.
+# Executable rejection controls live in stored_known_first.rs (false equality / division by zero).
+
+have fn vec(a,b cart(R,R)) cart(R,R) = (b[1]-a[1],b[2]-a[2])
+have fn dot(u,v cart(R,R)) R = u[1]*v[1]+u[2]*v[2]
+have fn distance_sq(a,b cart(R,R)) R = dot(vec(a,b),vec(a,b))
+thm dot_symmetric:
+    ? forall u,v cart(R,R):
+        dot(u,v) = dot(v,u)
+    dot(u,v) = u[1]*v[1]+u[2]*v[2] = v[1]*u[1]+v[2]*u[2] = dot(v,u)
+have ga,gb,gc,gd cart(R,R)
+by thm dot_symmetric(vec(ga,gb),vec(gc,gd))
+dot(vec(ga,gb),vec(gc,gd)) = dot(vec(gc,gd),vec(ga,gb))

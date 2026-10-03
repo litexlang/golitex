@@ -2,7 +2,7 @@ use super::order_complement::FromKnownOrderComplementBuiltinRuleProof;
 use crate::ast::fact::NotLessEqualFact;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::{
-    compare_closed_objs_by_normalized_decimal, NumberCompareResult,
+    compare_closed_numeric_objs, NumberCompareResult,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -32,7 +32,7 @@ impl Runtime {
             return Ok(Some(NotLessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof)));
         }
         let Some((cmp, left_normal, right_normal)) =
-            compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
+            compare_closed_numeric_objs(&fact.left, &fact.right)
         else {
             return Ok(None);
         };

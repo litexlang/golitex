@@ -8,6 +8,13 @@ pub(super) fn project_aggregate_identity(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AggregateIdentityBuiltinRuleProof::FiniteSetProductFreshInsertion(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("FiniteSetProductFreshInsertion")),
+            ("premises", super::store::project_verify_facts(&p.premises, runtime)),
+            ("pointwise", project_pointwise(&p.pointwise, runtime)),
+            ("factor_expansions", project_expansions(&p.factor_expansions, runtime)),
+            ("factor_equal", super::verify::project_verify_fact(&p.factor_equal, runtime)),
+        ]),
         AggregateIdentityBuiltinRuleProof::RangeSumConstant(p) => object_for(
             runtime,
             vec![
@@ -381,4 +388,14 @@ fn project_pointwise(p: &AggregatePointwiseProof, runtime: &Runtime) -> JsonValu
             ),
         ],
     )
+}
+
+fn project_expansions(
+    expansions: &[crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_have_fn_equal::AnonFnApplicationBodyProof],
+    runtime: &Runtime,
+) -> JsonValue {
+    JsonValue::Array(expansions.iter().map(|e| object_for(runtime, vec![
+        ("function_equal", super::searched::project_known_equality_path(&e.function_equal, runtime)),
+        ("expanded_body", string(e.expanded_body.readable_string())),
+    ])).collect())
 }

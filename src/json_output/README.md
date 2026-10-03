@@ -428,3 +428,20 @@ its stored bijection `certificate` and checked `target_membership`. The shape
 has one witness, a single equality `f(x)=y` (either orientation), and a map and
 target independent of that witness. Choice-function inference reuses the existing
 definition-consequence producer and ordinary known-forall consumer.
+
+`CartesianSize` retains a `factor_finiteness` proof for each factor, while
+`SinDifference`, `CosDifference` and `ComplexModulusProduct` are structural
+identity leaves under the enclosing equality's checked WD. `ReducePartition`
+retains two `bounds` proofs (`start <= cut <= end`) and eight `matches` for
+the endpoints, adjacency, functions, operations and initial seed. It preserves
+left-fold order and permits an empty second segment; it does not require
+associativity or commutativity.
+
+`FiniteSetProductFreshInsertion` retains its freshness/set `premises`, scoped
+`pointwise` equality between the original and restricted callback, and the
+`factor_expansions` and `factor_equal` proof for the inserted value. The scoped
+IR keeps its local environment; Detailed follows the existing aggregate
+projection convention and omits that environment. All six leaves have English
+and Chinese Normal explanations. Producer/consumer and permission checks are
+in `tests/unit/execute/legacy_next_capabilities/tests.rs`; the dedicated runnable
+tracers are indexed in `examples/proof_nodes/README.md`.

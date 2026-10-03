@@ -3,7 +3,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::ast::fact::NotGreaterFact;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::{
-    compare_closed_objs_by_normalized_decimal, NumberCompareResult,
+    compare_closed_numeric_objs, NumberCompareResult,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -47,7 +47,7 @@ impl Runtime {
             ));
         }
         let Some((cmp, left_normal, right_normal)) =
-            compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
+            compare_closed_numeric_objs(&fact.left, &fact.right)
         else {
             return Ok(None);
         };

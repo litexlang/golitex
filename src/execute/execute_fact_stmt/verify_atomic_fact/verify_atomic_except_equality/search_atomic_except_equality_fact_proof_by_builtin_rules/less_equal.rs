@@ -5,12 +5,13 @@ use crate::ast::obj::{Literal, Number, Obj};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::{
-    compare_closed_objs_by_normalized_decimal, NumberCompareResult,
+    compare_closed_numeric_objs, NumberCompareResult,
 };
 use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    ComplexModulusNonnegative,
     // Converse order, citing an existing opposite-direction comparison.
     FromKnownGreaterEqual(FromKnownGreaterEqualBuiltinRuleProof),
     FromKnownOrderComplement(FromKnownOrderComplementBuiltinRuleProof),
@@ -437,6 +438,11 @@ impl Runtime {
         fact: &LessEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
+        // The principal complex modulus is nonnegative; whole-fact WD is prior.
+        if matches!(&fact.right, Obj::ComplexOperator(crate::ast::obj::ComplexOperator::ComplexAbs(_)))
+            && crate::rational_expression::exact_rational::EvalRational::from_obj(&fact.left).is_some_and(|n| n.is_zero()) {
+            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative));
+        }
         if let Some(premise_proof) = self.known_greater_equal_proof(&fact.right, &fact.left) {
             return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FromKnownGreaterEqual(FromKnownGreaterEqualBuiltinRuleProof { premise_proof })));
         }
@@ -477,7 +483,7 @@ impl Runtime {
 
         // Closed numeric is zero-premise (no nested rule search).
         if let Some((cmp, left_normal, right_normal)) =
-            compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
+            compare_closed_numeric_objs(&fact.left, &fact.right)
         {
             if !matches!(cmp, NumberCompareResult::Greater) {
                 return Ok(Some(

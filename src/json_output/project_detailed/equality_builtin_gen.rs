@@ -8,6 +8,15 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::CartesianSize(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("CartesianSize")),
+            ("factor_finiteness", project_verify_facts(&p.factor_finiteness, runtime)),
+        ]),
+        EqualitySearchProofByBuiltinRule::ReducePartition(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("ReducePartition")),
+            ("bounds", project_verify_facts(&p.bounds, runtime)),
+            ("matches", project_verify_facts(&p.matches, runtime)),
+        ]),
         EqualitySearchProofByBuiltinRule::ReduceLastStep(p)=>object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ReduceLastStep")),("nonempty",project_verify_fact(&p.nonempty,runtime)),("endpoint",project_verify_fact(&p.endpoint,runtime)),("result",project_verify_fact(&p.result,runtime))]),
         EqualitySearchProofByBuiltinRule::FiniteMapSize(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string(p.rule_id())),("certificate",super::searched::project_known_premise(p.certificate(),runtime))]),
         EqualitySearchProofByBuiltinRule::ReduceProduct(_) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ReduceProduct"))]),
@@ -15,6 +24,17 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof as P;
             let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
             match p {
+                P::PeriodicTrig(p) => {
+                    entries.push(("coefficient", string(p.coefficient.to_string())));
+                    entries.push(("integer_requirements", project_verify_facts(&p.integer_requirements, runtime)));
+                    entries.push(("value", string(p.value.to_string())));
+                },
+                P::NumericComplexModulus(p) => {
+                    entries.push(("real", string(p.real.to_string())));
+                    entries.push(("imaginary", string(p.imaginary.to_string())));
+                    entries.push(("squared_modulus", string(p.squared_modulus.to_string())));
+                    entries.push(("value", string(p.value.to_string())));
+                },
                 P::ModNegation {requirements} | P::ModNaturalPower {requirements} => entries.push(("requirements",project_verify_facts(requirements,runtime))),
                 P::PositivePowerZero {premise,requirements} | P::PositivePowerCancellation {premise,requirements} | P::SqrtKnownSquare {premise,requirements} => {
                     entries.push(("premise",super::searched::project_equal_searched(premise,runtime)));
@@ -69,6 +89,11 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
         EqualitySearchProofByBuiltinRule::Calculation(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("Calculation"))];
             let mode = match p {
+                crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculation::ClosedRational { left_normal, right_normal } => {
+                    entries.push(("left_normal", string(left_normal.clone())));
+                    entries.push(("right_normal", string(right_normal.clone())));
+                    "closed_rational"
+                },
                 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculation::ClosedDecimal { .. } => "closed_decimal",
                 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculation::Rational {} => "rational",
                 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculation::Complex {} => "complex_imaginary_unit",

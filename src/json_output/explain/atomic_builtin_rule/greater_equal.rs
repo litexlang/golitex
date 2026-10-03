@@ -19,6 +19,10 @@ use super::text::text;
 impl GreaterEqualFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::ComplexModulusNonnegative => match lang {
+                OutputLanguage::English => text("ComplexModulusNonnegative", "Nonnegative complex modulus", "The principal complex modulus is nonnegative"),
+                OutputLanguage::Chinese => text("ComplexModulusNonnegative", "复数模长非负", "复数模长取非负主根"),
+            },
             Self::FromKnownLessEqual(p) => p.rule_id_and_message(lang),
             Self::FromKnownOrderComplement(p) => p.rule_id_and_message(lang),
             Self::FromKnownInPositiveNatural(p) => p.rule_id_and_message(lang),

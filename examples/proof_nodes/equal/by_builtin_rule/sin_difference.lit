@@ -1,0 +1,8 @@
+# SinDifference: real difference-angle identity.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/sin_difference.lit
+# Previously rejected, exact legacy-positive source:
+# forall x,y R:
+#     sin(x-y) = sin(x)*cos(y)-cos(x)*sin(y)
+forall x,y R:
+    sin(x-y) = sin(x)*cos(y)-cos(x)*sin(y)
+# Boundary: a plus sign or unrestricted complex arguments fail in Rust regressions.

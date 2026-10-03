@@ -876,8 +876,13 @@ fn mod_nonnegative_decimal_str_and_normalize(a: &str, b: &str) -> String {
 
 const POW_DECIMAL_MAX_NORMALIZED_LENGTH: usize = 100;
 
-// Non-negative integer exponent only; fractional exp => None (no exact decimal fold).
+// Signed integer powers; reciprocals fold only when their decimals terminate.
 pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> Option<String> {
+    let normalized_exp = normalize_decimal_number_string(exp);
+    if let Some(magnitude) = normalized_exp.strip_prefix('-') {
+        let positive_power = pow_decimal_str_and_normalize(base, magnitude)?;
+        return safe_div("1", &positive_power);
+    }
     let n = parse_nonnegative_integer_exponent_for_pow(exp)?;
     if n == 0 {
         return Some("1".to_string());

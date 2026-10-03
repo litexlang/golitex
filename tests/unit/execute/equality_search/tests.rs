@@ -12,6 +12,9 @@ use crate::tokenize::Tokenizer;
 #[path = "known_tuple.rs"]
 mod known_tuple;
 
+#[path = "stored_known_first.rs"]
+mod stored_known_first;
+
 #[test]
 fn identity_and_alpha_work_without_builtin_entry() {
     for (code, shape) in [

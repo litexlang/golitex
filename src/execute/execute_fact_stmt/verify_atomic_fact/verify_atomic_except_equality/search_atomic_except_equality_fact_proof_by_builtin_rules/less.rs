@@ -13,7 +13,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 };
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::{
-    compare_closed_objs_by_normalized_decimal, NumberCompareResult,
+    compare_closed_numeric_objs, NumberCompareResult,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::runtime::FactId;
@@ -32,6 +32,9 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Mathematical property: for any object `x`, `x - 1 < x`.
     // Example: prove `n - 1 < n` (used by inductive recursive domain checks).
     SubtractOneLess(SubtractOneLessBuiltinRuleProof),
+    // For real x and a closed exact c > 0, x - c < x.
+    // Example: n - 2 < n, including recursive function domain checks.
+    SubtractPositiveClosedLess(SubtractPositiveClosedLessBuiltinRuleProof),
     // Arctan principal lower bound: `-pi/2 < arctan(x)`.
     // Example: prove `-pi / 2 < arctan(x)`.
     ArctanPrincipalLowerBound(ArctanPrincipalLowerBoundBuiltinRuleProof),
@@ -152,6 +155,12 @@ pub enum FiniteProperInclusionProof {
 // Payload: the minuend `x` in the goal `x - 1 < x`.
 pub struct SubtractOneLessBuiltinRuleProof {
     pub minuend: Obj,
+}
+
+pub struct SubtractPositiveClosedLessBuiltinRuleProof {
+    pub minuend: Obj,
+    pub subtrahend: Obj,
+    pub normalized_subtrahend: String,
 }
 
 pub struct ArctanPrincipalLowerBoundBuiltinRuleProof {}
@@ -319,7 +328,7 @@ impl Runtime {
 
         // Zero-premise closed numeric (no nested search).
         if let Some((cmp, left_normal, right_normal)) =
-            compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
+            compare_closed_numeric_objs(&fact.left, &fact.right)
         {
             if cmp == NumberCompareResult::Less {
                 return Ok(Some(
@@ -344,6 +353,24 @@ impl Runtime {
                         minuend: left.as_ref().clone(),
                     },
                 )));
+            }
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
+                minuend,
+            ) if left.as_ref().ir() == minuend.ir() => {
+                if let Some((NumberCompareResult::Greater, normalized_subtrahend, _)) =
+                    compare_closed_numeric_objs(right.as_ref(), &zero_obj())
+                {
+                    return Ok(Some(
+                        LessFactSearchProofByBuiltinRule::SubtractPositiveClosedLess(
+                            SubtractPositiveClosedLessBuiltinRuleProof {
+                                minuend: left.as_ref().clone(),
+                                subtrahend: right.as_ref().clone(),
+                                normalized_subtrahend,
+                            },
+                        ),
+                    ));
+                }
             }
             (_, Obj::TrigOperator(TrigOperator::Arctan(_)))
                 if match_arctan_principal_lower(&fact.left, &fact.right) =>
@@ -706,3 +733,7 @@ impl Runtime {
         ))
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/positive_closed_decrement/tests.rs"]
+mod positive_closed_decrement_tests;

@@ -5,13 +5,14 @@ use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, Sub};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::is_number_value;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::{
-    compare_closed_objs_by_normalized_decimal, NumberCompareResult,
+    compare_closed_numeric_objs, NumberCompareResult,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::execute::execute_fact_stmt::VerifyFactResult;
 
 // Builtin rules for `a >= b`.
 pub enum GreaterEqualFactSearchProofByBuiltinRule {
+    ComplexModulusNonnegative,
     // Converse order, citing an existing opposite-direction comparison.
     FromKnownLessEqual(FromKnownLessEqualBuiltinRuleProof),
     FromKnownOrderComplement(FromKnownOrderComplementBuiltinRuleProof),
@@ -92,6 +93,12 @@ impl Runtime {
         fact: &GreaterEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<GreaterEqualFactSearchProofByBuiltinRule>> {
+        // Principal complex modulus is nonnegative after argument/output WD.
+        // Example: have z C; C_abs(z) >= 0.
+        if matches!(&fact.left, Obj::ComplexOperator(crate::ast::obj::ComplexOperator::ComplexAbs(_)))
+            && is_number_value(&fact.right, "0") {
+            return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative));
+        }
         if let Some(premise_proof) = self.known_less_equal_proof(&fact.right, &fact.left) {
             return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::FromKnownLessEqual(FromKnownLessEqualBuiltinRuleProof { premise_proof })));
         }
@@ -164,7 +171,7 @@ impl Runtime {
 
         // B1 — closed numeric
         let Some((cmp, left_normal, right_normal)) =
-            compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
+            compare_closed_numeric_objs(&fact.left, &fact.right)
         else {
             return Ok(None);
         };

@@ -399,7 +399,9 @@ are known integers or reals keeps the existing narrow result whenever that
 rule applies, and falls back to `C` only when a complex carrier is needed.
 
 Before builtin or strategy search, non-equality atomic goals use the shared
-`by_known` entry: stored atomic facts first, then `known_special_property`.
+`by_known` entry: first read stored atomic facts using identity or stored
+equality paths only; on a miss, try parameter transformations and then
+`known_special_property`. A direct stored hit does not launch argument proof search.
 For a well-defined function application, an exact-object definition-time
 signature can establish membership in its substituted return set or in
 `fn_range(f)`, without proving a new premise, enabling builtin entry, or consuming strategy depth.
@@ -407,8 +409,12 @@ Normal output identifies this route as `known_special_property`; Detailed
 output carries the definition citation and stored equality matches. Fixed
 builtin premises can retain the same evidence as nested proofs.
 
-Equality has a separate `ByKnownSpecialProperty` step after IR/alpha identity
-and before builtin rules. Known Cartesian membership supplies ordered tuple
+Equality first checks IR/alpha identity and already stored equality paths,
+then its separate `ByKnownSpecialProperty` step, then builtin rules. This
+order also applies inside strategy search. Re-reading a released equality
+cites its existing path before attempting rules with new premises; it still
+requires WD. See the [release-and-read tracer](../examples/proof_nodes/equal/by_equivalence_class/stored_equality_before_builtin.lit).
+Known Cartesian membership supplies ordered tuple
 reconstruction, `tuple_dim`, and projection WD; a stored tuple equality supplies
 its coordinates. For example, `have p cart(R,R) = (a,b)` permits `p[1] = a`
 without an intermediate projection equality. A tuple-returning function can

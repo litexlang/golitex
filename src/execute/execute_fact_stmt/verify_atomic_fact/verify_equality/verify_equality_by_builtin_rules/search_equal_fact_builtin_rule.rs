@@ -23,6 +23,9 @@ impl Runtime {
         if let Some(proof)=self.search_finite_map_size(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteMapSize(proof)));
         }
+        if let Some(proof) = self.search_cartesian_size(fact, verify_state.clone())? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::CartesianSize(proof)));
+        }
         if let Some(proof) = self.search_elementary_arithmetic(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(proof)));
         }
@@ -37,6 +40,9 @@ impl Runtime {
         }
         if let Some(proof)=self.search_reduce_last_step(fact,verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceLastStep(proof)));
+        }
+        if let Some(proof) = self.search_reduce_partition(fact, verify_state.clone())? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReducePartition(proof)));
         }
         if let Some(proof) = self.search_equal_fact_by_aggregate_identities(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::AggregateIdentity(proof)));

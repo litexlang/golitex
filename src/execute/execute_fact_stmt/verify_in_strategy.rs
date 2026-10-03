@@ -22,7 +22,6 @@ use crate::execute::execute_fact_stmt::{
     VerifyAtomicFactWellDefinedResult, VerifyEqualFactWellDefinedResult, VerifyState,
 };
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
 
 impl Runtime {
     // Top-level entry: builtin strategy first, then user-defined strategy.
@@ -182,10 +181,10 @@ impl Runtime {
         fact: &crate::ast::fact::EqualFact,
         ctx: StrategySearch,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
-        // Same-object evidence is available independently of strategy depth
-        // and builtin permission, just as at the ordinary equality entry.
-        if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(fact) {
-            return Ok(Some(proof.into()));
+        // Identity and stored equality paths precede property/calculation rules,
+        // just as at the ordinary equality entry; this lookup starts no search.
+        if let Some(proof) = self.lookup_known_obj_equality(&fact.left, &fact.right) {
+            return Ok(Some(proof));
         }
         if let Some(proof) = self.search_equal_fact_proof_by_known_special_property(fact)? {
             return Ok(Some(EqualFactSearchedProof::ByKnownSpecialProperty(proof)));

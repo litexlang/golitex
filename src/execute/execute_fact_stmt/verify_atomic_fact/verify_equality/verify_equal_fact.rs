@@ -11,7 +11,6 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 use super::EqualitySearchProofByBuiltinStrategy;
-use super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
 
 impl Runtime {
     // Verify both objects first, then select one successful truth-search route.
@@ -38,8 +37,9 @@ impl Runtime {
         }
     }
 
-    // Cheap phase: same object → known structural property → builtin rule → equivalence class.
-    // Class search tries stored paths before one restricted peer bridge.
+    // Cheap phase: identity / stored path → known structural property → builtin → class peers.
+    // Pure stored evidence must win before rules that generate new premises.
+    // Class fallback also handles alpha endpoints and restricted peer bridges.
     // Deep phase (can_use_def_and_known_forall_and_known_strategy, remaining_deep_search_depth > 0):
     //   after_deep_search() once, then
     //   object definition → verify_by_strategy → matching one arg → known forall →
@@ -51,8 +51,8 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
-        if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(fact) {
-            return Ok(Some(proof.into()));
+        if let Some(proof) = self.lookup_known_obj_equality(&fact.left, &fact.right) {
+            return Ok(Some(proof));
         }
         if let Some(proof) = self.search_equal_fact_proof_by_known_special_property(fact)? {
             return Ok(Some(EqualFactSearchedProof::ByKnownSpecialProperty(proof)));

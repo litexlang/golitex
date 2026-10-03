@@ -410,3 +410,16 @@ The preimage rule retains the bijection certificate and the target's codomain
 membership; surjectivity alone and witness-dependent targets are rejected.
 An [arbitrary-carrier unordered fold](../wd/finite_set_fold_arbitrary_carrier.lit)
 checks that explicit associativity and commutativity certificates remain usable.
+
+The next migration batch adds dedicated tracers for
+[finite Cartesian cardinality](equal/by_builtin_rule/cartesian_size.lit),
+[complex modulus multiplication](equal/by_builtin_rule/complex_modulus_product.lit),
+[sine difference](equal/by_builtin_rule/sin_difference.lit),
+[cosine difference](equal/by_builtin_rule/cos_difference.lit),
+[adjacent left-fold partition](equal/by_builtin_rule/reduce_partition.lit), and
+[fresh insertion into a finite product](equal/by_builtin_rule/finite_product_fresh_insertion.lit).
+`tests/unit/execute/legacy_next_capabilities/tests.rs` checks false formulas,
+domains, callback restrictions, boundary/order/seed preservation, bilingual
+Normal output, Detailed evidence and inherited builtin permission/depth.
+The exact three-binary comparison is in
+`proof_journals/legacy-next-capability-repairs.json`.

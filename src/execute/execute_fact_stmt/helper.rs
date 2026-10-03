@@ -15,7 +15,7 @@ use crate::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyState,
 };
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::rational_expression::compare_closed_objs_by_normalized_decimal;
+use crate::rational_expression::compare_closed_numeric_objs;
 
 impl Runtime {
     // Premise WD keeps the caller's permissions; truth cannot reopen ordinary
@@ -130,6 +130,6 @@ fn is_closed_numeric_premise(fact: &AtomicFact) -> bool {
         _ => None,
     };
     sides.is_some_and(|(left, right)| {
-        compare_closed_objs_by_normalized_decimal(left, right).is_some()
+        compare_closed_numeric_objs(left, right).is_some()
     })
 }

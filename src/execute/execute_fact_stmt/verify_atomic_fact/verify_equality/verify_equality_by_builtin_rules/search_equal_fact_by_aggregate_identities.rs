@@ -1,5 +1,5 @@
 use super::aggregate_identity_builtin_rule_proof::*;
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessEqualFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessEqualFact, NotInFact};
 use crate::ast::obj::{ArithmeticOperator, FiniteSetSize, FiniteSetStat, IdentifierObj,
     Intersect, IteratedOperator, ListSet, Literal, Number, Obj, Pow, SetFormer, SetOperator, StandardSet};
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
@@ -32,6 +32,9 @@ impl Runtime {
                 return Ok(Some(p));
             }
             if let Some(p) = self.aggregate_partition_identity(&aggregate, other, fact, &state)? {
+                return Ok(Some(p));
+            }
+            if let Some(p) = self.aggregate_product_fresh_insertion(&aggregate, other, fact, &state)? {
                 return Ok(Some(p));
             }
             if let Some(p) = self.aggregate_linearity_identity(&aggregate, other, fact, &state)? {
@@ -315,6 +318,52 @@ impl Runtime {
                 )
             }
         }))
+    }
+
+    fn aggregate_product_fresh_insertion(
+        &mut self,
+        aggregate: &AggregationView,
+        other: &Obj,
+        fact: &EqualFact,
+        state: &VerifyState,
+    ) -> RuntimeResult<Option<AggregateIdentityBuiltinRuleProof>> {
+        // Product over S union {a} factors into the product over S and f(a)
+        // when a is fresh. Restricted callbacks must agree on every x in S.
+        if !aggregate.product { return Ok(None); }
+        let AggregationDomain::FiniteSet(Obj::SetOperator(SetOperator::Union(union))) = aggregate.domain else { return Ok(None); };
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) = other else { return Ok(None); };
+        for (set, singleton) in [(&*union.left, &*union.right), (&*union.right, &*union.left)] {
+            let Obj::SetFormer(SetFormer::ListSet(list)) = singleton else { continue; };
+            if list.list.len() != 1 { continue; }
+            let element = &*list.list[0];
+            for (base, factor) in [(&*mul.left, &*mul.right), (&*mul.right, &*mul.left)] {
+                let Some(base) = aggregate_view(base) else { continue; };
+                if !base.product { continue; }
+                let AggregationDomain::FiniteSet(base_set) = base.domain else { continue; };
+                let fresh: Fact = NotInFact {
+                    fact_id: self.global_ids.allocate_fact_id(), element: element.clone(), set: set.clone(),
+                    line_file: fact.line_file.clone(),
+                }.into();
+                let same_set = equality(self, set.clone(), base_set.clone(), fact);
+                let Some(premises) = self.aggregate_identity_premises(vec![fresh, same_set], state)? else { continue; };
+                let Some(pointwise) = self.aggregate_pointwise_proof(
+                    AggregationDomain::FiniteSet(set), fact, state, |rt, index, expansions| {
+                        let Some(left) = function_at(rt, aggregate.func, index, expansions)? else { return Ok(None); };
+                        let Some(right) = function_at(rt, base.func, index, expansions)? else { return Ok(None); };
+                        Ok(Some((left, right)))
+                    },
+                )? else { continue; };
+                let mut factor_expansions = Vec::new();
+                let Some(value) = function_at(self, aggregate.func, element, &mut factor_expansions)? else { continue; };
+                let goal = equality(self, value, factor.clone(), fact);
+                let factor_equal = self.verify_builtin_rule_premise(&goal, state.clone())?;
+                if factor_equal.is_failed() { continue; }
+                return Ok(Some(AggregateIdentityBuiltinRuleProof::FiniteSetProductFreshInsertion(
+                    FiniteSetProductFreshInsertionProof { premises, pointwise, factor_expansions, factor_equal },
+                )));
+            }
+        }
+        Ok(None)
     }
 
     fn aggregate_linearity_identity(
