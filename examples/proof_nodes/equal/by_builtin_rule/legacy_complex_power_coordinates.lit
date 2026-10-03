@@ -1,0 +1,9 @@
+# Legacy migration: B49-C-re-pow
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_complex_power_coordinates.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall z C, n N:
+#     re(z^(n + 1)) = re(z^n) * re(z) - img(z^n) * img(z)
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall z C, n N:
+    re(z^(n + 1)) = re(z^n) * re(z) - img(z^n) * img(z)

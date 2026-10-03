@@ -388,3 +388,36 @@ witnesses include object/set WD, `proof_steps`, and `membership_check`;
 existential witnesses include ambient WD, witness type checks, proof steps,
 body checks, and the optional `uniqueness_check` (`null` for ordinary exist).
 These are projections of existing checked evidence, not additional proof rules.
+
+### Local legacy capability evidence
+
+The elementary arithmetic and trig/complex equality families use named rule
+variants in Detailed output. A stored-premise consumer carries the complete
+`premise` proof and its domain `requirements`; coordinate extensionality carries
+both `real` and `imaginary` proofs and checked `domains`. Finite map cardinality
+carries its stored map `certificate`. Normal output keeps the existing bilingual
+`rule_name` and `message` contract.
+
+Aggregate evidence also includes `reduce` and `finite_set_reduce`. Each records
+its `seed`, enumeration, and chronological terms. A term records both the unary
+function application and the binary `operation`, with their WD, beta expansion,
+source equality paths and resulting `accumulated_value`. An unordered fold must
+pass associativity and commutativity in the enclosing object WD before evaluation.
+`FunctionRangeOfFiniteDomain` records function membership and domain finiteness.
+The runnable collection is
+[`legacy_small_capabilities.lit`](../../examples/proof_nodes/equal/by_builtin_rule/legacy_small_capabilities.lit);
+paired rejection and Detailed producer/consumer checks are in
+`tests/unit/execute/legacy_small_capabilities/tests.rs`.
+
+`AnonymousFnApplicationInCodomain` reads the literal signature only after
+application WD, retaining the applied return set and its equality match.
+`FoldInCarrier` similarly reads the homogeneous operation signature after fold
+WD and retains its literal signature or stored function-membership proof.
+Neither route opens builtin, rewrite or forall search. `ReduceLastStep` retains
+nonemptiness, the calculated preceding endpoint and the checked final operation.
+
+`BijectivePreimage` is a unique-existence builtin leaf. Detailed output retains
+its stored bijection `certificate` and checked `target_membership`. The shape
+has one witness, a single equality `f(x)=y` (either orientation), and a map and
+target independent of that witness. Choice-function inference reuses the existing
+definition-consequence producer and ordinary known-forall consumer.

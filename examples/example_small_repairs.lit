@@ -1,0 +1,136 @@
+# Local example migration: checked scalar rules, definition consequences, finite display eval.
+# Previous versions rejected the active goals below; no trust or weakened statement is used.
+
+# legacy/B10-difference-ne
+forall a, b R:
+    a - b != 0
+    =>:
+        a != b
+
+# legacy/B11-sum-ne
+forall a, b R:
+    a + b != 0
+    =>:
+        a != -b
+
+# legacy/E04-eval-finite-size
+eval finite_set_size({1, 2, 3})
+
+# legacy/B18-surjection-finite-corrected
+forall A finite_set, B set, f fn(x A)B:
+    $surjective(A, B, f)
+    =>:
+        $is_finite_set(B)
+
+# legacy/B26-abs-zero-invert
+forall x R:
+    abs(x) = 0
+    =>:
+        x = 0
+
+# legacy/I01-prime-lower-bound
+forall p N:
+    $prime(p)
+    =>:
+        2 <= p
+
+# legacy/I02-coprime-gcd
+forall a, b N:
+    $coprime(a, b)
+    =>:
+        gcd(a, b) = 1
+
+# legacy/I03-proper-subset
+forall A, B set:
+    A $proper_subset B
+    =>:
+        A $subset B
+        A != B
+
+# legacy/I04-dvd-mod
+forall a Z, b Z*:
+    $dvd(a, b)
+    =>:
+        a % b = 0
+
+# legacy/I05-bijective-injective
+forall A, B set, f fn(x A)B:
+    $bijective(A, B, f)
+    =>:
+        $injective(A, B, f)
+        $surjective(A, B, f)
+
+# legacy/B32-range-builder-final
+closed_range(2, 5) = {x Z: 2 <= x <= 5}
+
+# legacy/I08-prime-trial
+forall p N, d range(2, p):
+    $prime(p)
+    =>:
+        p % d != 0
+
+# legacy/I09-coprime-nonzero
+forall a, b N:
+    $coprime(a, b)
+    =>:
+        a != 0 or b != 0
+
+# legacy/E05-eval-max
+eval finite_set_max({1, 2, 3})
+
+# legacy/E06-eval-min
+eval finite_set_min({1, 2, 3})
+
+# legacy/E07-eval-dimension
+eval tuple_dim((1, 2, 3))
+
+# legacy/E08-eval-projection
+eval (1, 2, 3)[2]
+
+# legacy/B34-floor-neg
+forall x R:
+    floor(-x) = -ceil(x)
+
+# legacy/B35-ceil-neg
+forall x R:
+    ceil(-x) = -floor(x)
+
+# legacy/B36-floor-shift
+forall x R, n Z:
+    floor(x + n) = floor(x) + n
+
+# legacy/B37-ceil-shift
+forall x R, n Z:
+    ceil(x + n) = ceil(x) + n
+
+# legacy/B38-min-absorb
+forall a, b R:
+    min(a, max(a, b)) = a
+
+# legacy/B39-max-absorb
+forall a, b R:
+    max(a, min(a, b)) = a
+
+# legacy/B40-lcm-zero
+forall a Z:
+    lcm(a, 0) = 0
+
+# legacy/B46-C-abs-nonzero
+forall z C:
+    z != 0
+    =>:
+        C_abs(z) != 0
+
+# legacy/B51-range-builder-halfopen
+range(2, 5) = {x Z: 2 <= x < 5}
+
+# legacy/W03-reduce-codomain
+reduce(1, 2, fn(k Z) Z {k}, fn(a, b Z) Z {a + b}, 0) $in Z
+
+# legacy/W04-finite-reduce-codomain
+finite_set_reduce({1, 2}, fn(k R) R {k}, fn(a, b R) R {a + b}, 0) $in R
+
+forall x R:
+    abs(-x) = abs(x)
+eval finite_set_max({1 / 3, 2 / 3})
+eval finite_set_min({1 / 3, 2 / 3})

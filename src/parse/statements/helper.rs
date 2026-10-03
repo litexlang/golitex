@@ -49,7 +49,7 @@ impl Runtime {
         if !block.exceed_end_of_head() {
             return Err(block.parse_error(format!("{syntax_name}: unfinished tokens in `?` goal")));
         }
-        if !block.body.is_empty() && !matches!(&fact, Fact::ForallFact(_) | Fact::NotForall(_)) {
+        if !block.body.is_empty() && !matches!(&fact, Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_)) {
             return Err(block.parse_error(format!(
                 "{syntax_name}: `?` body is only allowed for multiline `forall` facts"
             )));
@@ -105,6 +105,7 @@ impl Runtime {
     pub(in super::super) fn forall_params_of_fact(fact: &Fact) -> Option<&TypedParameterList> {
         match fact {
             Fact::ForallFact(f) => Some(&f.typed_parameters),
+            Fact::ForallFactWithIff(f) => Some(&f.forall_fact.typed_parameters),
             Fact::NotForall(n) => Some(&n.typed_parameters),
             _ => None,
         }

@@ -1,0 +1,17 @@
+# Legacy migration: B31-sqrt-equivalent
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_sqrt_known_square.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall x, y R:
+#     x >= 0
+#     y >= 0
+#     x = y^2
+#     =>:
+#         sqrt(x) = y
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall x, y R:
+    x >= 0
+    y >= 0
+    x = y^2
+    =>:
+        sqrt(x) = y

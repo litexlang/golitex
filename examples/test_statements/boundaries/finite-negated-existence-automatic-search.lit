@@ -1,0 +1,5 @@
+# Current automatic-search limitation; explicit by-contra is the accepted route.
+# This boundary deliberately expects search_proof failure on the final assertion.
+forall x {0}:
+    x != 1
+not exist x {0} st {x = 1}

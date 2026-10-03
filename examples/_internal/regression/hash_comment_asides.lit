@@ -1,0 +1,6 @@
+# Finally "there is no x satisfying
+# P(x)" and "every x fails."
+1 = 1 # "unfinished prose
+forall x R: # "unfinished comment after a header
+    x = x
+1 "a # inside an aside" = 1

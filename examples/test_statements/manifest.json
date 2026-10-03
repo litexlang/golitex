@@ -3881,16 +3881,27 @@
           true
         ]
       }
-    }
-  ],
-  "known_gaps": [
+    },
     {
-      "id": "K005",
-      "leaf": "Fact",
-      "file": "bugs/fact/K005-finite-negated-existence/repro.lit",
+      "name": "finite-negated-existence-by-contra",
+      "leaf": "ByContraStmt",
+      "file": "boundaries/finite-negated-existence-by-contra.lit",
       "strict": true,
-      "desired_success": true,
-      "observed": {
+      "expect": {
+        "success": true,
+        "statement_success": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "finite-negated-existence-automatic-search",
+      "leaf": "Fact",
+      "file": "boundaries/finite-negated-existence-automatic-search.lit",
+      "strict": true,
+      "expect": {
         "success": false,
         "statement_success": [
           true,
@@ -3901,5 +3912,6 @@
         ]
       }
     }
-  ]
+  ],
+  "known_gaps": []
 }

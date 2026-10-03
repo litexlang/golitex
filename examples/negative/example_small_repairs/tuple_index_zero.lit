@@ -1,0 +1,2 @@
+# This input must be rejected.
+eval (1, 2)[0]

@@ -1,7 +1,7 @@
 {
   "kind": "litex_kb_manifest",
-  "abi": "2",
-  "fingerprint": "9cb2b5a8085c6002",
+  "abi": "4",
+  "fingerprint": "d86bceeffa1f22c8",
   "self_mod_id": 0,
   "mod_id_to_path": [
     [
@@ -21,8 +21,8 @@
         "next_identifier_id": 1
       },
       "global_ids_at_leave": {
-        "next_fact_id": 29,
-        "next_well_definedness_id": 8,
+        "next_fact_id": 30,
+        "next_well_definedness_id": 9,
         "next_prop_rewrite_property_id": 1,
         "next_identifier_id": 5
       }
@@ -32,14 +32,14 @@
       "name": "check",
       "relative_path": "check.lit",
       "global_ids_at_enter": {
-        "next_fact_id": 29,
-        "next_well_definedness_id": 8,
+        "next_fact_id": 30,
+        "next_well_definedness_id": 9,
         "next_prop_rewrite_property_id": 1,
         "next_identifier_id": 5
       },
       "global_ids_at_leave": {
-        "next_fact_id": 78,
-        "next_well_definedness_id": 14,
+        "next_fact_id": 223,
+        "next_well_definedness_id": 13,
         "next_prop_rewrite_property_id": 1,
         "next_identifier_id": 5
       }

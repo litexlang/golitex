@@ -4,6 +4,7 @@
 
 mod exec_fact_stmt;
 mod helper;
+mod negate_quantifier_free_conjunction;
 pub(crate) mod known_tuple;
 mod result;
 mod strategy_search;

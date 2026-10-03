@@ -20,6 +20,10 @@
 
 ## Acceptance
 
+`atomic/choice_function_pointwise.lit` stores a positive choice-function
+certificate, releases its existing pointwise definition, then checks a fiber
+membership through the ordinary known-forall path.
+
 ```bash
 target/release/litex -f <this-file>
 ```

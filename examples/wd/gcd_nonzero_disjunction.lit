@@ -1,0 +1,11 @@
+# A known disjunction suffices for GCD's domain without choosing a branch.
+forall x, y N:
+    x != 0 or y != 0
+    =>:
+        gcd(x, y) = gcd(x, y)
+
+# The same nonzero-pair condition defines the transposed arguments.
+forall a, b Z:
+    a != 0 or b != 0
+    =>:
+        gcd(b, a) = gcd(b, a)

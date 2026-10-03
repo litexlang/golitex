@@ -9,3 +9,15 @@ sketch:
 # P02: reduce(1, 0, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 7) = 7
 sketch:
     reduce(1, 0, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 7) = 7
+
+# P03: recovered unchanged regression
+sketch:
+    reduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 6
+
+# P04: recovered unchanged regression
+sketch:
+    reduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0) = -6
+
+# P05: recovered unchanged regression
+sketch:
+    reduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 10) = 16

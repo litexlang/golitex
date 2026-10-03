@@ -1,0 +1,13 @@
+# Authoring control for the same imaginary-unit target.
+# Historical route is nondeterministic in the existing kernel:
+# by contra:
+#     ? i != 0
+#     i * i = -1
+#     impossible i * i != 0
+# Run: target/release/litex -strict -f examples/stmt_nodes/by/by_contra_imaginary_unit.lit
+# The direct closing passes the recorded repeated controls; it does not
+# repair the historical route. See the ByContraStmt issue folder.
+
+by contra:
+    ? i != 0
+    impossible i = 0

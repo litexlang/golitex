@@ -35,7 +35,9 @@ impl Runtime {
         match tb.peek() {
             Some(FORALL) => self.parse_forall_fact(tb),
             Some(EXIST) | Some(EXIST_BANG) => Ok(crate::ast::fact::exist_shaped_fact_to_fact(&self.parse_exist_fact(tb)?)),
-            Some(NOT) => self.parse_not_fact(tb),
+            Some(NOT) if matches!(tb.peek_at(1), Some(FORALL | EXIST | EXIST_BANG)) => {
+                self.parse_not_fact(tb)
+            }
             _ => Ok(self.parse_quantifier_free_fact_top(tb)?.into_fact()),
         }
     }
@@ -611,14 +613,14 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<AndChainAtomicFact> {
-        let first = self.parse_chain_or_atomic(tb, true)?;
+        let first = self.parse_signed_chain_or_atomic(tb)?;
         match first {
             ChainAtomicFact::ChainFact(c) => Ok(AndChainAtomicFact::ChainFact(c)),
             ChainAtomicFact::AtomicFact(a) => {
                 let mut collected = vec![a];
                 while tb.peek() == Some(AND) {
                     tb.advance()?;
-                    match self.parse_chain_or_atomic(tb, true)? {
+                    match self.parse_signed_chain_or_atomic(tb)? {
                         ChainAtomicFact::AtomicFact(next) => collected.push(next),
                         ChainAtomicFact::ChainFact(_) => {
                             return Err(RuntimeParseError::new(
@@ -643,19 +645,30 @@ impl Runtime {
         }
     }
 
-    // Case arms may start with `not`.
+    // Every conjunct has its own atomic polarity, including case/exist bodies.
     pub(super) fn parse_and_chain_atomic_fact_allow_not(
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<AndChainAtomicFact> {
-        if tb.peek() == Some(NOT) {
+        self.parse_and_chain_atomic_fact(tb)
+    }
+
+    fn parse_signed_chain_or_atomic(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> RuntimeResult<ChainAtomicFact> {
+        let mut positive = true;
+        let mut has_negation = false;
+        while tb.peek() == Some(NOT) {
+            has_negation = true;
+            positive = !positive;
             tb.advance()?;
-            Ok(AndChainAtomicFact::AtomicFact(
-                self.parse_atomic_fact(tb, false)?,
-            ))
-        } else {
-            self.parse_and_chain_atomic_fact(tb)
         }
+        let fact = self.parse_chain_or_atomic(tb, positive)?;
+        if has_negation && matches!(fact, ChainAtomicFact::ChainFact(_)) {
+            return Err(tb.parse_error("negated fact must be a single atomic (one operator)"));
+        }
+        Ok(fact)
     }
 
     // obj op obj [op obj…] / `$prop(...)` / infix `$in` `$subset` …

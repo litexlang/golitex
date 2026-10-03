@@ -293,16 +293,28 @@ impl Runtime {
         fact: &IsChoiceFunctionForFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+        let Some(requirements)=self.choice_definition_requirements(fact) else {return Ok(None);};
+        let Some((requirement_facts,proof_of_requirement_facts))=
+            self.verify_definition_requirements(requirements,verify_state)? else {return Ok(None);};
+        Ok(Some(BuiltinPropDefinitionProof::IsChoiceFunctionFor(
+            BuiltinIsChoiceFunctionForDefinitionProof {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )))
+    }
+
+    fn choice_definition_requirements(&mut self,fact:&IsChoiceFunctionForFact)->Option<Vec<Fact>> {
         let index = fact.index.clone();
         let family_fn = fact.family.clone();
         let choice_fn = fact.choice.clone();
         let alpha = self.fresh_internal_param();
         let alpha_obj = Obj::Identifier(IdentifierObj::from_bound_name(&alpha));
         let Some(f_alpha) = apply_fn_one_arg(&choice_fn, alpha_obj.clone()) else {
-            return Ok(None);
+            return None;
         };
         let Some(g_alpha) = apply_fn_one_arg(&family_fn, alpha_obj) else {
-            return Ok(None);
+            return None;
         };
         let forall = Fact::ForallFact(ForallFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -318,17 +330,7 @@ impl Runtime {
             ))],
             line_file: None,
         });
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(vec![forall], verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::IsChoiceFunctionFor(
-            BuiltinIsChoiceFunctionForDefinitionProof {
-                requirement_facts,
-                proof_of_requirement_facts,
-            },
-        )))
+        Some(vec![forall])
     }
 
     // $prime(p)  ⇔  2 <= p  and  forall d range(2, p): p % d != 0
@@ -402,6 +404,7 @@ impl Runtime {
             AtomicFact::PrimeFact(f) => self.prime_definition_requirements(f),
             AtomicFact::CoprimeFact(f) => self.coprime_definition_requirements(f),
             AtomicFact::DvdFact(f) => self.dvd_definition_requirements(f),
+            AtomicFact::IsChoiceFunctionForFact(f) => self.choice_definition_requirements(f).unwrap_or_default(),
             _ => vec![],
         }
     }

@@ -1,0 +1,5 @@
+# This input must be rejected.
+forall a, b N:
+    $coprime(a, b)
+    =>:
+        a != 0

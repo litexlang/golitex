@@ -1,3 +1,0 @@
-# Intended valid regression: sin P06
-forall x R:
-    sin(-x) = -sin(x)

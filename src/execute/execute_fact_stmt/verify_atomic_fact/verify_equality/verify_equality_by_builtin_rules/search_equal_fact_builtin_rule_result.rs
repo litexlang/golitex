@@ -131,6 +131,11 @@ use super::by_power_laws::{
 pub enum EqualitySearchProofByBuiltinRule {
     IntegerRangeBuilder(super::by_integer_range_builder::IntegerRangeBuilderBuiltinRuleProof),
     ScalarIdentity(super::by_scalar_identities::ScalarIdentityBuiltinRuleProof),
+    ElementaryArithmetic(super::by_elementary_arithmetic::ElementaryArithmeticProof),
+    TrigComplexIdentity(super::by_trig_complex_identities::TrigComplexIdentityProof),
+    ReduceProduct(super::by_reduce_product::ReduceProductBuiltinRuleProof),
+    ReduceLastStep(super::by_reduce_last_step::ReduceLastStepProof),
+    FiniteMapSize(super::by_finite_map_size::FiniteMapSizeProof),
     AggregateIdentity(super::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof),
     AggregateCalculation(super::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof),
     Calculation(EqualitySearchProofByCalculation),

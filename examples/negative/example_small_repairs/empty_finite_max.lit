@@ -1,0 +1,2 @@
+# This input must be rejected.
+eval finite_set_max({})

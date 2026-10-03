@@ -1,0 +1,9 @@
+# Run: target/release/litex -strict -f examples/module_manager/struct_law_publication/main.lit
+# Imported instances retain their struct laws on repeated imports.
+# Modules with struct laws use source fallback until the KB can replay foralls.
+release obj def L::base::s
+# Imported module facts are not ambient root facts; release this instance.
+release struct def L::base::s
+exist y R st {L::base::s.add(2, y) = L::base::s.zero}
+obtain inverse from exist z R st {L::base::s.add(2, z) = L::base::s.zero}
+witness exist z R st {L::base::s.add(2, z) = L::base::s.zero} from inverse

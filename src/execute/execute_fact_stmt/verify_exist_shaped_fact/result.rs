@@ -1,5 +1,6 @@
 use crate::ast::fact::{ExistShapedFact, Fact};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::well_defined_result::{
     ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,
 };
@@ -92,6 +93,8 @@ pub enum ExistShapedFactSearchedProof {
 
 // One exist-builtin rule ↔ one dedicated evidence struct.
 pub enum ExistShapedFactSearchProofByBuiltinRule {
+    // A stored bijection has exactly one preimage of a known codomain member.
+    BijectivePreimage(ExistShapedBuiltinBijectivePreimage),
     RealLineComparisonWitness(ExistShapedBuiltinRealLineComparisonWitness),
     // Witness by a known member: `a $in S` ⇒ `exist x S st {x = a}` (or `a = x`).
     EqualityWitnessFromMembership(ExistShapedBuiltinEqualityWitnessFromMembership),
@@ -110,6 +113,11 @@ pub enum ExistShapedFactSearchProofByBuiltinRule {
     ArchimedeanReciprocal(ExistShapedBuiltinArchimedeanReciprocal),
     // Real density by midpoint: `a < b` on reals ⇒ `exist r R st {a < r < b}`.
     RealDensityMidpoint(ExistShapedBuiltinRealDensityMidpoint),
+}
+
+pub struct ExistShapedBuiltinBijectivePreimage {
+    pub certificate: AtomicExceptEqualityFactKnownProof,
+    pub target_membership: VerifyFactResult,
 }
 
 // Existential witness on the real line for a comparison atom.

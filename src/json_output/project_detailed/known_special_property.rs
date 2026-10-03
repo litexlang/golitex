@@ -12,6 +12,19 @@ pub(super) fn project_known_special_property(
     runtime: &Runtime,
 ) -> JsonValue {
     let (rule, id, matches) = match proof {
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::FoldInCarrier(p)) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::FoldOperationSignatureProof;
+            let signature=match &p.operation_signature {
+                FoldOperationSignatureProof::Literal(signature)=>object_for(runtime,vec![("type",string("literal_signature")),("signature",string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(signature.clone())).readable_string()))]),
+                FoldOperationSignatureProof::Known(p)=>super::searched::project_known_premise(p,runtime),
+            };
+            return object_for(runtime,vec![("type",string("by_known_special_property")),("rule",string("FoldInCarrier")),("operation_signature",signature),("carrier",string(p.carrier.readable_string())),("carrier_match",project_equal_searched(&p.carrier_match,runtime))]);
+        },
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::AnonymousFnApplicationInCodomain(p)) => return object_for(runtime,vec![
+            ("type",string("by_known_special_property")),("rule",string("AnonymousFnApplicationInCodomain")),
+            ("signature",string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.signature.clone())).readable_string())),
+            ("applied_return_set",string(p.applied_return_set.readable_string())),("return_set_match",project_equal_searched(&p.return_set_match,runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::IsTuple(p) => {
             return super::known_tuple::project_atomic_tuple_shape("IsTuple", &p.shape, None, runtime);
         }

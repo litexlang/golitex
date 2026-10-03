@@ -9,7 +9,9 @@ pub const DEFINITIONS_FILE_NAME: &str = "definitions.json";
 
 /// Litex KB compatibility revision. Bump for incompatible layout or verifier
 /// corrections that invalidate previously checked definition/theorem products.
-pub const KB_ABI: &str = "3";
+// Revision 4 invalidates products checked with zero-based sequence identities
+// or shape-only known-exist citations. The wire representation is unchanged.
+pub const KB_ABI: &str = "4";
 
 pub fn kb_dir(module_root: &Path) -> PathBuf {
     module_root.join(KB_DIR_NAME)

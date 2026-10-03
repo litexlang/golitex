@@ -1,0 +1,9 @@
+# Legacy migration: B47-C-re-add
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_real_part_addition.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall z, w C:
+#     re(z + w) = re(z) + re(w)
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall z, w C:
+    re(z + w) = re(z) + re(w)

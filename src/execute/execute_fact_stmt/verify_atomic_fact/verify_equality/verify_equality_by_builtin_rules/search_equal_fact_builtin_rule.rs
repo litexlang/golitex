@@ -17,11 +17,26 @@ impl Runtime {
         if let Some(proof) = self.search_scalar_identity(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::ScalarIdentity(proof)));
         }
+        if let Some(proof)=super::by_reduce_product::reduce_product(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceProduct(proof)));
+        }
+        if let Some(proof)=self.search_finite_map_size(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteMapSize(proof)));
+        }
+        if let Some(proof) = self.search_elementary_arithmetic(fact, verify_state.clone())? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(proof)));
+        }
+        if let Some(proof) = self.search_trig_complex_identity(fact, verify_state.clone())? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(proof)));
+        }
         if let Some(proof) = self.search_equal_fact_by_calculation(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::Calculation(proof)));
         }
         if let Some(proof) = self.search_equal_fact_by_aggregate_calculation(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::AggregateCalculation(proof)));
+        }
+        if let Some(proof)=self.search_reduce_last_step(fact,verify_state.clone())? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceLastStep(proof)));
         }
         if let Some(proof) = self.search_equal_fact_by_aggregate_identities(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::AggregateIdentity(proof)));

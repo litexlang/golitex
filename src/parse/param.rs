@@ -98,7 +98,7 @@ impl Runtime {
         Ok(TypedParameterList { groups })
     }
 
-    // Parse `(x R, y S)` — defines each parameter atom.
+    // Parse `(x R, y S)` or `()` for a nullary concrete proposition.
     pub(super) fn parse_typed_param_list_in_parens(
         &mut self,
         tb: &mut TokenBlock,
@@ -112,14 +112,6 @@ impl Runtime {
             }
         }
         tb.expect(RIGHT_PAREN)?;
-        if groups.is_empty() {
-            return Err(RuntimeParseError::new(
-                "expected at least one parameter inside `(...)`",
-                tb.line,
-                tb.source_path.clone(),
-            )
-            .into());
-        }
         Ok(TypedParameterList { groups })
     }
 
@@ -148,7 +140,7 @@ impl Runtime {
         Ok(TypedParameterList { groups })
     }
 
-    // Parse `(x, y)` bare names — defines each atom.
+    // Parse `(x, y)` or `()` for an abstract proposition — defines each atom.
     // Returns surface strings for stmt-only param lists (e.g. abstract_prop).
     pub(super) fn parse_name_list_in_parens(
         &mut self,
@@ -173,14 +165,6 @@ impl Runtime {
             }
         }
         tb.expect(RIGHT_PAREN)?;
-        if names.is_empty() {
-            return Err(RuntimeParseError::new(
-                "expected at least one name inside `(...)`",
-                tb.line,
-                tb.source_path.clone(),
-            )
-            .into());
-        }
         Ok(names)
     }
 

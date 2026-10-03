@@ -223,17 +223,22 @@ impl Runtime {
         });
         // The domain excludes only the all-zero pair. A checked disjunction
         // suffices without selecting either nonzero operand.
-        let non_all_zero = QuantifierFreeFact::OrFact(OrFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            facts: vec![AndChainAtomicFact::AtomicFact(left_nz.clone()), AndChainAtomicFact::AtomicFact(right_nz.clone())],
-            line_file: None,
-        });
-        let disjunction = self.verify_required_quantifier_free_fact(
-            non_all_zero, verify_state.clone(),
-        )?;
-        if !disjunction.is_failed() {
-            reqs.push(disjunction);
-            return Ok(self.with_requirements(proof, reqs));
+        // Either branch order certifies the same nonzero-pair domain. Keep
+        // the proof of the actually checked disjunction, without choosing a
+        // nonzero operand or treating Or citation as order-independent.
+        for (first, second) in [(&left_nz, &right_nz), (&right_nz, &left_nz)] {
+            let non_all_zero = QuantifierFreeFact::OrFact(OrFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                facts: vec![AndChainAtomicFact::AtomicFact(first.clone()), AndChainAtomicFact::AtomicFact(second.clone())],
+                line_file: None,
+            });
+            let disjunction = self.verify_required_quantifier_free_fact(
+                non_all_zero, verify_state.clone(),
+            )?;
+            if !disjunction.is_failed() {
+                reqs.push(disjunction);
+                return Ok(self.with_requirements(proof, reqs));
+            }
         }
         let left_r = self.verify_required_atomic_fact(
             left_nz,

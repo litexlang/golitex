@@ -64,6 +64,14 @@ treated as freshly checked by the repaired verifier. The fingerprint includes
 the ABI revision and old manifests are rejected, so imports rebuild once and
 then use the ordinary cache again. Runtime/Env state shapes are unchanged.
 
+ABI 4 retains the wire layout and invalidates products checked with the former
+zero-based sequence identities or shape-only known-exist citations. Sequence
+indices now start at 1. Struct definitions with laws currently fall back to
+source execution on every import: the definitions-only cache cannot restore
+the newly published universal facts. This uses the existing unsupported-shape
+fallback and does not introduce a new cache or replay/state owner. Individual
+struct codecs still round-trip definitions; they are not complete export products.
+
 ABI 2 introduced the `HaveFnEqual` statement name as a `BoundName` (`id`, `name`)
 and remaps that ID together with the function's parameter/body IDs. ABI 1
 module products are cache misses and are rebuilt from source. A standalone

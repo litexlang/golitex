@@ -1,5 +1,5 @@
-use crate::ast::fact::{AtomicFact, Fact, IsFiniteSetFact};
-use crate::ast::obj::{Literal, Number, Obj, SetFormer};
+use crate::ast::fact::{AtomicFact, Fact, InFact, IsFiniteSetFact};
+use crate::ast::obj::{FunctionSpace, Literal, Number, Obj, SetFormer};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{FactId, Runtime, RuntimeResult};
@@ -8,6 +8,7 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 // Example: prove `$is_finite_set({1, 2})`, `$is_finite_set(closed_range(1, n))`.
 pub enum IsFiniteSetFactSearchProofByBuiltinRule {
     SurjectiveImageOfFiniteSet(SurjectiveImageOfFiniteSetBuiltinRuleProof),
+    FunctionRangeOfFiniteDomain(FunctionRangeOfFiniteDomainProof),
     ListSet(ListSetFiniteBuiltinRuleProof),
     ClosedRange(ClosedRangeFiniteBuiltinRuleProof),
     Range(RangeFiniteBuiltinRuleProof),
@@ -22,6 +23,10 @@ pub enum IsFiniteSetFactSearchProofByBuiltinRule {
 pub struct SurjectiveImageOfFiniteSetBuiltinRuleProof {
     pub cite_surjective_fact_id: FactId,
     pub domain_finite_proof: VerifyFactResult,
+}
+pub struct FunctionRangeOfFiniteDomainProof {
+    pub function_membership:VerifyFactResult,
+    pub domain_finite:VerifyFactResult,
 }
 
 pub struct ListSetFiniteBuiltinRuleProof {}
@@ -67,6 +72,18 @@ impl Runtime {
             }
         }
         match &fact.set {
+            Obj::FunctionSpace(FunctionSpace::FnRange(range)) => {
+                let Some(signature)=self.resolve_callable_fn_set(&range.function) else {return Ok(None);};
+                if signature.set_bound_parameters.groups.iter().map(|g|g.params.len()).sum::<usize>()!=1 {return Ok(None);}
+                let Some(group)=signature.set_bound_parameters.groups.iter().find(|g|!g.params.is_empty()) else {return Ok(None);};
+                let finite=Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {fact_id:self.global_ids.allocate_fact_id(),set:*group.param_type.clone(),line_file:None}));
+                let domain_finite=self.verify_builtin_rule_premise(&finite,verify_state.clone())?;
+                if domain_finite.is_failed() {return Ok(None);}
+                let membership=Fact::AtomicFact(AtomicFact::InFact(InFact {fact_id:self.global_ids.allocate_fact_id(),element:*range.function.clone(),set:Obj::FunctionSpace(FunctionSpace::FnSet(signature)),line_file:None}));
+                let function_membership=self.verify_builtin_rule_premise(&membership,verify_state)?;
+                if function_membership.is_failed() {return Ok(None);}
+                Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::FunctionRangeOfFiniteDomain(FunctionRangeOfFiniteDomainProof {function_membership,domain_finite})))
+            },
             Obj::SetFormer(SetFormer::ListSet(_)) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::ListSet(
                 ListSetFiniteBuiltinRuleProof {},
             ))),

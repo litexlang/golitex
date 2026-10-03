@@ -1,0 +1,21 @@
+struct RightZero<A nonempty_set>:
+    zero A
+    add fn(x, y A) A
+    <=>:
+        forall x A:
+            exist y A st {add(x, y) = zero}
+
+struct NoLaw<A nonempty_set>:
+    zero A
+    add fn(x, y A) A
+
+thm generic_law:
+    ? forall A nonempty_set, s &RightZero<A>, x A:
+        exist y A st {s.add(x, y) = s.zero}
+
+have fn addzero(x, y R) R = 0
+claim:
+    ? forall x R:
+        exist y R st {addzero(x, y) = 0}
+    witness exist y R st {addzero(x, y) = 0} from 0
+have s &RightZero<R> = (0, addzero)

@@ -2,7 +2,7 @@
 
 Task: add detailed regression files for every current Litex Obj variant.
 
-The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 518 positive cases, 284 rejection fixtures and 78 recorded gaps.
+The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 524 positive cases, 284 rejection fixtures and 72 recorded gaps.
 
 These counts describe coverage of written cases, not proof that the implementation is bug-free. The runner audits the enum tree and all `.lit` fixtures on every run.
 
@@ -20,7 +20,7 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::ArithmeticOperator::Mul` | [mul](mul.lit) | 7 | 2 | 0 |
 | `Obj::ArithmeticOperator::Div` | [div](div.lit) | 9 | 7 | 0 |
 | `Obj::ArithmeticOperator::Pow` | [pow](pow.lit) | 9 | 3 | 1 |
-| `Obj::ArithmeticOperator::Abs` | [abs](abs.lit) | 5 | 2 | 1 |
+| `Obj::ArithmeticOperator::Abs` | [abs](abs.lit) | 6 | 2 | 0 |
 | `Obj::ArithmeticOperator::Min` | [min](min.lit) | 5 | 2 | 1 |
 | `Obj::ArithmeticOperator::Max` | [max](max.lit) | 5 | 2 | 1 |
 | `Obj::ArithmeticOperator::Floor` | [floor](floor.lit) | 6 | 2 | 0 |
@@ -31,8 +31,8 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::IntegerOperator::Gcd` | [gcd](gcd.lit) | 6 | 3 | 0 |
 | `Obj::IntegerOperator::Lcm` | [lcm](lcm.lit) | 6 | 2 | 0 |
 | `Obj::IntegerOperator::Factorial` | [factorial](factorial.lit) | 6 | 3 | 0 |
-| `Obj::TrigOperator::Sin` | [sin](sin.lit) | 4 | 2 | 2 |
-| `Obj::TrigOperator::Cos` | [cos](cos.lit) | 4 | 2 | 2 |
+| `Obj::TrigOperator::Sin` | [sin](sin.lit) | 5 | 2 | 1 |
+| `Obj::TrigOperator::Cos` | [cos](cos.lit) | 5 | 2 | 1 |
 | `Obj::TrigOperator::Tan` | [tan](tan.lit) | 2 | 3 | 3 |
 | `Obj::TrigOperator::Cot` | [cot](cot.lit) | 2 | 3 | 2 |
 | `Obj::TrigOperator::Arcsin` | [arcsin](arcsin.lit) | 4 | 4 | 0 |
@@ -74,7 +74,7 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::IteratedOperator::Product` | [product](product.lit) | 11 | 6 | 0 |
 | `Obj::IteratedOperator::SumOfFiniteSet` | [sum_of_finite_set](sum_of_finite_set.lit) | 13 | 8 | 0 |
 | `Obj::IteratedOperator::ProductOfFiniteSet` | [product_of_finite_set](product_of_finite_set.lit) | 12 | 7 | 0 |
-| `Obj::IteratedOperator::Reduce` | [reduce](reduce.lit) | 2 | 3 | 3 |
+| `Obj::IteratedOperator::Reduce` | [reduce](reduce.lit) | 5 | 3 | 0 |
 | `Obj::IteratedOperator::FiniteSetReduce` | [finite_set_reduce](finite_set_reduce.lit) | 2 | 3 | 5 |
 | `Obj::FiniteSetStat::FiniteSetSize` | [finite_set_size](finite_set_size.lit) | 6 | 3 | 1 |
 | `Obj::FiniteSetStat::FiniteSetMax` | [finite_set_max](finite_set_max.lit) | 5 | 5 | 1 |

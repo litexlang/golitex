@@ -1,0 +1,29 @@
+# Before: forall k Z, k > 0 => k $in N+ failed despite both premises.
+# Now: the builtin certificate retains integer membership and strict positivity.
+forall k Z:
+    k > 0
+    =>:
+        k $in N+
+
+forall k Z:
+    k > 1
+    =>:
+        k - 1 $in Z
+        k - 1 > 0
+        k - 1 $in N+
+
+claim:
+    ? forall k N+:
+        k > 1
+        =>:
+            k - 1 $in N+
+    k $in Z
+    k - 1 $in Z
+    k - 1 > 0
+    k - 1 $in N+
+
+have fn countdown(n N+) N by induc n from 1:
+    case n = 1: 0
+    case n > 1: countdown(n - 1)
+countdown(1) = 0
+countdown(2) = 0

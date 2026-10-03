@@ -3,6 +3,7 @@
 //! Call site: `rule.rule_id_and_message(lang)` on `EqualitySearchProofByBuiltinRule`.
 
 mod calculation;
+mod scalar_identities;
 mod finite_subset_size;
 mod leaves;
 mod text;
@@ -15,14 +16,22 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
-            Self::IntegerRangeBuilder(_) => BuiltinRuleText {rule_id:"IntegerRangeBuilder",rule_name:"Integer range comprehension".into(),message:match lang {
+            Self::ReduceLastStep(_) => BuiltinRuleText {rule_id:"ReduceLastStep",rule_name:match lang {OutputLanguage::English=>"Last fold step",OutputLanguage::Chinese=>"折叠的末端一步"}.into(),message:match lang {OutputLanguage::English=>"The nonempty left fold applies its operation to the preceding fold and final term",OutputLanguage::Chinese=>"非空左折叠将运算应用于前段折叠结果和最后一项"}.into()},
+            Self::FiniteMapSize(p) => BuiltinRuleText {rule_id:p.rule_id(),rule_name:match lang {OutputLanguage::English=>"Finite map cardinality",OutputLanguage::Chinese=>"有限映射的基数"}.into(),message:match lang {OutputLanguage::English=>"Consume the stored bijection or injection certificate to compare finite cardinalities",OutputLanguage::Chinese=>"消费已存双射或单射证书比较有限基数"}.into()},
+            Self::ReduceProduct(_) => BuiltinRuleText {rule_id:"ReduceProduct",rule_name:match lang {OutputLanguage::English=>"Multiplication fold",OutputLanguage::Chinese=>"乘法折叠"}.into(),message:match lang {OutputLanguage::English=>"A multiplication fold with seed one equals the product over the same interval",OutputLanguage::Chinese=>"初值为一的乘法折叠等于相同区间上的乘积"}.into()},
+            Self::ElementaryArithmetic(p) => BuiltinRuleText {
+                rule_id:p.rule_id(), rule_name:match lang {OutputLanguage::English=>"Elementary arithmetic identity",OutputLanguage::Chinese=>"基本算术恒等式"}.into(),
+                message:match lang {OutputLanguage::English=>"Apply the arithmetic identity with checked domains and stored premises",OutputLanguage::Chinese=>"依据已验证的定义域和已存前提应用算术恒等式"}.into(),
+            },
+            Self::TrigComplexIdentity(p) => BuiltinRuleText {
+                rule_id:p.rule_id(), rule_name:match lang {OutputLanguage::English=>"Trigonometric or complex coordinate identity",OutputLanguage::Chinese=>"三角或复坐标恒等式"}.into(),
+                message:match lang {OutputLanguage::English=>"Apply the trigonometric or complex coordinate identity with checked premises",OutputLanguage::Chinese=>"依据已验证的前提应用三角或复坐标恒等式"}.into(),
+            },
+            Self::IntegerRangeBuilder(p) => BuiltinRuleText {rule_id:p.rule_id(),rule_name:"Integer range comprehension".into(),message:match lang {
                 OutputLanguage::English => "Integer membership with the exact lower and upper endpoint conditions",
                 OutputLanguage::Chinese => "整数成员及对应的上下界条件",
             }.into()},
-            Self::ScalarIdentity(p) => BuiltinRuleText { rule_id:p.rule_id(), rule_name:p.rule_id().into(), message: match lang {
-                OutputLanguage::English => "Apply the scalar identity with checked domain and premises",
-                OutputLanguage::Chinese => "在已验证的定义域和前提下应用标量恒等式",
-            }.into() },
+            Self::ScalarIdentity(p) => scalar_identities::explain(p,lang),
             Self::Calculation(p) => p.rule_id_and_message(lang),
             Self::AggregateIdentity(_) => {
                 let (name, message) = match lang {

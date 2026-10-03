@@ -1,0 +1,13 @@
+# Legacy migration: B30-pow-equal-literal-invert
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_positive_power_cancellation.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall a, b R+:
+#     a^3 = b^3
+#     =>:
+#         a = b
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall a, b R+:
+    a^3 = b^3
+    =>:
+        a = b

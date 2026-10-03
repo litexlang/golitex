@@ -52,9 +52,13 @@ pub enum InFactSearchProofByBuiltinRule {
     // Mathematical property: after child WD, `+ - * / abs …` over R-carriers stay in R.
     // Example: prove `(x + y) $in R`, `abs(x) $in R`.
     RealArithmeticClosure(RealArithmeticClosureBuiltinRuleProof),
+    // Negation, absolute value, addition, subtraction and multiplication of
+    // checked integers stay in Z. Division requires a separate contract.
+    IntegerArithmeticClosure(IntegerArithmeticClosureBuiltinRuleProof),
     // Native scalar codomains, after the enclosing fact's object WD succeeds:
     // sign: R → Z; gcd: (Z × Z) \ {(0, 0)} → N+; lcm: Z × Z → N;
-    // exp: R → R+; factorial: N → N+. Standard-set supertypes also follow.
+    // exp: R → R+; factorial: N → N+; floor/ceil: R → Z; min/max: R² → R.
+    // Standard-set supertypes also follow.
     NativeScalarCodomain(NativeScalarCodomainBuiltinRuleProof),
     // Both integer membership and strict positivity are required.
     PositiveIntegerInNPos(PositiveIntegerInNPosBuiltinRuleProof),
@@ -68,6 +72,9 @@ pub enum InFactSearchProofByBuiltinRule {
     // binder renaming. Domain conditions and free owners must remain exact.
     // Example: `fn(x R) R {x} $in fn(y R) R`.
     AnonymousFnInDeclaredFnSet(AnonymousFnInDeclaredFnSetBuiltinRuleProof),
+    // A fully checked uncurried literal call inherits its static scalar return
+    // set, including its standard-set supertypes.
+    AnonymousFnApplicationScalarCodomain(AnonymousFnApplicationScalarCodomainBuiltinRuleProof),
     // Membership lifts along the standard-set inclusion chain.
     // Mathematical property: if `x $in S` and `S $subset T` among standard sets,
     // then `x $in T`.
@@ -178,6 +185,7 @@ pub struct ComplexCoordinateInRealBuiltinRuleProof {}
 pub struct ComplexCoordinateInComplexBuiltinRuleProof {}
 
 pub struct RealArithmeticClosureBuiltinRuleProof {}
+pub struct IntegerArithmeticClosureBuiltinRuleProof { pub operand_proofs: Vec<VerifyFactResult> }
 
 // Input-domain evidence lives in the enclosing atomic fact's WD proof.
 // Record the native codomain even when the requested set is a proper superset.
@@ -203,6 +211,9 @@ pub struct CartDimInNaturalBuiltinRuleProof {}
 pub struct TupleDimInNaturalBuiltinRuleProof {}
 
 pub struct AnonymousFnInDeclaredFnSetBuiltinRuleProof {}
+pub struct AnonymousFnApplicationScalarCodomainBuiltinRuleProof {
+    pub codomain: StandardSet,
+}
 
 // Subset-lift certificate: verify membership in a proper subset, then lift.
 // Example: source_set `R`, prove `f(a) $in R` (e.g. by FnApplicationInCodomain), goal `f(a) $in C`.
@@ -441,6 +452,45 @@ impl Runtime {
             | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
             | Obj::ExpLogOperator(ExpLogOperator::Log(_))
             | Obj::ExpLogOperator(ExpLogOperator::Ln(_)) => {
+                // Remainder/quotient WD already requires integer operands.
+                if let Some(proof)=native_scalar_codomain_proof(&fact.element,set) {
+                    return Ok(Some(proof));
+                }
+                if matches!(set, StandardSet::Z) {
+                    // Integer bases to natural powers stay in Z. Negative
+                    // exponents are deliberately excluded (2^-1 is not Z).
+                    if let Obj::ArithmeticOperator(ArithmeticOperator::Pow(p))=&fact.element {
+                        let mut operand_proofs=Vec::new();
+                        for (operand,carrier) in [(&*p.base,StandardSet::Z),(&*p.exponent,StandardSet::N)] {
+                            let premise=Fact::AtomicFact(AtomicFact::InFact(InFact {fact_id:self.global_ids.allocate_fact_id(),element:operand.clone(),set:Obj::StandardSet(carrier),line_file:None}));
+                            let proof=self.verify_builtin_rule_premise(&premise,verify_state.clone())?;
+                            if proof.is_failed() {operand_proofs.clear();break;}
+                            operand_proofs.push(proof);
+                        }
+                        if operand_proofs.len()==2 {return Ok(Some(InFactSearchProofByBuiltinRule::IntegerArithmeticClosure(IntegerArithmeticClosureBuiltinRuleProof {operand_proofs})));}
+                    }
+                    let operands: Vec<&Obj> = match &fact.element {
+                        Obj::ArithmeticOperator(ArithmeticOperator::Neg(v)) => vec![&v.arg],
+                        Obj::ArithmeticOperator(ArithmeticOperator::Abs(v)) => vec![&v.arg],
+                        Obj::ArithmeticOperator(ArithmeticOperator::Add(v)) => vec![&v.left,&v.right],
+                        Obj::ArithmeticOperator(ArithmeticOperator::Sub(v)) => vec![&v.left,&v.right],
+                        Obj::ArithmeticOperator(ArithmeticOperator::Mul(v)) => vec![&v.left,&v.right],
+                        _ => vec![],
+                    };
+                    if !operands.is_empty() {
+                        let mut operand_proofs=Vec::new();
+                        for operand in operands {
+                            let premise=Fact::AtomicFact(AtomicFact::InFact(InFact {fact_id:self.global_ids.allocate_fact_id(),
+                                element:operand.clone(),set:Obj::StandardSet(StandardSet::Z),line_file:None}));
+                            let proof=self.verify_builtin_rule_premise(&premise,verify_state.clone())?;
+                            if proof.is_failed() {operand_proofs.clear();break;}
+                            operand_proofs.push(proof);
+                        }
+                        if !operand_proofs.is_empty() {return Ok(Some(InFactSearchProofByBuiltinRule::IntegerArithmeticClosure(
+                            IntegerArithmeticClosureBuiltinRuleProof {operand_proofs},
+                        )));}
+                    }
+                }
                 if matches!(set, StandardSet::C) {
                     if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
                         return Ok(Some(proof));
@@ -475,6 +525,26 @@ impl Runtime {
             | Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => {
                 if let Some(proof) = native_scalar_codomain_proof(&fact.element, set) {
                     return Ok(Some(proof));
+                }
+            }
+            Obj::FnObj(call) => {
+                if let FnObjHead::AnonymousFnLiteral(function) = call.head.as_ref() {
+                    // Whole application WD checked arity, arguments, predicates,
+                    // and the anonymous function's body. Only a static scalar
+                    // codomain is read here; curried/dependent returns stay out.
+                    if call.body.len() == 1 {
+                        if let Obj::StandardSet(codomain) = function.body.ret_set.as_ref() {
+                            if standard_set_is_subset_eq(codomain, set) {
+                                return Ok(Some(
+                                    InFactSearchProofByBuiltinRule::AnonymousFnApplicationScalarCodomain(
+                                        AnonymousFnApplicationScalarCodomainBuiltinRuleProof {
+                                            codomain: codomain.clone(),
+                                        },
+                                    ),
+                                ));
+                            }
+                        }
+                    }
                 }
             }
             Obj::ProductShape(ProductShape::CartDim(_))
@@ -1606,6 +1676,8 @@ fn native_scalar_codomain_proof(
     target: &StandardSet,
 ) -> Option<InFactSearchProofByBuiltinRule> {
     let codomain = match element {
+        Obj::IntegerOperator(IntegerOperator::Mod(_))
+        | Obj::IntegerOperator(IntegerOperator::Quot(_)) => StandardSet::Z,
         Obj::ArithmeticOperator(ArithmeticOperator::Sign(_))
         | Obj::ArithmeticOperator(ArithmeticOperator::Floor(_))
         | Obj::ArithmeticOperator(ArithmeticOperator::Ceil(_)) => StandardSet::Z,

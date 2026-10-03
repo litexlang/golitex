@@ -16,6 +16,10 @@ use super::text::text;
 impl IsFiniteSetFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::FunctionRangeOfFiniteDomain(_) => match lang {
+                OutputLanguage::English=>text("FunctionRangeOfFiniteDomain","Finite function range","The range of a checked function with finite domain is finite"),
+                OutputLanguage::Chinese=>text("FunctionRangeOfFiniteDomain","有限函数像","已验证函数在有限定义域上的像是有限集"),
+            },
             Self::SurjectiveImageOfFiniteSet(_) => text("SurjectiveImageOfFiniteSet", "Finite surjective image", "A surjection from a checked finite domain has finite codomain"),
             Self::ListSet(p) => p.rule_id_and_message(lang),
             Self::ClosedRange(p) => p.rule_id_and_message(lang),
@@ -27,6 +31,7 @@ impl IsFiniteSetFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::FunctionRangeOfFiniteDomain(_) => None,
             Self::SurjectiveImageOfFiniteSet(p) => Some(p.cite_surjective_fact_id),
             Self::ListSet(_) => None,
             Self::ClosedRange(_) => None,
@@ -161,4 +166,3 @@ impl FiniteSeqFromFiniteCodomainBuiltinRuleProof {
         }
     }
 }
-

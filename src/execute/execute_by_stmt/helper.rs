@@ -11,6 +11,8 @@ use crate::execute::execute_fact_stmt::{
 use crate::runtime::{FactId, Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
+pub(super) use super::negate_fact_for_contra::negate_fact_for_contra;
+
 pub(crate) fn proof_verify_state() -> VerifyState {
     VerifyState {
         can_use_builtin_rule: true,
@@ -49,20 +51,6 @@ pub(crate) fn store_goal_fact(
         return Ok(Err("goal well-definedness failed at store".to_string()));
     }
     Ok(Ok(runtime.store_fact_and_infer(fact)?))
-}
-
-pub(super) fn negate_fact_for_contra(runtime: &mut Runtime, fact: &Fact) -> Result<Fact, String> {
-    match fact {
-        Fact::AtomicFact(atomic) => {
-            let neg = negate_atomic_fact(atomic, runtime.global_ids.allocate_fact_id())
-                .ok_or_else(|| "by contra: cannot negate this atomic fact".to_string())?;
-            Ok(Fact::AtomicFact(neg))
-        }
-        _ => Err(
-            "by contra: first cut only supports atomic `?` goals (negate not wired for compound facts)"
-                .to_string(),
-        ),
-    }
 }
 
 pub(super) fn close_by_contradiction(

@@ -1,4 +1,6 @@
 # Migration blocker B06: see plan/迁移的plan/和example有关.md.
+# The singleton theorem verifies. The induction step now reaches the predecessor
+# index-function existence goal, where replay from finite_set_size_has_index is blocked.
 # Nonempty finite sets have an index function.
 # Induction on finite_set_size(s): base |s| = 1, then extend after removing a least element.
 
@@ -77,6 +79,15 @@ thm index_function_for_singleton:
         =>:
             exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
     finite_set_size(s) >= 1
+    claim:
+        ? $is_nonempty_set(s)
+        by contra:
+            ? $is_nonempty_set(s)
+            s = {}
+            finite_set_size({}) = 0
+            finite_set_size(s) = finite_set_size({})
+            finite_set_size(s) = 0
+            impossible finite_set_size(s) = 1
     $is_nonempty_set(s)
     have a s
     a $in s
@@ -111,6 +122,15 @@ thm index_function_step:
     n >= 1
     n + 1 >= 1
     finite_set_size(s) = n + 1 >= 1
+    claim:
+        ? $is_nonempty_set(s)
+        by contra:
+            ? $is_nonempty_set(s)
+            s = {}
+            finite_set_size({}) = 0
+            finite_set_size(s) = finite_set_size({})
+            finite_set_size(s) = 0
+            impossible finite_set_size(s) >= 1
     $is_nonempty_set(s)
     have a s
     a $in s

@@ -8,21 +8,51 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::ReduceLastStep(p)=>object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ReduceLastStep")),("nonempty",project_verify_fact(&p.nonempty,runtime)),("endpoint",project_verify_fact(&p.endpoint,runtime)),("result",project_verify_fact(&p.result,runtime))]),
+        EqualitySearchProofByBuiltinRule::FiniteMapSize(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string(p.rule_id())),("certificate",super::searched::project_known_premise(p.certificate(),runtime))]),
+        EqualitySearchProofByBuiltinRule::ReduceProduct(_) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ReduceProduct"))]),
+        EqualitySearchProofByBuiltinRule::ElementaryArithmetic(p) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof as P;
+            let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
+            match p {
+                P::ModNegation {requirements} | P::ModNaturalPower {requirements} => entries.push(("requirements",project_verify_facts(requirements,runtime))),
+                P::PositivePowerZero {premise,requirements} | P::PositivePowerCancellation {premise,requirements} | P::SqrtKnownSquare {premise,requirements} => {
+                    entries.push(("premise",super::searched::project_equal_searched(premise,runtime)));
+                    entries.push(("requirements",project_verify_facts(requirements,runtime)));
+                }, P::AbsEvenPower => {},
+            }
+            object_for(runtime,entries)
+        },
+        EqualitySearchProofByBuiltinRule::TrigComplexIdentity(p) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof as P;
+            let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
+            match p {
+                P::ComplexPowerCoordinates {natural} => entries.push(("natural",project_verify_fact(natural,runtime))),
+                P::ComplexModulusZero {premise,complex} => {
+                    entries.push(("premise",super::searched::project_equal_searched(premise,runtime)));
+                    entries.push(("complex",project_verify_fact(complex,runtime)));
+                }, P::ComplexCoordinatesEqual {real,imaginary,domains} => {
+                    entries.push(("real",super::searched::project_equal_searched(real,runtime)));
+                    entries.push(("imaginary",super::searched::project_equal_searched(imaginary,runtime)));
+                    entries.push(("domains",project_verify_facts(domains,runtime)));
+                }, _ => {},
+            }
+            object_for(runtime,entries)
+        },
         EqualitySearchProofByBuiltinRule::IntegerRangeBuilder(p) => object_for(runtime,vec![
-            ("type",string("builtin_rule")),("rule",string("IntegerRangeBuilder")),
-            ("closed",crate::json_output::helper::bool_value(p.closed)),
+            ("type",string("builtin_rule")),("rule",string(p.rule_id())),
         ]),
         EqualitySearchProofByBuiltinRule::ScalarIdentity(p) => {
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_identities::ScalarIdentityBuiltinRuleProof as P;
             let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
             match p {
-                P::AbsZeroArgument { premise_proof, real_proof } => {
-                    entries.push(("premise_proof", super::searched::project_equal_searched(premise_proof,runtime)));
-                    entries.push(("real_proof", project_verify_fact(real_proof,runtime)));
+                P::AbsZeroArgument(p) => {
+                    entries.push(("premise_proof", super::searched::project_equal_searched(&p.premise_proof,runtime)));
+                    entries.push(("real_proof", project_verify_fact(&p.real_proof,runtime)));
                 },
-                P::FloorIntegerTranslation { integer_proof } | P::CeilIntegerTranslation { integer_proof } => {
-                    entries.push(("integer_proof", project_verify_fact(integer_proof,runtime)));
-                }, _ => {},
+                P::FloorIntegerTranslation(p) => entries.push(("integer_proof",project_verify_fact(&p.integer_proof,runtime))),
+                P::CeilIntegerTranslation(p) => entries.push(("integer_proof",project_verify_fact(&p.integer_proof,runtime))),
+                P::FloorNegation(_) | P::CeilNegation(_) | P::MinMaxAbsorption(_) | P::MaxMinAbsorption(_) | P::LcmZero(_) => {},
             }
             object_for(runtime,entries)
         },

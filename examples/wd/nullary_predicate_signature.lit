@@ -1,0 +1,4 @@
+prop ready():
+    0 = 0
+by def $ready()
+$ready()

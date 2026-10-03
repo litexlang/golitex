@@ -224,10 +224,10 @@ pub enum SetFormer {
     ClosedRange(ClosedRange),
 
     // Length-n sequences in S (n may be 0). Essentially the FnSet of maps from
-    // the length-n index set into S. Example: `finite_seq(S, n)`.
+    // the one-based index set 1..n into S. Example: `finite_seq(S, n)`.
     FiniteSeqSet(FiniteSeqSet),
 
-    // Infinite sequences in S. Essentially the FnSet `fn(N) S`. Example: `seq(S)`.
+    // Infinite sequences in S. Essentially the FnSet `fn(N+) S`. Example: `seq(S)`.
     SeqSet(SeqSet),
 
     // One-sided real ray (unbounded on one side). Example: `'[a,)`, `'(,b]`.
@@ -973,7 +973,7 @@ pub struct FiniteSeqSet {
     pub n: Box<Obj>,
 }
 
-// Infinite sequences in S. Essentially the FnSet `fn(N) S`. Example: `seq(S)`.
+// Infinite sequences in S. Essentially the FnSet `fn(N+) S`. Example: `seq(S)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SeqSet {
     pub set: Box<Obj>,

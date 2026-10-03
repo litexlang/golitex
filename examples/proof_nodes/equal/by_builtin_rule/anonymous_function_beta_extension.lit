@@ -1,0 +1,8 @@
+# Before: this used the removed $fn_eq predicate.
+# Ordinary equality and checked fn_extension preserve the original theorem.
+thm direct_anonymous_function_body_equality:
+    ? forall g fn(x R) R:
+        fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
+    by fn_extension:
+        ? fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
+

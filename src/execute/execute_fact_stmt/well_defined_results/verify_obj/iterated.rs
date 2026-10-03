@@ -151,6 +151,12 @@ impl Runtime {
             verify_state.clone(),
             &mut reqs,
         )?;
+        // Enumeration-independent reduction requires both operation laws.
+        if let Some(signature)=self.resolve_callable_fn_set(value.op.as_ref()) {
+            if let Some(carrier)=homogeneous_binary_carrier(&signature) {
+                reqs.extend(self.unordered_fold_laws(value.op.as_ref(),&carrier,verify_state.clone())?);
+            }
+        }
         // A finite fold applies f at every set element, so its declared domain
         // and predicates must cover the set (e.g. {1} is not covered by {2}).
         if let Some(signature) = self.resolve_callable_fn_set(value.func.as_ref()) {

@@ -1,0 +1,10 @@
+# Migration case G22-reduce-generic-step
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_reduce_last_step.lit
+# Before: current release rejected this source.
+# have op fn(a, b R)R
+# have f fn(k Z)R
+# reduce(1, 3, f, op, 0) = op(reduce(1, 2, f, op, 0), f(3))
+# Now: checked operation/domain evidence is retained.
+have op fn(a, b R)R
+have f fn(k Z)R
+reduce(1, 3, f, op, 0) = op(reduce(1, 2, f, op, 0), f(3))

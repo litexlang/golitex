@@ -18,3 +18,8 @@ sketch:
 sketch:
     forall x R:
         cos(x) $in R
+
+# P06: recovered unchanged regression
+sketch:
+    forall x R:
+        cos(-x) = cos(x)

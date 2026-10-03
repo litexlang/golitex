@@ -1,0 +1,7 @@
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/function_range_finite_domain.lit
+# Before: no finite-range consumer for a declared finite source.
+# forall A finite_set,B set,f fn(x A)B:
+#     $is_finite_set(fn_range(f))
+# Current: exact function membership and domain finiteness are retained.
+forall A finite_set,B set,f fn(x A)B:
+    $is_finite_set(fn_range(f))

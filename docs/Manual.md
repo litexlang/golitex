@@ -990,6 +990,13 @@ set returns `seed`; `seed` need not be an identity element. If order matters
 or `op` is noncommutative, provide an explicit integer enumeration and use
 `reduce` instead.
 
+Closed `reduce` expressions can be evaluated with an ascending left fold;
+closed `finite_set_reduce` expressions can be evaluated after both operation
+laws pass. Both share the existing finite-aggregate term budget. A multiplication
+fold with seed `1` also matches `product` over the same interval and function.
+See [ordered-fold calculation](../examples/proof_nodes/equal/by_builtin_rule/legacy_reduce_calculation.lit)
+and [multiplication bridge](../examples/proof_nodes/equal/by_builtin_rule/legacy_reduce_product.lit).
+
 The checked equality, partition, congruence, and reindexing laws for these
 aggregates are listed in [Powers, logarithms, sums, products, and
 remainder](#powers-logarithms-sums-products-and-remainder). In particular,
@@ -1061,6 +1068,22 @@ field carriers, field-to-index equalities, or struct laws.
 > `(a1,…,an) $in cart(A1,…,An)` by coordinate memberships (and, for a
 > non-literal `e`, `$is_tuple(e)` plus `tuple_dim(e)=n`).
 
+A successful `struct` definition also publishes its checked laws as universal
+facts over the original header parameters and an instance of that exact struct.
+A consequent universal is flattened into the same parameter list; its premises
+are retained and existential witnesses stay inside. For example, a law
+`forall x A: exist y A st {add(x,y)=zero}` of `Op<A>` publishes
+`forall A nonempty_set, s &Op<A>, x A: exist y A st {s.add(x,y)=s.zero}`.
+These are definition consequences, with source FactIds retained in the result.
+Ordinary known-forall matching can consume them without an explicit release
+when it can verify the instance carrier and every condition. This does not
+publish tuple/field-index representation facts or recursively open instances.
+Publication follows the definition's existing environment scope. Importing a
+module does not inject its universal facts into the caller's ambient environment;
+an imported instance can use the existing explicit `release struct def` path.
+A top-level `not forall` law remains on the instance-release path because it
+is not a supported universal conclusion shape; it is not hoisted or strengthened.
+
 #### Explicit property release: `release struct def`
 
 `release struct def e` opens exactly one definition-owned struct layer. It has no
@@ -1081,8 +1104,9 @@ For a struct with fields `a : A` and `b : B`, success releases:
 
 Repeating the same statement is
 idempotent. Opening is never recursive: `release struct def outer` does not also
-open a struct-valued `outer.inner`; write `release struct def outer.inner` when its
-properties are needed.
+open a struct-valued `outer.inner`. Its quantified laws may already be usable
+through known-forall matching; use `release struct def outer.inner` to materialize
+its one-layer representation and property facts.
 
 #### Explicit object-definition release: `release obj def` (preview)
 
@@ -3204,7 +3228,9 @@ explanation; this index does not repeat its examples.
   condition with `prop` before using it there. Restricting the body this way
   keeps exist index keys easy to design for known-fact search. The same
   restriction applies to set builders.
-- `#` starts a line comment. Indentation defines block structure.
+- `#` outside an inline aside starts a line comment. Quotes in that comment
+  need not be balanced. A trailing comment preserves a block header's colon.
+  Indentation defines block structure.
 - Inline aside `"..."` (ASCII quotes, single line) is stripped at tokenize time
   and is not part of the AST. Unclosed `"..."` is a parse error.
 - Block comment: a line that is exactly `"""` after trim opens or closes a
@@ -3638,19 +3664,57 @@ This proof soft-fails; an exhaustive split does not make the unrelated goal
 
 ### Proof by contradiction
 
-`by contra` assumes the opposite form of its target. `impossible fact` closes
-the block when both that atomic fact and its opposite are available. The
-impossible fact may be a positive or negated atomic (`impossible not x $in S`,
-`impossible not $P(...)`, `impossible x != y`, …).
+`by contra` assumes the classified logical opposite of its target in a local
+proof scope. Targets may be atomic facts, `exist` / `not exist`, `exist!`,
+conjunctions, disjunctions, chains, `not forall`, and ordinary `forall` or
+forall-iff whose premises and conclusions are quantifier-free. Negating several
+forall conclusions means that at least one conclusion fails; it does not
+require all of them to fail. An iff target negates the complete equivalence,
+rather than one direction. Quantified premises or existential conclusions
+still exceed the current quantifier-free counterexample payloads.
 
-> **Migration example:** This retained block still fails at `by_contra` in the current checker; it is not a verified result.
+For an `exist!` target, the reverse assumption says that every satisfying
+candidate has a distinct satisfying alternative. This covers both absence
+of any witness and multiple witnesses. It uses existing forall/exists shapes;
+there is no unified `NotFact` or new `not exist!` syntax.
 
-<!-- litex:skip-test -->
+`impossible fact` currently accepts a positive or negated atomic fact
+(`impossible not x $in S`, `impossible not $P(...)`, `impossible x != y`, …).
+The block closes only after that fact and its opposite both verify. A failed
+or unknown verification is not proof of the opposite. Only the target is
+published outside the block; reverse assumptions and obtained witnesses stay
+local.
+
 ```litex
 by contra:
     ? not forall x R:
         x^2 >= x
     impossible 0.5^2 >= 0.5
+```
+
+A universal exclusion can be used in an explicit negative-existence proof:
+
+```litex
+by enumerate finite_set:
+    ? forall x {0}:
+        x != 1
+by contra:
+    ? not exist x {0} st {x = 1}
+    obtain a from exist x {0} st {x = 1}
+    a != 1
+    impossible a = 1
+```
+
+The reverse assumption here is the corresponding positive existential.
+A bare negative-existence assertion need not find this proof automatically.
+
+A unique-existence contradiction can open a distinct alternative:
+
+```litex
+by contra:
+    ? exist! x {0} st {x = 0}
+    obtain a from exist y {0} st {y = 0, y != 0}
+    impossible a != 0
 ```
 
 Merely writing `impossible` does not create a contradiction:
@@ -4878,7 +4942,7 @@ reduces to compatible function interfaces and pointwise equality.
 | `by fn_extension: f = g` | Function extensionality to ordinary `f = g` when FnSet carriers are alpha-equivalent (preview). Local agreement remains a bare `forall`. |
 | `$injective(A,B,f)` | Definition route: members of `A` with equal images are equal. For finite `A`, injectivity gives `finite_set_size(fn_range(f)) = finite_set_size(A)`. |
 | `$surjective(A,B,f)` | Definition route: each member of `B` has a preimage in `A`. A finite source makes the codomain finite and gives `finite_set_size(B) <= finite_set_size(A)`. |
-| `$bijective(A,B,f)` | Definition route combines injectivity and surjectivity. For finite source and target, it preserves cardinality; it also enables finite aggregate reindexing. |
+| `$bijective(A,B,f)` | Definition route combines injectivity and surjectivity. A stored certificate and `y $in B` prove `exist! x A st {f(x)=y}`. For finite source and target, it preserves cardinality; it also enables finite aggregate reindexing. |
 
 Here the definition proofs register the mapping facts, after which the
 cardinality rules consume them directly:
@@ -5238,6 +5302,7 @@ Main families are:
 | `A $in power_set(B)` | `A $subset B` |
 | `x $in cart(A, B, ...)` | Tuple shape, dimension, and coordinate memberships |
 | `f $in index_cart(I,S,g)` | `f $in fn(index I) family_union(S)`, `$is_choice_function_for(I,S,g,f)`, and its pointwise factor-membership universal |
+| `$is_choice_function_for(I,S,g,f)` | Its existing definition `forall alpha I: f(alpha) $in g(alpha)`; ordinary known-forall instantiation then gives each fiber membership |
 | `x $in range(a, b)` | Integer membership and half-open bounds |
 | `x $in closed_range(a, b)` | Integer membership and closed bounds |
 | `x` in a real interval | Real membership and endpoint bounds |

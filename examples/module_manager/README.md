@@ -69,3 +69,10 @@ Config migration alone does not establish these capabilities.
 [`eval_mount_failure/check.py`](eval_mount_failure/check.py) checks that failed
 cwd mounts emit a structured `FailToImport` result without executing requested
 eval code, and that the healthy cwd-eval control still succeeds.
+
+`struct_law_publication/main.lit` checks definition-local universal laws, followed
+by existential consumption of an imported instance after `release struct def`.
+Imported facts do not automatically become ambient root facts. Structs with laws
+use source fallback until definitions-only KB products can restore the published
+foralls. Qualified carrier syntax such as `&L::base::RightZero<R>` is not used:
+that syntax is not yet supported by the parser.

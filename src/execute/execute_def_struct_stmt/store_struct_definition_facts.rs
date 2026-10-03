@@ -1,6 +1,6 @@
 //! Publish checked struct laws with header, instance and law binders retained.
 
-use crate::ast::fact::{exist_shaped_fact_to_fact, ExistOrAndChainAtomicFact, Fact, ForallFact};
+use crate::ast::fact::{ExistOrAndChainAtomicFact, Fact, ForallFact};
 use crate::ast::obj::{IdentifierObj, Obj, StructAndFieldAccessObj, StructObj};
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::ast::stmt::DefStructStmt;
@@ -44,6 +44,12 @@ impl Runtime {
         let domains: Vec<Fact> = domains.into_iter().map(quantifier_free_fact_to_fact).collect();
         let mut published = Vec::new();
         for source in &definition.equivalent_facts {
+            // NotForall is not an existing forall conclusion shape. Preserve
+            // this law on the instance-release path; do not change its polarity
+            // or invent a stronger conjunction of counterexamples.
+            if matches!(source, Fact::NotForall(_)) {
+                continue;
+            }
             let instantiated = self.inst_fact(source, &substitution)
                 .map_err(|err| RuntimeError::InternalBug(format!("struct law substitution: {err}")))?;
             let quantified = self.quantify_struct_definition_fact(
@@ -62,15 +68,8 @@ impl Runtime {
         &mut self,
         parameters: &TypedParameterList,
         domains: &[Fact],
-        mut fact: Fact,
+        fact: Fact,
     ) -> RuntimeResult<Fact> {
-        // As in template publication, retain negation by using its existing
-        // counterexample representation, rather than moving binders into it.
-        if let Fact::NotForall(negative) = &fact {
-            let counterexample = self.not_forall_to_counterexample_exist(negative)?
-                .ok_or_else(|| RuntimeError::InternalBug("struct law has no counterexample form".into()))?;
-            fact = exist_shaped_fact_to_fact(&counterexample);
-        }
         let mut quantified = match fact {
             Fact::ForallFact(mut universal) => {
                 let mut groups = parameters.groups.clone();

@@ -11,6 +11,30 @@ pub enum AggregateEvaluationResult {
     SumOfFiniteSet(FiniteSetSumEvaluationResult),
     Product(RangeProductEvaluationResult),
     ProductOfFiniteSet(FiniteSetProductEvaluationResult),
+    Reduce(RangeReduceEvaluationResult),
+    FiniteSetReduce(FiniteSetReduceEvaluationResult),
+}
+
+pub struct FiniteSetReduceEvaluationResult {
+    pub source:Obj,
+    pub enumeration:FiniteSetEnumerationResult,
+    pub seed:Obj,
+    pub terms:Vec<ReduceTermEvaluationResult>,
+    pub value:Obj,
+}
+
+pub struct RangeReduceEvaluationResult {
+    pub source: Obj,
+    pub bounds: AggregateRangeBoundsResult,
+    pub seed: Obj,
+    pub terms: Vec<ReduceTermEvaluationResult>,
+    pub value: Obj,
+}
+pub struct ReduceTermEvaluationResult {
+    pub argument: Obj,
+    pub term: FunctionApplicationEvaluationResult,
+    pub operation: FunctionApplicationEvaluationResult,
+    pub accumulated_value: Obj,
 }
 
 pub struct RangeSumEvaluationResult {

@@ -1,2 +1,0 @@
-# Intended valid regression: reduce P04
-reduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0) = -6

@@ -1,0 +1,6 @@
+# Migration case G23-finite-reduce-literal
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_finite_reduce_calculation.lit
+# Before: current release rejected this source.
+# finite_set_reduce({1, 2, 3}, fn(k R) R {k}, fn(a, b R) R {a + b}, 0) = 6
+# Now: checked operation/domain evidence is retained.
+finite_set_reduce({1, 2, 3}, fn(k R) R {k}, fn(a, b R) R {a + b}, 0) = 6

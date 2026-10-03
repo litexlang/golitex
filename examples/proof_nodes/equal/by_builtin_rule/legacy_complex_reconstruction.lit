@@ -1,0 +1,9 @@
+# Legacy migration: B08-complex-reconstruct
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_complex_reconstruction.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall z C:
+#     z = re(z) + img(z) * i
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall z C:
+    z = re(z) + img(z) * i

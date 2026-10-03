@@ -1,0 +1,5 @@
+# This input must be rejected.
+forall A set, B set, f fn(x A) B:
+    $surjective(A, B, f)
+    =>:
+        $is_finite_set(B)

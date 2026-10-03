@@ -1,2 +1,2 @@
 # Intended valid regression: seq_set P03
-fn(x N) N {x} $in seq(N)
+fn(x N+) N {x} $in seq(N)

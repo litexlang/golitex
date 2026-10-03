@@ -293,6 +293,12 @@ explicit construction or control structure.
 | Inductive invariant | <code>by induc</code> or <code>by strong_induc</code> | Give base and step cases |
 | Set equality | <code>by extension</code> | Prove both membership directions |
 
+`by contra` accepts existing classified opposites for atomic facts,
+`exist` / `not exist` / `exist!`, `and` / `or` / chains, and `forall`,
+`not forall` or forall-iff with quantifier-free bodies and premises.
+Its `impossible` tail still takes one atomic fact;
+both that fact and its opposite must verify in the local scope.
+
 Conditional enumeration uses its premises in each local assignment. Nested
 proof methods and binder names are allowed in proof bodies; helpers stay local.
 `eval expr` checks the expression's mathematical domains before computing.

@@ -1,3 +1,0 @@
-# Intended valid regression: abs P05
-forall x R:
-    abs(-x) = abs(x)

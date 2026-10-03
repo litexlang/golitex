@@ -16,14 +16,6 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
-        // TASK_SEQUENCE_TRACE_BEGIN
-        if std::env::var_os("LITEX_TASK_SEQUENCE_TRACE").is_some() {
-            static COUNT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-            let count = COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            eprintln!("sequence trace {count}: {} depth={}", fact.readable_string(), verify_state.remaining_deep_search_depth);
-            if count == 180 { panic!("sequence trace stop"); }
-        }
-        // TASK_SEQUENCE_TRACE_END
         let well_defined_proof = match self
             .verify_atomic_fact_well_definedness(fact, verify_state.clone())?
         {

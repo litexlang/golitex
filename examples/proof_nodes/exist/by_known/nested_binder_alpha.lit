@@ -1,0 +1,17 @@
+# Before: the final existential soft-failed at search_proof even after the
+# equivalent witness had been checked. Its inner function binder was compared
+# by raw IR after renaming only the outer existential binder.
+# Old failing goal (now active below):
+# exist z R st {$fixed(fn(b R) R {b}, z)}
+# After: existing structural alpha comparison checks all nested binders,
+# preserving free owners, parameter carriers, function bodies and predicates.
+# Run: target/release/litex -strict -f examples/proof_nodes/exist/by_known/nested_binder_alpha.lit
+# Negative controls: tests/unit/execute/known_exist_nested_binders/tests.rs
+
+prop fixed(g fn(a R) R, x R):
+    g(x) = x
+
+witness exist x R st {$fixed(fn(y R) R {y}, x)} from 0:
+    by def $fixed(fn(t R) R {t}, 0)
+
+exist z R st {$fixed(fn(b R) R {b}, z)}

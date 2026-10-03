@@ -50,6 +50,9 @@ mod guarded_quantifier_wd_tests;
 #[path = "../../tests/unit/execute/function_application_wd_evidence/tests.rs"]
 mod function_application_wd_evidence_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/execute/known_exist_nested_binders/tests.rs"]
+mod known_exist_nested_binder_tests;
+#[cfg(test)]
 #[path = "../../tests/unit/execute/struct_field_instantiation/tests.rs"]
 mod struct_field_instantiation_tests;
 #[cfg(test)]
@@ -75,6 +78,9 @@ mod finite_set_cardinality_rule_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/induction_repairs/tests.rs"]
 mod induction_repair_tests;
+#[cfg(test)]
+#[path = "../../tests/unit/execute/example_small_repairs/tests.rs"]
+mod example_small_repair_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/local_rust_repairs/tests.rs"]
 mod local_rust_repair_tests;

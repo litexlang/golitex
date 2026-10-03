@@ -102,3 +102,21 @@ named, literal and field-headed calls with repeated composite arguments.
 Discarded candidate scopes cannot own WD ids in the returned proof. The Rust
 regression resolves child and projected WD citations after the statement ends,
 including reuse of an existing caller-owned cache entry.
+
+`predicate_positive_integer_carrier.lit` checks strict positive-integer introduction from a known integer carrier and positive bound. Its closed negative carrier controls (`1 / 2` in Z/N/N+) run separately in `cargo test --release predicate_domain`; premise-producing N+ rules must obey ordinary builtin entry permission.
+
+[gcd_nonzero_disjunction.lit](gcd_nonzero_disjunction.lit) checks GCD's domain
+using a proved `x != 0 or y != 0`, without choosing either operand. The same
+domain evidence supports the definition inferred from `$coprime(x, y)`.
+`cargo test --release predicate_domain` also rejects `gcd(0, 0)` and checks
+that local assumptions do not escape.
+
+[nullary_predicate_signature.lit](nullary_predicate_signature.lit) defines and
+uses `prop ready()` with zero parameters. Signature regressions reject extra
+arguments, undefined goals and ill-defined bodies; nullary `abstract_prop`
+retains its strict-mode restriction.
+
+[signed_conjunctions.lit](signed_conjunctions.lit) checks positive and negative
+atomic conjuncts, a leading negative disjunct, existential bodies and repeated
+atomic negation. Every atom still undergoes signature/domain WD. Negated
+comparison chains and `not exist!` keep their existing syntax restrictions.

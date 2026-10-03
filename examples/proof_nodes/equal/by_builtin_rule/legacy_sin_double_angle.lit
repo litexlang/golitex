@@ -1,0 +1,9 @@
+# Legacy migration: B45-sin-double
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_sin_double_angle.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall x R:
+#     sin(2 * x) = 2 * sin(x) * cos(x)
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall x R:
+    sin(2 * x) = 2 * sin(x) * cos(x)

@@ -94,8 +94,8 @@ These cases follow the implementation's contracts, rather than adding external
 mathematical axioms. `N` contains zero. `quot(a, d)` requires `d` in `N+`.
 `gcd(a, b)` excludes `(0, 0)`. Displayed list-set entries must be provably
 pairwise distinct. Real `abs` is separate from complex `C_abs`. Tuple and
-Cartesian-product indices are one-based; finite-sequence function domains are
-zero-based. Integer ranges and real intervals have different endpoint rules.
+Cartesian-product indices and finite-sequence function domains are one-based.
+Integer ranges and real intervals have different endpoint rules.
 Range `sum`/`product` require a nonempty range; `reduce` permits an empty range.
 Indexed union/intersection/product currently require a nonempty index carrier.
 Free-form nested bracket sequences and explicit `&Struct{value}.field` selection
