@@ -96,7 +96,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn \u2026\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `f`\", line: 3, path: Real(\"examples/test_objs/gaps/fn_obj__p06.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `f`\", line: 3, path: Real(\"examples/test_objs/gaps/fn_obj__p06.lit\") }))"
           }
         }
       ]
@@ -439,6 +439,7 @@
         "P02",
         "P03",
         "P04",
+        "P05",
         "P06"
       ],
       "negative_cases": [
@@ -451,19 +452,7 @@
           "file": "negative/abs__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P05",
-          "file": "gaps/abs__p05.lit",
-          "intended": "accept",
-          "issue": "abs-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"forall x R:\\n    abs (-x) = abs (x)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"forall x R:\\n    abs (-x) = abs (x)\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "min",
@@ -793,7 +782,8 @@
         "P01",
         "P02",
         "P03",
-        "P05"
+        "P05",
+        "P06"
       ],
       "negative_cases": [
         {
@@ -816,17 +806,6 @@
             "phase": "search_proof",
             "diagnostic": "{\"success\": false, \"statement\": \"sin(-pi / 2) = -1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"sin(-pi / 2) = -1\"}, \"stores\": [], \"infers\": []}"
           }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/sin__p06.lit",
-          "intended": "accept",
-          "issue": "sin-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"forall x R:\\n    sin(-x) = -sin(x)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"forall x R:\\n    sin(-x) = -sin(x)\"}, \"stores\": [], \"infers\": []}"
-          }
         }
       ]
     },
@@ -841,7 +820,8 @@
         "P01",
         "P02",
         "P03",
-        "P05"
+        "P05",
+        "P06"
       ],
       "negative_cases": [
         {
@@ -863,17 +843,6 @@
             "observed": "reject",
             "phase": "search_proof",
             "diagnostic": "{\"success\": false, \"statement\": \"cos(-pi) = -1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"cos(-pi) = -1\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/cos__p06.lit",
-          "intended": "accept",
-          "issue": "cos-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"forall x R:\\n    cos(-x) = cos(x)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"forall x R:\\n    cos(-x) = cos(x)\"}, \"stores\": [], \"infers\": []}"
           }
         }
       ]
@@ -1699,7 +1668,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `I`\", line: 3, path: Real(\"examples/test_objs/gaps/family_intersect__p04.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `I`\", line: 3, path: Real(\"examples/test_objs/gaps/family_intersect__p04.lit\") }))"
           }
         }
       ]
@@ -1782,7 +1751,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn \u2026\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_union__p02.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_union__p02.lit\") }))"
           }
         }
       ]
@@ -1827,7 +1796,7 @@
           "baseline": {
             "observed": "reject",
             "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn \u2026\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_intersect__p02.lit\") }))"
+            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_intersect__p02.lit\") }))"
           }
         }
       ]
@@ -2081,9 +2050,20 @@
             "observed": "reject",
             "phase": "search_proof",
             "diagnostic": "{\"success\": false, \"statement\": \"fn (x closed_range(0, 1)) R{x} $in finite_seq(R, 2)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x closed_range(0, 1)) R{x} $in finite_seq(R, 2)\"}, \"stores\": [], \"infers\": []}"
+          },
+          "current_verification": {
+            "date": "2026-10-02",
+            "source": "# Intended valid regression: finite_seq_set P05\nfn(x closed_range(1, 2)) R {x} $in finite_seq(R, 2)\n",
+            "observed": "reject",
+            "phase": "search_proof",
+            "exit": 1,
+            "success": false,
+            "binary_sha256": "d941e06ee9e695c341667258750b130539de6a13296ffb8a25abb5634e1a9be6",
+            "journal": "../../plan/迁移的plan/proof_journals/showcase-sequence-struct-contracts-2026-10-02.json"
           }
         }
-      ]
+      ],
+      "indexing_contract": "2026-10-02: seq uses N+; finite_seq of length n uses indices 1..n; historical baselines below predate that decision."
     },
     {
       "name": "seq_set",
@@ -2117,6 +2097,16 @@
             "observed": "reject",
             "phase": "search_proof",
             "diagnostic": "{\"success\": false, \"statement\": \"fn (x N) N{x} $in seq(N)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x N) N{x} $in seq(N)\"}, \"stores\": [], \"infers\": []}"
+          },
+          "current_verification": {
+            "date": "2026-10-02",
+            "source": "# Intended valid regression: seq_set P03\nfn(x N+) N {x} $in seq(N)\n",
+            "observed": "reject",
+            "phase": "search_proof",
+            "exit": 1,
+            "success": false,
+            "binary_sha256": "d941e06ee9e695c341667258750b130539de6a13296ffb8a25abb5634e1a9be6",
+            "journal": "../../plan/迁移的plan/proof_journals/showcase-sequence-struct-contracts-2026-10-02.json"
           }
         },
         {
@@ -2128,9 +2118,20 @@
             "observed": "reject",
             "phase": "search_proof",
             "diagnostic": "{\"success\": false, \"statement\": \"fn (x N) R{0} $in seq(R)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x N) R{0} $in seq(R)\"}, \"stores\": [], \"infers\": []}"
+          },
+          "current_verification": {
+            "date": "2026-10-02",
+            "source": "# Intended valid regression: seq_set P04\nfn(x N+) R {0} $in seq(R)\n",
+            "observed": "reject",
+            "phase": "search_proof",
+            "exit": 1,
+            "success": false,
+            "binary_sha256": "d941e06ee9e695c341667258750b130539de6a13296ffb8a25abb5634e1a9be6",
+            "journal": "../../plan/迁移的plan/proof_journals/showcase-sequence-struct-contracts-2026-10-02.json"
           }
         }
-      ]
+      ],
+      "indexing_contract": "2026-10-02: seq uses N+; finite_seq of length n uses indices 1..n; historical baselines below predate that decision."
     },
     {
       "name": "cart",
@@ -2742,7 +2743,10 @@
       "helper_paths": [],
       "positive_cases": [
         "P01",
-        "P02"
+        "P02",
+        "P03",
+        "P04",
+        "P05"
       ],
       "negative_cases": [
         {
@@ -2758,41 +2762,7 @@
           "file": "negative/reduce__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/reduce__p03.lit",
-          "intended": "accept",
-          "issue": "reduce-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 6\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/reduce__p04.lit",
-          "intended": "accept",
-          "issue": "reduce-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a - b}, 0) = -6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a - b}, 0) = -6\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P05",
-          "file": "gaps/reduce__p05.lit",
-          "intended": "accept",
-          "issue": "reduce-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 10) = 16\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 10) = 16\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "finite_set_reduce",

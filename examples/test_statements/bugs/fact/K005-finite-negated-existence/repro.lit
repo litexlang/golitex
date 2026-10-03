@@ -1,7 +1,0 @@
-# Known gap: K005
-# Desired success: true
-# See todo.md; runner checks observed behavior explicitly.
-
-forall x {0}:
-    x != 1
-not exist x {0} st {x = 1}

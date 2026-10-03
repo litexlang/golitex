@@ -284,6 +284,9 @@ impl Tokenizer {
             }
 
             *i += 1;
+            // Hash comments may contain arbitrary quotes. Keep hashes inside
+            // actual inline asides, then validate only the remaining code.
+            let content = Self::code_prefix_before_hash_comment(content);
             // Strip `"..."` asides before structure checks and tokenization.
             let content = self.strip_inline_asides(content, line_no, source_path)?;
             let content = content.trim();

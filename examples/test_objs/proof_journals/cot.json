@@ -74,53 +74,30 @@
       "P04"
     ],
     "file_gate_result": {
-      "command": [
-        "-f",
-        "examples/test_objs/cot.lit"
-      ],
-      "exit_code": 0,
-      "envelope": {
-        "kind": "run",
-        "success": true,
-        "target": "file",
-        "path": "examples/test_objs/cot.lit",
-        "detail": "normal",
-        "language": "en",
-        "statement_results": [
-          {
-            "success": true,
-            "statement": "sketch",
-            "proof_method": {
-              "type": "proof_block",
-              "rule_name": "Sketch",
-              "message": "Run a sketch proof block"
-            },
-            "stores": [],
-            "infers": []
-          },
-          {
-            "success": true,
-            "statement": "sketch",
-            "proof_method": {
-              "type": "proof_block",
-              "rule_name": "Sketch",
-              "message": "Run a sketch proof block"
-            },
-            "stores": [],
-            "infers": []
-          }
-        ],
-        "session_error": null
-      },
-      "stderr": "",
-      "ok": true
+      "command": "target/release/litex -f examples/test_objs/cot.lit",
+      "verification_date": "2026-10-02",
+      "verification_environment": "Immutable workspace source/corpus snapshot",
+      "source_sha256": "11be06941eb766040ed1903ad4f570ffd475e5118045ba80dadd1698e5c66140",
+      "binary_sha256": "787a8a6898b8d3fc3c4a227ee7ac69a8e95c45cec131c50f0abedd7679fb6a42",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 2,
+        "object": "cot",
+        "file": "cot.lit",
+        "kind": "positive",
+        "intended": "accept"
+      }
     }
   },
   "latest_clean_file_gate": {
     "command": "target/release/litex -f examples/test_objs/cot.lit",
     "verification_date": "2026-10-02",
-    "binary_sha256": "f24fc5c4ded2c946813ede37bd05ac55267a2d49bbc367174daf1428924a34fc",
-    "source_sha256": "c1702e495977ec1c597c105aba9c32c548655f8356131b2134f6344b7c164fd8",
+    "verification_environment": "Immutable workspace source/corpus snapshot",
+    "source_sha256": "11be06941eb766040ed1903ad4f570ffd475e5118045ba80dadd1698e5c66140",
+    "binary_sha256": "787a8a6898b8d3fc3c4a227ee7ac69a8e95c45cec131c50f0abedd7679fb6a42",
     "observation": {
       "observed": "accept",
       "exit_code": 0,

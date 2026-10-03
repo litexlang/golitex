@@ -1,0 +1,2 @@
+# This input must be rejected.
+range(2, 5) = {x Z: 2 <= x <= 5}

@@ -1,0 +1,3 @@
+# This input must be rejected.
+forall x R, n R:
+    floor(x + n) = floor(x) + n

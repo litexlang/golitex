@@ -1,0 +1,13 @@
+# Legacy migration: B23-power-zero-invert
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_positive_power_zero.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall x R, n N+:
+#     x^n = 0
+#     =>:
+#         x = 0
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall x R, n N+:
+    x^n = 0
+    =>:
+        x = 0

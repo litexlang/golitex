@@ -175,6 +175,12 @@ requirements carry full proofs or cite ancestor-owned ids. After selection,
 the caller records the successful application according to its original
 `store_well_defined_fact` setting. A failed candidate leaves no WD cache entry.
 
+Known-exist reuse checks WD first, preserves the existing existential-kind
+implication gate, and structurally compares typed binders and the complete
+body through the existing alpha-equality helpers. Nested function/set binders
+may be renamed; their carriers, bodies, predicates and free owners must match.
+The shape index and stored citation ownership are unchanged.
+
 Atomic / equality / or / exist search may then use `ByKnownForallFact` via
 `SearchProofByKnownForallFact` (`cite: ForallConclusionCite` = FactId +
 location into then / and-component / exist-then). Equality also tries the

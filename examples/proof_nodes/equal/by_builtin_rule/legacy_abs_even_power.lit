@@ -1,0 +1,9 @@
+# Legacy migration: B06-abs-even-power-corrected
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_abs_even_power.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall x R:
+#     abs(x)^4 = x^4
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall x R:
+    abs(x)^4 = x^4

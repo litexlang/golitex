@@ -1,0 +1,73 @@
+# Classified by-contra goals; no unified NotFact.
+# Before: K005's negative-existence target rejected before its proof body.
+# Run: target/release/litex -strict -f examples/stmt_nodes/by/by_contra_classified_goals.lit
+# Formerly rejected target, with the checked enumeration prefix:
+# by contra:
+#     ? not exist x {0} st {x = 1}
+#     obtain a from exist x {0} st {x = 1}
+#     a != 1
+#     impossible a = 1
+# Boundary: impossible remains atomic; exist! and quantified forall bodies
+# still require additional classified negation constructions.
+
+by enumerate finite_set:
+    ? forall x {0}:
+        x != 1
+by contra:
+    ? not exist x {0} st {x = 1}
+    obtain a from exist x {0} st {x = 1}
+    a != 1
+    impossible a = 1
+
+by contra:
+    ? exist x {0} st {x = 0}
+    impossible 0 = 0
+
+by contra:
+    ? 1 = 1 or 0 = 1
+    impossible 1 != 1
+
+by contra:
+    ? not forall n {0}:
+        n = 1
+    impossible 0 = 1
+
+forall z {0}:
+    z = 0
+by contra:
+    ? forall n {0}:
+        n = 0
+    obtain b from exist m {0} st {m != 0}
+    b = 0
+    impossible b != 0
+
+# Whole-body negation is a disjunction of counterexample conditions.
+witness exist n {0} st {n != 0 or n != 1} from 0
+not forall n {0}:
+    n = 0
+    n = 1
+
+by contra:
+    ? 1 = 1 and 0 = 0
+    by cases:
+        ? 0 = 1
+        case 1 != 1:
+            impossible 1 != 1
+        case 0 != 0:
+            impossible 0 != 0
+    impossible 0 = 1
+
+by contra:
+    ? 0 <= 1 <= 2
+    by cases:
+        ? 0 = 1
+        case not 0 <= 1:
+            impossible not 0 <= 1
+        case not 1 <= 2:
+            impossible not 1 <= 2
+    impossible 0 = 1
+
+# Existing separated counterexample clauses remain usable.
+witness exist x {0} st {x != 1 or x != 2, x != 3 or x != 4} from 0
+not forall x {0}:
+    x = 1 and x = 2 or x = 3 and x = 4

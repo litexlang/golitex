@@ -253,5 +253,15 @@
     "note": "Read-only search footprint, not a claim all files require edits."
   },
   "proposal_note": "ExistUnique negation can also be encoded specially using forall/exists; general NotFact is the proposed uniform design for full Fact coverage, including complex forall/iff, not the sole way to negate unique existence.",
-  "approval": "Pending; no protected AST or production Rust edits."
+  "approval": "Pending; no protected AST or production Rust edits.",
+  "superseding_decision": {
+    "date": "2026-10-02",
+    "user_instruction": "Do not introduce a unified NotFact; use the existing classified negations.",
+    "withdrawn": [
+      "Fact::NotFact(NotFact)",
+      "generic not: syntax"
+    ],
+    "remaining_concrete_ast_proposal": "ByContraStmt.impossible_fact: AtomicFact -> Fact",
+    "status": "Original preparation retained as history; follow classified-goal checkpoint and current plan."
+  }
 }

@@ -1,5 +1,10 @@
 pub mod by_integer_range_builder;
 pub mod by_scalar_identities;
+pub mod by_elementary_arithmetic;
+pub mod by_trig_complex_identities;
+pub mod by_reduce_product;
+pub mod by_reduce_last_step;
+pub mod by_finite_map_size;
 pub mod by_equal_from_known_difference_zero;
 pub mod by_finite_subset_size;
 pub mod by_inverse_trig;

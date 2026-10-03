@@ -3210,9 +3210,23 @@ fn by_def_requires_definition_route() {
 #[test]
 fn by_def_rechecks_known_predicate_obligations() {
     let mut runtime = runtime_with_file_env();
-    // Computation can prove the target, but cannot replace its trial forall.
+    // A fresh trial forall may be discharged by finite enumeration. When it
+    // succeeds, an explicit request must still retain definition evidence.
+    let fresh = exec_one(&mut runtime, "by def $prime(5)");
+    if !fresh.is_failed() {
+        let fresh_detail = crate::json_output::project_stmt_detailed(&fresh, &runtime).stringify();
+        assert!(fresh_detail.contains("by_definition"), "{fresh_detail}");
+    }
     assert!(!exec_one(&mut runtime, "$prime(5)").is_failed());
-    assert!(exec_one(&mut runtime, "by def $prime(5)").is_failed());
+    // Rechecking a known target must also keep the definition evidence.
+    let checked = exec_one(&mut runtime, "by def $prime(5)");
+    assert!(!checked.is_failed());
+    let detail = crate::json_output::project_stmt_detailed(&checked, &runtime).stringify();
+    assert!(detail.contains("by_definition"), "{detail}");
+    assert!(detail.contains("range(2, 5)"), "{detail}");
+    // A fresh composite must fail that same definition route.
+    let mut composite_runtime = runtime_with_file_env();
+    assert!(exec_one(&mut composite_runtime, "by def $prime(4)").is_failed());
     // Even a known abstract predicate has no definition.
     assert!(!exec_one(&mut runtime, "abstract_prop opaque(x)").is_failed());
     assert!(!exec_one(&mut runtime, "trust $opaque(1)").is_failed());

@@ -83,3 +83,79 @@ The written inventory now contains 262 negative fixtures and 111 recorded gaps. 
 ```
 
 The release verifier instead accepted it through `Closed decimal inequality`. See [diagnosis_2026-10-02.md](diagnosis_2026-10-02.md) for the normalization cause, the two complex-inverse barriers and the proposed finite-sum reduction. The follow-up ran a focused Number gate; it did not rerun the complete corpus or change kernel semantics. `number_diagnosis_baseline.json` and `number_diagnosis_results.json` record that focused snapshot; the earlier `baseline.json` and `results.json` describe the initial full gate and earlier inventory.
+
+## Approved numeric and aggregate implementation (2026-10-02)
+
+The four approved stages are implemented. These direct assertions now verify:
+
+```litex
+2.400 = 2.4
+i != 0
+1 / i = -i
+sum(1, 3, fn(x Z) Z {x}) = 6
+product(1, 3, fn(x Z) Z {x}) = 6
+```
+
+The false decimal inequality, `i = 0`, `1 / i = -1`, zero denominators,
+out-of-domain callable applications and incorrect aggregate results remain
+rejections. Exact rational inequality also supports displayed fractional index
+sets without accepting equal fractions as distinct elements.
+
+Finite evaluation covers anonymous/named functions and aliases, checked algorithm
+equations, mixed nested sums/products, exact fractions, displayed sets and known
+enumerations. Symbolic evidence covers constant, pointwise, sum linearity/scalar,
+adjacent partition, integer shift, disjoint finite union and range/set bridge
+rules. Unknown endpoints use those rules with checked premises, rather than
+inventing an enumeration. Detailed output retains application WD, function
+equations, each term and running folds. Normal English/Chinese output shows the
+evaluated object and the budget/overflow cause.
+
+The selected seven-object intended gate checks 78 positive cases and 46 rejection
+fixtures with no failures; see [the focused report](numeric_aggregate_focused_results.json).
+All 99 owning positive files pass the complete gate. The written inventory is
+524 positives, 284 rejection fixtures and 72 surviving gap fixtures: 71 valid
+direct assertions still reject, and one invalid finite-set reduction still
+accepts. The complete intended gate therefore exits nonzero; see
+[the complete report](numeric_aggregate_results.json) and [the issue list](todo.md).
+The 15 numeric/aggregate repairs preserve their original failure sources in
+[the promotion journal](proof_journals/numeric_aggregate_promotions_2026-10-02.json).
+24 other unchanged fixtures recovered during concurrent engine work; this task
+records their promotion without claiming those engine changes.
+
+The final feature, output, documentation and Rust evidence is retained in
+[the verification journal](proof_journals/numeric_aggregate_gate_2026-10-02.json).
+The 13 Rust filters collected and passed 246 tests; 27 feature/doc/output probes and both shift-domain controls also passed.
+Final gates build an immutable copy of the workspace's Rust/corpus inputs,
+because other tasks continued editing the shared checkout. Source and binary
+hashes identify that checked snapshot; they do not certify subsequent unrelated
+edits. Failed/inconsistent shared-checkout builds executed no acceptance fixtures.
+AST/fixture auditing and all nine runner protocol tests pass, including the
+failed-build control. Earlier `baseline.json`, `results.json` and diagnosis
+reports are historical snapshots.
+
+Scope and limits:
+
+- This repair changes shared exact-number and aggregate WD/evidence entrances,
+  with focused tests for their consumers. It adds no Obj/Stmt/Fact or Env/Runtime
+  shape changes. `eval` displays results and stores no mathematical equation;
+  direct equalities publish their checked facts.
+- Nested calculation shares 1024 terms, depth is bounded and integer endpoint
+  arithmetic is checked. Resource exhaustion is a failure, not a numeric result.
+- Reversed range sums/products still reject. Empty finite-set sum/product use
+  0/1. Infinite aggregates and unspecified set enumerations are not numeric eval.
+- A symbolic shift can still require an explicit target-interval hypothesis,
+  such as `3 <= n + 2`; the unproved legality obligation remains in the todo.
+- ABI 3 invalidates old products after the numeric/WD correctness correction;
+  subsequent unrelated interface changes raised the current revision to ABI 4.
+  Older imported products rebuild through the existing cold fallback. Cache
+  rejection and cold-rebuild/warm-hit tests cover this compatibility change.
+- No claim of Lean export or a globally defect-free kernel is made by these gates.
+
+Reproduce from the repository root:
+
+```sh
+python3 examples/test_objs/run.py --object number --object imaginary_unit --object div --object sum --object product --object sum_of_finite_set --object product_of_finite_set
+python3 examples/test_objs/run.py --audit-only
+python3 examples/test_objs/test_runner.py
+python3 examples/test_objs/run.py --report examples/test_objs/numeric_aggregate_results.json
+```

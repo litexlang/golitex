@@ -21,3 +21,14 @@ publishing an equation; direct equalities own their checked publication.
 Gate: `python3 examples/test_objs/run.py --object number --object imaginary_unit --object div
 --object sum --object product --object sum_of_finite_set --object product_of_finite_set`.
 Final broadened acceptance and remaining limits are recorded in [acceptance](../../acceptance.md).
+
+Final evidence: 246 Rust tests across 13 nonempty filters, 27 CLI feature/doc/output
+probes and two explicit/implicit shift-legality controls pass on the recorded
+immutable source snapshot. The selected corpus passes 78 positive cases and
+46 rejection fixtures. Number decoder and ABI miss/cold-rebuild/warm-hit tests
+cover persistence; the existing compatibility revision was raised for these
+semantic corrections, rather than changing state or cache layout.
+
+Reusable output boundary: a successful eval exposes its evaluated object in
+Normal English/Chinese; Detailed retains terms and running folds. Budget and
+endpoint-overflow failures have precise causes and publish no equality.

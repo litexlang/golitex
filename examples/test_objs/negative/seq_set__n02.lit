@@ -1,2 +1,2 @@
 # Must reject: seq_set N02
-fn(x N) R {-1} $in seq(N)
+fn(x N+) R {-1} $in seq(N)

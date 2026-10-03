@@ -1,0 +1,5 @@
+# This input must be rejected.
+forall k R:
+    k > 0
+    =>:
+        k $in N+

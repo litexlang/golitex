@@ -8,6 +8,12 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_exist_builtin_rule(rule: &ExistShapedFactSearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        ExistShapedFactSearchProofByBuiltinRule::BijectivePreimage(p) => object_for(runtime, vec![
+            ("type", string("exist_builtin")),
+            ("rule", string("BijectivePreimage")),
+            ("certificate", super::searched::project_known_premise(&p.certificate, runtime)),
+            ("target_membership", project_verify_fact(&p.target_membership, runtime)),
+        ]),
         ExistShapedFactSearchProofByBuiltinRule::RealLineComparisonWitness(p) => {
             let mut entries = vec![("type", string("exist_builtin")), ("rule", string("RealLineComparisonWitness"))];
             entries.push(("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())));

@@ -1,0 +1,13 @@
+# Unique-existence contra uses existing Forall/Exist shapes.
+# Formerly rejected:
+# by contra:
+#     ? exist! x {0} st {x = 0}
+#     obtain a from exist y {0} st {y = 0, y != 0}
+#     impossible a != 0
+# Run: target/release/litex -strict -f examples/stmt_nodes/by/by_contra_unique_existence.lit
+# Negative controls (no witnesses / multiple witnesses) live in the focused Rust tests.
+
+by contra:
+    ? exist! x {0} st {x = 0}
+    obtain a from exist y {0} st {y = 0, y != 0}
+    impossible a != 0

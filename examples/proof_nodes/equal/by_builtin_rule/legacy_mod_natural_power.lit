@@ -1,0 +1,9 @@
+# Legacy migration: B05-mod-power
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_mod_natural_power.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall a Z, m N+, n N:
+#     (a^n) % m = ((a % m)^n) % m
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall a Z, m N+, n N:
+    (a^n) % m = ((a % m)^n) % m

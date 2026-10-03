@@ -18,3 +18,8 @@ sketch:
 sketch:
     forall x R:
         sin(x) $in R
+
+# P06: recovered unchanged regression
+sketch:
+    forall x R:
+        sin(-x) = -sin(x)

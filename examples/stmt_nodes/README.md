@@ -65,6 +65,10 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `witness/` | Exhibit witnesses | `witness exist … from …:` etc. |
 | `witness/witness_type_soundness.lit` | Check concrete witness and predicate argument types | `witness exist` / `witness $P(args)` |
 | `by/` | Named proof methods | `by cases:` / `by contra:` / … |
+| [by/by_contra_classified_goals.lit](by/by_contra_classified_goals.lit) | Classified compound contra targets | `exist` / `not exist`, `or`, QF `forall` / `not forall`; atomic `impossible` |
+| [by/by_contra_unique_existence.lit](by/by_contra_unique_existence.lit) | Unique-existence contra target | Existing forall/exists reverse assumption; distinct alternative witness |
+| [by/by_contra_forall_iff.lit](by/by_contra_forall_iff.lit) | Whole iff contra target | Existing QF equivalence failure and Exist counterexample |
+| [by/by_contra_imaginary_unit.lit](by/by_contra_imaginary_unit.lit) | Direct atomic contradiction authoring | `i != 0` with `impossible i = 0`; historical nondeterministic route stays recorded |
 | `by/induction_base_scope.lit` | Separate induction base and step scopes | `by induc` / `by strong_induc` |
 | `proof_block/` | Nested scopes | `claim:` / `sketch:` |
 | `by/finite_set_conditional_proof_steps.lit` | Conditional enumeration and nested proof steps | finite list guards, live binder names, and local nested `by def` |

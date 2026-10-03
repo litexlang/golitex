@@ -1,0 +1,3 @@
+# Gate: target/release/litex -strict -f examples/wd/finite_set_fold_operation_laws.lit
+# Exact positive WD source; subtraction and (a+b)/2 are rejected in Rust tests.
+finite_set_reduce({1, 2}, fn(k R) R {k}, fn(a, b R) R {a + b}, 0) $in R

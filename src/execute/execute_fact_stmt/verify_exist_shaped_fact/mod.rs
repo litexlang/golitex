@@ -1,4 +1,5 @@
 mod helper;
+mod by_bijective_preimage;
 mod result;
 mod verify_exist_shaped_fact;
 mod verify_well_defined;

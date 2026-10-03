@@ -9,7 +9,8 @@
 //!   4. define field identifiers with their carriers
 //!   5. equivalent-fact (`<=>:`) WD under those fields
 //!   6. close field_local_env into the result
-//! Then close outer local_env and store the struct definition in the parent.
+//! Then close outer local_env, store the struct definition and publish quantified laws
+//! in the parent statement transaction.
 //!
 //! Example:
 //!   struct Point:

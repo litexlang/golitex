@@ -65,10 +65,57 @@ pub struct InferNormalAtomicParamTypesProjectedResult {
     pub derived: Vec<StoreFactAndInferResult>,
 }
 
-pub struct InferBuiltinDefinitionResult {
+pub enum InferBuiltinDefinitionResult {
+    Prime(InferPrimeDefinitionResult),
+    Coprime(InferCoprimeDefinitionResult),
+    ProperSubset(InferProperSubsetDefinitionResult),
+    ProperSuperset(InferProperSupersetDefinitionResult),
+    Dvd(InferDvdDefinitionResult),
+    Bijective(InferBijectiveDefinitionResult),
+    ChoiceFunction(InferChoiceFunctionDefinitionResult),
+}
+pub struct InferPrimeDefinitionResult {
     pub source_fact_id: FactId,
     pub derived: Vec<StoreFactAndInferResult>,
 }
+pub struct InferCoprimeDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+pub struct InferProperSubsetDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+pub struct InferProperSupersetDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+pub struct InferDvdDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+pub struct InferBijectiveDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+pub struct InferChoiceFunctionDefinitionResult {
+    pub source_fact_id:FactId,
+    pub derived:Vec<StoreFactAndInferResult>,
+}
+impl InferBuiltinDefinitionResult {
+    pub fn stored_fact_ids(&self) -> Vec<FactId> {
+        match self {
+            Self::Prime(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
+            Self::Coprime(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
+            Self::ProperSubset(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
+            Self::ProperSuperset(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
+            Self::Dvd(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
+            Self::Bijective(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
+            Self::ChoiceFunction(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
+        }
+    }
+}
+
 
 pub struct InferExpandDefinitionResult {
     pub derived: Vec<StoreFactAndInferResult>,
@@ -173,7 +220,7 @@ pub struct InferSupersetElementwiseMembershipResult {
 impl InferAtomicExceptEqualityResult {
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
         match self {
-            Self::BuiltinDefinition(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
+            Self::BuiltinDefinition(r) => r.stored_fact_ids(),
             Self::NormalAtomicParamTypes(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {

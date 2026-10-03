@@ -24,6 +24,15 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
+## Sequence and struct contracts
+
+[One-based sequences](equal/by_builtin_rule/sequence_one_based.lit) cover
+`seq(S) = fn(n N+) S`, finite indices 1 through n, and the empty sequence.
+[Struct existential laws](exist/by_known_forall/struct_existential_law.lit)
+cover flattened definition publication, existential alpha matching and `obtain`.
+Rust `sequence_struct_contract` tests retain bad indices, guards, carriers,
+false conclusions, source evidence and scope boundaries.
+
 ## Fundamental equality examples
 
 Exact decimal normalization, guarded imaginary division and finite aggregates
@@ -367,3 +376,37 @@ Checked return-carrier/signature leaves have dedicated tracers:
 argument/body WD must already succeed; they do not drop domain conditions or
 rename free definition owners. Focused positive and negative contracts run
 with `cargo test --release predicate_domain`.
+
+## Example small repairs (2026-10-02)
+
+`atomic/by_builtin_rule/positive_integer_in_npos.lit` preserves the integer
+and strict-positivity premise certificates, includes a checked predecessor
+proof, and exercises the countdown definition. Zero, negative, fractional and
+missing-premise controls live in `examples/negative/example_small_repairs/`.
+
+`equal/by_builtin_rule/anonymous_function_beta_extension.lit` migrates the
+removed `$fn_eq` spelling to ordinary equality with `by fn_extension`, while
+keeping the original anonymous-function beta/algebra goal. The full opaque
+integral prototype remains tracked separately in the migration plan.
+
+The broader strict tracer is `examples/example_small_repairs.lit`.
+
+## Local legacy migration repairs
+
+The [collected small-capability acceptance](equal/by_builtin_rule/legacy_small_capabilities.lit)
+covers guarded modulo/power/sqrt leaves, trigonometric parity and shifts,
+complex-coordinate identities and extensionality, finite map cardinalities,
+and ordered/unordered reduction. Each `legacy_*.lit` companion preserves its
+previously rejected source as comments and runs the restored statement.
+The [finite function range](atomic/by_builtin_rule/function_range_finite_domain.lit)
+tracer supplies the cardinality WD dependency. Executable false/domain cases
+and Detailed evidence checks live in `tests/unit/execute/legacy_small_capabilities/tests.rs`;
+exact binary identities and before/after runs are retained in
+`proof_journals/legacy-small-capability-repairs.json`.
+
+The collection also checks [unique preimages of a stored bijection](exist/by_builtin_rule/bijective_preimage.lit)
+and [choice-function pointwise inference](../infer/atomic/choice_function_pointwise.lit).
+The preimage rule retains the bijection certificate and the target's codomain
+membership; surjectivity alone and witness-dependent targets are rejected.
+An [arbitrary-carrier unordered fold](../wd/finite_set_fold_arbitrary_carrier.lit)
+checks that explicit associativity and commutativity certificates remain usable.

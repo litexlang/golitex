@@ -14,6 +14,44 @@ fn runtime(strict: bool) -> Runtime {
 }
 
 #[test]
+fn nullary_concrete_propositions_keep_definition_wd_and_exact_arity() {
+    let mut rt = runtime(true);
+    assert!(rt.run_litex_code(include_str!("../../../../examples/wd/nullary_predicate_signature.lit")).unwrap().success);
+    for code in ["$ready(0)\n", "not $ready(0)\n", "0 = 1\n"] {
+        let run = rt.run_litex_code(code).unwrap();
+        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(!run.success, "{code}");
+    }
+    assert!(rt.run_litex_code("prop falsehood():\n    0 = 1\n").unwrap().success);
+    assert!(!rt.run_litex_code("$falsehood()\n").unwrap().success);
+    assert!(!rt.run_litex_code("prop ill_defined():\n    1 / 0 = 0\n").unwrap().success);
+    assert!(!rt.run_litex_code("$ill_defined()\n").unwrap().success);
+    assert_eq!(rt.execution_environments_stack.len(), 1);
+}
+
+#[test]
+fn nullary_abstract_propositions_preserve_strict_and_signature_checks() {
+    let mut rt = runtime(false);
+    assert!(rt.run_litex_code("abstract_prop opaque()\n").unwrap().success);
+    assert!(!rt.run_litex_code("$opaque()\n").unwrap().success);
+    assert!(rt.run_litex_code("trust $opaque()\n$opaque()\n").unwrap().success);
+    for code in ["$opaque(0)\n", "not $opaque(0)\n", "by def $opaque()\n", "0 = 1\n"] {
+        assert!(!rt.run_litex_code(code).unwrap().success, "{code}");
+    }
+    assert!(!runtime(true).run_litex_code("abstract_prop opaque()\n").unwrap().success);
+}
+
+#[test]
+fn undefined_nullary_goal_still_fails_before_its_local_definition() {
+    let mut rt = runtime(true);
+    let run = rt.run_litex_code("claim:\n    ? $chosen()\n    prop chosen():\n        0 = 0\n    by def $chosen()\nprop chosen():\n    0 = 0\nby def $chosen()\n").unwrap();
+    assert!(run.session_error.is_none(), "{:?}", run.session_error);
+    assert_eq!(run.statement_results.iter().map(|r| r.is_failed()).collect::<Vec<_>>(), [true, false, false]);
+    assert_eq!(rt.execution_environments_stack.len(), 1);
+    assert!(!rt.run_litex_code("0 = 1\n").unwrap().success);
+}
+
+#[test]
 fn undefined_claim_goal_fails_before_a_later_local_declaration_can_prove_it() {
     let mut rt = runtime(true);
     let run = rt.run_litex_code("claim:\n    ? $chosen(0)\n    prop chosen(x R):\n        x = 0\n    by def $chosen(0)\nprop chosen(x R):\n    x = 1\n$chosen(0)\n0 = 1\n").unwrap();

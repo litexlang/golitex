@@ -18,6 +18,11 @@ sketch:
 sketch:
     abs(abs(-4)) = 4
 
+# P05: abs(-x) = abs(x)
+sketch:
+    forall x R:
+        abs(-x) = abs(x)
+
 # P06: abs(x) >= 0
 sketch:
     forall x R:

@@ -1,0 +1,12 @@
+# Legacy migration: I10-choice-apply
+# Gate: target/release/litex -strict -f examples/infer/atomic/choice_function_pointwise.lit
+# Before: the frozen current audit rejected the following statement.
+# forall I, S set, g fn(alpha I)S, f fn(alpha I)family_union(S), t I:
+#     $is_choice_function_for(I, S, g, f)
+#     =>:
+#         f(t) $in g(t)
+# Now: the existing certificate is consumed; false/domain variants are Rust regressions.
+forall I, S set, g fn(alpha I)S, f fn(alpha I)family_union(S), t I:
+    $is_choice_function_for(I, S, g, f)
+    =>:
+        f(t) $in g(t)

@@ -1,0 +1,13 @@
+# Legacy migration: B17-map-size-corrected
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_finite_bijective_size.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall A, B finite_set, f fn(x A)B:
+#     $bijective(A, B, f)
+#     =>:
+#         finite_set_size(A) = finite_set_size(B)
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall A, B finite_set, f fn(x A)B:
+    $bijective(A, B, f)
+    =>:
+        finite_set_size(A) = finite_set_size(B)

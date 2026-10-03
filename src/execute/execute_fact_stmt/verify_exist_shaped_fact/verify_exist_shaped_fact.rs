@@ -7,13 +7,15 @@ use crate::ast::obj::{
     IntegerOperator, Literal, Mod, Number, Obj, StandardSet,
 };
 use crate::exec_env::exist_shaped_fact_index_key::{
-    exist_shaped_fact_alpha_match_key, exist_shaped_fact_can_prove_goal,
+    exist_shaped_fact_alpha_match_key,
+    exist_shaped_fact_can_prove_goal,
     exist_shaped_fact_known_lookup_keys,
 };
 use crate::exec_env::known_forall_conclusion_memory::{
     exist_at_forall_location, ForallConclusionCite,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::plain_exist_facts_alpha_equal;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::helper::{
     archimedean_reciprocal_bound, equality_witness_from_membership_parts,
     integer_multiple_from_zero_remainder_operands, nonempty_set_member_witness_set,
@@ -92,6 +94,11 @@ impl Runtime {
         fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ExistShapedFactSearchProofByBuiltinRule>> {
+        if let Some(proof) =
+            self.search_exist_builtin_bijective_preimage(fact, verify_state.clone())?
+        {
+            return Ok(Some(ExistShapedFactSearchProofByBuiltinRule::BijectivePreimage(proof)));
+        }
         if let Some(proof) =
             self.search_exist_builtin_real_line_comparison_witness(fact, verify_state.clone())?
         {
@@ -450,7 +457,7 @@ impl Runtime {
                         let cite_fact_id = exist_shaped_fact_id(entry);
                         if cite_fact_id != goal_id
                             && exist_shaped_fact_can_prove_goal(entry, fact)
-                            && exist_shaped_fact_alpha_match_key(entry) == exist_shaped_fact_alpha_match_key(fact)
+                            && plain_exist_facts_alpha_equal(entry.plain(), fact.plain())
                         {
                             return Ok(Some(ExistShapedFactSearchedProof::ByKnownExistShapedFact(
                                 ExistShapedFactSearchProofByKnownExistShapedFact { cite_fact_id },

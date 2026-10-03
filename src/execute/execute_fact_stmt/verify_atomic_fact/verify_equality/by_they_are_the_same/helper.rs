@@ -3,11 +3,11 @@ use std::mem::discriminant;
 
 use crate::ast::fact::{
     atomic_fact_args_ref, AndChainAtomicFact, AndFact, AtomicFact, ChainFact, OrFact,
-    QuantifierFreeFact,
+    PlainExistFact, QuantifierFreeFact,
 };
 use crate::ast::names::BoundName;
 use crate::ast::obj::{AnonymousFn, FnObj, FnObjHead, FnSet, IdentifierObj, IntervalObj, Obj, OneSideInfinityIntervalObj, SetBuilder, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator};
-use crate::ast::param::SetBoundParameterList;
+use crate::ast::param::{ParamType, SetBoundParameterList};
 use crate::runtime::runtime_ids::IdentifierId;
 
 // Structural alpha-equality for FnSet / SetBuilder (and nested objs/facts).
@@ -24,6 +24,39 @@ pub fn set_builders_alpha_equal(left: &SetBuilder, right: &SetBuilder) -> bool {
 
 pub fn anonymous_fns_alpha_equal(left: &AnonymousFn, right: &AnonymousFn) -> bool {
     anonymous_fns_alpha_equal_under(left, right, &HashMap::new())
+}
+
+// Known existential reuse must compare nested binders as well as its own
+// parameters. Free owners, carriers and the complete body remain exact.
+pub(crate) fn plain_exist_facts_alpha_equal(left: &PlainExistFact, right: &PlainExistFact) -> bool {
+    let mut map = HashMap::new();
+    if left.typed_parameters.groups.len() != right.typed_parameters.groups.len()
+        || left.facts.len() != right.facts.len()
+    {
+        return false;
+    }
+    for (left, right) in left.typed_parameters.groups.iter().zip(&right.typed_parameters.groups) {
+        if left.params.len() != right.params.len() {
+            return false;
+        }
+        let carriers_equal = match (&left.param_type, &right.param_type) {
+            (ParamType::Obj(left), ParamType::Obj(right)) => objs_alpha_equal(left, right, &map),
+            (ParamType::Set(_), ParamType::Set(_))
+            | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
+            | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => true,
+            _ => false,
+        };
+        if !carriers_equal {
+            return false;
+        }
+        for (left, right) in left.params.iter().zip(&right.params) {
+            if !extend_binder_map(&mut map, left, right) {
+                return false;
+            }
+        }
+    }
+    left.facts.iter().zip(&right.facts)
+        .all(|(left, right)| quantifier_free_facts_alpha_equal(left, right, &map))
 }
 
 fn fn_sets_alpha_equal_under(
@@ -529,4 +562,3 @@ fn atomic_facts_alpha_equal(
             .zip(right_args.iter())
             .all(|(l, r)| objs_alpha_equal(l, r, map))
 }
-

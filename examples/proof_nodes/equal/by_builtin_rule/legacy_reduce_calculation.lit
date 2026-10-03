@@ -1,0 +1,7 @@
+# Legacy migration: G18-reduce-literal
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_reduce_calculation.lit
+# Before: rejected by the frozen current release in the migration audit.
+# reduce(1, 3, fn(k Z) Z {k}, fn(a, b Z) Z {a + b}, 0) = 6
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+reduce(1, 3, fn(k Z) Z {k}, fn(a, b Z) Z {a + b}, 0) = 6

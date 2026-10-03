@@ -1,0 +1,122 @@
+# Collected acceptance for the local legacy migration repairs.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_small_capabilities.lit
+# Per-rule files preserve the exact rejected source and its active replacement.
+
+# B04-mod-negation
+forall a Z, m N+:
+    (-a) % m = (m - a % m) % m
+
+# B05-mod-power
+forall a Z, m N+, n N:
+    (a^n) % m = ((a % m)^n) % m
+
+# B06-abs-even-power-corrected
+forall x R:
+    abs(x)^4 = x^4
+
+# B23-power-zero-invert
+forall x R, n N+:
+    x^n = 0
+    =>:
+        x = 0
+
+# B30-pow-equal-literal-invert
+forall a, b R+:
+    a^3 = b^3
+    =>:
+        a = b
+
+# B31-sqrt-equivalent
+forall x, y R:
+    x >= 0
+    y >= 0
+    x = y^2
+    =>:
+        sqrt(x) = y
+
+# B41-sin-neg
+forall x R:
+    sin(-x) = -sin(x)
+
+# B42-cos-neg
+forall x R:
+    cos(-x) = cos(x)
+
+# B43-sin-pi-shift
+forall x R:
+    sin(x + pi) = -sin(x)
+
+# B44-cos-pi-shift
+forall x R:
+    cos(x + pi) = -cos(x)
+
+# B45-sin-double
+forall x R:
+    sin(2 * x) = 2 * sin(x) * cos(x)
+
+# B08-complex-reconstruct
+forall z C:
+    z = re(z) + img(z) * i
+
+# B27-C-abs-zero
+forall z C:
+    C_abs(z) = 0
+    =>:
+        z = 0
+
+# B28-C-ext
+forall z, w C:
+    re(z) = re(w)
+    img(z) = img(w)
+    =>:
+        z = w
+
+# B47-C-re-add
+forall z, w C:
+    re(z + w) = re(z) + re(w)
+
+# B48-C-img-sub
+forall z, w C:
+    img(z - w) = img(z) - img(w)
+
+# B49-C-re-pow
+forall z C, n N:
+    re(z^(n + 1)) = re(z^n) * re(z) - img(z^n) * img(z)
+
+# B17-map-size-corrected
+forall A, B finite_set, f fn(x A)B:
+    $bijective(A, B, f)
+    =>:
+        finite_set_size(A) = finite_set_size(B)
+
+# B19-injection-range-size-corrected
+forall A finite_set, B set, f fn(x A)B:
+    $injective(A, B, f)
+    =>:
+        finite_set_size(fn_range(f)) = finite_set_size(A)
+
+# G18-reduce-literal
+reduce(1, 3, fn(k Z) Z {k}, fn(a, b Z) Z {a + b}, 0) = 6
+
+# G19-reduce-product-bridge
+reduce(1, 3, fn(k Z) R {k}, fn(a, b R) R {a * b}, 1) = product(1, 3, fn(k Z) R {k})
+
+# G23-finite-reduce-literal
+finite_set_reduce({1, 2, 3}, fn(k R) R {k}, fn(a, b R) R {a + b}, 0) = 6
+
+# I06-bijective-preimage-final
+forall A, B set, f fn(x A)B, y B:
+    $bijective(A, B, f)
+    =>:
+        exist! x A st {f(x) = y}
+
+# I10-choice-apply
+forall I, S set, g fn(alpha I)S, f fn(alpha I)family_union(S), t I:
+    $is_choice_function_for(I, S, g, f)
+    =>:
+        f(t) $in g(t)
+
+# G22-reduce-generic-step
+have op fn(a, b R)R
+have f fn(k Z)R
+reduce(1, 3, f, op, 0) = op(reduce(1, 2, f, op, 0), f(3))

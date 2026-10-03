@@ -1,0 +1,24 @@
+# Contra checks the whole iff through existing QF + Exist shapes.
+# Formerly rejected by the multiline goal parser:
+# by contra:
+#     ? forall x {0}:
+#         =>:
+#             0 = 0
+#         <=>:
+#             0 = 0
+#     impossible 0 != 0
+# Run: target/release/litex -strict -f examples/stmt_nodes/by/by_contra_forall_iff.lit
+# Boundary: quantified iff clauses exceed the current QF counterexample body.
+
+by contra:
+    ? forall x {0}:
+        =>:
+            0 = 0
+        <=>:
+            0 = 0
+    obtain a from exist y {0} st {0 != 0 or 0 != 0, 0 = 0 or 0 = 0}
+    by cases:
+        ? 0 != 0
+        case 0 != 0
+        case 0 != 0
+    impossible 0 != 0

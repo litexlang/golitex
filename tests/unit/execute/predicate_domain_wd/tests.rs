@@ -11,6 +11,58 @@ fn runtime() -> Runtime {
 }
 
 #[test]
+fn predicate_domain_wd_gcd_accepts_a_checked_nonzero_disjunction() {
+    for code in [
+        "forall x, y N:\n    $coprime(x, y)\n    =>:\n        $coprime(x, y)\n",
+        include_str!("../../../../examples/wd/gcd_nonzero_disjunction.lit"),
+    ] {
+        let mut rt = runtime();
+        let run = rt.run_litex_code(code).unwrap();
+        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(run.success, "{code}");
+        let detail = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
+        if code.contains("gcd(") {
+            assert!(detail.contains("by_known_or") || detail.contains("by_selected_branch"), "{detail}");
+        }
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+        // The disjunction neither chooses a branch nor admits the all-zero pair.
+        for negative in ["gcd(0, 0) = gcd(0, 0)\n", "0 = 1\n"] {
+            let rejected = rt.run_litex_code(negative).unwrap();
+            assert!(rejected.session_error.is_none());
+            assert!(!rejected.success, "{negative}");
+        }
+    }
+}
+
+#[test]
+fn predicate_domain_wd_gcd_nonzero_pair_is_symmetric_without_selecting_an_operand() {
+    for code in [
+        "forall a, b Z:\n    a != 0 or b != 0\n    =>:\n        gcd(b, a) = gcd(b, a)\n",
+        "forall a, b Z:\n    b != 0 or a != 0\n    =>:\n        gcd(a, b) = gcd(a, b)\n",
+        "claim:\n    ? forall a, b Z:\n        a != 0 or b != 0\n        =>:\n            gcd(b, a) = gcd(b, a)\n    gcd(b, a) = gcd(b, a)\n",
+    ] {
+        let mut rt = runtime();
+        let run = rt.run_litex_code(code).unwrap();
+        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(run.success, "{code}");
+        let detail = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
+        assert!(detail.contains("by_known_or"), "{detail}");
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+        for rejected in [
+            "gcd(0, 0) = gcd(0, 0)\n",
+            "forall a, b Z:\n    a != 0 or b != 0\n    =>:\n        a != 0\n",
+            "forall a, b Z:\n    a != 0 or b != 0\n    =>:\n        b != 0\n",
+            "gcd(0.5, 1) = gcd(0.5, 1)\n",
+        ] {
+            let run = rt.run_litex_code(rejected).unwrap();
+            assert!(run.session_error.is_none(), "{rejected}: {:?}", run.session_error);
+            assert!(!run.success, "{rejected}");
+            assert_eq!(rt.execution_environments_stack.len(), 1);
+        }
+    }
+}
+
+#[test]
 fn predicate_domain_wd_does_not_reopen_anonymous_function_peers() {
     // The stored `prior = fn(n N) N {1}` provides an equality peer.
     // Checking an unrelated numeric domain must not enter its binder again.

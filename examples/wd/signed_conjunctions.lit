@@ -1,0 +1,6 @@
+1 = 1 and not 1 = 2
+not 1 = 2 and 1 = 1
+not 1 = 2 or 1 = 1
+not not 1 = 1
+not not not 1 = 2
+witness exist x R st {x = 0 and not x = 1} from 0

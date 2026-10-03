@@ -1,0 +1,2 @@
+# This input must be rejected.
+gcd(0, 0) = 0

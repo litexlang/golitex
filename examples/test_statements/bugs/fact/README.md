@@ -10,9 +10,10 @@ Primary fixture: [fact.lit](../../fact.lit).
 
 ## Open issues
 
-- [ ] [K005: Explicit by-contra cannot target negative existence](K005-finite-negated-existence/README.md)
-
-K005 is a category-2 local repair candidate whose scope remains under diagnosis; Codex owns the next action and checks under the maintainer's delegation. See the [classified suite todo](../../todo.md).
+No original K-number Fact issue remains open in this inventory. A broader
+[finite-cardinality carrier observation](kernel_gate_2026-10-03.md) remains under diagnosis. K005's explicit proof and
+its [solution](../../experience/problem_notes/K005-classified-negative-existence-contra.md)
+are accepted; the bare automatic shortcut remains a documented limitation.
 
 The former internal `known_only` control now passes; its [recheck and historical failure](../../experience/problem_notes/known-only-control-recheck.md) remain in experience records, rather than the open bug inventory.
 

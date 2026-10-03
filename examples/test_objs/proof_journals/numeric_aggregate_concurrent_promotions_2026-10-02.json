@@ -66,7 +66,7 @@
         "baseline": {
           "observed": "reject",
           "phase": "let",
-          "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `X`\", line: 4, path: Real(\"examples/test_objs/gaps/index_union__p01.lit\") }))"
+          "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `X`\", line: 4, path: Real(\"examples/test_objs/gaps/index_union__p01.lit\") }))"
         }
       },
       "source": "# Intended valid regression: index_union P01\nlet A = fn(k {1, 2}) power_set(N) {{1}}\nlet X = index_union({1, 2}, N, A)\nX = X\n",
@@ -118,7 +118,7 @@
         "baseline": {
           "observed": "reject",
           "phase": "let",
-          "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `X`\", line: 4, path: Real(\"examples/test_objs/gaps/index_intersect__p01.lit\") }))"
+          "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `X`\", line: 4, path: Real(\"examples/test_objs/gaps/index_intersect__p01.lit\") }))"
         }
       },
       "source": "# Intended valid regression: index_intersect P01\nlet A = fn(k {1, 2}) power_set(N) {{1}}\nlet X = index_intersect({1, 2}, N, A)\nX = X\n",
@@ -170,7 +170,7 @@
         "baseline": {
           "observed": "reject",
           "phase": "let",
-          "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `P`\", line: 4, path: Real(\"examples/test_objs/gaps/index_cart__p01.lit\") }))"
+          "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `P`\", line: 4, path: Real(\"examples/test_objs/gaps/index_cart__p01.lit\") }))"
         }
       },
       "source": "# Intended valid regression: index_cart P01\nlet A = fn(k {1}) power_set(N) {{1}}\nlet P = index_cart({1}, power_set(N), A)\nP = P\n",
@@ -196,7 +196,7 @@
         "baseline": {
           "observed": "reject",
           "phase": "let",
-          "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `P`\", line: 4, path: Real(\"examples/test_objs/gaps/index_cart__p02.lit\") }))"
+          "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `P`\", line: 4, path: Real(\"examples/test_objs/gaps/index_cart__p02.lit\") }))"
         }
       },
       "source": "# Intended valid regression: index_cart P02\nlet A = fn(k {1, 2}) power_set(N) {{1, 2}}\nlet P = index_cart({1, 2}, power_set(N), A)\n$is_set(P)\n",
@@ -360,7 +360,7 @@
         "observed": "reject",
         "exit_code": 1,
         "phase": "let",
-        "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"fn (x R) N{x}\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"FunctionSpace\", \"failure\": {\"phase\": \"AnonymousFn\", \"failure\": {\"phase\": \"body_in_return_set\", \"failure\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"x $in N\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"x\", \"wd_id\": \"wd3\"}, {\"type\": \"by_known\", \"obj\": \"N\", \"wd_id\": \"wd2\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"fn (x R) N{x}\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"FunctionSpace\", \"failure\": {\"phase\": \"AnonymousFn\", \"failure\": {\"phase\": \"body_in_return_set\", \"failure\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"x $in N\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"x\", \"wd_id\": \"wd3\"}, {\"type\": \"by_known\", \"obj\": \"N\", \"wd_id\": \"wd2\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
         "statements": 1,
         "object": "anonymous_fn",
         "file": "negative/anonymous_fn__n01.lit",
@@ -412,7 +412,7 @@
         "observed": "reject",
         "exit_code": 1,
         "phase": "let",
-        "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_max({i})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"FiniteSetStat\", \"failure\": {\"phase\": \"FiniteSetMax\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"finite_set_max({i})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"{i} $subset R\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"{i}\", \"wd_id\": \"wd2\"}, {\"type\": \"by_def\", \"family\": \"StandardSet\", \"kind\": \"StandardSet\", \"obj\": \"R\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_max({i})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"FiniteSetStat\", \"failure\": {\"phase\": \"FiniteSetMax\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"finite_set_max({i})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"{i} $subset R\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"{i}\", \"wd_id\": \"wd2\"}, {\"type\": \"by_def\", \"family\": \"StandardSet\", \"kind\": \"StandardSet\", \"obj\": \"R\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
         "statements": 1,
         "object": "finite_set_max",
         "file": "negative/finite_set_max__n03.lit",
@@ -438,7 +438,7 @@
         "observed": "reject",
         "exit_code": 1,
         "phase": "let",
-        "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_min({i})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"FiniteSetStat\", \"failure\": {\"phase\": \"FiniteSetMin\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"finite_set_min({i})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"{i} $subset R\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"{i}\", \"wd_id\": \"wd2\"}, {\"type\": \"by_def\", \"family\": \"StandardSet\", \"kind\": \"StandardSet\", \"obj\": \"R\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
+        "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"finite_set_min({i})\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"FiniteSetStat\", \"failure\": {\"phase\": \"FiniteSetMin\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"finite_set_min({i})\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"{i} $subset R\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_known\", \"obj\": \"{i}\", \"wd_id\": \"wd2\"}, {\"type\": \"by_def\", \"family\": \"StandardSet\", \"kind\": \"StandardSet\", \"obj\": \"R\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}}}, \"stores\": [], \"infers\": []}",
         "statements": 1,
         "object": "finite_set_min",
         "file": "negative/finite_set_min__n03.lit",
@@ -468,6 +468,174 @@
         "statements": 1,
         "object": "standard_set_r_star",
         "file": "gaps/standard_set_r_star__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "abs",
+      "gap": {
+        "id": "P05",
+        "file": "gaps/abs__p05.lit",
+        "intended": "accept",
+        "issue": "abs-P05",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"forall x R:\\n    abs (-x) = abs (x)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"forall x R:\\n    abs (-x) = abs (x)\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: abs P05\nforall x R:\n    abs(-x) = abs(x)\n",
+      "source_sha256": "8cedf1d21551d7cf62a3d78e589593bc627bf74bf8efe32973dc0e32482c5904",
+      "binary_sha256": "6d704fc44cfd8110dc803aa3e5bf6eb49c23262b058dba53c2c6075d86aca8ae",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "abs",
+        "file": "gaps/abs__p05.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "sin",
+      "gap": {
+        "id": "P06",
+        "file": "gaps/sin__p06.lit",
+        "intended": "accept",
+        "issue": "sin-P06",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"forall x R:\\n    sin(-x) = -sin(x)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"forall x R:\\n    sin(-x) = -sin(x)\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: sin P06\nforall x R:\n    sin(-x) = -sin(x)\n",
+      "source_sha256": "11be06941eb766040ed1903ad4f570ffd475e5118045ba80dadd1698e5c66140",
+      "binary_sha256": "787a8a6898b8d3fc3c4a227ee7ac69a8e95c45cec131c50f0abedd7679fb6a42",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "sin",
+        "file": "gaps/sin__p06.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "cos",
+      "gap": {
+        "id": "P06",
+        "file": "gaps/cos__p06.lit",
+        "intended": "accept",
+        "issue": "cos-P06",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"forall x R:\\n    cos(-x) = cos(x)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"forall x R:\\n    cos(-x) = cos(x)\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: cos P06\nforall x R:\n    cos(-x) = cos(x)\n",
+      "source_sha256": "11be06941eb766040ed1903ad4f570ffd475e5118045ba80dadd1698e5c66140",
+      "binary_sha256": "787a8a6898b8d3fc3c4a227ee7ac69a8e95c45cec131c50f0abedd7679fb6a42",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "cos",
+        "file": "gaps/cos__p06.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "reduce",
+      "gap": {
+        "id": "P03",
+        "file": "gaps/reduce__p03.lit",
+        "intended": "accept",
+        "issue": "reduce-P03",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 6\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: reduce P03\nreduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 6\n",
+      "source_sha256": "11be06941eb766040ed1903ad4f570ffd475e5118045ba80dadd1698e5c66140",
+      "binary_sha256": "787a8a6898b8d3fc3c4a227ee7ac69a8e95c45cec131c50f0abedd7679fb6a42",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "reduce",
+        "file": "gaps/reduce__p03.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "reduce",
+      "gap": {
+        "id": "P04",
+        "file": "gaps/reduce__p04.lit",
+        "intended": "accept",
+        "issue": "reduce-P04",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a - b}, 0) = -6\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a - b}, 0) = -6\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: reduce P04\nreduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0) = -6\n",
+      "source_sha256": "11be06941eb766040ed1903ad4f570ffd475e5118045ba80dadd1698e5c66140",
+      "binary_sha256": "787a8a6898b8d3fc3c4a227ee7ac69a8e95c45cec131c50f0abedd7679fb6a42",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "reduce",
+        "file": "gaps/reduce__p04.lit",
+        "kind": "gap",
+        "intended": "accept"
+      }
+    },
+    {
+      "object": "reduce",
+      "gap": {
+        "id": "P05",
+        "file": "gaps/reduce__p05.lit",
+        "intended": "accept",
+        "issue": "reduce-P05",
+        "baseline": {
+          "observed": "reject",
+          "phase": "search_proof",
+          "diagnostic": "{\"success\": false, \"statement\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 10) = 16\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 10) = 16\"}, \"stores\": [], \"infers\": []}"
+        }
+      },
+      "source": "# Intended valid regression: reduce P05\nreduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 10) = 16\n",
+      "source_sha256": "11be06941eb766040ed1903ad4f570ffd475e5118045ba80dadd1698e5c66140",
+      "binary_sha256": "787a8a6898b8d3fc3c4a227ee7ac69a8e95c45cec131c50f0abedd7679fb6a42",
+      "observation": {
+        "observed": "accept",
+        "exit_code": 0,
+        "phase": "success",
+        "diagnostic": "",
+        "statements": 1,
+        "object": "reduce",
+        "file": "gaps/reduce__p05.lit",
         "kind": "gap",
         "intended": "accept"
       }

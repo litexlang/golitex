@@ -1,0 +1,13 @@
+# Legacy migration: B19-injection-range-size-corrected
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_finite_injective_range_size.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall A finite_set, B set, f fn(x A)B:
+#     $injective(A, B, f)
+#     =>:
+#         finite_set_size(fn_range(f)) = finite_set_size(A)
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall A finite_set, B set, f fn(x A)B:
+    $injective(A, B, f)
+    =>:
+        finite_set_size(fn_range(f)) = finite_set_size(A)

@@ -1,0 +1,9 @@
+# Legacy migration: B41-sin-neg
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_sin_negation.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall x R:
+#     sin(-x) = -sin(x)
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall x R:
+    sin(-x) = -sin(x)

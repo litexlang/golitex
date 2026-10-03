@@ -1,0 +1,13 @@
+# Legacy migration: B27-C-abs-zero
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_complex_modulus_zero.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall z C:
+#     C_abs(z) = 0
+#     =>:
+#         z = 0
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall z C:
+    C_abs(z) = 0
+    =>:
+        z = 0

@@ -1,4 +1,6 @@
 # Migration blocker B11: see plan/迁移的plan/和example有关.md.
+# The first equality uses checked fn_extension. Opaque integral assumptions remain unproved.
+# A strict isolated counterpart lives in proof_nodes/equal/by_builtin_rule/anonymous_function_beta_extension.lit.
 # A theorem instantiated with an anonymous function may introduce a beta-expanded
 # body.  The stored fact must still match the handwritten rationally equal body.
 abstract_prop is_probe_integrable(f)
@@ -7,7 +9,8 @@ trust have probe_integral fn(f fn(x R) R) R
 thm direct_anonymous_function_body_equality:
     ? forall g fn(x R) R:
         fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
-    by def $fn_eq(fn(x R) R {-1 * 1 * g(x)}, fn(x R) R {-1 * g(x)})
+    by fn_extension:
+        ? fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
 
 thm probe_scalar_multiplication:
     ? forall f fn(x R) R, c R:

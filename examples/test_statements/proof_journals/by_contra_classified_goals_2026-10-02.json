@@ -1,0 +1,1492 @@
+{
+  "schema_version": 1,
+  "task": "Classified by-contra goal expansion; generic NotFact rejected",
+  "date": "2026-10-02",
+  "impact": "L2",
+  "baseline": {
+    "binary_sha256": "85312dd26d8209e925f986c8b619ecf1c888dd3d947b786cd0e699e2cba24c1d",
+    "sources": {
+      "src/execute/execute_by_stmt/helper.rs": "use crate::ast::fact::{\n    and_chain_as_fact, negate_atomic_fact, AndChainAtomicFact, AtomicFact, Fact, OrFact,\n};\nuse crate::ast::line_file::SourceLine;\nuse crate::execute::execute_by_stmt::result::{\n    ByContradictionClosingFailed, ByContradictionClosingSuccess,\n};\nuse crate::execute::execute_fact_stmt::{\n    VerifyFactResult, VerifyFactWellDefinedResult, VerifyState,\n};\nuse crate::runtime::{FactId, Runtime, RuntimeResult};\nuse crate::store_fact_and_infer::StoreFactAndInferResult;\n\npub(crate) fn proof_verify_state() -> VerifyState {\n    VerifyState {\n        can_use_builtin_rule: true,\n        remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,\n        can_use_def_and_known_forall_and_known_strategy: true,\n        can_use_rewrite: true,\n        store_well_defined_fact: true,\n        equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,\n    }\n}\n\npub(super) fn assume_fact(\n    runtime: &mut Runtime,\n    fact: &Fact,\n) -> RuntimeResult<Result<StoreFactAndInferResult, String>> {\n    let wd = runtime.verify_fact_well_definedness(fact, proof_verify_state())?;\n    if wd.is_failed() {\n        return Ok(Err(\"assumption well-definedness failed\".to_string()));\n    }\n    Ok(Ok(runtime.store_fact_and_infer(fact)?))\n}\n\npub(crate) fn verify_goal_fact(\n    runtime: &mut Runtime,\n    fact: &Fact,\n) -> RuntimeResult<VerifyFactResult> {\n    runtime.verify_fact(fact, proof_verify_state())\n}\n\npub(crate) fn store_goal_fact(\n    runtime: &mut Runtime,\n    fact: &Fact,\n) -> RuntimeResult<Result<StoreFactAndInferResult, String>> {\n    let wd = runtime.verify_fact_well_definedness(fact, proof_verify_state())?;\n    if let VerifyFactWellDefinedResult::Failed(_) = &wd {\n        return Ok(Err(\"goal well-definedness failed at store\".to_string()));\n    }\n    Ok(Ok(runtime.store_fact_and_infer(fact)?))\n}\n\npub(super) fn negate_fact_for_contra(runtime: &mut Runtime, fact: &Fact) -> Result<Fact, String> {\n    match fact {\n        Fact::AtomicFact(atomic) => {\n            let neg = negate_atomic_fact(atomic, runtime.global_ids.allocate_fact_id())\n                .ok_or_else(|| \"by contra: cannot negate this atomic fact\".to_string())?;\n            Ok(Fact::AtomicFact(neg))\n        }\n        _ => Err(\n            \"by contra: first cut only supports atomic `?` goals (negate not wired for compound facts)\"\n                .to_string(),\n        ),\n    }\n}\n\npub(super) fn close_by_contradiction(\n    runtime: &mut Runtime,\n    impossible: &AtomicFact,\n) -> RuntimeResult<Result<ByContradictionClosingSuccess, ByContradictionClosingFailed>> {\n    let impossible_fact: Fact = impossible.clone().into();\n    let impossible_proof = verify_goal_fact(runtime, &impossible_fact)?;\n    if impossible_proof.is_failed() {\n        return Ok(Err(ByContradictionClosingFailed::Impossible(\n            impossible_proof,\n        )));\n    }\n    let Some(negated_atomic) =\n        negate_atomic_fact(impossible, runtime.global_ids.allocate_fact_id())\n    else {\n        return Ok(Err(\n            ByContradictionClosingFailed::NegateImpossibleUnsupported(\n                \"cannot negate impossible atomic fact\".to_string(),\n            ),\n        ));\n    };\n    let negated_fact: Fact = negated_atomic.clone().into();\n    let negated_proof = verify_goal_fact(runtime, &negated_fact)?;\n    if negated_proof.is_failed() {\n        return Ok(Err(ByContradictionClosingFailed::NegatedImpossible(\n            negated_proof,\n        )));\n    }\n    let impossible_fact_id = lookup_known_atomic_fact_id(runtime, impossible);\n    let negated_impossible_fact_id = lookup_known_atomic_fact_id(runtime, &negated_atomic);\n    Ok(Ok(ByContradictionClosingSuccess {\n        impossible_fact: impossible.clone(),\n        impossible: impossible_proof,\n        negated_impossible: negated_proof,\n        impossible_fact_id,\n        negated_impossible_fact_id,\n    }))\n}\n\npub(super) fn or_fact_from_and_chains(\n    runtime: &mut Runtime,\n    branches: &[AndChainAtomicFact],\n    line_file: &SourceLine,\n) -> OrFact {\n    OrFact {\n        fact_id: runtime.global_ids.allocate_fact_id(),\n        facts: branches.to_vec(),\n        line_file: Some(line_file.clone()),\n    }\n}\n\npub(super) fn and_chain_fact(branch: &AndChainAtomicFact) -> Fact {\n    and_chain_as_fact(branch)\n}\n\npub(super) fn lookup_known_atomic_fact_id(\n    runtime: &Runtime,\n    atomic: &AtomicFact,\n) -> Option<FactId> {\n    let target = atomic.ir();\n    for (id, fact) in &runtime.top_exec_env().facts.facts_by_id {\n        if let Fact::AtomicFact(known) = fact {\n            if known.ir() == target {\n                return Some(*id);\n            }\n        }\n    }\n    None\n}\n",
+      "src/execute/execute_fact_stmt/verify_not_forall_fact/derive_exist.rs": "use crate::ast::fact::{\n    negate_atomic_fact, AndChainAtomicFact, AtomicFact, ExistShapedFact, NotForallFact, OrFact,\n    PlainExistFact, QuantifierFreeFact,\n};\nuse crate::ast::line_file::SourceLine;\nuse crate::runtime::{Runtime, RuntimeResult};\n\nimpl Runtime {\n    // not forall → exist binders st { dom…, not(then)… }.\n    // None when some then-clause cannot be negated (e.g. FnEqual* has no not-form).\n    pub(crate) fn not_forall_to_counterexample_exist(\n        &mut self,\n        not_forall: &NotForallFact,\n    ) -> RuntimeResult<Option<ExistShapedFact>> {\n        let mut body: Vec<QuantifierFreeFact> = not_forall.dom_facts.clone();\n        for then in &not_forall.then_facts {\n            let Some(conjuncts) = self.negate_quantifier_free_to_conjuncts(then)? else {\n                return Ok(None);\n            };\n            for c in conjuncts {\n                body.push(collapse_single_branch_or(c));\n            }\n        }\n        if body.is_empty() {\n            return Ok(None);\n        }\n        Ok(Some(ExistShapedFact::Exist(PlainExistFact {\n            fact_id: self.global_ids.allocate_fact_id(),\n            typed_parameters: not_forall.typed_parameters.clone(),\n            facts: body,\n            line_file: not_forall.line_file.clone(),\n        })))\n    }\n\n    // De Morgan into exist-body conjuncts (exist body = conjunction of QF facts).\n    fn negate_quantifier_free_to_conjuncts(\n        &mut self,\n        fact: &QuantifierFreeFact,\n    ) -> RuntimeResult<Option<Vec<QuantifierFreeFact>>> {\n        match fact {\n            QuantifierFreeFact::AtomicFact(a) => {\n                let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {\n                    return Ok(None);\n                };\n                Ok(Some(vec![QuantifierFreeFact::AtomicFact(neg)]))\n            }\n            QuantifierFreeFact::AndFact(a) => {\n                let Some(or_fact) = self.negate_atomics_to_or(&a.facts, a.line_file.clone())? else {\n                    return Ok(None);\n                };\n                Ok(Some(vec![QuantifierFreeFact::OrFact(or_fact)]))\n            }\n            QuantifierFreeFact::OrFact(o) => {\n                let mut out = Vec::new();\n                for branch in &o.facts {\n                    let Some(part) = self.negate_and_chain_branch_to_conjuncts(branch)? else {\n                        return Ok(None);\n                    };\n                    out.extend(part);\n                }\n                Ok(Some(out))\n            }\n            QuantifierFreeFact::ChainFact(c) => {\n                let adjacent = self.chain_adjacent_atomics(c)?;\n                let Some(or_fact) = self.negate_atomics_to_or(&adjacent, c.line_file.clone())? else {\n                    return Ok(None);\n                };\n                Ok(Some(vec![QuantifierFreeFact::OrFact(or_fact)]))\n            }\n        }\n    }\n\n    fn negate_and_chain_branch_to_conjuncts(\n        &mut self,\n        branch: &AndChainAtomicFact,\n    ) -> RuntimeResult<Option<Vec<QuantifierFreeFact>>> {\n        match branch {\n            AndChainAtomicFact::AtomicFact(a) => {\n                let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {\n                    return Ok(None);\n                };\n                Ok(Some(vec![QuantifierFreeFact::AtomicFact(neg)]))\n            }\n            AndChainAtomicFact::AndFact(a) => {\n                let Some(or_fact) = self.negate_atomics_to_or(&a.facts, a.line_file.clone())? else {\n                    return Ok(None);\n                };\n                Ok(Some(vec![QuantifierFreeFact::OrFact(or_fact)]))\n            }\n            AndChainAtomicFact::ChainFact(c) => {\n                let adjacent = self.chain_adjacent_atomics(c)?;\n                let Some(or_fact) = self.negate_atomics_to_or(&adjacent, c.line_file.clone())? else {\n                    return Ok(None);\n                };\n                Ok(Some(vec![QuantifierFreeFact::OrFact(or_fact)]))\n            }\n        }\n    }\n\n    // not(A and B and …) → (not A) or (not B) or …\n    fn negate_atomics_to_or(\n        &mut self,\n        atomics: &[AtomicFact],\n        line_file: Option<SourceLine>,\n    ) -> RuntimeResult<Option<OrFact>> {\n        if atomics.is_empty() {\n            return Ok(None);\n        }\n        let mut branches = Vec::with_capacity(atomics.len());\n        for a in atomics {\n            let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {\n                return Ok(None);\n            };\n            branches.push(AndChainAtomicFact::AtomicFact(neg));\n        }\n        Ok(Some(OrFact {\n            fact_id: self.global_ids.allocate_fact_id(),\n            facts: branches,\n            line_file,\n        }))\n    }\n}\n\nfn collapse_single_branch_or(qf: QuantifierFreeFact) -> QuantifierFreeFact {\n    match qf {\n        QuantifierFreeFact::OrFact(mut o) if o.facts.len() == 1 => {\n            match o.facts.pop() {\n                Some(AndChainAtomicFact::AtomicFact(a)) => QuantifierFreeFact::AtomicFact(a),\n                Some(AndChainAtomicFact::AndFact(a)) => QuantifierFreeFact::AndFact(a),\n                Some(AndChainAtomicFact::ChainFact(c)) => QuantifierFreeFact::ChainFact(c),\n                None => QuantifierFreeFact::OrFact(o),\n            }\n        }\n        other => other,\n    }\n}\n",
+      "src/ast/fact/fact.rs": "use super::{\n    AndFact, AtomicFact, ChainFact, ForallFact, ForallFactWithIff, NotForallFact, OrFact,\n    PlainExistFact,\n};\nuse crate::runtime::FactId;\n\n// Proposition about objects. Membership, equality, forall, … live here — not as Obj \"types\".\n// Contrast: Obj = value/expression; Stmt = env-changing action that may assert or define.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum Fact {\n    AtomicFact(AtomicFact),\n    ExistFact(PlainExistFact),\n    ExistUniqueFact(PlainExistFact),\n    NotExistFact(PlainExistFact),\n    OrFact(OrFact),\n    AndFact(AndFact),\n    ChainFact(ChainFact),\n    ForallFact(ForallFact),\n    ForallFactWithIff(ForallFactWithIff),\n    NotForall(NotForallFact),\n}\n\nimpl Fact {\n    pub fn fact_id(&self) -> FactId {\n        match self {\n            Fact::AtomicFact(f) => f.fact_id(),\n            Fact::AndFact(f) => f.fact_id,\n            Fact::ChainFact(f) => f.fact_id,\n            Fact::OrFact(f) => f.fact_id,\n            Fact::ExistFact(p) | Fact::ExistUniqueFact(p) | Fact::NotExistFact(p) => p.fact_id,\n            Fact::ForallFact(f) => f.fact_id,\n            Fact::ForallFactWithIff(f) => f.fact_id,\n            Fact::NotForall(f) => f.fact_id,\n        }\n    }\n}\n",
+      "src/ast/stmt.rs": "//! Framework AST data shapes.\n//! Field taxonomy follows the legacy language; methods are added later.\n//! Identity: definition / store-key names are PlainName; binder params use\n//! BoundName / IdentifierId where wired (see `identifier_identity.md`).\n//! FactId; SourceLine.\n\nuse super::fact::{\n    AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, ExistShapedFact, Fact, ForallFact,\n    InFact, NormalAtomicFact, QuantifierFreeFact,\n};\nuse super::line_file::SourceLine;\nuse super::names::{AtomicName, BoundName, PlainName};\nuse super::obj::{AnonymousFn, ClosedRange, IdentifierObj, ListSet, Obj, Range};\nuse super::param::{SetBoundParameterList, TypedParameterList};\n\n// -----------------------------------------------------------------------------\n// Stmt (file spine)\n// -----------------------------------------------------------------------------\n\n// Env-changing action: assert a Fact, define names/interfaces, prove by …,\n// release / expand packaged facts, register prop properties, trust, … .\n// Not a value (Obj) and not itself a proposition (Fact); a bare Fact stmt asserts one.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum Stmt {\n    // Assert one fact; search a proof and store it. Example: `1 + 1 = 2`.\n    Fact(Fact),\n    // Skip truth search; WD still required; `-strict` rejects. Example: `trust: …`.\n    Trust(TrustBoundaryStmt),\n    // Define a name / interface into the env (`DefineObj` or prop/thm/have fn/…).\n    // Example: `let a = 1`, `have x R`, `prop P(x R): …`, `thm t: ? …`.\n    Definition(DefinitionStmt),\n    // Unpack packaged defs / axioms, or expand range membership into equality cases.\n    // Example: `release thm t(a)`, `expand: x $in range(1, 3)`, `release zorn_lemma: …`.\n    ReleaseAndExpand(ReleaseAndExpandStmt),\n    // Prove a goal by a named method. Example: `by cases: …`, `by contra: …`.\n    By(ByStmt),\n    // Register rewrite/infer laws of a user prop (no proof body).\n    // Example: `register transitive: ? forall …`.\n    Register(RegisterStmt),\n    // Exhibit witnesses for exist / atomic-exist / nonempty goals.\n    // Example: `witness exist x R st {…} from a:`.\n    Witness(WitnessStmt),\n    // Nested local proof scope. Example: `claim: ? fact` … / `sketch:` ….\n    ProofBlock(ProofBlockStmt),\n    // Non-proof session command. Example: `eval expr`.\n    Command(CommandStmt),\n}\n\n// -----------------------------------------------------------------------------\n// Fact — see fact.rs\n// -----------------------------------------------------------------------------\n\n// -----------------------------------------------------------------------------\n// TrustBoundaryStmt\n// -----------------------------------------------------------------------------\n\n// Trust boundary: skip truth search; still requires WD; `-strict` rejects these.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum TrustBoundaryStmt {\n    // Assert facts without searching a proof. Example: `trust: 1 = 1`.\n    TrustStmt(TrustStmt),\n    // Introduce typed names and assert facts without searching a proof.\n    // Example: `trust have x R: x = x`.\n    TrustHaveStmt(TrustHaveStmt),\n}\n\n// What: assert facts without searching a proof.\n// Surface: `trust: …`\n// Stores: the listed facts (trusted).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct TrustStmt {\n    pub facts: Vec<Fact>,\n    pub line_file: SourceLine,\n}\n\n// What: introduce typed names and assert facts without searching a proof.\n// Surface: `trust have x A: …`\n// Stores: the names plus the listed facts (trusted).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct TrustHaveStmt {\n    pub param_def: TypedParameterList,\n    pub facts: Vec<Fact>,\n    pub line_file: SourceLine,\n}\n\n// -----------------------------------------------------------------------------\n// DefinitionStmt\n// -----------------------------------------------------------------------------\n\n// Define something into the environment.\n// `DefineObj` nests fresh object names; other variants are flat siblings\n// (reusable interfaces / function objects).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum DefinitionStmt {\n    // Fresh object names: `let` / `have` / `obtain` / `have by …`.\n    DefineObj(DefineObjStmt),\n    // Named function by one expression body. Example: `have fn f(x R) R = x`.\n    HaveFnEqualStmt(HaveFnEqualStmt),\n    // Named function by exhaustive disjoint cases.\n    // Example: `have fn f(x R) R by cases: case x = 0: 0 …`.\n    HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),\n    // Named function by induction on a measure.\n    // Example: `have fn countdown(n N) N by induc n from 0: …`.\n    HaveFnByInducStmt(HaveFnByInducStmt),\n    // Named function from a proved `forall … exist!` (no formula body).\n    // Example: `have fn f by exist!: ? forall x A: exist! y B st {…}`.\n    HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),\n    // Concrete predicate with iff body. Example: `prop above_zero(x R): x > 0`.\n    DefPropStmt(DefPropStmt),\n    // Abstract predicate signature only. Example: `abstract_prop F(x, y)`.\n    DefAbstractPropStmt(DefAbstractPropStmt),\n    // Parameterized counterpart of one ordinary definition.\n    // Example: `template<S set>: have carrier_copy set = S`.\n    DefTemplateStmt(DefTemplateStmt),\n    // Named product carrier. Example:\n    //   struct Point:\n    //       x R\n    //       y R\n    DefStructStmt(DefStructStmt),\n    // Define a named function together with its executable cases.\n    // Example: `algo f(x R) R by cases: case …: …`.\n    DefAlgoByCasesStmt(DefAlgoByCasesStmt),\n    // Define a named function together with its executable induction.\n    // Example: `algo countdown(n N) N by induc n from 0: …`.\n    DefAlgoByInducStmt(DefAlgoByInducStmt),\n    // Named theorem with goal and proof. Example: `thm t: ? 1 = 1`.\n    DefThmStmt(DefThmStmt),\n    // Named axiom (interface checked; truth trusted). Example: `axiom a: ? forall …`.\n    AxiomStmt(AxiomStmt),\n    // Named reusable proof strategy. Example: `strategy s: ? forall …` then proof.\n    DefStrategyStmt(DefStrategyStmt),\n}\n\n// Introduce / define fresh object names and carriers.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum DefineObjStmt {\n    // Untyped equality binding. Example: `let a = 1`.\n    LetObjStmt(LetObjStmt),\n    // Typed names from a nonempty carrier (set). Example: `have x R` / `have x, y R`.\n    HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),\n    // Typed names equal to given objects. Example: `have x R = 1`.\n    HaveObjEqualStmt(HaveObjEqualStmt),\n    // Typed names satisfying body facts; the matching `exist` must already be known.\n    // Example: `have x R: x > 0` (requires `exist x R st {x > 0}` proved).\n    HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),\n    // Name witnesses of a known `exist` / `exist!`.\n    // Example: `obtain a from exist x R st {x = 0}`.\n    ObtainObjFromExistFact(ObtainObjFromExistFact),\n    // Name witnesses when `$P(…)` unfolds to one positive exist.\n    // Example: `obtain a from $P(…)`.\n    ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),\n    // Opaque preimages from known image membership.\n    // Example: `have by fn_preimage: a from f(x) $in fn_range(f)`.\n    HaveByPreimageStmt(HaveByPreimageStmt),\n    // Named set via ZF Replacement (no anonymous replacement_image Obj).\n    // Example: `have by replacement_axiom: Img from prop P, set A`.\n    HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt),\n}\n\n// What: bind a fresh name to a well-defined object (untyped equality def).\n// Surface: `let a = expr`\n// Stores: name `a` and `a = expr`.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct LetObjStmt {\n    pub name: crate::ast::names::BoundName,\n    pub value: Obj,\n    pub line_file: SourceLine,\n}\n\n// What: introduce typed names from a nonempty set / param-type carrier.\n// Surface: `have x A` / `have x, y A`\n// Stores: the names, membership / param-type facts, and ordinary infer.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct HaveObjInNonemptySetOrParamTypeStmt {\n    pub param_def: TypedParameterList,\n    pub line_file: SourceLine,\n}\n\n// What: introduce typed names defined equal to given objects.\n// Surface: `have x A = expr`\n// Stores: the names, carrier facts, and `x = expr` (plus ordinary infer).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct HaveObjEqualStmt {\n    pub param_def: TypedParameterList,\n    pub objs_equal_to: Vec<Obj>,\n    pub line_file: SourceLine,\n}\n\n// What: introduce typed names that satisfy given quantifier-free facts.\n// Surface: `have x R:` then indented facts (not `st {…}` sugar here).\n// Requires: the corresponding `exist` (same params + body) is already proved.\n// Stores: the names, carrier facts, the body facts, and ordinary infer.\n// Example: `have x R: x > 0` after `exist x R st {x > 0}` is known.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct HaveObjByExistFactsStmt {\n    pub param_def: TypedParameterList,\n    pub facts: Vec<QuantifierFreeFact>,\n    pub line_file: SourceLine,\n}\n\n// What: eliminate a known exist-shaped fact by naming its witnesses.\n// Surface: `obtain a, b from exist …` / `exist! …`\n// Stores: opaque witness names, their types, and the exist body facts.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ObtainObjFromExistFact {\n    pub equal_tos: Vec<BoundName>,\n    pub fact: ExistShapedFact,\n    pub line_file: SourceLine,\n}\n\n// What: eliminate a known `$P(…)` whose concrete def is a single positive exist.\n// Surface: `obtain a from $P(…)`\n// Stores: opaque witness names after projecting the prop definition to exist.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ObtainObjFromAtomicFact {\n    pub equal_tos: Vec<BoundName>,\n    pub fact: NormalAtomicFact,\n    pub line_file: SourceLine,\n}\n\n// What: arguments of a theorem call — bare name or parenthesized objs.\n// Surface: `thm_name` or `thm_name(args)`.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum TheoremCallArguments {\n    Bare,\n    Parenthesized(Vec<Obj>),\n}\n\n// What: a named theorem applied with optional arguments.\n// Surface: `name` / `name(args)` (used by `release thm` / `by thm`).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct TheoremCall {\n    pub name: AtomicName,\n    pub arguments: TheoremCallArguments,\n}\n\n// What: name opaque preimage witnesses from a known image-membership fact.\n// Surface: `have by fn_preimage: a from square(2) $in fn_range(square)`\n//\n// Design: membership inference already exposes an existential preimage from\n// `z $in fn_range(f)` (legacy also `y $in replacement(P, A)`). Multi-parameter\n// `fn_range` makes that exist ugly to rewrite for `obtain`, so this statement\n// takes the `$in` shape directly and introduces one fresh name per input\n// coordinate (arity must match).\n//\n// Stores (so later `f(x, y)` is WD):\n// - bind each name as a set-bound parameter of f's input carrier\n// - `x $in Dom`, … (and f's extra domain facts, instantiated at those names)\n// - `z = f(x, …)`\n//\n// Replacement images use `have by replacement_axiom: Img from prop P, set A`.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct HaveByPreimageStmt {\n    pub preimage_names: Vec<BoundName>,\n    // Must be `… $in fn_range(…)`.\n    pub range_membership: InFact,\n    pub line_file: SourceLine,\n}\n\n// What: introduce a named set as the Replacement-axiom image of a binary prop.\n// Surface: `have by replacement_axiom: Img from prop P, set A`\n// (same `have by …: name from …` family as `have by fn_preimage`).\n//\n// Parenthesized Obj forms take objs only; putting a prop name in `(...)` would\n// blur the prop/obj boundary, so this is a named statement rather than an Obj.\n//\n// Obligations: `prop_name` is a binary user prop/abstract_prop; `source_set` is\n// WD; uniqueness of the prop on the source is already known:\n//   forall x A, y, y2 set: $P(x,y) $P(x,y2) => y = y2\n//\n// Stores: `name` as a set, plus introduction/elimination:\n//   forall x A, y set: $P(x,y) => y $in name\n//   forall y name: exist x A st {$P(x,y)}\n//\n// Example:\n//   abstract_prop image_rel(x, y)\n//   trust:\n//       forall x {1, 2}, y, y2 set:\n//           $image_rel(x, y)\n//           $image_rel(x, y2)\n//           =>:\n//               y = y2\n//   have by replacement_axiom: Img from prop image_rel, set {1, 2}\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct HaveByReplacementAxiomStmt {\n    pub name: BoundName,\n    pub prop_name: AtomicName,\n    pub source_set: Obj,\n    pub line_file: SourceLine,\n}\n\n// What: define a named function by an anonymous fn body.\n// Surface: `have fn f(x A) B = expr`\n// Stores: `f`, `f $in fn(…)`, and `f = anon_fn` (plus ordinary infer).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct HaveFnEqualStmt {\n    pub name: BoundName,\n    pub equal_to_anonymous_fn: AnonymousFn,\n    pub line_file: SourceLine,\n}\n\n// What: shared `fn(params: dom) ret` shape for case-by-case / induction defs.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct FnSetClause {\n    pub set_bound_parameters: SetBoundParameterList,\n    pub dom_facts: Vec<QuantifierFreeFact>,\n    pub ret_set: Obj,\n}\n\n// What: define a named function by exhaustive, pairwise-disjoint cases.\n// Surface: `have fn f(…) B by cases:` then `case …: …`\n// Stores: `f`, signature membership, and guarded case equations.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct HaveFnEqualCaseByCaseStmt {\n    pub name: BoundName,\n    pub fn_set_clause: FnSetClause,\n    pub cases: Vec<AndChainAtomicFact>,\n    pub equal_tos: Vec<Obj>,\n    pub line_file: SourceLine,\n}\n\n// What: body of one induction case — a value, or nested subcases.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum HaveFnByInducCaseBody {\n    EqualTo(Obj),\n    NestedCases(Vec<HaveFnByInducCase>),\n}\n\n// What: one case arm in `have fn … by induc`.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct HaveFnByInducCase {\n    pub case_fact: AndChainAtomicFact,\n    pub body: HaveFnByInducCaseBody,\n}\n\n// What: define a named function by induction on a decreasing measure.\n// Surface: `have fn f(…) B by induc measure from lower: …`\n// Stores: `f`, signature membership, and checked inductive case equations.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct HaveFnByInducStmt {\n    pub name: BoundName,\n    pub fn_set_clause: FnSetClause,\n    pub measure: Obj,\n    pub lower_bound: Obj,\n    pub cases: Vec<HaveFnByInducCase>,\n    pub line_file: SourceLine,\n}\n\n// What: define a named function from a proved `forall … exist!` goal (no formula body).\n// Surface: `have fn f by exist!:` then `? forall …: exist! …`\n// Stores: `f $in FnSet`, the property forall, and the uniqueness forall\n// (`release obj def` re-stores the same three facts).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct HaveFnByForallExistUniqueStmt {\n    pub name: BoundName,\n    pub forall: ForallFact,\n    pub line_file: SourceLine,\n}\n\n// What: define a named concrete predicate with an iff body.\n// Surface: `prop P(x A):` then body facts (each fact is an iff conjunct).\n// Stores: foldable prop definition used by `by def` / `$P` verify.\n// Example: `prop above_zero(x R): x > 0`.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct DefPropStmt {\n    pub name: PlainName,\n    pub typed_parameters: TypedParameterList,\n    pub iff_facts: Vec<Fact>,\n    pub line_file: SourceLine,\n}\n\n// What: declare a named abstract predicate (signature only, no body).\n// Surface: `abstract_prop P(x, y)`\n// Stores: an uninterpreted predicate interface.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct DefAbstractPropStmt {\n    pub name: PlainName,\n    pub params: Vec<PlainName>,\n    pub line_file: SourceLine,\n}\n\n// Bodies allowed inside a `template<…>:` definition — same shapes that work\n// outside the template; the template only adds parameters.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum TemplateDefEnum {\n    // Example: `template<S set>: have carrier_copy set`.\n    HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),\n    // Example: `template<S set>: have carrier_copy set = S`.\n    HaveObjEqualStmt(HaveObjEqualStmt),\n    // Example: `template<S set>: have x S: x = x`.\n    HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),\n    // Example: `template<S set>: have by replacement_axiom: Img from prop P, set S`.\n    HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt),\n    // Example: `template<S set>: trust have x S: x = x`.\n    TrustHaveStmt(TrustHaveStmt),\n    // Example: `template<S set>: obtain a from exist x S st {…}`.\n    ObtainObjFromExistFact(ObtainObjFromExistFact),\n    // Example: `template<S set>: obtain a from $P(…)`.\n    ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),\n    // Example: `template<S set>: have fn id(x S) S = x`.\n    HaveFnEqualStmt(HaveFnEqualStmt),\n    // Example: `template<S set>: have fn f(x S) S by cases: …`.\n    HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),\n    // Example: `template<S set>: have fn f(…) S by induc …`.\n    HaveFnByInducStmt(HaveFnByInducStmt),\n    // Example: `template<S set>: have fn f by exist!: …`.\n    HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),\n}\n\n// What: parameterized counterpart of an ordinary definition statement.\n// Surface: `template<A set>: have name …` / `template<A set>: have fn f …`\n// Stores: a definition family; `\\name<args>` fills the template args.\n//\n// The body is checked as if the angle-bracket parameters were already\n// introduced. Instantiating `\\name<args>` yields the corresponding defined\n// object or function.\n//\n// Why not `fn(A set)` / a fake fn_set domain: a function parameter must range\n// over one fixed set. Binder kind `set` is not such a set — it means \"a set\n// parameter,\" not an element of a set-of-all-sets. Use template when the\n// definition itself is parameterized by an arbitrary set.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct DefTemplateStmt {\n    pub template_name: PlainName,\n    pub template_arg_def: TypedParameterList,\n    pub template_arg_dom: Vec<QuantifierFreeFact>,\n    pub template_def_stmt: TemplateDefEnum,\n    pub line_file: SourceLine,\n}\n\n// What: one field of a struct definition — binder name + carrier set.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct StructFieldDef {\n    // Parse-allocated binder id; must match free refs in `<=>:` facts.\n    pub binding: crate::ast::names::BoundName,\n    pub field_type: Obj,\n}\n\n// What: define a named struct carrier with fields and optional laws.\n// Surface: `struct Point:` then fields; optional `<=>:` laws.\n// Stores: the struct def; field paths need `release struct def` to open.\n// Example:\n//   struct Point:\n//       x R\n//       y R\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct DefStructStmt {\n    pub name: PlainName,\n    pub param_def_with_dom: Option<(TypedParameterList, Vec<QuantifierFreeFact>)>,\n    pub fields: Vec<StructFieldDef>,\n    pub equivalent_facts: Vec<Fact>,\n    pub line_file: SourceLine,\n}\n\n// What: define a named function by cases and store its executable presentation.\n// Surface: `algo f(…) B by cases:` then `case …: …`\n// Stores: mathematical fn facts (same strength as `have fn … by cases`) plus algo.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct DefAlgoByCasesStmt {\n    pub name: BoundName,\n    pub fn_set_clause: FnSetClause,\n    pub cases: Vec<AndChainAtomicFact>,\n    pub equal_tos: Vec<Obj>,\n    pub line_file: SourceLine,\n}\n\n// What: define a named function by induction and store its executable presentation.\n// Surface: `algo f(…) B by induc measure from lower: …`\n// Stores: mathematical fn facts (same strength as `have fn … by induc`) plus algo.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct DefAlgoByInducStmt {\n    pub name: BoundName,\n    pub fn_set_clause: FnSetClause,\n    pub measure: Obj,\n    pub lower_bound: Obj,\n    pub cases: Vec<HaveFnByInducCase>,\n    pub line_file: SourceLine,\n}\n\n// What: define a named theorem with a proof of its target fact.\n// Surface: `thm name: ? fact` then proof body\n// Stores: a reusable theorem interface; universals also enter matching.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct DefThmStmt {\n    pub name: PlainName,\n    pub fact: Fact,\n    pub prove_process: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// What: declare a named axiom (interface checked; truth trusted).\n// Surface: `axiom name: forall …`\n// Stores: a reusable theorem-like interface without a proof body.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct AxiomStmt {\n    pub name: PlainName,\n    pub forall_fact: ForallFact,\n    pub line_file: SourceLine,\n}\n\n// What: named reusable proof strategy for a restricted atomic universal.\n// Surface: `strategy name: forall …` then proof body\n// Stores: the named strategy definition; later non-equality atomics may apply\n// it via the known_strategy search stage (not ambient known_forall).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct DefStrategyStmt {\n    pub name: PlainName,\n    pub forall_fact: ForallFact,\n    pub prove_process: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// -----------------------------------------------------------------------------\n// ReleaseAndExpandStmt\n// -----------------------------------------------------------------------------\n\n// Unpack packaged definitions / axioms, or expand finite numeric membership.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum ReleaseAndExpandStmt {\n    // Instantiate a theorem and commit all conclusions.\n    // Example: `release thm t` / `release thm t(a, b)`.\n    ReleaseThmStmt(ReleaseThmStmt),\n    // Open one definition-owned struct layer (fields / bridges / laws).\n    // Example: `release struct def p`.\n    ReleaseStructDefStmt(ReleaseStructDefStmt),\n    // Re-store one object-definition's facts for an identifier (preview).\n    // Example: `release obj def f`.\n    ReleaseObjDefStmt(ReleaseObjDefStmt),\n    // Expand numeric-range membership into equality cases.\n    // Example: `expand: x $in range(1, 3)` stores `x = 1 or x = 2`.\n    ExpandRangeStmt(ExpandRangeStmt),\n    // Apply Zorn's lemma with named order / bound / maximality props.\n    // Example: `release zorn_lemma: set S, prop P, prop U, prop M:`.\n    ReleaseZornLemmaStmt(ReleaseZornLemmaStmt),\n    // Axiom of choice on a family of nonempty sets.\n    // Example: `release axiom_of_choice: set F:`.\n    ReleaseAxiomOfChoiceStmt(ReleaseAxiomOfChoiceStmt),\n    // Axiom of regularity.\n    // Example: `release regularity_axiom(S)`.\n    ReleaseRegularityAxiomStmt(ReleaseRegularityAxiomStmt),\n}\n\n// What: instantiate a theorem and commit all of its conclusions.\n// Surface: `release thm name(args)` / `release thm name`\n// Stores: every instantiated conclusion and ordinary inferred consequences.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ReleaseThmStmt {\n    pub call: TheoremCall,\n    pub line_file: SourceLine,\n}\n\n// -----------------------------------------------------------------------------\n// ByStmt\n// -----------------------------------------------------------------------------\n\n// Prove a goal by a named proof method.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum ByStmt {\n    // Exhaustive case split. Example: `by cases: case … prove: …`.\n    ByCasesStmt(ByCasesStmt),\n    // Contradiction from the negation. Example: `by contra: …`.\n    ByContraStmt(ByContraStmt),\n    // Forall by enumerating a finite set. Example: `by enumerate: forall x {…}: …`.\n    ByEnumerateFiniteSetStmt(ByEnumerateFiniteSetStmt),\n    // Ordinary induction on N (or from a lower bound). Example: `by induc n from 0: …`.\n    ByInducStmt(ByInducStmt),\n    // Strong induction on N. Example: `by strong_induc n from 0: …`.\n    ByStrongInducStmt(ByStrongInducStmt),\n    // Forall by iterating finite ranges / carts. Example: `by for: forall …`.\n    ByForStmt(ByForStmt),\n    // Set extensionality via both `$subset` directions. Example: `by extension: A = B`.\n    ByExtensionStmt(ByExtensionStmt),\n    // Function extensionality on a shared FnSet (preview). Example: `by fn_extension: f = g`.\n    ByFnExtensionStmt(ByFnExtensionStmt),\n    // Unfold a concrete / builtin definition. Example: `by def: $P(…)`.\n    ByDefStmt(ByDefStmt),\n    // Cite a theorem for one selected atomic conclusion.\n    // Example: `by thm name(args): selected_fact`.\n    ByThmStmt(ByThmStmt),\n}\n\n// What: prove a target by exhaustive case split.\n// Surface: `by cases: case … prove: …`\n// Stores: the requested then-facts / target when every branch closes.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ByCasesStmt {\n    pub cases: Vec<AndChainAtomicFact>,\n    pub then_facts: Vec<Fact>,\n    pub proofs: Vec<Vec<Stmt>>,\n    pub impossible_facts: Vec<Option<AtomicFact>>,\n    pub line_file: SourceLine,\n}\n\n// What: prove a target by deriving an impossibility from its negation.\n// Surface: `by contra: …`\n// Stores: the target fact when the contradiction closes.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ByContraStmt {\n    pub to_prove: Fact,\n    pub proof: Vec<Stmt>,\n    pub impossible_fact: AtomicFact,\n    pub line_file: SourceLine,\n}\n\n// What: prove a forall by enumerating a finite set carrier.\n// Surface: `by enumerate: forall x {…}: …`\n// Stores: the forall when every element case closes.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ByEnumerateFiniteSetStmt {\n    pub forall_fact: ForallFact,\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// What: ordinary induction on N (or from a lower bound).\n// Surface: `by induc n from k: …`\n// Stores: the inductive target when base and step close.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ByInducStmt {\n    pub to_prove: Vec<ExistOrAndChainAtomicFact>,\n    pub proof: Vec<Stmt>,\n    pub base_proof: Option<Vec<Stmt>>,\n    pub step_proof: Option<Vec<Stmt>>,\n    pub param_binding: String,\n    pub induc_from: Obj,\n    pub line_file: SourceLine,\n}\n\n// What: strong induction on N (or from a lower bound).\n// Surface: `by strong_induc n from k: …`\n// Stores: the inductive target when base and strong step close.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ByStrongInducStmt {\n    pub to_prove: Vec<ExistOrAndChainAtomicFact>,\n    pub proof: Vec<Stmt>,\n    pub base_proof: Option<Vec<Stmt>>,\n    pub step_proof: Option<Vec<Stmt>>,\n    pub param_binding: String,\n    pub induc_from: Obj,\n    pub line_file: SourceLine,\n}\n\n// What: either a closed range `{a, …, b}` or an open-ended range form.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum ClosedRangeOrRange {\n    ClosedRange(ClosedRange),\n    Range(Range),\n}\n\n// What: how `by for` expands parameters over ranges or a cart of list sets.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum ByForExpansion {\n    Ranges {\n        params: Vec<String>,\n        ranges: Vec<ClosedRangeOrRange>,\n    },\n    CartOfListSets {\n        param: String,\n        factors: Vec<ListSet>,\n    },\n}\n\n// What: prove a forall by iterating over finite ranges / carts.\n// Surface: `by for: forall …`\n// Stores: the forall when every generated instance closes.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ByForStmt {\n    pub forall_fact: ForallFact,\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// What: prove object equality from both `$subset` directions (extensionality).\n// Surface: `by extension: A = B`\n// Stores: `A = B` as ordinary object equality in the pure-set model.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ByExtensionStmt {\n    pub left: Obj,\n    pub right: Obj,\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// What: prove function object equality from pointwise equality on a shared FnSet.\n// Surface: `by fn_extension: f = g` (preview)\n// Stores: `f = g` as ordinary object equality when carriers are alpha-equivalent\n// and the reconstructed pointwise forall succeeds.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ByFnExtensionStmt {\n    pub left: Obj,\n    pub right: Obj,\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// What: expand numeric-range membership into equality cases.\n// Surface: `expand: e $in range(…)` / `expand: e $in closed_range(…)` / `expand: e $in a...b`\n// Stores: `e = a or e = b or …` when membership is already known.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ExpandRangeStmt {\n    pub element: Obj,\n    pub range: ClosedRangeOrRange,\n    pub line_file: SourceLine,\n}\n\n// What: apply Zorn's lemma with named order / bound / maximality props.\n// Surface: `release zorn_lemma: set S, prop P, prop U, prop M:`\n// Stores: `exist m S st {$M(m)}` using the supplied maximality prop.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ReleaseZornLemmaStmt {\n    pub set: Obj,\n    pub prop_name: AtomicName,\n    pub upper_bound_prop_name: AtomicName,\n    pub maximal_prop_name: AtomicName,\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// What: apply the axiom of choice to a family of nonempty sets.\n// Surface: `release axiom_of_choice: set F`\n// Stores: existence of a choice function for the family.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ReleaseAxiomOfChoiceStmt {\n    pub family: Obj,\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// What: apply the axiom of regularity to a set.\n// Surface: `release regularity_axiom(S)`\n// Stores: the regularity conclusion for that set (strict mode rejects).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ReleaseRegularityAxiomStmt {\n    pub set: Obj,\n    pub line_file: SourceLine,\n}\n\n// What: prove an atomic fact by unfolding a concrete / builtin definition.\n// Surface: `by def: $P(…)`\n// Stores: the target with explicit definition provenance.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ByDefStmt {\n    pub fact: AtomicFact,\n    pub line_file: SourceLine,\n}\n\n// What: open one definition-owned struct layer (fields / bridges / laws).\n// Surface: `release struct def e`\n// Stores: one layer of tuple/identity bridges, field carriers, struct laws.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ReleaseStructDefStmt {\n    pub obj: Obj,\n    pub line_file: SourceLine,\n}\n\n// What: re-store one object-definition's facts for an identifier (preview).\n// Surface: `release obj def I`\n// Stores: that definition's type / equality / body / fn facts under `I`.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ReleaseObjDefStmt {\n    pub name: IdentifierObj,\n    pub line_file: SourceLine,\n}\n\n// What: cite a theorem and commit only one selected atomic conclusion.\n// Surface: `by thm name(args): selected_fact`\n// Stores: the selected atomic fact and ordinary inferred consequences.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ByThmStmt {\n    pub call: TheoremCall,\n    pub selected_fact: AtomicFact,\n    pub line_file: SourceLine,\n}\n\n// -----------------------------------------------------------------------------\n// RegisterStmt\n// -----------------------------------------------------------------------------\n\n// Register rewrite / infer properties of a user prop (not a proof method).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum RegisterStmt {\n    // Transitivity for later rewrite / chain infer.\n    // Example: `register transitive: ? forall x, y, z … =>: $P(x, z)`.\n    RegisterTransitivePropStmt(RegisterTransitivePropStmt),\n    // Symmetry for later rewrite.\n    // Example: `register symmetric: ? forall x, y … =>: $P(y, x)`.\n    RegisterSymmetricPropStmt(RegisterSymmetricPropStmt),\n    // Reflexivity for later rewrite.\n    // Example: `register reflexive: ? forall x … =>: $P(x, x)`.\n    RegisterReflexivePropStmt(RegisterReflexivePropStmt),\n}\n\n// What: register transitivity of a user prop for later rewrite / chain infer.\n// Surface: `register transitive:` + one shaped `? forall …` (no proof body).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct RegisterTransitivePropStmt {\n    pub forall_fact: ForallFact,\n    pub line_file: SourceLine,\n}\n\n// What: register symmetry of a user prop for later rewrite.\n// Surface: `register symmetric:` + one shaped `? forall …` (no proof body).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct RegisterSymmetricPropStmt {\n    pub forall_fact: ForallFact,\n    pub line_file: SourceLine,\n}\n\n// What: register reflexivity of a user prop for later rewrite.\n// Surface: `register reflexive:` + one shaped `? forall …` (no proof body).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct RegisterReflexivePropStmt {\n    pub forall_fact: ForallFact,\n    pub line_file: SourceLine,\n}\n\n// -----------------------------------------------------------------------------\n// WitnessStmt\n// -----------------------------------------------------------------------------\n\n// Supply concrete witnesses for an exist / atomic / nonempty goal.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum WitnessStmt {\n    // Exist-shaped fact by exhibiting witnesses.\n    // Example: `witness exist x R st {x = 0} from 0` or `… from 0:` with proof body.\n    WitnessExistFact(WitnessExistFact),\n    // `$P(…)` when its concrete def is a single positive exist clause.\n    // Example: `witness $P(…) from a` or `… from a:` with proof body.\n    WitnessAtomicFact(WitnessAtomicFact),\n    // Nonemptiness by exhibiting a member.\n    // Example: `witness $is_nonempty_set(S) from e` or `… from e:` with proof body.\n    WitnessNonemptySet(WitnessNonemptySet),\n}\n\n// What: introduce an exist-shaped fact by exhibiting witnesses.\n// Surface: `witness exist … from a, b` or `… from a, b:` + local proof body.\n// Stores: the exist / exist! fact (binder names stay local; helpers stay in local_env).\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct WitnessExistFact {\n    pub equal_tos: Vec<Obj>,\n    pub exist_shaped_fact_in_witness: ExistShapedFact,\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// What: prove `$P(…)` when its concrete def is a single positive exist clause.\n// Surface: `witness $P(…) from a` or `… from a:` + local proof body.\n// Stores: `$P(…)` then ordinary definition inference.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct WitnessAtomicFact {\n    pub atomic_fact: NormalAtomicFact,\n    pub witnesses: Vec<Obj>,\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// What: prove a set is nonempty by exhibiting a member.\n// Surface: `witness $is_nonempty_set(S) from e` or `… from e:` + local proof body.\n// Stores: nonemptiness of `S`.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct WitnessNonemptySet {\n    pub obj: Obj,\n    pub set: Obj,\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// -----------------------------------------------------------------------------\n// ProofBlockStmt\n// -----------------------------------------------------------------------------\n\n// Nested proof blocks that scope local work.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum ProofBlockStmt {\n    // Prove a subgoal in a child scope; keep only that target.\n    // Example: `claim: ? 1 = 1` then proof body.\n    ClaimStmt(ClaimStmt),\n    // Informal / non-binding sketch whose body still checks.\n    // Example: `sketch: 1 = 1`.\n    SketchStmt(SketchStmt),\n}\n\n// What: prove a subgoal in a child scope and keep only that target.\n// Surface: `claim: ? fact` then proof body\n// Stores: the target fact; helpers do not escape.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ClaimStmt {\n    pub fact: Fact,\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// What: informal / non-binding proof sketch whose body still checks.\n// Surface: `sketch:` …\n// Stores: nothing outside the block.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct SketchStmt {\n    pub proof: Vec<Stmt>,\n    pub line_file: SourceLine,\n}\n\n// -----------------------------------------------------------------------------\n// CommandStmt\n// -----------------------------------------------------------------------------\n\n// Non-proof session commands.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub enum CommandStmt {\n    // Evaluate an object for display (no new proof fact). Example: `eval 1 + 1`.\n    EvalStmt(EvalStmt),\n}\n\n// What: evaluate an object for display (no new proof fact).\n// Surface: `eval expr`\n// Stores: evaluation output only.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct EvalStmt {\n    pub obj_to_eval: Obj,\n    pub line_file: SourceLine,\n}\n"
+    },
+    "cases": [
+      {
+        "name": "k005-explicit",
+        "source": "by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\nby contra:\n    ? not exist x {0} st {x = 1}\n    obtain a from exist x {0} st {x = 1}\n    a != 1\n    impossible a = 1\n",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/litex-before",
+          "-strict",
+          "-lang",
+          "en",
+          "-e",
+          "by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\nby contra:\n    ? not exist x {0} st {x = 1}\n    obtain a from exist x {0} st {x = 1}\n    a != 1\n    impossible a = 1\n"
+        ],
+        "exit_code": 1,
+        "output": {
+          "kind": "run",
+          "success": false,
+          "target": "eval",
+          "path": null,
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "by enumerate",
+              "proof_method": {
+                "type": "by",
+                "rule_name": "By finite enumeration",
+                "message": "Prove by enumerating a finite set"
+              },
+              "stores": [
+                "forall x {0}:\n    x != 1"
+              ],
+              "infers": []
+            },
+            {
+              "success": false,
+              "statement": "by contradiction",
+              "why_failed": {
+                "type": "by",
+                "rule_name": "By contradiction",
+                "message": "Prove by contradiction",
+                "phase": "by_contra"
+              },
+              "stores": [],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      },
+      {
+        "name": "multi-conclusion-not-forall",
+        "source": "witness exist x {0} st {x != 1} from 0\nnot forall x {0}:\n    x = 0\n    x = 1\n",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/litex-before",
+          "-strict",
+          "-lang",
+          "en",
+          "-e",
+          "witness exist x {0} st {x != 1} from 0\nnot forall x {0}:\n    x = 0\n    x = 1\n"
+        ],
+        "exit_code": 1,
+        "output": {
+          "kind": "run",
+          "success": false,
+          "target": "eval",
+          "path": null,
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "witness exist x {0} st {x != 1} from 0",
+              "proof_method": {
+                "type": "witness",
+                "rule_name": "Witness exist",
+                "message": "Witness an existential fact"
+              },
+              "stores": [
+                "exist x {0} st {x != 1}"
+              ],
+              "infers": []
+            },
+            {
+              "success": false,
+              "statement": "not forall x {0}:\n    x = 0\n    x = 1",
+              "why_failed": {
+                "phase": "search_proof",
+                "goal": "not forall x {0}:\n    x = 0\n    x = 1"
+              },
+              "stores": [],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      },
+      {
+        "name": "legacy-separated-negated-or-clauses",
+        "source": "witness exist x {0} st {x != 1 or x != 2; x != 3 or x != 4} from 0\nnot forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4",
+        "command": [
+          "tmp/2026-10-02/by-contra-all-facts/litex-before",
+          "-strict",
+          "-lang",
+          "en",
+          "-e",
+          "witness exist x {0} st {x != 1 or x != 2; x != 3 or x != 4} from 0\nnot forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4"
+        ],
+        "exit_code": 1,
+        "output": {
+          "kind": "run",
+          "success": false,
+          "target": "eval",
+          "path": null,
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [],
+          "session_error": "Runtime(ParseError(RuntimeParseError { message: \"expected `,`, got `;`\", line: 1, path: Eval }))"
+        },
+        "stderr": ""
+      },
+      {
+        "name": "legacy-separated-negated-or-clauses-corrected",
+        "source": "witness exist x {0} st {x != 1 or x != 2, x != 3 or x != 4} from 0\nnot forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4",
+        "command": [
+          "tmp/2026-10-02/by-contra-all-facts/litex-before",
+          "-strict",
+          "-lang",
+          "en",
+          "-e",
+          "witness exist x {0} st {x != 1 or x != 2, x != 3 or x != 4} from 0\nnot forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "eval",
+          "path": null,
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "witness exist x {0} st {x != 1 or x != 2, x != 3 or x != 4} from 0",
+              "proof_method": {
+                "type": "witness",
+                "rule_name": "Witness exist",
+                "message": "Witness an existential fact"
+              },
+              "stores": [
+                "exist x {0} st {x != 1 or x != 2, x != 3 or x != 4}"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "not forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "not forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4"
+              ],
+              "infers": [
+                "exist x {0} st {x != 1 or x != 2, x != 3 or x != 4}"
+              ]
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      }
+    ]
+  },
+  "records": [
+    {
+      "name": "k005-explicit-and-citation",
+      "source": "by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\nby contra:\n    ? not exist x {0} st {x = 1}\n    obtain a from exist x {0} st {x = 1}\n    a != 1\n    impossible a = 1\nnot exist x {0} st {x = 1}\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\nby contra:\n    ? not exist x {0} st {x = 1}\n    obtain a from exist x {0} st {x = 1}\n    a != 1\n    impossible a = 1\nnot exist x {0} st {x = 1}\n"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by enumerate",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set"
+            },
+            "stores": [
+              "forall x {0}:\n    x != 1"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not exist x {0} st {x = 1}",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "not exist x {0} st {x = 1}"
+            ],
+            "infers": [
+              "forall x_ne0 {0}:\n    x_ne0 != 1"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "not exist x {0} st {x = 1}",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Existential",
+              "message": "Verified as an exist fact (details omitted in Normal)"
+            },
+            "stores": [
+              "not exist x {0} st {x = 1}"
+            ],
+            "infers": [
+              "forall x_ne0 {0}:\n    x_ne0 != 1"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": true,
+      "matches": true
+    },
+    {
+      "name": "false-negative-existence",
+      "source": "by contra:\n    ? not exist x {0} st {x = 0}\n    obtain a from exist x {0} st {x = 0}\n    impossible a = 0\nnot exist x {0} st {x = 0}",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? not exist x {0} st {x = 0}\n    obtain a from exist x {0} st {x = 0}\n    impossible a = 0\nnot exist x {0} st {x = 0}"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by contradiction",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction",
+              "phase": "by_contra"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": false,
+            "statement": "not exist x {0} st {x = 0}",
+            "why_failed": {
+              "phase": "search_proof",
+              "goal": "not exist x {0} st {x = 0}"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": false,
+      "matches": true
+    },
+    {
+      "name": "missing-universal-exclusion",
+      "source": "by contra:\n    ? not exist x {0, 1} st {x = 1}\n    obtain a from exist x {0, 1} st {x = 1}\n    a != 1\n    impossible a = 1",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? not exist x {0, 1} st {x = 1}\n    obtain a from exist x {0, 1} st {x = 1}\n    a != 1\n    impossible a = 1"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by contradiction",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction",
+              "phase": "by_contra"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": false,
+      "matches": true
+    },
+    {
+      "name": "wrong-witness-carrier",
+      "source": "by contra:\n    ? not exist x {0} st {x = 1}\n    obtain b from exist x {1} st {x = 1}\n    impossible b = 1\nhave b R = 2",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? not exist x {0} st {x = 1}\n    obtain b from exist x {1} st {x = 1}\n    impossible b = 1\nhave b R = 2"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by contradiction",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction",
+              "phase": "by_contra"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "have b R = 2",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have with equality",
+              "message": "Introduce an object equal to a given well-defined value"
+            },
+            "stores": [
+              "b $in R"
+            ],
+            "infers": [
+              "b = 2"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": false,
+      "matches": true
+    },
+    {
+      "name": "exist-goal",
+      "source": "by contra:\n    ? exist x {0} st {x = 0}\n    impossible 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? exist x {0} st {x = 0}\n    impossible 0 = 0"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "exist x {0} st {x = 0}",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "exist x {0} st {x = 0}"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": true,
+      "matches": true
+    },
+    {
+      "name": "or-goal",
+      "source": "by contra:\n    ? 1 = 1 or 0 = 1\n    impossible 1 != 1",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? 1 = 1 or 0 = 1\n    impossible 1 != 1"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "1 = 1 or 0 = 1",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "1 = 1 or 0 = 1"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": true,
+      "matches": true
+    },
+    {
+      "name": "false-or-goal",
+      "source": "by contra:\n    ? 1 = 2 or 0 = 1\n    impossible 1 != 2",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? 1 = 2 or 0 = 1\n    impossible 1 != 2"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by contradiction",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction",
+              "phase": "by_contra"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": false,
+      "matches": true
+    },
+    {
+      "name": "not-forall-goal",
+      "source": "by contra:\n    ? not forall x {0}:\n        x = 1\n    impossible 0 = 1",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? not forall x {0}:\n        x = 1\n    impossible 0 = 1"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "not forall x {0}:\n    x = 1",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "not forall x {0}:\n    x = 1"
+            ],
+            "infers": [
+              "exist x {0} st {x != 1}"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": true,
+      "matches": true
+    },
+    {
+      "name": "forall-goal",
+      "source": "forall z {0}:\n    z = 0\nby contra:\n    ? forall x {0}:\n        x = 0\n    obtain a from exist y {0} st {y != 0}\n    a = 0\n    impossible a != 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "forall z {0}:\n    z = 0\nby contra:\n    ? forall x {0}:\n        x = 0\n    obtain a from exist y {0} st {y != 0}\n    a = 0\n    impossible a != 0"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall z {0}:\n    z = 0",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall z {0}:\n    z = 0"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "forall x {0}:\n    x = 0",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "forall x {0}:\n    x = 0"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": true,
+      "matches": true
+    },
+    {
+      "name": "whole-conjunction-not-forall",
+      "source": "witness exist x {0} st {x != 0 or x != 1} from 0\nnot forall x {0}:\n    x = 0\n    x = 1",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "witness exist x {0} st {x != 0 or x != 1} from 0\nnot forall x {0}:\n    x = 0\n    x = 1"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "witness exist x {0} st {x != 0 or x != 1} from 0",
+            "proof_method": {
+              "type": "witness",
+              "rule_name": "Witness exist",
+              "message": "Witness an existential fact"
+            },
+            "stores": [
+              "exist x {0} st {x != 0 or x != 1}"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not forall x {0}:\n    x = 0\n    x = 1",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "not forall x {0}:\n    x = 0\n    x = 1"
+            ],
+            "infers": [
+              "exist x {0} st {x != 0 or x != 1}"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": true,
+      "matches": true
+    },
+    {
+      "name": "false-not-forall",
+      "source": "witness exist x {0} st {x != 1} from 0\nnot forall x {0}:\n    x = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "witness exist x {0} st {x != 1} from 0\nnot forall x {0}:\n    x = 0"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "witness exist x {0} st {x != 1} from 0",
+            "proof_method": {
+              "type": "witness",
+              "rule_name": "Witness exist",
+              "message": "Witness an existential fact"
+            },
+            "stores": [
+              "exist x {0} st {x != 1}"
+            ],
+            "infers": []
+          },
+          {
+            "success": false,
+            "statement": "not forall x {0}:\n    x = 0",
+            "why_failed": {
+              "phase": "search_proof",
+              "goal": "not forall x {0}:\n    x = 0"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": false,
+      "matches": true
+    },
+    {
+      "name": "unique-existence-boundary",
+      "source": "by contra:\n    ? exist! x {0} st {x = 0}\n    impossible 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? exist! x {0} st {x = 0}\n    impossible 0 = 0"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by contradiction",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction",
+              "phase": "by_contra"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": false,
+      "matches": true
+    },
+    {
+      "name": "quantified-forall-boundary",
+      "source": "by contra:\n    ? forall x {0}:\n        exist y {0} st {y = x}\n    impossible 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? forall x {0}:\n        exist y {0} st {y = x}\n    impossible 0 = 0"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by contradiction",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction",
+              "phase": "by_contra"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": false,
+      "matches": true
+    },
+    {
+      "name": "iff-boundary",
+      "source": "by contra:\n    ? forall x {0}:\n        =>:\n            x = 0\n        <=>:\n            x = 0\n    impossible 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? forall x {0}:\n        =>:\n            x = 0\n        <=>:\n            x = 0\n    impossible 0 = 0"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": "Runtime(ParseError(RuntimeParseError { message: \"by contra: `?` body is only allowed for multiline `forall` facts\", line: 2, path: Eval }))"
+      },
+      "stderr": "",
+      "expected_success": false,
+      "matches": true
+    },
+    {
+      "name": "compound-impossible-pending",
+      "source": "by contra:\n    ? 1 = 1\n    impossible 1 = 1 and 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? 1 = 1\n    impossible 1 = 1 and 0 = 0"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": "Runtime(ParseError(RuntimeParseError { message: \"impossible: expected a single atomic fact\", line: 3, path: Eval }))"
+      },
+      "stderr": "",
+      "expected_success": false,
+      "matches": true
+    },
+    {
+      "name": "manual-quadratic-not-forall",
+      "source": "by contra:\n    ? not forall x R:\n        x^2 >= x\n    impossible 0.5^2 >= 0.5",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? not forall x R:\n        x^2 >= x\n    impossible 0.5^2 >= 0.5"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "not forall x R:\n    x ^ 2 >= x",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "not forall x R:\n    x ^ 2 >= x"
+            ],
+            "infers": [
+              "exist x R st {not x ^ 2 >= x}"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": true,
+      "matches": true
+    },
+    {
+      "name": "and-goal",
+      "source": "by contra:\n    ? 1 = 1 and 0 = 0\n    by cases:\n        ? 0 = 1\n        case 1 != 1:\n            impossible 1 != 1\n        case 0 != 0:\n            impossible 0 != 0\n    impossible 0 = 1",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? 1 = 1 and 0 = 0\n    by cases:\n        ? 0 = 1\n        case 1 != 1:\n            impossible 1 != 1\n        case 0 != 0:\n            impossible 0 != 0\n    impossible 0 = 1"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "1 = 1 and 0 = 0",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "1 = 1 and 0 = 0",
+              "1 = 1",
+              "0 = 0"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": true,
+      "matches": true
+    },
+    {
+      "name": "chain-goal",
+      "source": "by contra:\n    ? 0 <= 1 <= 2\n    by cases:\n        ? 0 = 1\n        case not 0 <= 1:\n            impossible not 0 <= 1\n        case not 1 <= 2:\n            impossible not 1 <= 2\n    impossible 0 = 1",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? 0 <= 1 <= 2\n    by cases:\n        ? 0 = 1\n        case not 0 <= 1:\n            impossible not 0 <= 1\n        case not 1 <= 2:\n            impossible not 1 <= 2\n    impossible 0 = 1"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "0 <= 1 <= 2",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "0 <= 1 <= 2",
+              "0 <= 1",
+              "1 <= 2"
+            ],
+            "infers": [
+              "0 <= 2"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": true,
+      "matches": true
+    },
+    {
+      "name": "legacy-separated-negated-or-clauses",
+      "source": "witness exist x {0} st {x != 1 or x != 2, x != 3 or x != 4} from 0\nnot forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "witness exist x {0} st {x != 1 or x != 2, x != 3 or x != 4} from 0\nnot forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "witness exist x {0} st {x != 1 or x != 2, x != 3 or x != 4} from 0",
+            "proof_method": {
+              "type": "witness",
+              "rule_name": "Witness exist",
+              "message": "Witness an existential fact"
+            },
+            "stores": [
+              "exist x {0} st {x != 1 or x != 2, x != 3 or x != 4}"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "not forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4"
+            ],
+            "infers": [
+              "exist x {0} st {x != 1 or x != 2, x != 3 or x != 4}"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "expected_success": true,
+      "matches": true
+    }
+  ],
+  "binary_sha256": "1b06b1eece8b3b1d8321bb89678655256af0fb5aca1cf1bcf319605480af453f",
+  "source_sha256": {
+    "src/execute/execute_by_stmt/negate_fact_for_contra.rs": "3f6723ac7095d5f785f04f6da5264a493c06cb769de2b83e05ee6df0a852206a",
+    "src/execute/execute_fact_stmt/negate_quantifier_free_conjunction.rs": "63f537414a0b40acbb15971d107c739382a5dd3e1a5123fd99f0b61483eee23c",
+    "src/execute/execute_fact_stmt/verify_not_forall_fact/derive_exist.rs": "473bc991ce49beec3ce994d5f1f79243004eac7c28f201f8826247962a693683",
+    "tests/unit/execute/contra_classified_negation/tests.rs": "c05fa67d269846839bbf12a21fe3e5d768fa9200296f4a232cbb57365879e6d3",
+    "examples/stmt_nodes/by/by_contra_classified_goals.lit": "5dafb717bd32a8db7a8ec4f64ae20c7795f5562537731bce236f4caf0a1093f3"
+  },
+  "protected_ast_unchanged": {
+    "src/ast/fact/fact.rs": true,
+    "src/ast/stmt.rs": true
+  },
+  "remaining": [
+    "ByContraStmt.impossible_fact: AtomicFact -> Fact requires concrete authorization",
+    "ExistUnique and ForallIff classified constructions",
+    "Forall quantified domain/existential conclusion exceeds existing NotForall shape"
+  ],
+  "status": "First classified-goal checkpoint accepted; K005 closed. All-fact closing/remaining quantifier work stays open.",
+  "unit_test_tail": "10 tests\ntest execute::execute_by_stmt::negate_fact_for_contra::classified_negation_tests::missing_classified_shapes_are_rejected_without_a_generic_not ... ok\ntest execute::execute_by_stmt::negate_fact_for_contra::classified_negation_tests::disjunction_goals_assume_every_negated_branch ... ok\ntest execute::execute_by_stmt::negate_fact_for_contra::classified_negation_tests::existence_goal_uses_negative_existence_as_its_reverse_assumption ... ok\ntest execute::execute_by_stmt::negate_fact_for_contra::classified_negation_tests::enumeration_then_contra_proves_k005_and_retains_scoped_evidence ... ok\ntest execute::execute_by_stmt::negate_fact_for_contra::classified_negation_tests::previously_accepted_counterexample_clause_shapes_remain_usable ... ok\ntest execute::execute_by_stmt::negate_fact_for_contra::classified_negation_tests::forall_and_not_forall_reverse_assumptions_preserve_whole_formulas ... ok\ntest execute::execute_by_stmt::negate_fact_for_contra::classified_negation_tests::conjunctions_and_chains_negate_every_component ... ok\ntest execute::execute_by_stmt::negate_fact_for_contra::classified_negation_tests::whole_not_forall_body_uses_one_counterexample_disjunction ... ok\ntest execute::execute_by_stmt::negate_fact_for_contra::classified_negation_tests::false_not_exist_and_failed_witness_steps_do_not_commit_assumptions ... ok\ntest execute::execute_by_stmt::negate_fact_for_contra::classified_negation_tests::classified_negations_obey_the_boolean_truth_table ... ok\n\ntest result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 578 filtered out; finished in 0.05s\n\n",
+  "artifact_and_doc_gates": [
+    {
+      "name": "examples/stmt_nodes/by/by_contra_classified_goals.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-f",
+        "examples/stmt_nodes/by/by_contra_classified_goals.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/by/by_contra_classified_goals.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by enumerate",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set"
+            },
+            "stores": [
+              "forall x {0}:\n    x != 1"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not exist x {0} st {x = 1}",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "not exist x {0} st {x = 1}"
+            ],
+            "infers": [
+              "forall x_ne0 {0}:\n    x_ne0 != 1"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "exist x {0} st {x = 0}",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "exist x {0} st {x = 0}"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "1 = 1 or 0 = 1",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "1 = 1 or 0 = 1"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not forall n {0}:\n    n = 1",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "not forall n {0}:\n    n = 1"
+            ],
+            "infers": [
+              "exist n {0} st {n != 1}"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "forall z {0}:\n    z = 0",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall z {0}:\n    z = 0"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "forall n {0}:\n    n = 0",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "forall n {0}:\n    n = 0"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "witness exist n {0} st {n != 0 or n != 1} from 0",
+            "proof_method": {
+              "type": "witness",
+              "rule_name": "Witness exist",
+              "message": "Witness an existential fact"
+            },
+            "stores": [
+              "exist n {0} st {n != 0 or n != 1}"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not forall n {0}:\n    n = 0\n    n = 1",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "not forall n {0}:\n    n = 0\n    n = 1"
+            ],
+            "infers": [
+              "exist n {0} st {n != 0 or n != 1}"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "1 = 1 and 0 = 0",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "1 = 1 and 0 = 0",
+              "1 = 1",
+              "0 = 0"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "0 <= 1 <= 2",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "0 <= 1 <= 2",
+              "0 <= 1",
+              "1 <= 2"
+            ],
+            "infers": [
+              "0 <= 2"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "witness exist x {0} st {x != 1 or x != 2, x != 3 or x != 4} from 0",
+            "proof_method": {
+              "type": "witness",
+              "rule_name": "Witness exist",
+              "message": "Witness an existential fact"
+            },
+            "stores": [
+              "exist x {0} st {x != 1 or x != 2, x != 3 or x != 4}"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "not forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4"
+            ],
+            "infers": [
+              "exist x {0} st {x != 1 or x != 2, x != 3 or x != 4}"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "matches": true
+    },
+    {
+      "name": "examples/stmt_nodes/by/by_contra.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-f",
+        "examples/stmt_nodes/by/by_contra.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/by/by_contra.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "1 = 1",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "1 = 1"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "matches": true
+    },
+    {
+      "name": "examples/stmt_nodes/by/by_contra_impossible_not.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-f",
+        "examples/stmt_nodes/by/by_contra_impossible_not.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/by/by_contra_impossible_not.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "0 $in {0}",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "0 $in {0}"
+            ],
+            "infers": [
+              "0 = 0"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "matches": true
+    },
+    {
+      "name": "examples/stmt_nodes/by/by_cases.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-f",
+        "examples/stmt_nodes/by/by_cases.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/by/by_cases.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by cases",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By cases",
+              "message": "Prove by case analysis"
+            },
+            "stores": [
+              "1 = 1"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "matches": true
+    },
+    {
+      "name": "Manual/by-contra/18",
+      "source": "by contra:\n    ? not forall x R:\n        x^2 >= x\n    impossible 0.5^2 >= 0.5",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? not forall x R:\n        x^2 >= x\n    impossible 0.5^2 >= 0.5"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "not forall x R:\n    x ^ 2 >= x",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "not forall x R:\n    x ^ 2 >= x"
+            ],
+            "infers": [
+              "exist x R st {not x ^ 2 >= x}"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "matches": true
+    },
+    {
+      "name": "Manual/by-contra/27",
+      "source": "by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\nby contra:\n    ? not exist x {0} st {x = 1}\n    obtain a from exist x {0} st {x = 1}\n    a != 1\n    impossible a = 1",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\nby contra:\n    ? not exist x {0} st {x = 1}\n    obtain a from exist x {0} st {x = 1}\n    a != 1\n    impossible a = 1"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by enumerate",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set"
+            },
+            "stores": [
+              "forall x {0}:\n    x != 1"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not exist x {0} st {x = 1}",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "not exist x {0} st {x = 1}"
+            ],
+            "infers": [
+              "forall x_ne0 {0}:\n    x_ne0 != 1"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "matches": true
+    }
+  ],
+  "docs_impact": {
+    "contract_prose": [
+      "docs/Manual.md",
+      "docs/Litex_Learner_Cheatsheet.md"
+    ],
+    "executable_proof_migrations": [
+      "Manual: previously skipped not-forall contra now verified",
+      "Manual: K005 explicit enumeration/contra example"
+    ],
+    "output_provenance": "No output/result-type schema changed; existing scoped evidence checked by unit test.",
+    "incidental_cleanup": "Added missing import of existing existential alpha-match helper during concurrent compile; no semantic change."
+  },
+  "statement_suite": {
+    "report": "by_contra_statement_suite_2026-10-02.json",
+    "leaves": 50,
+    "checks": 373,
+    "unexpected_failures": 0,
+    "recorded_gaps": 0,
+    "exit_code": 0
+  }
+}

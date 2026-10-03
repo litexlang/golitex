@@ -100,3 +100,18 @@ transport those sources through stored equality paths. Body unfolding retains
 its head-to-anonymous-function equality proof. A signature alone never supplies
 a concrete body. Default struct field views are separately marked by typed
 definition exits; an ordinary struct membership does not select a default view.
+
+## Dedicated builtin definition consequences
+
+Checked positive `prime`, `coprime`, `proper_subset` / `proper_superset`,
+`dvd`, and `bijective` facts publish the consequences built by their existing
+canonical definition constructors. Each named result retains its source FactId
+and WD-checked stored children. The producer preserves definition order:
+`coprime` publishes the non-all-zero disjunction before `gcd=1`; gcd WD can
+consume that disjunction without selecting an operand. Divisibility retains
+`dvd(x,y)` = “y divides x”, with the existing nonzero divisor requirement.
+Negative predicates publish no positive consequences. Quantified unique
+preimages and choice-function facts are outside this publication slice.
+
+Acceptance: `examples/example_small_repairs.lit` and
+`tests/unit/execute/example_small_repairs/tests.rs`.

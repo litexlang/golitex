@@ -1,0 +1,7 @@
+# Gate: target/release/litex -strict -f examples/wd/anonymous_function_return_composition.lit
+# The nested application previously failed its return-carrier requirement.
+# forall x,y R:
+#     fn(a,b R) R {a+b}(fn(a,b R) R {a+b}(x,y),x) $in R
+# The anonymous signature is intrinsic; application WD remains required.
+forall x,y R:
+    fn(a,b R) R {a+b}(fn(a,b R) R {a+b}(x,y),x) $in R

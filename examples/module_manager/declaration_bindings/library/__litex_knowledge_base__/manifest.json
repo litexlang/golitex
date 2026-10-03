@@ -1,7 +1,7 @@
 {
   "kind": "litex_kb_manifest",
-  "abi": "3",
-  "fingerprint": "38a5a6401b108445",
+  "abi": "4",
+  "fingerprint": "265f4cad922fe884",
   "self_mod_id": 0,
   "mod_id_to_path": [
     [
@@ -21,7 +21,7 @@
         "next_identifier_id": 1
       },
       "global_ids_at_leave": {
-        "next_fact_id": 103,
+        "next_fact_id": 108,
         "next_well_definedness_id": 20,
         "next_prop_rewrite_property_id": 1,
         "next_identifier_id": 6

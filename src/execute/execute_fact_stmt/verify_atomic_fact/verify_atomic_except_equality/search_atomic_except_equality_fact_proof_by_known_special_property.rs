@@ -1,5 +1,5 @@
 use crate::ast::fact::{AtomicFact, InFact};
-use crate::ast::obj::{FnObjHead, FunctionSpace, Obj, StructAndFieldAccessObj};
+use crate::ast::obj::{FnObjHead, FnSet, FunctionSpace, IteratedOperator, Obj, StructAndFieldAccessObj};
 use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::runtime::{FactId, Runtime};
@@ -15,6 +15,11 @@ pub enum AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
     pub fn cite_property_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::AnonymousFnApplicationInCodomain(_)) => None,
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::FoldInCarrier(p)) => match &p.operation_signature {
+                FoldOperationSignatureProof::Literal(_) => None,
+                FoldOperationSignatureProof::Known(p)=>p.cite_fact_id(),
+            },
             Self::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(p)) => {
                 Some(p.cite_property_fact_id)
             }
@@ -29,9 +34,25 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 }
 
 pub enum InFactSearchProofByKnownSpecialProperty {
+    FoldInCarrier(FoldInCarrierProof),
+    AnonymousFnApplicationInCodomain(AnonymousFnApplicationInCodomainProof),
     FnApplicationInCodomain(FnApplicationInCodomainKnownSpecialPropertyProof),
     FnApplicationInFnRange(FnApplicationInFnRangeKnownSpecialPropertyProof),
     TupleCoordinate(TupleCoordinateKnownProof),
+}
+pub struct FoldInCarrierProof {
+    pub operation_signature:FoldOperationSignatureProof,
+    pub carrier:Obj,
+    pub carrier_match:Box<EqualFactSearchedProof>,
+}
+pub enum FoldOperationSignatureProof {
+    Literal(FnSet),
+    Known(super::result::AtomicExceptEqualityFactKnownProof),
+}
+pub struct AnonymousFnApplicationInCodomainProof {
+    pub signature:FnSet,
+    pub applied_return_set:Obj,
+    pub return_set_match:Box<EqualFactSearchedProof>,
 }
 
 pub struct TupleIsTupleKnownProof {
@@ -141,6 +162,25 @@ impl Runtime {
         &mut self,
         fact: &InFact,
     ) -> Option<InFactSearchProofByKnownSpecialProperty> {
+        // Fold WD already checked homogeneous closure, seed, and iterand.
+        // Read the operation's declared carrier without reopening builtin
+        // search. This also permits a fold as the argument of a typed op.
+        let operation=match &fact.element {
+            Obj::IteratedOperator(IteratedOperator::Reduce(r))=>Some(&*r.op),
+            Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(r))=>Some(&*r.op),_=>None,
+        };
+        if let Some(operation)=operation {
+            let signature=self.resolve_callable_fn_set(operation)?;
+            let carrier=*signature.ret_set.clone();
+            let carrier_match=self.lookup_known_obj_equality(&carrier,&fact.set)?;
+            let operation_signature=if matches!(operation,Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))) {
+                FoldOperationSignatureProof::Literal(signature)
+            } else {
+                let membership=AtomicFact::InFact(InFact {fact_id:self.global_ids.allocate_fact_id(),element:operation.clone(),set:Obj::FunctionSpace(FunctionSpace::FnSet(signature)),line_file:None});
+                FoldOperationSignatureProof::Known(self.lookup_known_atomic_premise(membership)?)
+            };
+            return Some(InFactSearchProofByKnownSpecialProperty::FoldInCarrier(FoldInCarrierProof {operation_signature,carrier,carrier_match:Box::new(carrier_match)}));
+        }
         if let Obj::ProductShape(ProductShape::ObjAtIndex(at)) = &fact.element {
             let index = literal_positive_usize(at.index.as_ref())?;
             let shape = self.lookup_known_tuple_shape(at.obj.as_ref())?;
@@ -161,7 +201,17 @@ impl Runtime {
             FnObjHead::FieldAccess(access) => {
                 Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access.clone()))
             }
-            FnObjHead::AnonymousFnLiteral(_) => return None,
+            // Anonymous functions carry their signature intrinsically. The
+            // caller checked the body, arguments and domain in application WD;
+            // this leaf reads that signature and cites only stored equality.
+            // Example: fn(a,b R) R {a+b}(x,y) $in R, including nested calls.
+            FnObjHead::AnonymousFnLiteral(anonymous) => {
+                let applied_return_set=self.applied_fn_set_return_set(application,&anonymous.body)?;
+                let return_set_match=self.lookup_known_obj_equality(&applied_return_set,&fact.set)?;
+                return Some(InFactSearchProofByKnownSpecialProperty::AnonymousFnApplicationInCodomain(AnonymousFnApplicationInCodomainProof {
+                    signature:anonymous.body.clone(),applied_return_set,return_set_match:Box::new(return_set_match),
+                }));
+            },
         };
         let properties = self.known_special_properties_of(&head);
         for property in properties {

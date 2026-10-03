@@ -1258,6 +1258,10 @@ pub(super) fn project_atomic_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(br::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::FunctionRangeOfFiniteDomain(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("family",string("IsFiniteSetFact")),("rule",string("FunctionRangeOfFiniteDomain")),
+            ("function_membership",project_verify_fact(&p.function_membership,runtime)),("domain_finite",project_verify_fact(&p.domain_finite,runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(br::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::SurjectiveImageOfFiniteSet(p)) => object_for(runtime,vec![
             ("type",string("builtin_rule")),("family",string("IsFiniteSetFact")),("rule",string("SurjectiveImageOfFiniteSet")),
             ("cite_surjective_fact_id",string(p.cite_surjective_fact_id.to_string())),
@@ -1388,6 +1392,14 @@ pub(super) fn project_atomic_builtin_rule(
             ("rule", string("PositiveIntegerInNPos")),
             ("integer_proof", project_verify_fact(&p.integer_proof, runtime)),
             ("positive_proof", project_verify_fact(&p.positive_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::IntegerArithmeticClosure(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("family",string("InFact")),("rule",string("IntegerArithmeticClosure")),
+            ("operand_proofs",project_verify_facts(&p.operand_proofs,runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::AnonymousFnApplicationScalarCodomain(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("family",string("InFact")),("rule",string("AnonymousFnApplicationScalarCodomain")),
+            ("codomain",string(p.codomain.ir().as_str())),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::NativeScalarCodomain(p)) => {
             object_for(runtime, vec![

@@ -1,0 +1,9 @@
+# Legacy migration: B42-cos-neg
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/legacy_cos_negation.lit
+# Before: rejected by the frozen current release in the migration audit.
+# forall x R:
+#     cos(-x) = cos(x)
+# Now: the same statement is active; no trust or architecture changes.
+# False/domain variants are executable Rust regressions in legacy_small_capabilities.
+forall x R:
+    cos(-x) = cos(x)

@@ -160,6 +160,11 @@ fn decode_definition_memory(value: &JsonValue) -> Result<DefinitionMemory, KbCod
 }
 
 fn reject_unsupported_maps(defs: &DefinitionMemory) -> Result<(), KbCodecError> {
+    if defs.structure_definitions.values().any(|definition| !definition.equivalent_facts.is_empty()) {
+        return Err(KbCodecError::Unsupported(
+            "struct definition laws require source execution; definitions-only KB does not replay published foralls".into(),
+        ));
+    }
     if !defs.algorithm_definitions.is_empty() {
         return Err(KbCodecError::Unsupported(
             "algorithm_definitions not in kb definition_memory MVP".into(),

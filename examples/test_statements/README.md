@@ -4,8 +4,8 @@ Task: detailed per-statement tests requested on 2026-10-01.
 The authoritative inventory is `src/ast/stmt.rs`: 50 reachable statement
 leaves, including `Stmt::Fact`. Each leaf has one primary `.lit` file with
 multiple runnable scenarios. There are 170 positive scenarios,
-130 negative scenarios, 21 additional boundary/regression checks, and 1 gap
-reproduction covering 1 open issue group. Each scenario runs independently;
+130 negative scenarios, 23 additional boundary/regression checks, and no open
+K-number gap reproduction. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
 ## Run
@@ -58,6 +58,8 @@ K003 uses the accepted explicit equality chain [`f(2) = f(2 - 1) = f(1) = 0`](bo
 
 K004 uses the user's [explicit arithmetic chain](boundaries/recursive-increment-explicit-chain.lit). K010's [original arithmetic enumeration](boundaries/finite-numeric-enumeration.lit) now succeeds using finite-carrier membership evidence. Both are ordinary successful coverage. [Focused acceptance](proof_journals/k004_k010_d001_acceptance.json) also records D001's output replay.
 
+K005 now uses [enumeration plus explicit by-contra](boundaries/finite-negated-existence-by-contra.lit). Its [solution and controls](experience/problem_notes/K005-classified-negative-existence-contra.md) preserve the original conclusion. Remaining all-fact command work is listed [by statement](bugs/by_contra_stmt/limitations.md).
+
 ## First acceptance example
 
 The new typed-equality fixture accepts and reuses a natural value:
@@ -107,7 +109,8 @@ of stored consequences. They deliberately exercise subsequent use.
 The `Fact` fixture exercises all ten fact shapes. Unique existence uses a
 checked witness before assertion; negated existence is asserted in a local
 conditional context. It does not claim automatic proof search for every
-logical shape. Direct unsupported search is preserved in the gap fixtures.
+logical shape. The bare K005 shortcut remains an expected-failure automatic-search boundary;
+its explicit contradiction proof is ordinary successful regression coverage.
 
 These files are independent test inputs, not a shared Litex module; there is
 no `litex.config`, exported API, or dependency on the earlier `stmt_nodes`

@@ -50,6 +50,10 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInReal(p) => p.rule_id_and_message(lang),
             Self::ComplexCoordinateInComplex(p) => p.rule_id_and_message(lang),
             Self::RealArithmeticClosure(p) => p.rule_id_and_message(lang),
+            Self::IntegerArithmeticClosure(_) => match lang {
+                OutputLanguage::English => text("IntegerArithmeticClosure", "Integer arithmetic closure", "Checked integer operands remain integers under negation, absolute value, addition, subtraction, multiplication and natural powers"),
+                OutputLanguage::Chinese => text("IntegerArithmeticClosure", "整数运算封闭", "已验证的整数操作数经取负、绝对值、加减乘及自然数幂仍为整数"),
+            },
             Self::NativeScalarCodomain(p) => p.rule_id_and_message(lang),
             Self::PositiveIntegerInNPos(p) => p.rule_id_and_message(lang),
             Self::FoldScalarCodomain(_) => match lang {
@@ -66,6 +70,10 @@ impl InFactSearchProofByBuiltinRule {
             Self::CartDimInNatural(p) => p.rule_id_and_message(lang),
             Self::TupleDimInNatural(p) => p.rule_id_and_message(lang),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_id_and_message(lang),
+            Self::AnonymousFnApplicationScalarCodomain(_) => match lang {
+                OutputLanguage::English => text("AnonymousFnApplicationScalarCodomain", "Anonymous function return carrier", "A checked direct application inhabits its declared static scalar codomain"),
+                OutputLanguage::Chinese => text("AnonymousFnApplicationScalarCodomain", "匿名函数的返回载体", "已验证的直接调用属于其声明的静态数值返回载体"),
+            },
             Self::StandardSetSubsetMembership(p) => p.rule_id_and_message(lang),
             Self::FiniteSetSubsetMembership(p) => p.rule_id_and_message(lang),
             Self::SetBuilderMembership(p) => p.rule_id_and_message(lang),
@@ -98,6 +106,7 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInReal(_) => None,
             Self::ComplexCoordinateInComplex(_) => None,
             Self::RealArithmeticClosure(_) => None,
+            Self::IntegerArithmeticClosure(_) => None,
             Self::NativeScalarCodomain(_) => None,
             Self::PositiveIntegerInNPos(_) => None,
             Self::AggregateScalarCodomain(_) => None,
@@ -105,6 +114,7 @@ impl InFactSearchProofByBuiltinRule {
             Self::CartDimInNatural(_) => None,
             Self::TupleDimInNatural(_) => None,
             Self::AnonymousFnInDeclaredFnSet(_) => None,
+            Self::AnonymousFnApplicationScalarCodomain(_) => None,
             Self::StandardSetSubsetMembership(_) => None,
             Self::FiniteSetSubsetMembership(_) => None,
             Self::SetBuilderMembership(_) => None,

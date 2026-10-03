@@ -1,0 +1,582 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-02",
+  "checkpoint": 2,
+  "impact": "L4: existing forall-iff family in shared multiline goal parser",
+  "records": [
+    {
+      "name": "unique-positive",
+      "source": "# Unique-existence contra uses existing Forall/Exist shapes.\n# Formerly rejected:\n# by contra:\n#     ? exist! x {0} st {x = 0}\n#     obtain a from exist y {0} st {y = 0, y != 0}\n#     impossible a != 0\n# Run: target/release/litex -strict -f examples/stmt_nodes/by/by_contra_unique_existence.lit\n# Negative controls (no witnesses / multiple witnesses) live in the focused Rust tests.\n\nby contra:\n    ? exist! x {0} st {x = 0}\n    obtain a from exist y {0} st {y = 0, y != 0}\n    impossible a != 0\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "# Unique-existence contra uses existing Forall/Exist shapes.\n# Formerly rejected:\n# by contra:\n#     ? exist! x {0} st {x = 0}\n#     obtain a from exist y {0} st {y = 0, y != 0}\n#     impossible a != 0\n# Run: target/release/litex -strict -f examples/stmt_nodes/by/by_contra_unique_existence.lit\n# Negative controls (no witnesses / multiple witnesses) live in the focused Rust tests.\n\nby contra:\n    ? exist! x {0} st {x = 0}\n    obtain a from exist y {0} st {y = 0, y != 0}\n    impossible a != 0\n"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "exist! x {0} st {x = 0}",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "exist! x {0} st {x = 0}"
+            ],
+            "infers": [
+              "forall x_a0 {0}, x_b0 {0}:\n    x_a0 = 0\n    x_b0 = 0\n    =>:\n        x_a0 = x_b0"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "matches": true,
+      "expected_success": true
+    },
+    {
+      "name": "unique-no-witness",
+      "source": "by contra:\n    ? exist! x {0} st {x = 1}\n    impossible 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? exist! x {0} st {x = 1}\n    impossible 0 = 0"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by contradiction",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction",
+              "phase": "by_contra"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "matches": true,
+      "expected_success": false
+    },
+    {
+      "name": "unique-multiple-witnesses",
+      "source": "by contra:\n    ? exist! x {0, 1} st {x = x}\n    impossible 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? exist! x {0, 1} st {x = x}\n    impossible 0 = 0"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by contradiction",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction",
+              "phase": "by_contra"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "matches": true,
+      "expected_success": false
+    },
+    {
+      "name": "iff-positive",
+      "source": "# Contra checks the whole iff through existing QF + NotForall shapes.\n# Formerly rejected by the multiline goal parser:\n# by contra:\n#     ? forall x {0}:\n#         =>:\n#             0 = 0\n#         <=>:\n#             0 = 0\n#     impossible 0 != 0\n# Run: target/release/litex -strict -f examples/stmt_nodes/by/by_contra_forall_iff.lit\n# Boundary: quantified iff clauses exceed the current NotForall shape.\n\nby contra:\n    ? forall x {0}:\n        =>:\n            0 = 0\n        <=>:\n            0 = 0\n    obtain a from exist y {0} st {0 != 0 or 0 != 0, 0 = 0 or 0 = 0}\n    by cases:\n        ? 0 != 0\n        case 0 != 0\n        case 0 != 0\n    impossible 0 != 0\n",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "# Contra checks the whole iff through existing QF + NotForall shapes.\n# Formerly rejected by the multiline goal parser:\n# by contra:\n#     ? forall x {0}:\n#         =>:\n#             0 = 0\n#         <=>:\n#             0 = 0\n#     impossible 0 != 0\n# Run: target/release/litex -strict -f examples/stmt_nodes/by/by_contra_forall_iff.lit\n# Boundary: quantified iff clauses exceed the current NotForall shape.\n\nby contra:\n    ? forall x {0}:\n        =>:\n            0 = 0\n        <=>:\n            0 = 0\n    obtain a from exist y {0} st {0 != 0 or 0 != 0, 0 = 0 or 0 = 0}\n    by cases:\n        ? 0 != 0\n        case 0 != 0\n        case 0 != 0\n    impossible 0 != 0\n"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall x {0}:\n    0 = 0\n    <=>:\n        0 = 0",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "forall x {0}:\n    0 = 0\n    <=>:\n        0 = 0"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "matches": true,
+      "expected_success": true
+    },
+    {
+      "name": "iff-false",
+      "source": "by contra:\n    ? forall x {0}:\n        =>:\n            0 = 0\n        <=>:\n            0 = 1\n    impossible 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? forall x {0}:\n        =>:\n            0 = 0\n        <=>:\n            0 = 1\n    impossible 0 = 0"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by contradiction",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction",
+              "phase": "by_contra"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "matches": true,
+      "expected_success": false
+    },
+    {
+      "name": "quantified-iff-boundary",
+      "source": "by contra:\n    ? forall x {0}:\n        =>:\n            exist y {0} st {y = x}\n        <=>:\n            x = 0\n    impossible 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? forall x {0}:\n        =>:\n            exist y {0} st {y = x}\n        <=>:\n            x = 0\n    impossible 0 = 0"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "by contradiction",
+            "why_failed": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction",
+              "phase": "by_contra"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": "",
+      "matches": true,
+      "expected_success": false
+    },
+    {
+      "name": "compound-closing-pending",
+      "source": "by contra:\n    ? 1 = 1\n    impossible 1 = 1 and 0 = 0",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-e",
+        "by contra:\n    ? 1 = 1\n    impossible 1 = 1 and 0 = 0"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": "Runtime(ParseError(RuntimeParseError { message: \"impossible: expected a single atomic fact\", line: 3, path: Eval }))"
+      },
+      "stderr": "",
+      "matches": true,
+      "expected_success": false
+    },
+    {
+      "name": "examples/stmt_nodes/by/by_contra_classified_goals.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-f",
+        "examples/stmt_nodes/by/by_contra_classified_goals.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/by/by_contra_classified_goals.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "by enumerate",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By finite enumeration",
+              "message": "Prove by enumerating a finite set"
+            },
+            "stores": [
+              "forall x {0}:\n    x != 1"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not exist x {0} st {x = 1}",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "not exist x {0} st {x = 1}"
+            ],
+            "infers": [
+              "forall x_ne0 {0}:\n    x_ne0 != 1"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "exist x {0} st {x = 0}",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "exist x {0} st {x = 0}"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "1 = 1 or 0 = 1",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "1 = 1 or 0 = 1"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not forall n {0}:\n    n = 1",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "not forall n {0}:\n    n = 1"
+            ],
+            "infers": [
+              "exist n {0} st {n != 1}"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "forall z {0}:\n    z = 0",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall z {0}:\n    z = 0"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "forall n {0}:\n    n = 0",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "forall n {0}:\n    n = 0"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "witness exist n {0} st {n != 0 or n != 1} from 0",
+            "proof_method": {
+              "type": "witness",
+              "rule_name": "Witness exist",
+              "message": "Witness an existential fact"
+            },
+            "stores": [
+              "exist n {0} st {n != 0 or n != 1}"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not forall n {0}:\n    n = 0\n    n = 1",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "not forall n {0}:\n    n = 0\n    n = 1"
+            ],
+            "infers": [
+              "exist n {0} st {n != 0 or n != 1}"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "1 = 1 and 0 = 0",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "1 = 1 and 0 = 0",
+              "1 = 1",
+              "0 = 0"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "0 <= 1 <= 2",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "0 <= 1 <= 2",
+              "0 <= 1",
+              "1 <= 2"
+            ],
+            "infers": [
+              "0 <= 2"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "witness exist x {0} st {x != 1 or x != 2, x != 3 or x != 4} from 0",
+            "proof_method": {
+              "type": "witness",
+              "rule_name": "Witness exist",
+              "message": "Witness an existential fact"
+            },
+            "stores": [
+              "exist x {0} st {x != 1 or x != 2, x != 3 or x != 4}"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "not forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "not forall x {0}:\n    x = 1 and x = 2 or x = 3 and x = 4"
+            ],
+            "infers": [
+              "exist x {0} st {x != 1 or x != 2, x != 3 or x != 4}"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "matches": true
+    },
+    {
+      "name": "examples/stmt_nodes/by/by_contra_unique_existence.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-f",
+        "examples/stmt_nodes/by/by_contra_unique_existence.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/by/by_contra_unique_existence.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "exist! x {0} st {x = 0}",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "exist! x {0} st {x = 0}"
+            ],
+            "infers": [
+              "forall x_a0 {0}, x_b0 {0}:\n    x_a0 = 0\n    x_b0 = 0\n    =>:\n        x_a0 = x_b0"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "matches": true
+    },
+    {
+      "name": "examples/stmt_nodes/by/by_contra_forall_iff.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-02/by-contra-all-facts/target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-f",
+        "examples/stmt_nodes/by/by_contra_forall_iff.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/by/by_contra_forall_iff.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall x {0}:\n    0 = 0\n    <=>:\n        0 = 0",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By contradiction",
+              "message": "Prove by contradiction"
+            },
+            "stores": [
+              "forall x {0}:\n    0 = 0\n    <=>:\n        0 = 0"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "matches": true
+    }
+  ],
+  "binary_sha256": "aa5e30a8372e3363d16cf6a086a36b40765429c21af7580df44f07a89bc8543a",
+  "source_sha256": {
+    "src/execute/execute_by_stmt/negate_fact_for_contra.rs": "ec19e128e87e292d4e297d25c35fb68b07409552bd920bead948e319b048a84f",
+    "src/execute/execute_by_stmt/negate_unique_exist.rs": "af33bcba1604c3ee5ec26e588e9123755b94fe7c560fc1844534547e9801597b",
+    "src/execute/execute_by_stmt/negate_forall_iff.rs": "f0c5941be3d651ee827ad867cdbbde320d24ae506358b9e571019aa0d9be4697",
+    "src/execute/execute_fact_stmt/negate_quantifier_free_conjunction.rs": "d4963f2520f06e8a04fbb696c7997799fc8081678d0c34057becafc4950e4e87",
+    "src/execute/execute_fact_stmt/verify_not_forall_fact/derive_exist.rs": "473bc991ce49beec3ce994d5f1f79243004eac7c28f201f8826247962a693683",
+    "src/parse/statements/helper.rs": "a4ae46219accad5273f89eadc0f648058408c0557d1c688403420fd81c818ea2",
+    "tests/unit/execute/contra_classified_negation/tests.rs": "b85cecf0d7bbd1b37a5abc959e711f57310d4b4b7dc3fb8160e3829bf55fa176"
+  },
+  "full_kernel": {
+    "passed": 598,
+    "failed": 3,
+    "causal_status": "unrelated native before/after comparison in by_contra_full_kernel_failures_2026-10-02.json; detailed node history not established",
+    "exit_code": 101
+  },
+  "focused_tests": {
+    "passed": 15,
+    "failed": 0,
+    "source": "classified-full-kernel.log"
+  },
+  "field_approval": "pending; impossible_fact still AtomicFact",
+  "remaining": [
+    "compound impossible field approval",
+    "quantified forall/iff representation; current NotForall/PlainExist payloads are QF only"
+  ],
+  "status": "classified constructors and direct artifacts accepted; broad gate failures and field/recursive-shape work remain"
+}

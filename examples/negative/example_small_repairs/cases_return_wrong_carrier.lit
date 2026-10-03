@@ -1,0 +1,4 @@
+# This input must be rejected.
+have fn bad(x R: 0 <= x < 1 or 1 <= x < 2) N by cases:
+    case 0 <= x < 1: -1
+    case 1 <= x < 2: 1

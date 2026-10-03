@@ -1,0 +1,2 @@
+# This input must be rejected.
+reduce(1, 2, fn(k Z) Z {k}, fn(a, b Z) Z {a + b}, 0.5) $in Z

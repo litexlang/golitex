@@ -940,10 +940,14 @@ fact saying that `outer.inner` belongs to `&Inner` does not add fields.
 
 This validity is only well-definedness. Looking up `outer.inner.value` checks
 that the defined field path exists; it does not store field membership,
-field/index equalities, or struct laws. Use `release struct def outer.inner` before
-a proof that needs `Inner`'s properties. A function's explicit struct return
-carrier behaves the same way: it makes `f(t).field` a legal path but does not
-open the result's properties.
+field/index equalities, or instantiated struct laws. Definitions now publish
+universal laws over their parameters and an instance, flattening consequent
+universals while keeping conditions and existential witnesses in scope. Those
+laws can be used by ordinary known-forall matching when their carrier and
+premises verify, including for a nested instance. Use `release struct def
+outer.inner` to materialize its representation and property facts. A function's
+explicit struct return carrier makes `f(t).field` a legal path without itself
+opening the result.
 
 Postfixes compose when definitions provide the carriers. A final field may be
 callable, so `space.scalars.mul(a, b)` is supported when `scalars` is a
@@ -1687,10 +1691,11 @@ Yes. Decimal literals are normalized exactly, so `2.400 = 2.4` succeeds and
 orientation; guarded complex calculation then checks `1 / i = -i`.
 `1 / i = -1` and division by `i - i` are rejected.
 
-The existing module-cache compatibility revision is now ABI 3. Imported ABI 1/2
-products rebuild once, because old cached theorem interfaces omit their proof
-body and must not preserve an earlier incorrect acceptance. The layout stays
-the same; standalone numeric decoding also normalizes old spellings.
+The numeric/aggregate correction raised the module-cache compatibility revision
+to ABI 3; subsequent interface corrections raised it to ABI 4. Older imported
+products rebuild once, because cached theorem interfaces omit their proof body
+and must not preserve an earlier incorrect acceptance. The layout stays the
+same; standalone numeric decoding also normalizes old spellings.
 
 Finite `sum` and `product` instantiate each index, check the function domain,
 and fold exact values. Named functions, nested aggregates, exact fractions and

@@ -6,13 +6,20 @@
 - Scope: Fact restriction and tooling observations.
 - Related workspace: golitex.
 
-These are explicit implementation restrictions, documented policy, or tooling drift. They are not counted among the ten open issue groups. If support is intended, make that decision before changing the existing rejection contract.
+These are explicit implementation restrictions, documented policy, or tooling drift. They are separate from the resolved K-number groups. If support is intended, make that decision before changing the existing rejection contract.
 
 ### Input: `exist! x R st {x = 3}` alone
 
 - Observed boundary: `search_proof` rejects; this search route does not synthesize the uniqueness proof.
 - Supported route: Checked witness followed by the unique-exist assertion.
 - Captured authoring evidence: [authoring.json](../../proof_journals/authoring.json).
+
+### Bare universal exclusion followed by negative existence
+
+`forall x {0}: x != 1` does not automatically discharge `not exist x {0} st {x = 1}`.
+Use [the checked explicit by-contra proof](../../boundaries/finite-negated-existence-by-contra.lit).
+The [bare-input boundary](../../boundaries/finite-negated-existence-automatic-search.lit)
+retains search_proof rejection; automatic duality is not a maintainer requirement.
 
 Malformed initial attempts and unsupported shorthand remain in the chronological journal; they are not silently promoted to confirmed bugs.
 

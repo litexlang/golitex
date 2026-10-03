@@ -1,0 +1,10 @@
+# Gate: target/release/litex -strict -f examples/wd/finite_set_fold_arbitrary_carrier.lit
+# Arbitrary carrier: only a closed operation with both laws can be used in an unordered fold.
+forall E set,S finite_set,op fn(a,b E)E,f fn(k E)E,s E:
+    S $subset E
+    forall x,y E:
+        op(x,y) = op(y,x)
+    forall x,y,z E:
+        op(op(x,y),z) = op(x,op(y,z))
+    =>:
+        finite_set_reduce(S,f,op,s) $in E

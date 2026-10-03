@@ -79,6 +79,7 @@ thm additive_inverse_exists_unique:
         =>:
             space.add(y2, x) = space.add(x, y2) = space.zero
             y1 = space.add(space.zero, y1) = space.add(space.add(y2, x), y1) = space.add(y2, space.add(x, y1)) = space.add(y2, space.zero) = space.add(space.zero, y2) = y2
+            y1 = y2
     witness exist! y2 V st {space.add(x, y2) = space.zero} from y
 
 template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>>:

@@ -1,0 +1,12 @@
+# Legacy migration: I06-bijective-preimage-final
+# Gate: target/release/litex -strict -f examples/proof_nodes/exist/by_builtin_rule/bijective_preimage.lit
+# Before: the frozen current audit rejected the following statement.
+# forall A, B set, f fn(x A)B, y B:
+#     $bijective(A, B, f)
+#     =>:
+#         exist! x A st {f(x) = y}
+# Now: the existing certificate is consumed; false/domain variants are Rust regressions.
+forall A, B set, f fn(x A)B, y B:
+    $bijective(A, B, f)
+    =>:
+        exist! x A st {f(x) = y}
