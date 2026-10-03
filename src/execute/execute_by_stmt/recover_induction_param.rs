@@ -288,7 +288,7 @@ fn induction_bound_from_stmt(name: &str, stmt: &Stmt) -> Option<crate::ast::name
             }
             ByStmt::ByContraStmt(s) => {
                 facts.push(s.to_prove.clone());
-                facts.push(s.impossible_fact.clone().into());
+                facts.push(s.impossible_fact.clone());
                 bodies.push(&s.proof);
             }
             ByStmt::ByEnumerateFiniteSetStmt(s) => {

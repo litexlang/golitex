@@ -16,6 +16,9 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
     pub fn cite_property_fact_id(&self) -> Option<FactId> {
         match self {
             Self::InFact(InFactSearchProofByKnownSpecialProperty::AnonymousFnApplicationInCodomain(_)) => None,
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::FieldApplicationInDeclaredCodomain(_)) => None,
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(_)) => None,
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::FieldInDeclaredSet(_)) => None,
             Self::InFact(InFactSearchProofByKnownSpecialProperty::FoldInCarrier(p)) => match &p.operation_signature {
                 FoldOperationSignatureProof::Literal(_) => None,
                 FoldOperationSignatureProof::Known(p)=>p.cite_fact_id(),
@@ -36,6 +39,9 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 pub enum InFactSearchProofByKnownSpecialProperty {
     FoldInCarrier(FoldInCarrierProof),
     AnonymousFnApplicationInCodomain(AnonymousFnApplicationInCodomainProof),
+    FieldApplicationInDeclaredCodomain(FieldApplicationInDeclaredCodomainProof),
+    TemplateApplicationInDeclaredCodomain(TemplateApplicationInDeclaredCodomainProof),
+    FieldInDeclaredSet(FieldInDeclaredSetProof),
     FnApplicationInCodomain(FnApplicationInCodomainKnownSpecialPropertyProof),
     FnApplicationInFnRange(FnApplicationInFnRangeKnownSpecialPropertyProof),
     TupleCoordinate(TupleCoordinateKnownProof),
@@ -53,6 +59,28 @@ pub struct AnonymousFnApplicationInCodomainProof {
     pub signature:FnSet,
     pub applied_return_set:Obj,
     pub return_set_match:Box<EqualFactSearchedProof>,
+}
+
+// The enclosing application WD carries the receiver/field and domain checks.
+// Cached WD does not identify which signature was selected, so every visible
+// alternative must agree on the instantiated return carrier as well.
+pub struct FieldApplicationInDeclaredCodomainProof {
+    pub declared_signature: FnSet,
+    pub applied_return_set: Obj,
+    pub return_set_match: EqualFactSearchedProof,
+    pub alternative_signature_matches: Vec<SignatureReturnMatchProof>,
+}
+
+pub struct TemplateApplicationInDeclaredCodomainProof {
+    pub declared_signature: FnSet,
+    pub applied_return_set: Obj,
+    pub return_set_match: EqualFactSearchedProof,
+    pub alternative_signature_matches: Vec<SignatureReturnMatchProof>,
+}
+
+pub struct FieldInDeclaredSetProof {
+    pub declared_set: Obj,
+    pub set_match: EqualFactSearchedProof,
 }
 
 pub struct TupleIsTupleKnownProof {
@@ -162,6 +190,17 @@ impl Runtime {
         &mut self,
         fact: &InFact,
     ) -> Option<InFactSearchProofByKnownSpecialProperty> {
+        // Field WD selected a definition-owned struct carrier. Its instantiated
+        // field type also applies in read-only nested WD, before explicit release.
+        if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) = &fact.element {
+            if let Some(declared_set) = self.resolve_field_access_field_type(access) {
+                if let Some(set_match) = self.lookup_known_obj_equality(&declared_set, &fact.set) {
+                    return Some(InFactSearchProofByKnownSpecialProperty::FieldInDeclaredSet(
+                        FieldInDeclaredSetProof { declared_set, set_match },
+                    ));
+                }
+            }
+        }
         // Fold WD already checked homogeneous closure, seed, and iterand.
         // Read the operation's declared carrier without reopening builtin
         // search. This also permits a fold as the argument of a typed op.
@@ -194,6 +233,42 @@ impl Runtime {
         };
         if application.body.is_empty() {
             return None;
+        }
+        if let FnObjHead::InstantiatedTemplateObj(instance) = application.head.as_ref() {
+            if let Some(signature) = self.instantiated_template_function_signature(instance) {
+                if let Some(applied_return_set) = self.applied_fn_set_return_set(application, &signature) {
+                    if let Some(return_set_match) = self.lookup_known_obj_equality(&applied_return_set, &fact.set) {
+                        let head = Obj::InstantiatedTemplateObj(instance.clone());
+                        let alternative_signature_matches = self.known_alternative_signature_returns(application, &head, &fact.set)?;
+                        return Some(InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(
+                            TemplateApplicationInDeclaredCodomainProof {
+                                declared_signature: signature, applied_return_set,
+                                return_set_match, alternative_signature_matches,
+                            },
+                        ));
+                    }
+                }
+            }
+        }
+        if let FnObjHead::FieldAccess(access) = application.head.as_ref() {
+            if let Some(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) =
+                self.resolve_field_access_field_type(access)
+            {
+                if let Some(applied_return_set) = self.applied_fn_set_return_set(application, &signature) {
+                    if let Some(return_set_match) = self.lookup_known_obj_equality(&applied_return_set, &fact.set) {
+                        let head = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access.clone()));
+                        let alternative_signature_matches = self.known_alternative_signature_returns(application, &head, &fact.set)?;
+                        return Some(InFactSearchProofByKnownSpecialProperty::FieldApplicationInDeclaredCodomain(
+                            FieldApplicationInDeclaredCodomainProof {
+                                declared_signature: signature,
+                                applied_return_set,
+                                return_set_match,
+                                alternative_signature_matches,
+                            },
+                        ));
+                    }
+                }
+            }
         }
         let head = match application.head.as_ref() {
             FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
@@ -293,6 +368,21 @@ impl Runtime {
             }
         }
         None
+    }
+
+    fn known_alternative_signature_returns(
+        &mut self,
+        application: &crate::ast::obj::FnObj,
+        head: &Obj,
+        target: &Obj,
+    ) -> Option<Vec<SignatureReturnMatchProof>> {
+        let mut matches = Vec::new();
+        for (candidate, id) in self.collect_in_function_set_candidates(head) {
+            let Some(ret) = self.applied_fn_set_return_set(application, &candidate) else { continue; };
+            let return_set_match = self.lookup_known_obj_equality(&ret, target)?;
+            matches.push(SignatureReturnMatchProof { cite_signature_fact_id: id, return_set_match });
+        }
+        Some(matches)
     }
 
     pub(in crate::execute) fn known_special_properties_of(

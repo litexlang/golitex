@@ -22,3 +22,22 @@ by contra:
     ? 1 = 1
     by extension {1} = {1}
     impossible 1 != 1
+
+# case: compound-conjunction-closing
+by contra:
+    ? 1 = 1
+    impossible 1 = 1 and 0 = 0
+
+# case: compound-existence-closing
+by enumerate finite_set:
+    ? forall x {0}:
+        x != 1
+by contra:
+    ? not exist x {0} st {x = 1}
+    obtain a from exist x {0} st {x = 1}
+    a != 1
+    impossible a = 1
+by contra:
+    ? not exist x {0} st {x = 1}
+    impossible exist y {0} st {y = 1}
+not exist x {0} st {x = 1}

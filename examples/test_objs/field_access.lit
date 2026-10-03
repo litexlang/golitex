@@ -2,6 +2,15 @@
 # Run: target/release/litex -f examples/test_objs/field_access.lit
 # Cases use discarded sketch scopes; no cross-case facts.
 
+# P01: struct Point:; x R; y R; have p &Point = (1, 2); p.x = 1; p.y = 2
+sketch:
+    struct Point:
+        x R
+        y R
+    have p &Point = (1, 2)
+    p.x = p[1] = 1
+    p.y = p[2] = 2
+
 # P02: p.point.y = p.point.y
 sketch:
     struct Point:

@@ -14,9 +14,30 @@ sketch:
 sketch:
     not 3 $in {1, 2}
 
+# P04: {1, 2} = {2, 1}
+sketch:
+    by extension {1, 2} = {2, 1}
+
 # P05: finite_set_size({1, 2}) = 2
 sketch:
     finite_set_size({1, 2}) = 2
+
+# P06: {1} $in {{1}, {2}}
+sketch:
+    by contra:
+        ? {1} != {2}
+        1 $in {1}
+        1 $in {2}
+        impossible 1 $in {2}
+    {1} $in {{1}, {2}}
+
+# P07: (1, 2) $in {(1, 2), (2, 1)}
+sketch:
+    by contra:
+        ? (1, 2) != (2, 1)
+        1 = (1, 2)[1] = (2, 1)[1] = 2
+        impossible 1 = 2
+    (1, 2) $in {(1, 2), (2, 1)}
 
 # P08: $is_finite_set({})
 sketch:

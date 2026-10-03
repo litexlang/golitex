@@ -2,6 +2,10 @@
 
 Task: one detailed Litex regression file per Obj variant.
 
+Latest status: the [2026-10-03 recheck](audit_2026-10-03.md) observes 67 remaining
+direct rejections, all 99 positive files passing, and all 284 negative fixtures
+rejecting. The earlier implementation snapshots below remain historical.
+
 ## Tracer: exact division and its WD boundary
 
 The existing division WD example only introduced a value:
@@ -159,3 +163,73 @@ python3 examples/test_objs/run.py --audit-only
 python3 examples/test_objs/test_runner.py
 python3 examples/test_objs/run.py --report examples/test_objs/numeric_aggregate_results.json
 ```
+
+## Diagnostic recheck (2026-10-03)
+
+The unchanged invalid unordered subtraction fold now rejects during its `let`
+WD check:
+
+```litex
+let r = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0)
+```
+
+Four addition-fold gaps also meet their intended results. The current-source
+release build succeeds and remains stable through the full gate. All 99
+positive files (524 written cases) pass; all 284 negatives reject. Of the 72
+historically recorded gap fixtures, five recovered and 67 valid direct cases
+still reject. No operational failure or incorrect negative admission is
+observed in this corpus. The intended gate correctly exits 1.
+
+The AST/fixture audit and nine runner protocol tests pass. This round retains
+24 concrete probes, distinguishing successful explicit proof routes from
+unchanged direct-assertion failures. It changes records only, preserves every
+fixture and historical report, and closes the five recovered todo entries
+after saving [solution evidence](experience/problem_notes/obj_recheck_2026-10-03.md).
+No implementation change is attributed to this diagnostic task.
+
+See [the audit](audit_2026-10-03.md), [full process report](audit_2026-10-03_results.json)
+and [source/output journal](proof_journals/obj_audit_2026-10-03.json). Their source
+and binary hashes identify the checked snapshot. Subsequent concurrent
+ByCases/ByContra source edits are outside this evidence; the last five probes
+used the retained executable from the completed stable audit.
+
+```sh
+python3 examples/test_objs/run.py --audit-only
+python3 examples/test_objs/test_runner.py
+python3 examples/test_objs/run.py --report examples/test_objs/audit_2026-10-03_results.json
+```
+
+Full Rust, Lean, textbook and release gates were outside this record-only scan.
+The finite corpus does not prove a globally defect-free kernel.
+
+## F authoring repairs (2026-10-03)
+
+The direct tracer `union({1}, {2}) = {1, 2}` rejects at proof search;
+`by extension union({1}, {2}) = {1, 2}` checks the same equality. It is now
+P01 in [union.lit](union.lit), rather than a registered unresolved gap.
+
+This round changes `.lit` proofs and records only. It promotes 23 checked Obj
+proof/fixture migrations and four already recovered addition folds. The invalid
+unordered subtraction case remains a negative fixture. The live manifest has
+551 positive cases and 44 residual positive gaps; 284 negatives are retained.
+B10 now uses an explicit named theorem in ordinary mode, retaining its four
+opaque trust commands; it is not a strict mathematical proof.
+
+See [the recipes and remaining boundaries](experience/problem_notes/f_authoring_repairs_2026-10-03.md)
+and [the complete journal](proof_journals/f_authoring_repairs_2026-10-03.json).
+The initial successful release was frozen before proof iteration. A later
+current-source collector build failed during concurrent `VerifyState` edits;
+that invocation executed no acceptance fixtures. Frozen-release gates and
+any subsequent build checks are recorded with their actual binary identities.
+Full Rust, Lean, textbook and publication gates are outside these source-proof
+changes. No AST, runtime or search-budget change was made by this task.
+
+Final frozen-release gate: all 99 positive files (551 cases) pass under strict
+mode; all 284 negatives reject; all 44 residual direct gaps reject, so the
+intended full corpus remains non-green. All 81 independent strict frame replays
+match the persistent-session outcomes. B10 succeeds in ordinary mode only.
+Inventory audit and nine runner protocol tests pass; this task's diff check
+passes. The final current-source build retry also fails (exit 101), with duplicate
+`VerifyState` definitions and mismatched fields. Both failed current builds ran
+no acceptance fixtures. These records certify the preserved release, not the
+concurrent unfinished kernel state.

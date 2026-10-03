@@ -15,8 +15,12 @@ fixtures. No test uses `trust` to manufacture success.
 
 The approved numeric and aggregate repairs add exact decimal normalization,
 imaginary nonzero and guarded division, bounded nested sum/product calculation
-and symbolic identities. See [acceptance](acceptance.md) for current gate results
-and [todo](todo.md) for surviving issues. Earlier reports remain historical.
+and symbolic identities. The [2026-10-03 audit](audit_2026-10-03.md) is a retained
+historical snapshot. The subsequent [F authoring repairs](experience/problem_notes/f_authoring_repairs_2026-10-03.md)
+promote 23 explicit checked proofs and four recovered folds, leaving **44 gaps**
+in the live manifest, with **551 positive cases**. Source and binary identities,
+gates and any concurrent-build limitations are recorded separately in
+[acceptance](acceptance.md) and the authoring journal. No test adds trust.
 
 ## Run
 
@@ -69,7 +73,8 @@ journals record ordinary persistent sessions and final clean-file gates instead.
   needed to exercise real export and import ownership.
 - `negative/`: individually executable must-reject cases. Some currently
   expose defects; the manifest and todo identify those explicitly.
-- `gaps/`: legitimate cases that remain unverified. These are executed too.
+- `gaps/`: the 44 remaining direct positive reproductions. Solved sources are
+  archived in proof journals and promoted to their owning positive files.
 - `fixtures/`: small maintained library for qualified-identifier tests.
 - `coverage.json`: AST path, file, case and observed-gap inventory.
 - `baseline.json`, `results.json`: historical complete-suite process observations
@@ -80,6 +85,8 @@ journals record ordinary persistent sessions and final clean-file gates instead.
   decimal, complex-inverse and finite-sum examples selected by the user.
 - `proof_journals/`: accepted source and materially distinct failed attempts.
 - [coverage.md](coverage.md): readable per-object inventory and case counts.
+- [audit_2026-10-03.md](audit_2026-10-03.md): preceding scan counts, concrete diagnoses
+  and checked explicit proof routes; its journal retains all 24 follow-up probes.
 - [todo.md](todo.md): concrete reproductions, exact diagnostics, intended
   outcomes and next actions for surviving issues.
 - [acceptance.md](acceptance.md): tracer, selected gates and verification limits.

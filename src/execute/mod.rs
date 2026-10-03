@@ -197,3 +197,7 @@ mod soundness_boundaries;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/sequence_struct_contracts/tests.rs"]
 mod sequence_struct_contract_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/showcase_local_repairs/tests.rs"]
+mod showcase_local_repair_tests;

@@ -6,23 +6,13 @@ not-block syntax were explicitly rejected by the maintainer.
 
 Existing Atomic, Exist/NotExist, ExistUnique, And/Or/Chain, QF Forall,
 QF ForallIff and NotForall constructors are implemented and tested using
-unchanged AST shapes. Unique and iff no longer belong to the missing
+unchanged Fact shapes. Unique and iff no longer belong to the missing
 constructor list. See the [accepted quantifier experience](../../experience/problem_notes/by-contra-classified-quantifier-goals.md).
 
-## Closing field: concrete protected change pending
-
-```litex
-by contra:
-    ? 1 = 1
-    impossible 1 = 1 and 0 = 0
-```
-
-Parsing still rejects because impossible_fact stores AtomicFact. This source
-shows the representation boundary, not a complete valid contradiction.
-The exact pending proposal is ByContraStmt.impossible_fact: AtomicFact -> Fact,
-with matching parser, closing result and consumer updates. Execution must
-prove the whole closing fact and its classified opposite. The existing AST
-convention requires explicit field authorization, which remains unanswered.
+The closing-field change was explicitly authorized on 2026-10-03 and is now
+implemented. It is no longer an open representation proposal; accepted controlled gates
+are recorded in the [compound-closing acceptance note](../../experience/problem_notes/by-contra-compound-closing.md).
+The ten existing Fact variants and their payload definitions are unchanged.
 
 ## Quantified premises and existential forall/iff clauses
 

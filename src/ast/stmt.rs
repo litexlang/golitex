@@ -598,7 +598,7 @@ pub struct ByCasesStmt {
 pub struct ByContraStmt {
     pub to_prove: Fact,
     pub proof: Vec<Stmt>,
-    pub impossible_fact: AtomicFact,
+    pub impossible_fact: Fact,
     pub line_file: SourceLine,
 }
 

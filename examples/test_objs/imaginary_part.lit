@@ -14,6 +14,10 @@ sketch:
 sketch:
     img(3 + 2 * i) = 2
 
+# P04: img(-2 - i) = -1
+sketch:
+    img(-2 - i) = img(-2) - img(i) = 0 - 1 = -1
+
 # P05: img(x) = 0
 sketch:
     forall x R:

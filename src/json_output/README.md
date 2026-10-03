@@ -323,6 +323,13 @@ Locked by `cargo test --lib json_output::` (`acceptance_tests` +
 Projection needs a live `Runtime` so cite `FactId`s can resolve to
 `readable_string` text.
 
+Detailed by-contra success includes `closing.fact`, `closing.impossible`
+and `closing.negated_impossible`. The last two are the actual typed Fact
+verification projections retained after the local scope is taken. Closing
+failure reports `closing.phase` as `impossible`, `negate_impossible`, or
+`negated_impossible`, with the failed verification or unsupported-negation
+message. A failed verification never stands for a proof of the opposite.
+
 Function application WD and body unfolding include `function_equal` in their detailed proofs,
 containing the stored equality path from the submitted head to the anonymous
 function. Known special-property membership proofs use `cite_property_fact_id`

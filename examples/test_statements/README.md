@@ -3,8 +3,8 @@
 Task: detailed per-statement tests requested on 2026-10-01.
 The authoritative inventory is `src/ast/stmt.rs`: 50 reachable statement
 leaves, including `Stmt::Fact`. Each leaf has one primary `.lit` file with
-multiple runnable scenarios. There are 170 positive scenarios,
-130 negative scenarios, 23 additional boundary/regression checks, and no open
+multiple runnable scenarios. There are 172 positive scenarios,
+132 negative scenarios, 23 additional boundary/regression checks, and no open
 K-number gap reproduction. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
@@ -153,7 +153,7 @@ recursive `.lit` file in this directory as a positive example.
 | `ReleaseAxiomOfChoiceStmt` | [release_axiom_of_choice_stmt.lit](release_axiom_of_choice_stmt.lit) | 3 | 2 |
 | `ReleaseRegularityAxiomStmt` | [release_regularity_axiom_stmt.lit](release_regularity_axiom_stmt.lit) | 3 | 3 |
 | `ByCasesStmt` | [by_cases_stmt.lit](by_cases_stmt.lit) | 4 | 2 |
-| `ByContraStmt` | [by_contra_stmt.lit](by_contra_stmt.lit) | 4 | 2 |
+| `ByContraStmt` | [by_contra_stmt.lit](by_contra_stmt.lit) | 6 | 4 |
 | `ByEnumerateFiniteSetStmt` | [by_enumerate_finite_set_stmt.lit](by_enumerate_finite_set_stmt.lit) | 5 | 4 |
 | `ByInducStmt` | [by_induc_stmt.lit](by_induc_stmt.lit) | 3 | 3 |
 | `ByStrongInducStmt` | [by_strong_induc_stmt.lit](by_strong_induc_stmt.lit) | 3 | 3 |

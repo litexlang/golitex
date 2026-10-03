@@ -1,2 +1,0 @@
-# Intended valid regression: family_union P02
-family_union({{1}}) = {1}

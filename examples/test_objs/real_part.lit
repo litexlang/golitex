@@ -14,7 +14,16 @@ sketch:
 sketch:
     re(3 + 2 * i) = 3
 
+# P04: re(-2 - i) = -2
+sketch:
+    re(-2 - i) = re(-2) - re(i) = -2 - 0 = -2
+
 # P05: re(x) = x
 sketch:
     forall x R:
         re(x) = x
+
+# P06: re(i * i) = -1
+sketch:
+    i * i = -1
+    re(i * i) = re(-1) = -1

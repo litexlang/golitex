@@ -149,8 +149,9 @@ impl IdentifierObjWellDefinedProof {
 }
 
 // Which FnSet supplied the domain check for a successful FnObj application.
-// Identifier / template heads cite a source fact and its head equality; anonymous literals
-// carry their own `body` FnSet and have no registration FactId.
+// Identifiers cite a source fact and head equality. Anonymous literals carry
+// their own body. Templates may read a checked declaration after instance WD,
+// including nested checks where signature caching is disabled.
 pub enum FnObjDomainFnSetEvidence {
     InFunctionSet {
         fn_set: FnSet,
@@ -158,6 +159,9 @@ pub enum FnObjDomainFnSetEvidence {
         function_equal: KnownEqualityPathProof,
     },
     AnonymousLiteral {
+        fn_set: FnSet,
+    },
+    TemplateDefinition {
         fn_set: FnSet,
     },
 }

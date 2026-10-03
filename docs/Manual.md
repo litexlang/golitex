@@ -3678,9 +3678,11 @@ candidate has a distinct satisfying alternative. This covers both absence
 of any witness and multiple witnesses. It uses existing forall/exists shapes;
 there is no unified `NotFact` or new `not exist!` syntax.
 
-`impossible fact` currently accepts a positive or negated atomic fact
-(`impossible not x $in S`, `impossible not $P(...)`, `impossible x != y`, …).
-The block closes only after that fact and its opposite both verify. A failed
+`impossible fact` accepts the same classified Fact families as the goal,
+including conjunctions, disjunctions, chains, existence and multiline forall
+or iff facts. Quantified premises or conclusions inside forall/iff still
+exceed the current counterexample representation. The block closes only
+after the complete fact and its classified opposite both verify. A failed
 or unknown verification is not proof of the opposite. Only the target is
 published outside the block; reverse assumptions and obtained witnesses stay
 local.
@@ -3707,6 +3709,23 @@ by contra:
 
 The reverse assumption here is the corresponding positive existential.
 A bare negative-existence assertion need not find this proof automatically.
+
+Once that negative-existence fact has been proved, the closing fact may be
+the whole existential instead of an obtained atomic witness:
+
+```litex
+by enumerate finite_set:
+    ? forall x {0}:
+        x != 1
+by contra:
+    ? not exist x {0} st {x = 1}
+    obtain a from exist x {0} st {x = 1}
+    a != 1
+    impossible a = 1
+by contra:
+    ? not exist x {0} st {x = 1}
+    impossible exist y {0} st {y = 1}
+```
 
 A unique-existence contradiction can open a distinct alternative:
 

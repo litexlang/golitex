@@ -2,14 +2,21 @@
 
 Task: add detailed regression files for every current Litex Obj variant.
 
-The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 524 positive cases, 284 rejection fixtures and 72 recorded gaps.
+The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 551 positive cases, 284 rejection fixtures and 44 recorded gaps.
+
+The earlier 2026-10-03 [audit](audit_2026-10-03.md) observed 67 direct
+rejections. The subsequent [F authoring repairs](experience/problem_notes/f_authoring_repairs_2026-10-03.md)
+promote 23 checked proof migrations and four unchanged recovered addition folds;
+the recovered subtraction rejection stays in the negative corpus. Original gap
+sources and receipts are archived in the authoring journal before retirement.
+These are proof and fixture changes; no kernel change is attributed to this task.
 
 These counts describe coverage of written cases, not proof that the implementation is bug-free. The runner audits the enum tree and all `.lit` fixtures on every run.
 
 | AST path | Positive file | Positive cases | Rejection fixtures | Recorded gaps |
 | --- | --- | ---: | ---: | ---: |
 | `Obj::Identifier::Plain` | [identifier_plain](identifier_plain.lit) | 6 | 3 | 0 |
-| `Obj::FnObj` | [fn_obj](fn_obj.lit) | 7 | 5 | 2 |
+| `Obj::FnObj` | [fn_obj](fn_obj.lit) | 9 | 5 | 0 |
 | `Obj::Literal::Number` | [number](number.lit) | 9 | 3 | 0 |
 | `Obj::Literal::ImaginaryUnit` | [imaginary_unit](imaginary_unit.lit) | 8 | 3 | 0 |
 | `Obj::Literal::EulerNumber` | [euler_number](euler_number.lit) | 5 | 2 | 0 |
@@ -43,44 +50,44 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::ExpLogOperator::Ln` | [ln](ln.lit) | 5 | 4 | 0 |
 | `Obj::ExpLogOperator::Log` | [log](log.lit) | 4 | 5 | 2 |
 | `Obj::ExpLogOperator::Sqrt` | [sqrt](sqrt.lit) | 7 | 3 | 0 |
-| `Obj::ComplexOperator::RealPart` | [real_part](real_part.lit) | 4 | 2 | 2 |
-| `Obj::ComplexOperator::ImaginaryPart` | [imaginary_part](imaginary_part.lit) | 5 | 2 | 1 |
+| `Obj::ComplexOperator::RealPart` | [real_part](real_part.lit) | 6 | 2 | 0 |
+| `Obj::ComplexOperator::ImaginaryPart` | [imaginary_part](imaginary_part.lit) | 6 | 2 | 0 |
 | `Obj::ComplexOperator::ComplexAbs` | [complex_abs](complex_abs.lit) | 2 | 2 | 4 |
-| `Obj::SetOperator::Union` | [union](union.lit) | 5 | 2 | 1 |
-| `Obj::SetOperator::Intersect` | [intersect](intersect.lit) | 5 | 2 | 1 |
-| `Obj::SetOperator::SetMinus` | [set_minus](set_minus.lit) | 5 | 2 | 1 |
-| `Obj::SetOperator::FamilyUnion` | [family_union](family_union.lit) | 1 | 2 | 4 |
+| `Obj::SetOperator::Union` | [union](union.lit) | 6 | 2 | 0 |
+| `Obj::SetOperator::Intersect` | [intersect](intersect.lit) | 6 | 2 | 0 |
+| `Obj::SetOperator::SetMinus` | [set_minus](set_minus.lit) | 6 | 2 | 0 |
+| `Obj::SetOperator::FamilyUnion` | [family_union](family_union.lit) | 2 | 2 | 3 |
 | `Obj::SetOperator::FamilyIntersect` | [family_intersect](family_intersect.lit) | 3 | 2 | 4 |
 | `Obj::SetOperator::PowerSet` | [power_set](power_set.lit) | 5 | 2 | 1 |
 | `Obj::SetOperator::IndexUnion` | [index_union](index_union.lit) | 4 | 4 | 1 |
 | `Obj::SetOperator::IndexIntersect` | [index_intersect](index_intersect.lit) | 4 | 4 | 1 |
 | `Obj::SetOperator::IndexCart` | [index_cart](index_cart.lit) | 4 | 3 | 0 |
-| `Obj::SetFormer::ListSet` | [list_set](list_set.lit) | 5 | 3 | 3 |
+| `Obj::SetFormer::ListSet` | [list_set](list_set.lit) | 8 | 3 | 0 |
 | `Obj::SetFormer::SetBuilder` | [set_builder](set_builder.lit) | 6 | 3 | 0 |
 | `Obj::SetFormer::Range` | [range](range.lit) | 5 | 2 | 2 |
 | `Obj::SetFormer::ClosedRange` | [closed_range](closed_range.lit) | 6 | 2 | 1 |
 | `Obj::SetFormer::FiniteSeqSet` | [finite_seq_set](finite_seq_set.lit) | 4 | 3 | 1 |
 | `Obj::SetFormer::SeqSet` | [seq_set](seq_set.lit) | 3 | 2 | 2 |
 | `Obj::ProductShape::Cart` | [cart](cart.lit) | 5 | 3 | 1 |
-| `Obj::ProductShape::Tuple` | [tuple](tuple.lit) | 4 | 2 | 2 |
-| `Obj::ProductShape::CartDim` | [cart_dim](cart_dim.lit) | 3 | 2 | 1 |
+| `Obj::ProductShape::Tuple` | [tuple](tuple.lit) | 6 | 2 | 0 |
+| `Obj::ProductShape::CartDim` | [cart_dim](cart_dim.lit) | 4 | 2 | 0 |
 | `Obj::ProductShape::TupleDim` | [tuple_dim](tuple_dim.lit) | 4 | 2 | 0 |
 | `Obj::ProductShape::Proj` | [proj](proj.lit) | 4 | 4 | 0 |
-| `Obj::ProductShape::ObjAtIndex` | [obj_at_index](obj_at_index.lit) | 4 | 5 | 2 |
+| `Obj::ProductShape::ObjAtIndex` | [obj_at_index](obj_at_index.lit) | 6 | 5 | 0 |
 | `Obj::FunctionSpace::FnSet` | [fn_set](fn_set.lit) | 6 | 3 | 0 |
-| `Obj::FunctionSpace::AnonymousFn` | [anonymous_fn](anonymous_fn.lit) | 6 | 4 | 1 |
-| `Obj::FunctionSpace::FnRange` | [fn_range](fn_range.lit) | 3 | 2 | 1 |
+| `Obj::FunctionSpace::AnonymousFn` | [anonymous_fn](anonymous_fn.lit) | 7 | 4 | 0 |
+| `Obj::FunctionSpace::FnRange` | [fn_range](fn_range.lit) | 4 | 2 | 0 |
 | `Obj::IteratedOperator::Sum` | [sum](sum.lit) | 16 | 12 | 0 |
 | `Obj::IteratedOperator::Product` | [product](product.lit) | 11 | 6 | 0 |
 | `Obj::IteratedOperator::SumOfFiniteSet` | [sum_of_finite_set](sum_of_finite_set.lit) | 13 | 8 | 0 |
 | `Obj::IteratedOperator::ProductOfFiniteSet` | [product_of_finite_set](product_of_finite_set.lit) | 12 | 7 | 0 |
 | `Obj::IteratedOperator::Reduce` | [reduce](reduce.lit) | 5 | 3 | 0 |
-| `Obj::IteratedOperator::FiniteSetReduce` | [finite_set_reduce](finite_set_reduce.lit) | 2 | 3 | 5 |
+| `Obj::IteratedOperator::FiniteSetReduce` | [finite_set_reduce](finite_set_reduce.lit) | 6 | 3 | 0 |
 | `Obj::FiniteSetStat::FiniteSetSize` | [finite_set_size](finite_set_size.lit) | 6 | 3 | 1 |
 | `Obj::FiniteSetStat::FiniteSetMax` | [finite_set_max](finite_set_max.lit) | 5 | 5 | 1 |
 | `Obj::FiniteSetStat::FiniteSetMin` | [finite_set_min](finite_set_min.lit) | 5 | 5 | 1 |
-| `Obj::StructAndFieldAccessObj::StructObj` | [struct_obj](struct_obj.lit) | 2 | 3 | 2 |
-| `Obj::StructAndFieldAccessObj::FieldAccess` | [field_access](field_access.lit) | 3 | 4 | 1 |
+| `Obj::StructAndFieldAccessObj::StructObj` | [struct_obj](struct_obj.lit) | 4 | 3 | 0 |
+| `Obj::StructAndFieldAccessObj::FieldAccess` | [field_access](field_access.lit) | 4 | 4 | 0 |
 | `Obj::InstantiatedTemplateObj` | [instantiated_template_obj](instantiated_template_obj.lit) | 4 | 3 | 0 |
 | `Obj::StandardSet::N` | [standard_set_n](standard_set_n.lit) | 5 | 2 | 0 |
 | `Obj::StandardSet::NPos` | [standard_set_n_pos](standard_set_n_pos.lit) | 5 | 2 | 0 |
@@ -89,7 +96,7 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::StandardSet::R` | [standard_set_r](standard_set_r.lit) | 5 | 2 | 0 |
 | `Obj::StandardSet::C` | [standard_set_c](standard_set_c.lit) | 4 | 1 | 0 |
 | `Obj::StandardSet::QPos` | [standard_set_q_pos](standard_set_q_pos.lit) | 5 | 2 | 0 |
-| `Obj::StandardSet::RPos` | [standard_set_r_pos](standard_set_r_pos.lit) | 4 | 2 | 1 |
+| `Obj::StandardSet::RPos` | [standard_set_r_pos](standard_set_r_pos.lit) | 5 | 2 | 0 |
 | `Obj::StandardSet::QNeg` | [standard_set_q_neg](standard_set_q_neg.lit) | 5 | 2 | 0 |
 | `Obj::StandardSet::ZNeg` | [standard_set_z_neg](standard_set_z_neg.lit) | 5 | 2 | 0 |
 | `Obj::StandardSet::RNeg` | [standard_set_r_neg](standard_set_r_neg.lit) | 5 | 2 | 0 |

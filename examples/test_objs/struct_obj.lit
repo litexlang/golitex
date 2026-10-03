@@ -2,6 +2,22 @@
 # Run: target/release/litex -f examples/test_objs/struct_obj.lit
 # Cases use discarded sketch scopes; no cross-case facts.
 
+# P01: struct Point:; x R; y R; have p &Point = (1, 2); p.x = 1
+sketch:
+    struct Point:
+        x R
+        y R
+    have p &Point = (1, 2)
+    p.x = p[1] = 1
+
+# P02: struct Pair<S set>:; first S; second S; have p &Pair<N> = (1, 2); p.second = 2
+sketch:
+    struct Pair<S set>:
+        first S
+        second S
+    have p &Pair<N> = (1, 2)
+    p.second = p[2] = 2
+
 # P03: p.x $in R
 sketch:
     struct Point:

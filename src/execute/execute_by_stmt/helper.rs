@@ -1,6 +1,4 @@
-use crate::ast::fact::{
-    and_chain_as_fact, negate_atomic_fact, AndChainAtomicFact, AtomicFact, Fact, OrFact,
-};
+use crate::ast::fact::{and_chain_as_fact, AndChainAtomicFact, Fact, OrFact};
 use crate::ast::line_file::SourceLine;
 use crate::execute::execute_by_stmt::result::{
     ByContradictionClosingFailed, ByContradictionClosingSuccess,
@@ -20,7 +18,8 @@ pub(crate) fn proof_verify_state() -> VerifyState {
         can_use_def_and_known_forall_and_known_strategy: true,
         can_use_rewrite: true,
         store_well_defined_fact: true,
-        equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
+        equality_class_search:
+            crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
     }
 }
 
@@ -55,33 +54,30 @@ pub(crate) fn store_goal_fact(
 
 pub(super) fn close_by_contradiction(
     runtime: &mut Runtime,
-    impossible: &AtomicFact,
+    impossible: &Fact,
 ) -> RuntimeResult<Result<ByContradictionClosingSuccess, ByContradictionClosingFailed>> {
-    let impossible_fact: Fact = impossible.clone().into();
-    let impossible_proof = verify_goal_fact(runtime, &impossible_fact)?;
+    let impossible_proof = verify_goal_fact(runtime, impossible)?;
     if impossible_proof.is_failed() {
         return Ok(Err(ByContradictionClosingFailed::Impossible(
             impossible_proof,
         )));
     }
-    let Some(negated_atomic) =
-        negate_atomic_fact(impossible, runtime.global_ids.allocate_fact_id())
-    else {
-        return Ok(Err(
-            ByContradictionClosingFailed::NegateImpossibleUnsupported(
-                "cannot negate impossible atomic fact".to_string(),
-            ),
-        ));
+    let negated_fact = match negate_fact_for_contra(runtime, impossible) {
+        Ok(fact) => fact,
+        Err(message) => {
+            return Ok(Err(
+                ByContradictionClosingFailed::NegateImpossibleUnsupported(message),
+            ));
+        }
     };
-    let negated_fact: Fact = negated_atomic.clone().into();
     let negated_proof = verify_goal_fact(runtime, &negated_fact)?;
     if negated_proof.is_failed() {
         return Ok(Err(ByContradictionClosingFailed::NegatedImpossible(
             negated_proof,
         )));
     }
-    let impossible_fact_id = lookup_known_atomic_fact_id(runtime, impossible);
-    let negated_impossible_fact_id = lookup_known_atomic_fact_id(runtime, &negated_atomic);
+    let impossible_fact_id = lookup_known_fact_id(runtime, impossible);
+    let negated_impossible_fact_id = lookup_known_fact_id(runtime, &negated_fact);
     Ok(Ok(ByContradictionClosingSuccess {
         impossible_fact: impossible.clone(),
         impossible: impossible_proof,
@@ -107,17 +103,16 @@ pub(super) fn and_chain_fact(branch: &AndChainAtomicFact) -> Fact {
     and_chain_as_fact(branch)
 }
 
-pub(super) fn lookup_known_atomic_fact_id(
-    runtime: &Runtime,
-    atomic: &AtomicFact,
-) -> Option<FactId> {
-    let target = atomic.ir();
-    for (id, fact) in &runtime.top_exec_env().facts.facts_by_id {
-        if let Fact::AtomicFact(known) = fact {
-            if known.ir() == target {
-                return Some(*id);
-            }
+fn lookup_known_fact_id(runtime: &Runtime, fact: &Fact) -> Option<FactId> {
+    let target = fact.ir();
+    for (id, known) in &runtime.top_exec_env().facts.facts_by_id {
+        if known.ir() == target {
+            return Some(*id);
         }
     }
     None
 }
+
+#[cfg(test)]
+#[path = "../../../tests/unit/execute/contra_compound_closing/tests.rs"]
+mod compound_closing_tests;

@@ -11,9 +11,10 @@ No K-number reproduction remains open. K005's explicit negative-existence proof 
 ## Open issue groups
 
 No K-number issue remains open. Broader requested feature work is recorded in
-[ByContraStmt](by_contra_stmt/limitations.md): compound closing field approval
-and remaining classified quantifier constructions. It is not silently counted
-as completed by the K005 acceptance.
+[ByContraStmt](by_contra_stmt/limitations.md): remaining nested classified
+quantifier representation. The approved compound-closing phase has separate
+[acceptance](../experience/problem_notes/by-contra-compound-closing.md); it does
+not complete the nested-quantifier feature.
 
 The maintainer delegates authoring improvements (category 1) and bounded local
 Rust fixes (category 2) to Codex; nonlocal and protected AST changes require

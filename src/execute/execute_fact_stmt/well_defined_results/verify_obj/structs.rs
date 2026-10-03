@@ -8,7 +8,7 @@ use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
 use crate::ast::obj::{
-    FieldAccess, FunctionSpace, InstantiatedTemplateObj, Obj, StructAndFieldAccessObj, StructObj,
+    FieldAccess, FnSet, FunctionSpace, InstantiatedTemplateObj, Obj, StructAndFieldAccessObj, StructObj,
 };
 use crate::ast::param::ParamType;
 use crate::ast::stmt::TemplateDefEnum;
@@ -433,6 +433,37 @@ impl Runtime {
                 obj: root,
                 reason: fail,
             }),
+        }
+    }
+
+    // Read the function signature from a checked template definition. The
+    // caller must establish instance WD (arity, argument types and domains).
+    pub(in crate::execute) fn instantiated_template_function_signature(
+        &mut self,
+        value: &InstantiatedTemplateObj,
+    ) -> Option<FnSet> {
+        let def = self.def_template_visible(&value.template_name)?.clone();
+        let ids = def.template_arg_def.ordered_param_ids();
+        if ids.len() != value.args.len() { return None; }
+        let signature = match &def.template_def_stmt {
+            TemplateDefEnum::HaveFnEqualStmt(stmt) => stmt.equal_to_anonymous_fn.body.clone(),
+            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => FnSet {
+                set_bound_parameters: stmt.fn_set_clause.set_bound_parameters.clone(),
+                dom_facts: stmt.fn_set_clause.dom_facts.clone(),
+                ret_set: Box::new(stmt.fn_set_clause.ret_set.clone()),
+            },
+            TemplateDefEnum::HaveFnByInducStmt(stmt) => FnSet {
+                set_bound_parameters: stmt.fn_set_clause.set_bound_parameters.clone(),
+                dom_facts: stmt.fn_set_clause.dom_facts.clone(),
+                ret_set: Box::new(stmt.fn_set_clause.ret_set.clone()),
+            },
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => self.have_fn_by_exist_signature(stmt)?,
+            _ => return None,
+        };
+        let subst = ids.into_iter().zip(value.args.iter().cloned()).collect();
+        match self.inst_obj(&Obj::FunctionSpace(FunctionSpace::FnSet(signature)), &subst).ok()? {
+            Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => Some(signature),
+            _ => None,
         }
     }
 

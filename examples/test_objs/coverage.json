@@ -50,6 +50,8 @@
         "P02",
         "P03",
         "P04",
+        "P05",
+        "P06",
         "P07",
         "P08",
         "P09"
@@ -76,30 +78,7 @@
           "file": "negative/fn_obj__n05.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P05",
-          "file": "gaps/fn_obj__p05.lit",
-          "intended": "accept",
-          "issue": "fn_obj-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"f(f(1)) = 3\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"f(f(1)) = 3\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/fn_obj__p06.lit",
-          "intended": "accept",
-          "issue": "fn_obj-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `f`\", line: 3, path: Real(\"examples/test_objs/gaps/fn_obj__p06.lit\") }))"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "number",
@@ -1280,7 +1259,9 @@
         "P01",
         "P02",
         "P03",
-        "P05"
+        "P04",
+        "P05",
+        "P06"
       ],
       "negative_cases": [
         {
@@ -1292,30 +1273,7 @@
           "file": "negative/real_part__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/real_part__p04.lit",
-          "intended": "accept",
-          "issue": "real_part-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"re(-2 - i) = -2\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"re(-2 - i) = -2\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/real_part__p06.lit",
-          "intended": "accept",
-          "issue": "real_part-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"re(i * i) = -1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"re(i * i) = -1\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "imaginary_part",
@@ -1328,6 +1286,7 @@
         "P01",
         "P02",
         "P03",
+        "P04",
         "P05",
         "P06"
       ],
@@ -1341,19 +1300,7 @@
           "file": "negative/imaginary_part__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/imaginary_part__p04.lit",
-          "intended": "accept",
-          "issue": "imaginary_part-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"img(-2 - i) = -1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"img(-2 - i) = -1\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "complex_abs",
@@ -1431,6 +1378,7 @@
       "positive_file": "union.lit",
       "helper_paths": [],
       "positive_cases": [
+        "P01",
         "P02",
         "P03",
         "P04",
@@ -1447,19 +1395,7 @@
           "file": "negative/union__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P01",
-          "file": "gaps/union__p01.lit",
-          "intended": "accept",
-          "issue": "union-P01",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"union({1}, {2}) = {1, 2}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"union({1}, {2}) = {1, 2}\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "intersect",
@@ -1469,6 +1405,7 @@
       "positive_file": "intersect.lit",
       "helper_paths": [],
       "positive_cases": [
+        "P01",
         "P02",
         "P03",
         "P04",
@@ -1485,19 +1422,7 @@
           "file": "negative/intersect__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P01",
-          "file": "gaps/intersect__p01.lit",
-          "intended": "accept",
-          "issue": "intersect-P01",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"intersect({1, 2}, {2, 3}) = {2}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"intersect({1, 2}, {2, 3}) = {2}\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "set_minus",
@@ -1507,6 +1432,7 @@
       "positive_file": "set_minus.lit",
       "helper_paths": [],
       "positive_cases": [
+        "P01",
         "P02",
         "P03",
         "P04",
@@ -1523,19 +1449,7 @@
           "file": "negative/set_minus__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P01",
-          "file": "gaps/set_minus__p01.lit",
-          "intended": "accept",
-          "issue": "set_minus-P01",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"set_minus({1, 2}, {2}) = {1}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"set_minus({1, 2}, {2}) = {1}\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "family_union",
@@ -1545,7 +1459,8 @@
       "positive_file": "family_union.lit",
       "helper_paths": [],
       "positive_cases": [
-        "P01"
+        "P01",
+        "P02"
       ],
       "negative_cases": [
         {
@@ -1558,17 +1473,6 @@
         }
       ],
       "gaps": [
-        {
-          "id": "P02",
-          "file": "gaps/family_union__p02.lit",
-          "intended": "accept",
-          "issue": "family_union-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"family_union({{1}}) = {1}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"family_union({{1}}) = {1}\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
         {
           "id": "P03",
           "file": "gaps/family_union__p03.lit",
@@ -1841,7 +1745,10 @@
         "P01",
         "P02",
         "P03",
+        "P04",
         "P05",
+        "P06",
+        "P07",
         "P08"
       ],
       "negative_cases": [
@@ -1858,41 +1765,7 @@
           "file": "negative/list_set__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/list_set__p04.lit",
-          "intended": "accept",
-          "issue": "list_set-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"{1, 2} = {2, 1}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"{1, 2} = {2, 1}\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/list_set__p06.lit",
-          "intended": "accept",
-          "issue": "list_set-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P07",
-          "file": "gaps/list_set__p07.lit",
-          "intended": "accept",
-          "issue": "list_set-P07",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "set_builder",
@@ -2186,7 +2059,9 @@
         "P01",
         "P02",
         "P03",
-        "P05"
+        "P04",
+        "P05",
+        "P06"
       ],
       "negative_cases": [
         {
@@ -2198,30 +2073,7 @@
           "file": "negative/tuple__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/tuple__p04.lit",
-          "intended": "accept",
-          "issue": "tuple-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/tuple__p06.lit",
-          "intended": "accept",
-          "issue": "tuple-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"(1, 2) != (2, 1)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"(1, 2) != (2, 1)\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "cart_dim",
@@ -2233,7 +2085,8 @@
       "positive_cases": [
         "P01",
         "P02",
-        "P03"
+        "P03",
+        "P04"
       ],
       "negative_cases": [
         {
@@ -2245,19 +2098,7 @@
           "file": "negative/cart_dim__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/cart_dim__p04.lit",
-          "intended": "accept",
-          "issue": "cart_dim-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "tuple_dim",
@@ -2328,7 +2169,9 @@
         "P01",
         "P02",
         "P03",
-        "P05"
+        "P04",
+        "P05",
+        "P06"
       ],
       "negative_cases": [
         {
@@ -2352,30 +2195,7 @@
           "file": "negative/obj_at_index__n05.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/obj_at_index__p04.lit",
-          "intended": "accept",
-          "issue": "obj_at_index-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/obj_at_index__p06.lit",
-          "intended": "accept",
-          "issue": "obj_at_index-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"(2 + 3, 4 * 2)[2] = 8\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"(2 + 3, 4 * 2)[2] = 8\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "fn_set",
@@ -2425,6 +2245,7 @@
         "P03",
         "P04",
         "P05",
+        "P06",
         "P90"
       ],
       "negative_cases": [
@@ -2445,19 +2266,7 @@
           "file": "negative/anonymous_fn__n04.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P06",
-          "file": "gaps/anonymous_fn__p06.lit",
-          "intended": "accept",
-          "issue": "anonymous_fn-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"fn (x R) R{x + y}(2) = 5\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x R) R{x + y}(2) = 5\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ],
+      "gaps": [],
       "valid_domain_control": "P90"
     },
     {
@@ -2469,6 +2278,7 @@
       "helper_paths": [],
       "positive_cases": [
         "P01",
+        "P02",
         "P03",
         "P04"
       ],
@@ -2482,19 +2292,7 @@
           "file": "negative/fn_range__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P02",
-          "file": "gaps/fn_range__p02.lit",
-          "intended": "accept",
-          "issue": "fn_range-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"fn_range(fn (x R) R{x}) = R\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn_range(fn (x R) R{x}) = R\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "sum",
@@ -2773,6 +2571,10 @@
       "helper_paths": [],
       "positive_cases": [
         "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
         "P90"
       ],
       "negative_cases": [
@@ -2789,63 +2591,7 @@
           "file": "negative/finite_set_reduce__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P02",
-          "file": "gaps/finite_set_reduce__p02.lit",
-          "intended": "accept",
-          "issue": "finite_set_reduce-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"finite_set_reduce({2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 2\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_reduce({2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 2\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P03",
-          "file": "gaps/finite_set_reduce__p03.lit",
-          "intended": "accept",
-          "issue": "finite_set_reduce-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"finite_set_reduce({1, 2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 3\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_reduce({1, 2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 3\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/finite_set_reduce__p04.lit",
-          "intended": "accept",
-          "issue": "finite_set_reduce-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"finite_set_reduce({2, 1}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 3\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_reduce({2, 1}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 3\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P05",
-          "file": "gaps/finite_set_reduce__p05.lit",
-          "intended": "accept",
-          "issue": "finite_set_reduce-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"finite_set_reduce({1, 2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 10) = 13\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"finite_set_reduce({1, 2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 10) = 13\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "N01",
-          "file": "negative/finite_set_reduce__n01.lit",
-          "intended": "reject",
-          "issue": "finite_set_reduce-N01",
-          "baseline": {
-            "observed": "accept",
-            "phase": "success",
-            "diagnostic": ""
-          }
-        }
-      ],
+      "gaps": [],
       "valid_domain_control": "P90"
     },
     {
@@ -3001,6 +2747,8 @@
       "positive_file": "struct_obj.lit",
       "helper_paths": [],
       "positive_cases": [
+        "P01",
+        "P02",
         "P03",
         "P04"
       ],
@@ -3018,30 +2766,7 @@
           "file": "negative/struct_obj__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P01",
-          "file": "gaps/struct_obj__p01.lit",
-          "intended": "accept",
-          "issue": "struct_obj-P01",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"p.x = 1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"p.x = 1\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P02",
-          "file": "gaps/struct_obj__p02.lit",
-          "intended": "accept",
-          "issue": "struct_obj-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"p.second = 2\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"p.second = 2\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "field_access",
@@ -3051,6 +2776,7 @@
       "positive_file": "field_access.lit",
       "helper_paths": [],
       "positive_cases": [
+        "P01",
         "P02",
         "P03",
         "P04"
@@ -3073,19 +2799,7 @@
           "file": "negative/field_access__n04.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P01",
-          "file": "gaps/field_access__p01.lit",
-          "intended": "accept",
-          "issue": "field_access-P01",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"p.x = 1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"p.x = 1\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "instantiated_template_obj",
@@ -3303,6 +3017,7 @@
       "positive_cases": [
         "P01",
         "P02",
+        "P03",
         "P04",
         "P05"
       ],
@@ -3316,19 +3031,7 @@
           "file": "negative/standard_set_r_pos__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/standard_set_r_pos__p03.lit",
-          "intended": "accept",
-          "issue": "standard_set_r_pos-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"sqrt (2) $in R+\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"sqrt (2) $in R+\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "standard_set_q_neg",
@@ -3845,6 +3548,230 @@
       "code": "template<S set>:\n    have fn identity(x S) S = x\nlet f = \\identity<R>\nf(2) = 2",
       "former_phase": "search_proof",
       "resolution": "Concurrent source update made the same callable-template alias code pass. Promoted to the positive corpus."
+    },
+    {
+      "object": "union",
+      "case": "P01",
+      "code": "sketch:\n    by extension union({1}, {2}) = {1, 2}\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "intersect",
+      "case": "P01",
+      "code": "sketch:\n    by extension:\n        ? intersect({1, 2}, {2, 3}) = {2}\n        claim:\n            ? forall x intersect({1, 2}, {2, 3}):\n                x $in {2}\n            x $in {1, 2}\n            x $in {2, 3}\n            x = 1 or x = 2\n            by cases:\n                ? x $in {2}\n                case x = 1:\n                    1 $in {2, 3}\n                    impossible 1 $in {2, 3}\n                case x = 2:\n                    x $in {2}\n        forall x {2}:\n            x $in intersect({1, 2}, {2, 3})\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "set_minus",
+      "case": "P01",
+      "code": "sketch:\n    by extension:\n        ? set_minus({1, 2}, {2}) = {1}\n        claim:\n            ? forall x set_minus({1, 2}, {2}):\n                x $in {1}\n            x $in {1, 2}\n            not x $in {2}\n            x = 1 or x = 2\n            by cases:\n                ? x $in {1}\n                case x = 1:\n                    x $in {1}\n                case x = 2:\n                    not 2 $in {2}\n                    impossible not 2 $in {2}\n        forall x {1}:\n            x $in set_minus({1, 2}, {2})\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "list_set",
+      "case": "P04",
+      "code": "sketch:\n    by extension {1, 2} = {2, 1}\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "list_set",
+      "case": "P06",
+      "code": "sketch:\n    by contra:\n        ? {1} != {2}\n        1 $in {1}\n        1 $in {2}\n        impossible 1 $in {2}\n    {1} $in {{1}, {2}}\n",
+      "former_phase": "well_defined",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "list_set",
+      "case": "P07",
+      "code": "sketch:\n    by contra:\n        ? (1, 2) != (2, 1)\n        1 = (1, 2)[1] = (2, 1)[1] = 2\n        impossible 1 = 2\n    (1, 2) $in {(1, 2), (2, 1)}\n",
+      "former_phase": "well_defined",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "tuple",
+      "case": "P04",
+      "code": "sketch:\n    ((1, 2), 3)[1] = (1, 2)\n    ((1, 2), 3)[1][2] = 2\n",
+      "former_phase": "well_defined",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "tuple",
+      "case": "P06",
+      "code": "sketch:\n    by contra:\n        ? (1, 2) != (2, 1)\n        1 = (1, 2)[1] = (2, 1)[1] = 2\n        impossible 1 = 2\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "obj_at_index",
+      "case": "P04",
+      "code": "sketch:\n    ((1, 2), 3)[1] = (1, 2)\n    ((1, 2), 3)[1][2] = 2\n",
+      "former_phase": "well_defined",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "obj_at_index",
+      "case": "P06",
+      "code": "sketch:\n    (2 + 3, 4 * 2)[2] = 4 * 2 = 8\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "fn_obj",
+      "case": "P05",
+      "code": "sketch:\n    have fn f(x R) R = x + 1\n    f(1) = 2\n    f(f(1)) = f(2) = 3\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "fn_obj",
+      "case": "P06",
+      "code": "sketch:\n    have fn f(x R) fn(y R) R = fn(y R) R {x + y}\n    f(2) = fn(y R) R {2 + y}\n    f(2)(3) = fn(y R) R {2 + y}(3) = 2 + 3 = 5\n",
+      "former_phase": "have_fn_equal",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "anonymous_fn",
+      "case": "P06",
+      "code": "sketch:\n    let y = 3\n    fn(x R) R {x + y}(2) = 2 + y = 2 + 3 = 5\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "cart_dim",
+      "case": "P04",
+      "code": "sketch:\n    let product_space = cart(R, Z)\n    cart_dim(product_space) = 2\n",
+      "former_phase": "well_defined",
+      "resolution": "fixture_builtin_name_collision; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "family_union",
+      "case": "P02",
+      "code": "sketch:\n    by extension:\n        ? family_union({{1}}) = {1}\n        {1} $in {{1}}\n        claim:\n            ? forall x family_union({{1}}):\n                x $in {1}\n            obtain A from exist A {{1}} st {x $in A}\n            A = {1}\n            x $in {1}\n        forall x {1}:\n            x $in family_union({{1}})\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "fn_range",
+      "case": "P02",
+      "code": "sketch:\n    have fn identity(x R) R = x\n    by extension:\n        ? fn_range(fn(x R) R {x}) = R\n        claim:\n            ? forall y R:\n                y $in fn_range(fn(x R) R {x})\n            identity(y) = y\n            identity(y) $in fn_range(identity)\n            fn_range(identity) = fn_range(fn(x R) R {x})\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "struct_obj",
+      "case": "P01",
+      "code": "sketch:\n    struct Point:\n        x R\n        y R\n    have p &Point = (1, 2)\n    p.x = p[1] = 1\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "struct_obj",
+      "case": "P02",
+      "code": "sketch:\n    struct Pair<S set>:\n        first S\n        second S\n    have p &Pair<N> = (1, 2)\n    p.second = p[2] = 2\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "field_access",
+      "case": "P01",
+      "code": "sketch:\n    struct Point:\n        x R\n        y R\n    have p &Point = (1, 2)\n    p.x = p[1] = 1\n    p.y = p[2] = 2\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "real_part",
+      "case": "P04",
+      "code": "sketch:\n    re(-2 - i) = re(-2) - re(i) = -2 - 0 = -2\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "real_part",
+      "case": "P06",
+      "code": "sketch:\n    i * i = -1\n    re(i * i) = re(-1) = -1\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "imaginary_part",
+      "case": "P04",
+      "code": "sketch:\n    img(-2 - i) = img(-2) - img(i) = 0 - 1 = -1\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "standard_set_r_pos",
+      "case": "P03",
+      "code": "sketch:\n    sqrt(2) > 0\n    sqrt(2) $in R+\n",
+      "former_phase": "search_proof",
+      "resolution": "explicit_checked_proof; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "finite_set_reduce",
+      "case": "P02",
+      "code": "sketch:\n    finite_set_reduce({2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 2\n",
+      "former_phase": "search_proof",
+      "resolution": "already_recovered_unchanged_source; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "finite_set_reduce",
+      "case": "P03",
+      "code": "sketch:\n    finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3\n",
+      "former_phase": "search_proof",
+      "resolution": "already_recovered_unchanged_source; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "finite_set_reduce",
+      "case": "P04",
+      "code": "sketch:\n    finite_set_reduce({2, 1}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3\n",
+      "former_phase": "search_proof",
+      "resolution": "already_recovered_unchanged_source; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "finite_set_reduce",
+      "case": "P05",
+      "code": "sketch:\n    finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 10) = 13\n",
+      "former_phase": "search_proof",
+      "resolution": "already_recovered_unchanged_source; 2026-10-03 F authoring journal, same mathematical target, no new trust",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "finite_set_reduce",
+      "case": "N01",
+      "code": "# Must reject: finite_set_reduce N01\nlet r = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0)\n",
+      "former_phase": "success",
+      "resolution": "already recovered: unordered subtraction correctly rejects; negative fixture retained",
+      "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
     }
   ]
 }

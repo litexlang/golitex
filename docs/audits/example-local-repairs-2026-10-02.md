@@ -1,5 +1,9 @@
 # Local example migration repairs — 2026-10-02
 
+Follow-up status: [conversation issue recheck — 2026-10-03](conversation-issue-recheck-2026-10-03.md).
+This report retains the earlier repair checkpoints; the follow-up distinguishes
+new recoveries, checked source migrations, surviving gaps, and the current build limitation.
+
 Task: implement clear local fixes from the example migration scan; retain concrete
 remaining difficult issues. Workspace: golitex. No trust, weakened propositions,
 AST fields, Runtime/Env state contracts, or broad proof-search policy changed.

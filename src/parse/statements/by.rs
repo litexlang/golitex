@@ -319,21 +319,15 @@ impl Runtime {
             self.with_forall_params_occupied(params, tb, |this| {
                 let proof = this.parse_body_stmts(proof_blocks)?;
                 last.expect(IMPOSSIBLE)?;
-                let impossible_fact = this.parse_impossible_atomic_fact(&mut last)?;
-                if !last.exceed_end_of_head() || !last.body.is_empty() {
-                    return Err(last.parse_error("impossible: expected a single atomic fact"));
-                }
+                let impossible_fact = this.parse_complete_fact(&mut last)?;
                 Ok((proof, impossible_fact))
             })?
         } else {
             self.push_parse_scope();
-            let result = (|| {
+            let result: RuntimeResult<(Vec<Stmt>, Fact)> = (|| {
                 let proof = self.parse_body_stmts(proof_blocks)?;
                 last.expect(IMPOSSIBLE)?;
-                let impossible_fact = self.parse_impossible_atomic_fact(&mut last)?;
-                if !last.exceed_end_of_head() || !last.body.is_empty() {
-                    return Err(last.parse_error("impossible: expected a single atomic fact"));
-                }
+                let impossible_fact = self.parse_complete_fact(&mut last)?;
                 Ok((proof, impossible_fact))
             })();
             self.pop_parse_scope();

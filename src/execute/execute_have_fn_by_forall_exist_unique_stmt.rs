@@ -210,6 +210,15 @@ impl Runtime {
         Ok(Ok((membership, property, uniqueness)))
     }
 
+    // Read the already checked construction's signature without publishing
+    // instance facts. Nested WD must also work with fact storage disabled.
+    pub(in crate::execute) fn have_fn_by_exist_signature(
+        &self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+    ) -> Option<FnSet> {
+        self.have_fn_by_exist_shape(stmt).ok().map(|shape| fn_set_from_clause(&shape.fn_set_clause))
+    }
+
     fn have_fn_by_exist_shape(
         &self,
         stmt: &HaveFnByForallExistUniqueStmt,

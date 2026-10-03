@@ -1509,13 +1509,30 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("at_least_one_proof", super::searched::project_known_premise(&p.at_least_one_proof, runtime)));
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::PredecessorFromPositiveNatural(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("InFact")),
+                ("rule", string("PredecessorFromPositiveNatural")),
+                ("in_natural_proof", super::searched::project_known_premise(&p.in_natural_proof, runtime)),
+                ("positive_proof", super::searched::project_known_premise(&p.positive_proof, runtime)),
+            ])
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::PredecessorFromNaturalAboveZero(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")), ("family", string("InFact")),
+                ("rule", string("PredecessorFromNaturalAboveZero")),
+                ("in_natural_proof", super::searched::project_known_premise(&p.in_natural_proof, runtime)),
+                ("zero_below_proof", super::searched::project_known_premise(&p.zero_below_proof, runtime)),
+            ])
+        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::AnonymousFnApplicationInFnRange(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("InFact")),
                 ("rule", string("AnonymousFnApplicationInFnRange")),
             ];
-            let _ = p;
+            entries.push(("function_equal", super::searched::project_equal_searched(&p.function_equal, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::UnionMembershipFromLeft(p)) => {

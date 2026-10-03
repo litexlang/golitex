@@ -2216,6 +2216,20 @@
           "expect": {
             "success": true
           }
+        },
+        {
+          "name": "compound-conjunction-closing",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "compound-existence-closing",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
         }
       ],
       "negative": [
@@ -2241,6 +2255,34 @@
             "success": false,
             "statement_success": [],
             "session_error_contains": "by contra: expects a `? <fact>` goal block and `impossible ...` tail"
+          }
+        },
+        {
+          "name": "missing-compound-opposite",
+          "file": "negative/by_contra_stmt/missing-compound-opposite.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_contra"
+            ]
+          }
+        },
+        {
+          "name": "partial-conjunction",
+          "file": "negative/by_contra_stmt/partial-conjunction.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "by_contra"
+            ]
           }
         }
       ]

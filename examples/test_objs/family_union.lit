@@ -5,3 +5,17 @@
 # P01: family_union({}) = {}
 sketch:
     family_union({}) = {}
+
+# P02: family_union({{1}}) = {1}
+sketch:
+    by extension:
+        ? family_union({{1}}) = {1}
+        {1} $in {{1}}
+        claim:
+            ? forall x family_union({{1}}):
+                x $in {1}
+            obtain A from exist A {{1}} st {x $in A}
+            A = {1}
+            x $in {1}
+        forall x {1}:
+            x $in family_union({{1}})

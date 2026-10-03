@@ -1,0 +1,5 @@
+# Expected rejection: the entire conjunction is true, its opposite is unproved.
+# Owner: ByContraStmt
+by contra:
+    ? 1 = 2
+    impossible 1 = 1 and 0 = 0

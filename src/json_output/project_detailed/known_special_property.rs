@@ -25,6 +25,34 @@ pub(super) fn project_known_special_property(
             ("signature",string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.signature.clone())).readable_string())),
             ("applied_return_set",string(p.applied_return_set.readable_string())),("return_set_match",project_equal_searched(&p.return_set_match,runtime)),
         ]),
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::FieldApplicationInDeclaredCodomain(p)) => return object_for(runtime, vec![
+            ("type", string("by_known_special_property")),
+            ("rule", string("FieldApplicationInDeclaredCodomain")),
+            ("declared_signature", string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.declared_signature.clone())).readable_string())),
+            ("applied_return_set", string(p.applied_return_set.readable_string())),
+            ("return_set_match", project_equal_searched(&p.return_set_match, runtime)),
+            ("alternative_signature_matches", JsonValue::Array(p.alternative_signature_matches.iter().map(|candidate| object_for(runtime, vec![
+                ("cite_signature_fact_id", string(candidate.cite_signature_fact_id.to_string())),
+                ("return_set_match", project_equal_searched(&candidate.return_set_match, runtime)),
+            ])).collect())),
+        ]),
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(p)) => return object_for(runtime, vec![
+            ("type", string("by_known_special_property")),
+            ("rule", string("TemplateApplicationInDeclaredCodomain")),
+            ("declared_signature", string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.declared_signature.clone())).readable_string())),
+            ("applied_return_set", string(p.applied_return_set.readable_string())),
+            ("return_set_match", project_equal_searched(&p.return_set_match, runtime)),
+            ("alternative_signature_matches", JsonValue::Array(p.alternative_signature_matches.iter().map(|candidate| object_for(runtime, vec![
+                ("cite_signature_fact_id", string(candidate.cite_signature_fact_id.to_string())),
+                ("return_set_match", project_equal_searched(&candidate.return_set_match, runtime)),
+            ])).collect())),
+        ]),
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::FieldInDeclaredSet(p)) => return object_for(runtime, vec![
+            ("type", string("by_known_special_property")),
+            ("rule", string("FieldInDeclaredSet")),
+            ("declared_set", string(p.declared_set.readable_string())),
+            ("set_match", project_equal_searched(&p.set_match, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::IsTuple(p) => {
             return super::known_tuple::project_atomic_tuple_shape("IsTuple", &p.shape, None, runtime);
         }

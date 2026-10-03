@@ -1,0 +1,5 @@
+# Expected rejection: one true conjunct does not prove the entire closing fact.
+# Owner: ByContraStmt
+by contra:
+    ? 1 = 1
+    impossible 1 = 1 and 0 = 1

@@ -1,0 +1,8 @@
+# Showcase migration regression: verified without trust.
+# Run: target/release/litex -strict -f examples/wd/anonymous_application_range_alpha.lit
+# The literal in the call and the literal in its range bind separate IDs.
+forall S nonempty_set, x S:
+    fn(a S) S {a}(x) $in fn_range(fn(b S) S {b})
+
+forall X, Y set, f fn(x X) Y, K power_set(X), point K:
+    fn(x K) Y {f(x)}(point) $in fn_range(fn(y K) Y {f(y)})

@@ -1,2 +1,0 @@
-# Intended valid regression: tuple P06
-(1, 2) != (2, 1)

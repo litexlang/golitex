@@ -1,6 +1,0 @@
-# Intended valid regression: struct_obj P02
-struct Pair<S set>:
-    first S
-    second S
-have p &Pair<N> = (1, 2)
-p.second = 2

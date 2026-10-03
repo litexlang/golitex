@@ -2,6 +2,8 @@
 
 Follow-up repair checkpoint: [local fixes and current residuals](example-local-repairs-2026-10-02.md). The scan below is historical evidence.
 
+Latest conversation recheck: [2026-10-03 status and remaining issues](conversation-issue-recheck-2026-10-03.md).
+
 ## Scope and baseline
 
 This is an inspection and report requested by the user, using the classification
@@ -4017,4 +4019,3 @@ First failed statement: `forall x R:
         cos(arccos(x)) = x
         -pi / 2 <= arcsin(x) <= pi / 2
         0 <= arccos(x) <= pi`. Full nested requirements are in the linked raw JSON.
-

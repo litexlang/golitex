@@ -104,8 +104,10 @@ impl Runtime {
             }
         };
         let root = Obj::FnObj(value.clone());
-        // Template-instance heads register InFunctionSet during their own WD.
-        if matches!(value.head.as_ref(), FnObjHead::InstantiatedTemplateObj(_)) {
+        // Instance WD validates template arguments and guards. Read its checked
+        // declaration directly: a nested read-only WD cannot depend on having
+        // registered InFunctionSet as a side effect in the current scope.
+        if let FnObjHead::InstantiatedTemplateObj(instance) = value.head.as_ref() {
             let head_wd = self.verify_obj_well_definedness(&head_obj, verify_state.clone())?;
             if head_wd.is_failed() {
                 return Ok(VerifyObjWellDefinedResult::Failed {
@@ -117,6 +119,30 @@ impl Runtime {
                         ),
                     ),
                 });
+            }
+            if let Some(fn_set) = self.instantiated_template_function_signature(instance) {
+                match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
+                    Ok(mut stages) => {
+                        stages.child_obj_well_defined.insert(0, head_wd);
+                        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+                        if verify_state.store_well_defined_fact {
+                            let wd_id = self.global_ids.allocate_well_definedness_id();
+                            self.top_exec_env_mut().well_defined_objects.record(root.clone(), wd_id);
+                        }
+                        return Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+                            obj: root,
+                            proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                                domain_fn_set: Some(FnObjDomainFnSetEvidence::TemplateDefinition { fn_set }),
+                                child_obj_well_defined,
+                                requirement_fact_verified,
+                            }),
+                        }));
+                    }
+                    Err(stages) => return Ok(VerifyObjWellDefinedResult::Failed {
+                        obj: root.clone(),
+                        reason: FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(stages.into_common_fail(&root))),
+                    }),
+                }
             }
         }
         let candidates = self.collect_in_function_set_candidates(&head_obj);
