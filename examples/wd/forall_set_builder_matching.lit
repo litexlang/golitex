@@ -1,0 +1,15 @@
+# Showcase migration regression: verified without trust.
+# Run: target/release/litex -strict -f examples/wd/forall_set_builder_matching.lit
+# Infer the free U below a local set-builder binder; local names may differ.
+forall X, Y set, f fn(x X) Y, family power_set(power_set(X)), U power_set(Y):
+    forall V power_set(Y):
+        {x X: f(x) $in V} $in family
+    =>:
+        {renamed X: f(renamed) $in U} $in family
+
+# Matching also recurses through nested builders without capturing binders.
+forall U power_set(R), family power_set(power_set(power_set(R))):
+    forall V power_set(R):
+        {S power_set(R): S = {x R: x $in V}} $in family
+    =>:
+        {T power_set(R): T = {y R: y $in U}} $in family

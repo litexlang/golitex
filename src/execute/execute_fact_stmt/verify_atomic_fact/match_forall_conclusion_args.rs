@@ -15,9 +15,10 @@
 //! `$P(a,b)` matching the first dom under the partial subst.
 
 use crate::ast::fact::{
-    atomic_fact_args_ref, atomic_fact_has_positive_polarity, AtomicFact, EqualFact, Fact, ForallFact,
+    atomic_fact_args_ref, atomic_fact_has_positive_polarity, quantifier_free_fact_args_ref,
+    AtomicFact, EqualFact, Fact, ForallFact,
 };
-use crate::ast::obj::{IdentifierObj, Obj};
+use crate::ast::obj::{IdentifierObj, Obj, SetBuilder, SetFormer};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::corresponding_arg_pairs;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     strict_equal_arg_proof_from_searched, ForallConclusionArgMatchProof,
@@ -124,6 +125,16 @@ impl Runtime {
             equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
         };
 
+        // Binder types are implicit premises too. Recover hidden parameters
+        // only from the type of an already matched object (for example K and
+        // field from space : VectorSpace<K, field, V>), never by choosing an
+        // arbitrary object to fill a missing theorem argument.
+        let parameters: Vec<Obj> = forall.typed_parameters.groups.iter()
+            .flat_map(|group| &group.params)
+            .map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p))).collect();
+        let type_facts = self.type_facts_for_typed_arguments(&forall.typed_parameters, &parameters)
+            .map_err(crate::runtime::RuntimeError::InternalBug)?;
+
         let mut guard = 0;
         while ordered_param_ids.iter().any(|id| !subst.contains_key(id)) {
             guard += 1;
@@ -131,7 +142,12 @@ impl Runtime {
                 return Ok(false);
             }
             let mut progress = false;
-            for dom in &forall.dom_facts {
+            let anchored_types = type_facts.iter().filter(|fact| {
+                matches!(fact, Fact::AtomicFact(AtomicFact::InFact(in_fact))
+                    if matches!(&in_fact.element, Obj::Identifier(IdentifierObj::Plain {id, ..})
+                        if subst.contains_key(id)))
+            }).cloned().collect::<Vec<_>>();
+            for dom in forall.dom_facts.iter().chain(anchored_types.iter()) {
                 let Fact::AtomicFact(pattern_atomic) = dom else {
                     continue;
                 };
@@ -247,6 +263,27 @@ impl Runtime {
             ForallParamBindResult::NotAParam => {}
         }
 
+        if let (Obj::SetFormer(SetFormer::SetBuilder(left)), Obj::SetFormer(SetFormer::SetBuilder(right))) = (pattern, goal) {
+            let mut trial = subst.clone();
+            if !self.match_set_builder_free_parameters(left, right, param_set, &mut trial, equality_state.clone())? {
+                return Ok(None);
+            }
+            let pattern_after_subst = match self.inst_obj(pattern, &trial) {
+                Ok(obj) => obj,
+                Err(_) => return Ok(None),
+            };
+            // Argument pairing proposes a substitution only. The complete
+            // builder (carrier, polarity, connectives, free owners and bound
+            // occurrences) must still match under the existing alpha proof.
+            let Some(equal) = self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state)? else {
+                return Ok(None);
+            };
+            *subst = trial;
+            return Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
+                pattern: pattern.clone(), pattern_after_subst, goal_arg: goal.clone(), equal,
+            }));
+        }
+
         // Same constructor: recurse. No fallback to NonParamEqual (legacy-aligned).
         // A template occurrence is a constructor with definition-owned identity
         // and ordinary object arguments. Bind its parameters without unfolding.
@@ -298,6 +335,49 @@ impl Runtime {
             goal_arg: goal.clone(),
             equal,
         }))
+    }
+
+    // Infer a free forall argument inside a builder while keeping its local
+    // binder rigid. Example: `{x X: f(x) in U}` matches `{y X: f(y) in V}`
+    // with U = V. It must never infer a free argument equal to the local y.
+    fn match_set_builder_free_parameters(
+        &mut self,
+        pattern: &SetBuilder,
+        goal: &SetBuilder,
+        param_set: &HashSet<IdentifierId>,
+        subst: &mut HashMap<IdentifierId, Obj>,
+        equality_state: VerifyState,
+    ) -> RuntimeResult<bool> {
+        if pattern.facts.len() != goal.facts.len() {
+            return Ok(false);
+        }
+        if self.match_forall_one_arg(&pattern.param_set, &goal.param_set, param_set, subst, equality_state.clone())?.is_none() {
+            return Ok(false);
+        }
+        let rename = HashMap::from([(
+            pattern.param_binding.id,
+            Obj::Identifier(IdentifierObj::from_bound_name(&goal.param_binding)),
+        )]);
+        for (left, right) in pattern.facts.iter().zip(&goal.facts) {
+            let left = match self.inst_quantifier_free_fact(left, &rename) {
+                Ok(fact) => fact,
+                Err(_) => return Ok(false),
+            };
+            let left_args = quantifier_free_fact_args_ref(&left);
+            let right_args = quantifier_free_fact_args_ref(right);
+            if left_args.len() != right_args.len() { return Ok(false); }
+            for (left_arg, right_arg) in left_args.into_iter().zip(right_args) {
+                if self.match_forall_one_arg(left_arg, right_arg, param_set, subst, equality_state.clone())?.is_none() {
+                    return Ok(false);
+                }
+            }
+        }
+        for value in subst.values() {
+            let mut free = HashSet::new();
+            crate::instantiate::collect_free_plain_ids(value, &HashSet::new(), &mut free);
+            if free.contains(&goal.param_binding.id) { return Ok(false); }
+        }
+        Ok(true)
     }
 }
 

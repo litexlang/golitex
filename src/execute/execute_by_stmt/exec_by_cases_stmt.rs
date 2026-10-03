@@ -102,7 +102,7 @@ fn exec_one_case_branch(
             Err(failed) => return Ok(Err(ByCasesBranchFailed::ProofBody(failed))),
         };
         let closing = if let Some(impossible) = &stmt.impossible_facts[index] {
-            match close_by_contradiction(rt, impossible)? {
+            match close_by_contradiction(rt, &impossible.clone().into())? {
                 Ok(c) => ByCasesBranchClosingSuccess::Impossible(c),
                 Err(failed) => {
                     return Ok(Err(ByCasesBranchFailed::ClosingImpossible(failed)));

@@ -22,3 +22,11 @@ builtin predicate interface and its precise argument-domain checks.
 Exact input/output and full-kernel failure:
 [journal](../../proof_journals/by_contra_full_kernel_failures_2026-10-02.json).
 Original positive tracer remains under `examples/stmt_nodes/release_and_expand/builtin_thm/`.
+
+## Compound-closing checkpoint recheck
+
+The controlled 2026-10-03 source snapshot reports 618 passed / 3 failed;
+all three failed test names match its 606 / 3 before gate. The exact new
+outputs and source-substitution boundary are preserved in the
+[compound acceptance receipt](../../proof_journals/by_contra_compound_acceptance_2026-10-03.json).
+This observation remains open and was not repaired by the closing change.

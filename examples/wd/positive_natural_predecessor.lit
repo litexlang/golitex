@@ -1,0 +1,20 @@
+# Showcase migration regression: verified without trust.
+# Run: target/release/litex -strict -f examples/wd/positive_natural_predecessor.lit
+# A positive natural has a natural predecessor, including in recursion WD.
+forall n N:
+    n > 0
+    =>:
+        n - 1 $in N
+
+have fn countdown(n N) N by induc n from 0:
+    case n = 0: 0
+    case n > 0: countdown(n - 1)
+
+countdown(0) = 0
+countdown(1) = 0
+
+# Reversed order has its own cited builtin route.
+forall n N:
+    0 < n
+    =>:
+        n - 1 $in N

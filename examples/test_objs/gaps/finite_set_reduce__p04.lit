@@ -1,2 +1,0 @@
-# Intended valid regression: finite_set_reduce P04
-finite_set_reduce({2, 1}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3

@@ -1,2 +1,0 @@
-# Intended valid regression: list_set P04
-{1, 2} = {2, 1}

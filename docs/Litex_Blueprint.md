@@ -42,7 +42,7 @@ Writing boundary: the first three layers are Litex's scientific core; the fourth
 
 ## 0. Litex Blueprint Overview
 
-*Begun in 2024, Litex asks a question: can formal proofs stay close to ordinary mathematics, be easy to write and read, and still be rigorously checked? It hopes to become a Python for formal languages, bringing more people into the world of checkable mathematics.*
+*Begun in 2024, Litex asks a question: can formal proofs stay close to ordinary mathematics, be easy to write and read, and still be rigorously checked? It hopes to become a Python for formal languages, bringing more people into the world of checkable mathematics. Put simply, Litex is not only a tool for formalization experts; it aims to lower the barrier and help more people gradually become experts themselves.*
 
 To do this, Litex starts from the familiar set-theoretic world of sets, elements, functions, and relations. Authors choose definitions, constructions, and facts to prove; Litex checks for local grounds in the current knowledge and explains why a statement holds or where verification stops. Accepted facts stay in the context for later proofs. This explicit feedback also lets humans and AI try, revise, and accumulate checkable results together.
 
@@ -54,9 +54,7 @@ These choices ultimately serve human understanding. Mathematics helps us underst
 
 ### 0.1 Five Main Threads: How Litex Works
 
-**Litex is not only a tool created for formalization experts; its goal is also to help more people become formalization experts, and to make Math for AI possible.**
-
-Litex's design follows five guiding ideas:
+**These five threads show how Litex can build checkable mathematical knowledge step by step and put it to work for Math for AI.**
 
 **1. I write what I want to prove, and the language explains why it holds.**
 

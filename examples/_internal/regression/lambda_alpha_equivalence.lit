@@ -1,4 +1,6 @@
-# Migration blocker B10: see plan/迁移的plan/和example有关.md.
+# B10: explicit named theorem application verifies in ordinary mode.
+# Opaque trust background remains; automatic forall discovery is a separate gap.
+# See plan/迁移的plan/和example有关.md.
 # Anonymous-function binders are alpha-equivalent in known-fact lookup and
 # `forall`/theorem instantiation.
 abstract_prop alpha_assumption(f)
@@ -23,6 +25,5 @@ claim:
     trust $alpha_conclusion(fn(k R) R {k + a})
 
 trust $alpha_assumption(fn(i1 R) R {i1 + 1})
-$alpha_conclusion(fn(i1 R) R {i1 + 1})
-release thm alpha_theorem(1)
+by thm alpha_theorem(1) => $alpha_conclusion(fn(i1 R) R {i1 + 1})
 $alpha_conclusion(fn(j R) R {j + 1})

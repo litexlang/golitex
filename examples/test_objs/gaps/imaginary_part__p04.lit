@@ -1,2 +1,0 @@
-# Intended valid regression: imaginary_part P04
-img(-2 - i) = -1

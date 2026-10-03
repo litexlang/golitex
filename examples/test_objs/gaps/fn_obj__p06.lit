@@ -1,3 +1,0 @@
-# Intended valid regression: fn_obj P06
-have fn f(x R) fn(y R) R = fn(y R) R {x + y}
-f(2)(3) = 5

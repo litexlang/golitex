@@ -33,3 +33,13 @@ Category 1 candidate for explanatory failed/fragment fences: make runnable
 context and expected outcome explicit. A broader harness expectation schema
 would require discussion. Do not mark all 131 as new language bugs, skip them
 en masse, or rewrite another active audit merely to make the runner green.
+
+## Compound-closing checkpoint recheck
+
+The controlled 2026-10-03 source snapshot reports 618 passed / 3 failed;
+all three failed test names match its 606 / 3 before gate. The exact new
+outputs and source-substitution boundary are preserved in the
+[compound acceptance receipt](../../proof_journals/by_contra_compound_acceptance_2026-10-03.json).
+This observation remains open and was not repaired by the closing change.
+The latest Markdown run checks 409 fences and still fails 131, all in the
+same two audit files; normative documents and the four contra Manual fences pass.

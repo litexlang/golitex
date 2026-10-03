@@ -1,0 +1,23 @@
+# Showcase migration regression: verified without trust.
+# Run: target/release/litex -strict -f examples/wd/field_application_codomain.lit
+# The declared signature also supplies closure inside another field call.
+struct Operation<A nonempty_set>:
+    zero A
+    add fn(x, y A) A
+
+thm nested_generic_call:
+    ? forall A nonempty_set, s &Operation<A>, a, b, c A:
+        s.add(s.add(a, b), c) $in A
+
+struct Outer<A nonempty_set>:
+    operation &Operation<A>
+    tag N
+
+thm nested_receiver:
+    ? forall s &Outer<R>:
+        s.operation.add(s.operation.add(0, 1), 2) $in R
+
+# Field carriers must also be available for arguments such as s.zero.
+thm zero_argument:
+    ? forall A nonempty_set, s &Operation<A>, x A:
+        s.add(s.zero, x) $in A

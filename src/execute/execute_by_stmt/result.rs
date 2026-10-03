@@ -117,10 +117,10 @@ impl ExecByFnExtensionStmtResult {
 }
 
 pub struct ByContradictionClosingSuccess {
-    pub impossible_fact: AtomicFact,
+    pub impossible_fact: Fact,
     pub impossible: VerifyFactResult,
     pub negated_impossible: VerifyFactResult,
-    // Present when that atom was already known in the local env (cite handle).
+    // Present only when the exact fact was already known in the local env.
     pub impossible_fact_id: Option<FactId>,
     pub negated_impossible_fact_id: Option<FactId>,
 }

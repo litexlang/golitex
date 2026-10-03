@@ -296,8 +296,9 @@ explicit construction or control structure.
 `by contra` accepts existing classified opposites for atomic facts,
 `exist` / `not exist` / `exist!`, `and` / `or` / chains, and `forall`,
 `not forall` or forall-iff with quantifier-free bodies and premises.
-Its `impossible` tail still takes one atomic fact;
-both that fact and its opposite must verify in the local scope.
+Its `impossible` tail accepts those same Fact families, including multiline
+forall/iff facts; both the complete fact and its classified opposite must
+verify in the local scope.
 
 Conditional enumeration uses its premises in each local assignment. Nested
 proof methods and binder names are allowed in proof bodies; helpers stay local.

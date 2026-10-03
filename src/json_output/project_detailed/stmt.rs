@@ -15,6 +15,9 @@ use crate::execute::execute_by_stmt::{
     ExecByForStmtResult, ExecByInducStmtResult, ExecByStmtResult, ExecByStrongInducStmtResult,
     ExecByThmStmtResult,
 };
+use crate::execute::execute_by_stmt::{
+    ByContradictionClosingFailed, ExecByContraStmtFailed,
+};
 use crate::execute::execute_fact_stmt::ExecFactStmtResult;
 use crate::execute::execute_proof_block_stmt::{
     ExecClaimStmtResult, ExecProofBlockStmtResult, ExecSketchStmtResult,
@@ -689,12 +692,45 @@ fn project_by_contra(result: &ExecByContraStmtResult, runtime: &Runtime) -> Json
                 "proof_steps",
                 project_stmt_steps(&s.proof_steps, runtime),
             ),
+            (
+                "closing",
+                object_for(runtime, vec![
+                    ("fact", string(s.closing.impossible_fact.readable_string())),
+                    ("impossible", project_verify_fact(&s.closing.impossible, runtime)),
+                    (
+                        "negated_impossible",
+                        project_verify_fact(&s.closing.negated_impossible, runtime),
+                    ),
+                ]),
+            ),
                         ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByContraStmtResult::Failed(_) => object_for(runtime, vec![
-            ("success", bool_value(false)),
-            ("kind", string("by_contra")),
-        ]),
+        ExecByContraStmtResult::Failed(failed) => {
+            let mut entries = vec![
+                ("success", bool_value(false)),
+                ("kind", string("by_contra")),
+            ];
+            if let ExecByContraStmtFailed::Closing(closing) = failed {
+                let failure = match closing {
+                    ByContradictionClosingFailed::Impossible(proof) => object_for(runtime, vec![
+                        ("phase", string("impossible")),
+                        ("verification", project_verify_fact(proof, runtime)),
+                    ]),
+                    ByContradictionClosingFailed::NegateImpossibleUnsupported(message) =>
+                        object_for(runtime, vec![
+                            ("phase", string("negate_impossible")),
+                            ("message", string(message)),
+                        ]),
+                    ByContradictionClosingFailed::NegatedImpossible(proof) =>
+                        object_for(runtime, vec![
+                            ("phase", string("negated_impossible")),
+                            ("verification", project_verify_fact(proof, runtime)),
+                        ]),
+                };
+                entries.push(("closing", failure));
+            }
+            object_for(runtime, entries)
+        },
     }
 }
 

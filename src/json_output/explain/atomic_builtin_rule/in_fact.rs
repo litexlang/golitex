@@ -25,6 +25,8 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     OneSideInfinityIntervalMembershipBuiltinRuleProof,
     PowerSetMembershipBuiltinRuleProof,
     PredecessorInNaturalBuiltinRuleProof,
+    PredecessorFromPositiveNaturalBuiltinRuleProof,
+    PredecessorFromNaturalAboveZeroBuiltinRuleProof,
     RealArithmeticClosureBuiltinRuleProof,
     RealTrigClosureBuiltinRuleProof,
     RealTrigInComplexBuiltinRuleProof,
@@ -83,6 +85,8 @@ impl InFactSearchProofByBuiltinRule {
             Self::PowerSetMembership(p) => p.rule_id_and_message(lang),
             Self::StructObjMembership(p) => p.rule_id_and_message(lang),
             Self::PredecessorInNatural(p) => p.rule_id_and_message(lang),
+            Self::PredecessorFromPositiveNatural(p) => p.rule_id_and_message(lang),
+            Self::PredecessorFromNaturalAboveZero(p) => p.rule_id_and_message(lang),
             Self::AnonymousFnApplicationInFnRange(p) => p.rule_id_and_message(lang),
             Self::UnionMembershipFromLeft(p) => p.rule_id_and_message(lang),
             Self::UnionMembershipFromRight(p) => p.rule_id_and_message(lang),
@@ -124,6 +128,8 @@ impl InFactSearchProofByBuiltinRule {
             Self::PowerSetMembership(_) => None,
             Self::StructObjMembership(_) => None,
             Self::PredecessorInNatural(p) => p.in_natural_proof.cite_fact_id(),
+            Self::PredecessorFromPositiveNatural(p) => p.in_natural_proof.cite_fact_id(),
+            Self::PredecessorFromNaturalAboveZero(p) => p.in_natural_proof.cite_fact_id(),
             Self::AnonymousFnApplicationInFnRange(_) => None,
             Self::UnionMembershipFromLeft(_) => None,
             Self::UnionMembershipFromRight(_) => None,
@@ -502,6 +508,32 @@ impl StructObjMembershipBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl PredecessorFromNaturalAboveZeroBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text("PredecessorFromNaturalAboveZero", "Natural above zero has a predecessor", "`x $in N` and `0 < x` imply `x - 1 $in N`"),
+            OutputLanguage::Chinese => text("PredecessorFromNaturalAboveZero", "零小于自然数时的前驱", "已知自然数 x 且 0 < x，其前驱仍属于自然数"),
+        }
+    }
+}
+
+impl PredecessorFromPositiveNaturalBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text(
+                "PredecessorFromPositiveNatural",
+                "Predecessor of a positive natural",
+                "`x $in N` and `x > 0` imply `x - 1 $in N`",
+            ),
+            OutputLanguage::Chinese => text(
+                "PredecessorFromPositiveNatural",
+                "正自然数的前驱",
+                "已知自然数严格大于零，其前驱仍属于自然数",
+            ),
         }
     }
 }

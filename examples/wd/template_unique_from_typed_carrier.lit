@@ -1,0 +1,29 @@
+# Showcase migration regression: verified without trust.
+# Run: target/release/litex -strict -f examples/wd/template_unique_from_typed_carrier.lit
+# Recover S from the already matched t : Point<S> when using a theorem.
+struct Point<K nonempty_set, S nonempty_set>:
+    value S
+    tag N
+
+thm unique_value:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>:
+        exist! x S st {x = t.value}
+    witness exist! x S st {x = t.value} from t.value
+
+template<K nonempty_set, S nonempty_set, t &Point<K, S>>:
+    have fn selected_value by exist!:
+        ? forall index N:
+            exist! x S st {x = t.value}
+
+thm selected_value_spec:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>:
+        \selected_value<K, S, t>(0) = t.value
+
+struct Unary<S nonempty_set>:
+    call fn(x S) S
+    tag N
+
+# The template occurs under another call, whose WD uses read-only premises.
+thm selected_value_nested:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>, op &Unary<S>:
+        op.call(\selected_value<K, S, t>(0)) $in S

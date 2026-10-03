@@ -26,6 +26,9 @@ See [`../identifier_identity.md`](../identifier_identity.md).
   binder slots are `BoundName`, so their IR also embeds `#id#name`.
 - No shadowing; no same-name nested binders (parse occupy).
 - Tokenizer rejects source tokens starting with `__` (Lean/codegen reserve).
+- Forall-iff always prints `=>:` and `<=>:`, including when it has no premises.
+  By-contra indents the entire `impossible` Fact, including multiline bodies,
+  so readable statements can be parsed and executed again.
 
 ## Typed IR wrappers
 

@@ -308,33 +308,17 @@ thm group_homomorphism_preserves_identity:
         $is_group_homomorphism(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f)
         =>:
             f(G.one) = H.one
-    by def $is_group_homomorphism(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f)
-    claim:
-        ? f(G.one) = H.one
-        f(G.mul(G.one, G.one)) = H.mul(f(G.one), f(G.one))
-        f(G.one) = H.mul(f(G.one), f(G.one))
-        H.mul(H.inv(f(G.one)), f(G.one)) = H.one
-        H.mul(H.inv(f(G.one)), f(G.one)) = H.mul(H.inv(f(G.one)), H.mul(f(G.one), f(G.one)))
-        H.one = H.mul(H.mul(H.inv(f(G.one)), f(G.one)), f(G.one))
-        H.one = H.mul(H.one, f(G.one))
-        H.one = f(G.one)
+    # Apply the general theorem proved above to the operations stored in G/H.
+    $GroupHomomorphismSetting(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f)
+    by thm homomorphism_maps_identity(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f) => f(G.one) = H.one
 
 thm group_homomorphism_preserves_inverse:
     ? forall A nonempty_set, G &Group<A>, B nonempty_set, H &Group<B>, f fn(x A) B, a A:
         $is_group_homomorphism(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f)
         =>:
             f(G.inv(a)) = H.inv(f(a))
-    by def $is_group_homomorphism(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f)
-    f(G.one) = H.one
-    claim:
-        ? f(G.inv(a)) = H.inv(f(a))
-        f(G.mul(a, G.inv(a))) = H.mul(f(a), f(G.inv(a)))
-        f(G.one) = H.mul(f(a), f(G.inv(a)))
-        H.one = H.mul(f(a), f(G.inv(a)))
-        H.mul(H.inv(f(a)), H.one) = H.mul(H.inv(f(a)), H.mul(f(a), f(G.inv(a))))
-        H.inv(f(a)) = H.mul(H.mul(H.inv(f(a)), f(a)), f(G.inv(a)))
-        H.inv(f(a)) = H.mul(H.one, f(G.inv(a)))
-        H.inv(f(a)) = f(G.inv(a))
+    $GroupHomomorphismSetting(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f)
+    by thm homomorphism_maps_inverse(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f, a) => f(G.inv(a)) = H.inv(f(a))
 
 # Kernel of a ring homomorphism is an ideal.
 thm ring_homomorphism_kernel_is_ideal:

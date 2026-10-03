@@ -13,3 +13,8 @@ sketch:
 # P03: cart_dim(cart(cart(R, Z), N)) = 2
 sketch:
     cart_dim(cart(cart(R, Z), N)) = 2
+
+# P04: dimension of an alias for cart(R, Z) is 2; C is the builtin complex carrier
+sketch:
+    let product_space = cart(R, Z)
+    cart_dim(product_space) = 2

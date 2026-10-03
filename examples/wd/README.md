@@ -3,6 +3,23 @@
 Positive tracers for **already-implemented** Obj / Fact WD.
 Negatives stay in `../wd_negative/`.
 
+Showcase migration tracers (strict, no trust):
+
+- [Positive natural predecessor](positive_natural_predecessor.lit): both `n > 0`
+  and `0 < n`, including the recursive branch's argument WD.
+- [Field application codomain](field_application_codomain.lit): declared field
+  carriers and nested function calls, including generic and nested receivers.
+- [Unique function templates](template_unique_from_typed_carrier.lit): recover
+  hidden parameters from a matched receiver's type, then use the constructed
+  function inside another call with read-only WD.
+- [Forall set-builder matching](forall_set_builder_matching.lit): infer free
+  parameters under alpha-renamed local binders, including nested builders.
+- [Anonymous application range](anonymous_application_range_alpha.lit): alpha
+  equality between the called literal and the literal whose range is used.
+
+`cargo test --release showcase_local_repair_tests` checks these examples,
+their actual showcase prefixes, and carrier/guard/body/capture counterexamples.
+
 [Instantiated function fields](struct_field_instantiation.lit) check generic,
 concrete, nested and dependent header arguments in named theorem goals. Field
 types use the selected struct's actual parameters. This does not open nested

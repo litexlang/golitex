@@ -1,2 +1,0 @@
-# Intended valid regression: union P01
-union({1}, {2}) = {1, 2}

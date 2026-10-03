@@ -1,3 +1,0 @@
-# Intended valid regression: fn_obj P05
-have fn f(x R) R = x + 1
-f(f(1)) = 3

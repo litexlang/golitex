@@ -115,6 +115,11 @@ pub enum InFactSearchProofByBuiltinRule {
     // Mathematical property: `x $in N` and `x >= 1` ⇒ `x - 1 $in N`.
     // Example: known `n $in N` and `n >= 1` prove `n - 1 $in N`.
     PredecessorInNatural(PredecessorInNaturalBuiltinRuleProof),
+    // Discreteness of N: a strictly positive natural has a natural predecessor.
+    // Example: an induction branch `n > 0` permits a recursive call at `n - 1`.
+    PredecessorFromPositiveNatural(PredecessorFromPositiveNaturalBuiltinRuleProof),
+    // The independently cited reversed surface: `n in N`, `0 < n`.
+    PredecessorFromNaturalAboveZero(PredecessorFromNaturalAboveZeroBuiltinRuleProof),
     // Well-defined function application lands in the function's range.
     // Mathematical property: if `f(args)` is well-defined for a function with a
     // known FnSet body, then `f(args) $in fn_range(f)`.
@@ -279,9 +284,21 @@ pub struct PredecessorInNaturalBuiltinRuleProof {
     pub at_least_one_proof: AtomicExceptEqualityFactKnownProof,
 }
 
+pub struct PredecessorFromPositiveNaturalBuiltinRuleProof {
+    pub in_natural_proof: AtomicExceptEqualityFactKnownProof,
+    pub positive_proof: AtomicExceptEqualityFactKnownProof,
+}
+
+pub struct PredecessorFromNaturalAboveZeroBuiltinRuleProof {
+    pub in_natural_proof: AtomicExceptEqualityFactKnownProof,
+    pub zero_below_proof: AtomicExceptEqualityFactKnownProof,
+}
+
 // Zero-premise certificate: sides live on the InFact; WD already checked.
 // Example: `g(1) $in fn_range(g)`.
-pub struct AnonymousFnApplicationInFnRangeBuiltinRuleProof {}
+pub struct AnonymousFnApplicationInFnRangeBuiltinRuleProof {
+    pub function_equal: crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof,
+}
 
 pub struct UnionMembershipFromLeftBuiltinRuleProof {
     pub left_membership_proof: VerifyFactResult,
@@ -638,8 +655,9 @@ impl Runtime {
         self.finite_set_subset_membership_proof(fact, verify_state)
     }
 
-    // Prove `x - 1 $in N` from known `x $in N` and `x >= 1`.
-    // Example: after assuming `n $in N` and `n >= 1`, prove `n - 1 $in N`.
+    // Prove `x - 1 $in N` from known `x $in N` and either `x >= 1` or `x > 0`.
+    // Both routes retain their own cited order premise; positivity alone for
+    // a real (for example 1/2) never supplies the required natural carrier.
     fn predecessor_in_natural_proof(
         &mut self,
         fact: &InFact,
@@ -656,14 +674,25 @@ impl Runtime {
         let one = Obj::Literal(Literal::Number(Number {
             normalized_value: "1".to_string(),
         }));
-        let Some(at_least_one_proof) = self.known_greater_equal_proof(base, &one) else {
-            return Ok(None);
-        };
-        Ok(Some(InFactSearchProofByBuiltinRule::PredecessorInNatural(
-            PredecessorInNaturalBuiltinRuleProof {
-                in_natural_proof,
-                at_least_one_proof,
-            },
+        if let Some(at_least_one_proof) = self.known_greater_equal_proof(base, &one) {
+            return Ok(Some(InFactSearchProofByBuiltinRule::PredecessorInNatural(
+                PredecessorInNaturalBuiltinRuleProof {
+                    in_natural_proof,
+                    at_least_one_proof,
+                },
+            )));
+        }
+        let zero = Obj::Literal(Literal::Number(Number {
+            normalized_value: "0".to_string(),
+        }));
+        if let Some(positive_proof) = self.known_greater_proof(base, &zero) {
+            return Ok(Some(InFactSearchProofByBuiltinRule::PredecessorFromPositiveNatural(
+                PredecessorFromPositiveNaturalBuiltinRuleProof { in_natural_proof, positive_proof },
+            )));
+        }
+        let Some(zero_below_proof) = self.known_less_proof(&zero, base) else { return Ok(None); };
+        Ok(Some(InFactSearchProofByBuiltinRule::PredecessorFromNaturalAboveZero(
+            PredecessorFromNaturalAboveZeroBuiltinRuleProof { in_natural_proof, zero_below_proof },
         )))
     }
 
@@ -907,9 +936,9 @@ impl Runtime {
             return Ok(None);
         };
         let head_obj = fn_obj_head_as_obj(fn_obj.head.as_ref());
-        if head_obj.ir() != fn_range.function.ir() {
+        let Some(function_equal) = self.lookup_known_obj_equality(&head_obj, &fn_range.function) else {
             return Ok(None);
-        }
+        };
         let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = fn_range.function.as_ref() else {
             return Ok(None);
         };
@@ -924,7 +953,7 @@ impl Runtime {
         }
         Ok(Some(
             InFactSearchProofByBuiltinRule::AnonymousFnApplicationInFnRange(
-                AnonymousFnApplicationInFnRangeBuiltinRuleProof {},
+                AnonymousFnApplicationInFnRangeBuiltinRuleProof { function_equal },
             ),
         ))
     }

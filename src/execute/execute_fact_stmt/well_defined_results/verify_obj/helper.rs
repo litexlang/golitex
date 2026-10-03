@@ -112,7 +112,7 @@ impl Runtime {
 
     // Each field uses the selected carrier's actual arguments, e.g. Op<R>.add
     // has domain R, not the free parameter from struct Op<A>.
-    pub(super) fn resolve_field_access_field_type(&mut self, access: &FieldAccess) -> Option<Obj> {
+    pub(in crate::execute) fn resolve_field_access_field_type(&mut self, access: &FieldAccess) -> Option<Obj> {
         if access.fields.is_empty() {
             return None;
         }

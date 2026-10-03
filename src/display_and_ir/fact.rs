@@ -1029,7 +1029,16 @@ impl ForallFactWithIff {
                 .collect::<Vec<_>>()
                 .join("\n")
         };
-        let mut s = format!("{}", self.forall_fact.ir());
+        let mut s = if self.forall_fact.dom_facts.is_empty() {
+            let then_parts: Vec<_> = self.forall_fact.then_facts.iter().map(|t| t.ir()).collect();
+            format!(
+                "{} {}{}\n{}{}\n{}",
+                FORALL, self.forall_fact.typed_parameters.ir(), COLON,
+                indent(RIGHT_ARROW, 1), COLON, indent(&then_parts.join("\n"), 2)
+            )
+        } else {
+            format!("{}", self.forall_fact.ir())
+        };
         s.push('\n');
         s.push_str(&indent(EQUIVALENT_SIGN, 1));
         s.push_str(COLON);
@@ -1050,7 +1059,16 @@ impl ForallFactWithIff {
                 .collect::<Vec<_>>()
                 .join("\n")
         };
-        let mut s = format!("{}", self.forall_fact.display_string());
+        let mut s = if self.forall_fact.dom_facts.is_empty() {
+            let then_parts: Vec<_> = self.forall_fact.then_facts.iter().map(|t| t.display_string()).collect();
+            format!(
+                "{} {}{}\n{}{}\n{}",
+                FORALL, self.forall_fact.typed_parameters.display_string(), COLON,
+                indent(RIGHT_ARROW, 1), COLON, indent(&then_parts.join("\n"), 2)
+            )
+        } else {
+            format!("{}", self.forall_fact.display_string())
+        };
         s.push('\n');
         s.push_str(&indent(EQUIVALENT_SIGN, 1));
         s.push_str(COLON);

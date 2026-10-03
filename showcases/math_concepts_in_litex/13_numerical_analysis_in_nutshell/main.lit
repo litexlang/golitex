@@ -47,6 +47,14 @@ have fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:
 have fn sqrt_two_newton_gap(n N) R = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
 
 # This comparison sequence is chosen to obey B_(n+1) = B_n^2 / 4.
+thm sqrt_two_newton_gap_bound_positive:
+    ? forall n N:
+        4 * (1 / 4)^(2^n) $in R+
+    2^n $in R
+    1 / 4 > 0
+    (1 / 4)^(2^n) > 0
+    4 * (1 / 4)^(2^n) > 0
+
 have fn sqrt_two_newton_gap_bound(n N) R+ = 4 * (1 / 4)^(2^n)
 
 newton_sqrt_two(1) = 3 / 2
@@ -58,6 +66,10 @@ square_root_two_residual(17 / 12) = (17 / 12)^2 - 2 = 1 / 144
 thm sqrt_two_newton_iterate_step:
     ? forall n N:
         sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
+    n + 1 > 0
+    (n + 1) - 1 = n
+    sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate((n + 1) - 1))
+    sqrt_two_newton_iterate((n + 1) - 1) = sqrt_two_newton_iterate(n)
 
 thm newton_sqrt_two_residual_identity:
     ? forall x R+:
@@ -75,6 +87,7 @@ thm newton_sqrt_two_residual_nonnegative:
     ? forall x R+:
         square_root_two_residual(newton_sqrt_two(x)) >= 0
     by thm newton_sqrt_two_residual_identity(x) => 4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2
+    x^2 > 0
     4 * x^2 > 0
     4 * x^2 != 0
     square_root_two_residual(x)^2 >= 0
@@ -88,25 +101,10 @@ thm newton_sqrt_two_residual_nonnegative:
 thm newton_sqrt_two_one_step_gap_identity:
     ? forall x R+:
         4 * x^2 * abs(square_root_two_residual(newton_sqrt_two(x))) = abs(square_root_two_residual(x))^2
-    let next_residual = square_root_two_residual(newton_sqrt_two(x))
-    let current_residual = square_root_two_residual(x)
-    next_residual = newton_sqrt_two(x)^2 - 2
-    current_residual = x^2 - 2
-    newton_sqrt_two(x) = (x + 2 / x) / 2
-    newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
-    next_residual = newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
-    current_residual^2 = (x^2 - 2)^2
-    4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2
-    4 * x^2 * next_residual = 4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2 = current_residual^2
-    4 * x^2 > 0
-    4 * x^2 != 0
-    current_residual^2 >= 0
-    4 * x^2 * next_residual >= 0
-    (4 * x^2 * next_residual) / (4 * x^2) >= 0
-    next_residual = (4 * x^2 * next_residual) / (4 * x^2) >= 0
-    abs(next_residual) = next_residual
-    abs(current_residual)^2 = current_residual^2
-    4 * x^2 * abs(square_root_two_residual(newton_sqrt_two(x))) = 4 * x^2 * abs(next_residual) = 4 * x^2 * next_residual = current_residual^2 = abs(current_residual)^2 = abs(square_root_two_residual(x))^2
+    by thm newton_sqrt_two_residual_identity(x) => 4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2
+    by thm newton_sqrt_two_residual_nonnegative(x) => square_root_two_residual(newton_sqrt_two(x)) >= 0
+    abs(square_root_two_residual(newton_sqrt_two(x))) = square_root_two_residual(newton_sqrt_two(x))
+    abs(square_root_two_residual(x))^2 = square_root_two_residual(x)^2
 
 # Step 2: show that every positive input is sent above one; therefore all
 # iterates starting from x_0 = 1 stay at least one.

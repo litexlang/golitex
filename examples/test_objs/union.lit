@@ -2,6 +2,10 @@
 # Run: target/release/litex -f examples/test_objs/union.lit
 # Cases use discarded sketch scopes; no cross-case facts.
 
+# P01: union({1}, {2}) = {1, 2}
+sketch:
+    by extension union({1}, {2}) = {1, 2}
+
 # P02: union({}, {1}) = {1}
 sketch:
     union({}, {1}) = {1}

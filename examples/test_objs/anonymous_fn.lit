@@ -22,6 +22,11 @@ sketch:
 sketch:
     fn(x R) R {x + 1} $in fn(y R) R
 
+# P06: let y = 3; fn(x R) R {x + y}(2) = 5
+sketch:
+    let y = 3
+    fn(x R) R {x + y}(2) = 2 + y = 2 + 3 = 5
+
 # P90: Nearest valid-domain control
 sketch:
     fn(x R) R {x}(-1) = -1

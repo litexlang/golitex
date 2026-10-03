@@ -44,6 +44,7 @@ pub use result::{
     BuiltinThmApplication, ExecByThmStmtFailed, ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseZornLemmaStmtResult,
 };
 pub(crate) use exec_by_thm_stmt::{prepare_release_conclusions, PreparedRelease};
+pub(crate) use result::{ByContradictionClosingFailed, ExecByContraStmtFailed};
 pub(crate) use helper::{
     proof_verify_state, store_goal_fact, verify_goal_fact,
 };

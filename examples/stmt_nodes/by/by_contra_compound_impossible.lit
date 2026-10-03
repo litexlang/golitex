@@ -1,0 +1,32 @@
+# Stmt: By.ByContraStmt -> compound closing with two checked proofs
+# Run: litex -strict -f examples/stmt_nodes/by/by_contra_compound_impossible.lit
+# Before the authorized closing-field change, this tail failed to parse:
+# by contra:
+#     ? not exist x {0} st {x = 1}
+#     impossible exist x {0} st {x = 1}
+# This requires the checked negative-existence background below.
+# Quantifiers nested in forall/iff premises or conclusions remain unsupported.
+
+by enumerate finite_set:
+    ? forall x {0}:
+        x != 1
+by contra:
+    ? not exist x {0} st {x = 1}
+    obtain a from exist x {0} st {x = 1}
+    a != 1
+    impossible a = 1
+
+by contra:
+    ? not exist x {0} st {x = 1}
+    impossible exist y {0} st {y = 1}
+not exist x {0} st {x = 1}
+
+forall x {0}:
+    x = 0
+by contra:
+    ? forall n {0}:
+        n = 0
+    impossible forall q {0}:
+        q = 0
+forall n {0}:
+    n = 0

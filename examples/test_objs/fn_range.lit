@@ -6,6 +6,18 @@
 sketch:
     fn_range(fn(x R) R {1}) = {1}
 
+# P02: fn_range(fn(x R) R {x}) = R
+sketch:
+    have fn identity(x R) R = x
+    by extension:
+        ? fn_range(fn(x R) R {x}) = R
+        claim:
+            ? forall y R:
+                y $in fn_range(fn(x R) R {x})
+            identity(y) = y
+            identity(y) $in fn_range(identity)
+            fn_range(identity) = fn_range(fn(x R) R {x})
+
 # P03: fn_range(f) = {1}
 sketch:
     have fn f(x R) R = 1

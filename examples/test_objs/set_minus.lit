@@ -2,6 +2,26 @@
 # Run: target/release/litex -f examples/test_objs/set_minus.lit
 # Cases use discarded sketch scopes; no cross-case facts.
 
+# P01: set_minus({1, 2}, {2}) = {1}
+sketch:
+    by extension:
+        ? set_minus({1, 2}, {2}) = {1}
+        claim:
+            ? forall x set_minus({1, 2}, {2}):
+                x $in {1}
+            x $in {1, 2}
+            not x $in {2}
+            x = 1 or x = 2
+            by cases:
+                ? x $in {1}
+                case x = 1:
+                    x $in {1}
+                case x = 2:
+                    not 2 $in {2}
+                    impossible not 2 $in {2}
+        forall x {1}:
+            x $in set_minus({1, 2}, {2})
+
 # P02: set_minus({1}, {}) = {1}
 sketch:
     set_minus({1}, {}) = {1}

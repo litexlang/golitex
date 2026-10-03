@@ -20,6 +20,18 @@ sketch:
 sketch:
     fn(x R: x != 0) R {1 / x}(2) = 1 / 2
 
+# P05: have fn f(x R) R = x + 1; f(f(1)) = 3
+sketch:
+    have fn f(x R) R = x + 1
+    f(1) = 2
+    f(f(1)) = f(2) = 3
+
+# P06: have fn f(x R) fn(y R) R = fn(y R) R {x + y}; f(2)(3) = 5
+sketch:
+    have fn f(x R) fn(y R) R = fn(y R) R {x + y}
+    f(2) = fn(y R) R {2 + y}
+    f(2)(3) = fn(y R) R {2 + y}(3) = 2 + 3 = 5
+
 # P07: b.f(1) $in R
 sketch:
     struct Bundle:

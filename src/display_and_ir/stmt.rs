@@ -1218,10 +1218,9 @@ impl ByContraStmt {
             ));
         }
         out.push_str("\n");
-        out.push_str(&format!(
-            "{} {}",
-            indent!(IMPOSSIBLE, 1),
-            self.impossible_fact.ir()
+        out.push_str(&indent!(
+            &format!("{} {}", IMPOSSIBLE, self.impossible_fact.ir()),
+            1
         ));
         StmtIR(out)
     }
