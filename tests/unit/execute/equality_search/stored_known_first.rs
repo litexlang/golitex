@@ -1,5 +1,5 @@
 use super::*;
-use crate::execute::execute_fact_stmt::StrategySearch;
+use crate::execute::execute_fact_stmt::VerifyStateLevel;
 
 #[test]
 fn stored_equality_precedes_calculation_and_special_property_in_both_entries() {
@@ -18,12 +18,12 @@ fn stored_equality_precedes_calculation_and_special_property_in_both_entries() {
             let goal = equal(&mut rt, code);
             let before = store_sizes(&rt);
             let result = if strategy {
-                rt.verify_fact_in_strategy(
+                rt.verify_fact(
                     &Fact::AtomicFact(goal.clone().into()),
-                    StrategySearch { depth: 0 },
+                    VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
                 )
             } else {
-                rt.verify_equal_fact(&goal, VerifyState::top_level().without_well_defined_storage())
+                rt.verify_equal_fact(&goal, VerifyState::top_level())
             }
             .unwrap();
             let VerifyFactResult::Equality(result) = result else { panic!("equality") };

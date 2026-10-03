@@ -38,3 +38,19 @@ sketch:
 sketch:
     forall x C:
         x^0 = 1
+
+# P04: exact numeric/periodic/modulus repair; original source retained in the dated journal
+sketch:
+    2^(-3) = 1 / 8
+
+# P91: exact numeric/periodic/modulus boundary
+sketch:
+    (-2)^(-3) = -1 / 8
+
+# P92: exact numeric/periodic/modulus boundary
+sketch:
+    (2 / 3)^(-2) = 9 / 4
+
+# P121: closed exact elementary calculation
+sketch:
+    sqrt(2)^3=2*sqrt(2)

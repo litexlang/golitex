@@ -12,7 +12,7 @@ use crate::ast::obj::{
     SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet, StructAndFieldAccessObj,
     StructObj, Sum, SumOfFiniteSet, Tan, TrigOperator, Tuple, TupleDim, Union,
 };
-use crate::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
+use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::parse::keywords::{
     ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
     COT, C_ABS, C_STAR, DOT, EXP, FACTORIAL, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ,
@@ -280,8 +280,7 @@ impl Runtime {
         tb.expect(FN)?;
         self.push_parse_scope();
         let result = (|| {
-            let (params, dom_facts) = self.parse_fn_set_header(tb)?;
-            let ret_set = parse_obj(self, tb)?;
+            let (params, dom_facts, ret_set) = self.parse_fn_set_signature(tb)?;
             let body = FnSet {
                 set_bound_parameters: params,
                 dom_facts,
@@ -289,6 +288,7 @@ impl Runtime {
             };
             if tb.peek() == Some(LEFT_CURLY) {
                 tb.advance()?;
+                self.occupy_set_bound_parameters_as_parse(tb, &body.set_bound_parameters)?;
                 let equal_to = parse_obj(self, tb)?;
                 tb.expect(RIGHT_CURLY)?;
                 Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(
@@ -305,55 +305,75 @@ impl Runtime {
         result
     }
 
-    pub(in crate::parse) fn parse_fn_set_header(
+    // Function carriers are parsed before any of this signature's parameters
+    // are visible. Only domain conditions and the later body use those binders.
+    pub(in crate::parse) fn parse_fn_set_signature(
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<(
         SetBoundParameterList,
         Vec<crate::ast::fact::QuantifierFreeFact>,
+        Obj,
     )> {
         tb.expect(LEFT_PAREN)?;
-        let mut groups = Vec::new();
+        let mut unbound_groups = Vec::new();
         while !tb.exceed_end_of_head() && tb.peek() != Some(COLON) && tb.peek() != Some(RIGHT_PAREN)
         {
-            let typed = self.parse_one_typed_param_group(tb)?;
-            groups.push(typed_group_to_set_bound(tb, typed)?);
+            let mut names = Vec::new();
+            loop {
+                let name = tb.advance()?;
+                if !is_atom_name(&name) {
+                    return Err(tb.parse_error(format!("invalid function parameter name `{name}`")));
+                }
+                names.push(name);
+                if tb.peek() != Some(COMMA) {
+                    break;
+                }
+                tb.advance()?;
+            }
+            if matches!(tb.peek(), Some(crate::parse::keywords::SET | crate::parse::keywords::NONEMPTY_SET | crate::parse::keywords::FINITE_SET)) {
+                return Err(tb.parse_error(
+                    "fn parameters must be set-bound objects (e.g. `x R`), not `set` / `nonempty_set` / `finite_set`",
+                ));
+            }
+            let param_type = parse_obj(self, tb)?;
+            unbound_groups.push((names, param_type));
             if tb.peek() == Some(COMMA) {
                 tb.advance()?;
             }
         }
-        let mut dom_facts = Vec::new();
-        if tb.peek() == Some(COLON) {
-            tb.advance()?;
-            loop {
-                dom_facts.push(self.parse_quantifier_free_fact_inline(tb)?);
-                if tb.peek() == Some(COMMA) {
-                    tb.advance()?;
-                    continue;
-                }
-                break;
-            }
-        }
-        tb.expect(RIGHT_PAREN)?;
-        if groups.is_empty() {
+        if unbound_groups.is_empty() {
             return Err(tb.parse_error("fn expects at least one parameter"));
         }
-        Ok((SetBoundParameterList { groups }, dom_facts))
-    }
-}
 
-fn typed_group_to_set_bound(
-    tb: &TokenBlock,
-    group: crate::ast::param::TypedParameterGroup,
-) -> RuntimeResult<SetBoundParameterGroup> {
-    match group.param_type {
-        ParamType::Obj(obj) => Ok(SetBoundParameterGroup {
-            params: group.params,
-            param_type: Box::new(obj),
-        }),
-        _ => Err(tb.parse_error(
-            "fn parameters must be set-bound objects (e.g. `x R`), not `set` / `nonempty_set` / `finite_set`",
-        )),
+        self.push_parse_scope();
+        let header: RuntimeResult<_> = (|| {
+            let mut groups = Vec::new();
+            for (names, param_type) in unbound_groups {
+                let mut params = Vec::new();
+                for name in names {
+                    params.push(self.define_plain_atom_as_parse(tb, name)?);
+                }
+                groups.push(SetBoundParameterGroup { params, param_type: Box::new(param_type) });
+            }
+            let mut dom_facts = Vec::new();
+            if tb.peek() == Some(COLON) {
+                tb.advance()?;
+                loop {
+                    dom_facts.push(self.parse_quantifier_free_fact_inline(tb)?);
+                    if tb.peek() != Some(COMMA) {
+                        break;
+                    }
+                    tb.advance()?;
+                }
+            }
+            tb.expect(RIGHT_PAREN)?;
+            Ok((SetBoundParameterList { groups }, dom_facts))
+        })();
+        self.pop_parse_scope();
+        let (params, dom_facts) = header?;
+        let ret_set = parse_obj(self, tb)?;
+        Ok((params, dom_facts, ret_set))
     }
 }
 

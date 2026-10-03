@@ -22,8 +22,7 @@ impl Runtime {
                 proof,
             ));
         }
-        self.search_atomic_except_equality_fact_proof_by_known_special_property(fact)
-            .map(AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty)
+        None
     }
 
     pub(in crate::execute) fn lookup_known_atomic_premise(
@@ -95,8 +94,16 @@ impl Runtime {
         if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(&comparison) {
             return Some(proof.into());
         }
-        self.equivalence_class_path(left, right).map(|path| {
-            EqualFactSearchedProof::ByEquivalenceClass(KnownEqualityPathProof::new(path).into())
-        })
+        let adjacency = self.visible_equivalence_class_adjacency();
+        if let Some(path) = super::super::verify_equality::equivalence_class_graph::equivalence_class_path_in_adjacency(&adjacency, left, right) {
+            return Some(EqualFactSearchedProof::ByEquivalenceClass(
+                KnownEqualityPathProof::new(path).into(),
+            ));
+        }
+        // Alpha-renaming existing endpoints remains a finite citation lookup;
+        // this does not compare peers by proving new bridge facts.
+        super::super::verify_equality::search_equal_fact_proof_by_equivalence_class::search_alpha_endpoints(
+            &adjacency, &comparison,
+        ).map(EqualFactSearchedProof::ByEquivalenceClass)
     }
 }

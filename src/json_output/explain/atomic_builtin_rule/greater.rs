@@ -29,6 +29,10 @@ impl GreaterFactSearchProofByBuiltinRule {
             Self::MulRightPositiveMonotoneStrict(p) => p.rule_id_and_message(lang),
             Self::FromPositiveRealMembership(p) => p.rule_id_and_message(lang),
             Self::NativeEulerGreaterZero(p) => p.rule_id_and_message(lang),
+            Self::NativeEulerGreaterOne(_) => match lang {
+                OutputLanguage::English => text("NativeEulerGreaterOne", "Euler constant exceeds one", "The native Euler constant satisfies e > 1"),
+                OutputLanguage::Chinese => text("NativeEulerGreaterOne", "自然常数 e 大于一", "内建自然常数满足 e > 1"),
+            },
             Self::NativePiGreaterZero(p) => p.rule_id_and_message(lang),
         }
     }
@@ -44,6 +48,7 @@ impl GreaterFactSearchProofByBuiltinRule {
             Self::MulRightPositiveMonotoneStrict(_) => None,
             Self::FromPositiveRealMembership(_) => None,
             Self::NativeEulerGreaterZero(_) => None,
+            Self::NativeEulerGreaterOne(_) => None,
             Self::NativePiGreaterZero(_) => None,
         }
     }

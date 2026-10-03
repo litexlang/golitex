@@ -2,9 +2,12 @@
 
 Task: one detailed Litex regression file per Obj variant.
 
-Latest status: the [2026-10-03 recheck](audit_2026-10-03.md) observes 67 remaining
-direct rejections, all 99 positive files passing, and all 284 negative fixtures
-rejecting. The earlier implementation snapshots below remain historical.
+Latest focused status: the [remaining elementary follow-up](experience/problem_notes/remaining_elementary_gaps_2026-10-03.md)
+closes all 22 requested numerical, trig, inverse, log and modulus goals. Its
+[current-source report](remaining_elementary_gaps_results_2026-10-03.json)
+checks 95 positive cases across 13 owning files and 42 rejection fixtures.
+The live manifest still includes 22 unrelated gaps. Older complete-suite
+snapshots below remain historical; this focused gate is not a whole-corpus pass.
 
 ## Tracer: exact division and its WD boundary
 
@@ -233,3 +236,59 @@ passes. The final current-source build retry also fails (exit 101), with duplica
 `VerifyState` definitions and mismatched fields. Both failed current builds ran
 no acceptance fixtures. These records certify the preserved release, not the
 concurrent unfinished kernel state.
+
+
+## Exact numeric powers, fraction order, integral periods and modulus (2026-10-03)
+
+The primary tracer is now checked with integer evidence:
+
+```litex
+have k Z
+tan(pi + 2 * k * pi) = 0
+C_abs(3 + 4 * i) = 5
+C_abs(4 * i + 3) = 5
+C_abs(3 - 4 * i) = 5
+C_abs(-4 * i + 3) = 5
+```
+
+The local repair implements exact negative integer powers, rational comparison
+and binary min/max, checked symbolic integral trig periods and numeric complex
+modulus with a nonnegative principal root. It closes 14 original gap entries and
+adds 21 independent positive cases and five rejection controls in the owning
+Obj files. Decimal/rational coordinates and exact nonsquare roots are covered;
+source WD rejects poles, zero denominators and zero negative powers. Eval
+stores no equality, including after a proved modulus rewrites to a root.
+
+Durable accepted artifacts:
+
+- [periodic_trig_exact_values.lit](../proof_nodes/equal/by_builtin_rule/periodic_trig_exact_values.lit)
+- [negative_integer_power_exact.lit](../proof_nodes/equal/by_builtin_rule/negative_integer_power_exact.lit)
+- [exact_fraction_order.lit](../proof_nodes/atomic/by_builtin_rule/exact_fraction_order.lit)
+- [numeric_complex_modulus.lit](../proof_nodes/equal/by_builtin_rule/numeric_complex_modulus.lit)
+
+The stable source `f335968983c2b7f1548fbc871e12d25010b9b04ad87feb0d1bedb7cd364113ef`
+and binary `9e25f3b4e0167510ae79561d3089e2cde8d994c8a9c35114c248561fd4d6dd78`
+pass all four complete artifacts, all 13 paired negative files, all 26 new corpus
+cases and four changed documentation blocks, after the concurrent state-API
+refactor. The earlier stable source also passes 80 focused producer/consumer
+Rust tests. All eight original tests pass after API adaptation, but the source
+changed between their separate commands, so that later Rust receipt is labeled
+unstable and is not an exact final-workspace certificate. Concurrently added
+extremum/inverse/log tests are recorded separately; no all-family claim is made.
+
+See [the complete journal](proof_journals/exact_numeric_periodic_modulus_2026-10-03.json)
+and [solution notes](experience/problem_notes/exact_numeric_periodic_modulus_2026-10-03.md).
+
+The latest stable full-corpus scan is deliberately not green: 60 of 99 positive
+files accept, 37 reject and two have protocol failures; all 289 negatives
+reject. The live manifest has 594 positive cases and 22 direct gaps.
+The 39 owning-file failures are separate current-source regressions, recorded
+with exact source and diagnostics in [the regression ledger](current_source_regressions_2026-10-03.md).
+The [latest full report](exact_numeric_periodic_modulus_latest_results_2026-10-03.json)
+uses source `23ca3b86dcb0bcc53580c81d9ec4999e0f89e86220855368ad0d86030ba1d0ab` and binary
+`c28fadea9f204cf84987d185ffbd1d74f262c3678ca4a46f1dcf163d9db8cacd`. Both stayed stable for that scan.
+Subsequent source/executable changes are excluded from its claim.
+
+No trust, AST layout edit or global verifier-state design change is made by this
+implementation. Full Rust, Lean, textbook and publication gates are outside its
+scope. The full-corpus failures remain open with concrete reproductions.

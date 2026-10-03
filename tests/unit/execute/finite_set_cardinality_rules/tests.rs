@@ -1,7 +1,7 @@
 //! Finite inclusion rules must compose through WD and retain their premises.
 use crate::ast::stmt::Stmt;
 use crate::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactResult;
-use crate::execute::execute_fact_stmt::{StrategySearch, VerifyFactResult};
+use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::execute::{ExecFactStmtResult, ExecFactStmtSuccessResult, ExecStmtResult};
 use crate::json_output::{project_stmt_detailed, project_stmt_normal, stringify_normal};
 use crate::knowledge_base::JsonValue;
@@ -165,16 +165,16 @@ fn finite_set_cardinality_rule_strategy_budget_is_consumed_without_truth_storage
         panic!("fact")
     };
     assert!(rt
-        .verify_fact_in_strategy(&fact, StrategySearch { depth: 0 })
+        .verify_fact(&fact, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
         .unwrap()
         .is_failed());
     assert!(!rt
-        .verify_fact_in_strategy(&fact, StrategySearch { depth: 1 })
+        .verify_fact(&fact, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Strategy))
         .unwrap()
         .is_failed());
     // Verification alone must not cache truth and bypass a subsequent budget.
     assert!(rt
-        .verify_fact_in_strategy(&fact, StrategySearch { depth: 0 })
+        .verify_fact(&fact, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
         .unwrap()
         .is_failed());
 }

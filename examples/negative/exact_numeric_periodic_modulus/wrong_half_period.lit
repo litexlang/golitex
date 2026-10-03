@@ -1,0 +1,3 @@
+# Must reject: mathematical/domain boundary, never a positive corpus case.
+have k Z
+sin(pi / 2 + k * pi) = 1

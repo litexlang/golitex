@@ -47,6 +47,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 OutputLanguage::English => text("ClosedRationalNotEqual", "Exact rational inequality", "Exact closed fractions have different normalized values"),
                 OutputLanguage::Chinese => text("ClosedRationalNotEqual", "精确分数不等", "两边的精确分数规范化后不同"),
             },
+            Self::ClosedComplex(_) => match lang {
+                OutputLanguage::English => text("ClosedComplexNotEqual", "Exact complex inequality", "The exact real or imaginary coordinates differ"),
+                OutputLanguage::Chinese => text("ClosedComplexNotEqual", "精确复数不等", "精确实部或虚部不同"),
+            },
             Self::NotEqualSymmetry(p) => p.rule_id_and_message(lang),
             Self::ListSetDifferentLength(p) => p.rule_id_and_message(lang),
             Self::FromKnownStrictOrder(p) => p.rule_id_and_message(lang),

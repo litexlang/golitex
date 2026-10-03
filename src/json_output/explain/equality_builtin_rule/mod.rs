@@ -16,6 +16,13 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::ReduceFirstStep(_) => BuiltinRuleText { rule_id: "ReduceFirstStep", rule_name: match lang { OutputLanguage::English => "First left-fold step", OutputLanguage::Chinese => "左折叠的首项递推" }.into(), message: match lang { OutputLanguage::English => "A nonempty left fold moves its first term into the seed, preserving operand order", OutputLanguage::Chinese => "非空左折叠按原运算顺序将首项并入初值" }.into() },
+            Self::ReduceTranslation(_) => BuiltinRuleText { rule_id: "ReduceTranslation", rule_name: match lang { OutputLanguage::English => "Order-preserving fold translation", OutputLanguage::Chinese => "有序折叠的索引平移" }.into(), message: match lang { OutputLanguage::English => "Translate both integer endpoints equally and check the corresponding terms without changing operation or seed", OutputLanguage::Chinese => "两个整数端点平移同样的量，检查对应项并保持运算和初值一致" }.into() },
+            Self::ReducePointwise(_) => BuiltinRuleText { rule_id: "ReducePointwise", rule_name: match lang { OutputLanguage::English => "Pointwise fold congruence", OutputLanguage::Chinese => "有序折叠的逐点相等" }.into(), message: match lang { OutputLanguage::English => "Use a checked pointwise proposition over the same interval, operation and seed", OutputLanguage::Chinese => "引用已验证的逐点相等命题，保持区间、运算和初值一致" }.into() },
+            Self::AggregateIdentity(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_)) => BuiltinRuleText {
+                rule_id: "FiniteSetProductMemberRemoval", rule_name: match lang { OutputLanguage::English => "Remove a member from a finite product", OutputLanguage::Chinese => "有限乘积删除已有元素" }.into(),
+                message: match lang { OutputLanguage::English => "Check membership, the restricted callback and the removed factor; no division or nonzero premise is needed", OutputLanguage::Chinese => "检查成员关系、限制回调和被删除因子；乘法拆分无需除法或非零前提" }.into(),
+            },
             Self::CartesianSize(_) => BuiltinRuleText {
                 rule_id: "CartesianSize",
                 rule_name: match lang { OutputLanguage::English => "Finite Cartesian cardinality", OutputLanguage::Chinese => "有限笛卡尔积的基数" }.into(),

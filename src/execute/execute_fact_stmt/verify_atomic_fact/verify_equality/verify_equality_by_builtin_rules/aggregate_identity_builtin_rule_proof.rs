@@ -17,6 +17,7 @@ pub enum AggregateIdentityBuiltinRuleProof {
     FiniteSetSumDisjointUnion(FiniteSetSumDisjointUnionBuiltinRuleProof),
     FiniteSetProductDisjointUnion(FiniteSetProductDisjointUnionBuiltinRuleProof),
     FiniteSetProductFreshInsertion(FiniteSetProductFreshInsertionProof),
+    FiniteSetProductMemberRemoval(FiniteSetProductMemberRemovalProof),
     RangeSumPointwise(RangeSumPointwiseBuiltinRuleProof),
     RangeProductPointwise(RangeProductPointwiseBuiltinRuleProof),
     FiniteSetSumPointwise(FiniteSetSumPointwiseBuiltinRuleProof),
@@ -72,6 +73,12 @@ pub struct FiniteSetProductDisjointUnionBuiltinRuleProof {
     pub premises: Vec<VerifyFactResult>,
 }
 pub struct FiniteSetProductFreshInsertionProof {
+    pub premises: Vec<VerifyFactResult>,
+    pub pointwise: AggregatePointwiseProof,
+    pub factor_expansions: Vec<AnonFnApplicationBodyProof>,
+    pub factor_equal: VerifyFactResult,
+}
+pub struct FiniteSetProductMemberRemovalProof {
     pub premises: Vec<VerifyFactResult>,
     pub pointwise: AggregatePointwiseProof,
     pub factor_expansions: Vec<AnonFnApplicationBodyProof>,

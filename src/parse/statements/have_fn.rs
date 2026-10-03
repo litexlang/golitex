@@ -54,8 +54,8 @@ impl Runtime {
         let bound = self.define_plain_atom_as_parse(&tb, name.clone())?;
         self.push_parse_scope();
         let result = (|| {
-            let (params, dom_facts) = self.parse_fn_set_header(&mut tb)?;
-            let ret_set = parse_obj(self, &mut tb)?;
+            let (params, dom_facts, ret_set) = self.parse_fn_set_signature(&mut tb)?;
+            self.occupy_set_bound_parameters_as_parse(&tb, &params)?;
             let fn_set_clause = FnSetClause {
                 set_bound_parameters: params,
                 dom_facts,
@@ -407,6 +407,25 @@ fn check_have_fn_by_exist_forall_shape(
             block.source_path.clone(),
         )
         .into());
+    }
+
+    // The source forall retains ordinary sequential binder semantics. Once it
+    // is used to choose a function, its input and output carriers must be fixed.
+    let mut param_ids = std::collections::HashSet::new();
+    for group in &forall.typed_parameters.groups {
+        for param in &group.params {
+            param_ids.insert(param.id);
+        }
+    }
+    for group in forall.typed_parameters.groups.iter().chain(&exist_body.typed_parameters.groups) {
+        let ParamType::Obj(carrier) = &group.param_type else { unreachable!() };
+        let mut free = std::collections::HashSet::new();
+        crate::instantiate::collect_free_plain_ids(carrier, &std::collections::HashSet::new(), &mut free);
+        if !free.is_disjoint(&param_ids) {
+            return Err(block.parse_error(
+                "`have fn … by exist!`: parameter domains and return set must not reference the function's parameters",
+            ));
+        }
     }
 
     Ok(())

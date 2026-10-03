@@ -2,7 +2,7 @@ use super::result::*;
 use crate::ast::fact::{AtomicFact, EqualFact, IsFiniteSetFact};
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{FunctionSpace, Obj, ProductShape, SetFormer, SetOperator};
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::parse::keywords::{PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET};
 
@@ -14,7 +14,7 @@ impl Runtime {
     pub(super) fn search_subset_of_finite_set_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SubsetOfFiniteSetStrategySingleStep>> {
         let Some(set) = as_finite_set(fact) else { return Ok(None); };
         let mut candidates = Vec::new();
@@ -64,7 +64,7 @@ impl Runtime {
     pub(super) fn search_fn_range_finite_from_domain_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<FnRangeFiniteFromDomainStrategySingleStep>> {
         let Some(set) = as_finite_set(fact) else { return Ok(None); };
         let Obj::FunctionSpace(FunctionSpace::FnRange(fn_range)) = set else { return Ok(None); };
@@ -98,7 +98,7 @@ impl Runtime {
     pub(super) fn search_power_set_finite_from_base_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<PowerSetFiniteFromBaseStrategySingleStep>> {
         let Some(set) = as_finite_set(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::PowerSet(power)) = set else { return Ok(None); };
@@ -113,7 +113,7 @@ impl Runtime {
     pub(super) fn search_set_builder_finite_from_param_set_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SetBuilderFiniteFromParamSetStrategySingleStep>> {
         let Some(set) = as_finite_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::SetBuilder(builder)) = set else { return Ok(None); };
@@ -128,7 +128,7 @@ impl Runtime {
     pub(super) fn search_union_finite_from_both_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<UnionFiniteFromBothStrategySingleStep>> {
         let Some(set) = as_finite_set(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Union(u)) = set else { return Ok(None); };
@@ -146,7 +146,7 @@ impl Runtime {
     pub(super) fn search_intersect_finite_from_both_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntersectFiniteFromBothStrategySingleStep>> {
         let Some(set) = as_finite_set(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Intersect(i)) = set else { return Ok(None); };
@@ -164,7 +164,7 @@ impl Runtime {
     pub(super) fn search_set_minus_finite_from_left_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SetMinusFiniteFromLeftStrategySingleStep>> {
         let Some(set) = as_finite_set(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::SetMinus(s)) = set else { return Ok(None); };
@@ -179,7 +179,7 @@ impl Runtime {
     pub(super) fn search_cart_finite_from_factors_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<CartFiniteFromFactorsStrategySingleStep>> {
         let Some(set) = as_finite_set(fact) else { return Ok(None); };
         let Obj::ProductShape(ProductShape::Cart(cart)) = set else { return Ok(None); };

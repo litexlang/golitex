@@ -1,0 +1,3 @@
+# Must reject: mathematical/domain boundary, never a positive corpus case.
+have k Z
+tan(pi + (1 / k - 1 / k) * pi) = 0

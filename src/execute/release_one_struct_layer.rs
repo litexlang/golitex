@@ -54,7 +54,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         struct_obj: &StructObj,
-    ) -> RuntimeResult<ReleaseOneStructLayerResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<ReleaseOneStructLayerResult> {
         let def = match self.struct_def_for_release(struct_obj) {
             Ok(d) => d,
             Err(reason) => {
@@ -93,7 +93,7 @@ impl Runtime {
             set: obj.clone(),
             line_file: None,
         }));
-        store_and_infer.push(self.store_fact_and_infer(&is_tuple)?);
+        store_and_infer.push(self.store_fact_and_infer(&is_tuple, verify_state)?);
 
         let tuple_dim = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -105,7 +105,7 @@ impl Runtime {
             })),
             line_file: None,
         }));
-        store_and_infer.push(self.store_fact_and_infer(&tuple_dim)?);
+        store_and_infer.push(self.store_fact_and_infer(&tuple_dim, verify_state)?);
 
         let cart_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -113,7 +113,7 @@ impl Runtime {
             set: cart,
             line_file: None,
         }));
-        store_and_infer.push(self.store_fact_and_infer(&cart_membership)?);
+        store_and_infer.push(self.store_fact_and_infer(&cart_membership, verify_state)?);
 
         for (index, field) in def.fields.iter().enumerate() {
             let field_value = field_access_obj(obj, &field.binding.name);
@@ -129,7 +129,7 @@ impl Runtime {
                 right: projection,
                 line_file: None,
             }));
-            store_and_infer.push(self.store_fact_and_infer(&bridge)?);
+            store_and_infer.push(self.store_fact_and_infer(&bridge, verify_state)?);
         }
 
         for (field, named_field_type) in def.fields.iter().zip(field_types.iter()) {
@@ -140,7 +140,7 @@ impl Runtime {
                 set: named_field_type.clone(),
                 line_file: None,
             }));
-            store_and_infer.push(self.store_fact_and_infer(&field_membership)?);
+            store_and_infer.push(self.store_fact_and_infer(&field_membership, verify_state)?);
         }
 
         for fact in &def.equivalent_facts {
@@ -154,7 +154,7 @@ impl Runtime {
                     ));
                 }
             };
-            store_and_infer.push(self.store_fact_and_infer(&named)?);
+            store_and_infer.push(self.store_fact_and_infer(&named, verify_state)?);
         }
 
         Ok(ReleaseOneStructLayerResult::Success(
@@ -170,7 +170,7 @@ impl Runtime {
     pub fn auto_open_struct_layers_for_typed_parameters(
         &mut self,
         typed_parameters: &TypedParameterList,
-    ) -> RuntimeResult<
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<
         Result<
             Option<Vec<ReleaseOneStructLayerProof>>,
             (Vec<ReleaseOneStructLayerProof>, FailToReleaseOneStructLayer),
@@ -185,7 +185,7 @@ impl Runtime {
             };
             for identifier in &group.params {
                 let element = Obj::Identifier(self.identifier_obj_for_stored_mention(identifier));
-                match self.release_one_struct_layer(&element, struct_obj)? {
+                match self.release_one_struct_layer(&element, struct_obj, verify_state)? {
                     ReleaseOneStructLayerResult::Success(proof) => opened.push(proof),
                     ReleaseOneStructLayerResult::Failed(failed) => {
                         return Ok(Err((opened, failed)));

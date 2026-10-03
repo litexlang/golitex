@@ -19,6 +19,14 @@ use crate::rational_expression::helper::{
 //   examples/.../calculation_closed_decimal_complex_nested.lit
 //   e.g. `sqrt(4) * log(2, 8) + floor(2.5)!`, `((-7) % 3)^log(2, 4) + sqrt(0.36)`.
 pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
+    evaluate_decimal_tree(obj).or_else(|| {
+        let exact = super::exact_rational::EvalRational::from_obj(obj)?;
+        let (numerator, denominator) = exact.parts();
+        safe_div(&numerator.to_string(), &denominator.to_string()).map(Number::new)
+    })
+}
+
+fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
     match obj {
         Obj::Literal(Literal::Number(number)) => Some(Number::new(number.normalized_value.clone())),
         Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => {

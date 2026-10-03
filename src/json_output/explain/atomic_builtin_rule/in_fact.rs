@@ -52,6 +52,18 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInReal(p) => p.rule_id_and_message(lang),
             Self::ComplexCoordinateInComplex(p) => p.rule_id_and_message(lang),
             Self::RealArithmeticClosure(p) => p.rule_id_and_message(lang),
+            Self::RealOperandArithmeticClosure(_) => match lang {
+                OutputLanguage::English => text("RealOperandArithmeticClosure", "Real arithmetic from checked operands", "Checked real operands remain real under field arithmetic; division also has its checked WD domain"),
+                OutputLanguage::Chinese => text("RealOperandArithmeticClosure", "由实数操作数得实数运算结果", "已验证的实数操作数经四则运算仍为实数；除法另有已验证的定义域条件"),
+            },
+            Self::RealIntegerPower(_) => match lang {
+                OutputLanguage::English => text("RealIntegerPower", "Real integer power", "The base is checked real and the enclosing power WD certificate establishes an integer exponent and required nonzero domain"),
+                OutputLanguage::Chinese => text("RealIntegerPower", "实数的整数幂", "底数已验证为实数；幂的定义良好证据验证整数指数及所需非零条件"),
+            },
+            Self::ClosedExactScalarMembership(_) => match lang {
+                OutputLanguage::English => text("ClosedExactScalarMembership", "Exact scalar membership", "Exact real and imaginary coordinates satisfy the target scalar carrier"),
+                OutputLanguage::Chinese => text("ClosedExactScalarMembership", "精确数值载体", "精确的实部和虚部满足目标数值集合的条件"),
+            },
             Self::IntegerArithmeticClosure(_) => match lang {
                 OutputLanguage::English => text("IntegerArithmeticClosure", "Integer arithmetic closure", "Checked integer operands remain integers under negation, absolute value, addition, subtraction, multiplication and natural powers"),
                 OutputLanguage::Chinese => text("IntegerArithmeticClosure", "整数运算封闭", "已验证的整数操作数经取负、绝对值、加减乘及自然数幂仍为整数"),
@@ -110,6 +122,9 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInReal(_) => None,
             Self::ComplexCoordinateInComplex(_) => None,
             Self::RealArithmeticClosure(_) => None,
+            Self::RealOperandArithmeticClosure(_) => None,
+            Self::RealIntegerPower(_) => None,
+            Self::ClosedExactScalarMembership(_) => None,
             Self::IntegerArithmeticClosure(_) => None,
             Self::NativeScalarCodomain(_) => None,
             Self::PositiveIntegerInNPos(_) => None,
@@ -300,7 +315,7 @@ impl RealArithmeticClosureBuiltinRuleProof {
         text(
             "RealArithmeticClosure",
             "Real Arithmetic Closure",
-            "after child WD, `+ - * / abs …` over R-carriers stay in R",
+            "after domain WD, abs, sqrt, log and ln have real-valued results",
         )
     }
 

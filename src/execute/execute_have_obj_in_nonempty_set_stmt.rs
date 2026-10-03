@@ -56,14 +56,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> RuntimeResult<ExecHaveObjInNonemptySetStmtResult> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
         let mut groups = Vec::with_capacity(stmt.param_def.groups.len());
         let mut stored_fact_ids = Vec::new();
@@ -86,7 +79,7 @@ impl Runtime {
             let defined_params = self.define_typed_parameters_in_current_env(
                 &one,
                 Some(SharedHaveDefinition::HaveObjInNonemptySetOrParamType(Rc::clone(&shared))),
-            )?;
+             crate::execute::execute_fact_stmt::VerifyState::top_level())?;
             stored_fact_ids.extend(defined_params.stored_fact_ids.iter().copied());
             groups.push(HaveObjInNonemptySetGroupResult {
                 param_type_well_defined, nonempty_check, defined_params,
@@ -95,7 +88,7 @@ impl Runtime {
         let store_and_infer_result = StoreHaveObjAndInferResult { stored_fact_ids };
 
         let auto_opened_struct_layers =
-            match self.auto_open_struct_layers_for_typed_parameters(&stmt.param_def)? {
+            match self.auto_open_struct_layers_for_typed_parameters(&stmt.param_def, crate::execute::execute_fact_stmt::VerifyState::top_level())? {
                 Ok(layers) => layers,
                 Err((_, failed)) => {
                     return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(

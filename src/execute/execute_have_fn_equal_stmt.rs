@@ -48,14 +48,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualStmt,
     ) -> RuntimeResult<ExecHaveFnEqualStmtResult> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
         let anon_obj = Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone()));
         let anonymous_fn_well_defined =
@@ -76,7 +69,7 @@ impl Runtime {
             ));
         }
 
-        let store_and_infer_result = self.store_have_fn_equal_facts(stmt, &fn_set)?;
+        let store_and_infer_result = self.store_have_fn_equal_facts(stmt, &fn_set, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
 
         Ok(ExecHaveFnEqualStmtResult::Success(
             ExecHaveFnEqualStmtSuccessResult {
@@ -92,7 +85,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualStmt,
         fn_set: &FnSet,
-    ) -> RuntimeResult<StoreHaveFnEqualAndInferResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<StoreHaveFnEqualAndInferResult> {
         if self.identifier_defined_in_stack(&stmt.name.name) {
             return Err(RuntimeError::InternalBug(format!(
                 "identifier `{}` is already defined in this ExecEnv",
@@ -117,7 +110,7 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
+        let mut stored_fact_ids = self.store_fact_and_infer(&membership, verify_state)?.stored_fact_ids();
 
         let defining_equal_fact_id = self.global_ids.allocate_fact_id();
         let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
@@ -127,7 +120,7 @@ impl Runtime {
             line_file: Some(stmt.line_file.clone()),
         }));
         stored_fact_ids.extend(
-            self.store_fact_and_infer(&defining_equal)?
+            self.store_fact_and_infer(&defining_equal, verify_state)?
                 .stored_fact_ids(),
         );
 

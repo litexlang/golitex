@@ -150,7 +150,7 @@ impl Runtime {
                 }
             }
             (left, right) if is_one_obj(right) => {
-                if let Some(premise_proof) = self.known_in_positive_natural_proof(left) {
+                if let Some(premise_proof) = self.search_in_positive_natural_premise(left, verify_state)? {
                     return Ok(Some(
                         GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(
                             FromKnownInPositiveNaturalBuiltinRuleProof { premise_proof },

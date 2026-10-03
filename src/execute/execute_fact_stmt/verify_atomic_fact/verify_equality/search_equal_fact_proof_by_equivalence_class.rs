@@ -9,7 +9,7 @@ use crate::ast::fact::EqualFact;
 use crate::ast::obj::Obj;
 use crate::exec_env::known_fact_memory::ObjIR;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProofByEquivalenceClass;
-use crate::execute::execute_fact_stmt::{EqualityClassSearchMode, VerifyState};
+use crate::execute::execute_fact_stmt::{VerifyState};
 use crate::runtime::{FactId, Runtime, RuntimeResult};
 use std::collections::HashMap;
 
@@ -27,9 +27,6 @@ impl Runtime {
         {
             return Ok(Some(KnownEqualityPathProof::new(path).into()));
         }
-        if verify_state.equality_class_search == EqualityClassSearchMode::StoredPathsOnly {
-            return Ok(search_alpha_endpoints(&adjacency, fact));
-        }
 
         // BFS lists include the original endpoint at index 0. Try left-only,
         // right-only, then both sides; never repeat the already-tried goal pair.
@@ -38,7 +35,9 @@ impl Runtime {
         let left_only = (1..left.len()).map(|i| (i, 0));
         let right_only = (1..right.len()).map(|j| (0, j));
         let both = (1..left.len()).flat_map(|i| (1..right.len()).map(move |j| (i, j)));
-        let child_state = verify_state.for_equality_peer_comparison();
+        let child_state = verify_state.capped_at(
+            crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
+        );
         for (i, j) in left_only.chain(right_only).chain(both) {
             let mut bridge_fact = fact.clone();
             bridge_fact.fact_id = self.global_ids.allocate_fact_id();
@@ -68,52 +67,22 @@ impl Runtime {
         Ok(search_alpha_endpoints(&adjacency, fact))
     }
 
-    // A bridge verifies WD and then only identity, budgeted builtin or matching.
-    // StoredPathsOnly reaches direct WD, builtin premises and matching children.
-    // Binder WD retains its separate local inference entry (see VerifyState).
+    // A bridge verifies WD and searches with the shared ceiling <= BuiltinRule.
+    // It cannot start another peer stage or restore permission through WD/infer.
     // No successful bridge is stored in the caller's knowledge base.
     fn verify_equality_class_peer(
         &mut self,
         fact: EqualFact,
         state: VerifyState,
     ) -> RuntimeResult<Option<PeerEqualitySuccess>> {
-        debug_assert_eq!(
-            state.equality_class_search,
-            EqualityClassSearchMode::StoredPathsOnly
-        );
         let well_defined_proof =
             match self.verify_equal_fact_well_definedness(&fact, state.clone())? {
                 VerifyEqualFactWellDefinedResult::Success(proof) => proof,
                 VerifyEqualFactWellDefinedResult::Failed(_) => return Ok(None),
             };
-        if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(&fact) {
-            return Ok(Some(PeerEqualitySuccess::new(
-                fact,
-                well_defined_proof,
-                proof.into(),
-            )));
-        }
-        if state.can_use_builtin_rule {
-            if let Some(proof) =
-                self.search_equal_fact_builtin_rule(&fact, state.clone())?
-            {
-                return Ok(Some(PeerEqualitySuccess::new(
-                    fact,
-                    well_defined_proof,
-                    proof.into(),
-                )));
-            }
-        }
-        if let Some(proof) = self
-            .search_equal_fact_proof_by_matching_one_arg_by_one(&fact, state.known_only_no_wd())?
-        {
-            return Ok(Some(PeerEqualitySuccess::new(
-                fact,
-                well_defined_proof,
-                proof.into(),
-            )));
-        }
-        Ok(None)
+        Ok(self.search_equal_fact_proof(&fact, state)?.map(|proof| {
+            PeerEqualitySuccess::new(fact, well_defined_proof, proof)
+        }))
     }
 
     // Oriented path across visible env-stack generating edges (BFS).
@@ -148,7 +117,7 @@ impl Runtime {
     }
 }
 
-fn search_alpha_endpoints(adjacency: &EquivalenceClassAdjacency, fact: &EqualFact) -> Option<EqualFactSearchedProofByEquivalenceClass> {
+pub(crate) fn search_alpha_endpoints(adjacency: &EquivalenceClassAdjacency, fact: &EqualFact) -> Option<EqualFactSearchedProofByEquivalenceClass> {
     // Stored binder IDs can differ from a freshly parsed goal's IDs.
     // Cite the existing equality and prove pure alpha identity on each side;
     // never normalize the knowledge graph or perform definition rewriting.
@@ -157,6 +126,11 @@ fn search_alpha_endpoints(adjacency: &EquivalenceClassAdjacency, fact: &EqualFac
         for reversed in [false, true] {
             let (left, right) = if reversed { (&cited.right, &cited.left) }
             else { (&cited.left, &cited.right) };
+            // Compare borrowed objects before allocating a candidate fact. Most
+            // stored edges have a different shape and cannot be alpha endpoints.
+            if !same_or_alpha_objects(&fact.left, left) || !same_or_alpha_objects(&fact.right, right) {
+                continue;
+            }
             let mut endpoint = fact.clone();
             endpoint.right = left.clone();
             let Some(left_identity) = search_equal_fact_proof_by_they_are_the_same(&endpoint) else { continue; };
@@ -169,5 +143,33 @@ fn search_alpha_endpoints(adjacency: &EquivalenceClassAdjacency, fact: &EqualFac
         }
         }
     }
+    // Multi-edge version: the finite classes contain only stored objects.
+    // Compare their endpoints structurally, without WD or any proof-search call.
+    let left = equivalence_class_members_with_paths_in_adjacency(adjacency, &fact.left);
+    let right = equivalence_class_members_with_paths_in_adjacency(adjacency, &fact.right);
+    for (l, lpath) in &left {
+        for (r, rpath) in &right {
+            if lpath.is_empty() && rpath.is_empty() { continue; }
+            if !same_or_alpha_objects(l, r) { continue; }
+            let mut bridge = fact.clone();
+            bridge.left = l.clone();
+            bridge.right = r.clone();
+            let Some(identity) = search_equal_fact_proof_by_they_are_the_same(&bridge) else { continue; };
+            return Some(EqualFactSearchedProofByEquivalenceClass::AlphaPaths(
+                super::result::KnownEqualityAlphaPathsProof {
+                    left_path: KnownEqualityPathProof::new(lpath.clone()),
+                    left: l.clone(), right: r.clone(), identity,
+                    right_path: KnownEqualityPathProof::new(rpath.iter().rev()
+                        .map(|(from, to, id)| (to.clone(), from.clone(), *id)).collect()),
+                },
+            ));
+        }
+    }
     None
+}
+
+fn same_or_alpha_objects(left: &Obj, right: &Obj) -> bool {
+    if std::mem::discriminant(left) != std::mem::discriminant(right) { return false; }
+    super::by_they_are_the_same::helper::compound_objs_alpha_equal(left, right)
+        || left.ir() == right.ir()
 }

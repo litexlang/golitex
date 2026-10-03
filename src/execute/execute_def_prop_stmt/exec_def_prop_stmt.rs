@@ -101,14 +101,7 @@ impl Runtime {
     ) -> RuntimeResult<
         Result<(IntroduceTypedParametersResult, Vec<FactWellDefinedProof>), ExecDefPropStmtFailed>,
     > {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
         let introduced = match self
             .introduce_typed_parameters(&def_prop.typed_parameters, verify_state.clone())?
@@ -129,7 +122,7 @@ impl Runtime {
                     // Assume each body fact before later ones so domain-restricted
                     // applications (e.g. `line_through_points(a, b)` under `a != b`)
                     // can pass WD. Local env is not merged to the parent.
-                    let _ = self.store_fact_and_infer(fact)?;
+                    let _ = self.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
                     iff_fact_well_defined.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(reason) => {

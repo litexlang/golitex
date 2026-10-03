@@ -15,5 +15,8 @@ pub fn evaluate_closed_numeric_obj(obj: &Obj) -> Option<Obj> {
     if let Some(exact) = evaluate_obj_to_exact_rational_obj_for_eval(obj) {
         return Some(exact);
     }
+    if let Some(radical) = crate::rational_expression::exact_radical::ExactRadical::from_obj(obj) {
+        return Some(radical.to_obj());
+    }
     evaluate_obj_to_normalized_decimal_number(obj).map(|number| Obj::Literal(Literal::Number(number)))
 }

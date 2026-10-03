@@ -1,0 +1,8 @@
+# SinHalfPiShift: real quarter-turn shift.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/sin_half_pi_shift.lit
+# Previously rejected, exact legacy-positive source:
+# forall x R:
+#     sin(x+pi/2) = cos(x)
+forall x R:
+    sin(x+pi/2) = cos(x)
+# Boundary: wrong value or unrestricted complex arguments reject in Rust tests.

@@ -1,5 +1,6 @@
 # Before: tuple matching only cited coordinate equalities already known.
-# Now: the bounded tuple strategy proves each coordinate equality.
+# Now: SP constructor matching proves each coordinate with Direct calculation;
+# the tuple strategy remains available for coordinates needing higher rules.
 # Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_strategy/tuple_component_calculation.lit
 # Boundary: unequal lengths and an incorrect coordinate must still fail.
 (1 + 3, 2 + 4) = (4, 6)

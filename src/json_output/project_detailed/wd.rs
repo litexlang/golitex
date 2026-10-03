@@ -61,6 +61,18 @@ pub(super) fn project_atomic_wd_proof(
             ("arity", JsonValue::Number(*arity as f64)),
         ]),
     };
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
+    let domain = match &proof.predicate_domain {
+        PredicateDomainProof::ByKnownFact(cite) => object_for(runtime, vec![
+            ("type", string("by_known_fact_domain")),
+            ("cite", super::searched::project_known_atomic(cite, runtime)),
+        ]),
+        PredicateDomainProof::ByRequirements(requirements) => JsonValue::Array(requirements.iter().map(|p|
+            object_for(runtime, vec![
+                ("requirement", string(p.requirement.readable_string())),
+                ("verify", super::verify::project_verify_fact(&p.result, runtime)),
+            ])).collect()),
+    };
     object_for(runtime, vec![(
         "well_defined_of_each_parameter",
         JsonValue::Array(
@@ -71,11 +83,7 @@ pub(super) fn project_atomic_wd_proof(
                 .collect(),
         ),
     ), ("predicate_signature", signature),
-    ("predicate_domain", JsonValue::Array(proof.predicate_domain.iter().map(|p|
-        object_for(runtime, vec![
-            ("requirement", string(p.requirement.readable_string())),
-            ("verify", super::verify::project_verify_fact(&p.result, runtime)),
-        ])).collect()))])
+    ("predicate_domain", domain)])
 }
 
 pub(super) fn project_equal_wd_proof(
@@ -222,6 +230,13 @@ pub(super) fn project_forall_wd(proof: &ForallFactWellDefinedProof, runtime: &Ru
                     .collect(),
             ),
         ),
+        ("auto_opened_struct_layers", JsonValue::Array(proof.auto_opened_struct_layers.iter()
+            .flatten().map(|opened| object_for(runtime, vec![
+                ("obj", string(opened.obj.readable_string())),
+                ("struct_obj", string(opened.struct_obj.readable_string())),
+                ("store_and_infer", JsonValue::Array(opened.store_and_infer.iter()
+                    .map(|stored| super::store::project_store_and_infer(stored, runtime)).collect())),
+            ])).collect())),
         (
             "dom",
             JsonValue::Array(

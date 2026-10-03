@@ -187,14 +187,7 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let residual_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
-            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
-            can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-            equality_class_search: verify_state.equality_class_search,
-        };
+        let residual_state = verify_state.without_rewrite();
         let proof_of_rewritten_fact = self.verify_atomic_fact(&rewritten, residual_state)?;
         if proof_of_rewritten_fact.is_failed() {
             return Ok(None);
@@ -224,14 +217,7 @@ impl Runtime {
             .cloned()
             .collect();
         let adjacency = self.visible_equivalence_class_adjacency();
-        let residual_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
-            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
-            can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-            equality_class_search: verify_state.equality_class_search,
-        };
+        let residual_state = verify_state.without_rewrite();
 
         for (arg_index, arg) in args.iter().enumerate() {
             let from_ir = arg.ir();
@@ -286,30 +272,15 @@ impl Runtime {
         if matches!(fact, AtomicFact::EqualFact(_)) {
             return Ok(None);
         }
-        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
+        if !verify_state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall) {
             return Ok(None);
         }
         let args: Vec<Obj> = atomic_fact_args_ref(fact)
             .into_iter()
             .cloned()
             .collect();
-        let equal_child_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
-            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-            equality_class_search: verify_state.equality_class_search,
-        };
-        let residual_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
-            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
-            can_use_def_and_known_forall_and_known_strategy: verify_state
-                .can_use_def_and_known_forall_and_known_strategy,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-            equality_class_search: verify_state.equality_class_search,
-        };
+        let equal_child_state = verify_state.without_rewrite();
+        let residual_state = verify_state.without_rewrite();
 
         let mut rewritten_args = args.clone();
         let mut unfold_equal_proofs = Vec::new();
@@ -368,14 +339,7 @@ impl Runtime {
         let Some(alternate) = order_dual_atomic_fact(fact, || self.global_ids.allocate_fact_id()) else {
             return Ok(None);
         };
-        let residual_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
-            remaining_deep_search_depth: verify_state.remaining_deep_search_depth,
-            can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-            equality_class_search: verify_state.equality_class_search,
-        };
+        let residual_state = verify_state.without_rewrite();
         let proof_of_alternate_fact = self.verify_atomic_fact(&alternate, residual_state)?;
         if proof_of_alternate_fact.is_failed() {
             return Ok(None);

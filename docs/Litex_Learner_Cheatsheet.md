@@ -216,6 +216,13 @@ The canonical forms are <code>-(t^2)</code>, <code>(-t)^2</code>, and
 
 Function definitions state the domain, return set, and expression:
 
+Parameter domains and the return set use the enclosing scope and cannot refer
+to that function's own parameters. Domain conditions and the body can:
+<code>fn(x R: x > 0) R {x + 1}</code> is valid, while
+<code>fn(x R) {x}</code> and <code>fn(S power_set(R), x S) R</code> are rejected
+during parsing. Put a more precise output membership property in a separate
+fact. Ordinary quantified parameter dependencies remain available.
+
 ```litex
 have fn square_plus_one(t R) R = t^2 + 1
 

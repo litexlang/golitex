@@ -42,6 +42,8 @@ pub enum GreaterFactSearchProofByBuiltinRule {
     FromPositiveRealMembership(FromPositiveRealMembershipBuiltinRuleProof),
     // Native Euler constant is strictly positive: `e > 0`.
     NativeEulerGreaterZero(NativeEulerGreaterZeroBuiltinRuleProof),
+    // Native Euler constant satisfies the standard bound e > 1.
+    NativeEulerGreaterOne(NativeEulerGreaterOneBuiltinRuleProof),
     // Native Pi constant is strictly positive: `pi > 0`.
     NativePiGreaterZero(NativePiGreaterZeroBuiltinRuleProof),
 }
@@ -78,6 +80,7 @@ pub struct FromPositiveRealMembershipBuiltinRuleProof {
 }
 
 pub struct NativeEulerGreaterZeroBuiltinRuleProof {}
+pub struct NativeEulerGreaterOneBuiltinRuleProof {}
 
 pub struct NativePiGreaterZeroBuiltinRuleProof {}
 
@@ -95,6 +98,13 @@ impl Runtime {
         if let Some(premise_proof) = self.known_less_proof(&fact.right, &fact.left) {
             return Ok(Some(GreaterFactSearchProofByBuiltinRule::FromKnownLess(
                 FromKnownLessBuiltinRuleProof { premise_proof },
+            )));
+        }
+        if matches!(&fact.left, Obj::Literal(Literal::EulerNumber(_)))
+            && matches!(&fact.right, Obj::Literal(Literal::Number(n)) if n.normalized_value == "1")
+        {
+            return Ok(Some(GreaterFactSearchProofByBuiltinRule::NativeEulerGreaterOne(
+                NativeEulerGreaterOneBuiltinRuleProof {},
             )));
         }
         if is_zero_obj(&fact.right) {

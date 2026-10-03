@@ -8,13 +8,13 @@ impl Runtime {
     pub(crate) fn infer_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> RuntimeResult<InferAtomicFactResult> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<InferAtomicFactResult> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
-                Ok(InferAtomicFactResult::EqualFact(self.infer_equal_fact(equal_fact)?))
+                Ok(InferAtomicFactResult::EqualFact(self.infer_equal_fact(equal_fact, verify_state)?))
             }
             _ => Ok(InferAtomicFactResult::ExceptEquality(
-                self.infer_atomic_except_equality(atomic_fact)?,
+                self.infer_atomic_except_equality(atomic_fact, verify_state)?,
             )),
         }
     }

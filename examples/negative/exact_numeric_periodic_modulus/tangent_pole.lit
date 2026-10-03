@@ -1,0 +1,2 @@
+# Must reject: mathematical/domain boundary, never a positive corpus case.
+tan(pi / 2) = 0

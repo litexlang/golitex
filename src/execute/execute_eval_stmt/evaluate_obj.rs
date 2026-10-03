@@ -33,10 +33,22 @@ pub fn evaluate_obj(
         });
     }
 
+    if crate::rational_expression::contains_imaginary_unit(obj) {
+        if let Some(value) = crate::rational_expression::exact_complex::exact_complex_value(obj) {
+            return Ok(Ok(value));
+        }
+    }
+
     match obj {
-        Obj::ComplexOperator(_) => Ok(match crate::rational_expression::exact_complex::exact_modulus_value(obj) {
-            Some(value) => Ok(value), None => Err(ExecEvalStmtFailed::UnsupportedExpression),
-        }),
+        Obj::ComplexOperator(_) => {
+            let value = crate::rational_expression::exact_rational::evaluate_obj_to_exact_rational_obj_for_eval(obj)
+                .or_else(|| crate::rational_expression::exact_complex::exact_modulus_value(obj));
+            Ok(match value {
+                Some(value) => Ok(crate::rational_expression::exact_radical::ExactRadical::from_obj(&value)
+                    .map(|normal| normal.to_obj()).unwrap_or(value)),
+                None => Err(ExecEvalStmtFailed::UnsupportedExpression),
+            })
+        }
         Obj::FiniteSetStat(_) | Obj::ProductShape(_) => super::evaluate_finite_objects::evaluate_finite_object(runtime,obj,depth,active_calls),
         Obj::ArithmeticOperator(op) => {
             evaluate_arithmetic_operator(runtime, op, depth, active_calls)
@@ -51,7 +63,7 @@ pub fn evaluate_obj(
                 let application_well_defined = match runtime.verify_obj_well_definedness(
                     obj,
                     crate::execute::execute_by_stmt::proof_verify_state()
-                        .without_well_defined_storage(),
+                        ,
                 )? {
                     crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(p) => p,
                     failed => return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),

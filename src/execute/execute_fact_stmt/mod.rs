@@ -7,7 +7,6 @@ mod helper;
 mod negate_quantifier_free_conjunction;
 pub(crate) mod known_tuple;
 mod result;
-mod strategy_search;
 mod verify;
 pub mod verify_and_fact;
 pub mod verify_atomic_fact;
@@ -41,8 +40,7 @@ pub use verify_or_fact::{
     OrBuiltinRealLineTrichotomyLessEqGreater, OrFactSearchProofByBuiltinRule,
     OrFactSearchedProof, VerifyOrFactFailed, VerifyOrFactResult, VerifyOrFactSuccess,
 };
-pub use strategy_search::StrategySearch;
-pub use verify_state::{EqualityClassSearchMode, VerifyState};
+pub use verify_state::{VerifyState, VerifyStateLevel};
 pub use well_defined_results::{
     fail_to_verify_obj_well_defined_others, AtomicFactWellDefinedProof, EqualFactWellDefinedProof,
     ExistShapedFactWellDefinedProof, FactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,

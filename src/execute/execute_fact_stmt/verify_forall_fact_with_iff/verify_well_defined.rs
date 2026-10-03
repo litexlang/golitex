@@ -72,7 +72,7 @@ impl Runtime {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     // Only the shared antecedents guard both sides of the iff.
                     // Neither side is assumed while checking the other side's WD.
-                    let _ = self.store_fact_and_infer(dom)?;
+                    let _ = self.store_fact_and_infer(dom, verify_state)?;
                     succeeded_dom.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {

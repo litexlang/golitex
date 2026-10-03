@@ -1,0 +1,14 @@
+# Tracer: exact closed complex inequality supplies division's domain fact.
+# Before (rejected):
+# 1+i != 0
+# (1+i)/(1+i) $in Q
+# Former behavior: a nonzero closed complex denominator lacked exact evidence.
+# Now: either differing exact coordinate establishes inequality.
+1+i != 0
+0 != 1+i
+i^2 != 1
+(1+i)/(1+i) $in Q
+
+# Boundary: equal coordinate pairs and zero denominators remain rejected.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/closed_complex_not_equal.lit
+# Implementation: builtin not_equal.rs / exact_complex.rs; focused Rust controls.

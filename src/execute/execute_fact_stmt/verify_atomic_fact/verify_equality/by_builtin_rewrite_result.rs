@@ -35,6 +35,6 @@ pub struct ClosedNumericEqualSubstitutionBuiltinRewriteProof {
     pub rewritten_left: Obj,
     pub rewritten_right: Obj,
     pub cited_equal_fact_ids: Vec<FactId>,
-    // Prove rewritten_left = rewritten_right with can_use_rewrite = false.
+    // Prove rewritten_left = rewritten_right with rewrite permission consumed.
     pub residual_equal: VerifyFactResult,
 }

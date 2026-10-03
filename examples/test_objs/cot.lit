@@ -9,3 +9,21 @@ sketch:
 # P04: cot(arccot(2)) = 2
 sketch:
     cot(arccot(2)) = 2
+
+# P02: exact numeric/periodic/modulus repair; original source retained in the dated journal
+sketch:
+    cot(pi / 4) = 1
+
+# P03: exact numeric/periodic/modulus repair; original source retained in the dated journal
+sketch:
+    cot(-pi / 4) = -1
+
+# P91: exact numeric/periodic/modulus boundary
+sketch:
+    have k Z
+    cot(pi / 4 + k * pi)=1
+
+# P92: exact numeric/periodic/modulus boundary
+sketch:
+    have k Z
+    cot(pi / 6 - k * pi)=sqrt(3)

@@ -6,6 +6,7 @@ pub mod nonzero_product;
 pub mod structural_order_weak;
 pub mod structural_order_strict;
 pub mod numeric_carrier;
+mod search_field_arithmetic_carrier_strategy;
 pub mod set_membership;
 pub mod subset;
 pub mod is_finite_set;

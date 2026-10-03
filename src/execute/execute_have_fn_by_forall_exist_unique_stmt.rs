@@ -86,14 +86,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
     ) -> RuntimeResult<ExecHaveFnByForallExistUniqueStmtResult> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
         if self.identifier_defined_in_stack(&stmt.name.name) {
             return Err(RuntimeError::InternalBug(format!(
@@ -138,7 +131,7 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
+        let mut stored_fact_ids = self.store_fact_and_infer(&membership, crate::execute::execute_fact_stmt::VerifyState::top_level())?.stored_fact_ids();
 
         let applied = applied_function_obj(&Obj::Identifier(function_ident.clone()), &stmt.forall.typed_parameters);
         let property_forall =
@@ -153,13 +146,13 @@ impl Runtime {
             }
         }
         let property_forall_fact_id = property_fact.fact_id();
-        stored_fact_ids.extend(self.store_fact_and_infer(&property_fact)?.stored_fact_ids());
+        stored_fact_ids.extend(self.store_fact_and_infer(&property_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?.stored_fact_ids());
 
         let uniqueness_forall =
             self.build_have_fn_by_exist_uniqueness_forall(stmt, &shape, applied)?;
         let uniqueness_fact = Fact::ForallFact(uniqueness_forall);
         let uniqueness_forall_fact_id = uniqueness_fact.fact_id();
-        stored_fact_ids.extend(self.store_fact_and_infer(&uniqueness_fact)?.stored_fact_ids());
+        stored_fact_ids.extend(self.store_fact_and_infer(&uniqueness_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?.stored_fact_ids());
 
         self.top_exec_env_mut().definitions.identifiers.insert(
             stmt.name.name.clone(),

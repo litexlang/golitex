@@ -3,7 +3,7 @@ use crate::ast::stmt::Stmt;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
     AtomicExceptEqualityFactSearchedProof, VerifyAtomicExceptEqualityFactResult,
 };
-use crate::execute::execute_fact_stmt::{StrategySearch, VerifyFactResult, VerifyState};
+use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::execute::ExecStmtResult;
 use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
@@ -127,7 +127,7 @@ fn stored_fact_wins_over_definition_property_in_both_entries() {
     for strategy in [false, true] {
         let target = Fact::AtomicFact(atomic(&mut rt, "id(a) $in R"));
         let result = if strategy {
-            rt.verify_fact_in_strategy(&target, StrategySearch { depth: 0 })
+            rt.verify_fact(&target, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
                 .unwrap()
         } else {
             rt.verify_fact(&target, builtin_disabled()).unwrap()
@@ -152,7 +152,7 @@ fn zero_strategy_depth_uses_the_same_known_special_property_phase() {
     exec_ok(&mut rt, "have a R = 1");
     let target = Fact::AtomicFact(atomic(&mut rt, "id(a) $in R"));
     let result = rt
-        .verify_fact_in_strategy(&target, StrategySearch { depth: 0 })
+        .verify_fact(&target, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
         .unwrap();
     assert_special(result, "strategy depth zero");
 }
@@ -246,7 +246,7 @@ fn fixed_builtin_premises_retain_definition_evidence_without_storing_the_premise
     let before = memory_sizes(&rt);
     let target = atomic(&mut rt, "positive(a) >= 1");
     let mut state = builtin_disabled();
-    state.can_use_builtin_rule = true;
+    state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
     let result = rt.verify_fact(&Fact::AtomicFact(target), state).unwrap();
     assert!(!result.is_failed());
     let VerifyFactResult::AtomicExceptEquality(result) = result else {
@@ -365,7 +365,7 @@ fn bounded_codomain_fallback_retains_its_selected_signature_citation() {
     let result = rt
         .verify_fact(
             &Fact::AtomicFact(target),
-            VerifyState::top_level().without_well_defined_storage(),
+            VerifyState::top_level(),
         )
         .unwrap();
     let VerifyFactResult::AtomicExceptEquality(result) = result else {
@@ -537,7 +537,7 @@ fn equality_antisymmetry_retains_both_read_only_order_citations() {
     let target = Fact::AtomicFact(atomic(&mut rt, "a = b"));
     let before = memory_sizes(&rt);
     let mut state = builtin_disabled();
-    state.can_use_builtin_rule = true;
+    state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
     let VerifyFactResult::Equality(result) = rt.verify_fact(&target, state).unwrap() else {
         panic!("equality")
     };
@@ -568,7 +568,7 @@ fn runtime() -> Runtime {
 }
 
 fn builtin_disabled() -> VerifyState {
-    VerifyState::top_level().known_only_no_wd()
+    VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty)
 }
 
 fn parse(rt: &mut Runtime, code: &str) -> Stmt {

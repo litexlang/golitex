@@ -1,7 +1,7 @@
 use super::by_builtin_strategy_result::ExtremumEqualityStrategySingleStep;
 use crate::ast::fact::{EqualFact, LessEqualFact};
 use crate::ast::obj::{Obj, ArithmeticOperator, FiniteSetStat};
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -10,7 +10,7 @@ impl Runtime {
     pub fn search_equal_fact_by_extremum_equality(
         &mut self,
         fact: &EqualFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<ExtremumEqualityStrategySingleStep>> {
         let has_extremum = matches!(
             (&fact.left, &fact.right),

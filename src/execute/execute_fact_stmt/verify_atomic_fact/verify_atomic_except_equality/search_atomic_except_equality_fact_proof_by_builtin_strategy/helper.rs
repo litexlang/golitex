@@ -5,7 +5,7 @@ use crate::ast::fact::{
 use crate::ast::line_file::SourceLine;
 use crate::ast::obj::{Literal, Number, Obj};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::cell::RefCell;
 
@@ -74,16 +74,16 @@ pub(super) fn is_zero_obj(obj: &Obj) -> bool {
 
 
 impl Runtime {
-    // Prove strategy premises inside StrategySearch: known + nested strategy only.
+    // Prove strategy premises inside VerifyState: known + nested strategy only.
     pub(crate) fn verify_strategy_requirements(
         &mut self,
         requirement_facts: Vec<Fact>,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<(Vec<Fact>, Vec<VerifyFactResult>)>> {
-        let child = ctx.after_layer();
+        let child = ctx;
         let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
         for requirement in &requirement_facts {
-            let proof = self.verify_fact_in_strategy(requirement, child)?;
+            let proof = self.verify_fact(requirement, child)?;
             if proof.is_failed() {
                 return Ok(None);
             }
@@ -95,7 +95,7 @@ impl Runtime {
     pub(crate) fn try_strategy_requirement_alternatives(
         &mut self,
         alternatives: Vec<Vec<Fact>>,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<(Vec<Fact>, Vec<VerifyFactResult>)>> {
         for required in alternatives {
             if let Some(ok) = self.verify_strategy_requirements(required, ctx)? {

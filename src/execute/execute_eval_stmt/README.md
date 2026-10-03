@@ -7,7 +7,7 @@ Display evaluation only (no proof fact stored).
 1. Source WD, including the full callable domain and its predicate conditions.
 2. `known_closed_numeric_equal` rewrite (same index as atomic-fact rewrite).
 3. Recursive `evaluate_obj`
-   - `ClosedNumericExpr` → exact rational / closed decimal
+   - `ClosedNumericExpr` → exact rational / bounded radical / closed decimal
      (includes integer-domain `% quot gcd lcm !`, foldable `sqrt` / `log`)
    - arithmetic ops → eval children → rebuild → simplify
    - plain-Identifier `FnObj` with stored algo → case dispatch → eval return
@@ -60,3 +60,40 @@ arbitrary-object enumeration mechanism.
 
 Acceptance: `examples/example_small_repairs.lit`; paired controls:
 `examples/negative/example_small_repairs/`.
+
+
+## Exact signed powers and numeric complex modulus
+
+Closed numeric integer powers use a checked reciprocal for a negative exponent;
+source WD requires a nonzero base. Exact nonterminating fractions remain
+rational objects. Numeric `C_abs` shares the pure coordinate calculator with
+the equality rule, accepts reordered and signed coordinates, and displays the
+nonnegative principal root (an exact `sqrt` when nonsquare). It never stores an
+equality. Inputs outside the numeric coordinate grammar or checked integer
+bounds decline calculation. Periodic trig values belong to equality/WD rules;
+this display evaluator does not independently execute symbolic trig functions.
+
+Tracers: `examples/proof_nodes/equal/by_builtin_rule/negative_integer_power_exact.lit`
+and `numeric_complex_modulus.lit`. Boundary tests:
+`tests/unit/execute/exact_numeric_periodic_modulus/tests.rs`.
+
+## Closed elementary calculations
+
+Fraction rounding and sign, integer-valued rational operands, perfect rational
+square roots and rational logarithms use `exact_rational`. `exact_radical`
+normalizes bounded rational linear combinations of square-free roots, products,
+integer powers and single-term radical denominators. `exact_complex` supplies
+closed rational-coordinate arithmetic and `re`/`img` projections.
+For example, `eval floor(-7/3)` displays `-3`, `eval sqrt(12)+sqrt(27)` displays
+`5 * sqrt(3)`, and `eval log(8,4)` displays `2 / 3`. Their assertion counterparts
+use the same pure producers at the central closed-calculation leaf.
+
+Source WD remains first. Computation never uses approximate logs/roots, stores
+a fact, or calls a premise verifier. Factorization above trial divisor 10,000,
+checked-integer overflow, radical expressions exceeding 64 terms/levels and
+general sums in radical denominators decline this calculator.
+Tracers: `closed_fraction_rounding_calculation.lit`,
+`closed_radical_calculation.lit`, `closed_complex_parts_calculation.lit`,
+`closed_rational_log_calculation.lit` under
+`examples/proof_nodes/equal/by_builtin_rule/`; controls under
+`examples/negative/closed_exact_elementary_calculation/`.

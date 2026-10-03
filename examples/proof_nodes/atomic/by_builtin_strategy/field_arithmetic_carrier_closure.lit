@@ -1,0 +1,25 @@
+# Previously rejected without explicit carrier echoes:
+# have fn s(a Q) Q = 3 * a + 2
+# Field constructors descend to checked leaves; every division retains a nonzero premise.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_strategy/field_arithmetic_carrier_closure.lit
+# False carriers, division zero and inherited ceilings: field_arithmetic_carrier_strategy tests.
+forall a Q:
+    3 * a + 2 $in Q
+forall a, b Q:
+    b != 0
+    =>:
+        -(3 * a + 2) / b $in Q
+
+prop surjective_fn(S, T set, f fn(x S) T):
+    forall y T:
+        exist x S st {y = f(x)}
+
+sketch:
+    have fn s(a Q) Q = 3 * a + 2
+    claim:
+        ? forall y Q:
+            exist x Q st {y = s(x)}
+        have a Q = (y - 2) / 3
+        witness exist x Q st {y = s(x)} from a:
+            y = 3 * ((y - 2) / 3) + 2 = 3 * a + 2 = s(a)
+    by def $surjective_fn(Q, Q, s)

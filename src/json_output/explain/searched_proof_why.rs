@@ -12,6 +12,14 @@ pub struct SearchedProofWhyText {
 
 pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedProofWhyText {
     let (type_tag, rule_name, message) = match (kind, lang) {
+        ("closed_calculation", OutputLanguage::English) => (
+            "by_closed_calculation", "Closed calculation",
+            "Exact evaluation of closed expressions without proof search",
+        ),
+        ("closed_calculation", OutputLanguage::Chinese) => (
+            "封闭计算", "封闭计算",
+            "精确计算封闭表达式，不递归搜索证明",
+        ),
         ("known_special_property", OutputLanguage::English) => (
             "known_special_property", "Known special property",
             "Verified by matching a definition-time object property and existing evidence",

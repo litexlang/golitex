@@ -281,7 +281,9 @@ pub struct ProductOfNonnegativesBuiltinRuleProof {
     pub right_nonnegative_proof: VerifyFactResult,
 }
 
-pub struct EvenPowNonnegativeBuiltinRuleProof {}
+pub struct EvenPowNonnegativeBuiltinRuleProof {
+    pub base_in_real_proof: VerifyFactResult,
+}
 
 pub struct PowNonnegFromPositiveBaseBuiltinRuleProof {
     pub base_positive_proof: VerifyFactResult,
@@ -498,9 +500,6 @@ impl Runtime {
         }
 
         // Premise-producing / shape rules consume the builtin-rule budget.
-        if !verify_state.can_use_builtin_rule {
-            return Ok(None);
-        }
         let child_state = verify_state.clone();
 
         if let Some(proof) =

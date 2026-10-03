@@ -156,7 +156,7 @@ impl Runtime {
             .store_def_template(def_template.clone());
 
         let definition_facts =
-            self.store_template_definition_facts(def_template, &parts.body, &local_env)?;
+            self.store_template_definition_facts(def_template, &parts.body, &local_env, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
 
         Ok(ExecDefTemplateStmtResult::Success(
             ExecDefTemplateStmtSuccessResult {
@@ -183,14 +183,7 @@ impl Runtime {
         &mut self,
         def_template: &DefTemplateStmt,
     ) -> RuntimeResult<Result<LocalParts, ExecDefTemplateStmtFailed>> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
         let introduced_params = match self
             .introduce_typed_parameters(&def_template.template_arg_def, verify_state.clone())?
@@ -214,7 +207,7 @@ impl Runtime {
                     return Ok(Err(ExecDefTemplateStmtFailed::DomainFact(reason)));
                 }
             };
-            let store_and_infer = self.store_fact_and_infer(&fact)?;
+            let store_and_infer = self.store_fact_and_infer(&fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
             assumed_dom_facts.push(AssumedTemplateDomFactResult {
                 well_defined,
                 store_and_infer,

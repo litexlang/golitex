@@ -26,3 +26,11 @@ pub use well_defined_result::{
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
     VerifyAtomicFactWellDefinedResult,
 };
+
+pub mod search_atomic_fact;
+pub use search_atomic_fact::AtomicFactSearchedProof;
+
+pub mod closed_calculation_proof;
+pub mod calculate_closed_atomic_fact;
+pub mod direct_atomic_fact_search_result;
+pub mod search_atomic_fact_proof_by_known_fact_or_closed_calculation;

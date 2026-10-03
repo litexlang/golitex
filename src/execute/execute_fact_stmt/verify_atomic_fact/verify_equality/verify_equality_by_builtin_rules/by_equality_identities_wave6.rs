@@ -81,7 +81,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualityIdentitiesWave6BuiltinRuleProof>> {
-        let child = verify_state.without_well_defined_storage();
+        let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if let Some(p) = self.try_abs_nonneg_equals_self(left, right, child.clone())? {
                 return Ok(Some(

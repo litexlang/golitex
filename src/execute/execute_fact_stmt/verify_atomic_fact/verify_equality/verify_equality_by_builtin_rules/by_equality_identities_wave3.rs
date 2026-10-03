@@ -88,7 +88,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualityIdentitiesWave3BuiltinRuleProof>> {
-        let child = verify_state.without_well_defined_storage();
+        let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if let Some(p) = self.try_min_idempotent(left, right)? {
                 return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::MinIdempotent(p)));

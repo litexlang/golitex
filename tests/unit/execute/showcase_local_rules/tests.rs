@@ -44,9 +44,13 @@ fn cosine_integer_offset_positive_and_evidence() {
         true,
     );
     assert!(detailed.contains("CosZeroIntegerOffset"));
-    assert!(detailed.contains("RationalWithNonzeroPremises"));
-    assert!(detailed.contains("PiNonzero"));
+    assert!(detailed.contains("PeriodicTrig"));
     assert!(detailed.contains("proof_of_requirement_facts"));
+    // Numeric/integral angles now take the direct periodic leaf. A symbolic
+    // denominator still exercises the original guarded strategy and evidence.
+    let guarded = check("have a R:\n    a != 0\ncos(a*pi/a+pi/2)=0", true);
+    assert!(guarded.contains("RationalWithNonzeroPremises"));
+    assert!(guarded.contains("PiNonzero"));
     check("0 = cos(3*pi/2)", true);
 }
 #[test]
@@ -70,8 +74,8 @@ fn tuple_coordinates_have_independent_proofs() {
         )),
         true,
     );
-    assert!(detailed.contains("TupleComponentEquality"));
-    assert!(detailed.contains("closed_decimal"));
+    assert!(detailed.contains("by_matching_one_arg_by_one"));
+    assert!(detailed.contains("by_closed_calculation"));
     check("(1+3,2+4)=(4,7)", false);
     check("(1+3,2+4)=(4,6,0)", false);
     check("(1,2)[1]+(3,4)[1]=1+3", true);
@@ -146,28 +150,30 @@ fn full_add2_chain_and_projection_boundaries() {
 }
 #[test]
 fn local_strategies_respect_existing_depth_boundary() {
-    use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+    use crate::execute::execute_fact_stmt::VerifyStateLevel;
     let mut rt = runtime();
-    let depth = StrategySearch { depth: 0 };
+    let depth = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
     let eq = equal(&mut rt, "cos(3*pi/2)=0");
     assert!(rt
-        .search_equal_fact_by_cos_zero_integer_offset(&eq, depth)
+        .search_equal_fact_proof(&eq, depth.capped_at(VerifyStateLevel::KnownSpecialProperty))
         .unwrap()
         .is_none());
     let eq = equal(&mut rt, "(1+3,2+4)=(4,6)");
     assert!(rt
-        .search_equal_fact_by_tuple_components(&eq, depth)
+        .search_equal_fact_proof(&eq, depth)
         .unwrap()
-        .is_none());
+        .is_some());
     let eq = equal(&mut rt, "(1,2)[1]+(3,4)[1]=1+3");
     assert!(rt
-        .search_equal_fact_by_arithmetic_congruence(&eq, depth)
+        .search_equal_fact_proof(&eq, depth.capped_at(VerifyStateLevel::Direct))
         .unwrap()
         .is_none());
-    // Known-only matching still cannot synthesize arithmetic coordinate proofs.
+    // Constructor matching at SP can now calculate its Direct leaves. Direct
+    // itself still cannot decompose the tuple.
     let eq = equal(&mut rt, "(1+3,2+4)=(4,6)");
-    assert!(rt
-        .verify_equal_fact(&eq, VerifyState::top_level().known_only_no_wd())
+    assert!(rt.search_equal_fact_proof(&eq, VerifyState::new(VerifyStateLevel::Direct)).unwrap().is_none());
+    assert!(!rt
+        .verify_equal_fact(&eq, VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty))
         .unwrap()
         .is_failed());
 }

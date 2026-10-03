@@ -6,6 +6,8 @@ mod decimal_comparison;
 mod denominator_clearing;
 mod exact_division;
 pub mod exact_rational;
+pub(crate) mod integer_factorization;
+pub(crate) mod exact_radical;
 pub(crate) mod exact_complex;
 pub(crate) mod pi_multiple;
 pub(crate) mod helper;
@@ -27,3 +29,5 @@ pub use normalization::{
     algebraic_normalization_nonzero_requirements, objs_equal_by_rational_expression_evaluation,
     objs_equal_by_complex_expression_evaluation, contains_imaginary_unit,
 };
+
+pub(crate) mod closed_scalar_membership;

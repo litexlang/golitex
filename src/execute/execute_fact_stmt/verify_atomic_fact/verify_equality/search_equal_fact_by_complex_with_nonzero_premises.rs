@@ -1,14 +1,14 @@
 use super::by_builtin_strategy_result::ComplexWithNonzeroPremisesStrategySingleStep;
 use crate::ast::fact::{EqualFact, NotEqualFact};
 use crate::ast::obj::{Literal, Number, Obj};
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::rational_expression::{algebraic_normalization_nonzero_requirements,
     contains_imaginary_unit, objs_equal_by_complex_expression_evaluation};
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub fn search_equal_fact_by_complex_with_nonzero_premises(
-        &mut self, fact: &EqualFact, ctx: StrategySearch,
+        &mut self, fact: &EqualFact, ctx: VerifyState,
     ) -> RuntimeResult<Option<ComplexWithNonzeroPremisesStrategySingleStep>> {
         if !(contains_imaginary_unit(&fact.left) || contains_imaginary_unit(&fact.right))
             || !objs_equal_by_complex_expression_evaluation(&fact.left, &fact.right)

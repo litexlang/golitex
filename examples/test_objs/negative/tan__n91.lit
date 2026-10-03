@@ -1,0 +1,3 @@
+# Must reject: tan N91; exact numeric/periodic/modulus boundary
+have k R
+tan(pi+2*k*pi)=0

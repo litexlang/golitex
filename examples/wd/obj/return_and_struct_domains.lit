@@ -13,8 +13,10 @@ have fn nonnegative(x Z: x >= 0) N = x
 nonnegative(0) = 0
 let literal = fn(x Z) Z {x}
 literal(-1) = -1
-have fn singleton(x R) {x} = x
+have fn singleton(x R) R = x
 singleton(2) = 2
+forall a R:
+    singleton(a) $in {a}
 
 # Before (incorrectly accepted):
 # struct Box<n N>:

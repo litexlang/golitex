@@ -1,7 +1,7 @@
 use super::by_builtin_strategy_result::ModCongruenceStrategySingleStep;
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::{Mod, Obj, ArithmeticOperator, IntegerOperator};
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -10,7 +10,7 @@ impl Runtime {
     pub fn search_equal_fact_by_mod_congruence(
         &mut self,
         fact: &EqualFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<ModCongruenceStrategySingleStep>> {
         let (Obj::IntegerOperator(IntegerOperator::Mod(left_mod)), Obj::IntegerOperator(IntegerOperator::Mod(right_mod))) = (&fact.left, &fact.right) else {
             return Ok(None);

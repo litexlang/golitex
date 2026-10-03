@@ -1,0 +1,2 @@
+# N121: incorrect exact elementary result; must reject.
+img((1+2*i)/(3-i))=1/10

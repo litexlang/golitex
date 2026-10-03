@@ -2,13 +2,16 @@
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::ast::obj::{
     Abs, Add, ArithmeticOperator as A, Ceil, Floor, IntegerOperator, Lcm, Literal, Neg, Number,
-    Obj, StandardSet, Sub,
+    Obj, StandardSet, Sub, FiniteSetStat, SetFormer,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProof;
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{Runtime, RuntimeResult};
+use crate::rational_expression::{exact_rational::EvalRational, NumberCompareResult};
 
 pub enum ScalarIdentityBuiltinRuleProof {
+    FiniteSetMaxSelection(FiniteSetMaxSelectionBuiltinRuleProof),
+    FiniteSetMinSelection(FiniteSetMinSelectionBuiltinRuleProof),
     AbsZeroArgument(AbsZeroArgumentBuiltinRuleProof),
     FloorNegation(FloorNegationBuiltinRuleProof),
     CeilNegation(CeilNegationBuiltinRuleProof),
@@ -33,9 +36,32 @@ pub struct CeilIntegerTranslationBuiltinRuleProof {
 pub struct MinMaxAbsorptionBuiltinRuleProof {}
 pub struct MaxMinAbsorptionBuiltinRuleProof {}
 pub struct LcmZeroBuiltinRuleProof {}
+pub struct FiniteSetMaxSelectionBuiltinRuleProof {
+    pub selected_index: usize,
+    pub selected_member: Obj,
+    pub comparisons: Vec<ExactExtremumComparison>,
+}
+pub struct FiniteSetMinSelectionBuiltinRuleProof {
+    pub selected_index: usize,
+    pub selected_member: Obj,
+    pub comparisons: Vec<ExactExtremumComparison>,
+}
+pub struct ExactExtremumComparison {
+    pub member: Obj,
+    pub member_normal: Obj,
+    pub selected_normal: Obj,
+    pub ordering: NumberCompareResult,
+}
+impl ExactExtremumComparison {
+    fn new(member: Obj, member_normal: Obj, selected_normal: Obj, ordering: NumberCompareResult) -> Self {
+        Self { member, member_normal, selected_normal, ordering }
+    }
+}
 impl ScalarIdentityBuiltinRuleProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::FiniteSetMaxSelection(_) => "FiniteSetMaxSelection",
+            Self::FiniteSetMinSelection(_) => "FiniteSetMinSelection",
             Self::AbsZeroArgument(_) => "AbsZeroArgument",
             Self::FloorNegation(_) => "FloorNegation",
             Self::CeilNegation(_) => "CeilNegation",
@@ -55,6 +81,27 @@ impl Runtime {
     ) -> RuntimeResult<Option<ScalarIdentityBuiltinRuleProof>> {
         use ScalarIdentityBuiltinRuleProof as P;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            // A displayed nonempty rational set has an extremal original member.
+            // Example: finite_set_max({1/3,1/2}) = 1/2. Whole-object WD
+            // retains finiteness, real membership and pairwise distinctness.
+            if let Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(extremum)) = left {
+                if let Some((selected_index, selected_member, comparisons)) =
+                    exact_extremum_selection(&extremum.set, right, NumberCompareResult::Greater)
+                {
+                    return Ok(Some(P::FiniteSetMaxSelection(FiniteSetMaxSelectionBuiltinRuleProof {
+                        selected_index, selected_member, comparisons,
+                    })));
+                }
+            }
+            if let Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(extremum)) = left {
+                if let Some((selected_index, selected_member, comparisons)) =
+                    exact_extremum_selection(&extremum.set, right, NumberCompareResult::Less)
+                {
+                    return Ok(Some(P::FiniteSetMinSelection(FiniteSetMinSelectionBuiltinRuleProof {
+                        selected_index, selected_member, comparisons,
+                    })));
+                }
+            }
             if is_zero(right) {
                 let abs = Obj::ArithmeticOperator(A::Abs(Abs {
                     arg: Box::new(left.clone()),
@@ -191,4 +238,33 @@ fn zero() -> Obj {
 }
 fn is_zero(obj: &Obj) -> bool {
     matches!(obj,Obj::Literal(Literal::Number(n)) if n.normalized_value=="0")
+}
+
+fn exact_extremum_selection(
+    set: &Obj,
+    target: &Obj,
+    preferred: NumberCompareResult,
+) -> Option<(usize, Obj, Vec<ExactExtremumComparison>)> {
+    let Obj::SetFormer(SetFormer::ListSet(list)) = set else { return None; };
+    let first = list.list.first()?;
+    let mut selected_index = 0;
+    let mut selected_value = EvalRational::from_obj(first)?;
+    for (index, member) in list.list.iter().enumerate().skip(1) {
+        let value = EvalRational::from_obj(member)?;
+        if value.compare(&selected_value)? == preferred {
+            selected_index = index;
+            selected_value = value;
+        }
+    }
+    if EvalRational::from_obj(target)? != selected_value { return None; }
+    let mut comparisons = Vec::new();
+    for member in &list.list {
+        let value = EvalRational::from_obj(member)?;
+        let ordering = value.compare(&selected_value)?;
+        if ordering == preferred { return None; }
+        comparisons.push(ExactExtremumComparison::new(
+            member.as_ref().clone(), value.to_obj(), selected_value.to_obj(), ordering,
+        ));
+    }
+    Some((selected_index, list.list[selected_index].as_ref().clone(), comparisons))
 }

@@ -1,0 +1,25 @@
+# Tracer: log algebra for every positive base unequal to one.
+# Before (rejected by proof search or e != 1 WD):
+# log(1/2,8)=-3
+# log(e,e)=1
+# Now: exact same-base power, standard Euler bound and checked base premises.
+
+sketch:
+    0 $in R
+    1/2 $in R
+    1/2>0
+    1/2!=1
+    (1/2)^(-3)=8
+    log(1/2,8)=log(1/2,(1/2)^(-3))=-3
+
+sketch:
+    0 $in R
+    e $in R
+    e>1
+    e!=1
+    e>0
+    log(e,e)=1
+
+# Boundary: bases 0, 1 and negative bases reject; monotonicity retains base ranges.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/log_positive_nonunit_base.lit
+# Regression: cargo test --release logarithm_algebra_for_positive_nonunit_bases -- --nocapture

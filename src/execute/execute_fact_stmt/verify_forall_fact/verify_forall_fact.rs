@@ -107,7 +107,7 @@ impl Runtime {
         }
     }
 
-    fn match_known_forall_source(
+    pub(crate) fn match_known_forall_source(
         &mut self,
         goal: &ForallFact,
     ) -> Option<(crate::runtime::FactId, Vec<ForallParameterRenaming>)> {
@@ -262,7 +262,7 @@ impl Runtime {
                     failed_then: verify_result,
                 });
             }
-            let store_and_infer = self.store_fact_and_infer(&then_fact)?;
+            let store_and_infer = self.store_fact_and_infer(&then_fact, verify_state)?;
             proved_then_facts.push(ProveAndStoreThenFactResult {
                 verify_result,
                 store_and_infer,
@@ -289,7 +289,7 @@ impl Runtime {
                 return Ok(Err(reason));
             }
         };
-        let store_and_infer: StoreFactAndInferResult = self.store_fact_and_infer(dom)?;
+        let store_and_infer: StoreFactAndInferResult = self.store_fact_and_infer(dom, verify_state)?;
         Ok(Ok(AssumeDomFactResult {
             well_defined,
             store_and_infer,

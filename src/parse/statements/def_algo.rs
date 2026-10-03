@@ -41,8 +41,8 @@ impl Runtime {
 
         self.push_parse_scope();
         let result = (|| {
-            let (params, dom_facts) = self.parse_fn_set_header(&mut tb)?;
-            let ret_set = parse_obj(self, &mut tb)?;
+            let (params, dom_facts, ret_set) = self.parse_fn_set_signature(&mut tb)?;
+            self.occupy_set_bound_parameters_as_parse(&tb, &params)?;
             let fn_set_clause = FnSetClause {
                 set_bound_parameters: params,
                 dom_facts,

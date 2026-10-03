@@ -7,6 +7,9 @@ Showcase migration tracers (strict, no trust):
 
 - [Positive natural predecessor](positive_natural_predecessor.lit): both `n > 0`
   and `0 < n`, including the recursive branch's argument WD.
+- [Positive closed decrement](positive_closed_decrement_recursive.lit): subtract
+  a checked positive constant, including the original two-step Fibonacci
+  recursive domain. Zero, negative and unknown offsets remain rejected.
 - [Field application codomain](field_application_codomain.lit): declared field
   carriers and nested function calls, including generic and nested receivers.
 - [Unique function templates](template_unique_from_typed_carrier.lit): recover
@@ -87,7 +90,7 @@ exit $fail
 ## Function returns and struct arguments
 
 [Function returns and struct arguments](obj/return_and_struct_domains.lit)
-checks valid identity, wider, guarded and dependent return carriers, and typed
+checks valid identity, wider and guarded return carriers, and typed
 struct header arguments. Every anonymous-function body must prove membership
 in its return set, including a body that is just a parameter. Struct-instance
 WD proves substituted header types, including the three set kinds and
@@ -95,6 +98,14 @@ dependent element domains. The executable rejection controls are
 [`function_projection_return_domain.lit`](../wd_negative/function_projection_return_domain.lit)
 and [`struct_argument_domain.lit`](../wd_negative/struct_argument_domain.lit);
 failed statements leave no binding or successful WD cache entry.
+
+[Fixed function signature scopes](fixed_function_signature_scopes.lit) checks
+that parameter domains and return sets use the enclosing scope, while domain
+conditions and bodies use the function's own parameters. Nested return spaces
+cannot capture an outer function parameter. Disjoint signatures can reuse a
+spelling with independent IDs. Ordinary quantifier and template dependencies
+remain supported. Parser rejection, rollback and independently constructed WD
+controls live in `tests/unit/parse/function_signature_scopes.rs`.
 
 ## Dependent quantifier parameters
 
@@ -137,3 +148,5 @@ retains its strict-mode restriction.
 atomic conjuncts, a leading negative disjunct, existential bodies and repeated
 atomic negation. Every atom still undergoes signature/domain WD. Negated
 comparison chains and `not exist!` keep their existing syntax restrictions.
+
+- `struct_dependent_fields.lit`: field types may use earlier fields; checks guarded calls, nested receiver substitution, concrete tuple construction, and struct laws in forall WD. Self/forward references and missing guards are covered by `struct_dependent_fields` Rust regressions.

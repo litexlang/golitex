@@ -11,7 +11,7 @@ impl Runtime {
     pub(super) fn infer_in_fact_rules(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
         if let Some(builder) = self.resolve_set_builder_for_membership_projection(&in_fact.set) {
             let mut derived = Vec::new();
@@ -22,7 +22,7 @@ impl Runtime {
                 set: builder.param_set.as_ref().clone(),
                 line_file: in_fact.line_file.clone(),
             });
-            derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(base_in))?);
+            derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(base_in), verify_state)?);
             let mut subst = std::collections::HashMap::new();
             subst.insert(builder.param_binding.id, in_fact.element.clone());
             for defining in &builder.facts {
@@ -30,7 +30,7 @@ impl Runtime {
                     continue;
                 };
                 let projected = crate::instantiate::quantifier_free_fact_to_fact(qf);
-                derived.push(self.store_inferred_fact_and_infer(&projected)?);
+                derived.push(self.store_inferred_fact_and_infer(&projected, verify_state)?);
             }
             rules.push(InferAtomicExceptEqualityResult::InFactSetBuilder(
                 InferSetBuilderMembershipProjectionResult { derived },
@@ -44,16 +44,16 @@ impl Runtime {
                 right: base,
                 line_file: in_fact.line_file.clone(),
             });
-            let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::AtomicFact(subset))?);
+            let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::AtomicFact(subset), verify_state)?);
             rules.push(InferAtomicExceptEqualityResult::InFactPowerSet(
                 InferPowerSetMembershipProjectionResult { derived },
             ));
         }
-        rules.extend(self.infer_in_fact_list_set_ops_rules(in_fact)?);
-        rules.extend(self.infer_in_fact_cart_interval_rules(in_fact)?);
-        rules.extend(self.infer_in_fact_signed_standard_set_rules(in_fact)?);
-        rules.extend(self.infer_in_fact_fn_rules(in_fact)?);
-        rules.extend(self.infer_in_fact_index_family_rules(in_fact)?);
+        rules.extend(self.infer_in_fact_list_set_ops_rules(in_fact, verify_state)?);
+        rules.extend(self.infer_in_fact_cart_interval_rules(in_fact, verify_state)?);
+        rules.extend(self.infer_in_fact_signed_standard_set_rules(in_fact, verify_state)?);
+        rules.extend(self.infer_in_fact_fn_rules(in_fact, verify_state)?);
+        rules.extend(self.infer_in_fact_index_family_rules(in_fact, verify_state)?);
         Ok(rules)
     }
 }

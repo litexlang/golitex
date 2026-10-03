@@ -1,14 +1,14 @@
 use super::helper::{enter_strategy_goal, leave_strategy_goal, strategy_goal_key};
 use super::result::AtomicExceptEqualityFactSearchProofByBuiltinStrategy;
 use crate::ast::fact::AtomicFact;
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub fn search_atomic_except_equality_fact_proof_by_builtin_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
         // Literal tuple struct membership is skipped here (depends on struct-env APIs).
         // Prefer CartMembership for cartesian constructors.
@@ -26,7 +26,7 @@ impl Runtime {
     fn search_atomic_except_equality_fact_proof_by_builtin_strategy_inner(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
         if let Some(proof) = self.search_literal_tuple_projection_membership_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::LiteralTupleProjectionMembership(proof)));
@@ -229,6 +229,9 @@ impl Runtime {
         if let Some(proof) = self.search_rational_arithmetic_carrier_closure_abs_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureAbs(proof)));
         }
+        if let Some(proof) = self.search_field_arithmetic_carrier_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FieldArithmeticCarrierClosure(proof)));
+        }
         if let Some(proof) = self.search_integer_arithmetic_carrier_closure_add_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureAdd(proof)));
         }
@@ -279,6 +282,14 @@ impl Runtime {
         }
         if let Some(proof) = self.search_positive_natural_carrier_finite_set_size_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierFiniteSetSize(proof)));
+        }
+
+        // Displayed membership and nonmembership remove one list constructor.
+        if let Some(proof) = self.search_list_set_membership_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetMembership(proof)));
+        }
+        if let Some(proof) = self.search_list_set_nonmembership_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetNonMembership(proof)));
         }
 
         // set_membership (In)

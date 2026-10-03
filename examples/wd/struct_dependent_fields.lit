@@ -1,0 +1,50 @@
+# Before: PriorField failed because all field types were checked before fields
+# were introduced; call_at_nonzero_point failed in forall WD before its proof.
+# struct PriorField<A nonempty_set>:
+#     point A
+#     at fn(x A: x = point) A
+# Now: ordered fields, instantiated receivers, guarded calls and construction.
+# Run: target/release/litex -strict -f examples/wd/struct_dependent_fields.lit
+
+struct PriorField<A nonempty_set>:
+    point A
+    at fn(x A: x = point) A
+    <=>:
+        at(point) = point
+
+thm prior_field_call:
+    ? forall A nonempty_set, s &PriorField<A>:
+        s.at(s.point) = s.point
+
+struct NestedPriorField<A nonempty_set>:
+    inner &PriorField<A>
+    tag N
+
+thm nested_prior_field_call:
+    ? forall A nonempty_set, s &NestedPriorField<A>:
+        s.inner.at(s.inner.point) = s.inner.point
+    release struct def s.inner
+
+struct CarrierValue:
+    carrier power_set(R)
+    value carrier
+
+{0} $subset R
+{0} $in power_set(R)
+0 $in {0}
+({0}, 0) $in &CarrierValue
+
+let identity_at_zero = fn(x R: x = 0) R {x}
+identity_at_zero $in fn(x R: x = 0) R
+identity_at_zero(0) = 0
+(0, identity_at_zero) $in &PriorField<R>
+
+struct NonzeroPoint:
+    point R
+    call fn(x R: x != 0) R
+    <=>:
+        point != 0
+
+thm call_at_nonzero_point:
+    ? forall s &NonzeroPoint:
+        s.call(s.point) = s.call(s.point)

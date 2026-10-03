@@ -22,7 +22,7 @@ impl Runtime {
                 Ok(mut group_proofs) => proofs.append(&mut group_proofs),
                 Err(failed) => return Ok(Err(failed)),
             }
-            self.define_typed_parameters_in_current_env(&one, None)?;
+            self.define_typed_parameters_in_current_env(&one, None, verify_state)?;
         }
         Ok(Ok(proofs))
     }

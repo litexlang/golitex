@@ -30,9 +30,6 @@ impl Runtime {
         fact: &EqualFact,
         _state: VerifyState,
     ) -> RuntimeResult<Option<AggregateCalculationBuiltinRuleProof>> {
-        if !_state.can_use_builtin_rule {
-            return Ok(None);
-        }
         if !(contains_aggregate(&fact.left) || contains_aggregate(&fact.right)) {
             return Ok(None);
         }

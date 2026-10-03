@@ -130,6 +130,20 @@ have fn f by exist!:
 Fn header params must be **object-typed** (`x R`), not `set` / `nonempty_set` / `finite_set`.  
 `by exist!` has no signature paren list; the body is exactly one shaped `? forall …: exist! …`.
 
+Function parameter domains and the complete return object are parsed without
+the signature's own parameter bindings. The parser collects the names first,
+parses all domain carriers in the enclosing scope, registers the bindings only
+for `: conditions`, closes that scope for the return object, then reopens the
+same binding IDs for the body. This applies to function sets, anonymous values,
+`have fn` and `algo`. The derived signature of `have fn ... by exist!` is checked
+for the same carrier restriction after parsing its ordinary quantified source.
+Ordinary `forall` / `exist` parameter lists retain sequential binding.
+
+`fn(S power_set(R)) fn(x S) R` and `fn(S power_set(R), x S) R`
+are parse errors. `fn(x R: x > 0) R {x + 1}` remains valid.
+Disjoint binders, as in `fn(x R) fn(x R) R`, have independent IDs.
+Tracer: `examples/wd/fixed_function_signature_scopes.lit`.
+
 Tracers: `have_fn_equal.lit`, `have_fn_equal_case_by_case.lit`, `have_fn_by_induc.lit`, `have_fn_by_exist.lit`
 
 ### `algo` (preview)

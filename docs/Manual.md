@@ -200,6 +200,21 @@ sqrt(4) = 2
 | `re(z)`, `img(z)`, `C_abs(z)` | Real coordinate, imaginary coordinate, and complex modulus |
 | `finite_set_max(S)`, `finite_set_min(S)` | Extremum of a suitable finite set |
 
+Closed numeric integer powers also accept negative exponents by taking the
+reciprocal of a nonzero base. Exact rational comparison covers nonterminating
+fractions and binary `min`/`max`; no rounded decimal is used as proof evidence.
+The rational fallback uses checked `i128` arithmetic and declines an overflow.
+The existing decimal path retains its own bounds.
+
+```litex
+2^(-3) = 1 / 8
+(-2)^(-3) = -1 / 8
+1 / 3 < 1 / 2
+min(1 / 3, 1 / 2) = 1 / 3
+max(1 / 3, 1 / 2) = 1 / 2
+eval 3^(-1)
+```
+
 Exact numeric calls normalize inside ordinary facts or `eval` statements:
 
 ```litex
@@ -218,6 +233,40 @@ sign(-9) = (-1)
 factorial(10) = 3628800
 10! = 3628800
 ```
+
+Closed calculation also accepts nonterminating rational inputs to `floor`,
+`ceil`, and `sign`. Integer functions first check the exact value of each
+argument, so an integral fraction expression is eligible while `gcd(1/3,8)`
+remains undefined. Perfect rational square roots, bounded numeric radical
+normalization, rational-coordinate complex parts, and exact rational logarithms
+share their pure arithmetic with `eval`:
+
+```litex
+floor(-7 / 3) = -3
+ceil(-7 / 3) = -2
+sign(1 / 3 - 1 / 2) = -1
+gcd((1 / 3) * 6, 8) = 2
+sqrt(1 / 9) = 1 / 3
+sqrt(12) + sqrt(27) = 5 * sqrt(3)
+re((1 + 2 * i) * (3 - i)) = 5
+img((1 + 2 * i) / (3 - i)) = 7 / 10
+log(8, 4) = 2 / 3
+log(1 / 3, 27) = -3
+eval sqrt(12) + sqrt(27)
+eval log(8, 4)
+```
+
+These closed leaves generate no proof premises. Source well-definedness still
+precedes calculation, including nonzero divisors, nonnegative square-root
+arguments, and positive log arguments with a positive base unequal to one.
+Radicals support rational linear combinations, products, integer powers, and
+division by a single nonzero radical term. They retain exact `sqrt` expressions;
+general inversion of sums of radicals is outside this calculator. Normalization
+uses checked `i128` coefficients, at most 64 terms and 64 constructor levels.
+Trial factorization stops above divisor 10,000, declining an unproved residual
+factorization. Rational logarithms require matching prime-valuation ratios;
+`eval log(2,3)` declines rather than supplying an approximate value. Existing
+decimal bounds remain in force for large-number calculations.
 
 `gcd(a,b)` requires integer arguments that are not both zero. `quot(a,d)` uses
 Euclidean division with `d $in N+`, so
@@ -350,8 +399,21 @@ forall x R:
     0 < arccot(x) < pi
 ```
 
-The preview intentionally does not assign every familiar special-angle value;
-for example, `sin(pi / 6) = 1 / 2` still needs an explicit source fact.
+The exact-value rule covers rational multiples of `pi` at sixths, quarters,
+thirds and halves, including signs and checked integer periods. For example:
+
+```litex
+have k Z
+tan(pi + 2 * k * pi) = 0
+sin(pi / 6 + 2 * k * pi) = 1 / 2
+cos(pi / 3 + 2 * k * pi) = 1 / 2
+```
+
+The integer membership of each surviving symbolic period term is required.
+Reordering products and combining equal linear terms are supported; an
+arbitrary real `k` does not establish an integral period. Tangent and cotangent
+still require their denominator to be nonzero. The [period regression](../examples/proof_nodes/equal/by_builtin_rule/periodic_trig_exact_values.lit)
+contains the supported exact values and the corresponding rejection controls.
 Complex trigonometry, analytic definitions, and continuity theorems are outside
 this interface. Right inverses require the principal interval:
 
@@ -381,6 +443,13 @@ forall y R:
         arccot(cot(y)) = y
 ```
 
+For closed rational multiples of `pi`, strict comparison uses exact rational
+coefficients and the positive sign of `pi`; it does not approximate angles.
+Concrete inverse values can use a forward value, its principal interval, and
+an explicit equality chain, as demonstrated by
+[the quarter-angle inverse tracer](../examples/proof_nodes/equal/by_builtin_rule/inverse_trig_quarter_angles.lit).
+In particular, `arccot(-1)` uses `3*pi/4` in `(0,pi)`.
+
 The names `sin`, `cos`, `tan`, `cot`, `arcsin`, `arccos`, `arctan`, and `arccot`
 are hard-reserved. Their bare names are not first-class function values;
 higher-order code can use `fn(x R) R {sin(x)}`. The evaluator does not assign
@@ -404,7 +473,7 @@ equality paths only; on a miss, try parameter transformations and then
 `known_special_property`. A direct stored hit does not launch argument proof search.
 For a well-defined function application, an exact-object definition-time
 signature can establish membership in its substituted return set or in
-`fn_range(f)`, without proving a new premise, enabling builtin entry, or consuming strategy depth.
+`fn_range(f)`, without proving a new premise, entering a builtin rule or a strategy.
 Normal output identifies this route as `known_special_property`; Detailed
 output carries the definition citation and stored equality matches. Fixed
 builtin premises can retain the same evidence as nested proofs.
@@ -511,6 +580,23 @@ code can use `fn(z C) R {re(z)}` and the analogous lambdas. For a real input,
 `C_abs(r) = abs(r)`, while `C_abs(i) = 1`. Equality and inequality (`=`, `!=`)
 are available for complex objects. Ordered comparisons, signs, real intervals,
 `abs`, `sqrt`, and `log` remain real-domain operations.
+
+For numeric coordinates, `C_abs` computes exact real and imaginary parts,
+then uses the nonnegative principal root of their squared sum. Both summand
+orders, subtraction and negative imaginary coefficients work:
+
+```litex
+C_abs(3 + 4 * i) = 5
+C_abs(4 * i + 3) = 5
+C_abs(3 - 4 * i) = 5
+C_abs(-4 * i + 3) = 5
+C_abs(1 + i) = sqrt(2)
+eval C_abs(3 - 4 * i)
+```
+
+Decimal and rational coordinates are exact. A nonsquare result remains an
+exact `sqrt` expression; a negative root is rejected. For every well-defined
+complex argument, `C_abs(z) >= 0` and `0 <= C_abs(z)` are builtin facts.
 
 Known complex equalities can be observed through `re` and `img`. The verifier
 also supplies the standard coordinate formulas for native complex addition,
@@ -844,38 +930,53 @@ square_plus_one(3) $in fn_range(square_plus_one)
 > `A -> B -> C` means `A -> (B -> C)`. Arithmetic, `×`, `∩`, and `∪` bind
 > tighter than `->`, so `R × R -> R` means `(R × R) -> R`. Use `=>` for logical
 > implication; `->` is only the function-set arrow. This sugar does not support
-> `{body}`, domain `: conditions`, or a return set that must name the domain
-> binder — write those with full `fn(...)`.
+> `{body}` or domain `: conditions` — write those with full `fn(...)`.
+> Neither spelling permits a return set that refers to its own domain binder.
 >
-> **Preview:** each `fn` / anonymous-fn **parameter domain**
-> (obj carrier) must be a fixed set expression: it must not mention an earlier
-> parameter of the same signature. So `fn(x R, y Z) R` and
-> `fn(p cart(R, Z)) R` are fine, but `fn(x R, y S(x)) R` is not well-defined.
-> Dependence belongs in `: domain conditions`, in the **return set** (after
-> binders are in scope), or in a curried return such as
-> `fn(S power_set(R)) fn(x S) R`. Binder-kind telescopes such as
-> `forall S set, x S` remain sequential and are unchanged.
+> **Preview:** every `fn` / anonymous-fn parameter domain and return set
+> must be fixed relative to that signature: neither may refer to any of its own
+> parameters. `fn(x R, y Z) R` and `fn(p cart(R, Z)) R` are valid shapes;
+> `fn(x R, y S(x)) R`, `fn(x R) {x}` and
+> `fn(S power_set(R)) fn(x S) R` are rejected during parsing.
+> Domain `: conditions` and function bodies may refer to the parameters.
+> Ordinary quantifier binders such as `forall S set, x S` remain sequential.
 
-Function parameter domains are fixed set objects read from left to right; a
-later **obj** domain must not cite an earlier parameter. The return set is
-checked in the scope of all function parameters and may cite them. Domain
-`: conditions` may cite them too. At application, Litex substitutes the actual
-arguments into that return set before checking later calls or membership
-facts:
+Function parameter names are collected without registering them while their
+carriers are parsed. The parser registers the bindings for domain conditions,
+closes that scope before parsing the return object, and reopens the same IDs
+for an anonymous or named function body. Thus a nested return space cannot
+capture an outer function parameter, including inside its own conditions or
+body. WD independently enforces the same restriction for constructed objects.
+The rule also applies to `have fn`, `algo`, and signatures derived by
+`have fn ... by exist!`. It does not change ordinary `forall` / `exist`
+parameter dependencies.
 
-> **Migration example:** This retained block still fails at `have_in_nonempty` in the current checker; it is not a verified result.
+An enclosing set is fixed for an inner function, and a fixed function space
+may itself be a return set. Disjoint signatures may reuse a parameter spelling
+with distinct binding IDs:
 
-<!-- litex:skip-test -->
 ```litex
-have g fn(S power_set(R)) fn(x S) R
-g(R)(0) = g(R)(0)
+let curried_space = fn(x R) fn(x R) R
+curried_space = curried_space
+forall A nonempty_set:
+    fn(x A) A {x} = fn(y A) A {y}
+fn(x R: x > 0) R {x + 1}(2) = 3
 ```
 
-Here the first application instantiates the return set of `g(R)` as
-`fn(x R) R`. This is controlled set-valued dependency inside Litex's
-set-theoretic function model. It does not make the binder kinds `set`,
-`nonempty_set`, or `finite_set` into ordinary function domains; use `template`
-for a family parameterized by an arbitrary set.
+A parameter-dependent output property belongs in a separate fact rather than
+the return set. For example, the former `have fn identity(x R) {x} = x`
+becomes a fixed-return definition plus its precise membership property:
+
+```litex
+have fn identity(x R) R = x
+forall a R:
+    identity(a) $in {a}
+```
+
+For families parameterized by an arbitrary carrier, use `template<A set>`.
+The binder kinds `set`, `nonempty_set`, and `finite_set` are still not ordinary
+function domains. Tracer:
+[`examples/wd/fixed_function_signature_scopes.lit`](../examples/wd/fixed_function_signature_scopes.lit).
 
 A defined codomain does not waive the input condition:
 
@@ -1012,6 +1113,15 @@ associative-commutative `finite_set_reduce` interface instead.
 `finite_set_max(S)` and `finite_set_min(S)` are not total default-value
 operators. If finiteness, nonemptiness, or `S $subset R` is unavailable, the
 object is ill-defined rather than assigned an arbitrary endpoint.
+For displayed sets of closed rational numbers, the equality rule selects an
+original member and records every exact comparison against that member.
+Detailed output exposes `FiniteSetMaxSelection` or `FiniteSetMinSelection`,
+`selected_index` (zero-based), `selected_member`, and `comparisons` with
+normalized operands and `less` / `equal` / `greater` outcomes. These certificates
+follow the whole-object WD checks, including pairwise distinctness; display
+`eval` output alone supplies no proof. See
+[the rational extrema tracer](../examples/proof_nodes/equal/by_builtin_rule/finite_set_rational_extrema.lit).
+
 
 The operations still require suitable domains:
 
@@ -2473,6 +2583,14 @@ domain and be pairwise disjoint. A nested list is checked under its parent
 guard; it need not cover integers excluded by that guard. An invalid list
 rejects the declaration before any function or case equation is published.
 
+For a real-valued `x` and a closed numeric expression `c` whose exact value is
+positive, the checker proves `x - c < x`. This includes offsets such as `2`,
+`1 + 1`, and `1 / 3`; it does not assume that a symbolic offset is positive.
+Zero, negative offsets, and nondecreasing recursive calls remain rejected.
+See the [two-step recursive domain tracer](../examples/wd/positive_closed_decrement_recursive.lit).
+Detailed output records the actual offset as `SubtractPositiveClosedLess`;
+the existing literal-one route retains its `SubtractOneLess` label.
+
 ```litex
 have fn countdown(n N) N by induc n from 0:
     case n = 0: 0
@@ -3329,10 +3447,25 @@ For an ordinary atomic fact, Litex follows this public progression:
 1. Parse the statement and check that every object is well-defined.
 2. Reuse an already known fact, including transport through known equalities,
    or evaluate a closed expression directly.
-3. Try a bounded builtin mathematical rule or a terminating structural rule.
-4. Try an applicable known strategy (user `strategy` definition), known `forall`,
-   a concrete definition, or a registered predicate property.
-5. On success, store the fact and run builtin inference on the new information.
+3. Read indexed special properties and try finite constructor matching.
+4. Try a bounded builtin mathematical rule, then builtin/user strategies.
+5. Try a concrete definition or known `forall`, followed by permitted rewrite.
+6. On success, store the fact and run builtin inference on the new information.
+
+Atomic truth search uses one shared permission ceiling. Level 0 (`Direct`)
+first reads stored facts/identity/alpha paths, then tries closed exact calculation.
+Special properties (level 1) may use level-0 premises; builtin rules (level 2)
+may use level 1; strategies (level 3) and definition/forall (level 4) may use
+level 2. Rewrite is available at level 4 once per branch and keeps level 4
+with rewriting disabled. WD checks inherit the current ceiling.
+
+Closed calculation has no access to the environment or recursive proof search.
+It covers closed numeric equality, real comparisons and standard-set membership
+with exact decimal, rational or complex evidence. It does not substitute known
+values for symbols or unfold user functions. For example, `1/3 < 1/2` can close
+a level-0 premise; `1/0 = 1/0` still fails WD. Detailed JSON identifies this
+route as `by_closed_calculation` and retains normalized values. Unsupported or
+overflowing calculations return a search miss, never an assumed proof.
 
 This is goal-directed verification, not unrestricted theorem search. A builtin
 rule may ask for its documented premises, but it does not silently build an
@@ -4775,6 +4908,74 @@ forall a, b R+:
 > and
 > [`examples/proof_nodes/equal/by_builtin_strategy/`](../examples/proof_nodes/equal/by_builtin_strategy/).
 
+Displayed finite-set membership can also use the structural strategy route:
+
+```litex
+{1, 2} $in {{}, {1, 2}}
+not 4 $in {1, 2, 3}
+```
+
+The first goal checks one equality to a listed element. The second checks a
+disequality to every listed element. The normal well-definedness checks still
+apply, including for nonmembership in `{}`. Strategy children retain the
+central dispatcher's `BuiltinRule` ceiling; they do not restore definition,
+strategy or rewrite search. Detailed output records `ListSetMembership` or
+`ListSetNonMembership`, its exact requirement facts and each child proof.
+Maintained examples: [membership](../examples/proof_nodes/atomic/by_builtin_strategy/list_set_membership.lit)
+and [nonmembership](../examples/proof_nodes/atomic/by_builtin_strategy/list_set_nonmembership.lit).
+
+Field expressions over `Q` and `R` have a structural carrier strategy:
+
+```litex
+forall a Q:
+    3 * a + 2 $in Q
+
+forall a, b Q:
+    b != 0
+    =>:
+        (3 * a + 2) / b $in Q
+```
+
+It descends through addition, subtraction, negation, multiplication and division,
+then checks terminal memberships and every divisor's nonzero requirement at
+the strategy's existing child ceiling. Detailed output records
+`FieldArithmeticCarrierClosure`, the constructor tree and each checked
+requirement. Other constructors remain terminal membership goals; this route
+does not unfold definitions or reenable nested strategies. See the
+[field-expression tracer](../examples/proof_nodes/atomic/by_builtin_strategy/field_arithmetic_carrier_closure.lit).
+
+Complex arithmetic being well-defined does not imply a real-valued result.
+General real closure now records `RealOperandArithmeticClosure` operand proofs,
+or `RealIntegerPower` with its real-base proof and the enclosing power WD's
+integer exponent/domain evidence. Intrinsically real constructors such as
+`abs`, `sqrt`, `log` and `ln` keep their own checked-domain route. Even-power
+order requires a checked real base, and strict positivity also requires a
+nonzero base:
+
+```litex
+forall x R:
+    0 <= x^2
+
+i^2 < 0
+1 + i != 0
+(1 + i) / (1 + i) $in Q
+```
+
+Closed rational complex expressions can establish scalar membership through
+their exact real and imaginary coordinates. The Direct closed-calculation route
+records `by_closed_calculation` with these values; the retained builtin entries
+record `ClosedExactScalarMembership` or `ClosedComplex` when used directly.
+Exact complex inequality compares both coordinates; order
+compares only values whose imaginary coordinate is zero. Unsupported inputs,
+overflow and invalid domains produce no certificate. Consequently `0 <= i^2`,
+`i^2 $in N` and a nonreal result declared in `R` remain rejected. Maintained
+[real-operand](../examples/proof_nodes/atomic/by_builtin_rule/real_arithmetic_operand_carriers.lit),
+[even-power](../examples/proof_nodes/atomic/by_builtin_rule/even_power_real_carrier.lit),
+[scalar](../examples/proof_nodes/atomic/by_builtin_rule/closed_exact_scalar_membership.lit),
+[inequality](../examples/proof_nodes/atomic/by_builtin_rule/closed_complex_not_equal.lit)
+and [order](../examples/proof_nodes/atomic/by_builtin_rule/closed_complex_real_order.lit)
+examples retain the boundary controls in focused Rust tests.
+
 The last equivalence is an integer-adjacency rule: a strict bound immediately
 below the successor `n + 1` is the same as the weak bound at `n`. It requires
 both compared objects to be known integers.
@@ -4802,6 +5003,7 @@ The symbolic trigonometric interface recognizes the following exact families:
 | Principal inverse cosine | `arccos(x)` requires `x in [(-1),1]`, returns a value in `[0,pi]`, and satisfies `cos(arccos(x))=x`. Conversely, `arccos(cos(y))=y` requires `y` in `[0,pi]`. |
 | Principal inverse tangent | `arctan(x)` is total on `R`, returns a value in `((-pi)/2,pi/2)`, and satisfies `tan(arctan(x))=x`. Conversely, `arctan(tan(y))=y` requires `y` in that open principal interval. |
 | Principal inverse cotangent | `arccot(x)` is total on `R`, returns a value in `(0,pi)`, and satisfies `cot(arccot(x))=x`. Conversely, `arccot(cot(y))=y` requires `y` in `(0,pi)`. |
+| Exact special values | Rational `pi` coefficients at sixths, quarters, thirds and halves; checked symbolic integer periods and a separate sine/cosine nonzero certificate for tangent/cotangent WD. Sine integer zeros and cosine half-integer zeros require only integer multiples of `pi`; nonzero signed sine/cosine values require multiples of `2*pi`. |
 | Symmetry and angles | Odd/even parity, double-angle and cofunction formulas, supported integral and half-integral multiples of `pi`, shifts by `pi` and `pi/2`, and period `2*pi` for sine/cosine or `pi` for tangent/cotangent when defined. |
 | Bounds and signs | `(-1) <= sin(x), cos(x) <= 1`, `3 < pi < 4`, and the standard sign intervals for sine, cosine, tangent, and cotangent. Open-domain bounds remain necessary for tangent and cotangent. |
 | Local order | Sine is monotone on `[(-pi)/2, pi/2]`, cosine on `[0, pi]`, tangent on `((-pi)/2, pi/2)`, and cotangent in the reverse direction on `(0, pi)`. |
@@ -4825,6 +5027,14 @@ Symbolic transcendental expressions are not decimal approximations. Every law
 still requires its ordinary well-definedness conditions.
 
 ### Powers, logarithms, sums, products, and remainder
+
+The self, one, and same-base-power log rules explicitly check `b>0` and
+`b!=1`, covering bases strictly between zero and one as well as bases above
+one. Their detailed evidence preserves both requirements. The native constant
+bound `e>1` supplies a checked route to `e!=1` and `log(e,e)=1`; see
+[the log algebra tracer](../examples/proof_nodes/equal/by_builtin_rule/log_positive_nonunit_base.lit).
+Order rules retain their separate base-range conditions.
+
 
 Power rules first select one supported carrier branch. Complex bases support
 natural exponents and, when nonzero, integer exponents. Arbitrary real

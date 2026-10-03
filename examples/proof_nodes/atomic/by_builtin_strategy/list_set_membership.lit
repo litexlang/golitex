@@ -1,0 +1,6 @@
+# Previously rejected under the shared stage ceiling:
+# {1, 2} $in {{}, {1, 2}}
+# Membership descends to one checked equality without raising the child's level.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_strategy/list_set_membership.lit
+# Executable false-membership and WD controls: finite_list_membership_strategy tests.
+{1, 2} $in {{}, {1, 2}}

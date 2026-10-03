@@ -121,10 +121,10 @@ impl Runtime {
             &stmt.exist_shaped_fact_in_witness,
             &stmt.equal_tos,
             &stmt.proof,
-        )? {
+         crate::execute::execute_fact_stmt::VerifyState::top_level())? {
             Ok((ambient, proof_steps, obligations, local_env)) => {
                 let exist_as_fact = exist_shaped_fact_to_fact(&stmt.exist_shaped_fact_in_witness);
-                let store_and_infer_result = self.store_fact_and_infer(&exist_as_fact)?;
+                let store_and_infer_result = self.store_fact_and_infer(&exist_as_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
                 Ok(ExecWitnessExistFactStmtResult::Success(
                     ExecWitnessExistFactStmtSuccessResult {
                         statement: stmt.clone(),
@@ -151,7 +151,7 @@ impl Runtime {
         exist_fact: &ExistShapedFact,
         equal_tos: &[Obj],
         proof: &[Stmt],
-    ) -> RuntimeResult<
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<
         Result<
             (
                 WitnessExistAmbientSuccess,
@@ -214,7 +214,7 @@ impl Runtime {
                                 line_file: plain.line_file.clone(),
                             },
                         ));
-                        rt.store_fact_and_infer(&equal_fact)?;
+                        rt.store_fact_and_infer(&equal_fact, verify_state)?;
                     }
                 }
             }

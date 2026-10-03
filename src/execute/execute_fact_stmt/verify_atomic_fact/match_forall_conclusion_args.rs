@@ -77,14 +77,7 @@ impl Runtime {
             return Ok(None);
         }
         let param_set: HashSet<IdentifierId> = ordered_param_ids.iter().copied().collect();
-        let equality_state = VerifyState {
-            can_use_builtin_rule: false,
-            remaining_deep_search_depth: 0,
-            can_use_def_and_known_forall_and_known_strategy: false,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let equality_state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct);
 
         let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
         let mut arg_match_proofs = Vec::with_capacity(pattern_args.len());
@@ -116,14 +109,7 @@ impl Runtime {
         ordered_param_ids: &[IdentifierId],
     ) -> RuntimeResult<bool> {
         let param_set: HashSet<IdentifierId> = ordered_param_ids.iter().copied().collect();
-        let equality_state = VerifyState {
-            can_use_builtin_rule: false,
-            remaining_deep_search_depth: 0,
-            can_use_def_and_known_forall_and_known_strategy: false,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let equality_state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct);
 
         // Binder types are implicit premises too. Recover hidden parameters
         // only from the type of an already matched object (for example K and

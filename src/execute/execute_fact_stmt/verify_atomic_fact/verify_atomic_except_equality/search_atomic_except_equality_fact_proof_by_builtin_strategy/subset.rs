@@ -1,14 +1,14 @@
 use super::result::*;
 use crate::ast::fact::{AtomicFact, SubsetFact, SupersetFact};
 use crate::ast::obj::{Obj, SetFormer, SetOperator};
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub(super) fn search_list_set_subset_from_members_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<ListSetSubsetFromMembersStrategySingleStep>> {
         let Some((left, right, lf)) = as_subset_sides(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::ListSet(set)) = left else { return Ok(None); };
@@ -25,7 +25,7 @@ impl Runtime {
     pub(super) fn search_union_subset_from_both_operands_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<UnionSubsetFromBothOperandsStrategySingleStep>> {
         let Some((left, right, lf)) = as_subset_sides(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Union(set)) = left else { return Ok(None); };
@@ -42,7 +42,7 @@ impl Runtime {
     pub(super) fn search_intersect_subset_from_left_operand_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntersectSubsetFromLeftOperandStrategySingleStep>> {
         let Some((left, right, lf)) = as_subset_sides(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Intersect(set)) = left else { return Ok(None); };
@@ -56,7 +56,7 @@ impl Runtime {
     pub(super) fn search_intersect_subset_from_right_operand_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntersectSubsetFromRightOperandStrategySingleStep>> {
         let Some((left, right, lf)) = as_subset_sides(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Intersect(set)) = left else { return Ok(None); };
@@ -70,7 +70,7 @@ impl Runtime {
     pub(super) fn search_set_minus_subset_from_left_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SetMinusSubsetFromLeftStrategySingleStep>> {
         let Some((left, right, lf)) = as_subset_sides(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::SetMinus(set)) = left else { return Ok(None); };
@@ -84,7 +84,7 @@ impl Runtime {
     pub(super) fn search_subset_of_intersect_from_both_bounds_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SubsetOfIntersectFromBothBoundsStrategySingleStep>> {
         let Some((left, right, lf)) = as_subset_sides(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Intersect(set)) = right else { return Ok(None); };

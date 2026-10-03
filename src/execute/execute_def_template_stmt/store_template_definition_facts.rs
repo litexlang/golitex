@@ -32,7 +32,7 @@ impl Runtime {
         template: &DefTemplateStmt,
         body: &ExecTemplateDefBodyResult,
         local_env: &ExecEnv,
-    ) -> RuntimeResult<Vec<StoreTemplateDefinitionFactResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<StoreTemplateDefinitionFactResult>> {
         let (binding_id, source_ids) = definition_binding_and_fact_ids(body);
         let args = template
             .template_arg_def
@@ -65,7 +65,7 @@ impl Runtime {
                 RuntimeError::InternalBug(format!("template definition substitution: {err}"))
             })?;
             let quantified = self.quantify_template_definition_fact(template, instantiated)?;
-            let stored = self.store_fact_and_infer(&quantified)?;
+            let stored = self.store_fact_and_infer(&quantified, verify_state)?;
             published.push(StoreTemplateDefinitionFactResult::new(
                 source_fact_id,
                 stored,

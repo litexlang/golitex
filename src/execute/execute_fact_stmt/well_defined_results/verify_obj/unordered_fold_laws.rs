@@ -47,8 +47,8 @@ impl Runtime {
             then_facts: comm_steps,
             line_file: None,
         });
-        let mut law_state = state.without_well_defined_storage();
-        law_state.can_use_rewrite = false;
+        let mut law_state = state;
+        law_state = law_state.without_rewrite();
         let comm = self.verify_fact(&comm, law_state.clone())?;
         if comm.is_failed() {
             return Ok(vec![comm]);

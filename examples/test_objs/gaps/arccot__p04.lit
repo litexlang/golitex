@@ -1,2 +1,0 @@
-# Intended valid regression: arccot P04
-arccot(-1) = 3 * pi / 4

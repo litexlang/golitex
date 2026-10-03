@@ -22,18 +22,18 @@ impl Runtime {
     pub(super) fn infer_in_fact_index_family_rules(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
-        if let Some(r) = self.infer_in_fact_family_union(in_fact)? {
+        if let Some(r) = self.infer_in_fact_family_union(in_fact, verify_state)? {
             rules.push(r);
         }
-        if let Some(r) = self.infer_in_fact_index_union(in_fact)? {
+        if let Some(r) = self.infer_in_fact_index_union(in_fact, verify_state)? {
             rules.push(r);
         }
-        if let Some(r) = self.infer_in_fact_index_intersect(in_fact)? {
+        if let Some(r) = self.infer_in_fact_index_intersect(in_fact, verify_state)? {
             rules.push(r);
         }
-        if let Some(r) = self.infer_in_fact_index_cart(in_fact)? {
+        if let Some(r) = self.infer_in_fact_index_cart(in_fact, verify_state)? {
             rules.push(r);
         }
         Ok(rules)
@@ -44,7 +44,7 @@ impl Runtime {
     fn infer_in_fact_family_union(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetOperator(SetOperator::FamilyUnion(family_union)) = &in_fact.set else {
             return Ok(None);
         };
@@ -67,7 +67,7 @@ impl Runtime {
             facts: vec![QuantifierFreeFact::AtomicFact(body_in)],
             line_file: in_fact.line_file.clone(),
         });
-        let Some(stored) = self.try_store_inferred_fact_and_infer(&exist)? else {
+        let Some(stored) = self.try_store_inferred_fact_and_infer(&exist, verify_state)? else {
             return Ok(None);
         };
         Ok(Some(
@@ -80,7 +80,7 @@ impl Runtime {
     fn infer_in_fact_index_union(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetOperator(SetOperator::IndexUnion(index_union)) = &in_fact.set else {
             return Ok(None);
         };
@@ -92,7 +92,7 @@ impl Runtime {
             set: index_union.ambient_set.as_ref().clone(),
             line_file: in_fact.line_file.clone(),
         });
-        if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(ambient))? {
+        if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(ambient), verify_state)? {
             derived.push(stored);
         }
 
@@ -127,7 +127,7 @@ impl Runtime {
             facts: vec![QuantifierFreeFact::AtomicFact(element_in_fiber)],
             line_file: in_fact.line_file.clone(),
         });
-        if let Some(stored) = self.try_store_inferred_fact_and_infer(&exist)? {
+        if let Some(stored) = self.try_store_inferred_fact_and_infer(&exist, verify_state)? {
             derived.push(stored);
         }
         if derived.is_empty() {
@@ -143,7 +143,7 @@ impl Runtime {
     fn infer_in_fact_index_intersect(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetOperator(SetOperator::IndexIntersect(index_intersect)) = &in_fact.set else {
             return Ok(None);
         };
@@ -155,7 +155,7 @@ impl Runtime {
             set: index_intersect.ambient_set.as_ref().clone(),
             line_file: in_fact.line_file.clone(),
         });
-        if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(ambient))? {
+        if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(ambient), verify_state)? {
             derived.push(stored);
         }
 
@@ -191,7 +191,7 @@ impl Runtime {
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(element_in_fiber)],
             line_file: in_fact.line_file.clone(),
         });
-        if let Some(stored) = self.try_store_inferred_fact_and_infer(&forall)? {
+        if let Some(stored) = self.try_store_inferred_fact_and_infer(&forall, verify_state)? {
             derived.push(stored);
         }
         if derived.is_empty() {
@@ -210,7 +210,7 @@ impl Runtime {
     fn infer_in_fact_index_cart(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetOperator(SetOperator::IndexCart(index_cart)) = &in_fact.set else {
             return Ok(None);
         };
@@ -235,7 +235,7 @@ impl Runtime {
             set: fn_set,
             line_file: in_fact.line_file.clone(),
         });
-        if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(fn_set_in))?
+        if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(fn_set_in), verify_state)?
         {
             derived.push(stored);
         }
@@ -248,7 +248,7 @@ impl Runtime {
             choice: in_fact.element.clone(),
             line_file: in_fact.line_file.clone(),
         });
-        if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(choice))? {
+        if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(choice), verify_state)? {
             derived.push(stored);
         }
 

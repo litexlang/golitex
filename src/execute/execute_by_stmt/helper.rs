@@ -12,15 +12,7 @@ use crate::store_fact_and_infer::StoreFactAndInferResult;
 pub(super) use super::negate_fact_for_contra::negate_fact_for_contra;
 
 pub(crate) fn proof_verify_state() -> VerifyState {
-    VerifyState {
-        can_use_builtin_rule: true,
-        remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-        can_use_def_and_known_forall_and_known_strategy: true,
-        can_use_rewrite: true,
-        store_well_defined_fact: true,
-        equality_class_search:
-            crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-    }
+    VerifyState::top_level()
 }
 
 pub(super) fn assume_fact(
@@ -31,7 +23,7 @@ pub(super) fn assume_fact(
     if wd.is_failed() {
         return Ok(Err("assumption well-definedness failed".to_string()));
     }
-    Ok(Ok(runtime.store_fact_and_infer(fact)?))
+    Ok(Ok(runtime.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?))
 }
 
 pub(crate) fn verify_goal_fact(
@@ -49,7 +41,7 @@ pub(crate) fn store_goal_fact(
     if let VerifyFactWellDefinedResult::Failed(_) = &wd {
         return Ok(Err("goal well-definedness failed at store".to_string()));
     }
-    Ok(Ok(runtime.store_fact_and_infer(fact)?))
+    Ok(Ok(runtime.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?))
 }
 
 pub(super) fn close_by_contradiction(

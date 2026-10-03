@@ -1,0 +1,28 @@
+# Tracer: complex arithmetic WD alone does not establish a real result.
+# Before (incorrect admission):
+# forall z C:
+#     z+z $in R
+# Former behavior: general arithmetic was unconditionally classified as real.
+# Now: general real closure has checked operand evidence; real integer powers
+# additionally inherit the integer exponent / nonzero domain from Pow WD.
+forall x, y R:
+    x+y $in R
+    x-y $in R
+    -x $in R
+    x*y $in R
+    x^2 $in R
+
+forall x, y R:
+    y != 0
+    =>:
+        x/y $in R
+
+forall x R, n Z:
+    x != 0
+    =>:
+        x^n $in R
+
+# Boundary: nonreal operands, unsupported noninteger powers and zero negative
+# powers cannot use this route. Checked child search keeps its existing ceiling.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/real_arithmetic_operand_carriers.lit
+# Tests: field_arithmetic_carrier_strategy; implementation: builtin in_fact.rs.

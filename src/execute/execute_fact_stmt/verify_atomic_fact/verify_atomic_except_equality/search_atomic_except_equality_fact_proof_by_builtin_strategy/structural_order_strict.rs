@@ -3,7 +3,7 @@ use super::result::*;
 use crate::ast::fact::{AtomicFact, LessFact};
 use crate::ast::line_file::SourceLine;
 use crate::ast::obj::{Abs, ArithmeticOperator, Obj, Pow, StandardSet};
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -11,7 +11,7 @@ impl Runtime {
     pub(super) fn search_product_positive_both_pos_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<ProductPositiveBothPosStrategySingleStep>> {
         let Some((l, r, lf)) = zero_lt_mul(fact) else { return Ok(None); };
         let requirements = vec![
@@ -32,7 +32,7 @@ impl Runtime {
     pub(super) fn search_product_positive_both_neg_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<ProductPositiveBothNegStrategySingleStep>> {
         let Some((l, r, lf)) = zero_lt_mul(fact) else { return Ok(None); };
         let requirements = vec![
@@ -53,7 +53,7 @@ impl Runtime {
     pub(super) fn search_quotient_positive_same_sign_pos_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<QuotientPositiveSameSignPosStrategySingleStep>> {
         let Some((l, r, lf)) = zero_lt_div(fact) else { return Ok(None); };
         let requirements = vec![
@@ -74,7 +74,7 @@ impl Runtime {
     pub(super) fn search_quotient_positive_same_sign_neg_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<QuotientPositiveSameSignNegStrategySingleStep>> {
         let Some((l, r, lf)) = zero_lt_div(fact) else { return Ok(None); };
         let requirements = vec![
@@ -95,7 +95,7 @@ impl Runtime {
     pub(super) fn search_add_componentwise_strict_left_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<AddComponentwiseStrictLeftStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let (Some(left), Some(right)) = (as_add(&lt.left), as_add(&lt.right)) else { return Ok(None); };
@@ -117,7 +117,7 @@ impl Runtime {
     pub(super) fn search_add_componentwise_strict_right_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<AddComponentwiseStrictRightStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let (Some(left), Some(right)) = (as_add(&lt.left), as_add(&lt.right)) else { return Ok(None); };
@@ -139,7 +139,7 @@ impl Runtime {
     pub(super) fn search_sub_shared_subtrahend_less_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SubSharedSubtrahendLessStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let (Some(left), Some(right)) = (as_sub(&lt.left), as_sub(&lt.right)) else { return Ok(None); };
@@ -159,7 +159,7 @@ impl Runtime {
     pub(super) fn search_sub_shared_minuend_less_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SubSharedMinuendLessStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let (Some(left), Some(right)) = (as_sub(&lt.left), as_sub(&lt.right)) else { return Ok(None); };
@@ -179,7 +179,7 @@ impl Runtime {
     pub(super) fn search_div_shared_positive_denom_less_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<DivSharedPositiveDenomLessStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let (Some(left), Some(right)) = (as_div(&lt.left), as_div(&lt.right)) else { return Ok(None); };
@@ -202,7 +202,7 @@ impl Runtime {
     pub(super) fn search_div_shared_negative_denom_less_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<DivSharedNegativeDenomLessStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let (Some(left), Some(right)) = (as_div(&lt.left), as_div(&lt.right)) else { return Ok(None); };
@@ -225,7 +225,7 @@ impl Runtime {
     pub(super) fn search_pow_shared_exponent_less_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<PowSharedExponentLessStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let (Some(left), Some(right)) = (as_pow(&lt.left), as_pow(&lt.right)) else { return Ok(None); };
@@ -249,7 +249,7 @@ impl Runtime {
     pub(super) fn search_abs_vs_square_less_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<AbsVsSquareLessStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let (Some(la), Some(ra)) = (as_abs(&lt.left), as_abs(&lt.right)) else { return Ok(None); };
@@ -272,7 +272,7 @@ impl Runtime {
     pub(super) fn search_add_right_strict_shift_left_strict_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<AddRightStrictShiftLeftStrictStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let Some(add) = as_add(&lt.right) else { return Ok(None); };
@@ -294,7 +294,7 @@ impl Runtime {
     pub(super) fn search_add_right_strict_shift_left_weak_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<AddRightStrictShiftLeftWeakStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let Some(add) = as_add(&lt.right) else { return Ok(None); };
@@ -316,7 +316,7 @@ impl Runtime {
     pub(super) fn search_add_right_strict_shift_right_strict_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<AddRightStrictShiftRightStrictStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let Some(add) = as_add(&lt.right) else { return Ok(None); };
@@ -338,7 +338,7 @@ impl Runtime {
     pub(super) fn search_add_right_strict_shift_right_weak_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<AddRightStrictShiftRightWeakStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let Some(add) = as_add(&lt.right) else { return Ok(None); };
@@ -360,7 +360,7 @@ impl Runtime {
     pub(super) fn search_sub_positive_to_zero_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SubPositiveToZeroStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         if !is_zero_obj(&lt.right) { return Ok(None); }
@@ -380,7 +380,7 @@ impl Runtime {
     pub(super) fn search_sub_positive_from_zero_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SubPositiveFromZeroStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         if !is_zero_obj(&lt.left) { return Ok(None); }
@@ -400,7 +400,7 @@ impl Runtime {
     pub(super) fn search_common_positive_factor_less_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<CommonPositiveFactorLessStrategySingleStep>> {
         let Some(lt) = as_lt(fact) else { return Ok(None); };
         let (Some(lm), Some(rm)) = (as_mul(&lt.left), as_mul(&lt.right)) else { return Ok(None); };

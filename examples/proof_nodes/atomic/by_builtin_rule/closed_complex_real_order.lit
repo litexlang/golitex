@@ -1,0 +1,16 @@
+# Tracer: compare exact closed complex expressions only when real-valued.
+# Before (rejected):
+# i^2 < 0
+# 0 < i^4
+# Former behavior: the closed rational comparator did not reduce complex syntax.
+# Now: zero imaginary coordinates permit exact real rational comparison.
+i^2 < 0
+0 > i^2
+0 < i^4
+i^4 > 0
+i-i <= 0
+i^2 $in R-
+
+# Boundary: 0 <= i^2, 0 < i^2 and comparisons of nonreal values reject.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/closed_complex_real_order.lit
+# Implementation: rational_expression/decimal_comparison.rs; focused Rust controls.

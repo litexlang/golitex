@@ -70,14 +70,7 @@ impl Runtime {
             ));
         }
 
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
         let source_wd = self.verify_obj_well_definedness(&stmt.source_set, verify_state.clone())?;
         if source_wd.is_failed() {
             return Ok(ExecHaveByReplacementAxiomStmtResult::Failed(
@@ -104,7 +97,7 @@ impl Runtime {
             Some(SharedHaveDefinition::HaveByReplacementAxiom(Rc::new(
                 stmt.clone(),
             ))),
-        );
+         crate::execute::execute_fact_stmt::VerifyState::top_level());
         let store = match store {
             Ok(s) => s,
             Err(e) => {
@@ -119,11 +112,11 @@ impl Runtime {
         let elim = self.replacement_elim_forall(stmt, &img);
         let mut stored_fact_ids = store.stored_fact_ids;
         stored_fact_ids.extend(
-            self.store_fact_and_infer(&Fact::ForallFact(intro))?
+            self.store_fact_and_infer(&Fact::ForallFact(intro), crate::execute::execute_fact_stmt::VerifyState::top_level())?
                 .stored_fact_ids(),
         );
         stored_fact_ids.extend(
-            self.store_fact_and_infer(&Fact::ForallFact(elim))?
+            self.store_fact_and_infer(&Fact::ForallFact(elim), crate::execute::execute_fact_stmt::VerifyState::top_level())?
                 .stored_fact_ids(),
         );
 

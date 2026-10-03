@@ -4,12 +4,33 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FieldArithmeticCarrierConstructorTree;
 
 pub(super) fn project_atomic_builtin_strategy(
     proof: &AtomicExceptEqualityFactSearchProofByBuiltinStrategy,
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FieldArithmeticCarrierClosure(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("FieldArithmeticCarrierClosure")),
+            ("carrier", string(crate::ast::obj::Obj::StandardSet(p.carrier.clone()).readable_string())),
+            ("constructor_tree", project_field_arithmetic_tree(&p.constructor_tree, runtime)),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetMembership(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("ListSetMembership")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetNonMembership(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("ListSetNonMembership")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::LiteralTupleProjectionMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("LiteralTupleProjectionMembership")),
@@ -595,6 +616,34 @@ pub(super) fn project_atomic_builtin_strategy(
             ("type", string("builtin_strategy")),
             ("strategy", string("SeqSetNonemptyFromCodomain")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+    }
+}
+
+fn project_field_arithmetic_tree(tree: &FieldArithmeticCarrierConstructorTree, runtime: &Runtime) -> JsonValue {
+    use FieldArithmeticCarrierConstructorTree::*;
+    let binary = |kind, left, right| object_for(runtime, vec![
+        ("constructor", string(kind)),
+        ("left", project_field_arithmetic_tree(left, runtime)),
+        ("right", project_field_arithmetic_tree(right, runtime)),
+    ]);
+    match tree {
+        Leaf { requirement_index } => object_for(runtime, vec![
+            ("constructor", string("leaf")),
+            ("requirement_index", JsonValue::Number(*requirement_index as f64)),
+        ]),
+        Add { left, right } => binary("add", left, right),
+        Sub { left, right } => binary("sub", left, right),
+        Neg { argument } => object_for(runtime, vec![
+            ("constructor", string("neg")),
+            ("argument", project_field_arithmetic_tree(argument, runtime)),
+        ]),
+        Mul { left, right } => binary("mul", left, right),
+        Div { left, right, nonzero_requirement_index } => object_for(runtime, vec![
+            ("constructor", string("div")),
+            ("left", project_field_arithmetic_tree(left, runtime)),
+            ("right", project_field_arithmetic_tree(right, runtime)),
+            ("nonzero_requirement_index", JsonValue::Number(*nonzero_requirement_index as f64)),
         ]),
     }
 }

@@ -1628,57 +1628,25 @@ fn fn_arrow_sugar_desugars_to_fn_set() {
 }
 
 #[test]
-fn fn_set_obj_param_domain_must_not_cite_earlier_binder() {
-    use crate::execute::execute_fact_stmt::well_defined_results::{
-        FailToVerifyFnSetObjWellDefined, FailToVerifyFunctionSpaceObjWellDefinedResult,
-        FailToVerifyObjWellDefinedResult, VerifyObjWellDefinedResult
-    };
-    use crate::execute::execute_let_stmt::ExecLetObjStmtResult;
-    use crate::execute::exec_stmt_result::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
-    use crate::execute::ExecStmtResult;
-
-    // Flat dependent obj carriers are rejected: domain sets must be fixed up front.
-    let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "have S fn(x R) power_set(R)").is_failed());
-    match exec_one(&mut runtime, "let F = fn(x R, y S(x)) R") {
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
-            ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Failed(
-                VerifyObjWellDefinedResult::Failed {
-                    obj: _,
-                    reason: FailToVerifyObjWellDefinedResult::FunctionSpace(
-                        FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(
-                            FailToVerifyFnSetObjWellDefined::ParamTypeCitesEarlierBinder {
-                                failed_index: 1
-                            },
-                        ),
-                    )
-                },
-            )),
-        )) => {}
-        other => panic!(
-            "expected ParamTypeCitesEarlierBinder at group 1, got failed={}",
-            other.is_failed()
-        )
+fn fn_set_obj_carriers_are_fixed_and_conditions_can_use_parameters() {
+    for code in [
+        "let F = fn(S power_set(R), x S) R",
+        "let G = fn(S power_set(R)) fn(x S) R",
+        "let g = fn(x R) {x} {x}",
+    ] {
+        let mut runtime = runtime_with_file_env();
+        let run = runtime.run_litex_code(code).unwrap();
+        assert!(!run.success, "{code}");
+        assert!(run.session_error.is_some(), "dependent carrier must fail during parse: {code}");
     }
-    assert!(
-        exec_one(&mut runtime, "let g = fn(x R, y S(x)) R {y}").is_failed(),
-        "anonymous fn with dependent obj carrier must soft-fail"
-    );
-
-    // Non-dependent multi-arg and curried return-set dependence remain OK.
     let mut runtime = runtime_with_file_env();
-    assert!(
-        !exec_one(&mut runtime, "let F = fn(x R, y Z) R").is_failed(),
-        "fn(x R, y Z) must WD"
-    );
-    assert!(
-        !exec_one(&mut runtime, "let G = fn(S power_set(R)) fn(x S) R").is_failed(),
-        "curried return may cite earlier parameter"
-    );
-    assert!(
-        !exec_one(&mut runtime, "let H = fn(x R, y Z: y > x) R").is_failed(),
-        "dom_facts may cite earlier parameters"
-    );
+    for code in [
+        "let F = fn(x R, y Z) R",
+        "let G = fn(x R) fn(y R) R",
+        "let H = fn(x R, y Z: y > x) R",
+    ] {
+        assert!(!exec_one(&mut runtime, code).is_failed(), "{code}");
+    }
 }
 
 #[test]

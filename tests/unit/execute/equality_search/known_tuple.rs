@@ -1,6 +1,5 @@
 use super::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_proof_by_known_special_property::EqualFactSearchProofByKnownSpecialProperty as Known;
-use crate::execute::execute_fact_stmt::{EqualityClassSearchMode, StrategySearch};
 
 #[test]
 fn run_examples_known_tuple_tracers() {
@@ -28,9 +27,7 @@ fn run_examples_known_tuple_tracers() {
 }
 
 fn known_state() -> VerifyState {
-    let mut state = VerifyState::top_level().known_only_no_wd();
-    state.equality_class_search = EqualityClassSearchMode::StoredPathsOnly;
-    state
+    VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty)
 }
 
 fn known(rt: &mut Runtime, goal: &str) -> Known {
@@ -50,21 +47,25 @@ fn known(rt: &mut Runtime, goal: &str) -> Known {
     proof
 }
 
-// WD may use its ordinary domain/type rules; only truth is known-only.
-// This is the actual builtin-premise entry's split, not a cached goal setup.
+// Test the truth-only SP reader after separately checking ordinary goal WD.
+// Production verify passes the same state to WD and truth; this helper does
+// not claim a fresh complex goal's WD is available at the SP ceiling.
 fn known_with_wd(rt: &mut Runtime, goal: &str) -> VerifyEqualityResult {
     let fact = equal(rt, goal);
-    let VerifyFactResult::Equality(result) = rt
-        .verify_builtin_rule_premise_with_wd_state(
-            &fact.into(),
-            known_state(),
-            VerifyState::top_level().without_well_defined_storage(),
-        )
-        .unwrap()
-    else {
-        panic!("equality")
+    let wd = match rt.verify_equal_fact_well_definedness(&fact, VerifyState::top_level()).unwrap() {
+        super::super::well_defined_result::VerifyEqualFactWellDefinedResult::Success(wd) => wd,
+        super::super::well_defined_result::VerifyEqualFactWellDefinedResult::Failed(reason) => {
+            return VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(reason));
+        }
     };
-    *result
+    match rt.search_equal_fact_proof(&fact, known_state()).unwrap() {
+        Some(searched_proof) => VerifyEqualityResult::Success(VerifyEqualitySuccess {
+            fact, well_defined_proof: wd, searched_proof,
+        }),
+        None => VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof {
+            fact, well_defined_proof: wd,
+        }),
+    }
 }
 
 #[test]
@@ -152,7 +153,7 @@ fn function_projection_and_wd_work_fresh_cached_and_in_strategy() {
         let fact = equal(&mut rt, "vec(a,b)[1] = b[1]-a[1]");
         let before = store_sizes(&rt);
         let result = rt
-            .verify_fact_in_strategy(&fact.clone().into(), StrategySearch { depth: 0 })
+            .verify_fact(&fact.clone().into(), VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
             .unwrap();
         assert_eq!(before, store_sizes(&rt));
         let VerifyFactResult::Equality(result) = result else {
@@ -165,14 +166,7 @@ fn function_projection_and_wd_work_fresh_cached_and_in_strategy() {
             result.searched_proof,
             EqualFactSearchedProof::ByKnownSpecialProperty(_)
         ));
-        let result = rt
-            .verify_builtin_rule_premise_with_wd_state(
-                &fact.into(),
-                known_state(),
-                VerifyState::top_level().without_well_defined_storage(),
-            )
-            .unwrap();
-        assert!(!result.is_failed());
+        assert!(rt.search_equal_fact_proof(&fact, known_state()).unwrap().is_some());
         assert!(matches!(
             known_with_wd(&mut rt, "vec(a,b)[1] = b[2]-a[2]"),
             VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof { .. })

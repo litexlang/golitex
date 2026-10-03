@@ -1,0 +1,2 @@
+# Must reject: mathematical/domain boundary, never a positive corpus case.
+1 / 3 > 1 / 2

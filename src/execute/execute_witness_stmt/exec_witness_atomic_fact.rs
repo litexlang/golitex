@@ -159,7 +159,7 @@ impl Runtime {
                 &projected_exist,
                 &stmt.witnesses,
                 &stmt.proof,
-            )? {
+             crate::execute::execute_fact_stmt::VerifyState::top_level())? {
                 Ok(v) => v,
                 Err(failed) => {
                     return Ok(ExecWitnessAtomicFactStmtResult::Failed(
@@ -170,7 +170,7 @@ impl Runtime {
 
         let atomic_as_fact =
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(stmt.atomic_fact.clone()));
-        let store_and_infer_result = self.store_fact_and_infer(&atomic_as_fact)?;
+        let store_and_infer_result = self.store_fact_and_infer(&atomic_as_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
 
         Ok(ExecWitnessAtomicFactStmtResult::Success(
             ExecWitnessAtomicFactStmtSuccessResult {

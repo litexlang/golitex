@@ -1,0 +1,33 @@
+# Formerly rejected on the baseline of 2026-10-03:
+# have k Z
+# tan(pi + 2 * k * pi) = 0
+# Checked integer periods; radians, exact values, source WD precedes the rule.
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/periodic_trig_exact_values.lit
+sketch:
+    have k, j Z
+    tan(pi + 2 * k * pi) = 0
+    tan(k * pi) = 0
+    tan((k + j + 1) * pi) = 0
+    tan(pi * (2 * k + 1)) = 0
+    tan(pi - 2 * pi * k) = 0
+    tan(pi / 4 + k * pi) = 1
+    cot(-pi / 4 - j * pi) = -1
+    sin((k - j) * pi) = 0
+    cos(pi / 2 + k * pi) = 0
+    cos(pi + 2 * k * pi) = -1
+    sin(pi / 2 + 2 * k * pi) = 1
+    sin(pi / 6 + 2 * k * pi) = 1 / 2
+    cos(pi / 3 + 2 * j * pi) = 1 / 2
+    tan(pi / 3 + k * pi) = sqrt(3)
+    cot(pi / 6 + j * pi) = sqrt(3)
+    sin(pi / 4 + 2 * k * pi) = sqrt(2) / 2
+    cos(5 * pi / 6 - 2 * j * pi) = -sqrt(3) / 2
+    cos(pi + (k + k) * pi) = -1
+sketch:
+    tan(pi) = 0
+    tan(5 * pi / 4) = 1
+    cot(pi / 2) = 0
+    sin(-pi / 6) = -1 / 2
+    cos(-pi / 3) = 1 / 2
+# Paired rejection controls are in examples/negative/exact_numeric_periodic_modulus/.
+# A real k alone does not establish a period; tan(pi/2), cot(pi) are undefined.

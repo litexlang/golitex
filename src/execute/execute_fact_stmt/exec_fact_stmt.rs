@@ -10,19 +10,12 @@ impl Runtime {
         &mut self,
         fact: &Fact,
     ) -> RuntimeResult<ExecFactStmtResult> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
         let verify_result = self.verify_fact(fact, verify_state)?;
         if verify_result.is_failed() {
             return Ok(ExecFactStmtResult::Failed(verify_result));
         }
-        let store_and_infer_result = self.store_fact_and_infer(fact)?;
+        let store_and_infer_result = self.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
         Ok(ExecFactStmtResult::Success(ExecFactStmtSuccessResult {
             verify_result,
             store_and_infer_result,

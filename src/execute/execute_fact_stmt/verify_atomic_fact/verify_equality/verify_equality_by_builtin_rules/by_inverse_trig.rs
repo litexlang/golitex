@@ -165,7 +165,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InverseTrigEqualityBuiltinRuleProof>> {
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = verify_state;
         match left {
             Obj::TrigOperator(TrigOperator::Arcsin(Arcsin { arg })) => {
                 if let Obj::TrigOperator(TrigOperator::Sin(Sin { arg: inner })) = arg.as_ref() {

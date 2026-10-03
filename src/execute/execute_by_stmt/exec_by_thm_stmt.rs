@@ -31,7 +31,7 @@ pub fn exec_release_thm_stmt(
             if proof.is_failed() {
                 return Ok(Err(ExecReleaseThmStmtFailed::Dom { theorem: thm_name.clone(), fact: dom.clone(), index, result: proof }));
             }
-            let _ = rt.store_fact_and_infer(dom)?;
+            let _ = rt.store_fact_and_infer(dom, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
             dom_proofs.push(proof);
         }
         let conclusions_wd = match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
@@ -96,7 +96,7 @@ pub fn exec_by_thm_stmt(
                     ExecReleaseThmStmtFailed::Dom { theorem: thm_name.clone(), fact: dom.clone(), index, result: proof },
                 )));
             }
-            let _ = rt.store_fact_and_infer(dom)?;
+            let _ = rt.store_fact_and_infer(dom, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
             dom_proofs.push(proof);
         }
         let conclusions_wd = match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
@@ -104,7 +104,7 @@ pub fn exec_by_thm_stmt(
             Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
         };
         for conclusion in &prepared.conclusions {
-            let _ = rt.store_fact_and_infer(conclusion)?;
+            let _ = rt.store_fact_and_infer(conclusion, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
         }
         let selected_proof = verify_goal_fact(rt, &selected)?;
         if selected_proof.is_failed() {
@@ -258,7 +258,7 @@ fn verify_prepared_type_facts(
         if proof.is_failed() {
             return Ok(Err(ExecReleaseThmStmtFailed::Type { theorem: thm_name.to_string(), fact: fact.clone(), index, result: proof }));
         }
-        let _ = runtime.store_fact_and_infer(fact)?;
+        let _ = runtime.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
         proofs.push(proof);
     }
     Ok(Ok(proofs))

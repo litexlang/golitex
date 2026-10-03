@@ -1,0 +1,2 @@
+# Must reject: complex_abs N92; exact numeric/periodic/modulus boundary
+C_abs(1+i)=-sqrt(2)

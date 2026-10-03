@@ -4,9 +4,9 @@
 //! Outer local_env:
 //!   1. optional header params (param-type WD + define)
 //!   2. optional structure-domain fact WD
-//!   3. each field-type Obj WD
 //! Field local_env (nested):
-//!   4. define field identifiers with their carriers
+//!   3. each field-type Obj WD under the header and earlier fields
+//!   4. introduce that field, then continue with the next field
 //!   5. equivalent-fact (`<=>:`) WD under those fields
 //!   6. close field_local_env into the result
 //! Then close outer local_env, store the struct definition and publish quantified laws
@@ -47,9 +47,15 @@ pub enum ExecDefStructStmtFailed {
 
 /// Nested field-binder scope evidence (taken, not merged into the outer local env).
 pub struct ExecDefStructFieldScopeSuccessResult {
-    pub defined_fields: StoreHaveObjAndInferResult,
+    pub fields: Vec<StructFieldWellDefinedAndIntroduced>,
     pub equivalent_facts: Vec<StructEquivalentFactWellDefinedProof>,
     pub field_local_env: Box<ExecEnv>,
+}
+
+/// One ordered field stage: check its carrier before introducing its binding.
+pub struct StructFieldWellDefinedAndIntroduced {
+    pub well_defined: ObjWellDefinedProof,
+    pub defined: StoreHaveObjAndInferResult,
 }
 
 // Each condition is checked before it is assumed for subsequent conditions.
@@ -64,7 +70,6 @@ pub struct ExecDefStructStmtSuccessResult {
     pub statement: DefStructStmt,
     pub introduced_params: Option<IntroduceTypedParametersResult>,
     pub structure_domains: Vec<FactWellDefinedProof>,
-    pub field_type_well_defined: Vec<ObjWellDefinedProof>,
     pub field_scope: ExecDefStructFieldScopeSuccessResult,
     pub local_env: Box<ExecEnv>,
     pub definition_facts: Vec<StoreStructDefinitionFactResult>,
@@ -102,14 +107,13 @@ impl Runtime {
 
         self.top_exec_env_mut()
             .store_def_struct(def_struct.clone());
-        let definition_facts = self.store_struct_definition_facts(def_struct)?;
+        let definition_facts = self.store_struct_definition_facts(def_struct, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
 
         Ok(ExecDefStructStmtResult::Success(
             ExecDefStructStmtSuccessResult {
                 statement: def_struct.clone(),
                 introduced_params: parts.introduced_params,
                 structure_domains: parts.structure_domains,
-                field_type_well_defined: parts.field_type_well_defined,
                 field_scope: parts.field_scope,
                 local_env,
                 definition_facts,
@@ -121,7 +125,6 @@ impl Runtime {
 struct OuterLocalParts {
     introduced_params: Option<IntroduceTypedParametersResult>,
     structure_domains: Vec<FactWellDefinedProof>,
-    field_type_well_defined: Vec<ObjWellDefinedProof>,
     field_scope: ExecDefStructFieldScopeSuccessResult,
 }
 
@@ -139,14 +142,7 @@ impl Runtime {
         &mut self,
         def_struct: &DefStructStmt,
     ) -> RuntimeResult<Result<OuterLocalParts, ExecDefStructStmtFailed>> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
         let introduced_params = if let Some((params, _)) = &def_struct.param_def_with_dom {
             match self.introduce_typed_parameters(params, verify_state.clone())? {
@@ -177,23 +173,11 @@ impl Runtime {
             }
         }
 
-        let mut field_type_well_defined = Vec::with_capacity(def_struct.fields.len());
-        for field in &def_struct.fields {
-            match self.verify_obj_well_definedness(&field.field_type, verify_state.clone())? {
-                VerifyObjWellDefinedResult::Success(proof) => {
-                    field_type_well_defined.push(proof);
-                }
-                failed @ VerifyObjWellDefinedResult::Failed { .. } => {
-                    return Ok(Err(ExecDefStructStmtFailed::FieldType(failed)));
-                }
-            }
-        }
-
         let (field_outcome, field_local_env) = self.run_in_local_env_and_take_env(|rt| {
             rt.exec_def_struct_field_scope(&def_struct.fields, &def_struct.equivalent_facts)
         })?;
 
-        let (defined_fields, equivalent_facts) = match field_outcome {
+        let (fields, equivalent_facts) = match field_outcome {
             Ok(parts) => parts,
             Err(failed) => return Ok(Err(failed)),
         };
@@ -201,9 +185,8 @@ impl Runtime {
         Ok(Ok(OuterLocalParts {
             introduced_params,
             structure_domains,
-            field_type_well_defined,
             field_scope: ExecDefStructFieldScopeSuccessResult {
-                defined_fields,
+                fields,
                 equivalent_facts,
                 field_local_env,
             },
@@ -215,19 +198,24 @@ impl Runtime {
         fields: &[StructFieldDef],
         equivalent_facts: &[Fact],
     ) -> RuntimeResult<
-        Result<(StoreHaveObjAndInferResult, Vec<StructEquivalentFactWellDefinedProof>), ExecDefStructStmtFailed>,
+        Result<(Vec<StructFieldWellDefinedAndIntroduced>, Vec<StructEquivalentFactWellDefinedProof>), ExecDefStructStmtFailed>,
     > {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
-        let field_params = field_typed_parameters(fields);
-        let defined_fields = self.define_typed_parameters_in_current_env(&field_params, None)?;
+        let mut introduced_fields = Vec::with_capacity(fields.len());
+        for field in fields {
+            // The current field is not in scope until its type has passed WD.
+            // Earlier field assumptions remain confined to this field scope.
+            let well_defined = match self.verify_obj_well_definedness(&field.field_type, verify_state)? {
+                VerifyObjWellDefinedResult::Success(proof) => proof,
+                failed @ VerifyObjWellDefinedResult::Failed { .. } => {
+                    return Ok(Err(ExecDefStructStmtFailed::FieldType(failed)));
+                }
+            };
+            let field_params = field_typed_parameters(std::slice::from_ref(field));
+            let defined = self.define_typed_parameters_in_current_env(&field_params, None, verify_state)?;
+            introduced_fields.push(StructFieldWellDefinedAndIntroduced { well_defined, defined });
+        }
 
         let mut checked = Vec::with_capacity(equivalent_facts.len());
         for fact in equivalent_facts {
@@ -245,7 +233,7 @@ impl Runtime {
             }
         }
 
-        Ok(Ok((defined_fields, checked)))
+        Ok(Ok((introduced_fields, checked)))
     }
 }
 
@@ -273,3 +261,7 @@ fn fact_from_quantifier_free(fact: &QuantifierFreeFact) -> Fact {
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/struct_ordered_conditions/tests.rs"]
 mod ordered_condition_tests;
+
+#[cfg(test)]
+#[path = "../../../tests/unit/execute/struct_dependent_fields/tests.rs"]
+mod dependent_field_tests;

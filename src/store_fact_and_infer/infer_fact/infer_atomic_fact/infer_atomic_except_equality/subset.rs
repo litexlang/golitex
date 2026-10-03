@@ -12,7 +12,7 @@ impl Runtime {
     pub(super) fn infer_subset_elementwise_membership(
         &mut self,
         subset: &SubsetFact,
-    ) -> RuntimeResult<Option<InferSubsetElementwiseMembershipResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferSubsetElementwiseMembershipResult>> {
         if self.set_is_or_equals_set_builder(&subset.left) {
             return Ok(None);
         }
@@ -36,7 +36,7 @@ impl Runtime {
             ))],
             line_file: subset.line_file.clone(),
         };
-        let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall))?);
+        let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall), verify_state)?);
         Ok(Some(InferSubsetElementwiseMembershipResult { derived }))
     }
 

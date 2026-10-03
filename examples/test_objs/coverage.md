@@ -2,14 +2,16 @@
 
 Task: add detailed regression files for every current Litex Obj variant.
 
-The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 551 positive cases, 284 rejection fixtures and 44 recorded gaps.
+The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 594 positive cases, 289 rejection fixtures and 22 recorded gaps.
 
 The earlier 2026-10-03 [audit](audit_2026-10-03.md) observed 67 direct
 rejections. The subsequent [F authoring repairs](experience/problem_notes/f_authoring_repairs_2026-10-03.md)
 promote 23 checked proof migrations and four unchanged recovered addition folds;
 the recovered subtraction rejection stays in the negative corpus. Original gap
 sources and receipts are archived in the authoring journal before retirement.
-These are proof and fixture changes; no kernel change is attributed to this task.
+That F follow-up changed proofs and fixtures. The subsequent [exact numeric, periodic trig and modulus repair](experience/problem_notes/exact_numeric_periodic_modulus_2026-10-03.md) adds local Rust leaves, closes 14 gaps and adds 21 positive and five negative cases. Current versus retained-release receipts are distinguished in the journal.
+
+The [remaining elementary follow-up](experience/problem_notes/remaining_elementary_gaps_2026-10-03.md) closes the other eight requested extrema, inverse and log goals. The focused current-source report covers all 13 involved object families; unrelated gaps remain in the manifest.
 
 These counts describe coverage of written cases, not proof that the implementation is bug-free. The runner audits the enum tree and all `.lit` fixtures on every run.
 
@@ -25,11 +27,11 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::ArithmeticOperator::Sub` | [sub](sub.lit) | 7 | 2 | 0 |
 | `Obj::ArithmeticOperator::Neg` | [neg](neg.lit) | 6 | 2 | 0 |
 | `Obj::ArithmeticOperator::Mul` | [mul](mul.lit) | 7 | 2 | 0 |
-| `Obj::ArithmeticOperator::Div` | [div](div.lit) | 9 | 7 | 0 |
-| `Obj::ArithmeticOperator::Pow` | [pow](pow.lit) | 9 | 3 | 1 |
+| `Obj::ArithmeticOperator::Div` | [div](div.lit) | 10 | 8 | 0 |
+| `Obj::ArithmeticOperator::Pow` | [pow](pow.lit) | 12 | 3 | 0 |
 | `Obj::ArithmeticOperator::Abs` | [abs](abs.lit) | 6 | 2 | 0 |
-| `Obj::ArithmeticOperator::Min` | [min](min.lit) | 5 | 2 | 1 |
-| `Obj::ArithmeticOperator::Max` | [max](max.lit) | 5 | 2 | 1 |
+| `Obj::ArithmeticOperator::Min` | [min](min.lit) | 6 | 2 | 0 |
+| `Obj::ArithmeticOperator::Max` | [max](max.lit) | 6 | 2 | 0 |
 | `Obj::ArithmeticOperator::Floor` | [floor](floor.lit) | 6 | 2 | 0 |
 | `Obj::ArithmeticOperator::Ceil` | [ceil](ceil.lit) | 6 | 2 | 0 |
 | `Obj::ArithmeticOperator::Sign` | [sign](sign.lit) | 5 | 2 | 0 |
@@ -38,21 +40,21 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::IntegerOperator::Gcd` | [gcd](gcd.lit) | 6 | 3 | 0 |
 | `Obj::IntegerOperator::Lcm` | [lcm](lcm.lit) | 6 | 2 | 0 |
 | `Obj::IntegerOperator::Factorial` | [factorial](factorial.lit) | 6 | 3 | 0 |
-| `Obj::TrigOperator::Sin` | [sin](sin.lit) | 5 | 2 | 1 |
-| `Obj::TrigOperator::Cos` | [cos](cos.lit) | 5 | 2 | 1 |
-| `Obj::TrigOperator::Tan` | [tan](tan.lit) | 2 | 3 | 3 |
-| `Obj::TrigOperator::Cot` | [cot](cot.lit) | 2 | 3 | 2 |
+| `Obj::TrigOperator::Sin` | [sin](sin.lit) | 8 | 3 | 0 |
+| `Obj::TrigOperator::Cos` | [cos](cos.lit) | 8 | 2 | 0 |
+| `Obj::TrigOperator::Tan` | [tan](tan.lit) | 8 | 4 | 0 |
+| `Obj::TrigOperator::Cot` | [cot](cot.lit) | 6 | 3 | 0 |
 | `Obj::TrigOperator::Arcsin` | [arcsin](arcsin.lit) | 4 | 4 | 0 |
 | `Obj::TrigOperator::Arccos` | [arccos](arccos.lit) | 4 | 4 | 0 |
-| `Obj::TrigOperator::Arctan` | [arctan](arctan.lit) | 2 | 2 | 2 |
-| `Obj::TrigOperator::Arccot` | [arccot](arccot.lit) | 2 | 2 | 2 |
+| `Obj::TrigOperator::Arctan` | [arctan](arctan.lit) | 4 | 2 | 0 |
+| `Obj::TrigOperator::Arccot` | [arccot](arccot.lit) | 4 | 2 | 0 |
 | `Obj::ExpLogOperator::Exp` | [exp](exp.lit) | 6 | 2 | 0 |
 | `Obj::ExpLogOperator::Ln` | [ln](ln.lit) | 5 | 4 | 0 |
-| `Obj::ExpLogOperator::Log` | [log](log.lit) | 4 | 5 | 2 |
+| `Obj::ExpLogOperator::Log` | [log](log.lit) | 6 | 5 | 0 |
 | `Obj::ExpLogOperator::Sqrt` | [sqrt](sqrt.lit) | 7 | 3 | 0 |
 | `Obj::ComplexOperator::RealPart` | [real_part](real_part.lit) | 6 | 2 | 0 |
 | `Obj::ComplexOperator::ImaginaryPart` | [imaginary_part](imaginary_part.lit) | 6 | 2 | 0 |
-| `Obj::ComplexOperator::ComplexAbs` | [complex_abs](complex_abs.lit) | 2 | 2 | 4 |
+| `Obj::ComplexOperator::ComplexAbs` | [complex_abs](complex_abs.lit) | 15 | 4 | 0 |
 | `Obj::SetOperator::Union` | [union](union.lit) | 6 | 2 | 0 |
 | `Obj::SetOperator::Intersect` | [intersect](intersect.lit) | 6 | 2 | 0 |
 | `Obj::SetOperator::SetMinus` | [set_minus](set_minus.lit) | 6 | 2 | 0 |
@@ -84,8 +86,8 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::IteratedOperator::Reduce` | [reduce](reduce.lit) | 5 | 3 | 0 |
 | `Obj::IteratedOperator::FiniteSetReduce` | [finite_set_reduce](finite_set_reduce.lit) | 6 | 3 | 0 |
 | `Obj::FiniteSetStat::FiniteSetSize` | [finite_set_size](finite_set_size.lit) | 6 | 3 | 1 |
-| `Obj::FiniteSetStat::FiniteSetMax` | [finite_set_max](finite_set_max.lit) | 5 | 5 | 1 |
-| `Obj::FiniteSetStat::FiniteSetMin` | [finite_set_min](finite_set_min.lit) | 5 | 5 | 1 |
+| `Obj::FiniteSetStat::FiniteSetMax` | [finite_set_max](finite_set_max.lit) | 6 | 5 | 0 |
+| `Obj::FiniteSetStat::FiniteSetMin` | [finite_set_min](finite_set_min.lit) | 6 | 5 | 0 |
 | `Obj::StructAndFieldAccessObj::StructObj` | [struct_obj](struct_obj.lit) | 4 | 3 | 0 |
 | `Obj::StructAndFieldAccessObj::FieldAccess` | [field_access](field_access.lit) | 4 | 4 | 0 |
 | `Obj::InstantiatedTemplateObj` | [instantiated_template_obj](instantiated_template_obj.lit) | 4 | 3 | 0 |

@@ -326,7 +326,8 @@
         "P06",
         "P07",
         "P08",
-        "P101"
+        "P101",
+        "P91"
       ],
       "negative_cases": [
         {
@@ -356,6 +357,10 @@
         {
           "id": "N103",
           "file": "negative/div__n103.lit"
+        },
+        {
+          "id": "N91",
+          "file": "negative/div__n91.lit"
         }
       ],
       "gaps": []
@@ -376,7 +381,11 @@
         "P07",
         "P08",
         "P09",
-        "P10"
+        "P10",
+        "P04",
+        "P91",
+        "P92",
+        "P121"
       ],
       "negative_cases": [
         {
@@ -392,19 +401,7 @@
           "file": "negative/pow__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/pow__p04.lit",
-          "intended": "accept",
-          "issue": "pow-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"2 ^ -3 = 1 / 8\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"2 ^ -3 = 1 / 8\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "abs",
@@ -445,7 +442,8 @@
         "P02",
         "P03",
         "P04",
-        "P06"
+        "P06",
+        "P05"
       ],
       "negative_cases": [
         {
@@ -457,19 +455,7 @@
           "file": "negative/min__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P05",
-          "file": "gaps/min__p05.lit",
-          "intended": "accept",
-          "issue": "min-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"min(1 / 3, 1 / 2) = 1 / 3\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"min(1 / 3, 1 / 2) = 1 / 3\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "max",
@@ -483,7 +469,8 @@
         "P02",
         "P03",
         "P04",
-        "P06"
+        "P06",
+        "P05"
       ],
       "negative_cases": [
         {
@@ -495,19 +482,7 @@
           "file": "negative/max__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P05",
-          "file": "gaps/max__p05.lit",
-          "intended": "accept",
-          "issue": "max-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"max(1 / 3, 1 / 2) = 1 / 2\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"max(1 / 3, 1 / 2) = 1 / 2\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "floor",
@@ -522,7 +497,10 @@
         "P03",
         "P04",
         "P05",
-        "P06"
+        "P06",
+        "P121",
+        "P122",
+        "P123"
       ],
       "negative_cases": [
         {
@@ -532,6 +510,10 @@
         {
           "id": "N02",
           "file": "negative/floor__n02.lit"
+        },
+        {
+          "id": "N121",
+          "file": "negative/floor__n121.lit"
         }
       ],
       "gaps": []
@@ -549,7 +531,10 @@
         "P03",
         "P04",
         "P05",
-        "P06"
+        "P06",
+        "P121",
+        "P122",
+        "P123"
       ],
       "negative_cases": [
         {
@@ -559,6 +544,10 @@
         {
           "id": "N02",
           "file": "negative/ceil__n02.lit"
+        },
+        {
+          "id": "N121",
+          "file": "negative/ceil__n121.lit"
         }
       ],
       "gaps": []
@@ -575,7 +564,10 @@
         "P02",
         "P03",
         "P04",
-        "P05"
+        "P05",
+        "P121",
+        "P122",
+        "P123"
       ],
       "negative_cases": [
         {
@@ -603,7 +595,8 @@
         "P04",
         "P05",
         "P06",
-        "P07"
+        "P07",
+        "P121"
       ],
       "negative_cases": [
         {
@@ -635,7 +628,8 @@
         "P04",
         "P05",
         "P06",
-        "P07"
+        "P07",
+        "P121"
       ],
       "negative_cases": [
         {
@@ -674,7 +668,9 @@
         "P03",
         "P04",
         "P05",
-        "P06"
+        "P06",
+        "P121",
+        "P122"
       ],
       "negative_cases": [
         {
@@ -705,7 +701,8 @@
         "P03",
         "P04",
         "P05",
-        "P06"
+        "P06",
+        "P121"
       ],
       "negative_cases": [
         {
@@ -732,7 +729,8 @@
         "P03",
         "P04",
         "P05",
-        "P06"
+        "P06",
+        "P121"
       ],
       "negative_cases": [
         {
@@ -762,7 +760,10 @@
         "P02",
         "P03",
         "P05",
-        "P06"
+        "P06",
+        "P04",
+        "P91",
+        "P92"
       ],
       "negative_cases": [
         {
@@ -772,21 +773,13 @@
         {
           "id": "N02",
           "file": "negative/sin__n02.lit"
+        },
+        {
+          "id": "N91",
+          "file": "negative/sin__n91.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/sin__p04.lit",
-          "intended": "accept",
-          "issue": "sin-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"sin(-pi / 2) = -1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"sin(-pi / 2) = -1\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "cos",
@@ -800,7 +793,10 @@
         "P02",
         "P03",
         "P05",
-        "P06"
+        "P06",
+        "P04",
+        "P91",
+        "P92"
       ],
       "negative_cases": [
         {
@@ -812,19 +808,7 @@
           "file": "negative/cos__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/cos__p04.lit",
-          "intended": "accept",
-          "issue": "cos-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"cos(-pi) = -1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"cos(-pi) = -1\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "tan",
@@ -835,7 +819,13 @@
       "helper_paths": [],
       "positive_cases": [
         "P01",
-        "P05"
+        "P05",
+        "P02",
+        "P03",
+        "P04",
+        "P91",
+        "P92",
+        "P93"
       ],
       "negative_cases": [
         {
@@ -849,43 +839,13 @@
         {
           "id": "N03",
           "file": "negative/tan__n03.lit"
+        },
+        {
+          "id": "N91",
+          "file": "negative/tan__n91.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P02",
-          "file": "gaps/tan__p02.lit",
-          "intended": "accept",
-          "issue": "tan-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P03",
-          "file": "gaps/tan__p03.lit",
-          "intended": "accept",
-          "issue": "tan-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/tan__p04.lit",
-          "intended": "accept",
-          "issue": "tan-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "cot",
@@ -896,7 +856,11 @@
       "helper_paths": [],
       "positive_cases": [
         "P01",
-        "P04"
+        "P04",
+        "P02",
+        "P03",
+        "P91",
+        "P92"
       ],
       "negative_cases": [
         {
@@ -912,30 +876,7 @@
           "file": "negative/cot__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P02",
-          "file": "gaps/cot__p02.lit",
-          "intended": "accept",
-          "issue": "cot-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P03",
-          "file": "gaps/cot__p03.lit",
-          "intended": "accept",
-          "issue": "cot-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "arcsin",
@@ -1012,6 +953,8 @@
       "helper_paths": [],
       "positive_cases": [
         "P01",
+        "P02",
+        "P03",
         "P04"
       ],
       "negative_cases": [
@@ -1024,30 +967,7 @@
           "file": "negative/arctan__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P02",
-          "file": "gaps/arctan__p02.lit",
-          "intended": "accept",
-          "issue": "arctan-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"arctan(1) = pi / 4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"arctan(1) = pi / 4\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P03",
-          "file": "gaps/arctan__p03.lit",
-          "intended": "accept",
-          "issue": "arctan-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"arctan(-1) = -pi / 4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"arctan(-1) = -pi / 4\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "arccot",
@@ -1058,7 +978,9 @@
       "helper_paths": [],
       "positive_cases": [
         "P01",
-        "P03"
+        "P02",
+        "P03",
+        "P04"
       ],
       "negative_cases": [
         {
@@ -1070,30 +992,7 @@
           "file": "negative/arccot__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P02",
-          "file": "gaps/arccot__p02.lit",
-          "intended": "accept",
-          "issue": "arccot-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"arccot(1) = pi / 4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"arccot(1) = pi / 4\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/arccot__p04.lit",
-          "intended": "accept",
-          "issue": "arccot-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"arccot(-1) = 3 * pi / 4\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"arccot(-1) = 3 * pi / 4\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "exp",
@@ -1167,7 +1066,13 @@
         "P01",
         "P02",
         "P03",
-        "P04"
+        "P04",
+        "P05",
+        "P06",
+        "P121",
+        "P122",
+        "P123",
+        "P124"
       ],
       "negative_cases": [
         {
@@ -1189,32 +1094,13 @@
         {
           "id": "N05",
           "file": "negative/log__n05.lit"
-        }
-      ],
-      "gaps": [
-        {
-          "id": "P05",
-          "file": "gaps/log__p05.lit",
-          "intended": "accept",
-          "issue": "log-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"log (1 / 2, 8) = -3\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"log (1 / 2, 8) = -3\"}, \"stores\": [], \"infers\": []}"
-          }
         },
         {
-          "id": "P06",
-          "file": "gaps/log__p06.lit",
-          "intended": "accept",
-          "issue": "log-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
+          "id": "N121",
+          "file": "negative/log__n121.lit"
         }
-      ]
+      ],
+      "gaps": []
     },
     {
       "name": "sqrt",
@@ -1230,7 +1116,14 @@
         "P04",
         "P05",
         "P06",
-        "P07"
+        "P07",
+        "P121",
+        "P122",
+        "P123",
+        "P124",
+        "P125",
+        "P126",
+        "P127"
       ],
       "negative_cases": [
         {
@@ -1244,6 +1137,14 @@
         {
           "id": "N03",
           "file": "negative/sqrt__n03.lit"
+        },
+        {
+          "id": "N121",
+          "file": "negative/sqrt__n121.lit"
+        },
+        {
+          "id": "N122",
+          "file": "negative/sqrt__n122.lit"
         }
       ],
       "gaps": []
@@ -1261,7 +1162,10 @@
         "P03",
         "P04",
         "P05",
-        "P06"
+        "P06",
+        "P121",
+        "P122",
+        "P123"
       ],
       "negative_cases": [
         {
@@ -1288,7 +1192,10 @@
         "P03",
         "P04",
         "P05",
-        "P06"
+        "P06",
+        "P121",
+        "P122",
+        "P123"
       ],
       "negative_cases": [
         {
@@ -1298,6 +1205,10 @@
         {
           "id": "N02",
           "file": "negative/imaginary_part__n02.lit"
+        },
+        {
+          "id": "N121",
+          "file": "negative/imaginary_part__n121.lit"
         }
       ],
       "gaps": []
@@ -1311,7 +1222,20 @@
       "helper_paths": [],
       "positive_cases": [
         "P01",
-        "P02"
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P91",
+        "P92",
+        "P93",
+        "P94",
+        "P95",
+        "P96",
+        "P97",
+        "P98",
+        "P99"
       ],
       "negative_cases": [
         {
@@ -1321,54 +1245,17 @@
         {
           "id": "N02",
           "file": "negative/complex_abs__n02.lit"
+        },
+        {
+          "id": "N91",
+          "file": "negative/complex_abs__n91.lit"
+        },
+        {
+          "id": "N92",
+          "file": "negative/complex_abs__n92.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/complex_abs__p03.lit",
-          "intended": "accept",
-          "issue": "complex_abs-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"C_abs(3 + 4 * i) = 5\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"C_abs(3 + 4 * i) = 5\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/complex_abs__p04.lit",
-          "intended": "accept",
-          "issue": "complex_abs-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"C_abs(-3) = 3\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"C_abs(-3) = 3\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P05",
-          "file": "gaps/complex_abs__p05.lit",
-          "intended": "accept",
-          "issue": "complex_abs-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"C_abs(-i) = 1\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"C_abs(-i) = 1\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/complex_abs__p06.lit",
-          "intended": "accept",
-          "issue": "complex_abs-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"forall z C:\\n    C_abs(z) >= 0\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"forall z C:\\n    C_abs(z) >= 0\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "union",
@@ -2648,6 +2535,7 @@
         "P01",
         "P02",
         "P03",
+        "P04",
         "P05",
         "P90"
       ],
@@ -2673,19 +2561,7 @@
           "file": "negative/finite_set_max__n05.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/finite_set_max__p04.lit",
-          "intended": "accept",
-          "issue": "finite_set_max-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ],
+      "gaps": [],
       "valid_domain_control": "P90"
     },
     {
@@ -2699,6 +2575,7 @@
         "P01",
         "P02",
         "P03",
+        "P04",
         "P05",
         "P90"
       ],
@@ -2724,19 +2601,7 @@
           "file": "negative/finite_set_min__n05.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/finite_set_min__p04.lit",
-          "intended": "accept",
-          "issue": "finite_set_min-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ],
+      "gaps": [],
       "valid_domain_control": "P90"
     },
     {
@@ -3772,6 +3637,226 @@
       "former_phase": "success",
       "resolution": "already recovered: unordered subtraction correctly rejects; negative fixture retained",
       "journal": "proof_journals/f_authoring_repairs_2026-10-03.json"
+    },
+    {
+      "object": "pow",
+      "case": "P04",
+      "code": "sketch:\n    2^(-3) = 1 / 8\n",
+      "original_source": "# Intended valid regression: pow P04\n2^(-3) = 1 / 8\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "pow.lit"
+    },
+    {
+      "object": "min",
+      "case": "P05",
+      "code": "sketch:\n    min(1 / 3, 1 / 2) = 1 / 3\n",
+      "original_source": "# Intended valid regression: min P05\nmin(1 / 3, 1 / 2) = 1 / 3\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "min.lit"
+    },
+    {
+      "object": "max",
+      "case": "P05",
+      "code": "sketch:\n    max(1 / 3, 1 / 2) = 1 / 2\n",
+      "original_source": "# Intended valid regression: max P05\nmax(1 / 3, 1 / 2) = 1 / 2\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "max.lit"
+    },
+    {
+      "object": "sin",
+      "case": "P04",
+      "code": "sketch:\n    sin(-pi / 2) = -1\n",
+      "original_source": "# Intended valid regression: sin P04\nsin(-pi / 2) = -1\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "sin.lit"
+    },
+    {
+      "object": "cos",
+      "case": "P04",
+      "code": "sketch:\n    cos(-pi) = -1\n",
+      "original_source": "# Intended valid regression: cos P04\ncos(-pi) = -1\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "cos.lit"
+    },
+    {
+      "object": "tan",
+      "case": "P02",
+      "code": "sketch:\n    tan(pi) = 0\n",
+      "original_source": "# Intended valid regression: tan P02\ntan(pi) = 0\n",
+      "former_phase": "well_defined",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "tan.lit"
+    },
+    {
+      "object": "tan",
+      "case": "P03",
+      "code": "sketch:\n    tan(pi / 4) = 1\n",
+      "original_source": "# Intended valid regression: tan P03\ntan(pi / 4) = 1\n",
+      "former_phase": "well_defined",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "tan.lit"
+    },
+    {
+      "object": "tan",
+      "case": "P04",
+      "code": "sketch:\n    tan(-pi / 4) = -1\n",
+      "original_source": "# Intended valid regression: tan P04\ntan(-pi / 4) = -1\n",
+      "former_phase": "well_defined",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "tan.lit"
+    },
+    {
+      "object": "cot",
+      "case": "P02",
+      "code": "sketch:\n    cot(pi / 4) = 1\n",
+      "original_source": "# Intended valid regression: cot P02\ncot(pi / 4) = 1\n",
+      "former_phase": "well_defined",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "cot.lit"
+    },
+    {
+      "object": "cot",
+      "case": "P03",
+      "code": "sketch:\n    cot(-pi / 4) = -1\n",
+      "original_source": "# Intended valid regression: cot P03\ncot(-pi / 4) = -1\n",
+      "former_phase": "well_defined",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "cot.lit"
+    },
+    {
+      "object": "complex_abs",
+      "case": "P03",
+      "code": "sketch:\n    C_abs(3 + 4 * i) = 5\n",
+      "original_source": "# Intended valid regression: complex_abs P03\nC_abs(3 + 4 * i) = 5\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "complex_abs.lit"
+    },
+    {
+      "object": "complex_abs",
+      "case": "P04",
+      "code": "sketch:\n    C_abs(-3) = 3\n",
+      "original_source": "# Intended valid regression: complex_abs P04\nC_abs(-3) = 3\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "complex_abs.lit"
+    },
+    {
+      "object": "complex_abs",
+      "case": "P05",
+      "code": "sketch:\n    C_abs(-i) = 1\n",
+      "original_source": "# Intended valid regression: complex_abs P05\nC_abs(-i) = 1\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "complex_abs.lit"
+    },
+    {
+      "object": "complex_abs",
+      "case": "P06",
+      "code": "sketch:\n    forall z C:\n        C_abs(z) >= 0\n",
+      "original_source": "# Intended valid regression: complex_abs P06\nforall z C:\n    C_abs(z) >= 0\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local Rust exact numeric/periodic/modulus repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/exact_numeric_periodic_modulus_2026-10-03.json",
+      "acceptance_file": "complex_abs.lit"
+    },
+    {
+      "object": "arctan",
+      "case": "P02",
+      "code": "(-pi)/2 $in R\npi/2 $in R\npi/4 $in R\ncos(pi/4)!=0\ntan(pi/4)=1\n(-pi)/2<pi/4\npi/4<pi/2\narctan(1)=arctan(tan(pi/4))=pi/4",
+      "original_source": "# Intended valid regression: arctan P02\narctan(1) = pi / 4\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local rational-extremum certificate, principal inverse proof, or positive-nonunit log repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/remaining_elementary_gaps_2026-10-03.json",
+      "acceptance_file": "arctan.lit"
+    },
+    {
+      "object": "arctan",
+      "case": "P03",
+      "code": "(-pi)/2 $in R\npi/2 $in R\n(-pi)/4 $in R\ncos(-pi/4)!=0\ntan(-pi/4)=-1\n(-pi)/2<(-pi)/4\n(-pi)/4<pi/2\narctan(-1)=arctan(tan(-pi/4))=(-pi)/4",
+      "original_source": "# Intended valid regression: arctan P03\narctan(-1) = -pi / 4\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local rational-extremum certificate, principal inverse proof, or positive-nonunit log repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/remaining_elementary_gaps_2026-10-03.json",
+      "acceptance_file": "arctan.lit"
+    },
+    {
+      "object": "arccot",
+      "case": "P02",
+      "code": "0 $in R\npi $in R\npi/4 $in R\nsin(pi/4)!=0\ncot(pi/4)=1\n0<pi/4\npi/4<pi\narccot(1)=arccot(cot(pi/4))=pi/4",
+      "original_source": "# Intended valid regression: arccot P02\narccot(1) = pi / 4\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local rational-extremum certificate, principal inverse proof, or positive-nonunit log repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/remaining_elementary_gaps_2026-10-03.json",
+      "acceptance_file": "arccot.lit"
+    },
+    {
+      "object": "arccot",
+      "case": "P04",
+      "code": "0 $in R\npi $in R\n3*pi/4 $in R\nsin(3*pi/4)!=0\ncot(3*pi/4)=-1\n0<3*pi/4\n3*pi/4<pi\narccot(-1)=arccot(cot(3*pi/4))=3*pi/4",
+      "original_source": "# Intended valid regression: arccot P04\narccot(-1) = 3 * pi / 4\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local rational-extremum certificate, principal inverse proof, or positive-nonunit log repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/remaining_elementary_gaps_2026-10-03.json",
+      "acceptance_file": "arccot.lit"
+    },
+    {
+      "object": "log",
+      "case": "P05",
+      "code": "0 $in R\n1/2 $in R\n1/2>0\n1/2!=1\n(1/2)^(-3)=8\nlog(1/2,8)=log(1/2,(1/2)^(-3))=-3",
+      "original_source": "# Intended valid regression: log P05\nlog(1 / 2, 8) = -3\n",
+      "former_phase": "search_proof",
+      "resolution": "checked local rational-extremum certificate, principal inverse proof, or positive-nonunit log repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/remaining_elementary_gaps_2026-10-03.json",
+      "acceptance_file": "log.lit"
+    },
+    {
+      "object": "log",
+      "case": "P06",
+      "code": "0 $in R\ne $in R\ne>1\ne!=1\ne>0\nlog(e,e)=1",
+      "original_source": "# Intended valid regression: log P06\nlog(e, e) = 1\n",
+      "former_phase": "well_defined",
+      "resolution": "checked local rational-extremum certificate, principal inverse proof, or positive-nonunit log repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/remaining_elementary_gaps_2026-10-03.json",
+      "acceptance_file": "log.lit"
+    },
+    {
+      "object": "finite_set_max",
+      "case": "P04",
+      "code": "finite_set_max({1/3,1/2})=1/2",
+      "original_source": "# Intended valid regression: finite_set_max P04\nfinite_set_max({1 / 3, 1 / 2}) = 1 / 2\n",
+      "former_phase": "well_defined",
+      "resolution": "checked local rational-extremum certificate, principal inverse proof, or positive-nonunit log repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/remaining_elementary_gaps_2026-10-03.json",
+      "acceptance_file": "finite_set_max.lit"
+    },
+    {
+      "object": "finite_set_min",
+      "case": "P04",
+      "code": "finite_set_min({1/3,1/2})=1/3",
+      "original_source": "# Intended valid regression: finite_set_min P04\nfinite_set_min({1 / 3, 1 / 2}) = 1 / 3\n",
+      "former_phase": "well_defined",
+      "resolution": "checked local rational-extremum certificate, principal inverse proof, or positive-nonunit log repair; unchanged mathematics, no trust",
+      "journal": "proof_journals/remaining_elementary_gaps_2026-10-03.json",
+      "acceptance_file": "finite_set_min.lit"
     }
   ]
 }

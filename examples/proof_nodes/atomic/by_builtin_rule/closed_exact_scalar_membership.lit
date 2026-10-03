@@ -1,0 +1,11 @@
+# Previously the unchecked RealArithmeticClosure also admitted (i + 1) * 2 in R.
+# Now exact coordinates preserve genuinely real complex cancellations and integer powers.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/closed_exact_scalar_membership.lit
+# Executable nonreal, signed, noninteger and undefined controls: field_arithmetic_carrier_strategy tests.
+i - i $in R
+i * i $in Z
+i^2 $in Z
+i^100 $in N+
+(i - i) / 3 $in Q
+forall a R:
+    (3 * a + 2) / 3 $in R

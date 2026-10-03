@@ -45,14 +45,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjByExistFactsStmt,
     ) -> RuntimeResult<ExecHaveObjByExistFactsStmtResult> {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
 
         let exist_family = ExistShapedFact::Exist(PlainExistFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -76,11 +69,11 @@ impl Runtime {
             Some(SharedHaveDefinition::HaveObjByExistFacts(Rc::new(
                 stmt.clone(),
             ))),
-        )?;
+         crate::execute::execute_fact_stmt::VerifyState::top_level())?;
 
         for body_fact in &stmt.facts {
             let as_fact = quantifier_free_fact_to_fact(body_fact.clone());
-            let stored = self.store_fact_and_infer(&as_fact)?;
+            let stored = self.store_fact_and_infer(&as_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
             store_and_infer_result
                 .stored_fact_ids
                 .extend(stored.stored_fact_ids());

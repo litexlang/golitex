@@ -37,6 +37,9 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
+        let Some(verify_state) = verify_state.for_premises(
+            crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
+        ) else { return Ok(None); };
         if let Some(proof) = self.search_or_complete_residues(fact)? {
             return Ok(Some(proof));
         }
@@ -619,7 +622,7 @@ impl Runtime {
                     };
                 let assumed_premise = Fact::AtomicFact(assumed_atomic.clone());
                 let assumed_store_and_infer: StoreFactAndInferResult =
-                    rt.store_fact_and_infer(&assumed_premise)?;
+                    rt.store_fact_and_infer(&assumed_premise, verify_state)?;
                 let conclusion_fact = and_chain_as_fact(&fact.facts[conclusion_branch_index]);
                 let conclusion_proof = rt.verify_fact(&conclusion_fact, verify_state.clone())?;
                 if conclusion_proof.is_failed() {
@@ -657,4 +660,3 @@ impl Runtime {
         Ok(None)
     }
 }
-

@@ -1,7 +1,7 @@
 use super::by_builtin_strategy_result::RationalWithNonzeroPremisesStrategySingleStep;
 use crate::ast::fact::{EqualFact, NotEqualFact};
 use crate::ast::obj::{Number, Obj, Literal};
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::rational_expression::{
     algebraic_normalization_nonzero_requirements, objs_equal_by_rational_expression_evaluation,
 };
@@ -13,7 +13,7 @@ impl Runtime {
     pub fn search_equal_fact_by_rational_with_nonzero_premises(
         &mut self,
         fact: &EqualFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RationalWithNonzeroPremisesStrategySingleStep>> {
         if !objs_equal_by_rational_expression_evaluation(&fact.left, &fact.right) {
             return Ok(None);

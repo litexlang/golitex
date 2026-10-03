@@ -1,3 +1,131 @@
+# Direct level 0 — 2026-10-03
+
+Status: Direct increment complete; broader geo migration remains incomplete. Final comparison is recorded in
+`plan/迁移的plan/proof_journals/verify-state-level-implementation.json`.
+
+`VerifyState` retains exactly `level` and `can_rewrite`. Level 0 is now Direct:
+stored identity/alpha/path/citation evidence first, closed exact calculation
+second. `DirectAtomicFactSearchResult` explicitly distinguishes `ByKnownFact`,
+`ByClosedCalculation` and `NotFound`. Calculation evidence mirrors the atomic
+family and records equality values, comparison polarity, or membership value/set.
+
+The calculator is a free function without Runtime/State/search callbacks. It
+uses classified decimal arithmetic and exact rational/complex evaluation.
+Unknown/false/undefined/overflowing expressions produce no proof. Existing raw
+known readers stay calculation-free. Symbolic normalization and tuple/finite-set
+shape calculations retain their higher routes; complete verify still checks WD.
+No AST, owned Runtime/Env state, trust, axiom or geo proposition was changed.
+
+The maintained [Direct tracer](../../../examples/proof_nodes/equal/direct_closed_calculation.lit)
+restores this unchanged source without preliminary numeric memberships:
+
+```litex
+by enumerate finite_set:
+    ? forall x {1,2}:
+        x > 0
+```
+
+`1/3 < 1/2` is available at Direct; `1/0=1/0` still fails WD. SP can now close
+`(1+3,2+4)=(4,6)` by constructor descent and Direct leaves. Likewise an existing
+list builtin may win before its strategy now that numeric WD/premises are
+available. Tests check the new winning route and retain explicit strategy
+certificate coverage rather than disabling the original mathematics.
+
+Validation: 13 permission tests, 29 equality-search tests, 6 list-membership
+contract tests and 7 normal-JSON tests passed in the full release checkpoint.
+Global compatibility remains a separate open item; see the current journal for
+full counts, concurrent-source caveats and surviving geo failures.
+
+Documentation impact: Manual/FAQ and this architecture README specify Direct;
+the new `.lit` is the executable migration; normal/detailed JSON and typed result
+tests distinguish calculation from citation. Old builtin calculation evidence
+remains for direct builtin callers and symbolic higher-level routes. A missing
+`JsonValue::Array` constructor in a concurrently edited projection was also
+repaired as a local compile fix; it does not change the Direct policy.
+
+Current release build and direct CLI positive/negative gates pass. Last completed
+worktree full gate: 637 passed / 52 failed, with statement integration failing.
+The latest test compilation was blocked by an unrelated in-progress registration
+of missing `tests/unit/execute/struct_dependent_fields/tests.rs`. A frozen candidate
+whose Direct source hashes match the current worktree independently passes all
+69 focused tests listed above (including 14 additional JSON acceptance tests).
+Its full run has three extra import-alias fixture-path failures from relocation;
+that snapshot count is not a new production regression claim.
+
+A paired fixed-source build changes only whether the Direct calculation branch
+runs: finite enumeration fails without it and passes with it; both versions fail
+the long geo prefix at `(b[1]-a[1])^2 $in R`. Full geo still times out at 45s.
+
+---
+
+## Historical pre-Direct checkpoint (superseded by the Direct receipt above)
+
+# Shared search-level migration — 2026-10-03
+
+Status: implemented core, compatibility gate still failing. This supersedes the
+boolean/depth policy in the historical receipt below.
+
+`VerifyState` has only `level` and `can_rewrite`. One atomic search schedule
+serves both families. Stages and their premise ceilings are 0: no new search;
+1/SP: 0; 2/builtin: 1; 3/strategy and 4/definition-forall: 2. Rewrite is admitted
+at (4,true) and continues at (4,false). Pure constructor traversal has a fixed
+leaf ceiling; a searched peer bridge cannot reenter the peer stage.
+
+WD and infer receive the caller ceiling. Exploratory WD returns evidence;
+the existing checked-fact commit records direct atomic subjects in its current
+scope. Named identifiers and quantified internals are excluded. Reusing a
+stored atomic fact's predicate domain now retains an explicit FactId citation.
+No AST or owned Runtime/ExecEnv field was added, and no trust/axiom was added.
+
+Acceptance source: [shared_search_levels.lit](../../../examples/proof_nodes/equal/shared_search_levels.lit).
+Permission regressions cover cross-family stage admission, finite congruence,
+WD rejection, no speculative cache write, stored-domain citations and rewrite
+consumption. The focused permission gate passed 8 tests; the equality-search
+gate passed 29 tests. These are not an all-tests-green claim.
+
+## Open compatibility decision
+
+This strict five-level policy removes fresh calculation from builtin premises.
+A concrete reproduction is:
+
+```litex
+by enumerate finite_set:
+    ? forall x {1,2}:
+        x > 0
+```
+
+Current release rejects it. Prefixing the same source with `1 $in R` and
+`2 $in R` succeeds. The symbolic carrier WD needs a finite-carrier membership
+rule whose numeric membership leaves cannot enter builtin again at level 1.
+The exact source and JSON outputs are retained in the migration journal.
+
+A separate **ClosedCalculation** stage, containing only finite closed numeric
+checks with no verify/search calls, is proposed for maintainer choice. It is
+not implemented or silently folded into KnownFact/SP. Retaining the strict
+five-level table instead requires explicit intermediate premises and further
+classification of composed rules. Neither choice alone establishes that all
+remaining aggregate, definition and geo cases are repaired.
+
+The source-owned record is [the migration journal](../../../plan/迁移的plan/proof_journals/verify-state-level-implementation.json).
+Raw build/test output is in `tmp/2026-10-03/geo-search-level-design/level-migration/`.
+The frozen start baseline had 644 library passes, 7 failures, and a passing
+50-fixture statement integration gate. Concurrent numerical/parser work means
+a raw difference from that baseline is not exclusively attributable to this task.
+
+## Current checkpoint results
+
+- `cargo build --release`: pass.
+- `cargo test --release --all-targets --no-fail-fast`: **609 pass / 53 fail** in the library; statement integration fails.
+- Permission tests: 8 pass. Equality-search tests: 29 pass. `git diff --check`: pass.
+- New shared-level tracer and maintained tuple/function projection tracers: exit 0, success:true, session_error:null.
+- Geo without the extra vec equality passes; with that equality it still fails at dot expansion (2.164s).
+- The longer theorem release/read probe passes in 17.807s. Full `scripts/geo.lit` still times out at 45s.
+
+These measurements are a checkpoint, not acceptance. The new closed-calculation
+policy question is pending; no permission exception has been introduced.
+
+## Historical receipt (2026-10-02, superseded policy)
+
 # Builtin entry verification — 2026-10-02
 
 `VerifyState::can_use_builtin_rule` replaces the builtin round with one boolean

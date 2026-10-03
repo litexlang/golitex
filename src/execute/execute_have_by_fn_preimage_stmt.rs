@@ -81,14 +81,7 @@ impl Runtime {
             ));
         }
 
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            remaining_deep_search_depth: VerifyState::TOP_DEEP_SEARCH_DEPTH,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-            equality_class_search: crate::execute::execute_fact_stmt::EqualityClassSearchMode::AllowPeerComparison,
-        };
+        let verify_state = VerifyState::top_level();
         let source_membership = self.verify_fact(
             &Fact::AtomicFact(AtomicFact::InFact(stmt.range_membership.clone())),
             verify_state,
@@ -103,7 +96,7 @@ impl Runtime {
             self.build_fn_preimage_params_and_subst(stmt, &body)?;
 
         let mut store_and_infer_result =
-            self.define_typed_parameters_in_current_env(&renamed_params, None)?;
+            self.define_typed_parameters_in_current_env(&renamed_params, None, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
 
         for dom_fact in &body.dom_facts {
             let instantiated = self.inst_quantifier_free_fact(dom_fact, &subst).map_err(|e| {
@@ -112,7 +105,7 @@ impl Runtime {
                 ))
             })?;
             let as_fact = quantifier_free_fact_to_fact(instantiated);
-            let stored = self.store_fact_and_infer(&as_fact)?;
+            let stored = self.store_fact_and_infer(&as_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
             store_and_infer_result
                 .stored_fact_ids
                 .extend(stored.stored_fact_ids());
@@ -130,7 +123,7 @@ impl Runtime {
             right: application,
             line_file: stmt.range_membership.line_file.clone(),
         }));
-        let stored = self.store_fact_and_infer(&equality)?;
+        let stored = self.store_fact_and_infer(&equality, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
         store_and_infer_result
             .stored_fact_ids
             .extend(stored.stored_fact_ids());

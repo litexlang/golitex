@@ -176,13 +176,10 @@ fn builtin_permission_and_depth_are_inherited() {
         let statements = rt.parse(&tokens).unwrap();
         let Stmt::Fact(fact) = &statements[0] else { panic!("fact expected"); };
         let before = rt.execution_environments_stack.iter().map(|e| (e.facts.facts_by_id.len(), e.well_defined_objects.object_to_wd_id.len())).collect::<Vec<_>>();
-        let mut state = VerifyState::top_level().without_well_defined_storage();
-        state.remaining_deep_search_depth = 0;
-        state.can_use_def_and_known_forall_and_known_strategy = false;
-        state.can_use_rewrite = false;
-        state.can_use_builtin_rule = false;
+        let mut state = VerifyState::top_level();
+        state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty);
         assert!(rt.verify_fact(fact, state.clone()).unwrap().is_failed(), "disabled entry: {goal}");
-        state.can_use_builtin_rule = true;
+        state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
         assert!(!rt.verify_fact(fact, state).unwrap().is_failed(), "zero deep depth: {goal}");
         let after = rt.execution_environments_stack.iter().map(|e| (e.facts.facts_by_id.len(), e.well_defined_objects.object_to_wd_id.len())).collect::<Vec<_>>();
         assert_eq!(before, after, "search must not publish evidence: {goal}");

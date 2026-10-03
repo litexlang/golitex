@@ -20,7 +20,7 @@ impl Runtime {
     pub(super) fn store_struct_definition_facts(
         &mut self,
         definition: &DefStructStmt,
-    ) -> RuntimeResult<Vec<StoreStructDefinitionFactResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<StoreStructDefinitionFactResult>> {
         let (mut parameters, domains) = match &definition.param_def_with_dom {
             Some((parameters, domains)) => (parameters.clone(), domains.clone()),
             None => (TypedParameterList { groups: Vec::new() }, Vec::new()),
@@ -55,7 +55,7 @@ impl Runtime {
             let quantified = self.quantify_struct_definition_fact(
                 &parameters, &domains, instantiated,
             )?;
-            let store_and_infer = self.store_fact_and_infer(&quantified)?;
+            let store_and_infer = self.store_fact_and_infer(&quantified, verify_state)?;
             published.push(StoreStructDefinitionFactResult {
                 source_fact_id: source.fact_id(),
                 store_and_infer,

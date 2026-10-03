@@ -23,3 +23,17 @@ sketch:
 sketch:
     forall x R:
         sin(-x) = -sin(x)
+
+# P04: exact numeric/periodic/modulus repair; original source retained in the dated journal
+sketch:
+    sin(-pi / 2) = -1
+
+# P91: exact numeric/periodic/modulus boundary
+sketch:
+    have k Z
+    sin(pi / 6 + 2 * k * pi) = 1 / 2
+
+# P92: exact numeric/periodic/modulus boundary
+sketch:
+    have k, j Z
+    sin((k-j)*pi)=0

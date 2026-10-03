@@ -61,7 +61,7 @@ impl VerifyObjWellDefinedResult {
 
 impl Runtime {
     // Known-memory lookup across the env stack, then prove by definition.
-    // When store_well_defined_fact is set and ByDef succeeds, record on current top.
+    // Search returns evidence only; checked atomic subjects are cached at commit.
     pub fn verify_obj_well_definedness(
         &mut self,
         obj: &Obj,
@@ -156,12 +156,7 @@ impl Runtime {
         let stages = self.verify_obj_well_definedness_by_def(obj, verify_state.clone())?;
         match finish_by_def(obj, stages) {
             Ok(by_def) => {
-                if verify_state.store_well_defined_fact {
-                    let wd_id = self.global_ids.allocate_well_definedness_id();
-                    self.top_exec_env_mut()
-                        .well_defined_objects
-                        .record(obj.clone(), wd_id);
-                }
+
                 Ok(VerifyObjWellDefinedResult::Success(
                     ObjWellDefinedProof::ByDef {
                         obj: obj.clone(),

@@ -1,2 +1,0 @@
-# Intended valid regression: complex_abs P03
-C_abs(3 + 4 * i) = 5

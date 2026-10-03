@@ -36,6 +36,8 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     ClosedDecimal(ClosedDecimalNotEqualBuiltinRuleProof),
     // Exact closed rationals also cover nonterminating decimal fractions.
     ClosedRational(ClosedRationalNotEqualBuiltinRuleProof),
+    // Exact closed complex coordinate pairs are unequal if either part differs.
+    ClosedComplex(ClosedComplexNotEqualBuiltinRuleProof),
     // Not-equal symmetry: prove `a != b` from a proved `b != a`.
     // Example: known `0 != x` proves `x != 0`.
     NotEqualSymmetry(NotEqualSymmetryBuiltinRuleProof),
@@ -128,6 +130,13 @@ pub struct ClosedDecimalNotEqualBuiltinRuleProof {
 pub struct ClosedRationalNotEqualBuiltinRuleProof {
     pub left_normal: Obj,
     pub right_normal: Obj,
+}
+
+pub struct ClosedComplexNotEqualBuiltinRuleProof {
+    pub left_real: Obj,
+    pub left_imaginary: Obj,
+    pub right_real: Obj,
+    pub right_imaginary: Obj,
 }
 
 pub struct NotEqualSymmetryBuiltinRuleProof {
@@ -245,6 +254,23 @@ impl Runtime {
                 return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ClosedRational(
                     ClosedRationalNotEqualBuiltinRuleProof {
                         left_normal: left.to_obj(), right_normal: right.to_obj(),
+                    },
+                )));
+            }
+        }
+        // Coordinate comparison is exact and does not search symbolic inputs.
+        // Example: 1+i != 0 supplies the actual complex division domain fact.
+        if let (Some(left), Some(right)) = (
+            crate::rational_expression::exact_complex::exact_complex_coordinates(&fact.left),
+            crate::rational_expression::exact_complex::exact_complex_coordinates(&fact.right),
+        ) {
+            if left != right {
+                return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ClosedComplex(
+                    ClosedComplexNotEqualBuiltinRuleProof {
+                        left_real: left.0.to_obj(),
+                        left_imaginary: left.1.to_obj(),
+                        right_real: right.0.to_obj(),
+                        right_imaginary: right.1.to_obj(),
                     },
                 )));
             }

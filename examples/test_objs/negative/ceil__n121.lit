@@ -1,0 +1,2 @@
+# N121: incorrect exact elementary result; must reject.
+ceil(-7/3)=-3

@@ -26,3 +26,15 @@ sketch:
 sketch:
     forall x Z:
         floor(x) = x
+
+# P121: closed exact elementary calculation
+sketch:
+    floor(-7/3)=-3
+
+# P122: closed exact elementary calculation
+sketch:
+    floor(7/3)=2
+
+# P123: closed exact elementary calculation
+sketch:
+    floor(-6/3)=-2

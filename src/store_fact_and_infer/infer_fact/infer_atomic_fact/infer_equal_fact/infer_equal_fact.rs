@@ -8,12 +8,12 @@ impl Runtime {
     pub(crate) fn infer_equal_fact(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> RuntimeResult<Vec<InferEqualityResult>> {
+     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferEqualityResult>> {
         let mut rules = Vec::new();
-        if let Some(shape) = self.infer_equal_fact_cart_tuple_shape(equal_fact)? {
+        if let Some(shape) = self.infer_equal_fact_cart_tuple_shape(equal_fact, verify_state)? {
             rules.push(InferEqualityResult::CartTupleShape(shape));
         }
-        if let Some(pow) = self.infer_equal_fact_positive_real_power(equal_fact)? {
+        if let Some(pow) = self.infer_equal_fact_positive_real_power(equal_fact, verify_state)? {
             rules.push(InferEqualityResult::PositiveRealPower(pow));
         }
         Ok(rules)

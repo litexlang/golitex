@@ -121,16 +121,23 @@ impl Runtime {
         self.lookup_known_atomic_premise(fact)
     }
 
-    pub(in crate::execute) fn known_in_positive_natural_proof(
+    // The enclosing order goal already checked this element's WD. The N+
+    // carrier is intrinsic. Search truth at the supplied builtin-premise ceiling
+    // so a declared function codomain can be cited without redefining raw known.
+    pub(in crate::execute) fn search_in_positive_natural_premise(
         &mut self,
         element: &Obj,
-    ) -> Option<AtomicExceptEqualityFactKnownProof> {
+        state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> crate::runtime::RuntimeResult<Option<AtomicExceptEqualityFactKnownProof>> {
         let fact = AtomicFact::InFact(InFact {
             fact_id: self.global_ids.allocate_fact_id(),
             element: element.clone(),
             set: Obj::StandardSet(StandardSet::NPos),
             line_file: None,
         });
-        self.lookup_known_atomic_premise(fact)
+        let searched = self.search_atomic_except_equality_fact_proof(&fact, state)?;
+        Ok(searched.map(|searched_proof| AtomicExceptEqualityFactKnownProof {
+            fact, searched_proof: Box::new(searched_proof),
+        }))
     }
 }

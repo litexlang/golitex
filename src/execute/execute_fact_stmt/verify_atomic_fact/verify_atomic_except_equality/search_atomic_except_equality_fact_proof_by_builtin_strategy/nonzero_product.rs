@@ -2,14 +2,14 @@ use super::helper::{is_zero_obj, zero_obj};
 use super::result::NonzeroProductStrategySingleStep;
 use crate::ast::fact::{AtomicFact, NotEqualFact};
 use crate::ast::obj::{ArithmeticOperator, Obj};
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub(super) fn search_nonzero_product_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<NonzeroProductStrategySingleStep>> {
         let AtomicFact::NotEqualFact(NotEqualFact { left, right, line_file, .. }) = fact else {
             return Ok(None);

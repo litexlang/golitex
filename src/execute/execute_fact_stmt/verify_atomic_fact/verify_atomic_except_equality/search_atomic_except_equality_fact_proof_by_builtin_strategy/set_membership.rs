@@ -1,11 +1,11 @@
 use super::result::*;
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, NotEqualFact};
 use crate::ast::obj::{
     FnObj, FnObjHead, FunctionSpace, IntervalObj, Obj, ProductShape, SetFormer, SetOperator,
     StandardSet, StructAndFieldAccessObj,
 };
 use crate::ast::param::SetBoundParameterList;
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::standard_set_is_subset_eq;
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::runtime_ids::IdentifierId;
@@ -13,12 +13,70 @@ use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
 impl Runtime {
+    // Remove the outer list constructor; child equality uses only the state
+    // already supplied by the central strategy dispatcher, never a fresh root.
+    pub(super) fn search_list_set_membership_strategy(
+        &mut self,
+        fact: &AtomicFact,
+        ctx: VerifyState,
+    ) -> RuntimeResult<Option<ListSetMembershipStrategySingleStep>> {
+        let Some(in_fact) = as_in(fact) else { return Ok(None) };
+        let Obj::SetFormer(SetFormer::ListSet(list)) = &in_fact.set else {
+            return Ok(None);
+        };
+        for element in &list.list {
+            let equal: Fact = EqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: in_fact.element.clone(),
+                right: element.as_ref().clone(),
+                line_file: in_fact.line_file.clone(),
+            }.into();
+            if let Some((requirement_facts, proof_of_requirement_facts)) =
+                self.verify_strategy_requirements(vec![equal], ctx)?
+            {
+                return Ok(Some(ListSetMembershipStrategySingleStep {
+                    requirement_facts,
+                    proof_of_requirement_facts,
+                }));
+            }
+        }
+        Ok(None)
+    }
+
+    // Remove the outer list constructor and check every disequality. Empty
+    // lists need no children, but the enclosing goal still underwent normal WD.
+    pub(super) fn search_list_set_nonmembership_strategy(
+        &mut self,
+        fact: &AtomicFact,
+        ctx: VerifyState,
+    ) -> RuntimeResult<Option<ListSetNonMembershipStrategySingleStep>> {
+        let AtomicFact::NotInFact(not_in_fact) = fact else { return Ok(None) };
+        let Obj::SetFormer(SetFormer::ListSet(list)) = &not_in_fact.set else {
+            return Ok(None);
+        };
+        let mut requirements = Vec::with_capacity(list.list.len());
+        for element in &list.list {
+            requirements.push(NotEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: not_in_fact.element.clone(),
+                right: element.as_ref().clone(),
+                line_file: not_in_fact.line_file.clone(),
+            }.into());
+        }
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_strategy_requirements(requirements, ctx)?
+        else { return Ok(None) };
+        Ok(Some(ListSetNonMembershipStrategySingleStep {
+            requirement_facts,
+            proof_of_requirement_facts,
+        }))
+    }
+
     pub(super) fn search_literal_tuple_projection_membership_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<LiteralTupleProjectionMembershipStrategySingleStep>> {
-        if !ctx.can_use_strategy() { return Ok(None); }
         let Some(inf) = as_in(fact) else { return Ok(None) };
         let Obj::ProductShape(ProductShape::ObjAtIndex(projection)) = &inf.element else { return Ok(None) };
         let Obj::ProductShape(ProductShape::Tuple(tuple)) = projection.obj.as_ref() else { return Ok(None) };
@@ -39,7 +97,7 @@ impl Runtime {
     pub(super) fn search_cart_membership_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<CartMembershipStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::ProductShape(ProductShape::Cart(cart)) = &inf.set else { return Ok(None); };
@@ -63,7 +121,7 @@ impl Runtime {
     pub(super) fn search_union_membership_from_left_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<UnionMembershipFromLeftStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Union(set)) = &inf.set else { return Ok(None); };
@@ -80,7 +138,7 @@ impl Runtime {
     pub(super) fn search_union_membership_from_right_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<UnionMembershipFromRightStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Union(set)) = &inf.set else { return Ok(None); };
@@ -97,7 +155,7 @@ impl Runtime {
     pub(super) fn search_intersect_membership_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntersectMembershipStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Intersect(set)) = &inf.set else { return Ok(None); };
@@ -113,7 +171,7 @@ impl Runtime {
     pub(super) fn search_set_minus_membership_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SetMinusMembershipStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::SetMinus(set)) = &inf.set else { return Ok(None); };
@@ -129,7 +187,7 @@ impl Runtime {
     pub(super) fn search_power_set_membership_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<PowerSetMembershipStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::PowerSet(set)) = &inf.set else { return Ok(None); };
@@ -146,7 +204,7 @@ impl Runtime {
     pub(super) fn search_range_membership_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<RangeMembershipStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::Range(range)) = &inf.set else { return Ok(None); };
@@ -163,7 +221,7 @@ impl Runtime {
     pub(super) fn search_closed_range_membership_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<ClosedRangeMembershipStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::ClosedRange(range)) = &inf.set else { return Ok(None); };
@@ -180,7 +238,7 @@ impl Runtime {
     pub(super) fn search_interval_membership_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<IntervalMembershipStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::IntervalObj(interval)) = &inf.set else { return Ok(None); };
@@ -209,7 +267,7 @@ impl Runtime {
     pub(super) fn search_set_builder_membership_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SetBuilderMembershipStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &inf.set else { return Ok(None); };
@@ -239,7 +297,7 @@ impl Runtime {
     pub(super) fn search_standard_set_subset_membership_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<StandardSetSubsetMembershipStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::StandardSet(target) = &inf.set else { return Ok(None); };
@@ -267,7 +325,7 @@ impl Runtime {
     pub(super) fn search_fn_application_in_codomain_strategy(
         &mut self,
         fact: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<FnApplicationInCodomainStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
         let Obj::FnObj(fn_obj) = &inf.element else { return Ok(None); };
@@ -417,7 +475,7 @@ fn set_bound_params_to_arg_map(
 fn finish<T, F>(
     runtime: &mut Runtime,
     requirements: Vec<Fact>,
-    ctx: StrategySearch,
+    ctx: VerifyState,
     build: F,
 ) -> RuntimeResult<Option<T>>
 where
@@ -433,3 +491,7 @@ where
     };
     Ok(Some(build(requirement_facts, proof_of_requirement_facts)))
 }
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/finite_list_membership_strategy/tests.rs"]
+mod finite_list_membership_strategy_tests;

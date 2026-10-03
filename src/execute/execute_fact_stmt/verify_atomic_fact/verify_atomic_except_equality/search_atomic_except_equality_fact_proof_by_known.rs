@@ -11,22 +11,9 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchedProof>> {
-        // Read stored facts using only identity / stored equality paths before
-        // trying candidate transformations that can launch argument searches.
-        if let Some(proof) = self.lookup_known_atomic_fact(fact) {
-            return Ok(Some(
-                AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof),
-            ));
-        }
-        if let Some(proof) =
-            self.search_atomic_except_equality_fact_proof_by_known_atomic_fact(fact, verify_state)?
-        {
-            return Ok(Some(
-                AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof),
-            ));
-        }
-        Ok(self
-            .search_atomic_except_equality_fact_proof_by_known_special_property(fact)
-            .map(AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty))
+        self.search_atomic_except_equality_fact_proof(
+            fact,
+            verify_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty),
+        )
     }
 }

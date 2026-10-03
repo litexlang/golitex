@@ -1,0 +1,2 @@
+# Must reject: complex_abs N91; exact numeric/periodic/modulus boundary
+C_abs(3+4*i)=-5

@@ -186,7 +186,7 @@ impl Runtime {
     }
 
     // WD memory: inner scopes first, then parents (same walk as definitions).
-    pub(in crate::execute) fn well_defined_visible_in_stack(
+    pub(crate) fn well_defined_visible_in_stack(
         &self,
         obj: &Obj,
     ) -> Option<WellDefinednessId> {

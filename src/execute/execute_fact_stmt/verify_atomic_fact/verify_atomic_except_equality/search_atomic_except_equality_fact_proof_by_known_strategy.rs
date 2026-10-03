@@ -1,13 +1,13 @@
 //! Non-equality atomic → user-defined known strategy.
 //!
-//! Used only from the StrategySearch subtree (top `verify_by_strategy` or
+//! Used only from the VerifyState subtree (top `verify_by_strategy` or
 //! nested strategy requirements). Source: `strategy_definitions` on the
 //! ExecEnv stack (not ambient known_forall).
 //!
 //! Apply pipeline for one strategy then-clause (soft miss → continue):
 //! 1. then must be a direct AtomicFact with matching prop / polarity
 //! 2. `match_forall_conclusion_args`
-//! 3. prove param-type and dom requirements inside StrategySearch
+//! 3. prove param-type and dom requirements inside VerifyState
 //!
 //! Example:
 //!   strategy use_is_one: ? forall x R: x = 1 =>: $is_one(x)
@@ -20,7 +20,7 @@ use crate::ast::fact::{
 };
 use crate::ast::names::PlainName;
 use crate::ast::stmt::DefStrategyStmt;
-use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::SearchProofByKnownStrategy;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
@@ -37,7 +37,7 @@ impl Runtime {
     pub fn search_atomic_except_equality_fact_proof_by_known_strategy(
         &mut self,
         goal: &AtomicFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownStrategy>> {
         let candidates = self.visible_strategy_definitions();
         for (name, stmt) in candidates {
@@ -65,7 +65,7 @@ impl Runtime {
         goal: &AtomicFact,
         strategy_name: &PlainName,
         forall: &ForallFact,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownStrategy>> {
         for (then_index, then) in forall.then_facts.iter().enumerate() {
             let ExistOrAndChainAtomicFact::AtomicFact(conclusion) = then else {
@@ -115,9 +115,9 @@ impl Runtime {
         &mut self,
         forall: &ForallFact,
         subst: &HashMap<IdentifierId, Obj>,
-        ctx: StrategySearch,
+        ctx: VerifyState,
     ) -> RuntimeResult<Option<ProveForallInstantiationRequirementsProof>> {
-        let child = ctx.after_layer();
+        let child = ctx;
         let mut param_type_requirements = Vec::new();
         for group in &forall.typed_parameters.groups {
             let param_type = match self.inst_param_type(&group.param_type, subst) {
@@ -133,7 +133,7 @@ impl Runtime {
                     &param_type,
                     self.global_ids.allocate_fact_id(),
                 );
-                let proof = self.verify_fact_in_strategy(&type_fact, child)?;
+                let proof = self.verify_fact(&type_fact, child)?;
                 if proof.is_failed() {
                     return Ok(None);
                 }
@@ -156,7 +156,7 @@ impl Runtime {
         }
         let mut proof_of_dom_facts = Vec::with_capacity(dom_facts.len());
         for fact in &dom_facts {
-            let proof = self.verify_fact_in_strategy(fact, child)?;
+            let proof = self.verify_fact(fact, child)?;
             if proof.is_failed() {
                 return Ok(None);
             }
