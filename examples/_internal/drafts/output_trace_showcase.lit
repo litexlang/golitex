@@ -1,5 +1,4 @@
-# Migration blocker B07: see plan/迁移的plan/和example有关.md.
-# Output demo for claim and by-statement verification traces.
+# Output demo for claims, proof commands, and predicate registration.
 
 # Claim forall: parameters, stored assumptions, proof steps, and conclusions.
 claim:
@@ -62,47 +61,51 @@ by extension:
 
 # By induc: structured base and induction-step proof trace.
 abstract_prop tmp_induc_p(a)
-trust $tmp_induc_p(0)
-trust forall m Z:
-    m >= 0
-    $tmp_induc_p(m)
-    =>:
-        $tmp_induc_p(m + 1)
-by induc n from 0:
-    ? $tmp_induc_p(n)
-
-    ? from n = 0:
+thm tmp_induction_trace:
+    ? forall n Z:
+        n >= 0
         $tmp_induc_p(0)
+        forall m Z:
+            m >= 0
+            $tmp_induc_p(m)
+            =>:
+                $tmp_induc_p(m + 1)
+        =>:
+            $tmp_induc_p(n)
+    by induc n from 0:
+        ? $tmp_induc_p(n)
+        ? from n = 0:
+            $tmp_induc_p(0)
+        ? induc:
+            $tmp_induc_p(n + 1)
 
-    ? induc:
-        $tmp_induc_p(n + 1)
-
-# Prop registration: parameters, assumptions, proof steps, conclusion, registration.
+# Predicate registration: reflexivity, transitivity, and symmetry.
 prop tmp_same_obj(x set, y set):
     x = y
 
-by reflexive_prop:
+register reflexive:
     ? forall x set:
         $tmp_same_obj(x, x)
 
-by transitive_prop:
+register transitive:
     ? forall x, y, z set:
         $tmp_same_obj(x, y)
         $tmp_same_obj(y, z)
         =>:
             $tmp_same_obj(x, z)
 
-by symmetric_prop:
+register symmetric:
     ? forall x, y set:
         $tmp_same_obj(x, y)
         =>:
             $tmp_same_obj(y, x)
 
 
-# Explicit choice-backed theorem interface.
-have tmp_index set
-have tmp_factors nonempty_set
-have tmp_family fn(tmp_coordinate tmp_index) tmp_factors
-trust forall X tmp_factors:
-    $is_nonempty_set(X)
-release thm index_cart_nonempty_by_choice_from_family(index_cart(tmp_index, tmp_factors, tmp_family))
+# A nonempty index and nonempty factors give a nonempty indexed product.
+thm tmp_choice_trace:
+    ? forall tmp_index nonempty_set,tmp_factors nonempty_set,tmp_family fn(tmp_coordinate tmp_index) tmp_factors:
+        forall X tmp_factors:
+            $is_nonempty_set(X)
+        =>:
+            $is_nonempty_set(index_cart(tmp_index,tmp_factors,tmp_family))
+    release thm index_cart_nonempty_by_choice_from_family(index_cart(tmp_index,tmp_factors,tmp_family))

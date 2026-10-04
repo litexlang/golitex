@@ -126,7 +126,7 @@ fn existing_integer_power_domains_keep_their_behavior() {
 }
 
 #[test]
-fn eval_shares_exact_values_and_does_not_publish_facts() {
+fn eval_shares_exact_values_and_publishes_the_checked_equality() {
     for (source, expected) in [
         ("eval 8^(1/3)", "2"),
         ("eval 16^(3/4)", "8"),
@@ -143,11 +143,14 @@ fn eval_shares_exact_values_and_does_not_publish_facts() {
             normal.contains(&format!("\"evaluated_object\": \"{expected}\"")),
             "{normal}"
         );
-        assert!(normal.contains("\"stores\": []"), "{normal}");
-        assert!(rt
-            .execution_environments_stack
-            .iter()
-            .all(|env| env.facts.facts_by_id.is_empty()));
+        let crate::execute::ExecStmtResult::Command(
+            crate::execute::execute_eval_stmt::ExecCommandStmtResult::Eval(
+                crate::execute::execute_eval_stmt::ExecEvalStmtResult::Success(evaluated),
+            ),
+        ) = &result.statement_results[0] else { panic!("eval success"); };
+        assert!(rt.top_exec_env().facts.facts_by_id.contains_key(&evaluated.evaluated_equal_fact.fact_id));
+        let stored: Fact = evaluated.evaluated_equal_fact.clone().into();
+        assert!(normal.contains(&stored.readable_string()), "{normal}");
     }
 }
 

@@ -1,5 +1,18 @@
 # Statement execution
 
+## Checked eval result publication
+
+`eval expr` checks source WD, computes exactly, verifies every executed
+algorithm's defining equation at its normalized arguments, checks the generated
+equality's WD, then calls the existing `store_fact_and_infer` on `expr = value`.
+The computation trace is retained in `ExecEvalStmtSuccess`, including checked
+algorithm evidence and actual stored FactId. The command uses the ordinary
+`exec_stmt` temporary environment: failure discards effects and proof-local
+facts remain local. No new Env/Runtime state owner or implicit search permission
+is introduced. Normal and Detailed JSON expose the store effect.
+
+Tracer: [eval_store_result.lit](../../examples/stmt_nodes/command/eval_store_result.lit).
+
 ## Identifier identity and witness diagnostics
 
 `env_stack_lookup::stored_identifier_definition_visible` applies its existing
@@ -229,3 +242,15 @@ children with fixed raw-known/closed/intrinsic leaves; it cannot enter higher
 search stages or mutate facts/WD memory. The enclosing verify pipeline continues
 to own all WD evidence. See `execute_fact_stmt/README.md` and the maintained
 `examples/proof_nodes/atomic/direct_structural_membership.lit` tracer.
+
+`FnApplicationInStandardSuperset` is a read-only KnownSpecialProperty leaf for stored function signatures after application WD. It checks all fully applied standard return carriers against the intrinsic numeric inclusion relation, preserving each signature FactId and head equality path. It never searches domain premises or changes the WD cache. Nonstandard carriers and intrinsic template/field alternatives conservatively retain their existing producers. The dedicated tracer is `examples/proof_nodes/atomic/by_known_special_property/function_return_standard_superset.lit`.
+
+The existing `LessFromPosDifference` builtin leaf consumes a saved `0 < b - a`
+or `b - a > 0` after the enclosing comparison has checked real operands. It tries
+at most two fixed known-premise lookups, in that order, and retains the selected
+premise proof and FactId. It cannot enter another search stage, generate a bound,
+or mutate facts or WD memory. Greater goals retain the existing order-dual
+rewrite. The tracer is
+`examples/proof_nodes/atomic/by_builtin_rule/greater_from_positive_difference.lit`;
+the focused `positive_difference_order` tests cover both spellings, strictness,
+direction, domain and local-scope rejection.

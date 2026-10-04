@@ -67,3 +67,7 @@ exit $fail
 ```
 
 `atomic/in_signed_standard_set_nonzero_from_sign.lit` publishes `x != 0` from strict positive/negative standard carriers before later inferred division/modulo facts need WD. Nonnegative N and unsigned R do not supply nonzero. The common-divisor builder demonstrates explicit subset proof for its natural carrier; direct carrier automation remains a separate limitation.
+
+`atomic/subset_finite_upper_bound.lit` publishes lower-set finiteness from a stored inclusion and an available finite upper certificate; missing or infinite upper certificates do not trigger it.
+
+`atomic/strict_lower_bound_positive.lit` publishes positivity from a stored strict lower bound and an available nonnegative-bound proof; the original log goal keeps its `1 < x` premise.

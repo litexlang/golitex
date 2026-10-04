@@ -119,6 +119,11 @@ thm newton_sqrt_two_residual_nonnegative:
     4 * x^2 != 0
     square_root_two_residual(x)^2 >= 0
     4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) >= 0
+    square_root_two_residual(newton_sqrt_two(x)) $in R
+    x^2 $in R
+    4 * x^2 $in R
+    4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) $in R
+    (4 * x^2 * square_root_two_residual(newton_sqrt_two(x))) / (4 * x^2) $in R
     (4 * x^2 * square_root_two_residual(newton_sqrt_two(x))) / (4 * x^2) >= 0
     square_root_two_residual(newton_sqrt_two(x)) = (4 * x^2 * square_root_two_residual(newton_sqrt_two(x))) / (4 * x^2) >= 0
 
@@ -132,20 +137,30 @@ thm newton_sqrt_two_one_step_gap_identity:
     4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2
     release thm newton_sqrt_two_residual_nonnegative(x)
     square_root_two_residual(newton_sqrt_two(x)) >= 0
+    square_root_two_residual(newton_sqrt_two(x)) $in R
+    0 <= square_root_two_residual(newton_sqrt_two(x))
     abs(square_root_two_residual(newton_sqrt_two(x))) = square_root_two_residual(newton_sqrt_two(x))
+    square_root_two_residual(x) $in R
     abs(square_root_two_residual(x))^2 = square_root_two_residual(x)^2
+    4 * x^2 * abs(square_root_two_residual(newton_sqrt_two(x))) = 4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2 = abs(square_root_two_residual(x))^2
 
 # Step 2: show that every positive input is sent above one; therefore all
 # iterates starting from x_0 = 1 stay at least one.
 thm newton_sqrt_two_greater_than_one:
     ? forall x R+:
         newton_sqrt_two(x) > 1
+    x > 0
+    x != 0
+    2 * x != 0
     newton_sqrt_two(x) = (x + 2 / x) / 2
+    newton_sqrt_two(x) - 1 = (x + 2 / x) / 2 - 1
+    (x + 2 / x) / 2 - 1 = ((x - 1)^2 + 1) / (2 * x)
     newton_sqrt_two(x) - 1 = ((x - 1)^2 + 1) / (2 * x)
     (x - 1)^2 >= 0
     (x - 1)^2 + 1 > 0
     2 * x > 0
     ((x - 1)^2 + 1) / (2 * x) > 0
+    newton_sqrt_two(x) - 1 > 0
 
 # Induction propagates the one-step lower bound through the recursive iterate.
 thm sqrt_two_newton_iterate_at_least_one:

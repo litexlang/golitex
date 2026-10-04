@@ -1,0 +1,640 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "task": "User explicitly changes eval to publish checked exact source=result equality; remove solved specific correction records",
+  "status": "completed scoped implementation and acceptance",
+  "original_issue": "R03",
+  "master_issue": "OBJ02",
+  "intent": "Successful explicit eval stores the original expression equal to its exact value. Subsequent known-fact consumers use the actual FactId; failures publish nothing and proof-local facts stay local.",
+  "classification": {
+    "impact": "L3 shared eval producer/store/known-fact/JSON contract",
+    "primary_blocker_before": "kernel_problem",
+    "root_cause": "Old exec_eval returned computation/display traces without store_and_infer; generic algorithm aggregate proof path is search-permission limited.",
+    "user_decision": "Explicit command certifies its finite computation and algorithm equations then publishes equality. Implicit search permissions unchanged."
+  },
+  "baseline": {
+    "task": "eval stores verified source=result equality",
+    "date": "2026-10-04",
+    "source_sample_after_build_sha256": "56979e1e9f0cfef401b185efa18b71004c31ff7be3f54725802f427f24fe7477",
+    "binary_sha256": "ccb5947fdcf0f1717fca30fcc7fa7acd76e49fff4d889c9012504bc23641254d",
+    "build": "cargo build --release --offline: exit0",
+    "source_stability_during_baseline_build": "not established; shared source",
+    "cases": [
+      {
+        "name": "flag_sum",
+        "code": "algo flag(x R) R by cases:\n    case x=0:0\n    case x!=0:1\neval sum(0,3,flag)\nsum(0,3,flag)=3",
+        "exit": 1,
+        "success": false,
+        "output": "flag_sum-before.json"
+      },
+      {
+        "name": "finite_flag",
+        "code": "algo flag(x R) R by cases:\n    case x=0:0\n    case x!=0:1\neval finite_set_sum({1/3,2/3},flag)\nfinite_set_sum({1/3,2/3},flag)=2",
+        "exit": 1,
+        "success": false,
+        "output": "finite_flag-before.json"
+      },
+      {
+        "name": "wrong_value",
+        "code": "eval 1+2\n1+2=4",
+        "exit": 1,
+        "success": false,
+        "output": "wrong_value-before.json"
+      }
+    ]
+  },
+  "identity": {
+    "source_sha256": "09de3ce88813e723c5853fb58c12ce041e204a00eb20b412fb9a4a2359872a0d",
+    "frozen_files": 3338,
+    "frozen_source_changed_after_gates": [],
+    "live_changed_since_freeze": [
+      "examples/stmt_nodes/README.md",
+      "examples/stmt_nodes/definition/let_template_struct_aliases.lit",
+      "examples/test_objs/numeric_and_aggregate_plan.md",
+      "docs/Manual.md"
+    ],
+    "binary_sha256": "937d52e40e17ef1fa45a52dadda329d5b3211503d7d0a6292cc70585e67723a8"
+  },
+  "live_release": {
+    "live_build_exit": 0,
+    "live_production_source_matches_frozen": true,
+    "live_binary_sha256": "937d52e40e17ef1fa45a52dadda329d5b3211503d7d0a6292cc70585e67723a8",
+    "checks": [
+      {
+        "name": "tracer",
+        "exit": 0,
+        "success": true,
+        "matches": true
+      },
+      {
+        "name": "wrong-sum",
+        "exit": 1,
+        "success": false,
+        "matches": true
+      },
+      {
+        "name": "division-zero",
+        "exit": 1,
+        "success": false,
+        "matches": true
+      }
+    ]
+  },
+  "implementation": {
+    "owner": "execute_eval_stmt",
+    "pipeline": [
+      "source WD",
+      "known closed-numeric equality rewrite with citations",
+      "bounded exact evaluation trace",
+      "each executed algorithm defining equation verified at normalized arguments",
+      "generated original expression = result WD",
+      "existing store_fact_and_infer",
+      "existing exec_stmt transaction commit/rollback"
+    ],
+    "protected_fields_changed": false,
+    "global_search_permission_changed": false,
+    "resource_budget_changed": false,
+    "kb_abi_changed": false,
+    "cache_reason": "Definitions-only import products remain valid; import consumers do not read foreign fact stores. No formerly proved products invalidated."
+  },
+  "owned_code_files": [
+    "src/execute/execute_eval_stmt/exec_eval_stmt.rs",
+    "src/execute/execute_eval_stmt/result.rs",
+    "src/execute/execute_eval_stmt/mod.rs",
+    "src/execute/execute_eval_stmt/verify_evaluated_algo_calls.rs",
+    "src/execute/execute_eval_stmt/exec_eval_stmt_tests.rs",
+    "src/json_output/project_stmt_catalog.rs",
+    "src/json_output/project_detailed/stmt.rs",
+    "src/json_output/project_detailed/wd.rs",
+    "src/json_output/project_detailed/mod.rs",
+    "src/json_output/explain/stmt_why.rs"
+  ],
+  "gates": {
+    "rust": [
+      {
+        "gate": "eval",
+        "command": [
+          "cargo",
+          "test",
+          "--release",
+          "--offline",
+          "--lib",
+          "execute::execute_eval_stmt::exec_eval_stmt_tests",
+          "--",
+          "--nocapture"
+        ],
+        "exit": 0,
+        "seconds": 59.0,
+        "summary": [
+          "test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 795 filtered out; finished in 0.06s"
+        ]
+      },
+      {
+        "gate": "statement-boundaries",
+        "command": [
+          "cargo",
+          "test",
+          "--release",
+          "--offline",
+          "--lib",
+          "execute::statement_boundary_tests",
+          "--",
+          "--nocapture"
+        ],
+        "exit": 0,
+        "seconds": 0.15,
+        "summary": [
+          "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 802 filtered out; finished in 0.08s"
+        ]
+      },
+      {
+        "gate": "transactions",
+        "command": [
+          "cargo",
+          "test",
+          "--release",
+          "--offline",
+          "--lib",
+          "execute::exec_stmt_transaction_tests",
+          "--",
+          "--nocapture"
+        ],
+        "exit": 101,
+        "seconds": 0.22,
+        "summary": [
+          "test result: FAILED. 134 passed; 3 failed; 0 ignored; 0 measured; 674 filtered out; finished in 0.18s",
+          "error: test failed, to rerun pass `--lib`"
+        ]
+      },
+      {
+        "gate": "function-wd",
+        "command": [
+          "cargo",
+          "test",
+          "--release",
+          "--offline",
+          "--lib",
+          "execute::function_application_wd_evidence_tests",
+          "--",
+          "--nocapture"
+        ],
+        "exit": 0,
+        "seconds": 0.06,
+        "summary": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 808 filtered out; finished in 0.00s"
+        ]
+      },
+      {
+        "gate": "json",
+        "command": [
+          "cargo",
+          "test",
+          "--release",
+          "--offline",
+          "--lib",
+          "json_output::",
+          "--",
+          "--nocapture"
+        ],
+        "exit": 0,
+        "seconds": 0.07,
+        "summary": [
+          "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 748 filtered out; finished in 0.02s"
+        ]
+      }
+    ],
+    "focused_rust_pass": 91,
+    "broader_transaction_pass": 134,
+    "broader_transaction_fail": 3,
+    "preexisting_non_eval_failures": [
+      "execute::exec_stmt_transaction_tests::not_in_and_set_algebra_builtin_rules",
+      "execute::exec_stmt_transaction_tests::rational_sum_of_two_fractions_with_product_denominator",
+      "execute::exec_stmt_transaction_tests::template_have_fn_by_induc_object_definition_unfold"
+    ],
+    "collector": [
+      {
+        "leaf": "EvalStmt",
+        "exit": 0,
+        "stdout": "1 statement leaves; 11 checks; 0 unexpected failures; 0 recorded gaps\n"
+      },
+      {
+        "leaf": "DefAlgoByCasesStmt",
+        "exit": 0,
+        "stdout": "1 statement leaves; 6 checks; 0 unexpected failures; 0 recorded gaps\n"
+      },
+      {
+        "leaf": "DefAlgoByInducStmt",
+        "exit": 0,
+        "stdout": "1 statement leaves; 8 checks; 0 unexpected failures; 0 recorded gaps\n"
+      }
+    ],
+    "cli": [
+      {
+        "name": "tracer",
+        "file": "examples/stmt_nodes/command/eval_store_result.lit",
+        "sha256": "e1b758f6a434865deae9b7419afc5ffde7439efe54ceeee4f96f2e191f7b13e4",
+        "expected_success": true,
+        "success": true,
+        "exit": 0,
+        "accepted": true,
+        "statements": 21
+      },
+      {
+        "name": "existing-eval",
+        "file": "examples/stmt_nodes/command/eval.lit",
+        "sha256": "4d18309f9ab98399324d12ef103506b0ee2f16c4d5abf3df44cedf2479903efa",
+        "expected_success": true,
+        "success": true,
+        "exit": 0,
+        "accepted": true,
+        "statements": 13
+      },
+      {
+        "name": "sum-result-use",
+        "file": "tmp/2026-10-04/eval-store-result/cli_inputs/sum-result-use.lit",
+        "sha256": "f2b8431378900ba6fff5246f6184fd983ad379023a6d7ef09d0a31bd897709d7",
+        "expected_success": true,
+        "success": true,
+        "exit": 0,
+        "accepted": true,
+        "statements": 4
+      },
+      {
+        "name": "finite-result-use",
+        "file": "tmp/2026-10-04/eval-store-result/cli_inputs/finite-result-use.lit",
+        "sha256": "6178f6cde5f8be96c0d1b8019778aaa2e697a68f424c80030ae4f0c78a3e762d",
+        "expected_success": true,
+        "success": true,
+        "exit": 0,
+        "accepted": true,
+        "statements": 3
+      },
+      {
+        "name": "wrong-sum",
+        "file": "tmp/2026-10-04/eval-store-result/cli_inputs/wrong-sum.lit",
+        "sha256": "4fcce9ce38c58b3129f678e2d816b1f0aaa1e0f5cb7aa4c3211534a268fb9294",
+        "expected_success": false,
+        "success": false,
+        "exit": 1,
+        "accepted": true,
+        "statements": 3
+      },
+      {
+        "name": "wrong-finite",
+        "file": "tmp/2026-10-04/eval-store-result/cli_inputs/wrong-finite.lit",
+        "sha256": "f9369020ce99b9049c251b03ee5b2254f57a13d7387bc87eb05f0726f4b25699",
+        "expected_success": false,
+        "success": false,
+        "exit": 1,
+        "accepted": true,
+        "statements": 3
+      },
+      {
+        "name": "division-zero",
+        "file": "tmp/2026-10-04/eval-store-result/cli_inputs/division-zero.lit",
+        "sha256": "42bb51277f98a0541f7628ce6ec2628bd366bd01f080c6856d1947403d5e2e60",
+        "expected_success": false,
+        "success": false,
+        "exit": 1,
+        "accepted": true,
+        "statements": 1
+      },
+      {
+        "name": "negative-root",
+        "file": "tmp/2026-10-04/eval-store-result/cli_inputs/negative-root.lit",
+        "sha256": "a0995b6e69dd852f79e4bd7f818e85cf8713ba2b76c49140b31f9ac7706377e3",
+        "expected_success": false,
+        "success": false,
+        "exit": 1,
+        "accepted": true,
+        "statements": 1
+      },
+      {
+        "name": "work-budget",
+        "file": "tmp/2026-10-04/eval-store-result/cli_inputs/work-budget.lit",
+        "sha256": "addff46fe46dbcf1a6525c66e0d6d28a3150d348bb939cb10220c4db49e3c647",
+        "expected_success": false,
+        "success": false,
+        "exit": 1,
+        "accepted": true,
+        "statements": 1
+      },
+      {
+        "name": "wrong-natural-domain",
+        "file": "tmp/2026-10-04/eval-store-result/cli_inputs/wrong-natural-domain.lit",
+        "sha256": "08b14565e1cda0bee14e6c882796085f658a828455732cc4abdc95d4a5bc4cf3",
+        "expected_success": false,
+        "success": false,
+        "exit": 1,
+        "accepted": true,
+        "statements": 2
+      }
+    ],
+    "docs": [
+      {
+        "file": "docs/Manual.md",
+        "line": 210,
+        "literal_block": "2^(-3) = 1 / 8\n(-2)^(-3) = -1 / 8\n1 / 3 < 1 / 2\nmin(1 / 3, 1 / 2) = 1 / 3\nmax(1 / 3, 1 / 2) = 1 / 2\neval 3^(-1)",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      },
+      {
+        "file": "docs/Manual.md",
+        "line": 225,
+        "literal_block": "8^(1 / 3) = 2\n16^(3 / 4) = 8\n(1 / 27)^(-1 / 3) = 3\n(8 / 27)^(2 / 3) = 4 / 9\neval (4 / 9)^(1 / 2)",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      },
+      {
+        "file": "docs/Manual.md",
+        "line": 266,
+        "literal_block": "floor(-7 / 3) = -3\nceil(-7 / 3) = -2\nsign(1 / 3 - 1 / 2) = -1\ngcd((1 / 3) * 6, 8) = 2\nsqrt(1 / 9) = 1 / 3\nsqrt(12) + sqrt(27) = 5 * sqrt(3)\nre((1 + 2 * i) * (3 - i)) = 5\nimg((1 + 2 * i) / (3 - i)) = 7 / 10\nlog(8, 4) = 2 / 3\nlog(1 / 3, 27) = -3\neval sqrt(12) + sqrt(27)\neval log(8, 4)",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      },
+      {
+        "file": "docs/Manual.md",
+        "line": 617,
+        "literal_block": "C_abs(3 + 4 * i) = 5\nC_abs(4 * i + 3) = 5\nC_abs(3 - 4 * i) = 5\nC_abs(-4 * i + 3) = 5\nC_abs(1 + i) = sqrt(2)\neval C_abs(3 - 4 * i)",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      },
+      {
+        "file": "docs/Manual.md",
+        "line": 2771,
+        "literal_block": "# preview\nalgo parity_value(n Z) Z by cases:\n    case n % 2 = 0: 0\n    case n % 2 != 0: 1\n\neval parity_value(4)",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      },
+      {
+        "file": "docs/Manual.md",
+        "line": 3279,
+        "literal_block": "eval (1 + 2)^2",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      },
+      {
+        "file": "docs/Manual.md",
+        "line": 3291,
+        "literal_block": "sum(1, 3, fn(k Z) Z {k}) = 6\nproduct(1, 3, fn(k Z) Z {k}) = 6\nsum(1, 3, fn(k Z) Q {1 / 3}) = 1\neval sum(1, 3, fn(k Z) Z {k})",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      },
+      {
+        "file": "docs/FAQ.md",
+        "line": 1791,
+        "literal_block": "8^(1/3)=2\n16^(3/4)=8\n(1/27)^(-1/3)=3\neval (4/9)^(1/2)",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      },
+      {
+        "file": "docs/FAQ.md",
+        "line": 1809,
+        "literal_block": "floor(-7 / 3) = -3\nsqrt(12) + sqrt(27) = 5 * sqrt(3)\nimg((1 + 2 * i) / (3 - i)) = 7 / 10\nlog(8, 4) = 2 / 3\neval log(1 / 3, 27)",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      },
+      {
+        "file": "docs/Litex_Learner_Cheatsheet.md",
+        "line": 316,
+        "literal_block": "algo flag(x R) N by cases:\n    case x = 0: 0\n    case x != 0: 1\neval sum(0, 3, flag)\nsum(0, 3, flag) = 3",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      },
+      {
+        "file": "docs/Manual.md",
+        "line": 2816,
+        "literal_block": "algo nonzero_flag(x R) R by cases:\n    case x = 0: 0\n    case x != 0: 1\n\neval nonzero_flag(0) + 1\nnonzero_flag(0) + 1 = 1",
+        "exit": 0,
+        "success": true,
+        "accepted": true
+      }
+    ],
+    "owners": [
+      {
+        "name": "sum",
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "statements": 16
+      },
+      {
+        "name": "product",
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "statements": 11
+      },
+      {
+        "name": "sum_of_finite_set",
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "statements": 13
+      },
+      {
+        "name": "product_of_finite_set",
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "statements": 12
+      },
+      {
+        "name": "source-domain-tracer",
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "statements": 3
+      }
+    ],
+    "persistent_session": {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/eval-store-result/frozen/target/release/litex",
+        "-strict",
+        "-session",
+        "-e",
+        "1=1"
+      ],
+      "binary_sha256": "937d52e40e17ef1fa45a52dadda329d5b3211503d7d0a6292cc70585e67723a8",
+      "protocol": "supported -session and discarded sketch; legacy try/-compact/-before/-runner unavailable",
+      "exit": 0,
+      "blocks": [
+        {
+          "name": "definitions",
+          "literal_block": "algo flag(x R) R by cases:\n    case x=0:0\n    case x!=0:1",
+          "expected_success": true,
+          "success": true,
+          "accepted": true,
+          "scope": "persistent session"
+        },
+        {
+          "name": "discarded-positive",
+          "literal_block": "sketch:\n    eval sum(0,3,flag)\n    sum(0,3,flag)=3",
+          "expected_success": true,
+          "success": true,
+          "accepted": true,
+          "scope": "discarded sketch"
+        },
+        {
+          "name": "discarded-wrong-result",
+          "literal_block": "sketch:\n    eval sum(0,3,flag)\n    sum(0,3,flag)=4",
+          "expected_success": false,
+          "success": false,
+          "accepted": true,
+          "scope": "discarded sketch"
+        },
+        {
+          "name": "no-leak-before-commit",
+          "literal_block": "sum(0,3,flag)=3",
+          "expected_success": false,
+          "success": false,
+          "accepted": true,
+          "scope": "persistent session"
+        },
+        {
+          "name": "commit-evaluation",
+          "literal_block": "eval sum(0,3,flag)",
+          "expected_success": true,
+          "success": true,
+          "accepted": true,
+          "scope": "persistent session"
+        },
+        {
+          "name": "read-committed-equality",
+          "literal_block": "sum(0,3,flag)=3",
+          "expected_success": true,
+          "success": true,
+          "accepted": true,
+          "scope": "persistent session"
+        },
+        {
+          "name": "commit-product",
+          "literal_block": "eval product(1,3,flag)",
+          "expected_success": true,
+          "success": true,
+          "accepted": true,
+          "scope": "persistent session"
+        },
+        {
+          "name": "read-product",
+          "literal_block": "product(1,3,flag)=1",
+          "expected_success": true,
+          "success": true,
+          "accepted": true,
+          "scope": "persistent session"
+        },
+        {
+          "name": "invalid-source",
+          "literal_block": "eval 1/0",
+          "expected_success": false,
+          "success": false,
+          "accepted": true,
+          "scope": "persistent session"
+        },
+        {
+          "name": "continue-after-failure",
+          "literal_block": "sum(0,3,flag)=3",
+          "expected_success": true,
+          "success": true,
+          "accepted": true,
+          "scope": "persistent session"
+        }
+      ]
+    }
+  },
+  "documentation_impact": {
+    "contract_prose": [
+      "docs/Manual.md",
+      "docs/FAQ.md",
+      "docs/Litex_Learner_Cheatsheet.md",
+      "docs/Litex_Blueprint.md",
+      "docs/Litex中文蓝图.md",
+      "src/execute/README.md",
+      "src/execute/execute_eval_stmt/README.md"
+    ],
+    "executable_migration": [
+      "examples/stmt_nodes/command/eval_store_result.lit",
+      "examples/test_statements/eval_stmt.lit",
+      "examples/test_statements/boundaries/evaluation-stores-result.lit",
+      "docs/Manual.md quoted algorithm block",
+      "docs/Litex_Learner_Cheatsheet.md"
+    ],
+    "output_provenance": [
+      "src/json_output/README.md",
+      "stmt_why for all ten supported languages",
+      "Normal real stores/infers and evaluated_object",
+      "Detailed source/result/citations/checked algorithm proof/equality WD/FactId/store result"
+    ],
+    "incidental_cleanup": [
+      "Two previously stale sqrt tests updated to already supported exact rational/root representation"
+    ]
+  },
+  "correction_record_cleanup": {
+    "removed_active_ids": [
+      "R01",
+      "R02",
+      "R03"
+    ],
+    "resolved": [
+      "R01",
+      "R03"
+    ],
+    "withdrawn": [
+      "R02"
+    ],
+    "original_ids_renumbered": false,
+    "raw_original_receipt_unchanged": true,
+    "routine": "After acceptance delete the specific active issue section, keep original-number closed link in plan, and preserve source-owned experience/journal/raw receipt."
+  },
+  "limits": [
+    "No full Obj/full-kernel/full-release/textbook/Lean gate claimed.",
+    "Three wider transaction failures remain, match original audit entries, and use no eval.",
+    "Bare algorithm aggregate automatic equality search was not expanded; use explicit eval.",
+    "Baseline source identity was sampled after a shared build; exact baseline build-source stability was not established.",
+    "Old skill flags and literal try are unsupported; actual current session protocol and discarded sketch blocks retained.",
+    "Earlier test failures/CLI harness protocol retries are archived; they are not silently omitted."
+  ],
+  "receipts": {
+    "path": "eval_store_result_2026-10-04_receipts.zip",
+    "contents": [
+      "full frozen source/fixture manifest",
+      "frozen release binary",
+      "baseline source archive and failing CLI outputs",
+      "release test logs including initial failures",
+      "strict CLI outputs and exact inputs",
+      "literal persistent session blocks and raw transcript",
+      "collector records",
+      "document block inputs/outputs",
+      "live build/selected receipts",
+      "deleted active issue sections",
+      "completed SOP"
+    ],
+    "sha256": "c14ff8ac25646c04f3d269dc600f26550798057dedd5847d05628b8b36a69f7c",
+    "bytes": 15800275,
+    "validated_full_frozen_manifest": true
+  },
+  "validation": {
+    "active_records_removed": true,
+    "original_32_numbers_preserved": true,
+    "production_source_matches_verified_snapshot": true,
+    "local_links_checked": 94,
+    "local_links_missing": []
+  },
+  "cleanup": {
+    "completed_sop": "todo/2026-10-4/eval-store-result.md",
+    "task_scratch": "tmp/2026-10-04/eval-store-result",
+    "status": "completed SOP and current-task scratch removed after full archive verification",
+    "completed_sop_removed": true,
+    "task_scratch_removed": true
+  }
+}

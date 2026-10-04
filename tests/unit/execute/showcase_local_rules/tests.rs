@@ -46,11 +46,11 @@ fn cosine_integer_offset_positive_and_evidence() {
     assert!(detailed.contains("CosZeroIntegerOffset"));
     assert!(detailed.contains("PeriodicTrig"));
     assert!(detailed.contains("proof_of_requirement_facts"));
-    // Numeric/integral angles now take the direct periodic leaf. A symbolic
-    // denominator still exercises the original guarded strategy and evidence.
-    let guarded = check("have a R:\n    a != 0\ncos(a*pi/a+pi/2)=0", true);
+    // Expose the checked symbolic cancellation, then reuse its endpoint.
+    let guarded = check("have a R:\n    a != 0\na*pi/a=pi\ncos(a*pi/a+pi/2)=cos(pi+pi/2)=0", true);
     assert!(guarded.contains("RationalWithNonzeroPremises"));
-    assert!(guarded.contains("PiNonzero"));
+    assert!(guarded.contains("a != 0"));
+    check("have a R\na*pi/a=pi", false);
     check("0 = cos(3*pi/2)", true);
 }
 #[test]
@@ -159,10 +159,10 @@ fn full_add2_chain_and_projection_boundaries() {
         true,
     );
     for node in [
-        "TupleComponentEquality",
-        "ArithmeticCongruence",
-        "LiteralTupleProjectionMembership",
-        "TupleComponentAtIndex",
+        "by_matching_one_arg_by_one",
+        "by_closed_calculation",
+        "TupleIndexBound",
+        "TupleProjection",
     ] {
         assert!(detailed.contains(node), "{node}");
     }

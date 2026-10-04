@@ -3,12 +3,17 @@ use super::helper::ActiveAlgoCalls;
 use super::result::{
     ExecCommandStmtResult, ExecEvalStmtFailed, ExecEvalStmtResult, ExecEvalStmtSuccess,
 };
+use super::verify_evaluated_algo_calls::verify_evaluated_algo_calls;
+use crate::ast::fact::{EqualFact, Fact};
 use crate::ast::stmt::EvalStmt;
 use crate::execute::execute_by_stmt::proof_verify_state;
-use crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult;
+use crate::execute::execute_fact_stmt::{
+    VerifyEqualFactWellDefinedResult, VerifyObjWellDefinedResult,
+};
 use crate::runtime::{Runtime, RuntimeResult};
 
-// eval expr: display evaluation (no proof fact stored).
+// eval expr: compute an exact value, certify algorithm equations, then publish
+// expr = value through the same store/infer and exec_stmt transaction as facts.
 //
 // Stages:
 //   1. Check the source expression's WD, including callable domains.
@@ -76,6 +81,32 @@ pub fn exec_eval_stmt(
 
     cited_equal_fact_ids.extend(active_calls.cited_equal_fact_ids);
 
+    if let Err(failed) = verify_evaluated_algo_calls(runtime, &mut active_calls.algo_evaluations)? {
+        return Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
+            failed,
+        )));
+    }
+    let evaluated_equal_fact = EqualFact {
+        fact_id: runtime.global_ids.allocate_fact_id(),
+        left: stmt.obj_to_eval.clone(),
+        right: evaluated_object.clone(),
+        line_file: Some(stmt.line_file.clone()),
+    };
+    let evaluated_equal_well_defined = match runtime
+        .verify_equal_fact_well_definedness(&evaluated_equal_fact, proof_verify_state())?
+    {
+        VerifyEqualFactWellDefinedResult::Success(proof) => proof,
+        failed => {
+            return Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
+                ExecEvalStmtFailed::EvaluatedEqualityWellDefined(Box::new(failed)),
+            )))
+        }
+    };
+    // The exact computation and checked defining equations above establish the
+    // equality. Do not re-run automatic equality search to rediscover that trace.
+    let fact: Fact = evaluated_equal_fact.clone().into();
+    let store_and_infer_result = runtime.store_fact_and_infer(&fact, proof_verify_state())?;
+
     Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(
         ExecEvalStmtSuccess {
             statement: stmt.clone(),
@@ -87,6 +118,9 @@ pub fn exec_eval_stmt(
             aggregate_evaluations: active_calls.aggregate_evaluations,
             function_evaluations: active_calls.function_evaluations,
             algo_evaluations: active_calls.algo_evaluations,
+            evaluated_equal_fact,
+            evaluated_equal_well_defined,
+            store_and_infer_result,
         },
     )))
 }

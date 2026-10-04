@@ -1,0 +1,13 @@
+# Explicit theorem application transports equality of function arguments.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_known_forall/function_argument_congruence_explicit.lit
+thm apply_equal_argument:
+    ? forall X,Y set,F fn(x X)Y,a,b X:
+        a = b
+        =>:
+            F(a) = F(b)
+have F fn(h fn(x R)R)R
+have g fn(x R)R
+have h fn(x R)R = fn(y R)R{-1*g(y)}
+h = fn(x R)R{-1*g(x)}
+release thm apply_equal_argument(fn(x R)R,R,F,h,fn(x R)R{-1*g(x)})
+F(h) = F(fn(x R)R{-1*g(x)})

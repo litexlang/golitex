@@ -42,29 +42,12 @@ fn run_launch() {
             }
         }
         Err(error) => {
-            eprintln!("{}", format_runtime_error(&error));
+            eprintln!("{}", error);
             let code = match error {
                 RuntimeError::InvalidArguments(_) => 2,
                 _ => 1,
             };
             process::exit(code);
         }
-    }
-}
-
-fn format_runtime_error(error: &RuntimeError) -> String {
-    match error {
-        RuntimeError::InvalidArguments(message) => format!("launch_error: {}", message),
-        RuntimeError::Io { path, message } => {
-            format!("io_error: {}: {}", path.display(), message)
-        }
-        RuntimeError::ParseError(error) => {
-            format!(
-                "parse_error: {} at line {} in {}",
-                error.message, error.line, error.path
-            )
-        }
-        RuntimeError::Unsupported(message) => format!("unsupported: {}", message),
-        RuntimeError::InternalBug(message) => format!("internal_bug: {}", message),
     }
 }

@@ -1,0 +1,235 @@
+{
+  "date": "2026-10-04",
+  "binary_sha256": "da1258c315ed0765df8c80f53d852bc44e00b3fb38f729b1aa95f5787733445b",
+  "source_sha256": "d664c14e7deec69596899cd6d01e66de75cb3b7dccf1b5291abdcc88c304f6be",
+  "frozen_source_stable": true,
+  "live_drift": [
+    "src/json_output/README.md",
+    "src/json_output/acceptance_tests.rs",
+    "src/json_output/explain/equality_builtin_rule/leaves.rs"
+  ],
+  "direct_cases": [
+    {
+      "name": "sum-constant",
+      "code": "have n N+\nhave c R\nhave f,g fn(k Z)R\nsum(1,n,fn(k Z)R{c})=n*c",
+      "exit": 1,
+      "success": false,
+      "session_error": null,
+      "first_failure": {
+        "success": false,
+        "statement": "sum(1, n, fn (k Z) R{c}) = n * c",
+        "why_failed": {
+          "phase": "search_proof",
+          "goal": "sum(1, n, fn (k Z) R{c}) = n * c"
+        },
+        "stores": [],
+        "infers": []
+      }
+    },
+    {
+      "name": "sum-add",
+      "code": "have n N+\nhave c R\nhave f,g fn(k Z)R\nsum(1,n,fn(k Z)R{f(k)+g(k)})=sum(1,n,f)+sum(1,n,g)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    },
+    {
+      "name": "sum-sub",
+      "code": "have n N+\nhave c R\nhave f,g fn(k Z)R\nsum(1,n,fn(k Z)R{f(k)-g(k)})=sum(1,n,f)-sum(1,n,g)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    },
+    {
+      "name": "sum-scale",
+      "code": "have n N+\nhave c R\nhave f,g fn(k Z)R\nsum(1,n,fn(k Z)R{c*f(k)})=c*sum(1,n,f)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    },
+    {
+      "name": "sum-pointwise",
+      "code": "have n N+\nhave c R\nhave f,g fn(k Z)R\nsum(1,n,fn(k Z)Z{k+k})=sum(1,n,fn(j Z)Z{2*j})",
+      "exit": 1,
+      "success": false,
+      "session_error": null,
+      "first_failure": {
+        "success": false,
+        "statement": "sum(1, n, fn (k Z) Z{k + k}) = sum(1, n, fn (j Z) Z{2 * j})",
+        "why_failed": {
+          "phase": "search_proof",
+          "goal": "sum(1, n, fn (k Z) Z{k + k}) = sum(1, n, fn (j Z) Z{2 * j})"
+        },
+        "stores": [],
+        "infers": []
+      }
+    },
+    {
+      "name": "product-constant",
+      "code": "have n N+\nhave c R*\nproduct(1,n,fn(k Z)R*{c})=c^n",
+      "exit": 1,
+      "success": false,
+      "session_error": null,
+      "first_failure": {
+        "success": false,
+        "statement": "product(1, n, fn (k Z) R*{c}) = c ^ n",
+        "why_failed": {
+          "phase": "search_proof",
+          "goal": "product(1, n, fn (k Z) R*{c}) = c ^ n"
+        },
+        "stores": [],
+        "infers": []
+      }
+    },
+    {
+      "name": "finite-sum-add",
+      "code": "have S finite_set\nhave c R\nhave f,g fn(k S)R\nfinite_set_sum(S,fn(k S)R{f(k)+g(k)})=finite_set_sum(S,f)+finite_set_sum(S,g)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    },
+    {
+      "name": "finite-sum-sub",
+      "code": "have S finite_set\nhave c R\nhave f,g fn(k S)R\nfinite_set_sum(S,fn(k S)R{f(k)-g(k)})=finite_set_sum(S,f)-finite_set_sum(S,g)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    },
+    {
+      "name": "finite-sum-scale",
+      "code": "have S finite_set\nhave c R\nhave f,g fn(k S)R\nfinite_set_sum(S,fn(k S)R{c*f(k)})=c*finite_set_sum(S,f)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    },
+    {
+      "name": "finite-product-distribute",
+      "code": "have S finite_set\nhave c R\nhave f,g fn(k S)R\nfinite_set_product(S,fn(k S)R{f(k)*g(k)})=finite_set_product(S,f)*finite_set_product(S,g)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    },
+    {
+      "name": "finite-sum-add-C",
+      "code": "have S finite_set\nhave c C\nhave f,g fn(k S)C\nfinite_set_sum(S,fn(k S)C{f(k)+g(k)})=finite_set_sum(S,f)+finite_set_sum(S,g)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    },
+    {
+      "name": "finite-sum-sub-C",
+      "code": "have S finite_set\nhave c C\nhave f,g fn(k S)C\nfinite_set_sum(S,fn(k S)C{f(k)-g(k)})=finite_set_sum(S,f)-finite_set_sum(S,g)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    },
+    {
+      "name": "finite-sum-scale-C",
+      "code": "have S finite_set\nhave c C\nhave f,g fn(k S)C\nfinite_set_sum(S,fn(k S)C{c*f(k)})=c*finite_set_sum(S,f)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    },
+    {
+      "name": "finite-product-distribute-C",
+      "code": "have S finite_set\nhave c C\nhave f,g fn(k S)C\nfinite_set_product(S,fn(k S)C{f(k)*g(k)})=finite_set_product(S,f)*finite_set_product(S,g)",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "first_failure": null
+    }
+  ],
+  "owning_files": [
+    {
+      "file": "examples/test_objs/sum.lit",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "statements": 16,
+      "first_failure": null
+    },
+    {
+      "file": "examples/test_objs/product.lit",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "statements": 11,
+      "first_failure": null
+    },
+    {
+      "file": "examples/test_objs/sum_of_finite_set.lit",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "statements": 13,
+      "first_failure": null
+    },
+    {
+      "file": "examples/test_objs/product_of_finite_set.lit",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "statements": 12,
+      "first_failure": null
+    },
+    {
+      "file": "examples/proof_nodes/equal/by_builtin_rule/aggregate_identities.lit",
+      "exit": 0,
+      "success": true,
+      "session_error": null,
+      "statements": 28,
+      "first_failure": null
+    }
+  ],
+  "schema_version": 1,
+  "task": "User asks to inspect symbolic sum/product/finite-aggregate issues; refresh old records",
+  "scope": "Original R04/R05/R06 inputs, 4 carrier controls, 5 complete authoring files",
+  "build": "cargo build --release --offline: exit0",
+  "classification": {
+    "cause": "Existing authoring goals accepted; stale failed-only ledger; 3 original short interfaces still search-limited",
+    "earliest_remaining_boundary": "search_proof, not parser or original-goal WD",
+    "diagnosis_limit": "No internal child-failure certificate or causal deletion run, so no unique internal root cause asserted.",
+    "execution_category": "Read-only kernel/proof audit plus user-authorized record cleanup"
+  },
+  "record_cleanup": {
+    "removed_active_ids": [
+      "R04",
+      "R05",
+      "R06"
+    ],
+    "original_numbers_preserved": true,
+    "kernel_or_proof_code_modified": false,
+    "raw_original_receipt_unchanged": true
+  },
+  "receipts": {
+    "path": "symbolic_aggregate_status_2026-10-04_receipts.zip",
+    "sha256": "0309b17413a30ed54ff82d662adac1946b37357b2ff2ef4f454a46ad54a70365",
+    "bytes": 4668211,
+    "full_source_manifest_verified": true
+  },
+  "validation": {
+    "local_links_checked": 9,
+    "original_32_numbering_preserved": true,
+    "closed_card_anchors_unique": true
+  },
+  "limits": [
+    "No Rust suite, full Obj or full release gate run.",
+    "Results belong to fixed source/binary identity; live drift separately listed.",
+    "Three original short search misses retained in experience although same-target explicit proofs already pass."
+  ],
+  "cleanup": {
+    "completed_sop_removed": true,
+    "owned_scratch_removed": true,
+    "raw_receipts_retained": true
+  }
+}

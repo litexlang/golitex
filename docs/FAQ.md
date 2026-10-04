@@ -531,10 +531,15 @@ reserved and accepts exactly one argument. This conclusion is available only
 through the explicit theorem handler; writing the existential directly does
 not trigger an implicit reduced-fraction rule, and no trusted `std/basics`
 theorem is required.
-Finite-set foundations use the same explicit style. After checking
-`A $subset B` with finite `B`, call
-`release thm subset_of_finite_set_is_finite(A, B)`; Litex deliberately does not
-search arbitrary subset chains. For finite `s`,
+Finite-set foundations also have explicit theorem interfaces. After checking
+`A $subset B` with finite `B`, one may call
+`release thm subset_of_finite_set_is_finite(A, B)`. A stored inclusion now also
+publishes lower-set finiteness when the upper finite certificate is already
+available at the restricted stored/structural stage. This forward consequence
+lets later size expressions pass WD without enabling deeper search. Without
+that certificate, the explicit theorem or existing bounded strategy is still
+needed. The [inference tracer](../examples/infer/atomic/subset_finite_upper_bound.lit)
+shows this boundary. For finite `s`,
 `release thm finite_set_has_bijective_index(s)` stores a noncanonical existential
 index in `finite_seq(s, finite_set_size(s))`, bijective from
 `closed_range(1, finite_set_size(s))`. These are bare kernel names, not
@@ -1184,6 +1189,13 @@ calculation chains. The proof script exposes the facts that should be true, and
 the checker performs routine matching and replacement steps that a human reader
 would usually do silently.
 
+For example, once `b - a > 0` or `0 < b - a` has been verified, the
+positive-difference builtin can prove `a < b` for real `a` and `b`. It reads the
+saved bound and cites that premise; it does not recursively discover the bound.
+Replacing the premise with `b - a >= 0` does not justify strict order. The
+[runnable example](../examples/proof_nodes/atomic/by_builtin_rule/greater_from_positive_difference.lit)
+also covers the corresponding `>` goals.
+
 This does not mean Litex proves arbitrary goals by magic. It means Litex places
 ordinary mathematical structure inside the verifier and visible local
 background packages, then gives the user a fact-oriented interface to that
@@ -1273,6 +1285,12 @@ inside `statement_results` with `"success": false` and a `why_failed` payload.
 **SessionError** means a hard failure. The session must stop. Batch JSON
 exposes this as top-level `"session_error"`.
 
+An internal invariant conflict is reported explicitly as
+`internal_bug: Litex internal bug: <specific reason>`. This is an implementation
+bug in Litex, not an ordinary unproved statement. It stops the session; Litex
+does not present the affected session as safe to continue or claim an atomic
+rollback of an internal commit error.
+
 This makes the feedback loop more useful. A search soft miss usually suggests
 "add the missing mathematical fact." A well-definedness soft miss suggests
 "fix the expression or its domain information before discussing truth." A
@@ -1312,10 +1330,12 @@ separate local scopes through the ordinary proof-body checker:
 have fn f(x N) N = x
 by induc n from 0:
     ? f(n) = f(n)
+    n $in N
     have a N = 0
 ```
 
-This is accepted because `n >= 0` makes `f(n)` callable. Changing the base
+The bound `n >= 0` makes the target callable. The checked `n $in N` step
+also supplies the natural carrier for its successor application. Changing the base
 to `-1` rejects the target's WD. The same rules apply to `by strong_induc`;
 its stronger hypothesis is supplied only after WD, in the successor scope.
 Recursive function definitions additionally require every nested case list
@@ -1738,9 +1758,12 @@ Symbolic constant, linearity, pointwise, partition and shift identities use
 their own checked premises rather than enumerate an unknown endpoint. Source
 and target interval legality may need explicit hypotheses.
 
-`eval` displays the result and publishes no equality. A direct equality uses
-calculation evidence; Detailed output retains substitutions, each term and
-running totals. See the [numeric tracer](../examples/proof_nodes/equal/by_builtin_rule/numeric_normalization.lit),
+`eval` displays the result and publishes the checked `source = result` equality
+in the current scope. Algorithm calls cite their defining equations; a failed
+computation or check publishes no result. Later assertions can use its FactId.
+Detailed output retains substitutions, each term, running totals and the store
+result. See the [eval publication tracer](../examples/stmt_nodes/command/eval_store_result.lit),
+[numeric tracer](../examples/proof_nodes/equal/by_builtin_rule/numeric_normalization.lit),
 [complex tracer](../examples/proof_nodes/equal/by_builtin_rule/imaginary_division.lit),
 [aggregate calculation tracer](../examples/proof_nodes/equal/by_builtin_rule/aggregate_calculation.lit)
 and [symbolic identities](../examples/proof_nodes/equal/by_builtin_rule/aggregate_identities.lit).
@@ -1764,8 +1787,8 @@ C_abs(-4 * i + 3) = 5
 The period rule checks integer membership; `have k R` alone is insufficient.
 Tangent poles and cotangent poles remain undefined. Numeric complex modulus
 accepts both summand orders and signs, computes exact coordinates and selects
-the nonnegative root. `eval C_abs(1+i)` displays `sqrt(2)` and publishes no
-fact. Detailed output records the period's integer evidence or the modulus's
+the nonnegative root. `eval C_abs(1+i)` displays `sqrt(2)` and stores
+`C_abs(1+i)=sqrt(2)`. Detailed output records the period's integer evidence or the modulus's
 coordinates and squared value. See the [period tracer](../examples/proof_nodes/equal/by_builtin_rule/periodic_trig_exact_values.lit)
 and [modulus tracer](../examples/proof_nodes/equal/by_builtin_rule/numeric_complex_modulus.lit).
 
@@ -1800,7 +1823,7 @@ log(8, 4) = 2 / 3
 eval log(1 / 3, 27)
 ```
 
-The same arithmetic supplies `eval` results without publishing equality facts.
+The same exact arithmetic supplies `eval` results and their published equalities.
 Symbolic laws keep their existing premise-bearing builtin rule or strategy.
 All input domains are checked before computing. Square roots keep the
 nonnegative principal value, and numeric logarithms use exact prime-exponent
@@ -1808,3 +1831,14 @@ ratios. Unsupported radical inversion, factorization exhaustion and arithmetic
 overflow decline calculation. No decimal approximation proves an equality.
 The four [closed calculation tracers](../examples/test_objs/experience/problem_notes/closed_exact_elementary_calculation_2026-10-03.md)
 and their paired executable negatives record these boundaries.
+
+### Why can a strict positive lower bound make a logarithm goal well-defined?
+
+Storing `1 < x` now publishes `0 < x`: the strict source and the closed
+proof `0 <= 1` justify that forward consequence. More generally, `b < x`
+can use an available `0 <= b` proof at the same restricted inference stage.
+The [strict-bound tracer](../examples/infer/atomic/strict_lower_bound_positive.lit)
+keeps the original logarithm premise. This does not permit negative or unknown
+bounds to imply positivity, and does not widen WD search permissions.
+
+A stored R-returning function can now supply `f(a) $in C` at the known-property stage after its application domain has been checked. This is numeric carrier inclusion, not equality of R and C. The checker requires every candidate stored return signature to fit the target, so it cannot select only a convenient signature. For a finite product insertion proof, explicitly establish `a $in union(S,{a})` and publish the callback's restriction with `release thm fn_set_member(f,fn(x S)R)`. Freshness remains a premise. Native template/field signatures retain their separate verification routes.

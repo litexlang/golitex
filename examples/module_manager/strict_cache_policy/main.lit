@@ -1,0 +1,3 @@
+# Deliberately false safety regression. Cold strict must reject this module.
+release thm Dep::main::false_theorem
+0 = 1

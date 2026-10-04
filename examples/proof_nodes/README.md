@@ -56,6 +56,12 @@ Their strict CLI gates require exit 0, success true and no session_error.
 `field_arithmetic_carrier_strategy` tests check the real-base evidence,
 coordinate evidence, domain/false controls and inherited child ceilings.
 
+[Positive differences](atomic/by_builtin_rule/greater_from_positive_difference.lit)
+cover saved `0 < b - a` and `b - a > 0` premises for strict real order.
+`positive_difference_order` tests retain the cited premise and reject weak
+bounds, the opposite conclusion, missing premises, nonreal operands and leaked
+local assumptions.
+
 ## Fundamental equality examples
 
 Exact decimal normalization, guarded imaginary division and finite aggregates
@@ -547,3 +553,7 @@ The native `(0,0)` WD exclusion remains in force.
 reuses a whole proved forall with renamed outer, existential and nested
 function binders. The `source_replay_tests` controls retain carrier, guard,
 body and existential-kind boundaries and prove the citation route at Direct.
+
+The [stored function return superset](atomic/by_known_special_property/function_return_standard_superset.lit) tracer checks R-to-C and N+-to-Z/R return lifting, followed by fresh-element finite-product insertion with an explicit member and restricted callback signature. The leaf compares all stored candidate carriers, preserves signature and alias provenance, and declines nonstandard carriers or native template/field alternatives. Tests retain narrowing, invalid domains, mixed signatures, aliases and wrong arity.
+
+[Explicit function argument congruence](equal/by_known_forall/function_argument_congruence_explicit.lit) proves a general X/Y-carrier equality lemma and instantiates it with a function-valued argument. It needs no trust. This documents an explicit authoring route; it does not claim automatic discovery of every anonymous-function argument equality.

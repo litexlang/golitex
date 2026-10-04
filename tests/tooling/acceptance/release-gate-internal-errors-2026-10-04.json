@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-04T16:27:27.509415+08:00",
+  "task": "Strict Cargo gate counts and explicit Litex internal errors",
+  "user_decisions": {
+    "SYS01": "Ongoing maintainer development; not assigned as a bug repair here.",
+    "REL01": "Require real nonempty, complete and consistent execution; zero tests must fail.",
+    "SYS02": "Internal conflict returns explicit Litex internal-bug Error and stops; no atomic recovery requested."
+  },
+  "changes": {
+    "gate": "Both direct/controller paths require exit0 plus paired running counts and summaries; reject zero, ignored/measured-only, failed, partial, malformed or inconsistent evidence. Record and display selected/executed.",
+    "error": "Existing InternalBug retained. RuntimeError Display owns internal_bug: Litex internal bug: <cause>; CLI/REPL/extraction/Normal/Compact/Detailed expose it. Noninternal session strings retain Debug representation.",
+    "protected_ast_or_state_modified_by_this_task": false,
+    "protected_file_hash_comparison": {
+      "src/runtime/runtime.rs": true,
+      "src/exec_env/merge_exec_env.rs": true,
+      "src/runtime/parse_scope_transaction.rs": true,
+      "src/ast/stmt.rs": false,
+      "src/ast/obj.rs": true
+    },
+    "concurrent_ast_comment_change": "src/ast/stmt.rs changed its eval comments in parallel; git diff shows comment-only AST edits. This task did not edit that file or any AST struct.",
+    "owned_source_hashes": {
+      ".github/scripts/predeploy_gate.py": "e8bd501eb55ee643a39b5a9ed7ca98b82fc48213c6e70a70a7fe48671dc21291",
+      "tests/tooling/test_predeploy_gate.py": "5c29a273c15993fd02e10a210a584bf2b663f16f921b18ee2bc500e679981140",
+      "src/runtime/error.rs": "ff3bae6f45a4794038dcaab5ce9b11fca4fac79644cbba97f4551375eea7c740",
+      "src/runtime/mod.rs": "176c6c27f212aaf47cf4c7ceea65b0b2fb898e96f90ee9170ab4dc47795ddba8",
+      "src/runtime/internal_error_tests.rs": "c24f7dc55e85865809dd3b96daf77711bc9a227679b1b68526dd735ca647fa78",
+      "src/run/run_repl.rs": "175c5cb65f0080a132c10e65d5b71d6cbee1414a502c830e84b4a7e7b97cb3a3",
+      "src/run/run_extract.rs": "e66e7422dcaf24992eb43d285dca5324035d202c41242ae7eb6a380068fc4647",
+      "src/run/run_command_outcome.rs": "6fc36a0ba6959ce2388b7530592ce60836518bab85a2a5faf845f36952b3bf8d",
+      "src/main.rs": "5acccae3300f8fdc9ebf85ca31c7dc68eadfe3839da7d465e7f9d291abb296cb",
+      "src/json_output/project_normal.rs": "277061aca9b80b7332802d3e8b7e442c11da560663221624982296c01a9c0b2a",
+      "src/json_output/project_compact.rs": "f8b9f7d13c05f4074dd6f2ef011c416b11d1c7402ee83cfa42833366e93a7774",
+      "src/json_output/project_detailed/entry.rs": "52626c0ff12c33935e2496d5d5e54df2dd0679aca71164ad43a351179317ba61",
+      "src/run/README.md": "0d83e13be3990d73407b92f9ed9180d8c6b37b43e9050ef52606936cda7c5a78",
+      "src/json_output/README.md": "d300a7540aabca8ae40e3170aa60ebb11ac2b36e7a0969453222193047970552",
+      "docs/FAQ.md": "00a5acc134d3320ab1e64444424b1a4096e60c2605a46d882b817c4c230eb771"
+    }
+  },
+  "verification": {
+    "python_tooling": {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/tooling",
+        "-p",
+        "test_predeploy_gate.py",
+        "-v"
+      ],
+      "executed": 16,
+      "passed": 16,
+      "exit": 0,
+      "log": "python-tests-final.log"
+    },
+    "zero_test_before_after": {
+      "before": {
+        "status": "success",
+        "process_exit": 0,
+        "output": "running 0 tests\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 800 filtered out; finished in 0.00s\n",
+        "tests_selected": null,
+        "tests_executed": null
+      },
+      "after": {
+        "status": "failed",
+        "process_exit": 0,
+        "output": "running 0 tests\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 800 filtered out; finished in 0.00s\ngate error [run_examples_only]: zero tests executed; check the registered Cargo filter",
+        "tests_selected": 0,
+        "tests_executed": 0
+      }
+    },
+    "release_rust_consumer_tests": {
+      "name": "internal-error-consumers",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "internal_error_",
+        "--",
+        "--nocapture"
+      ],
+      "status": "success",
+      "cargo_exit": 0,
+      "selected": 3,
+      "executed": 3,
+      "matches": true,
+      "wall_seconds": 69.06912191701122
+    },
+    "actual_cargo_controls": {
+      "purpose": "Real Cargo/libtest producer to actual predeploy validator; isolated because concurrent repository compiler wiring changed during the live obsolete-filter check. Not Litex domain coverage.",
+      "records": [
+        {
+          "name": "gate_pass",
+          "command": [
+            "cargo",
+            "test",
+            "--release",
+            "gate_pass",
+            "--",
+            "--nocapture"
+          ],
+          "cargo_exit": 0,
+          "gate_status": "success",
+          "selected": 1,
+          "executed": 1,
+          "matches": true
+        },
+        {
+          "name": "no_matching_gate",
+          "command": [
+            "cargo",
+            "test",
+            "--release",
+            "no_matching_gate",
+            "--",
+            "--nocapture"
+          ],
+          "cargo_exit": 0,
+          "gate_status": "failed",
+          "selected": 0,
+          "executed": 0,
+          "matches": true
+        },
+        {
+          "name": "gate_failure",
+          "command": [
+            "cargo",
+            "test",
+            "--release",
+            "gate_failure",
+            "--",
+            "--nocapture"
+          ],
+          "cargo_exit": 101,
+          "gate_status": "failed",
+          "selected": null,
+          "executed": null,
+          "matches": true
+        },
+        {
+          "name": "gate_ignored",
+          "command": [
+            "cargo",
+            "test",
+            "--release",
+            "gate_ignored",
+            "--",
+            "--nocapture"
+          ],
+          "cargo_exit": 0,
+          "gate_status": "failed",
+          "selected": 1,
+          "executed": 0,
+          "matches": true
+        }
+      ],
+      "passed": 4,
+      "checks": 4,
+      "all_match": true
+    },
+    "cli_controls": [
+      {
+        "name": "negative-number",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-e",
+          "-2 < 0"
+        ],
+        "exit": 0,
+        "success": true,
+        "matches": true
+      },
+      {
+        "name": "false-fact",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-e",
+          "0 = 1"
+        ],
+        "exit": 1,
+        "success": false,
+        "matches": true
+      },
+      {
+        "name": "parse-error",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-e",
+          "let broken ="
+        ],
+        "exit": 1,
+        "success": false,
+        "matches": true
+      },
+      {
+        "name": "duplicate-name",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-e",
+          "let x = 1\nlet x = 2"
+        ],
+        "exit": 1,
+        "success": false,
+        "matches": true
+      },
+      {
+        "name": "soft-failure-rollback",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-e",
+          "have k N = -1\nhave k N = 1\nk = 1"
+        ],
+        "exit": 1,
+        "success": false,
+        "matches": true
+      },
+      {
+        "name": "launch-error",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "--unknown"
+        ],
+        "exit": 2,
+        "success": null,
+        "matches": true
+      }
+    ],
+    "release_binary": {
+      "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+      "sha256": "16a14b5ca6984587520a3d9f507011f04c723ff7f61b02a6c7688d90074ff9c1"
+    },
+    "verified_binary_retained": false,
+    "production_build": {
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--offline",
+        "--bin",
+        "litex"
+      ],
+      "exit": 0,
+      "log": "production-build.log"
+    },
+    "live_obsolete_filter_attempt": {
+      "name": "legacy-examples-filter",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "run_examples_only",
+        "--",
+        "--nocapture"
+      ],
+      "status": "failed",
+      "cargo_exit": 101,
+      "selected": null,
+      "executed": null,
+      "matches": false,
+      "wall_seconds": 64.89400820806623
+    },
+    "live_attempt_note": "Exit101 during concurrent eval/result compiler rewiring; no tests ran. Not a zero-test replay. Actual zero execution verified against real Cargo in isolated task-owned fixture.",
+    "initial_rust_probe": {
+      "passed": 2,
+      "executed": 2,
+      "exit": 0,
+      "note": "Before REPL test addition; superseded by3/3."
+    }
+  },
+  "limits": [
+    "Actual Cargo control project tests gate accounting, not Litex corpus coverage.",
+    "Old docs/examples/showcases filters remain absent from the live inventory. Strict gate rejects empty selection; restore real collectors with inventory coverage under REL02.",
+    "No full all-targets/corpus/textbook/10-language deployment acceptance is claimed.",
+    "Concurrent source drift is retained; scoped diagnostics and captured CLI binary are the acceptance."
+  ],
+  "source_drift": {
+    "production_interval": [
+      "src/json_output/explain/atomic_builtin_rule/greater.rs",
+      "src/json_output/explain/atomic_builtin_rule/greater_equal.rs",
+      "src/json_output/explain/atomic_builtin_rule/in_fact.rs",
+      "src/json_output/explain/atomic_builtin_rule/is_finite_set.rs",
+      "src/json_output/explain/atomic_builtin_rule/is_nonempty_set.rs",
+      "src/json_output/explain/atomic_builtin_rule/is_set.rs",
+      "src/json_output/explain/atomic_builtin_rule/is_tuple.rs",
+      "src/json_output/explain/atomic_builtin_rule/less.rs",
+      "src/json_output/explain/atomic_builtin_rule/less_equal.rs",
+      "src/json_output/explain/atomic_builtin_rule/misc_result.rs",
+      "src/json_output/explain/atomic_builtin_rule/not_equal.rs",
+      "src/json_output/explain/atomic_builtin_rule/not_greater.rs",
+      "src/json_output/explain/atomic_builtin_rule/not_in_fact.rs",
+      "src/json_output/explain/atomic_builtin_rule/not_is_finite_set.rs",
+      "src/json_output/explain/atomic_builtin_rule/not_is_nonempty_set.rs",
+      "src/json_output/explain/atomic_builtin_rule/not_less.rs",
+      "src/json_output/explain/atomic_builtin_rule/subset.rs",
+      "src/json_output/explain/equality_builtin_rule/leaves.rs",
+      "src/json_output/mod.rs",
+      "src/json_output/rule_language_methods_tests.rs"
+    ],
+    "final_gates_interval": [
+      "src/execute/execute_eval_stmt/exec_eval_stmt.rs",
+      "src/execute/execute_eval_stmt/mod.rs",
+      "src/execute/execute_eval_stmt/result.rs",
+      "src/execute/execute_eval_stmt/verify_evaluated_algo_calls.rs",
+      "src/json_output/acceptance_tests.rs",
+      "src/json_output/explain/searched_proof_why.rs",
+      "src/json_output/explain/stmt_why.rs",
+      "src/json_output/mod.rs",
+      "src/json_output/project_detailed/stmt.rs",
+      "src/json_output/project_stmt_catalog.rs",
+      "src/json_output/rule_language_methods_tests.rs"
+    ]
+  },
+  "plan": "plan/src收尾总清单.md",
+  "closed_local_items": [
+    "REL01 false-green count contract",
+    "SYS02 explicit internal Error contract"
+  ],
+  "open_release_debt": "REL02 missing whole-corpus collector migration and stable full acceptance; SYS01 maintainer development",
+  "receipt": {
+    "path": "tests/tooling/acceptance/release-gate-internal-errors-2026-10-04_receipts.zip",
+    "sha256": "9341ec367ab54bb898e1042c01e96e62feeed2075bbebfa2bef2f916098a73f3"
+  },
+  "completion": {
+    "master_statuses_updated": [
+      "SYS01 maintainer-owned continuing development",
+      "REL01 closed count bug; collector migration remains REL02",
+      "SYS02 closed explicit internal Error contract"
+    ],
+    "master_sha256_at_validation": "c0fea2e0003b5ca8a3ce735475e4376a1091a41a728f147592292f1d39701e2a",
+    "receipt_integrity": "pass",
+    "owned_source_payload_hashes": "pass",
+    "local_acceptance_links": "pass",
+    "implementation_artifact_scope": "No task edits to AST/Runtime/ExecEnv state or merge/rollback code."
+  },
+  "cleanup": {
+    "task_created_draft_removed": "tmp/2026-10-04/release-gate-internal-errors",
+    "completed_sop_removed": "todo/2026-10-4/release-gate-internal-errors.md",
+    "source_owned_note_journal_receipt_retained": true
+  }
+}

@@ -53,7 +53,7 @@ K-gaps does not mean the whole kernel has no problems.
 | --- | --- | --- |
 | Real least-upper-bound builtin conclusion WD | [ByThmStmt](by_thm_stmt/kernel_gate_2026-10-03.md) | Category 2 candidate; missing predicate interface, before/after failure |
 | Finite cardinality numeric carrier | [Fact](fact/kernel_gate_2026-10-03.md) | Category 1 vs 2 provisional; exact carrier phase recorded |
-| Squared-i atomic proof nondeterminism | [ByContraStmt](by_contra_stmt/atomic_i_nondeterminism_2026-10-03.md) | Category 2 candidate; observed before and after, direct authoring route accepted |
+| Squared-i atomic proof nondeterminism | [ByContraStmt](by_contra_stmt/atomic_i_nondeterminism_2026-10-03.md) | Closed by accepted explicit substitution chain; historical shortcut evidence retained, no pending Rust repair |
 | add2 node assertion / audit-fence collection | [Tooling](tooling/kernel_gate_2026-10-03.md) | Separate proof-output and authoring/tooling controls; no automatic assertion weakening |
 
 ## Related statement folders

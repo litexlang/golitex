@@ -11,21 +11,25 @@ narrow test-only access seams.
 | `integration/` | Black-box public API, CLI, output, publication, and repository-boundary tests. | Registered explicitly as Cargo `[[test]]` targets. |
 | `tooling/` | Tests for repository scripts and deployment tooling. | Run by the tool-specific Python gate. |
 
-`cargo test --release run_examples -- --nocapture` runs registered examples and
-the repository's executable Markdown snippets. The white-box harness is kept
-outside the production tree while retaining access to crate-internal contracts.
+The current Cargo targets run Rust unit tests and the Stmt fixture inventory
+integration test. The old `run_examples`, `run_examples_only`,
+`run_docs_markdown_files`, and `run_showcases` collectors exist only in the
+memorial source; their Cargo filters currently select zero tests. The predeploy
+script rejects that empty selection. Collector migration is tracked as REL02
+in `plan/src收尾总清单.md`.
 
 ## Examples and boundaries
 
 | Command | Actual coverage example |
 | --- | --- |
-| `cargo test --release run_examples_only -- --nocapture` | Runs the selected `.lit` example dataset without the remaining docs phase. |
+| `python3 examples/test_statements/run.py --binary target/release/litex --require-no-gaps` | Runs the current Stmt manifest, including declared positive and negative cases. |
 | `python3 tests/tooling/run_docs_markdown_files.py` | Runs root `README.md` plus `docs/**/*.md` Litex fences via `target/release/litex`. |
 | `cargo test --release runtime_contract_builtin -- --nocapture` | Runs the checked-`1 = 1` runtime smoke test. |
-| `cargo test --release run_all_docs_examples_runtime_contracts -- --ignored --nocapture` | Runs the explicit slow aggregate of examples, docs, and runtime contracts. |
+| `cargo test --release --all-targets --no-fail-fast` | Runs all registered Rust targets; it does not replace the missing full corpus collectors. |
 | A test name containing `run_all` | Does not imply compiler, Lean, textbook, or packaging coverage unless that command lists those targets. |
 
-The explicit dataset gates remain ignored by default:
+The following commands describe memorial dataset collectors. They are not
+currently registered Cargo gates and must not be used as acceptance counts:
 
 - `cargo test --release run_gsm8k_solutions -- --ignored --nocapture`
 - `cargo test --release run_metamathqa_litex_solutions -- --ignored --nocapture`
@@ -34,7 +38,10 @@ The explicit dataset gates remain ignored by default:
 - `cargo test --release run_math500_litex_simple -- --ignored --nocapture`
 - `cargo test --release run_math500_litex_all -- --ignored --nocapture`
 
-Workspace-owned textbook coverage uses `python3 scripts/textbook_gate.py`; the parallel pre-deploy docs/examples/showcases gate uses `python3 .github/scripts/predeploy_gate.py`.
+Workspace-owned textbook tooling is in `scripts/textbook_gate.py`; the
+predeploy entry is `.github/scripts/predeploy_gate.py`. Textbook files use the
+current `-f` entry and checked `run` JSON contract. Its corpus filters still
+need real collectors; a successful scoped gate does not certify this whole entry.
 
 ```text
 collect registered examples and Markdown fences

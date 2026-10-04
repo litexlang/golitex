@@ -135,11 +135,12 @@ pub fn run_import_module(
             }
         };
         let failed = !file_result.run.success;
+        let session_error = file_result.run.session_error.clone().unwrap_or(RunSessionError::FailToImport);
         file_results.push(file_result);
         if failed {
             running.remove(&key);
             return Ok(RunImportModuleOutcome::SessionError(
-                RunSessionError::FailToImport,
+                session_error,
             ));
         }
     }

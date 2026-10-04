@@ -131,3 +131,31 @@ preimages and choice-function facts are outside this publication slice.
 
 Acceptance: `examples/example_small_repairs.lit` and
 `tests/unit/execute/example_small_repairs/tests.rs`.
+
+## Finite lower set from a stored inclusion
+
+Storing `A $subset B` also publishes `$is_finite_set(A)` when the upper
+set's finite certificate is available at the caller's existing permissions,
+capped at KnownSpecialProperty. The inference keeps the inclusion FactId,
+upper finite proof and derived storage result. It does not recurse through
+subset strategies or reset search permissions. Proper inclusion benefits from
+its existing definition expansion. No available finite upper proof means no
+new finite fact; later strategy verification remains available as before.
+
+This forward consequence makes `finite_set_size(A)` well-defined in the same
+quantified scope. Verification alone still does not store truth. Tracer:
+`examples/infer/atomic/subset_finite_upper_bound.lit`; focused tests:
+`tests/unit/execute/finite_set_cardinality_rules/tests.rs`.
+
+## Positive values from strict lower bounds
+
+Storing `b < x` or `x > b` publishes `0 < x` when `0 <= b` is available
+under the inherited permissions capped at KnownSpecialProperty. Numeric
+closed bounds and previously stored nonnegative bounds use the same rule.
+The result retains the strict source FactId, the checked bound proof and the
+derived storage result. This does not search arbitrary order chains. A zero
+bound is already a positivity seed and is skipped to avoid re-inference.
+Negative or unknown bounds and nonstrict zero bounds do not trigger it.
+
+Tracer: `examples/infer/atomic/strict_lower_bound_positive.lit`;
+focused tests: `tests/unit/execute/native_scalar_codomain/mod.rs`.

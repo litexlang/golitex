@@ -31,9 +31,11 @@ from predeploy_gate import (
     Textbook,
     TextbookFile,
     cargo_test_command,
+    cargo_test_counts,
     collect_textbook_files,
     file_result_from_completed,
     run_gates,
+    run_cargo_test,
     run_textbook_file,
     textbook_file_command,
 )
@@ -96,7 +98,11 @@ class PredeployGateTest(unittest.TestCase):
                 "run_showcases": 0.03,
             }
             time.sleep(delays[test_name])
-            return subprocess.CompletedProcess(command, 0, stdout=f"{test_name} passed\n")
+            return subprocess.CompletedProcess(command, 0, stdout=(
+                "running 1 test\n" + f"test {test_name} ... ok\n" +
+                "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; "
+                "0 filtered out; finished in 0.00s\n"
+            ))
 
         results = run_gates(Path("/repo"), runner=fake_runner)
 
@@ -106,6 +112,78 @@ class PredeployGateTest(unittest.TestCase):
         )
         self.assertTrue(all(result.returncode == 0 for result in results))
         self.assertTrue(all(result.wall_seconds > 0 for result in results))
+        self.assertTrue(all(result.status == "success" for result in results))
+        self.assertTrue(all(result.tests_executed == 1 for result in results))
+
+    def test_cargo_gate_rejects_zero_execution_on_both_process_paths(self) -> None:
+        output = (
+            "running 0 tests\n"
+            "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; "
+            "800 filtered out; finished in 0.00s\n"
+        )
+
+        def runner(command: Sequence[str], **_: object) -> subprocess.CompletedProcess[str]:
+            return subprocess.CompletedProcess(command, 0, stdout=output)
+
+        class Controller:
+            def run(self, *_: object, **__: object) -> ProcessOutcome:
+                return ProcessOutcome("completed", 0, output, "", 0.01)
+
+        for controller in [None, Controller()]:
+            with self.subTest(controller=controller):
+                result = run_cargo_test(Path("/repo"), "examples", "missing_filter",
+                                        runner, controller)  # type: ignore[arg-type]
+                self.assertEqual(result.status, "failed")
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(result.tests_selected, 0)
+                self.assertEqual(result.tests_executed, 0)
+                self.assertIn("zero tests executed", result.output)
+                self.assertIn("missing_filter", result.output)
+
+    def test_cargo_counts_accept_real_execution_among_empty_targets(self) -> None:
+        empty = ("running 0 tests\n"
+                 "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; "
+                 "40 filtered out; finished in 0.00s\n")
+        nonempty = ("running 2 tests\ntest first ... ok\ntest second ... ok\n"
+                    "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; "
+                    "3 filtered out; finished in 0.01s\n")
+        self.assertEqual(cargo_test_counts(empty + nonempty + empty), (2, 2, None))
+
+    def test_cargo_counts_reject_missing_inconsistent_or_failed_evidence(self) -> None:
+        valid = ("running 1 test\n"
+                 "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; "
+                 "0 filtered out; finished in 0.00s\n")
+        invalid = [
+            "", "test output\n", "running 1 test\n",
+            valid + "running 1 test\n",
+            valid.replace("running 1 test", "running 2 tests"),
+            valid.split("\n", 1)[1],
+            valid.replace("ok. 1 passed; 0 failed", "FAILED. 0 passed; 1 failed"),
+            valid.replace("1 passed; 0 failed; 0 ignored", "0 passed; 0 failed; 1 ignored"),
+            valid.replace("1 passed; 0 failed; 0 ignored; 0 measured", "0 passed; 0 failed; 0 ignored; 1 measured"),
+            valid.replace("0 filtered out", "invalid summary"),
+            "running 1 test\n" + valid,
+        ]
+        for output in invalid:
+            with self.subTest(output=output):
+                self.assertIsNotNone(cargo_test_counts(output)[2])
+
+    def test_cargo_controller_failure_and_cancellation_cannot_be_success(self) -> None:
+        valid = ("running 1 test\n"
+                 "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; "
+                 "0 filtered out; finished in 0.00s\n")
+        for status, code in [("completed", 1), ("cancelled", -15), ("not_started", None)]:
+            class Controller:
+                timeout_seconds = 1.0
+
+                def run(self, *_: object, **__: object) -> ProcessOutcome:
+                    return ProcessOutcome(status, code, valid, "", 0.01)
+
+            with self.subTest(status=status):
+                result = run_cargo_test(Path("/repo"), "examples", "fixture",
+                                        controller=Controller())  # type: ignore[arg-type]
+                self.assertNotEqual(result.status, "success")
+                self.assertIsNone(result.tests_executed)
 
     def test_failure_is_preserved_per_gate(self) -> None:
         def fake_runner(command: Sequence[str], **_: object) -> subprocess.CompletedProcess[str]:
@@ -211,43 +289,22 @@ class PredeployGateTest(unittest.TestCase):
             1,
             1,
         )
-        successful_prefix = json.dumps(
-            {
-                "result": "success",
-                "line": 1,
-                "statement": "1 = 1",
-            }
-        )
-        error_trace = json.dumps(
-            {
-                "kind": "verify_error",
-                "line": 42,
-                "path": "/repo/scripts/Book/textbook/chapter.lit",
-                "message": "verification failed",
-                "statement": "1 = 0",
-                "previous_error": {"failed_goal": "1 = 0"},
-            }
-        )
-        envelope = json.dumps(
-            {
-                "kind": "artifact",
-                "ok": False,
-                "artifact": "result_graph",
-                "format": "json",
-                "target": "file",
-                "path": "/repo/scripts/Book/textbook/chapter.lit",
-                "output_path": None,
-                "content": None,
-                "error": {
-                    "graph": "litex-result-graph",
-                    "graph_version": "3",
-                    "result": "error",
-                    "ok": False,
-                    "target": {"kind": "file"},
-                    "error": successful_prefix + "\n\n" + error_trace,
+        envelope = json.dumps({
+            "kind": "run", "success": False, "target": "file",
+            "path": "/repo/scripts/Book/textbook/chapter.lit",
+            "statement_results": [{
+                "success": True, "statement": "1 = 1",
+            }, {
+                "success": False, "statement": "1 = 0",
+                "why_failed": {
+                    "line": 42,
+                    "path": "/repo/scripts/Book/textbook/chapter.lit",
+                    "message": "verification failed",
+                    "failed_goal": "1 = 0",
                 },
-            }
-        )
+            }],
+            "session_error": None,
+        })
 
         result = file_result_from_completed(
             Path("/repo"),
@@ -356,16 +413,43 @@ class PredeployGateTest(unittest.TestCase):
             self.assertEqual(result.line, 3)
             self.assertEqual(result.statement, "x = x")
 
-    def test_textbook_command_uses_result_graph(self) -> None:
+    def test_textbook_command_uses_current_file_entry(self) -> None:
         self.assertEqual(
             textbook_file_command(Path("/repo/litex"), Path("/repo/book/ch1.lit")),
             [
                 "/repo/litex",
-                "-graph",
                 "-f",
                 "/repo/book/ch1.lit",
             ],
         )
+
+    def test_run_contract_rejects_inconsistent_or_old_payloads(self) -> None:
+        valid = {"kind": "run", "target": "file", "path": "/repo/ch.lit",
+                 "success": True, "statement_results": [{"success": True}],
+                 "session_error": None}
+        self.assertIsNone(PREDEPLOY_GATE.run_file_contract_error(valid, 0))
+        for change, code in [
+            ({"kind": "artifact"}, 0), ({"target": "eval"}, 0),
+            ({"path": None}, 0), ({"success": "true"}, 0), ({}, -9),
+            ({"statement_results": [{"success": False}]}, 0),
+            ({"statement_results": [{}]}, 0), ({"statement_results": None}, 0),
+            ({"session_error": "internal_bug: Litex internal bug"}, 0),
+            ({"session_error": {}}, 0), ({"success": False}, 1),
+        ]:
+            with self.subTest(change=change, code=code):
+                self.assertIsNotNone(PREDEPLOY_GATE.run_file_contract_error({**valid, **change}, code))
+
+    def test_internal_bug_is_a_failed_file_with_the_original_message(self) -> None:
+        file = TextbookFile(Textbook("Book", Path("scripts/Book/textbook")),
+                            Path("/repo/ch.lit"), 1, 1)
+        message = "internal_bug: Litex internal bug: inferred fact failed WD"
+        envelope = {"kind": "run", "target": "file", "path": "/repo/ch.lit",
+                    "success": False, "statement_results": [], "session_error": message}
+        result = file_result_from_completed(Path("/repo"), file,
+                  subprocess.CompletedProcess([], 1, stdout=json.dumps(envelope), stderr=""), 0.1)
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(result.message, message)
+        self.assertEqual(result.source_path, "ch.lit")
 
 
 if __name__ == "__main__":

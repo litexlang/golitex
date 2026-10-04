@@ -34,7 +34,9 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 *Begun in 2024, Litex asks a question: can formal proofs stay close to ordinary mathematics, be easy to write and read, and still be rigorously checked? It hopes to become a Python for formal languages, lowering the barrier to checkable mathematics so that more people can gradually become formalization experts.*
 
-Moving from understanding a proof to writing a checkable one often requires an author to find, name, and apply the grounds for every step. Litex lets authors choose definitions, constructions, and intermediate conclusions; the language checks supported local steps against current knowledge, explains why it accepts them or where it stops, and makes verified facts available to later reasoning. It organizes this process around sets, elements, functions, and relations, with explicit feedback that people and AI can use together.
+Moving from understanding a proof to writing a checkable one often requires an author to find, name, and apply the grounds for every step. Litex makes the selection, combination, and invocation of many common proof operations part of the default verification of ordinary mathematical facts. Authors choose definitions, constructions, and intermediate conclusions; the language uses the shapes of objects and facts to find local grounds in current knowledge, builtin rules, and bounded combinations of verification steps, then checks their conditions.
+
+This saves authors many routine tool operations: state the fact that should hold next, let the language check it and explain why it accepts it or where it stops, and make verified facts available to later reasoning. Litex organizes this process around sets, elements, functions, and relations, with explicit feedback that people and AI can use together. Authors still choose the mathematical route; the language implementation handles candidate classification, premise checking, and search control. [Section 1.1](#fact-oriented-interface) illustrates this division of work and why it requires a substantial verification implementation.
 
 The next step on this path is Lean. The Litex-to-Lean compiler is not yet integrated into the current build and is expected to be completed by the end of 2026. Its goal is to let Lean independently recheck supported Litex proofs, connecting familiar mathematical expression to the existing formalization ecosystem.
 
@@ -56,21 +58,39 @@ For example, I can state an arithmetic fact directly:
 1 + 1 = 2
 ```
 
-The following statement record comes from the current CLI output. `proof_method` explains the grounds, while `stores` records facts that can be used later:
+The following statement records show the current CLI output in English and Chinese side by side; Litex currently supports 10 output languages. `proof_method` (`证明方法` in Chinese) explains the grounds, while `stores` (`存储` in Chinese) records facts that can be used later:
 
-```json
-{
+<table>
+<thead>
+<tr><th>English (<code>-lang en</code>)</th><th>Chinese (<code>-lang zh</code>)</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><pre><code class="language-json">{
   "success": true,
   "statement": "1 + 1 = 2",
   "proof_method": {
-    "type": "builtin_rule",
-    "rule_name": "Calculation",
-    "message": "Both sides evaluate to the same number"
+    "type": "by_closed_calculation",
+    "rule_name": "Closed calculation",
+    "message": "Exact evaluation of closed expressions without proof search"
   },
   "stores": ["1 + 1 = 2"],
   "infers": []
-}
-```
+}</code></pre></td>
+<td><pre><code class="language-json">{
+  "成功": true,
+  "语句": "1 + 1 = 2",
+  "证明方法": {
+    "类型": "封闭计算",
+    "规则名": "封闭计算",
+    "说明": "精确计算封闭表达式，不递归搜索证明"
+  },
+  "存储": ["1 + 1 = 2"],
+  "推断": []
+}</code></pre></td>
+</tr>
+</tbody>
+</table>
 
 I can also define oddness and then state a concrete judgment:
 
@@ -98,6 +118,8 @@ The JSON record for `$is_odd(3)` shows that the language checks the fact by unfo
 ```
 
 These records let both people and AI see whether a statement passed, what kind of grounds the language found, and what the step left behind.
+
+**Multilingual feedback.** The CLI can present this JSON feedback in multiple languages. The same source can be checked with `litex -lang zh -e '1 + 1 = 2'` for Chinese field names and explanations, or with `-lang fr` for French. Thanks in part to AI-assisted translation, this multilingual explanatory copy became feasible; choosing an output language does not change the Litex source or its verification. The current output locales are `en`, `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, and `vi`.
 
 **2. I can start from a mathematical world I already know.**
 
@@ -214,7 +236,7 @@ The following chapters develop these five threads in order, then discuss the lan
 
 ### 1.1 Fact-Oriented: Writing “What Holds” into the Source
 
-**Fact-centered**: authors write the facts that should hold next. The verifier checks well-definedness and searches builtin rules, known facts, universal facts, and definitions for local grounds. Authors still choose key constructions, witnesses, and estimates; default local checking reduces the need to name a tactic or lemma for each routine step.
+**Fact-centered**: ordinary fact statements automatically trigger local verification. Authors write the facts that should hold next. The verifier checks well-definedness and searches builtin rules and strategies, known facts, universal facts, and definitions for local grounds. The default workflow handles tool selection and combination for many routine steps; authors still choose key constructions, witnesses, and estimates.
 
 #### How Litex Helps Users Search Verification Routes by Fact Shape
 
@@ -224,7 +246,7 @@ Common matching targets fall into four kinds:
 
 | What is matched | What the kernel does | Minimal example |
 | --- | --- | --- |
-| **Builtin rules** | Filter rules by predicate/argument shape, then check premises | Given `x >= 0`, `y >= 0`, match “sum of nonnegatives is nonnegative,” get `x + y >= 0` |
+| **Builtin rules and strategies** | Filter paths by predicate/argument shape and combine premise checks within their permissions | Given `x >= 0`, `y >= 0`, match “sum of nonnegatives is nonnegative,” get `x + y >= 0` |
 | **Known concrete facts** | Find a same-shaped fact in context; align spelling by equality if needed | Given `$is_positive(a)` and `a = b`, match and rewrite to `$is_positive(b)` |
 | **Known `forall`** | Match the goal shape to a universal fact, instantiate, check premises | Given `forall x R: x > 1 => $is_positive(x)` and `b > 1`, get `$is_positive(b)` |
 | **Definitions** (`def` / `prop`) | Match a named predicate with its definition body by shape | Given `a > 0`, match `prop is_positive`, get `$is_positive(a)` |
@@ -266,7 +288,77 @@ have a R:
 $is_positive(a)
 ```
 
+The first part's `0 <= x + y` does not name a verification tool. Litex selects a candidate path from the addition and order shapes, then checks premises such as `0 <= x` and `0 <= y` in the current context. Shape matching finds a candidate; the required premises must also check before the conclusion can be accepted. The other three parts show the same default workflow reusing known facts, instantiating universal facts, and using definitions.
+
+| The author's mathematical work | Litex's routine verification work |
+| --- | --- |
+| Choose definitions, construct objects, and state conditions | Check objects, parameter domains, and well-definedness conditions |
+| State the fact to establish at this step | Retrieve known grounds, rules, and builtin strategies by fact shape |
+| Supply intermediate equalities, witnesses, or local derivations | Check each step's premises, record results, and reuse verified facts |
+| Choose the mathematical route of the proof | Control the permissions and rewrite scope of default search |
+
+Litex's design characteristic is to organize these capabilities into one everyday workflow: classify mathematical objects and facts, let ordinary facts trigger local verification, and extend available knowledge when they pass. Within the supported scope, authors can write mathematical steps directly while the language implementation handles many of their mechanical verification operations.
+
 The current implementation grades lookup paths through `VerifyState`: direct evidence, known object properties, builtin rules, strategies, definitions, and universal facts have different permissions. When checking a rule's premises, the verifier passes down only lower lookup permissions; rewrites through definitions or universal facts also have explicit boundaries within a branch. Adding a rule thus requires specifying what it may use as premises and how to prevent it from calling itself repeatedly. The author still writes only the fact to establish at this step.
+
+<details>
+<summary><strong>Which steps does Litex check automatically, and which should the author write?</strong></summary>
+
+Authors choose definitions, constructions and key intermediate results; Litex checks supported local steps against current knowledge. The boundary depends on the work a step requires: following a fixed structure to check available grounds, or choosing a proof route that has not yet been supplied. It cannot be drawn simply by counting automatic steps.
+
+**Check types through a uniform structure.** This expression contains several layers of addition, but the author need not supply a separate type fact for each layer:
+
+```litex
+have n N
+((n+1)+1)+1 $in N
+```
+
+Litex follows the supported addition structure using closure of the natural numbers. This does not mean that every operation preserves the natural-number carrier; domains and operation conditions still have to hold.
+
+**Supply an intermediate equality, then reuse the result.** The author can expose the route from a definition to a value:
+
+```litex
+have x R = 2
+have y R = x + 1
+y = x + 1 = 3
+y^2 = 9
+```
+
+The third line specifies unfolding `y` and then calculating `x+1`. Once the chain checks, its endpoint equality `y=3` is available to later steps; the fourth line need not repeat that derivation.
+
+**Supply a recursive unfolding.** For a function they define, authors can specify the recursive equation and the established value to substitute:
+
+```litex
+have fn f(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: f(n - 1) + 1
+f(0) = 0
+f(1 - 1) = f(0) = 0
+f(1) = f(1 - 1) + 1 = 0 + 1 = 1
+```
+
+Here the value of `f` comes from the author's definition. The final chain uses the recursive equation, the initial value and arithmetic in order. With the same definition and `f(0)=0`, the bare assertion `f(1)=1` did not close automatically in the current acceptance run. A checkable explicit route does not require default search to discover every combination of recursive unfoldings.
+
+Search can be made stronger, but more search branches also add runtime and maintenance costs. Litex aims to automate mechanical reasoning with clear structural, evidence and cost boundaries, while authors write meaningful mathematical steps. Repeated mechanical typing or repeated use of existing evidence should prompt an audit for missing shared support; every failure should not be assigned to the author. The effects of this tradeoff still need measurement on real tasks.
+
+</details>
+
+<a id="automation-implementation"></a>
+
+<details>
+<summary><strong>Why does Litex's verification kernel need so much implementation?</strong></summary>
+
+The operations authors omit still have to be performed. To check `0 <= x + y` directly, the system must recognize the goal's shape, select a candidate path, check the objects and both nonnegative premises, record the grounds, and make the conclusion reusable. These responsibilities move into the language implementation.
+
+**Classification and combination.** Litex implements many common mathematical rules and bounded proof strategies that combine supported checks. Different objects, operations, and relations have different conditions. Classifying paths by mathematical category helps narrow candidates and gives each combination explicit premises and calling boundaries. This document calls them rules and proof strategies; they need not correspond to tactics with the same names in other proof assistants.
+
+**Premises and evidence.** Alongside matching a goal, the system must check the sets its arguments belong to, function-call conditions, and required facts, then preserve the result and give feedback. These checks let authors omit routine operations, while requiring implementation for each verification path. The typing, equality-chain, and recursive examples above illustrate the division of work for different paths.
+
+**Search and maintenance costs.** Searching for further intermediate conclusions, rewrites, or recursive unfoldings adds branches and combinations to handle. The default workflow therefore has explicit permissions: it seeks grounds for a supplied local step, with authors supplying mathematical routes at the supported boundary. Repeated mechanical bridges should still prompt an audit for missing shared support. Every additional path needs review of its mathematical conditions, evidence, and cost; code size cannot substitute for that review.
+
+Here, “verification kernel” means the project's verification and execution implementation, including grounds search, builtin mathematical rules, well-definedness checks, fact storage, and feedback. The [Lean Language Reference](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/) separates elaboration and tactic execution from the trusted kernel that checks core proof terms; code-size comparisons need to distinguish these responsibilities. Current verification relies on the correctness of Litex's verifier and its builtin and inference rules. [Section 5](#compatibility) explains the goal and current status of independent Lean rechecking.
+
+</details>
 
 <details>
 <summary><strong>Why can Litex maintain a fact table? Could Lean be extended to do the same?</strong></summary>
@@ -289,7 +381,7 @@ This table compares typical workflows, not every way either language can be writ
 <details>
 <summary><strong>Example 1: how Lean and Litex verify “the sum of two nonnegative reals is still nonnegative”</strong></summary>
 
-**Builtin rules.** Litex splits the goal into a predicate and an argument shape, filters candidate rules accordingly, then checks that types, premises, and conditions all hold.
+**Builtin rules and strategies.** Litex splits the goal into a predicate and an argument shape, filters candidate paths accordingly, then checks that types, premises, and conditions all hold.
 
 The mathematical fact to prove is: the sum of two nonnegative reals is still nonnegative.
 
@@ -614,6 +706,8 @@ forall s, t, u set:
     =>:
         intersect(s, u) $subset intersect(t, u)
 ```
+
+**Symbolic input.** The same conclusion can also be typed as `s ∩ u ⊆ t ∩ u`. Litex accepts `∩` and `⊆` as input and normalizes them to `intersect` and `$subset`. Most examples here use the letter-based spelling because it is easier to type on an ordinary keyboard.
 
 As one can see, this writing is very close to the set-theoretic statements we meet in everyday mathematics.
 
@@ -1001,9 +1095,9 @@ If the theorem eventually passes verification and human review, the convergence 
 
 ## 5. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)
 
-**Lean rechecking**: Litex currently verifies and gives feedback on its own; independent rechecking is the next-stage goal. For supported proofs, the handoff must satisfy three conditions: translation preserves the original proposition, generated proofs contain no holes, and Lean's kernel actually accepts the result. Only then can it reduce reliance on Litex's verifier and connect further to Mathlib. Earlier experimental artifacts remain in `lean/`; the current build has no compiler entrypoint.
+**Lean rechecking**: Litex currently verifies and gives feedback on its own; independent rechecking is the next-stage goal. For supported proofs, the handoff must satisfy three conditions: translation preserves the original proposition, generated proofs contain no holes, and Lean's kernel actually accepts the result. Only then can it reduce reliance on Litex's verifier and connect further to Mathlib. Earlier compiler experiments remain available, but the current build has no compiler entrypoint.
 
-> **Current build:** `Cargo.toml` registers the `litex` binary, and `src/lib.rs` has no compiler module. The retained `lean/stmt_result_to_lean_compiler.sh` wrapper names a missing Cargo binary. The example below records an earlier experiment; it has not been regenerated or Lean-checked against current `src/`.
+> **Current build:** The `litex` binary has no integrated compiler command. A wrapper retained from the earlier experiment targets a binary absent from this build. The example below records that experiment; it has not been regenerated by the current build or rechecked with the current Lean toolchain.
 
 <details>
 <summary><strong>Example: how Litex code compiles to Lean</strong></summary>
@@ -1312,15 +1406,15 @@ Note: the current repository retains checked results, experiments, and unfinishe
 
 ### Native theorem interfaces and diagnostics (2026-10-02)
 
-The 25 reserved legacy theorem names now have native contracts in
-`src/execute/execute_by_stmt/builtin_thm/`. The theorem-release path checks
+The 25 reserved legacy theorem names now have native contracts in the current
+verifier. The theorem-release path checks
 requirements and conclusion well-definedness before committing conclusions to
 the surrounding context, and reports the actual
 failed stage and premise. Complex arithmetic containing `i` is handled by
 calculation. Indexed constructions require a nonempty index set. These changes
 preserve the AST and Runtime/ExecEnv contracts; explicit equality chains remain
-the authoring route for definition endpoints. See the Manual's builtin table
-for supported argument shapes and the axiom-of-choice provenance.
+the authoring route for definition endpoints. Argument shapes are theorem-specific;
+choice-backed product nonemptiness identifies its axiom-of-choice provenance.
 
 <a id="overview-readers"></a>
 
@@ -1498,7 +1592,7 @@ Mathematicians are well placed to judge whether a new form of writing is faithfu
 
 Programmers can view Litex as a language that explicitly distinguishes mathematical objects, facts, and statements that change the context. Lean tactic proofs often use commands to change goal state; Litex source normally states facts to be accepted, while the verifier searches for local grounds. It still checks well-definedness rather than deferring mathematical constraints to runtime.
 
-The Python analogy concerns the entry experience: the same Litex object can be proved to belong to multiple sets, and the verifier checks the membership and condition facts needed for a function call. This is not a claim that Litex implements a programming-language dynamic type system, nor that Lean's general type system is equivalent to assembly.
+The Python analogy can be understood through the division of operations: the language implementation handles many everyday operations, while authors focus on the mathematics they want to express. In Litex, this includes selecting local verification paths for ordinary facts, checking premises, and reusing results. The same object can also be proved to belong to multiple sets, with the verifier checking the membership and condition facts needed for function calls. This entry-experience analogy does not equate Litex with programming-language dynamic typing or Lean's general type system with assembly.
 
 ```text
 Lean surface:  terms / types   (objects, propositions, and proofs use terms and types)
@@ -1512,7 +1606,7 @@ Lean (writing math):  strict typing feel  ≈ static
 Litex:                many-set membership ≈ dynamic (Python-like)
 ```
 
-Fact and rule tables transfer some premise retrieval from the author to the language. [Section 1](#fact-oriented) explains the boundaries of that default search path. The engineering cost is that each supported route must handle premises, results, and failure feedback, not merely remove a few tactic names.
+Fact and rule tables transfer some grounds retrieval from the author to the language. [Section 1](#fact-oriented) explains the boundaries of that default search path, and the [division of verification responsibilities](#automation-implementation) explains the engineering cost. Authors can omit many operations because each supported path handles premises, results, and failure feedback in the implementation.
 
 There is a second experimental compilation route that programmers often care about: once a computational fragment is checked in Litex, Litex can try to emit runnable Python or C from it (Section 6.1)—again experimental, and narrow, not a full language backend.
 
@@ -1769,7 +1863,6 @@ binding-aware substitution, recursive exact evaluation, then accumulation.
 Each evaluation shares a 1024-term allowance across nested aggregates and
 checks integer endpoint overflow. Separate symbolic rules retain their domain,
 pointwise or partition premises. Detailed results expose the term calculations;
-`eval` displays a value without publishing a fact. The
-[aggregate tracer](../examples/proof_nodes/equal/by_builtin_rule/aggregate_calculation.lit)
-and [symbolic tracer](../examples/proof_nodes/equal/by_builtin_rule/aggregate_identities.lit)
-exercise these paths. These verifier paths do not establish Lean export support.
+`eval` displays the exact value and publishes the checked source-to-result
+equality; algorithm trace steps cite their defining equations. These verifier
+paths do not establish Lean export support.

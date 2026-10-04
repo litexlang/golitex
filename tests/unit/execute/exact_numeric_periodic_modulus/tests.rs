@@ -62,7 +62,7 @@ fn exact_signed_integer_powers_and_eval() {
     assert!(result.success);
     let normal = emit_run_normal(&result, &runtime, "eval", None);
     assert!(
-        normal.contains("1 / 3") && normal.matches("\"stores\": []").count() == 2,
+        normal.contains("3 ^ -1 = 1 / 3") && normal.contains("C_abs(3 - 4 * i) = 5"),
         "{normal}"
     );
 }
@@ -226,10 +226,10 @@ fn new_rule_normal_output_is_bilingual() {
         ),
         (
             "C_abs(3+4*i)=5",
-            "Exact numeric complex modulus",
-            "数字复数模长精确计算",
+            "Closed calculation",
+            "封闭计算",
         ),
-        ("3^(-2)=1/9", "Exact rational calculation", "精确有理数计算"),
+        ("3^(-2)=1/9", "Closed calculation", "封闭计算"),
         ("finite_set_max({1/3,1/2})=1/2", "Exact finite-set maximum", "有限集合最大值精确选取"),
         ("pi/4<pi/2", "Exact pi coefficient order", "pi 系数精确比较"),
         ("e>1", "Euler constant exceeds one", "自然常数 e 大于一"),
@@ -301,9 +301,12 @@ fn new_leaves_inherit_search_ceiling_and_do_not_store_search_facts() {
             "successful search is read-only: {source}"
         );
         let state = state.capped_at(VerifyStateLevel::KnownSpecialProperty);
-        assert!(
-            runtime.verify_fact(&fact, state).unwrap().is_failed(),
-            "disabled builtin: {source}"
+        let calculated = matches!(source,
+            "C_abs(3-4*i)=5" | "3^(-2)=1/9" | "1/3<1/2"
+        );
+        assert_eq!(
+            runtime.verify_fact(&fact, state).unwrap().is_failed(), !calculated,
+            "closed calculation remains Direct; symbolic builtin is capped: {source}"
         );
         assert_eq!(
             before,
@@ -387,7 +390,9 @@ fn logarithm_algebra_for_positive_nonunit_bases() {
         "forall b R:\n    b>0\n    =>:\n        log(b,b)=1",
     ] { check(source, false); }
     let json = check("0 $in R\n1/2 $in R\n1/2>0\n1/2!=1\nlog(1/2,(1/2)^(-3))=-3", true);
-    assert!(json.contains("LogOfPowerSameBase") && json.contains("proof_of_requirement_facts"), "{json}");
+    assert!(json.contains("by_closed_calculation") && json.contains("\"left_normal\": \"-3\""), "{json}");
+    let symbolic = check("0 $in R\n1 $in R\nforall b R:\n    0 < b\n    b != 1\n    =>:\n        log(b, b^(-3)) = -3", true);
+    assert!(symbolic.contains("LogOfPowerSameBase") && symbolic.contains("proof_of_requirement_facts"), "{symbolic}");
     let json = check("0 $in R\ne $in R\ne>1\ne!=1\ne>0\nlog(e,e)=1", true);
     assert!(json.contains("NativeEulerGreaterOne") && json.contains("LogBaseSelf"), "{json}");
 }

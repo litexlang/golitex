@@ -642,7 +642,12 @@ fn project_command(c: &ExecCommandStmtResult, runtime: &Runtime) -> JsonValue {
     match c {
         ExecCommandStmtResult::Eval(r) => match r {
             ExecEvalStmtResult::Success(s) => {
-                let mut value = success_plain(runtime, s.statement.readable_string(), "eval");
+                let mut value = success_from_store(
+                    runtime,
+                    s.statement.readable_string(),
+                    "eval",
+                    &s.store_and_infer_result,
+                );
                 if let JsonValue::Object(fields) = &mut value {
                     fields.insert(
                         super::json_keys::localize_key(
@@ -661,6 +666,18 @@ fn project_command(c: &ExecCommandStmtResult, runtime: &Runtime) -> JsonValue {
                 "eval …",
                 "eval",
                 super::project_detailed::project_verify_obj_wd(failed_wd, runtime),
+            ),
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::AlgorithmEquation(proof)) => failed_with_details(
+                runtime,
+                "eval …",
+                "eval",
+                super::project_detailed::project_verify_fact(proof, runtime),
+            ),
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::EvaluatedEqualityWellDefined(wd)) => failed_with_details(
+                runtime,
+                "eval …",
+                "eval",
+                super::project_detailed::project_verify_equal_wd(wd, runtime),
             ),
             ExecEvalStmtResult::Failed(
                 crate::execute::ExecEvalStmtFailed::UnsupportedExpression,

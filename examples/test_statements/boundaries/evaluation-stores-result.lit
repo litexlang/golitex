@@ -1,0 +1,9 @@
+# Boundary: evaluation-stores-result
+# Owner: EvalStmt
+# A checked algorithm aggregate publishes its exact equality for reuse.
+
+algo boundary_eval_flag(x R) R by cases:
+    case x=0:0
+    case x!=0:1
+eval sum(0,3,boundary_eval_flag)
+sum(0,3,boundary_eval_flag)=3

@@ -33,17 +33,22 @@ chosen_struct.first = 1
 # chosen.first = 1
 
 # A `let` may also name a callable field reached through a nested struct. The
-# verifier derives the retained `(x, y R) -> R` contract from the field-access
-# object's frozen `ScalarOps` view; `scalar_add` is still only a transparent
-# local abbreviation, not a second function declaration.
+# proof opens the inner ScalarOps layer to publish its callable field carrier.
+# `scalar_add` is still a transparent local abbreviation, not a second function
+# declaration; it can then reuse the checked `(x, y R) -> R` contract.
+# The fixture uses the current at-least-two-field struct interface.
+# Its extra multiplication/dimension fields do not supply any alias equality.
 struct ScalarOps:
     add fn(x, y R) R
+    mul fn(x, y R) R
 
 struct Space:
     scalars &ScalarOps
+    dimension N
 
 thm callable_struct_field_alias:
     ? forall space &Space, x, y R:
         space.scalars.add(x, y) = space.scalars.add(x, y)
+    release struct def space.scalars
     let scalar_add = space.scalars.add
     scalar_add(x, y) = space.scalars.add(x, y)

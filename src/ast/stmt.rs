@@ -906,13 +906,13 @@ pub struct SketchStmt {
 // Non-proof session commands.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CommandStmt {
-    // Evaluate an object for display (no new proof fact). Example: `eval 1 + 1`.
+    // Evaluate exactly and publish expr=result. Example: `eval 1 + 1` stores 1+1=2.
     EvalStmt(EvalStmt),
 }
 
-// What: evaluate an object for display (no new proof fact).
+// What: evaluate an object exactly and publish its checked result equality.
 // Surface: `eval expr`
-// Stores: evaluation output only.
+// Stores: expr = evaluated_object, with computation and WD evidence.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EvalStmt {
     pub obj_to_eval: Obj,

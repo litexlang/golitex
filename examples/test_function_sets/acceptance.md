@@ -81,8 +81,10 @@ Its diagnostic now identifies `body_have_equal` → `membership` →
 transactions and also check parameter/guard WD, nonempty-set failure, function
 body `x != 0`, invalid closure tuple membership, nested existential `0 != 0`,
 Chinese field keys, unpublished failed definitions and a later valid template.
-Parsing still reserves a failed declaration's name; recovery uses a fresh
-name, rather than assuming that parser-name reservation rolls back. Successful
+The lower-level `parse`/`exec_stmt` test helper reserves declaration names;
+its recovery test uses a fresh name. This helper bypasses the production
+`run_litex_code` parse-name transaction, so its reservation must not be
+reported as a public CLI retry limitation. Successful
 template projections retain their existing shape.
 
 ## Old example
@@ -102,7 +104,8 @@ $is_set(\maps<R>)
 N27 preserves the exact obsolete declaration as a parser rejection. The Obj
 P01–P06 inventory and its three adjacent negative controls remain covered.
 This does not introduce dependent-return function signatures. EX01's separate
-`dependent_codomain.lit` migration is outside this cleanup and remains open.
+`dependent_codomain.lit` migration was outside this cleanup. It was subsequently
+accepted independently in [Round14](../../plan/迁移的plan/experience/problem_notes/example_authoring_round14_2026-10-04.md); EX01 is now closed.
 
 ## Current executable receipts
 
@@ -129,6 +132,25 @@ the intended stage with their exact failed goals. These observations are kept
 in the cleanup receipt; earlier receipts below remain dated historical
 snapshots rather than current assertions. No full-repository, textbook or
 Lean acceptance is claimed.
+
+## Summary follow-up and method correction
+
+The learned authoring order is legal object/view → membership/signature →
+concrete value equation → checked evaluation. A general function-interface
+lemma is more reusable than an exact captured-closure instance; explicit
+intermediate values select the intended proof route. Fixed signatures can be
+paired with separate exact-output properties. Negative values, guards and
+carriers must stay rejected after any authoring or numeric improvement.
+
+A lower-level test helper is not the complete public pipeline. The helper's
+name-reservation failure does not establish a CLI bug: `run_litex_code` owns
+parse-name rollback. Separately, the accepted `power_set(1)` test draft leaves
+an input-domain contract question to audit; no soundness failure is claimed.
+The latest summary build hit four concurrent eval/JSON errors, so the proposed
+fresh CLI observations were not executed. See
+[summary_observations_2026-10-04.json](summary_observations_2026-10-04.json)
+and the retained [todo.md](todo.md). This later build state does not rewrite
+or invalidate the earlier dated, stable acceptance receipts.
 
 ---
 

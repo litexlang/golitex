@@ -102,7 +102,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
                     return Ok(fail_to_import_result(
                         &runtime,
                         path,
-                        RunSessionError::FailToImport,
+                        file_result.run.session_error.unwrap_or(RunSessionError::FailToImport),
                     ));
                 }
                 if is_target {

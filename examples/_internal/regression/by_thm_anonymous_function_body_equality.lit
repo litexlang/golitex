@@ -1,3 +1,8 @@
+thm apply_equal_argument:
+    ? forall X,Y set,F fn(x X)Y,a,b X:
+        a = b
+        =>:
+            F(a) = F(b)
 # Migration blocker B11: see plan/迁移的plan/和example有关.md.
 # The first equality uses checked fn_extension. Opaque integral assumptions remain unproved.
 # A strict isolated counterpart lives in proof_nodes/equal/by_builtin_rule/anonymous_function_beta_extension.lit.
@@ -44,12 +49,21 @@ thm probe_subtraction:
         $is_probe_integrable(g)
         =>:
             probe_integral(fn(x R) R {f(x) - g(x)}) = probe_integral(f) - probe_integral(g)
-    release thm probe_scalar_multiplication(g, -1)
-    $is_probe_integrable(fn(x R) R {-1 * g(x)})
-    probe_integral(fn(x R) R {-1 * g(x)}) = -1 * probe_integral(g)
-    release thm fn_set_member(fn(x R) R {-1 * g(x)}, fn(x R) R)
-    release thm probe_addition(f, fn(x R) R {-1 * g(x)})
-    $is_probe_integrable(fn(x R) R {f(x) + (-1 * g(x))})
-    probe_integral(fn(x R) R {f(x) + (-1 * g(x))}) = probe_integral(f) + probe_integral(fn(x R) R {-1 * g(x)})
-    trust:
-        probe_integral(fn(x R) R {f(x) - g(x)}) = probe_integral(f) - probe_integral(g)
+    have h fn(x R)R = fn(y R)R{-1*g(y)}
+    release thm probe_scalar_multiplication(g,-1)
+    release thm apply_equal_argument(fn(x R)R,R,probe_integral,h,fn(x R)R{-1*g(x)})
+    release thm probe_addition(f,h)
+    by fn_extension:
+        ? fn(x R)R{f(x)-g(x)} = fn(x R)R{f(x)+h(x)}
+        forall z R:
+            h(z) = -1*g(z)
+            fn(x R)R{f(x)-g(x)}(z) = f(z)-g(z)
+            f(z)-g(z) = f(z)+-1*g(z)
+            f(z)+-1*g(z) = f(z)+h(z)
+            f(z)-g(z) = f(z)+h(z)
+            fn(x R)R{f(x)+h(x)}(z) = f(z)+h(z)
+            fn(x R)R{f(x)-g(x)}(z) = fn(x R)R{f(x)+h(x)}(z)
+    release thm apply_equal_argument(fn(x R)R,R,probe_integral,fn(x R)R{f(x)-g(x)},fn(x R)R{f(x)+h(x)})
+    probe_integral(f)+probe_integral(h) = probe_integral(f)+-1*probe_integral(g)
+    probe_integral(f)+-1*probe_integral(g) = probe_integral(f)-probe_integral(g)
+    probe_integral(fn(x R)R{f(x)-g(x)}) = probe_integral(fn(x R)R{f(x)+h(x)}) = probe_integral(f)+probe_integral(h) = probe_integral(f)+-1*probe_integral(g) = probe_integral(f)-probe_integral(g)

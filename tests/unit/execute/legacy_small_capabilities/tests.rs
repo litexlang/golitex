@@ -181,10 +181,11 @@ fn legacy_small_unordered_fold_laws() {
     );
     check("forall f fn(x R)R:\n    $is_finite_set(fn_range(f))", false);
     let evidence = check(
-        "finite_set_reduce({3,1,2},fn(k R) R {k},fn(a,b R) R {a+b},0) = 6",
+        "finite_set_reduce({3,1,2},fn(k R) R {k},fn(a,b R) R {a+b},0) = finite_set_sum({3,1,2},fn(k R) R {k}) = 6",
         true,
     );
-    assert!(evidence.contains("finite_set_reduce") && evidence.contains("operation"));
+    assert!(evidence.contains("FiniteSetReduceAddZeroEqualsSum"));
+    assert!(evidence.contains("AggregateCalculation"));
     check(
         "finite_set_reduce({1,1},fn(k R) R {k},fn(a,b R) R {a+b},0) = 1",
         false,

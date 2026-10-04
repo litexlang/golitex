@@ -526,6 +526,7 @@ ordinary mathematical facts in Litex:
 ```litex
 {1, 2} $in {{}, {1, 2}}
 
+{1, 2} $subset {1, 2, 3}
 {1, 2} $in power_set({1, 2, 3})
 
 forall A, B set, x A:

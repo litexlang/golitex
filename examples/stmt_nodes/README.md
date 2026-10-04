@@ -33,7 +33,7 @@ release_and_expand/  ExpandRange, ReleaseAxiomOfChoice, ReleaseRegularityAxiom,
                ReleaseZornLemma
                (plus release thm/struct/obj live under definition/)
 proof_block/   Claim, Sketch
-command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no proof fact)
+command/       Eval (exact evaluation, checked algorithm equations, result equality storage)
 ```
 
 ## What / how (wired arms)
@@ -43,12 +43,14 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `fact/` | Assert a fact | bare `1 + 1 = 2` |
 | [fact/negative_leading_code.lit](fact/negative_leading_code.lit) | Source starts with a negative number | `-e '-2 < 0'` preserves the complete source operand; `-2 > 0` rejects |
 | `definition/let_obj.lit` | Equality binding | `let a = expr` |
+| [definition/let_template_struct_aliases.lit](definition/let_template_struct_aliases.lit) | Template and nested callable-field aliases | Open the inner carrier with `release struct def space.scalars` before invoking its `let` alias; struct fixtures use at least two fields |
 | `definition/have_obj_*.lit` | Introduce typed objs | `have x R` / `= expr` / `:` body |
 | `definition/parse_scope_transaction.lit` | Correct a previously failed declaration in the same Runtime | failed `have k N = -1`, then active `have k N = 1`; negative boundary in `tests/unit/run/binding_lifecycle/tests.rs` |
 | `definition/obtain_*.lit` | Name exist witnesses | `obtain a from exist …` / `$P` |
 | `definition/have_by_*.lit` | Preimage / Replacement | `have by fn_preimage:` / `replacement_axiom:` |
 | `definition/have_fn_*.lit` | Define named functions | `have fn … =` / `by cases` / `by induc` / `by exist!` |
 | `definition/def_algo.lit` | Algo fn + executable cases | `algo f(x R) R by cases:` … |
+| [command/eval_store_result.lit](command/eval_store_result.lit) | Compute and publish the result equality | `eval sum(0,3,flag)` stores `sum(0,3,flag)=3` for later proof; failure rolls back |
 | `definition/def_prop.lit` | Concrete predicate | `prop P(x A):` body |
 | `definition/def_abstract_prop.lit` | Abstract predicate | `abstract_prop P(x, y)` |
 | [definition/strict_abstract_prop.lit](definition/strict_abstract_prop.lit) | Abstract signature in strict mode | declaration and `P(x) => P(x)` pass; unproved instances and user trust do not |
@@ -149,3 +151,5 @@ the conclusion. Parser migration tracers include
 `by/induction_reuses_goal_parameter.lit`. Wrong arity, unsupported argument
 shape, missing premises, selected-fact failure and transaction rollback are
 covered by `src/execute/execute_by_stmt/builtin_thm/tests.rs`.
+
+The internal [finite-set induction regression](../_internal/regression/finite_set_induction.lit) proves the mathematical principle through ordinary induction on cardinality. Its original empty-set and fresh-insertion inputs are explicit hypotheses; singleton removal and reconstruction provide the checked successor step, followed by the concrete {1,2} replay. It does not reintroduce the removed finite-set induction syntax.

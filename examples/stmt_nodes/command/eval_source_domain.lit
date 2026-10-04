@@ -12,6 +12,7 @@ algo domain_identity(x N) N by cases:
 eval domain_identity(0)
 eval domain_identity(2) + 1
 
-# Boundary: output is display evaluation, not a new proof fact.
+# Boundary: source WD is checked before execution; only a successful exact
+# computation publishes the source/result equality.
 # Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/command/eval_source_domain.lit
 # Tests: execute::statement_boundary_tests::eval_checks_source_domain_before_rewrite_or_execution.

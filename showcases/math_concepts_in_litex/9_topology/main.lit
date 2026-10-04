@@ -176,6 +176,8 @@ thm continuous_composition:
         by extension:
             ? literal_preimage = direct_preimage
         literal_preimage $in open_sets_A
+    by def $TopologicalMapSetting(A, open_sets_A, CarrierC, open_sets_C, fn(x A) CarrierC {g(f(x))})
+    by def $ContinuousMapSetting(A, open_sets_A, CarrierC, open_sets_C, fn(x A) CarrierC {g(f(x))})
     by def:
         ? $is_continuous(A, open_sets_A, CarrierC, open_sets_C, fn(x A) CarrierC {g(f(x))})
 

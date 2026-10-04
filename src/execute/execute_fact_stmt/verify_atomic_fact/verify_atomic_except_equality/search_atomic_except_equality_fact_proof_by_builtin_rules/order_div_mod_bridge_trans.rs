@@ -237,15 +237,20 @@ impl Runtime {
         ))
     }
 
-    // `0 < b - a` implies `a < b` (premise must already be known).
-    // Example: known `0 < y - x` proves `x < y`.
+    // A known positive difference implies strict real order. Both spellings
+    // `0 < b - a` and `b - a > 0` prove `a < b`; the enclosing order goal
+    // already checked that a and b are real. Only cite saved facts here.
     fn less_from_pos_difference_proof(
         &mut self,
         fact: &LessFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
         let difference = sub_obj(&fact.right, &fact.left);
-        let Some(premise_proof) = self.known_less_proof(&zero_obj(), &difference) else {
+        let premise_proof = if let Some(proof) = self.known_less_proof(&zero_obj(), &difference) {
+            proof
+        } else if let Some(proof) = self.known_greater_proof(&difference, &zero_obj()) {
+            proof
+        } else {
             return Ok(None);
         };
         Ok(Some(LessFactSearchProofByBuiltinRule::LessFromPosDifference(

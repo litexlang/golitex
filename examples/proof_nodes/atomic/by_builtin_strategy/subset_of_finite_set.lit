@@ -9,6 +9,9 @@
 #         finite_set_size(A) <= finite_set_size(B)
 
 # Active acceptance; all premises are checked.
+# The concrete X case retains the strategy route: list-set finiteness needs
+# a builtin stage, so the restricted eager upper-bound rule does not fire.
+# The quantified typed-B case now obtains finite A by forward inference.
 have X set = intersect({1}, R)
 X $subset {1}
 $is_finite_set(X)

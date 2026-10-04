@@ -3705,7 +3705,10 @@
       "strict": true,
       "expect": {
         "success": true,
-        "statement_success": [true, true]
+        "statement_success": [
+          true,
+          true
+        ]
       }
     },
     {
@@ -3715,7 +3718,15 @@
       "strict": true,
       "expect": {
         "success": false,
-        "statement_success": [true, false, false, false, false, false, false]
+        "statement_success": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
       }
     },
     {
@@ -3760,12 +3771,16 @@
     },
     {
       "leaf": "EvalStmt",
-      "name": "evaluation-exports-no-facts",
-      "file": "boundaries/evaluation-exports-no-facts.lit",
+      "name": "evaluation-stores-result",
+      "file": "boundaries/evaluation-stores-result.lit",
       "strict": true,
       "expect": {
         "success": true,
-        "empty_effects": true
+        "statement_success": [
+          true,
+          true,
+          true
+        ]
       }
     },
     {

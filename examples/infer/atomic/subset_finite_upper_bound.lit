@@ -1,0 +1,20 @@
+# Tracer: stored subset with an available finite upper bound publishes finite lower.
+# Before: the size comparison below failed in goal WD for finite_set_size(A).
+# forall A set, B finite_set:
+#     A $subset B
+#     =>:
+#         finite_set_size(A) <= finite_set_size(B)
+# Now: domain inclusion inference supplies finiteness without deeper WD search.
+forall A set, B finite_set:
+    A $subset B
+    =>:
+        $is_finite_set(A)
+        finite_set_size(A) <= finite_set_size(B)
+forall A set, B finite_set:
+    A $proper_subset B
+    =>:
+        finite_set_size(A) < finite_set_size(B)
+# Boundary: no finite upper certificate means no eager finite inference;
+# inclusion chains remain strategy proofs. Verification alone never stores truth.
+# Evidence: target/release/litex -strict -f examples/infer/atomic/subset_finite_upper_bound.lit
+# Tests: tests/unit/execute/finite_set_cardinality_rules/tests.rs

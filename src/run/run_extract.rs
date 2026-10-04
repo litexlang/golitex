@@ -106,6 +106,6 @@ fn format_runtime_error(error: &RuntimeError) -> String {
             format!("{} at line {} in {}", error.message, error.line, error.path)
         }
         RuntimeError::Unsupported(message) => message.clone(),
-        RuntimeError::InternalBug(message) => format!("internal bug: {}", message),
+        RuntimeError::InternalBug(_) => error.to_string(),
     }
 }

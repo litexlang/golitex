@@ -173,6 +173,8 @@ fn order_stage_a_finite_set_max_min_members() {
 #[test]
 fn order_stage_a_finite_set_size_union_and_surjection() {
     let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "$is_finite_set({1})").is_failed());
+    assert!(!exec_one(&mut runtime, "$is_finite_set({2})").is_failed());
     assert!(
         !exec_one(&mut runtime, "trust $is_finite_set(union({1}, {2}))").is_failed()
     );
@@ -190,6 +192,8 @@ fn order_stage_a_finite_set_size_union_and_surjection() {
     assert!(!exec_one(&mut runtime, "have B set = {1}").is_failed());
     assert!(!exec_one(&mut runtime, "have fn f(x A) B = 1").is_failed());
     assert!(!exec_one(&mut runtime, "trust $surjective(A, B, f)").is_failed());
+    assert!(!exec_one(&mut runtime, "$is_finite_set(A)").is_failed());
+    assert!(!exec_one(&mut runtime, "$is_finite_set(B)").is_failed());
     assert!(
         !exec_one(&mut runtime, "finite_set_size(B) <= finite_set_size(A)").is_failed(),
         "surjection codomain card <= domain"

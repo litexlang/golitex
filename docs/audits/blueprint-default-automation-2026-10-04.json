@@ -1,0 +1,655 @@
+{
+  "task": "Blueprint default automation and implementation responsibilities",
+  "date": "2026-10-04",
+  "status": "verified",
+  "impact_class": "L0 documentation only",
+  "scope": [
+    "docs/Litex中文蓝图.md",
+    "docs/Litex_Blueprint.md"
+  ],
+  "requirements_review": [
+    {
+      "requirement": "Explain default automation without claiming measured majority coverage",
+      "evidence": "Overview and §1.1 explicitly state many common operations within supported local scope."
+    },
+    {
+      "requirement": "Distinguish mathematical choices from routine verification work",
+      "evidence": "Four-row responsibility table follows the existing four-path example in §1.1."
+    },
+    {
+      "requirement": "Explain implementation size through classification, premises, evidence, storage and feedback",
+      "evidence": "New folded explanation with implementation links and Lean terminology scope."
+    },
+    {
+      "requirement": "Explain bounded search and its maintenance cost",
+      "evidence": "Folded cost paragraph and existing structural/equality/recursive boundary examples; fixed-snapshot gates below."
+    },
+    {
+      "requirement": "Make distinctive design clear and keep comparisons bounded",
+      "evidence": "§1.1 names the combination of fact classification, default local checking and knowledge growth; existing Lean/Naproche comparison boundaries retained."
+    },
+    {
+      "requirement": "Connect the Python analogy to responsibility transfer",
+      "evidence": "Programmer appendix explains routine operations moving to language implementation."
+    },
+    {
+      "requirement": "Synchronize Chinese and English",
+      "evidence": "Manual side-by-side review of all changed prose and tables; matching new links and §1.1 Litex code verified."
+    }
+  ],
+  "documents": [
+    {
+      "path": "docs/Litex中文蓝图.md",
+      "before_sha256": "3a5b541455106a0a4dd1103115b9cfba530552ac25d4f646f1401464d246bfa4",
+      "after_sha256": "34f72f012deff703738900914405cc9568af174f78753f45095467c6849b6af3",
+      "task_patch": "--- task-baseline/Litex中文蓝图.md\n+++ docs/Litex中文蓝图.md\n@@ -34,7 +34,9 @@\n \n *Litex 始于 2024 年，想回答一个问题：形式化证明能否既贴近日常数学、好写好懂，又能被严格检查？它希望成为形式化语言里的 Python，降低进入可检查数学的门槛，让更多人逐步成为形式化专家。*\n \n-从理解一个证明到写出可检查的证明，作者常要额外寻找、点名和操作每一步的依据。Litex 让作者选择定义、构造与中间结论；语言在当前知识中检查受支持的局部步骤，解释它为什么接受或停下，并让已验证的事实成为后续推理的背景。它以集合、元素、函数和关系组织这一过程，也让人和 AI 能围绕明确反馈协作。\n+从理解一个证明到写出可检查的证明，作者常要额外寻找、点名和操作每一步的依据。Litex 把许多常见证明操作的选择、组合和调用，纳入普通数学事实的默认验证流程。作者选择定义、构造与中间结论；语言根据对象与事实的形状，从当前知识、内置规则和受限组合策略中寻找局部依据，并检查适用条件。\n+\n+这让作者省去许多常规的工具操作：写出本步应当成立的事实，语言检查它、解释为什么接受或停下，并让已验证的事实成为后续推理的背景。Litex 以集合、元素、函数和关系组织这一过程，让人和 AI 能围绕明确反馈协作。数学路线仍由作者选择；候选路径的分类、前提检查和搜索控制则由语言实现承担。[第 1.1 节](#fact-oriented-interface)用例子说明这种分工，以及它为什么需要较丰富的验证实现。\n \n 这条路径的下一站是 Lean。Litex 到 Lean 的编译器尚未接入当前构建，预计在 2026 年底完成。它的目标是把支持范围内的 Litex 证明交给 Lean 独立复核，让读者从熟悉的数学表达走进现有的形式化生态。\n \n@@ -216,7 +218,7 @@\n \n ### 1.1 事实导向：把“什么成立”写进源码\n \n-**事实中心**：作者写下接下来应当成立的事实，验证器检查其良定义性，再从内置规则、已知事实、全称事实与定义中寻找局部依据。作者仍选择关键构造、见证和估计；默认的局部检查减少了为常见步骤逐一点名 tactic 或引理的工作。\n+**事实中心**：普通事实语句自动触发局部验证。作者写下接下来应当成立的事实，验证器检查其良定义性，再从内置规则与策略、已知事实、全称事实与定义中寻找局部依据。许多常见步骤的工具选择与组合由默认流程承担；作者仍选择关键构造、见证和估计。\n \n #### Litex如何帮用户按事实形状寻找验证路径\n \n@@ -226,7 +228,7 @@\n \n | 匹配什么 | 内核做什么 | 极小例子 |\n | --- | --- | --- |\n-| **内置规则**（builtin） | 按谓词/参数形状筛选规则，再核对前提 | 已知 `x >= 0`、`y >= 0`，匹配“非负之和仍非负”，得到 `x + y >= 0` |\n+| **内置规则与策略**（builtin） | 按谓词/参数形状筛选路径，在允许的范围内组合检查前提 | 已知 `x >= 0`、`y >= 0`，匹配“非负之和仍非负”，得到 `x + y >= 0` |\n | **已知具体事实** | 在上下文中找到同形事实；必要时用等式对齐写法 | 已知 `$is_positive(a)` 与 `a = b`，匹配并替换得到 `$is_positive(b)` |\n | **已知 `forall`** | 把目标形状对上全称事实，实例化参数并检查前提 | 已有 `forall x R: x > 1 => $is_positive(x)`，且 `b > 1`，匹配得到 `$is_positive(b)` |\n | **定义**（def） | 把具名谓词与其定义体互相同形状匹配 | 已知 `a > 0`，匹配 `prop is_positive` 的定义，得到 `$is_positive(a)` |\n@@ -268,6 +270,17 @@\n $is_positive(a)\n ```\n \n+第一段中的 `0 <= x + y` 没有点名验证工具。Litex 根据加法与序关系选择候选路径，再检查当前上下文中的 `0 <= x`、`0 <= y` 等前提。形状匹配只是找到候选；所需前提也通过检查，才能接受结论。后三段展示同一默认流程如何复用已知事实、实例化全称事实和使用定义。\n+\n+| 作者的数学工作 | Litex 的常规验证工作 |\n+| --- | --- |\n+| 选择定义、构造对象并给出条件 | 检查对象、参数范围和良定义条件 |\n+| 写出本步要建立的事实 | 按事实形状检索已知依据、规则和组合策略 |\n+| 给出中间等式、见证或局部推导 | 检查各步所需前提，记录结果并复用已验证事实 |\n+| 选择证明的数学路线 | 控制默认搜索的调用权限和改写范围 |\n+\n+Litex 的设计特点在于把这些能力组织为同一种日常使用方式：以数学对象和事实的分类为基础，普通事实自动触发局部验证，通过后继续扩展可用知识。作者在支持范围内可以直接写数学步骤，语言实现承担其中许多机械验证操作。\n+\n 当前实现以 `VerifyState` 给查找路径分级：直接证据、已知对象性质、内置规则、策略、定义与全称事实依次拥有不同权限。规则检查前提时只把更低的查找权限传下去；定义或全称事实的改写在同一分支上也有明确的使用边界。这样，增加规则不仅是加入一个结论，还须说明它能调用哪些前提、如何避免反复调用自身。用户仍只需写出本步要建立的事实。\n \n <details>\n@@ -314,6 +327,25 @@\n \n </details>\n \n+<a id=\"automation-implementation\"></a>\n+\n+<details>\n+<summary><strong>为什么 Litex 的验证内核需要这么多实现？</strong></summary>\n+\n+作者省去的操作仍然需要完成。为了直接检查上面的 `0 <= x + y`，系统需要识别目标形状，选出候选路径，检查对象与两个非负前提，记录验证依据，并让结论成为可复用的事实。这些职责转移到了语言实现中。\n+\n+**分类与组合。** Litex 内置了大量常见数学规则与受限组合策略，覆盖的对象、运算和关系各有适用条件。按数学类别细分路径，有助于缩小候选范围，也让每种组合可以有明确的前提与调用边界。本文用“规则与组合策略”描述这些实现；它们不必对应其他证明助手中同名的 tactic。\n+\n+**前提与证据。** 除了匹配目标，系统还要检查参数所属集合、函数调用条件以及所需事实，保存结果并向作者反馈。这些检查使作者能够省去常规操作，也使每条验证路径都需要相应实现。上面的类型检查、等式链和递归例子展示了不同路径的分工。\n+\n+**搜索与维护成本。** 让系统继续寻找中间结论、尝试更多改写或递归展开，需要更多搜索分支和组合处理。默认流程因此有明确权限：对给出的局部步骤寻找依据，在支持边界处由作者补充数学路线。反复出现的机械衔接仍应检查是否缺少通用支持。每条新增路径都需要审查数学条件、证据和成本，代码规模本身不能替代这些审查。\n+\n+这里的“验证内核”指项目中的验证与执行实现，包含依据搜索、内置数学规则、良定义检查、事实存储和反馈。[Lean 的语言参考](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)将精化与 tactic 执行和检查核心证明项的可信内核分开；比较代码规模时需要区分这些职责。当前验证依赖 Litex 验证器及其内置规则、推理规则的正确性；[第 5 节](#compatibility)说明独立 Lean 复核的目标与现状。\n+\n+当前实现的职责边界可从[原子事实查找入口](../src/execute/execute_fact_stmt/verify_atomic_fact/search_atomic_fact.rs)、[查找权限](../src/execute/execute_fact_stmt/verify_state.rs)与[事实存储和推理](../src/store_fact_and_infer/README.md)继续查看。\n+\n+</details>\n+\n <details>\n <summary><strong>为什么 Litex 能维护事实表？Lean 能否扩充实现同一机制？</strong></summary>\n \n@@ -335,7 +367,7 @@\n <details>\n <summary><strong>例子 1：Lean 与 Litex 如何验证“两个非负实数之和仍然非负”</strong></summary>\n \n-**内置规则。** Litex 把目标拆成谓词与参数形状，据此筛选候选规则，再检查类型、前提和条件是否全部成立。\n+**内置规则与策略。** Litex 把目标拆成谓词与参数形状，据此筛选候选路径，再检查类型、前提和条件是否全部成立。\n \n 要证明的数学事实是：两个非负实数之和仍然非负。\n \n@@ -1530,7 +1562,7 @@\n \n 程序员可以把 Litex 看成一种明确区分数学对象、事实和改变上下文的语句的语言。Lean tactic 证明常通过指令改变目标状态；Litex 的默认源码写下要接受的事实，让验证器寻找局部依据。它仍检查良定义性，并非把数学约束留到运行时。\n \n-“像 Python”也只是入口体验的类比：同一 Litex 对象可以被证明属于多个集合，调用函数时所需的成员与条件事实由验证器检查。这里没有声称 Litex 实现了编程语言意义上的动态类型系统，更没有把 Lean 的通用类型系统等同于汇编。\n+“像 Python”可以从操作分工来理解：许多日常操作由语言实现承担，作者专注于要表达的数学。在 Litex 中，这包括为普通事实选择局部验证路径、检查前提并复用结果。同一对象也可以被证明属于多个集合，函数调用所需的成员与条件事实由验证器检查。这个入口体验的类比并不等同于编程语言意义上的动态类型，也不把 Lean 的通用类型系统等同于汇编。\n \n ```text\n Lean 表面:  terms / types   （对象、命题和证明由项与类型表达）\n@@ -1544,7 +1576,7 @@\n Litex:             多集合归属    ≈ dynamic（偏 Python）\n ```\n \n-事实表与规则表把一部分依据检索工作从作者转移给语言；[第 1 节](#fact-oriented)说明这条默认路径的搜索边界。这样做的工程代价，是每条受支持的路径都要处理前提、结果与失败反馈，而不是只减少几个 tactic 名称。\n+事实表与规则表把一部分依据检索工作从作者转移给语言；[第 1 节](#fact-oriented)说明这条默认路径的搜索边界，[验证实现的分工](#automation-implementation)解释相应的工程成本。作者能少写许多操作，是因为每条受支持的路径都在实现中处理了前提、结果与失败反馈。\n \n 还有第二条程序员常关心的实验性编译路线：计算片段在 Litex 里检查过之后，可以尝试抽出可运行的 Python 或 C（第 6.1 节）——同样标明实验性，且范围很窄，不是整门语言的后端。\n \n",
+      "preserved_concurrent_edits": [
+        {
+          "before_line": 102,
+          "before": "CLI 可以用多种语言呈现这些 JSON 验证反馈。同一段源码执行 `litex -lang zh -e '1 + 1 = 2'`，会得到中文字段名与说明；选用 `-lang fr` 则得到法文反馈。感谢 AI 工具的协助，多语种的验证说明才更容易实现；选择输出语言不会改变 Litex 源码或验证结果。[CLI 参考](cli.md#basic-shape)列出了支持的语言。\n",
+          "after": "**多语种验证反馈。** CLI 可以用多种语言呈现这些 JSON 验证反馈。同一段源码执行 `litex -lang zh -e '1 + 1 = 2'`，会得到中文字段名与说明；选用 `-lang fr` 则得到法文反馈。感谢 AI 工具在翻译上的协助，使多语种验证说明成为可能；选择输出语言不会改变 Litex 源码或验证结果。[CLI 参考](cli.md#basic-shape)列出了支持的语言。\n",
+          "reason": "Concurrent edits to multilingual-feedback and symbolic-input paragraphs; preserved, outside this task."
+        },
+        {
+          "before_line": 662,
+          "before": "同一个结论也可以输入为 `s ∩ u ⊆ t ∩ u`。Litex 接受 `∩` 与 `⊆`，并将它们规范化为 `intersect` 与 `$subset`。文中多数例子采用英文字母拼写，只是因为普通键盘输入更方便；[手册](Manual.md#unicode-mathematical-input-aliases-preview)列出了支持的符号。\n",
+          "after": "**数学符号输入。** 同一个结论也可以输入为 `s ∩ u ⊆ t ∩ u`。Litex 接受 `∩` 与 `⊆`，并将它们规范化为 `intersect` 与 `$subset`。文中多数例子采用英文字母拼写，只是因为普通键盘输入更方便；[手册](Manual.md#unicode-mathematical-input-aliases-preview)列出了支持的符号。\n",
+          "reason": "Concurrent edits to multilingual-feedback and symbolic-input paragraphs; preserved, outside this task."
+        }
+      ],
+      "code_fences_unchanged": true,
+      "code_fence_count": 67,
+      "details_balanced": true,
+      "new_details_count": 1,
+      "anchors_unique": true,
+      "new_links_checked": [
+        "#fact-oriented-interface",
+        "https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/",
+        "#compatibility",
+        "../src/execute/execute_fact_stmt/verify_atomic_fact/search_atomic_fact.rs",
+        "../src/execute/execute_fact_stmt/verify_state.rs",
+        "../src/store_fact_and_infer/README.md",
+        "#fact-oriented",
+        "#automation-implementation"
+      ],
+      "added_lines_whitespace_valid": true
+    },
+    {
+      "path": "docs/Litex_Blueprint.md",
+      "before_sha256": "a20fd5a8c8b5d462672c48a139a7767c4580e5d1725a1b416432117e463cbffe",
+      "after_sha256": "1d74db1d8e1d54f08a1f0160a807c2173c7489d2b85c9b7aed00f038f2f19368",
+      "task_patch": "--- task-baseline/Litex_Blueprint.md\n+++ docs/Litex_Blueprint.md\n@@ -34,7 +34,9 @@\n \n *Begun in 2024, Litex asks a question: can formal proofs stay close to ordinary mathematics, be easy to write and read, and still be rigorously checked? It hopes to become a Python for formal languages, lowering the barrier to checkable mathematics so that more people can gradually become formalization experts.*\n \n-Moving from understanding a proof to writing a checkable one often requires an author to find, name, and apply the grounds for every step. Litex lets authors choose definitions, constructions, and intermediate conclusions; the language checks supported local steps against current knowledge, explains why it accepts them or where it stops, and makes verified facts available to later reasoning. It organizes this process around sets, elements, functions, and relations, with explicit feedback that people and AI can use together.\n+Moving from understanding a proof to writing a checkable one often requires an author to find, name, and apply the grounds for every step. Litex makes the selection, combination, and invocation of many common proof operations part of the default verification of ordinary mathematical facts. Authors choose definitions, constructions, and intermediate conclusions; the language uses the shapes of objects and facts to find local grounds in current knowledge, builtin rules, and bounded combinations of verification steps, then checks their conditions.\n+\n+This saves authors many routine tool operations: state the fact that should hold next, let the language check it and explain why it accepts it or where it stops, and make verified facts available to later reasoning. Litex organizes this process around sets, elements, functions, and relations, with explicit feedback that people and AI can use together. Authors still choose the mathematical route; the language implementation handles candidate classification, premise checking, and search control. [Section 1.1](#fact-oriented-interface) illustrates this division of work and why it requires a substantial verification implementation.\n \n The next step on this path is Lean. The Litex-to-Lean compiler is not yet integrated into the current build and is expected to be completed by the end of 2026. Its goal is to let Lean independently recheck supported Litex proofs, connecting familiar mathematical expression to the existing formalization ecosystem.\n \n@@ -216,7 +218,7 @@\n \n ### 1.1 Fact-Oriented: Writing “What Holds” into the Source\n \n-**Fact-centered**: authors write the facts that should hold next. The verifier checks well-definedness and searches builtin rules, known facts, universal facts, and definitions for local grounds. Authors still choose key constructions, witnesses, and estimates; default local checking reduces the need to name a tactic or lemma for each routine step.\n+**Fact-centered**: ordinary fact statements automatically trigger local verification. Authors write the facts that should hold next. The verifier checks well-definedness and searches builtin rules and strategies, known facts, universal facts, and definitions for local grounds. The default workflow handles tool selection and combination for many routine steps; authors still choose key constructions, witnesses, and estimates.\n \n #### How Litex Helps Users Search Verification Routes by Fact Shape\n \n@@ -226,7 +228,7 @@\n \n | What is matched | What the kernel does | Minimal example |\n | --- | --- | --- |\n-| **Builtin rules** | Filter rules by predicate/argument shape, then check premises | Given `x >= 0`, `y >= 0`, match “sum of nonnegatives is nonnegative,” get `x + y >= 0` |\n+| **Builtin rules and strategies** | Filter paths by predicate/argument shape and combine premise checks within their permissions | Given `x >= 0`, `y >= 0`, match “sum of nonnegatives is nonnegative,” get `x + y >= 0` |\n | **Known concrete facts** | Find a same-shaped fact in context; align spelling by equality if needed | Given `$is_positive(a)` and `a = b`, match and rewrite to `$is_positive(b)` |\n | **Known `forall`** | Match the goal shape to a universal fact, instantiate, check premises | Given `forall x R: x > 1 => $is_positive(x)` and `b > 1`, get `$is_positive(b)` |\n | **Definitions** (`def` / `prop`) | Match a named predicate with its definition body by shape | Given `a > 0`, match `prop is_positive`, get `$is_positive(a)` |\n@@ -268,6 +270,17 @@\n $is_positive(a)\n ```\n \n+The first part's `0 <= x + y` does not name a verification tool. Litex selects a candidate path from the addition and order shapes, then checks premises such as `0 <= x` and `0 <= y` in the current context. Shape matching finds a candidate; the required premises must also check before the conclusion can be accepted. The other three parts show the same default workflow reusing known facts, instantiating universal facts, and using definitions.\n+\n+| The author's mathematical work | Litex's routine verification work |\n+| --- | --- |\n+| Choose definitions, construct objects, and state conditions | Check objects, parameter domains, and well-definedness conditions |\n+| State the fact to establish at this step | Retrieve known grounds, rules, and builtin strategies by fact shape |\n+| Supply intermediate equalities, witnesses, or local derivations | Check each step's premises, record results, and reuse verified facts |\n+| Choose the mathematical route of the proof | Control the permissions and rewrite scope of default search |\n+\n+Litex's design characteristic is to organize these capabilities into one everyday workflow: classify mathematical objects and facts, let ordinary facts trigger local verification, and extend available knowledge when they pass. Within the supported scope, authors can write mathematical steps directly while the language implementation handles many of their mechanical verification operations.\n+\n The current implementation grades lookup paths through `VerifyState`: direct evidence, known object properties, builtin rules, strategies, definitions, and universal facts have different permissions. When checking a rule's premises, the verifier passes down only lower lookup permissions; rewrites through definitions or universal facts also have explicit boundaries within a branch. Adding a rule thus requires specifying what it may use as premises and how to prevent it from calling itself repeatedly. The author still writes only the fact to establish at this step.\n \n <details>\n@@ -314,6 +327,25 @@\n \n </details>\n \n+<a id=\"automation-implementation\"></a>\n+\n+<details>\n+<summary><strong>Why does Litex's verification kernel need so much implementation?</strong></summary>\n+\n+The operations authors omit still have to be performed. To check `0 <= x + y` directly, the system must recognize the goal's shape, select a candidate path, check the objects and both nonnegative premises, record the grounds, and make the conclusion reusable. These responsibilities move into the language implementation.\n+\n+**Classification and combination.** Litex implements many common mathematical rules and bounded proof strategies that combine supported checks. Different objects, operations, and relations have different conditions. Classifying paths by mathematical category helps narrow candidates and gives each combination explicit premises and calling boundaries. This document calls them rules and proof strategies; they need not correspond to tactics with the same names in other proof assistants.\n+\n+**Premises and evidence.** Alongside matching a goal, the system must check the sets its arguments belong to, function-call conditions, and required facts, then preserve the result and give feedback. These checks let authors omit routine operations, while requiring implementation for each verification path. The typing, equality-chain, and recursive examples above illustrate the division of work for different paths.\n+\n+**Search and maintenance costs.** Searching for further intermediate conclusions, rewrites, or recursive unfoldings adds branches and combinations to handle. The default workflow therefore has explicit permissions: it seeks grounds for a supplied local step, with authors supplying mathematical routes at the supported boundary. Repeated mechanical bridges should still prompt an audit for missing shared support. Every additional path needs review of its mathematical conditions, evidence, and cost; code size cannot substitute for that review.\n+\n+Here, “verification kernel” means the project's verification and execution implementation, including grounds search, builtin mathematical rules, well-definedness checks, fact storage, and feedback. The [Lean Language Reference](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/) separates elaboration and tactic execution from the trusted kernel that checks core proof terms; code-size comparisons need to distinguish these responsibilities. Current verification relies on the correctness of Litex's verifier and its builtin and inference rules. [Section 5](#compatibility) explains the goal and current status of independent Lean rechecking.\n+\n+The current implementation boundaries can be explored through the [atomic-fact search entrypoint](../src/execute/execute_fact_stmt/verify_atomic_fact/search_atomic_fact.rs), [search permissions](../src/execute/execute_fact_stmt/verify_state.rs), and [fact storage and inference](../src/store_fact_and_infer/README.md).\n+\n+</details>\n+\n <details>\n <summary><strong>Why can Litex maintain a fact table? Could Lean be extended to do the same?</strong></summary>\n \n@@ -335,7 +367,7 @@\n <details>\n <summary><strong>Example 1: how Lean and Litex verify “the sum of two nonnegative reals is still nonnegative”</strong></summary>\n \n-**Builtin rules.** Litex splits the goal into a predicate and an argument shape, filters candidate rules accordingly, then checks that types, premises, and conditions all hold.\n+**Builtin rules and strategies.** Litex splits the goal into a predicate and an argument shape, filters candidate paths accordingly, then checks that types, premises, and conditions all hold.\n \n The mathematical fact to prove is: the sum of two nonnegative reals is still nonnegative.\n \n@@ -1546,7 +1578,7 @@\n \n Programmers can view Litex as a language that explicitly distinguishes mathematical objects, facts, and statements that change the context. Lean tactic proofs often use commands to change goal state; Litex source normally states facts to be accepted, while the verifier searches for local grounds. It still checks well-definedness rather than deferring mathematical constraints to runtime.\n \n-The Python analogy concerns the entry experience: the same Litex object can be proved to belong to multiple sets, and the verifier checks the membership and condition facts needed for a function call. This is not a claim that Litex implements a programming-language dynamic type system, nor that Lean's general type system is equivalent to assembly.\n+The Python analogy can be understood through the division of operations: the language implementation handles many everyday operations, while authors focus on the mathematics they want to express. In Litex, this includes selecting local verification paths for ordinary facts, checking premises, and reusing results. The same object can also be proved to belong to multiple sets, with the verifier checking the membership and condition facts needed for function calls. This entry-experience analogy does not equate Litex with programming-language dynamic typing or Lean's general type system with assembly.\n \n ```text\n Lean surface:  terms / types   (objects, propositions, and proofs use terms and types)\n@@ -1560,7 +1592,7 @@\n Litex:                many-set membership ≈ dynamic (Python-like)\n ```\n \n-Fact and rule tables transfer some premise retrieval from the author to the language. [Section 1](#fact-oriented) explains the boundaries of that default search path. The engineering cost is that each supported route must handle premises, results, and failure feedback, not merely remove a few tactic names.\n+Fact and rule tables transfer some grounds retrieval from the author to the language. [Section 1](#fact-oriented) explains the boundaries of that default search path, and the [division of verification responsibilities](#automation-implementation) explains the engineering cost. Authors can omit many operations because each supported path handles premises, results, and failure feedback in the implementation.\n \n There is a second experimental compilation route that programmers often care about: once a computational fragment is checked in Litex, Litex can try to emit runnable Python or C from it (Section 6.1)—again experimental, and narrow, not a full language backend.\n \n",
+      "preserved_concurrent_edits": [
+        {
+          "before_line": 102,
+          "before": "The CLI can present this JSON feedback in multiple languages. The same source can be checked with `litex -lang zh -e '1 + 1 = 2'` for Chinese field names and explanations, or with `-lang fr` for French. AI tools helped make this multilingual explanatory copy possible; choosing an output language does not change the Litex source or its verification. The [CLI reference](cli.md#basic-shape) lists the supported languages.\n",
+          "after": "**Multilingual feedback.** The CLI can present this JSON feedback in multiple languages. The same source can be checked with `litex -lang zh -e '1 + 1 = 2'` for Chinese field names and explanations, or with `-lang fr` for French. Thanks in part to AI-assisted translation, this multilingual explanatory copy became feasible; choosing an output language does not change the Litex source or its verification. The [CLI reference](cli.md#basic-shape) lists the supported languages.\n",
+          "reason": "Concurrent edits to multilingual-feedback and symbolic-input paragraphs; preserved, outside this task."
+        },
+        {
+          "before_line": 664,
+          "before": "The same conclusion can also be typed as `s ∩ u ⊆ t ∩ u`. Litex accepts `∩` and `⊆` as input and normalizes them to `intersect` and `$subset`. Most examples here use the letter-based spelling because it is easier to type on an ordinary keyboard; the [Manual](Manual.md#unicode-mathematical-input-aliases-preview) lists the supported symbols.\n",
+          "after": "**Symbolic input.** The same conclusion can also be typed as `s ∩ u ⊆ t ∩ u`. Litex accepts `∩` and `⊆` as input and normalizes them to `intersect` and `$subset`. Most examples here use the letter-based spelling because it is easier to type on an ordinary keyboard; the [Manual](Manual.md#unicode-mathematical-input-aliases-preview) lists the supported symbols.\n",
+          "reason": "Concurrent edits to multilingual-feedback and symbolic-input paragraphs; preserved, outside this task."
+        }
+      ],
+      "code_fences_unchanged": true,
+      "code_fence_count": 67,
+      "details_balanced": true,
+      "new_details_count": 1,
+      "anchors_unique": true,
+      "new_links_checked": [
+        "#fact-oriented-interface",
+        "https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/",
+        "#compatibility",
+        "../src/execute/execute_fact_stmt/verify_atomic_fact/search_atomic_fact.rs",
+        "../src/execute/execute_fact_stmt/verify_state.rs",
+        "../src/store_fact_and_infer/README.md",
+        "#fact-oriented",
+        "#automation-implementation"
+      ],
+      "added_lines_whitespace_valid": true
+    }
+  ],
+  "bilingual_code_and_new_detail_links_equivalent": true,
+  "build": {
+    "command": "cargo build --release --manifest-path tmp/2026-10-04/blueprint-default-automation/frozen-source/Cargo.toml --target-dir tmp/2026-10-04/blueprint-default-automation/target",
+    "exit_code": 0,
+    "snapshot_sha256": "867758f22dc65bf2a2ba82a52f942f5eac4692282bd0d5162d5e559be7fc441d",
+    "source_file_count": 641,
+    "binary_sha256": "937d52e40e17ef1fa45a52dadda329d5b3211503d7d0a6292cc70585e67723a8",
+    "scope": "Immutable snapshot of workspace Rust/Cargo source, isolated output target; build succeeded with existing warnings. No Rust edits."
+  },
+  "snippet_gates": [
+    {
+      "label": "default_four_paths",
+      "code": "prop is_positive(a R):\n    a > 0\n\n# 1) 匹配内置规则（builtin）\nforall x, y R:\n    0 <= x\n    0 <= y\n    =>:\n        0 <= x + y\n\n# 2) 匹配已知事实，再用等式替换\nforall a, b R:\n    $is_positive(a)\n    a = b\n    =>:\n        $is_positive(b)\n\n# 3) 匹配已知 forall（先存下这条全称；再由 b > 1 得到 $is_positive(b)）\nforall x R:\n    x > 1\n    =>:\n        x > 0\n        $is_positive(x)\n\nhave b R:\n    b > 1\n\n$is_positive(b)\n\n# 4) 匹配 prop is_positive 的定义\nhave a R:\n    a > 0\n\n$is_positive(a)",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/target/release/litex",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/default_four_paths.lit"
+      ],
+      "expected_success": true,
+      "exit_code": 0,
+      "gate_passed": true,
+      "stdout": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/default_four_paths.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "prop is_positive(a R):\n    a > 0",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define prop",
+              "message": "Define a predicate"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "forall x, y R:\n    0 <= x\n    0 <= y\n    =>:\n        0 <= x + y",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall x, y R:\n    0 <= x\n    0 <= y\n    =>:\n        0 <= x + y"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "forall a, b R:\n    $is_positive(a)\n    a = b\n    =>:\n        $is_positive(b)",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall a, b R:\n    $is_positive(a)\n    a = b\n    =>:\n        $is_positive(b)"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "forall x R:\n    x > 1\n    =>:\n        x > 0\n        $is_positive(x)",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall x R:\n    x > 1\n    =>:\n        x > 0\n        $is_positive(x)"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "have b R:\n    b > 1",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have by existence",
+              "message": "Introduce objects from a proved existential fact"
+            },
+            "stores": [
+              "b $in R"
+            ],
+            "infers": [
+              "b > 1",
+              "0 < b"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "$is_positive(b)",
+            "proof_method": {
+              "type": "by_definition",
+              "rule_name": "By definition",
+              "message": "Verified by unfolding a definition"
+            },
+            "stores": [
+              "$is_positive(b)"
+            ],
+            "infers": [
+              "b $in R",
+              "b > 0"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "have a R:\n    a > 0",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have by existence",
+              "message": "Introduce objects from a proved existential fact"
+            },
+            "stores": [
+              "a $in R"
+            ],
+            "infers": [
+              "a > 0"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "$is_positive(a)",
+            "proof_method": {
+              "type": "by_definition",
+              "rule_name": "By definition",
+              "message": "Verified by unfolding a definition"
+            },
+            "stores": [
+              "$is_positive(a)"
+            ],
+            "infers": [
+              "a $in R",
+              "a > 0"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "label": "structural_membership",
+      "code": "have n N\n((n+1)+1)+1 $in N",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/target/release/litex",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/structural_membership.lit"
+      ],
+      "expected_success": true,
+      "exit_code": 0,
+      "gate_passed": true,
+      "stdout": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/structural_membership.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "have n N",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have from nonempty set",
+              "message": "Introduce an object from a nonempty carrier / parameter type"
+            },
+            "stores": [
+              "n $in N"
+            ],
+            "infers": [
+              "0 <= n"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "n + 1 + 1 + 1 $in N",
+            "proof_method": {
+              "type": "by_structural_membership",
+              "rule_name": "Structural membership",
+              "message": "Determine the carrier from stored types and checked constructors without proof search"
+            },
+            "stores": [
+              "n + 1 + 1 + 1 $in N"
+            ],
+            "infers": [
+              "0 <= n + 1 + 1 + 1"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "label": "equality_endpoint_reuse",
+      "code": "have x R = 2\nhave y R = x + 1\ny = x + 1 = 3\ny^2 = 9",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/target/release/litex",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/equality_endpoint_reuse.lit"
+      ],
+      "expected_success": true,
+      "exit_code": 0,
+      "gate_passed": true,
+      "stdout": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/equality_endpoint_reuse.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "have x R = 2",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have with equality",
+              "message": "Introduce an object equal to a given well-defined value"
+            },
+            "stores": [
+              "x $in R"
+            ],
+            "infers": [
+              "x = 2"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "have y R = x + 1",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have with equality",
+              "message": "Introduce an object equal to a given well-defined value"
+            },
+            "stores": [
+              "y $in R"
+            ],
+            "infers": [
+              "y = x + 1"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "y = x + 1 = 3",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Chain",
+              "message": "Verified as a chain fact (details omitted in Normal)"
+            },
+            "stores": [
+              "y = x + 1 = 3",
+              "y = x + 1",
+              "x + 1 = 3"
+            ],
+            "infers": [
+              "y = 3"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "y ^ 2 = 9",
+            "proof_method": {
+              "type": "builtin_rewrite",
+              "rule_name": "Builtin rewrite",
+              "message": "Verified by a builtin equality rewrite"
+            },
+            "stores": [
+              "y ^ 2 = 9"
+            ],
+            "infers": [
+              "9 $in R+",
+              "0 < 9",
+              "0 <= 9",
+              "9 != 0"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "label": "recursive_explicit_chain",
+      "code": "have fn f(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: f(n - 1) + 1\nf(0) = 0\nf(1 - 1) = f(0) = 0\nf(1) = f(1 - 1) + 1 = 0 + 1 = 1",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/target/release/litex",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/recursive_explicit_chain.lit"
+      ],
+      "expected_success": true,
+      "exit_code": 0,
+      "gate_passed": true,
+      "stdout": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/recursive_explicit_chain.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "have fn f(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: f(n - 1) + 1",
+            "proof_method": {
+              "type": "define_fn",
+              "rule_name": "Have function by induction",
+              "message": "Define a function by induction on naturals"
+            },
+            "stores": [
+              "f $in fn (n N) N"
+            ],
+            "infers": [
+              "forall n N:\n    n = 0\n    =>:\n        f(n) = 0",
+              "forall n N:\n    n >= 1\n    =>:\n        f(n) = f(n - 1) + 1"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "f(0) = 0",
+            "proof_method": {
+              "type": "object_definition",
+              "rule_name": "Object definition",
+              "message": "Equality follows from an object definition"
+            },
+            "stores": [
+              "f(0) = 0"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "f(1 - 1) = f(0) = 0",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Chain",
+              "message": "Verified as a chain fact (details omitted in Normal)"
+            },
+            "stores": [
+              "f(1 - 1) = f(0) = 0",
+              "f(1 - 1) = f(0)",
+              "f(0) = 0"
+            ],
+            "infers": [
+              "f(1 - 1) = 0"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "f(1) = f(1 - 1) + 1 = 0 + 1 = 1",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Chain",
+              "message": "Verified as a chain fact (details omitted in Normal)"
+            },
+            "stores": [
+              "f(1) = f(1 - 1) + 1 = 0 + 1 = 1",
+              "f(1) = f(1 - 1) + 1",
+              "f(1 - 1) + 1 = 0 + 1",
+              "0 + 1 = 1"
+            ],
+            "infers": [
+              "f(1) = 0 + 1",
+              "f(1) = 1",
+              "f(1 - 1) + 1 = 1"
+            ]
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "label": "nonnegative_sum_tracer",
+      "code": "forall x, y R:\n    0 <= x\n    0 <= y\n    =>:\n        0 <= x + y",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/target/release/litex",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/nonnegative_sum_tracer.lit"
+      ],
+      "expected_success": true,
+      "exit_code": 0,
+      "gate_passed": true,
+      "stdout": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/nonnegative_sum_tracer.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall x, y R:\n    0 <= x\n    0 <= y\n    =>:\n        0 <= x + y",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall x, y R:\n    0 <= x\n    0 <= y\n    =>:\n        0 <= x + y"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "label": "missing_right_nonnegative_premise",
+      "code": "forall x, y R:\n    0 <= x\n    =>:\n        0 <= x + y",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/target/release/litex",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/missing_right_nonnegative_premise.lit"
+      ],
+      "expected_success": false,
+      "exit_code": 1,
+      "gate_passed": true,
+      "stdout": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/missing_right_nonnegative_premise.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "forall x, y R:\n    0 <= x\n    =>:\n        0 <= x + y",
+            "why_failed": {
+              "phase": "search_proof",
+              "goal": "forall x, y R:\n    0 <= x\n    =>:\n        0 <= x + y"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "label": "recursive_bare_assertion",
+      "code": "have fn f(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: f(n - 1) + 1\nf(0) = 0\nf(1) = 1",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/target/release/litex",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/recursive_bare_assertion.lit"
+      ],
+      "expected_success": false,
+      "exit_code": 1,
+      "gate_passed": true,
+      "stdout": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/blueprint-default-automation/recursive_bare_assertion.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "have fn f(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: f(n - 1) + 1",
+            "proof_method": {
+              "type": "define_fn",
+              "rule_name": "Have function by induction",
+              "message": "Define a function by induction on naturals"
+            },
+            "stores": [
+              "f $in fn (n N) N"
+            ],
+            "infers": [
+              "forall n N:\n    n = 0\n    =>:\n        f(n) = 0",
+              "forall n N:\n    n >= 1\n    =>:\n        f(n) = f(n - 1) + 1"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "f(0) = 0",
+            "proof_method": {
+              "type": "object_definition",
+              "rule_name": "Object definition",
+              "message": "Equality follows from an object definition"
+            },
+            "stores": [
+              "f(0) = 0"
+            ],
+            "infers": []
+          },
+          {
+            "success": false,
+            "statement": "f(1) = 1",
+            "why_failed": {
+              "phase": "search_proof",
+              "goal": "f(1) = 1"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    }
+  ],
+  "cli_contract": "-strict -f; require expected process exit, top-level success and no session_error. Older -compact/-runner flags absent from current -help.",
+  "whitespace_gate": {
+    "command": "git diff --check -- docs/Litex中文蓝图.md docs/Litex_Blueprint.md",
+    "exit_code": 0
+  },
+  "external_source_checked": {
+    "url": "https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/",
+    "claim": "Lean separates elaboration/tactic execution from core proof-term kernel checking."
+  },
+  "limitations": [
+    "Focused Litex snippet verification only; no whole-Blueprint or Lean execution claim.",
+    "No measurement of majority coverage, usability, performance, memory or code-size superiority.",
+    "No semantic, kernel, syntax, trust, skill or publication changes."
+  ],
+  "cleanup": {
+    "task_owned_draft": "tmp/2026-10-04/blueprint-default-automation",
+    "task_sop": "todo/2026-10-4/blueprint-default-automation.md",
+    "state": "complete: task-owned draft removed; completed SOP removed at final completion audit"
+  }
+}

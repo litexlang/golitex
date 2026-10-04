@@ -1,13 +1,14 @@
 # Node: atomic.ByBuiltinRule.LessEqual.FiniteSetSizeSubsetLe
 # Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_size_subset_wd.lit
 
-# Before: goal WD proved finiteness, but duplicate premise lookup failed.
+# Before Round24: target WD could not obtain finiteness of A.
 # forall A set, B finite_set:
 #     A $subset B
 #     =>:
 #         finite_set_size(A) <= finite_set_size(B)
 
-# Active: WD finite evidence plus the checked inclusion certificate.
+# Active: stored inclusion publishes finite A from typed finite B;
+# size WD and the existing comparison rule retain checked evidence.
 forall A set, B finite_set:
     A $subset B
     =>:

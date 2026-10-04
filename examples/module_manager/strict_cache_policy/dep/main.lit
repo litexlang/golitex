@@ -1,0 +1,4 @@
+# Deliberately trusted false theorem: never a valid strict acceptance example.
+thm false_theorem:
+    ? 0 = 1
+    trust 0 = 1

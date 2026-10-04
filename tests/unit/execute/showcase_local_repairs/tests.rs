@@ -44,7 +44,8 @@ fn positive_natural_predecessor_keeps_both_cited_premises_and_allows_recursion()
 fn declared_field_types_close_nested_calls_without_releasing_laws() {
     let detail = check(FIELD, true);
     assert!(detail.contains("FieldApplicationInDeclaredCodomain"));
-    assert!(detail.contains("FieldInDeclaredSet"));
+    assert!(detail.contains("\"kind\":\"FieldAccess\""));
+    assert!(detail.contains("declared_signature") && detail.contains("cite_signature_fact_id"));
     for goal in [
         "s.add(s.add(i, 0), 0) $in R",
         "s.add(s.add(0, 0), 0) $in N",

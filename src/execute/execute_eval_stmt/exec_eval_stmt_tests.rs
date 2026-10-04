@@ -177,10 +177,9 @@ fn aggregate_display_evidence_and_fact_publication_boundary() {
     let before = rt.top_exec_env().facts.facts_by_id.len();
     let result = exec_one(&mut rt, "eval sum(1,3,square)");
     assert!(!result.is_failed());
-    assert_eq!(
-        rt.top_exec_env().facts.facts_by_id.len(),
-        before,
-        "eval publishes no mathematical facts"
+    assert!(
+        rt.top_exec_env().facts.facts_by_id.len() > before,
+        "eval publishes its checked source=result equality"
     );
     let detail = crate::json_output::project_stmt_detailed(&result, &rt);
     let normal = crate::json_output::project_stmt_normal(&result, &rt);
@@ -190,7 +189,8 @@ fn aggregate_display_evidence_and_fact_publication_boundary() {
             .unwrap()
             .get("evaluated_object")
             .unwrap()
-            .as_str().unwrap(),
+            .as_str()
+            .unwrap(),
         "14"
     );
     let aggregates = detail
@@ -244,7 +244,7 @@ fn aggregate_display_evidence_and_fact_publication_boundary() {
 }
 
 #[test]
-fn aggregate_algorithm_terms_keep_checked_equations_and_eval_stores_empty() {
+fn aggregate_algorithm_terms_keep_checked_equations_and_eval_publishes_results() {
     let mut rt = runtime_with_file_env();
     assert!(!exec_one(
         &mut rt,
@@ -253,11 +253,128 @@ fn aggregate_algorithm_terms_keep_checked_equations_and_eval_stores_empty() {
     .is_failed());
     let before = rt.top_exec_env().facts.facts_by_id.len();
     assert_eval_number(&mut rt, "eval sum(0,3,flag)", "3");
-    assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), before);
+    assert!(rt.top_exec_env().facts.facts_by_id.len() > before);
     assert!(!exec_one(&mut rt, "sum(0,3,flag) = 3").is_failed());
+    assert_eval_number(&mut rt, "eval product(1,3,flag)", "1");
     assert!(!exec_one(&mut rt, "product(1,3,flag) = 1").is_failed());
+    assert_eval_number(&mut rt, "eval finite_set_sum({1/3,2/3},flag)", "2");
     assert!(!exec_one(&mut rt, "finite_set_sum({1/3,2/3},flag) = 2").is_failed());
     assert!(exec_one(&mut rt, "sum(0,3,flag) = 4").is_failed());
+}
+
+#[test]
+fn eval_publishes_original_equality_and_preserves_failed_transaction_boundaries() {
+    let mut rt = runtime_with_file_env();
+    assert!(!exec_one(&mut rt, "have a R = 10").is_failed());
+    let outcome = exec_one(&mut rt, "eval a+1");
+    let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(s))) =
+        &outcome
+    else {
+        panic!("eval must succeed");
+    };
+    let fact: crate::ast::fact::Fact = s.evaluated_equal_fact.clone().into();
+    assert_eq!(fact.readable_string(), "a + 1 = 11");
+    let id = s.evaluated_equal_fact.fact_id;
+    assert!(rt.top_exec_env().facts.facts_by_id.contains_key(&id));
+    assert_eq!(s.store_and_infer_result.primary_fact_id(), id);
+    let normal = crate::json_output::project_stmt_normal(&outcome, &rt);
+    assert!(normal
+        .as_object()
+        .unwrap()
+        .get("stores")
+        .unwrap()
+        .stringify_pretty()
+        .contains("a + 1 = 11"));
+    let detailed = crate::json_output::project_stmt_detailed(&outcome, &rt).stringify_pretty();
+    assert!(detailed.contains(&id.to_string()));
+    assert!(detailed.contains("store_and_infer"));
+    let use_result = exec_one(&mut rt, "a+1=11");
+    assert!(!use_result.is_failed());
+    assert!(crate::json_output::project_stmt_detailed(&use_result, &rt)
+        .stringify_pretty()
+        .contains(&id.to_string()));
+
+    let before = rt.top_exec_env().facts.facts_by_id.len();
+    for code in ["eval 1/0", "eval sum(1,1025,fn(k Z) Z {k})", "a+1=12"] {
+        assert!(exec_one(&mut rt, code).is_failed(), "{code}");
+        assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), before, "{code}");
+    }
+    assert!(exec_one(&mut rt, "claim:\n    ? 0=1\n    eval 20+3").is_failed());
+    assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), before);
+    assert!(!exec_one(&mut rt, "sketch:\n    eval 20+3").is_failed());
+    assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), before);
+}
+
+#[test]
+fn eval_algorithm_trace_checks_nested_arguments_and_recursive_equations() {
+    use crate::execute::execute_eval_stmt::aggregate_evaluation_result::AlgoDefinitionEvidence;
+    let mut rt = runtime_with_file_env();
+    assert!(!exec_one(
+        &mut rt,
+        "algo flag(x R) R by cases:\n    case x=0:0\n    case x!=0:1"
+    )
+    .is_failed());
+    let result = exec_one(&mut rt, "eval flag(sum(0,3,flag))");
+    let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(s))) =
+        result
+    else {
+        panic!("nested algorithm evaluation must succeed");
+    };
+    assert!(!s.algo_evaluations.is_empty());
+    assert!(s
+        .algo_evaluations
+        .iter()
+        .all(|p| matches!(p.definition_evidence, AlgoDefinitionEvidence::Checked(_))));
+    assert!(!exec_one(&mut rt, "flag(sum(0,3,flag))=1").is_failed());
+    assert!(exec_one(&mut rt, "flag(sum(0,3,flag))=0").is_failed());
+    assert!(!exec_one(
+        &mut rt,
+        "algo countdown(n N) N by induc n from 0:\n    case n=0:0\n    case n>=1:countdown(n-1)"
+    )
+    .is_failed());
+    assert_eval_number(&mut rt, "eval countdown(4)", "0");
+    assert!(!exec_one(&mut rt, "countdown(4)=0").is_failed());
+}
+
+#[test]
+fn eval_publication_and_failure_are_visible_in_every_output_language() {
+    use crate::json_output::json_keys::localize_key;
+    for language in OutputLanguage::ALL {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language,
+        });
+        let result = exec_one(&mut rt, "eval 1+2");
+        let normal = crate::json_output::project_stmt_normal(&result, &rt);
+        let stores = normal
+            .as_object()
+            .unwrap()
+            .get(&localize_key("stores", language))
+            .unwrap();
+        assert!(
+            stores.stringify_pretty().contains("1 + 2 = 3"),
+            "{language:?}"
+        );
+        let detail = crate::json_output::project_stmt_detailed(&result, &rt);
+        assert!(detail
+            .as_object()
+            .unwrap()
+            .get(&localize_key("fact_id", language)).is_some());
+        assert!(!exec_one(&mut rt, "1+2=3").is_failed());
+        let failed = exec_one(&mut rt, "eval 1/0");
+        assert!(failed.is_failed());
+        let normal = crate::json_output::project_stmt_normal(&failed, &rt);
+        assert_eq!(
+            normal
+                .as_object()
+                .unwrap()
+                .get(&localize_key("stores", language))
+                .unwrap(),
+            &JsonValue::Array(vec![])
+        );
+    }
 }
 
 #[test]
@@ -326,23 +443,33 @@ fn eval_factorial_sqrt_log_closed_numeric_succeed() {
     assert_eval_number(&mut runtime, "eval 2!", "2");
     assert_eval_number(&mut runtime, "eval 3!", "6");
     assert_eval_number(&mut runtime, "eval sqrt(4)", "2");
-    assert_eval_number(&mut runtime, "eval sqrt(0.36)", "0.6");
+    let result = exec_one(&mut runtime, "eval sqrt(0.36)");
+    let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(s))) =
+        result
+    else {
+        panic!("exact rational sqrt must succeed");
+    };
+    assert_eq!(s.evaluated_object.readable_string(), "3 / 5");
+    assert!(!exec_one(&mut runtime, "sqrt(0.36)=3/5").is_failed());
     assert_eval_number(&mut runtime, "eval log(2, 8)", "3");
 }
 
 #[test]
-fn eval_non_square_sqrt_soft_fails() {
+fn eval_non_square_sqrt_keeps_exact_root_and_publishes_equality() {
     let mut runtime = runtime_with_file_env();
     let outcome = exec_one(&mut runtime, "eval sqrt(2)");
-    match outcome {
-        ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
-            ExecEvalStmtFailed::EvaluationFailed,
-        ))) => {}
-        other => panic!(
-            "expected EvaluationFailed for sqrt(2), failed={}",
-            other.is_failed()
-        ),
-    }
+    let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(s))) =
+        outcome
+    else {
+        panic!("exact principal root must succeed");
+    };
+    assert_eq!(s.evaluated_object, s.source_object);
+    assert!(runtime
+        .top_exec_env()
+        .facts
+        .facts_by_id
+        .contains_key(&s.evaluated_equal_fact.fact_id));
+    assert!(exec_one(&mut runtime, "sqrt(2)=2").is_failed());
 }
 
 #[test]

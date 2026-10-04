@@ -1,26 +1,117 @@
-# Migration blocker B09: see plan/迁移的plan/和example有关.md.
-"""
-Finite-set induction has an explicit empty case and a fresh-element insertion
-case. It stores the resulting universal fact over `finite_set`.
-"""
+# Finite-set induction via ordinary induction on cardinality.
+# The empty case and fresh-element step are explicit hypotheses.
+# Gate: target/release/litex -strict -f examples/_internal/regression/finite_set_induction.lit
+
+thm intersect_singleton_member:
+    ? forall A set,a set:
+        a $in A
+        =>:
+            intersect(A,{a}) = {a}
+    by extension:
+        ? intersect(A,{a}) = {a}
+        forall x intersect(A,{a}):
+            x $in {a}
+        forall x {a}:
+            x = a
+            x $in A
+            x $in intersect(A,{a})
+
+thm remove_member_rebuild:
+    ? forall A finite_set,a set:
+        a $in A
+        =>:
+            $is_finite_set(set_minus(A,{a}))
+            not a $in set_minus(A,{a})
+            finite_set_size(set_minus(A,{a})) = finite_set_size(A)-1
+            union({a},set_minus(A,{a})) = A
+    by contra:
+        ? not a $in set_minus(A,{a})
+        not a $in {a}
+        impossible not a $in {a}
+    release thm intersect_singleton_member(A,a)
+    finite_set_size(intersect(A,{a})) = finite_set_size({a}) = 1
+    finite_set_size(set_minus(A,{a})) = finite_set_size(A)-finite_set_size(intersect(A,{a})) = finite_set_size(A)-1
+    by extension:
+        ? union({a},set_minus(A,{a})) = A
+        claim:
+            ? forall x union({a},set_minus(A,{a})):
+                x $in A
+            x $in {a} or x $in set_minus(A,{a})
+            by cases:
+                ? x $in A
+                case x $in {a}:
+                    x = a
+                    x $in A
+                case x $in set_minus(A,{a}):
+                    x $in A
+        claim:
+            ? forall x A:
+                x $in union({a},set_minus(A,{a}))
+            by cases:
+                ? x $in union({a},set_minus(A,{a}))
+                case x = a:
+                    x $in {a}
+                    x $in union({a},set_minus(A,{a}))
+                case x != a:
+                    not x $in {a}
+                    x $in set_minus(A,{a})
+                    x $in union({a},set_minus(A,{a}))
 
 abstract_prop finite_set_induction_regression(P)
-
-trust $finite_set_induction_regression({})
-
-trust:
-    forall x set, S finite_set:
-        not x $in S
-        $finite_set_induction_regression(S)
+prop finite_induction_size(n N):
+    forall A finite_set:
+        finite_set_size(A) = n
         =>:
-            $finite_set_induction_regression(union({x}, S))
+            $finite_set_induction_regression(A)
 
-by induc P:
-    ? $finite_set_induction_regression(P)
-    ? from P = {}:
+thm finite_induction_via_size:
+    ? forall T finite_set:
         $finite_set_induction_regression({})
-    ? induc x, S:
-        $finite_set_induction_regression(S)
-        $finite_set_induction_regression(union({x}, S))
+        forall x set,S finite_set:
+            not x $in S
+            $finite_set_induction_regression(S)
+            =>:
+                $finite_set_induction_regression(union({x},S))
+        =>:
+            $finite_set_induction_regression(T)
+    by induc n from 0:
+        ? $finite_induction_size(n)
+        ? from n = 0:
+            claim:
+                ? forall A finite_set:
+                    finite_set_size(A) = 0
+                    =>:
+                        $finite_set_induction_regression(A)
+                A = {}
+            by def $finite_induction_size(0)
+        ? induc:
+            claim:
+                ? forall A finite_set:
+                    finite_set_size(A) = n+1
+                    =>:
+                        $finite_set_induction_regression(A)
+                finite_set_size(A) > 0
+                by contra:
+                    ? $is_nonempty_set(A)
+                    A = {}
+                    finite_set_size(A) = finite_set_size({}) = 0
+                    impossible finite_set_size(A) > 0
+                have a A
+                release thm remove_member_rebuild(A,a)
+                finite_set_size(set_minus(A,{a})) = finite_set_size(A)-1 = (n+1)-1 = n
+                $finite_set_induction_regression(set_minus(A,{a}))
+                $finite_set_induction_regression(union({a},set_minus(A,{a})))
+            by def $finite_induction_size(n+1)
+    $finite_induction_size(finite_set_size(T))
 
-$finite_set_induction_regression({1, 2})
+thm concrete_finite_induction_replay:
+    ? forall:
+        $finite_set_induction_regression({})
+        forall x set,S finite_set:
+            not x $in S
+            $finite_set_induction_regression(S)
+            =>:
+                $finite_set_induction_regression(union({x},S))
+        =>:
+            $finite_set_induction_regression({1,2})
+    release thm finite_induction_via_size({1,2})

@@ -3,17 +3,11 @@ thm anonymous_restriction_value:
         Y $subset X
         =>:
             fn(x Y) R {f(x)}(y) = f(y)
-    y $in X
-    release thm fn_set_member(fn(x Y) R {f(x)}, fn(x Y) R)
-    fn(x Y) R {f(x)}(y) = f(y)
+    release thm fn_set_member(f, fn(x Y) R)
 
 thm closed_interval_restriction_value:
     ? forall a, b, u, v R, f fn(x '[a, b]) R, y '[u, v]:
         '[u, v] $subset '[a, b]
         =>:
             fn(x '[u, v]) R {f(x)}(y) = f(y)
-    '[a, b] $subset R
-    '[u, v] $subset R
-    '[a, b] $in power_set(R)
-    '[u, v] $in power_set(R)
     release thm anonymous_restriction_value('[a, b], '[u, v], f, y)

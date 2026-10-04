@@ -11,11 +11,98 @@ use crate::runtime::FactId;
 use super::text::text;
 
 impl NotGreaterFactSearchProofByBuiltinRule {
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
         match self {
-            Self::FromKnownOrderComplement(p) => p.rule_id_and_message(lang),
-            Self::ClosedNumericComparison(p) => p.rule_id_and_message(lang),
-            Self::FromKnownLess(p) => p.rule_id_and_message(lang),
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_en(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_en(),
+            Self::FromKnownLess(p) => p.rule_id_and_message_en(),
+        }
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_zh(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_zh(),
+            Self::FromKnownLess(p) => p.rule_id_and_message_zh(),
+        }
+    }
+
+    pub fn rule_id_and_message_zh_hant(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_zh_hant(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_zh_hant(),
+            Self::FromKnownLess(p) => p.rule_id_and_message_zh_hant(),
+        }
+    }
+
+    pub fn rule_id_and_message_fr(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_fr(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_fr(),
+            Self::FromKnownLess(p) => p.rule_id_and_message_fr(),
+        }
+    }
+
+    pub fn rule_id_and_message_ru(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_ru(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_ru(),
+            Self::FromKnownLess(p) => p.rule_id_and_message_ru(),
+        }
+    }
+
+    pub fn rule_id_and_message_es(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_es(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_es(),
+            Self::FromKnownLess(p) => p.rule_id_and_message_es(),
+        }
+    }
+
+    pub fn rule_id_and_message_ar(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_ar(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_ar(),
+            Self::FromKnownLess(p) => p.rule_id_and_message_ar(),
+        }
+    }
+
+    pub fn rule_id_and_message_ja(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_ja(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_ja(),
+            Self::FromKnownLess(p) => p.rule_id_and_message_ja(),
+        }
+    }
+
+    pub fn rule_id_and_message_ko(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_ko(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_ko(),
+            Self::FromKnownLess(p) => p.rule_id_and_message_ko(),
+        }
+    }
+
+    pub fn rule_id_and_message_vi(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_vi(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_vi(),
+            Self::FromKnownLess(p) => p.rule_id_and_message_vi(),
+        }
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_id_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_id_and_message_fr(),
+            OutputLanguage::Russian => self.rule_id_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_id_and_message_es(),
+            OutputLanguage::Arabic => self.rule_id_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_id_and_message_ja(),
+            OutputLanguage::Korean => self.rule_id_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_id_and_message_vi(),
         }
     }
 
@@ -33,7 +120,7 @@ impl ClosedNumericComparisonBuiltinRuleProof {
         text(
             "ClosedNumericComparison",
             "Closed Numeric Comparison",
-            "if L <= R as decimals, then `not (left > right)`",
+            "Exact closed values show the left side is less than or equal, excluding strict greater-than",
         )
     }
 
@@ -45,50 +132,82 @@ impl ClosedNumericComparisonBuiltinRuleProof {
         )
     }
 
+    pub fn rule_id_and_message_zh_hant(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "封閉數值比較",
+            "十進位值 L <= R 時，`not (left > right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_fr(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "Comparaison numérique fermée",
+            "Si les valeurs décimales vérifient L <= R, alors `not (left > right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ru(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "Сравнение замкнутых числовых выражений",
+            "Если десятичные значения удовлетворяют L <= R, то `not (left > right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_es(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "Comparación numérica cerrada",
+            "Si los valores decimales cumplen L <= R, entonces `not (left > right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ar(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "مقارنة عددية مغلقة",
+            "إذا كانت القيم العشرية تحقق L <= R فإن `not (left > right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ja(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "閉じた数値式の比較",
+            "小数値で L <= R なら `not (left > right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ko(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "닫힌 수치 식 비교",
+            "소수 값이 L <= R이면 `not (left > right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_vi(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "So sánh số đóng",
+            "Nếu giá trị thập phân thỏa L <= R thì `not (left > right)`",
+        )
+    }
+
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-            OutputLanguage::ChineseTraditional => text(
-                "ClosedNumericComparison",
-                "封閉數值比較",
-                "十進位值 L <= R 時，`not (left > right)`",
-            ),
-            OutputLanguage::French => text(
-                "ClosedNumericComparison",
-                "Comparaison numérique fermée",
-                "Si les valeurs décimales vérifient L <= R, alors `not (left > right)`",
-            ),
-            OutputLanguage::Russian => text(
-                "ClosedNumericComparison",
-                "Сравнение замкнутых числовых выражений",
-                "Если десятичные значения удовлетворяют L <= R, то `not (left > right)`",
-            ),
-            OutputLanguage::Spanish => text(
-                "ClosedNumericComparison",
-                "Comparación numérica cerrada",
-                "Si los valores decimales cumplen L <= R, entonces `not (left > right)`",
-            ),
-            OutputLanguage::Arabic => text(
-                "ClosedNumericComparison",
-                "مقارنة عددية مغلقة",
-                "إذا كانت القيم العشرية تحقق L <= R فإن `not (left > right)`",
-            ),
-            OutputLanguage::Japanese => text(
-                "ClosedNumericComparison",
-                "閉じた数値式の比較",
-                "小数値で L <= R なら `not (left > right)`",
-            ),
-            OutputLanguage::Korean => text(
-                "ClosedNumericComparison",
-                "닫힌 수치 식 비교",
-                "소수 값이 L <= R이면 `not (left > right)`",
-            ),
-            OutputLanguage::Vietnamese => text(
-                "ClosedNumericComparison",
-                "So sánh số đóng",
-                "Nếu giá trị thập phân thỏa L <= R thì `not (left > right)`",
-            ),
+            OutputLanguage::ChineseTraditional => self.rule_id_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_id_and_message_fr(),
+            OutputLanguage::Russian => self.rule_id_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_id_and_message_es(),
+            OutputLanguage::Arabic => self.rule_id_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_id_and_message_ja(),
+            OutputLanguage::Korean => self.rule_id_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_id_and_message_vi(),
         }
     }
 }
@@ -98,7 +217,7 @@ impl FromKnownLessBuiltinRuleProof {
         text(
             "FromKnownLess",
             "From Known Less",
-            "`a < b` ⇒ `not (a > b)`",
+            "The From Known Less rule establishes the following relation: `a < b` ⇒ `not (a > b)`",
         )
     }
 
@@ -110,48 +229,78 @@ impl FromKnownLessBuiltinRuleProof {
         )
     }
 
+    pub fn rule_id_and_message_zh_hant(&self) -> BuiltinRuleText {
+        text("FromKnownLess", "由已知小於", "由已知小於給出以下關係: `a < b` ⇒ `not (a > b)`")
+    }
+
+    pub fn rule_id_and_message_fr(&self) -> BuiltinRuleText {
+        text(
+            "FromKnownLess",
+            "Depuis une inégalité inférieure connue",
+            "La règle « Depuis une inégalité inférieure connue » établit la relation suivante: `a < b` ⇒ `not (a > b)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ru(&self) -> BuiltinRuleText {
+        text(
+            "FromKnownLess",
+            "Из известного меньшего значения",
+            "Правило «Из известного меньшего значения» устанавливает следующее соотношение: `a < b` ⇒ `not (a > b)`",
+        )
+    }
+
+    pub fn rule_id_and_message_es(&self) -> BuiltinRuleText {
+        text(
+            "FromKnownLess",
+            "Desde desigualdad menor conocida",
+            "La regla «Desde desigualdad menor conocida» establece la siguiente relación: `a < b` ⇒ `not (a > b)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ar(&self) -> BuiltinRuleText {
+        text(
+            "FromKnownLess",
+            "من علاقة أصغر معلومة",
+            "تثبت قاعدة «من علاقة أصغر معلومة» العلاقة التالية: `a < b` ⇒ `not (a > b)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ja(&self) -> BuiltinRuleText {
+        text(
+            "FromKnownLess",
+            "既知の小なり関係から",
+            "既知の小なり関係からにより次の関係が得られます: `a < b` ⇒ `not (a > b)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ko(&self) -> BuiltinRuleText {
+        text(
+            "FromKnownLess",
+            "알려진 작음 관계에서",
+            "알려진 작음 관계에서에 따라 다음 관계를 얻습니다: `a < b` ⇒ `not (a > b)`",
+        )
+    }
+
+    pub fn rule_id_and_message_vi(&self) -> BuiltinRuleText {
+        text(
+            "FromKnownLess",
+            "Từ quan hệ nhỏ hơn đã biết",
+            "Quy tắc «Từ quan hệ nhỏ hơn đã biết» thiết lập quan hệ sau: `a < b` ⇒ `not (a > b)`",
+        )
+    }
+
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-            OutputLanguage::ChineseTraditional => {
-                text("FromKnownLess", "由已知小於", "`a < b` ⇒ `not (a > b)`")
-            }
-            OutputLanguage::French => text(
-                "FromKnownLess",
-                "Depuis une inégalité inférieure connue",
-                "`a < b` ⇒ `not (a > b)`",
-            ),
-            OutputLanguage::Russian => text(
-                "FromKnownLess",
-                "Из известного меньшего значения",
-                "`a < b` ⇒ `not (a > b)`",
-            ),
-            OutputLanguage::Spanish => text(
-                "FromKnownLess",
-                "Desde desigualdad menor conocida",
-                "`a < b` ⇒ `not (a > b)`",
-            ),
-            OutputLanguage::Arabic => text(
-                "FromKnownLess",
-                "من علاقة أصغر معلومة",
-                "`a < b` ⇒ `not (a > b)`",
-            ),
-            OutputLanguage::Japanese => text(
-                "FromKnownLess",
-                "既知の小なり関係から",
-                "`a < b` ⇒ `not (a > b)`",
-            ),
-            OutputLanguage::Korean => text(
-                "FromKnownLess",
-                "알려진 작음 관계에서",
-                "`a < b` ⇒ `not (a > b)`",
-            ),
-            OutputLanguage::Vietnamese => text(
-                "FromKnownLess",
-                "Từ quan hệ nhỏ hơn đã biết",
-                "`a < b` ⇒ `not (a > b)`",
-            ),
+            OutputLanguage::ChineseTraditional => self.rule_id_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_id_and_message_fr(),
+            OutputLanguage::Russian => self.rule_id_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_id_and_message_es(),
+            OutputLanguage::Arabic => self.rule_id_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_id_and_message_ja(),
+            OutputLanguage::Korean => self.rule_id_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_id_and_message_vi(),
         }
     }
 }
