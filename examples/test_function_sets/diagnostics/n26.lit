@@ -1,0 +1,3 @@
+# N26: Template preserves its failing membership obligation in Normal JSON.
+template<a R>:
+    have selected Z = a

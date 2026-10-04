@@ -48,7 +48,18 @@ sketch:
     have c R*
     have f,g fn(k S) R
     finite_set_product(S,fn(k S) R* {c}) = c^finite_set_size(S)
-    finite_set_product(S,fn(k S) R {f(k)*g(k)}) = finite_set_product(S,f)*finite_set_product(S,g)
+    claim:
+        ? finite_set_product(S,fn(k S) R{f(k)*g(k)}) = finite_set_product(S,f)*finite_set_product(S,g)
+        thm complex_finite_product_multiply:
+            ? forall T finite_set, F,G fn(k T) C:
+                finite_set_product(T,fn(k T) C{F(k)*G(k)}) = finite_set_product(T,F)*finite_set_product(T,G)
+        forall t S:
+            f(t)*g(t) $in R
+        finite_set_product(S,fn(k S) R{f(k)*g(k)}) = finite_set_product(S,fn(k S) C{f(k)*g(k)})
+        release thm fn_set_member(f,fn(k S) C)
+        release thm fn_set_member(g,fn(k S) C)
+        release thm complex_finite_product_multiply(S,f,g)
+        finite_set_product(S,fn(k S) R{f(k)*g(k)}) = finite_set_product(S,fn(k S) C{f(k)*g(k)}) = finite_set_product(S,f)*finite_set_product(S,g)
 
 # P104: symbolic range bridge
 sketch:

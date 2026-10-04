@@ -1,6 +1,9 @@
-# Node: atomic.ByKnownSpecialProperty.InFact.FnApplicationInCodomain with structural substitution
+# Node: atomic.ByKnownSpecialProperty.InFact.FnApplicationInCodomain with a fixed return carrier
 # Run: litex -strict -f examples/proof_nodes/atomic/by_known_special_property/dependent_codomain.lit
 
-have fn singleton(x R) power_set({x}) = {x}
+have fn singleton(x R) power_set(R) = {x}
+forall y R:
+    singleton(y) $in power_set({y})
 have a R = 1
+singleton(a) $in power_set(R)
 singleton(a) $in power_set({a})

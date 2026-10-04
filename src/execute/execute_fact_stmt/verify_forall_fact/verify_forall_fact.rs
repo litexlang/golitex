@@ -312,10 +312,12 @@ fn same_quantified_source_fact(source: &Fact, goal: &Fact) -> bool {
         crate::ast::fact::exist_shaped_fact_from_fact(goal),
     ) {
         (Some(a), Some(b)) => {
-            crate::exec_env::exist_shaped_fact_index_key::exist_shaped_fact_alpha_match_key(&a)
-                == crate::exec_env::exist_shaped_fact_index_key::exist_shaped_fact_alpha_match_key(
-                    &b,
-                )
+            // Nested function/set binders also permit alpha-renaming. Keep
+            // free identities, carriers and the complete existential body exact.
+            crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::plain_exist_facts_alpha_equal(
+                crate::exec_env::exist_shaped_fact_index_key::plain_exist_fact(&a),
+                crate::exec_env::exist_shaped_fact_index_key::plain_exist_fact(&b),
+            )
         }
         _ => source.ir() == goal.ir() || quantifier_free_source_facts_alpha_equal(source, goal),
     }

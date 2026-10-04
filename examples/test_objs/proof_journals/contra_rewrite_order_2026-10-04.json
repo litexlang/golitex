@@ -8861,5 +8861,13 @@
     "path": "contra_rewrite_order_2026-10-04_receipts.zip",
     "sha256": "e01f884c34101884e2114eace95cd7ad981c044ccc03fc890d12eb8030765d13"
   },
-  "standard_library_source": "https://doc.rust-lang.org/std/collections/struct.HashMap.html"
+  "standard_library_source": "https://doc.rust-lang.org/std/collections/struct.HashMap.html",
+  "followups": [
+    {
+      "journal": "imaginary_contra_explicit_chain_2026-10-04.json",
+      "user_decision": "Keep existing substitution; repair Litex example with i*i=0*0=0.",
+      "example_status": "checkable",
+      "production_rust_change": false
+    }
+  ]
 }

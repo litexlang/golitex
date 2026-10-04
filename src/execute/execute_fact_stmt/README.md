@@ -332,7 +332,8 @@ still requested explicitly by `by def` or `by thm`, not by this search slot.
 
 `verify_forall_fact` first compares the goal against whole stored forall facts
 in the existing live env stack. A structural match renames outer binders
-positionally and uses the existing existential alpha key for witness binders;
+positionally and uses the existing structural existential alpha comparison
+for witness binders and nested function/set carriers;
 carriers, premises, fact polarity and free owner identities remain exact.
 The verifier checks the full goal WD before returning `ByKnownForallFact`
 with a real source FactId and parameter renamings. An unused parameter is
@@ -341,11 +342,13 @@ deep forall-pattern search or consume its budget.
 
 On a miss, the existing local-introduction pipeline remains: introduce typed
 parameters, assume checked domains, then prove and locally store conclusions.
-Both routes retain their WD/local environments in typed evidence. Nested
-forall/anonymous-function alpha equivalence is not added by this exact-source
-matcher; those shapes retain their ordinary verification routes.
+Both routes retain their WD/local environments in typed evidence. The nested
+carrier comparison preserves domains, return carriers, guards and free owners.
+This source replay does not extend automatic dependent-function existential
+projection; an explicit theorem application may still be needed.
 
-The stable tracer is `examples/stmt_nodes/definition/forall_source_replay.lit`;
+The stable tracers are `examples/stmt_nodes/definition/forall_source_replay.lit`
+and `examples/proof_nodes/forall/known_exist_nested_function_alpha.lit`;
 producer/consumer and failure boundaries are in
 `tests/unit/execute/forall_source_replay/tests.rs`. Imported exist! theorem
 fixtures currently use source fallback because their facts are outside the

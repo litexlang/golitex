@@ -13,6 +13,7 @@ by induc n from 0:
     ? f(n) = f(n)
     have a N = 0
     let b = a
+    n + 1 >= 0
 
 prop same(x Z):
     x = x
@@ -32,7 +33,8 @@ by induc k from 0:
     ? from k = 0:
         countdown(k) = 0
     ? induc:
+        k $in N
+        k + 1 >= 1
         (k + 1) - 1 = k
         countdown(k + 1) = countdown((k + 1) - 1)
         countdown((k + 1) - 1) = countdown(k)
-        countdown(k) = 0

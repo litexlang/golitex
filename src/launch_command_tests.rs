@@ -40,7 +40,19 @@ fn parses_negative_leading_eval_code_and_surrounding_flags() {
 
 #[test]
 fn eval_operand_is_source_even_when_it_spells_a_cli_option() {
-    for code in ["-strict", "--strict", "-session", "--session", "-lang", "--lang", "-f", "-r", "-e", "-help", "-unknown"] {
+    for code in [
+        "-strict",
+        "--strict",
+        "-session",
+        "--session",
+        "-lang",
+        "--lang",
+        "-f",
+        "-r",
+        "-e",
+        "-help",
+        "-unknown",
+    ] {
         assert_eq!(
             parse_launch_command(&args(&["-e", code])).unwrap(),
             LaunchCommand::Eval {
@@ -164,7 +176,7 @@ fn rejects_unknown_shape_and_bad_lang() {
     assert!(parse_launch_command(&args(&["-foo", "-e", "1 = 1"])).is_err());
     assert!(parse_launch_command(&args(&["-strict", "-help"])).is_err());
     assert!(parse_launch_command(&args(&["-lang"])).is_err());
-    assert!(parse_launch_command(&args(&["-lang", "fr", "-e", "1 = 1"])).is_err());
+    assert!(parse_launch_command(&args(&["-lang", "de", "-e", "1 = 1"])).is_err());
 }
 
 #[test]
@@ -196,4 +208,38 @@ fn parses_extract_commands() {
         }
     );
     assert!(parse_launch_command(&args(&["-session", "-extractpython", "have a R = 1"])).is_err());
+}
+
+#[test]
+fn parses_all_output_languages_and_preserves_source() {
+    for language in OutputLanguage::ALL {
+        let command =
+            parse_launch_command(&args(&["-lang", language.as_str(), "-e", "1 + 2 = 3"])).unwrap();
+        assert_eq!(command.output_language(), language);
+        match command {
+            LaunchCommand::Eval { code, .. } => assert_eq!(code, "1 + 2 = 3"),
+            _ => panic!("expected eval"),
+        }
+        assert_eq!(
+            OutputLanguage::parse_token(&format!("  {}  ", language.as_str().to_ascii_uppercase()))
+                .unwrap(),
+            language
+        );
+    }
+    for (alias, language) in [
+        ("english", OutputLanguage::English),
+        ("chinese", OutputLanguage::Chinese),
+        ("zh-hans", OutputLanguage::Chinese),
+        ("french", OutputLanguage::French),
+        ("russian", OutputLanguage::Russian),
+        ("spanish", OutputLanguage::Spanish),
+        ("arabic", OutputLanguage::Arabic),
+        ("japanese", OutputLanguage::Japanese),
+        ("korean", OutputLanguage::Korean),
+        ("vietnamese", OutputLanguage::Vietnamese),
+    ] {
+        assert_eq!(OutputLanguage::parse_token(alias).unwrap(), language);
+    }
+    assert!(OutputLanguage::parse_token("zh-unknown").is_err());
+    assert!(OutputLanguage::parse_token("").is_err());
 }

@@ -532,3 +532,18 @@ has separate [injective](../infer/atomic/injective_definition.lit) and
 [Migration record](../../docs/audits/builtin-prop-thm-migration-2026-10-03.md)
 and [journal](proof_journals/builtin-prop-thm-migration-2026-10-03.json)
 retain inventories, false/domain controls and unresolved struct/finite-set cases.
+
+[Maximum membership](atomic/by_builtin_rule/in_finite_set_max_member.lit) and
+[minimum membership](atomic/by_builtin_rule/in_finite_set_min_member.lit)
+use the existing finite, nonempty, real-valued WD contract. Focused
+`finite_set_extrema_membership_preserves_wd_and_target` Rust controls reject
+empty, infinite, non-real inputs and unrelated target sets.
+
+[Positive common divisor bound](atomic/by_builtin_rule/less_equal_positive_common_divisor_gcd.lit)
+checks positivity and both zero residues before comparing against native gcd.
+The native `(0,0)` WD exclusion remains in force.
+
+[Nested function-carrier existential replay](forall/known_exist_nested_function_alpha.lit)
+reuses a whole proved forall with renamed outer, existential and nested
+function binders. The `source_replay_tests` controls retain carrier, guard,
+body and existential-kind boundaries and prove the citation route at Direct.

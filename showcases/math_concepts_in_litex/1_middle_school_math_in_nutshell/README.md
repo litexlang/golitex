@@ -2,7 +2,7 @@
 
 This standalone showcase is the short companion to the mathematical map in
 `scripts/high_school_book/textbook/Introduction.lit`. It covers all eleven
-directions in that Introduction in one linear, runnable `main.lit`:
+directions in that Introduction in one linear `main.lit`:
 
 1. sets and logic;
 2. algebra, including powers and logarithms;
@@ -28,14 +28,20 @@ constant difference quotient of a circumference function.
 The module uses native numeric carriers, Cartesian products, finite sets,
 trigonometric and complex operations, factorial, and square root. It contains
 no direct `trust`, local axiom, or import from the larger high-school book; the
-book guides the domain selection, while this module remains independently
-runnable. The set layer also exposes and immediately applies
+book guides the domain selection. The module has its own registration; its
+complete migration acceptance remains open. The set layer also exposes and immediately applies
 `symmetric_difference` as a real-valued set construction.
 
-Run it from the repository root with:
+Migration checkpoint (2026-10-04): a clean162/162 prefix passes on release
+f499e394, through solid geometry. The current full source then fails parsing
+the dependent `A power_set(S)` parameter of `uniform_probability`. Its flat
+carrier/domain-condition migration has a native positive9/9 control and a
+rejected outside-event control; full registered acceptance is still pending.
+
+Run the current verification from the repository root with:
 
 ```bash
-target/release/litex -graph -r showcases/math_concepts_in_litex/1_middle_school_math_in_nutshell
+target/release/litex -strict -r showcases/math_concepts_in_litex/1_middle_school_math_in_nutshell
 ```
 
 `same_math_in_lean.lean` is a selected comparison rather than a line-for-line

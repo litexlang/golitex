@@ -1,18 +1,105 @@
 # Symbolic endpoints; these identities cannot be established by enumeration.
-forall n N+, c R:
-    sum(1, n, fn(k Z) R {c}) = n * c
+claim:
+    ? forall n N+, c R:
+        sum(1,n,fn(k Z) R{c}) = n*c
+    by induc m from 1:
+        ? sum(1,m,fn(k Z) R{c}) = m*c
+        ? from m = 1:
+            sum(1,m,fn(k Z) R{c}) = sum(1,1,fn(k Z) R{c}) = fn(k Z) R{c}(1) = c = m*c
+        ? induc:
+            m >= 1
+            fn(k Z) R{c}(m+1) = c
+            sum(1,m+1,fn(k Z) R{c}) = sum(1,m,fn(k Z) R{c}) + fn(k Z) R{c}(m+1) = m*c+c = (m+1)*c
+    n $in Z
+    n >= 1
+    sum(1,n,fn(k Z) R{c}) = n*c
 
 have n N+
 have c R
 have f, g fn(k Z) R
 have nonzero_constant R*
-product(1, n, fn(k Z) R* {nonzero_constant}) = nonzero_constant ^ n
-sum(1, n, fn(k Z) R {f(k) + g(k)}) = sum(1, n, f) + sum(1, n, g)
-sum(1, n, fn(k Z) R {f(k) - g(k)}) = sum(1, n, f) - sum(1, n, g)
-sum(1, n, fn(k Z) R {c * f(k)}) = c * sum(1, n, f)
+claim:
+    ? product(1, n, fn(k Z) R* {nonzero_constant}) = nonzero_constant ^ n
+    by induc m from 1:
+        ? product(1,m,fn(k Z) R*{nonzero_constant}) = nonzero_constant^m
+        ? from m = 1:
+            product(1,m,fn(k Z) R*{nonzero_constant}) = product(1,1,fn(k Z) R*{nonzero_constant}) = fn(k Z) R*{nonzero_constant}(1) = nonzero_constant = nonzero_constant^m
+        ? induc:
+            m >= 1
+            fn(k Z) R*{nonzero_constant}(m+1) = nonzero_constant
+            m $in Z
+            nonzero_constant != 0
+            product(1,m+1,fn(k Z) R*{nonzero_constant}) = product(1,m,fn(k Z) R*{nonzero_constant}) * fn(k Z) R*{nonzero_constant}(m+1) = nonzero_constant^m*nonzero_constant = nonzero_constant^m*nonzero_constant^1 = nonzero_constant^(m+1)
+    n $in Z
+    n >= 1
+    product(1,n,fn(k Z) R*{nonzero_constant}) = nonzero_constant^n
+claim:
+    ? sum(1, n, fn(k Z) R {f(k) + g(k)}) = sum(1, n, f) + sum(1, n, g)
+    let h = fn(k Z) R{f(k)+g(k)}
+    by induc m from 1:
+        ? sum(1,m,h) = sum(1,m,f)+sum(1,m,g)
+        ? from m = 1:
+            h(1) = f(1)+g(1)
+            sum(1,1,f) = f(1)
+            sum(1,1,g) = g(1)
+            sum(1,1,h) = h(1) = f(1)+g(1) = sum(1,1,f)+sum(1,1,g)
+        ? induc:
+            m >= 1
+            h(m+1) = f(m+1)+g(m+1)
+            sum(1,m+1,f) = sum(1,m,f)+f(m+1)
+            sum(1,m+1,g) = sum(1,m,g)+g(m+1)
+            sum(1,m+1,h) = sum(1,m,h) + h(m+1) = (sum(1,m,f)+sum(1,m,g)) + (f(m+1)+g(m+1)) = (sum(1,m,f)+f(m+1)) + (sum(1,m,g)+g(m+1)) = sum(1,m+1,f) + (sum(1,m,g)+g(m+1)) = sum(1,m+1,f)+sum(1,m+1,g)
+    n $in Z
+    n >= 1
+    sum(1,n,h) = sum(1,n,f)+sum(1,n,g)
+    sum(1,n,fn(k Z) R{f(k)+g(k)}) = sum(1,n,h) = sum(1,n,f)+sum(1,n,g)
+claim:
+    ? sum(1, n, fn(k Z) R {f(k) - g(k)}) = sum(1, n, f) - sum(1, n, g)
+    let h = fn(k Z) R{f(k)-g(k)}
+    by induc m from 1:
+        ? sum(1,m,h) = sum(1,m,f)-sum(1,m,g)
+        ? from m = 1:
+            h(1) = f(1)-g(1)
+            sum(1,1,f) = f(1)
+            sum(1,1,g) = g(1)
+            sum(1,1,h) = h(1) = f(1)-g(1) = sum(1,1,f)-sum(1,1,g)
+        ? induc:
+            m >= 1
+            h(m+1) = f(m+1)-g(m+1)
+            sum(1,m+1,f) = sum(1,m,f)+f(m+1)
+            sum(1,m+1,g) = sum(1,m,g)+g(m+1)
+            sum(1,m+1,h) = sum(1,m,h)+h(m+1) = (sum(1,m,f)-sum(1,m,g))+(f(m+1)-g(m+1)) = (sum(1,m,f)+f(m+1))-(sum(1,m,g)+g(m+1)) = sum(1,m+1,f)-(sum(1,m,g)+g(m+1)) = sum(1,m+1,f)-sum(1,m+1,g)
+    n $in Z
+    n >= 1
+    sum(1,n,h) = sum(1,n,f)-sum(1,n,g)
+    sum(1,n,fn(k Z) R{f(k)-g(k)}) = sum(1,n,h) = sum(1,n,f)-sum(1,n,g)
+claim:
+    ? sum(1, n, fn(k Z) R {c * f(k)}) = c * sum(1, n, f)
+    let h = fn(k Z) R{c*f(k)}
+    by induc m from 1:
+        ? sum(1,m,h) = c*sum(1,m,f)
+        ? from m = 1:
+            h(1) = c*f(1)
+            sum(1,1,f) = f(1)
+            sum(1,1,h) = h(1) = c*f(1) = c*sum(1,1,f)
+        ? induc:
+            m >= 1
+            h(m+1) = c*f(m+1)
+            sum(1,m+1,f) = sum(1,m,f)+f(m+1)
+            sum(1,m+1,h) = sum(1,m,h)+h(m+1) = c*sum(1,m,f)+c*f(m+1) = c*(sum(1,m,f)+f(m+1)) = c*sum(1,m+1,f)
+    n $in Z
+    n >= 1
+    sum(1,n,h) = c*sum(1,n,f)
+    sum(1,n,fn(k Z) R{c*f(k)}) = sum(1,n,h) = c*sum(1,n,f)
 sum(1, n + 1, f) = sum(1, n, f) + sum(n + 1, n + 1, f)
 product(1, n + 1, f) = product(1, n, f) * product(n + 1, n + 1, f)
-sum(1, n, fn(k Z) Z {k + k}) = sum(1, n, fn(j Z) Z {2 * j})
+claim:
+    ? sum(1,n,fn(k Z) Z{k+k}) = sum(1,n,fn(j Z) Z{2*j})
+    by fn_extension:
+        ? fn(k Z) Z{k+k} = fn(j Z) Z{2*j}
+        forall t Z:
+            fn(k Z) Z{k+k}(t) = t+t = 2*t = fn(j Z) Z{2*j}(t)
+            fn(k Z) Z{k+k}(t) = fn(j Z) Z{2*j}(t)
 
 # Legal source and target ranges are explicit hypotheses for this reindexing rule.
 forall a, b, t Z:
@@ -28,23 +115,76 @@ finite_set_product(closed_range(1, n), f) = product(1, n, f)
 have S finite_set
 have h, j fn(k S) R
 finite_set_sum(S, fn(k S) R {c}) = finite_set_size(S) * c
-finite_set_sum(S, fn(k S) R {h(k) + j(k)}) = finite_set_sum(S, h) + finite_set_sum(S, j)
-finite_set_sum(S, fn(k S) R {h(k) - j(k)}) = finite_set_sum(S, h) - finite_set_sum(S, j)
-finite_set_sum(S, fn(k S) R {c * h(k)}) = c * finite_set_sum(S, h)
-finite_set_product(S, fn(k S) R {h(k) * j(k)}) = finite_set_product(S, h) * finite_set_product(S, j)
+claim:
+    ? finite_set_sum(S,fn(k S) R{h(k)+j(k)}) = finite_set_sum(S,h)+finite_set_sum(S,j)
+    thm complex_finite_sum_add:
+        ? forall T finite_set, F,G fn(k T) C:
+            finite_set_sum(T,fn(k T) C{F(k)+G(k)}) = finite_set_sum(T,F)+finite_set_sum(T,G)
+    forall t S:
+        h(t)+j(t) $in R
+    release thm fn_set_member(h,fn(k S) C)
+    release thm fn_set_member(j,fn(k S) C)
+    release thm complex_finite_sum_add(S,h,j)
+    release thm finite_set_sum_substitution(finite_set_sum(S,fn(k S) R{h(k)+j(k)}),finite_set_sum(S,fn(k S) C{h(k)+j(k)}))
+    finite_set_sum(S,fn(k S) R{h(k)+j(k)}) = finite_set_sum(S,fn(k S) C{h(k)+j(k)}) = finite_set_sum(S,h)+finite_set_sum(S,j)
+claim:
+    ? finite_set_sum(S,fn(k S) R{h(k)-j(k)}) = finite_set_sum(S,h)-finite_set_sum(S,j)
+    thm complex_finite_sum_subtract:
+        ? forall T finite_set, F,G fn(k T) C:
+            finite_set_sum(T,fn(k T) C{F(k)-G(k)}) = finite_set_sum(T,F)-finite_set_sum(T,G)
+    forall t S:
+        h(t)-j(t) $in R
+    release thm fn_set_member(h,fn(k S) C)
+    release thm fn_set_member(j,fn(k S) C)
+    release thm complex_finite_sum_subtract(S,h,j)
+    release thm finite_set_sum_substitution(finite_set_sum(S,fn(k S) R{h(k)-j(k)}),finite_set_sum(S,fn(k S) C{h(k)-j(k)}))
+    finite_set_sum(S,fn(k S) R{h(k)-j(k)}) = finite_set_sum(S,fn(k S) C{h(k)-j(k)}) = finite_set_sum(S,h)-finite_set_sum(S,j)
+claim:
+    ? finite_set_sum(S,fn(k S) R{c*h(k)}) = c*finite_set_sum(S,h)
+    thm complex_finite_sum_scale:
+        ? forall T finite_set, a C, F fn(k T) C:
+            finite_set_sum(T,fn(k T) C{a*F(k)}) = a*finite_set_sum(T,F)
+    forall t S:
+        c*h(t) $in R
+    release thm fn_set_member(h,fn(k S) C)
+    release thm complex_finite_sum_scale(S,c,h)
+    release thm finite_set_sum_substitution(finite_set_sum(S,fn(k S) R{c*h(k)}),finite_set_sum(S,fn(k S) C{c*h(k)}))
+    finite_set_sum(S,fn(k S) R{c*h(k)}) = finite_set_sum(S,fn(k S) C{c*h(k)}) = c*finite_set_sum(S,h)
+claim:
+    ? finite_set_product(S,fn(k S) R{h(k)*j(k)}) = finite_set_product(S,h)*finite_set_product(S,j)
+    thm complex_finite_product_multiply:
+        ? forall T finite_set, F,G fn(k T) C:
+            finite_set_product(T,fn(k T) C{F(k)*G(k)}) = finite_set_product(T,F)*finite_set_product(T,G)
+    forall t S:
+        h(t)*j(t) $in R
+    finite_set_product(S,fn(k S) R{h(k)*j(k)}) = finite_set_product(S,fn(k S) C{h(k)*j(k)})
+    release thm fn_set_member(h,fn(k S) C)
+    release thm fn_set_member(j,fn(k S) C)
+    release thm complex_finite_product_multiply(S,h,j)
+    finite_set_product(S,fn(k S) R{h(k)*j(k)}) = finite_set_product(S,fn(k S) C{h(k)*j(k)}) = finite_set_product(S,h)*finite_set_product(S,j)
 
 have d R*
 finite_set_product(S, fn(k S) R* {d}) = d ^ finite_set_size(S)
 
-forall m N+:
-    forall k Z:
-        1 <= k
-        k <= m
+claim:
+    ? forall m N+:
+        forall k Z:
+            1 <= k
+            k <= m
+            =>:
+                f(k) = g(k)
         =>:
-            f(k) = g(k)
-    =>:
-        sum(1, m, f) = sum(1, m, g)
-        product(1, m, f) = product(1, m, g)
+            sum(1,m,f) = sum(1,m,g)
+            product(1,m,f) = product(1,m,g)
+    have fn F(k closed_range(1,m)) R = f(k)
+    have fn G(k closed_range(1,m)) R = g(k)
+    by fn_extension:
+        ? F = G
+        forall t closed_range(1,m):
+            F(t) = f(t) = g(t) = G(t)
+            F(t) = G(t)
+    product(1,m,f) = finite_set_product(closed_range(1,m),f) = finite_set_product(closed_range(1,m),F) = finite_set_product(closed_range(1,m),G) = finite_set_product(closed_range(1,m),g) = product(1,m,g)
+    sum(1,m,f) = finite_set_sum(closed_range(1,m),f) = finite_set_sum(closed_range(1,m),F) = finite_set_sum(closed_range(1,m),G) = finite_set_sum(closed_range(1,m),g) = sum(1,m,g)
 
 have A, B finite_set
 have q fn(k union(A, B)) R

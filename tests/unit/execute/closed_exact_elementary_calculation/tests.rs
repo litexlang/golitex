@@ -279,6 +279,7 @@ fn radical_provenance_projects_in_both_languages() {
         let explanation = match language {
             OutputLanguage::English => "by_closed_calculation",
             OutputLanguage::Chinese => "封闭计算",
+            _ => unreachable!("this regression checks the original English and Chinese outputs"),
         };
         assert!(normal.contains(explanation), "{normal}");
     }

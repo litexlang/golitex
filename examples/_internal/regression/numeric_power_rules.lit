@@ -3,11 +3,16 @@ forall a, b N, n N+:
     =>:
         a^n < b^n
 
-forall a, b, n N:
-    n >= 1
-    a < b
-    =>:
-        a^n < b^n
+claim:
+    ? forall a, b, n N:
+        n >= 1
+        a < b
+        =>:
+            a^n < b^n
+    n $in Z
+    n > 0
+    n $in N+
+    a^n < b^n
 
 forall a, b, n N+:
     a < b
@@ -23,19 +28,60 @@ forall x, y Q, n N+:
 forall x Q*, n Z:
     x^n != 0
 
-forall x Q*, n N+:
-    x^n != 0
-    =>:
-        x^(-n) = 1 / x^n
+claim:
+    ? forall x Q*, n N+:
+        x^n != 0
+        =>:
+            x^(-n) = 1 / x^n
+    x $in R*
+    n $in Z
+    have p R* = x^n
+    n * (-1) = -n
+    1 / p = p^(-1)
+    (x^n)^(-1) = x^(n * (-1))
+    x^(-n) = x^(n * (-1)) = (x^n)^(-1) = p^(-1) = 1 / p = 1 / x^n
 
 forall x, y Q*, n Z:
     (x * y)^n = x^n * y^n
 
-forall x, y Q+, n Z:
-    x >= y
-    n < 0
-    =>:
-        x^n <= y^n
+claim:
+    ? forall x, y Q+, n Z:
+        x >= y
+        n < 0
+        =>:
+            x^n <= y^n
+    x != 0
+    y != 0
+    -n $in Z
+    n * (-1) > 0
+    -n = n * (-1) > 0
+    have m N+ = -n
+    y <= x
+    have a R+ = x^m
+    have b R+ = y^m
+    a != 0
+    b != 0
+    claim:
+        ? b <= a
+        by cases:
+            ? b <= a
+            case y = x:
+                b = y^m = x^m = a
+            case y != x:
+                by contra:
+                    ? y < x
+                    y >= x
+                    y = x
+                    impossible y != x
+                y^m < x^m
+                b = y^m <= x^m = a
+    have d R+ = a*b
+    b/d <= a/d
+    1/a = b/(a*b) = b/d <= a/d = a/(a*b) = 1/b
+    m * (-1) = (-n) * (-1) = n
+    x^n = x^(m * (-1)) = (x^m)^(-1) = a^(-1) = 1/a
+    y^n = y^(m * (-1)) = (y^m)^(-1) = b^(-1) = 1/b
+    x^n = 1/a <= 1/b = y^n
 
 forall x, y Q+, n Z:
     n != 0
@@ -43,9 +89,33 @@ forall x, y Q+, n Z:
     =>:
         x = y
 
-forall x Q*, n Z:
-    x $in R
-    abs(x^n) = abs(x)^n
+claim:
+    ? forall x Q*, n Z:
+        x $in R
+        abs(x^n) = abs(x)^n
+    claim:
+        ? forall t R*:
+            abs(t) > 0
+        abs(t) >= 0
+        abs(t) != 0
+        by contra:
+            ? abs(t) > 0
+            abs(t) <= 0
+            abs(t) = 0
+            impossible abs(t) != 0
+    x $in R*
+    x^n $in R*
+    abs(x^n) > 0
+    abs(x) > 0
+    abs(x) $in R*
+    abs(x) $in R+
+    have a R+ = abs(x^n)
+    have b R+ = abs(x)^n
+    a^2 = abs(x^n)^2 = (x^n)^2 = x^(n*2)
+    b^2 = (abs(x)^n)^2 = abs(x)^(n*2) = abs(x)^(2*n) = (abs(x)^2)^n = (x^2)^n = x^(2*n) = x^(n*2)
+    a^2 = b^2
+    a = b
+    abs(x^n) = a = b = abs(x)^n
 
 forall a, b R:
     a * b = 0
@@ -53,21 +123,30 @@ forall a, b R:
     =>:
         b = 0
 
-forall a, b, c R*:
-    a / (b / c) = a * c / b
-    (a / b) / c = a / (b * c)
+claim:
+    ? forall a, b, c R*:
+        a / (b / c) = a * c / b
+        (a / b) / c = a / (b * c)
+    b != 0
+    c != 0
+    b / c != 0
+    b * c != 0
 
-forall u, v, w R:
-    w != 0
-    u = v / w
-    =>:
-        u * w = v
-
-forall u, v, w R:
-    w != 0
-    u * w = v
-    =>:
+claim:
+    ? forall u, v, w R:
+        w != 0
         u = v / w
+        =>:
+            u * w = v
+    u * w = (v / w) * w = v
+
+claim:
+    ? forall u, v, w R:
+        w != 0
+        u * w = v
+        =>:
+            u = v / w
+    u = (u * w) / w = v / w
 
 forall x R:
     x + x = 2 * x
@@ -97,10 +176,16 @@ forall x, c R:
     <=>:
         x - c != 0
 
-forall x, c R:
-    x != -c
-    =>:
-        x + c != 0
+claim:
+    ? forall x, c R:
+        x != -c
+        =>:
+            x + c != 0
+    by contra:
+        ? x + c != 0
+        x + c = 0
+        x = 0 - c = -c
+        impossible x != -c
 
 forall x, c R:
     x + c != 0

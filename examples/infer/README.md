@@ -65,3 +65,5 @@ while IFS= read -r f; do
 done < <(find examples/infer -name '*.lit' | sort)
 exit $fail
 ```
+
+`atomic/in_signed_standard_set_nonzero_from_sign.lit` publishes `x != 0` from strict positive/negative standard carriers before later inferred division/modulo facts need WD. Nonnegative N and unsigned R do not supply nonzero. The common-divisor builder demonstrates explicit subset proof for its natural carrier; direct carrier automation remains a separate limitation.

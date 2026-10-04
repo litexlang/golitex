@@ -1,0 +1,1297 @@
+{
+  "schema_version": 1,
+  "built_from_current_source": true,
+  "mode": "capability_observation",
+  "source_sha256": "ae8edf742afa7ccf9afa7a194cb35720489b1297537087da292de5cfd9276cb0",
+  "binary_sha256": "40c56a295131ffa2778578d37b5e281fd6efd21f61816d4c8b7f87c8b69db9b0",
+  "observations": [
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/capability_probes/t03.lit"
+      ],
+      "observed": "reject",
+      "phase": "have_equal",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `f`\", line: 8, path: Real(\"examples/test_function_sets/capability_probes/t03.lit\") }))",
+      "failures": [
+        {
+          "success": false,
+          "statement": "have … = …",
+          "why_failed": {
+            "type": "define_obj",
+            "rule_name": "Have with equality",
+            "message": "Introduce an object equal to a given well-defined value",
+            "phase": "have_equal"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "CAP_T03",
+      "group": "template",
+      "title": "Original direct claim: Template selects a function-space carrier",
+      "file": "capability_probes/t03.lit",
+      "expect": "observe",
+      "fixture_sha256": "2dd0686cdca150ca1574b8f602059e037d214e85404f5d54f59dbee77a8b28ef",
+      "matches": null
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/capability_probes/t05.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "shift_two(3) = 5",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "shift_two(3) = 5"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "CAP_T05",
+      "group": "template",
+      "title": "Original direct claim: Callable alias of a specialized template",
+      "file": "capability_probes/t05.lit",
+      "expect": "observe",
+      "fixture_sha256": "8ff6273cc357f08e42102e1466b6d229a69730c9b7066097331f27001fc6d79e",
+      "matches": null
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/capability_probes/s02.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "box.op(2) = 3",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "box.op(2) = 3"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "CAP_S02",
+      "group": "struct",
+      "title": "Original direct claim: Concrete function field evaluates after typed construction",
+      "file": "capability_probes/s02.lit",
+      "expect": "observe",
+      "fixture_sha256": "8ef88f3e17f4656066adbefc1ea374aaaa72a5237364b33ccfd3b43d15047ac7",
+      "matches": null
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/capability_probes/s07.lit"
+      ],
+      "observed": "reject",
+      "phase": "def_template",
+      "statement_statuses": [
+        true,
+        true,
+        false,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "template …",
+          "why_failed": {
+            "type": "definition",
+            "rule_name": "Define template",
+            "message": "Define a reusable template",
+            "phase": "def_template",
+            "failure": {
+              "phase": "body_have_equal",
+              "failure": {
+                "phase": "membership",
+                "failure": {
+                  "type": "atomic_except_equality",
+                  "success": false,
+                  "phase": "search_proof",
+                  "fact": "(fn (x R) R{x + a}, 0) $in &Box",
+                  "well_defined": {
+                    "well_defined_of_each_parameter": [
+                      {
+                        "type": "by_def",
+                        "family": "ProductShape",
+                        "kind": "Tuple",
+                        "obj": "(fn (x R) R{x + a}, 0)",
+                        "child_obj_well_defined": [
+                          {
+                            "type": "by_def",
+                            "family": "FunctionSpace",
+                            "kind": "AnonymousFn",
+                            "obj": "fn (x R) R{x + a}",
+                            "param_type_well_defined": [
+                              {
+                                "type": "by_known",
+                                "obj": "R",
+                                "wd_id": "wd10"
+                              }
+                            ],
+                            "dom_fact_well_defined": [],
+                            "ret_set_well_defined": {
+                              "type": "by_known",
+                              "obj": "R",
+                              "wd_id": "wd10"
+                            },
+                            "body_well_defined": {
+                              "type": "by_def",
+                              "family": "ArithmeticOperator",
+                              "kind": "Add",
+                              "obj": "x + a",
+                              "child_obj_well_defined": [
+                                {
+                                  "type": "by_def",
+                                  "family": "Identifier",
+                                  "kind": "Identifier",
+                                  "obj": "x"
+                                },
+                                {
+                                  "type": "by_def",
+                                  "family": "Identifier",
+                                  "kind": "Identifier",
+                                  "obj": "a"
+                                }
+                              ],
+                              "requirement_fact_verified": [
+                                {
+                                  "type": "atomic_except_equality",
+                                  "success": true,
+                                  "fact": "x $in C",
+                                  "well_defined": {
+                                    "well_defined_of_each_parameter": [
+                                      {
+                                        "type": "by_def",
+                                        "family": "Identifier",
+                                        "kind": "Identifier",
+                                        "obj": "x"
+                                      },
+                                      {
+                                        "type": "by_def",
+                                        "family": "StandardSet",
+                                        "kind": "StandardSet",
+                                        "obj": "C"
+                                      }
+                                    ],
+                                    "predicate_signature": {
+                                      "type": "builtin"
+                                    },
+                                    "predicate_domain": []
+                                  },
+                                  "searched_proof": {
+                                    "type": "by_structural_membership",
+                                    "element": "x",
+                                    "set": "C",
+                                    "source": {
+                                      "type": "by_structural_membership",
+                                      "element": "x",
+                                      "set": "R",
+                                      "cite": {
+                                        "type": "by_known_atomic",
+                                        "cite_fact_id": "f662",
+                                        "why_parameters_of_known_fact_are_equal_to_givens": [
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          },
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          }
+                                        ]
+                                      },
+                                      "kind": "known"
+                                    },
+                                    "kind": "standard_superset"
+                                  }
+                                },
+                                {
+                                  "type": "atomic_except_equality",
+                                  "success": true,
+                                  "fact": "a $in C",
+                                  "well_defined": {
+                                    "well_defined_of_each_parameter": [
+                                      {
+                                        "type": "by_def",
+                                        "family": "Identifier",
+                                        "kind": "Identifier",
+                                        "obj": "a"
+                                      },
+                                      {
+                                        "type": "by_def",
+                                        "family": "StandardSet",
+                                        "kind": "StandardSet",
+                                        "obj": "C"
+                                      }
+                                    ],
+                                    "predicate_signature": {
+                                      "type": "builtin"
+                                    },
+                                    "predicate_domain": []
+                                  },
+                                  "searched_proof": {
+                                    "type": "by_structural_membership",
+                                    "element": "a",
+                                    "set": "C",
+                                    "source": {
+                                      "type": "by_structural_membership",
+                                      "element": "a",
+                                      "set": "R",
+                                      "cite": {
+                                        "type": "by_known_atomic",
+                                        "cite_fact_id": "f452",
+                                        "why_parameters_of_known_fact_are_equal_to_givens": [
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          },
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          }
+                                        ]
+                                      },
+                                      "kind": "known"
+                                    },
+                                    "kind": "standard_superset"
+                                  }
+                                }
+                              ]
+                            },
+                            "body_in_ret_set": {
+                              "type": "atomic_except_equality",
+                              "success": true,
+                              "fact": "x + a $in R",
+                              "well_defined": {
+                                "well_defined_of_each_parameter": [
+                                  {
+                                    "type": "by_def",
+                                    "family": "ArithmeticOperator",
+                                    "kind": "Add",
+                                    "obj": "x + a",
+                                    "child_obj_well_defined": [
+                                      {
+                                        "type": "by_def",
+                                        "family": "Identifier",
+                                        "kind": "Identifier",
+                                        "obj": "x"
+                                      },
+                                      {
+                                        "type": "by_def",
+                                        "family": "Identifier",
+                                        "kind": "Identifier",
+                                        "obj": "a"
+                                      }
+                                    ],
+                                    "requirement_fact_verified": [
+                                      {
+                                        "type": "atomic_except_equality",
+                                        "success": true,
+                                        "fact": "x $in C",
+                                        "well_defined": {
+                                          "well_defined_of_each_parameter": [
+                                            {
+                                              "type": "by_def",
+                                              "family": "Identifier",
+                                              "kind": "Identifier",
+                                              "obj": "x"
+                                            },
+                                            {
+                                              "type": "by_def",
+                                              "family": "StandardSet",
+                                              "kind": "StandardSet",
+                                              "obj": "C"
+                                            }
+                                          ],
+                                          "predicate_signature": {
+                                            "type": "builtin"
+                                          },
+                                          "predicate_domain": []
+                                        },
+                                        "searched_proof": {
+                                          "type": "by_structural_membership",
+                                          "element": "x",
+                                          "set": "C",
+                                          "source": {
+                                            "type": "by_structural_membership",
+                                            "element": "x",
+                                            "set": "R",
+                                            "cite": {
+                                              "type": "by_known_atomic",
+                                              "cite_fact_id": "f662",
+                                              "why_parameters_of_known_fact_are_equal_to_givens": [
+                                                {
+                                                  "type": "by_they_are_the_same",
+                                                  "kind": "same_ir"
+                                                },
+                                                {
+                                                  "type": "by_they_are_the_same",
+                                                  "kind": "same_ir"
+                                                }
+                                              ]
+                                            },
+                                            "kind": "known"
+                                          },
+                                          "kind": "standard_superset"
+                                        }
+                                      },
+                                      {
+                                        "type": "atomic_except_equality",
+                                        "success": true,
+                                        "fact": "a $in C",
+                                        "well_defined": {
+                                          "well_defined_of_each_parameter": [
+                                            {
+                                              "type": "by_def",
+                                              "family": "Identifier",
+                                              "kind": "Identifier",
+                                              "obj": "a"
+                                            },
+                                            {
+                                              "type": "by_def",
+                                              "family": "StandardSet",
+                                              "kind": "StandardSet",
+                                              "obj": "C"
+                                            }
+                                          ],
+                                          "predicate_signature": {
+                                            "type": "builtin"
+                                          },
+                                          "predicate_domain": []
+                                        },
+                                        "searched_proof": {
+                                          "type": "by_structural_membership",
+                                          "element": "a",
+                                          "set": "C",
+                                          "source": {
+                                            "type": "by_structural_membership",
+                                            "element": "a",
+                                            "set": "R",
+                                            "cite": {
+                                              "type": "by_known_atomic",
+                                              "cite_fact_id": "f452",
+                                              "why_parameters_of_known_fact_are_equal_to_givens": [
+                                                {
+                                                  "type": "by_they_are_the_same",
+                                                  "kind": "same_ir"
+                                                },
+                                                {
+                                                  "type": "by_they_are_the_same",
+                                                  "kind": "same_ir"
+                                                }
+                                              ]
+                                            },
+                                            "kind": "known"
+                                          },
+                                          "kind": "standard_superset"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "by_known",
+                                    "obj": "R",
+                                    "wd_id": "wd10"
+                                  }
+                                ],
+                                "predicate_signature": {
+                                  "type": "builtin"
+                                },
+                                "predicate_domain": []
+                              },
+                              "searched_proof": {
+                                "type": "by_structural_membership",
+                                "element": "x + a",
+                                "set": "R",
+                                "left": {
+                                  "type": "by_structural_membership",
+                                  "element": "x",
+                                  "set": "R",
+                                  "cite": {
+                                    "type": "by_known_atomic",
+                                    "cite_fact_id": "f662",
+                                    "why_parameters_of_known_fact_are_equal_to_givens": [
+                                      {
+                                        "type": "by_they_are_the_same",
+                                        "kind": "same_ir"
+                                      },
+                                      {
+                                        "type": "by_they_are_the_same",
+                                        "kind": "same_ir"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "known"
+                                },
+                                "right": {
+                                  "type": "by_structural_membership",
+                                  "element": "a",
+                                  "set": "R",
+                                  "cite": {
+                                    "type": "by_known_atomic",
+                                    "cite_fact_id": "f452",
+                                    "why_parameters_of_known_fact_are_equal_to_givens": [
+                                      {
+                                        "type": "by_they_are_the_same",
+                                        "kind": "same_ir"
+                                      },
+                                      {
+                                        "type": "by_they_are_the_same",
+                                        "kind": "same_ir"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "known"
+                                },
+                                "kind": "add"
+                              }
+                            }
+                          },
+                          {
+                            "type": "by_def",
+                            "family": "Literal",
+                            "kind": "Number",
+                            "obj": "0"
+                          }
+                        ],
+                        "requirement_fact_verified": []
+                      },
+                      {
+                        "type": "by_def",
+                        "family": "Structish",
+                        "kind": "StructObj",
+                        "obj": "&Box",
+                        "child_obj_well_defined": [],
+                        "requirement_fact_verified": []
+                      }
+                    ],
+                    "predicate_signature": {
+                      "type": "builtin"
+                    },
+                    "predicate_domain": []
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "child",
+                  "obj": "\\box<2>.op",
+                  "failure": {
+                    "phase": "Structish",
+                    "failure": {
+                      "phase": "FieldAccess",
+                      "failure": {
+                        "phase": "child",
+                        "obj": "\\box<2>",
+                        "failure": {
+                          "phase": "InstantiatedTemplateObj",
+                          "failure": {
+                            "message": "template `box` is not defined"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "CAP_S07",
+      "group": "struct",
+      "title": "Original direct claim: Template selects a struct containing a concrete function",
+      "file": "capability_probes/s07.lit",
+      "expect": "observe",
+      "fixture_sha256": "ae0712f8e8048edd4be3ef044b6410a55e261e588abdab737ef225d3db306e34",
+      "matches": null
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/capability_probes/s08.lit"
+      ],
+      "observed": "reject",
+      "phase": "have_fn_equal",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `make`\", line: 12, path: Real(\"examples/test_function_sets/capability_probes/s08.lit\") }))",
+      "failures": [
+        {
+          "success": false,
+          "statement": "have fn …",
+          "why_failed": {
+            "type": "define_fn",
+            "rule_name": "Have function equal",
+            "message": "Define a named function equal to an anonymous function",
+            "phase": "have_fn_equal",
+            "failure": {
+              "success": false,
+              "obj": "fn (a R) &Box{(fn (x R) R{x + a}, 0)}",
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FunctionSpace",
+                "failure": {
+                  "phase": "AnonymousFn",
+                  "failure": {
+                    "phase": "body_in_return_set",
+                    "failure": {
+                      "type": "atomic_except_equality",
+                      "success": false,
+                      "phase": "search_proof",
+                      "fact": "(fn (x R) R{x + a}, 0) $in &Box",
+                      "well_defined": {
+                        "well_defined_of_each_parameter": [
+                          {
+                            "type": "by_def",
+                            "family": "ProductShape",
+                            "kind": "Tuple",
+                            "obj": "(fn (x R) R{x + a}, 0)",
+                            "child_obj_well_defined": [
+                              {
+                                "type": "by_def",
+                                "family": "FunctionSpace",
+                                "kind": "AnonymousFn",
+                                "obj": "fn (x R) R{x + a}",
+                                "param_type_well_defined": [
+                                  {
+                                    "type": "by_known",
+                                    "obj": "R",
+                                    "wd_id": "wd10"
+                                  }
+                                ],
+                                "dom_fact_well_defined": [],
+                                "ret_set_well_defined": {
+                                  "type": "by_known",
+                                  "obj": "R",
+                                  "wd_id": "wd10"
+                                },
+                                "body_well_defined": {
+                                  "type": "by_def",
+                                  "family": "ArithmeticOperator",
+                                  "kind": "Add",
+                                  "obj": "x + a",
+                                  "child_obj_well_defined": [
+                                    {
+                                      "type": "by_def",
+                                      "family": "Identifier",
+                                      "kind": "Identifier",
+                                      "obj": "x"
+                                    },
+                                    {
+                                      "type": "by_def",
+                                      "family": "Identifier",
+                                      "kind": "Identifier",
+                                      "obj": "a"
+                                    }
+                                  ],
+                                  "requirement_fact_verified": [
+                                    {
+                                      "type": "atomic_except_equality",
+                                      "success": true,
+                                      "fact": "x $in C",
+                                      "well_defined": {
+                                        "well_defined_of_each_parameter": [
+                                          {
+                                            "type": "by_def",
+                                            "family": "Identifier",
+                                            "kind": "Identifier",
+                                            "obj": "x"
+                                          },
+                                          {
+                                            "type": "by_def",
+                                            "family": "StandardSet",
+                                            "kind": "StandardSet",
+                                            "obj": "C"
+                                          }
+                                        ],
+                                        "predicate_signature": {
+                                          "type": "builtin"
+                                        },
+                                        "predicate_domain": []
+                                      },
+                                      "searched_proof": {
+                                        "type": "by_structural_membership",
+                                        "element": "x",
+                                        "set": "C",
+                                        "source": {
+                                          "type": "by_structural_membership",
+                                          "element": "x",
+                                          "set": "R",
+                                          "cite": {
+                                            "type": "by_known_atomic",
+                                            "cite_fact_id": "f526",
+                                            "why_parameters_of_known_fact_are_equal_to_givens": [
+                                              {
+                                                "type": "by_they_are_the_same",
+                                                "kind": "same_ir"
+                                              },
+                                              {
+                                                "type": "by_they_are_the_same",
+                                                "kind": "same_ir"
+                                              }
+                                            ]
+                                          },
+                                          "kind": "known"
+                                        },
+                                        "kind": "standard_superset"
+                                      }
+                                    },
+                                    {
+                                      "type": "atomic_except_equality",
+                                      "success": true,
+                                      "fact": "a $in C",
+                                      "well_defined": {
+                                        "well_defined_of_each_parameter": [
+                                          {
+                                            "type": "by_def",
+                                            "family": "Identifier",
+                                            "kind": "Identifier",
+                                            "obj": "a"
+                                          },
+                                          {
+                                            "type": "by_def",
+                                            "family": "StandardSet",
+                                            "kind": "StandardSet",
+                                            "obj": "C"
+                                          }
+                                        ],
+                                        "predicate_signature": {
+                                          "type": "builtin"
+                                        },
+                                        "predicate_domain": []
+                                      },
+                                      "searched_proof": {
+                                        "type": "by_structural_membership",
+                                        "element": "a",
+                                        "set": "C",
+                                        "source": {
+                                          "type": "by_structural_membership",
+                                          "element": "a",
+                                          "set": "R",
+                                          "cite": {
+                                            "type": "by_known_atomic",
+                                            "cite_fact_id": "f452",
+                                            "why_parameters_of_known_fact_are_equal_to_givens": [
+                                              {
+                                                "type": "by_they_are_the_same",
+                                                "kind": "same_ir"
+                                              },
+                                              {
+                                                "type": "by_they_are_the_same",
+                                                "kind": "same_ir"
+                                              }
+                                            ]
+                                          },
+                                          "kind": "known"
+                                        },
+                                        "kind": "standard_superset"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "body_in_ret_set": {
+                                  "type": "atomic_except_equality",
+                                  "success": true,
+                                  "fact": "x + a $in R",
+                                  "well_defined": {
+                                    "well_defined_of_each_parameter": [
+                                      {
+                                        "type": "by_def",
+                                        "family": "ArithmeticOperator",
+                                        "kind": "Add",
+                                        "obj": "x + a",
+                                        "child_obj_well_defined": [
+                                          {
+                                            "type": "by_def",
+                                            "family": "Identifier",
+                                            "kind": "Identifier",
+                                            "obj": "x"
+                                          },
+                                          {
+                                            "type": "by_def",
+                                            "family": "Identifier",
+                                            "kind": "Identifier",
+                                            "obj": "a"
+                                          }
+                                        ],
+                                        "requirement_fact_verified": [
+                                          {
+                                            "type": "atomic_except_equality",
+                                            "success": true,
+                                            "fact": "x $in C",
+                                            "well_defined": {
+                                              "well_defined_of_each_parameter": [
+                                                {
+                                                  "type": "by_def",
+                                                  "family": "Identifier",
+                                                  "kind": "Identifier",
+                                                  "obj": "x"
+                                                },
+                                                {
+                                                  "type": "by_def",
+                                                  "family": "StandardSet",
+                                                  "kind": "StandardSet",
+                                                  "obj": "C"
+                                                }
+                                              ],
+                                              "predicate_signature": {
+                                                "type": "builtin"
+                                              },
+                                              "predicate_domain": []
+                                            },
+                                            "searched_proof": {
+                                              "type": "by_structural_membership",
+                                              "element": "x",
+                                              "set": "C",
+                                              "source": {
+                                                "type": "by_structural_membership",
+                                                "element": "x",
+                                                "set": "R",
+                                                "cite": {
+                                                  "type": "by_known_atomic",
+                                                  "cite_fact_id": "f526",
+                                                  "why_parameters_of_known_fact_are_equal_to_givens": [
+                                                    {
+                                                      "type": "by_they_are_the_same",
+                                                      "kind": "same_ir"
+                                                    },
+                                                    {
+                                                      "type": "by_they_are_the_same",
+                                                      "kind": "same_ir"
+                                                    }
+                                                  ]
+                                                },
+                                                "kind": "known"
+                                              },
+                                              "kind": "standard_superset"
+                                            }
+                                          },
+                                          {
+                                            "type": "atomic_except_equality",
+                                            "success": true,
+                                            "fact": "a $in C",
+                                            "well_defined": {
+                                              "well_defined_of_each_parameter": [
+                                                {
+                                                  "type": "by_def",
+                                                  "family": "Identifier",
+                                                  "kind": "Identifier",
+                                                  "obj": "a"
+                                                },
+                                                {
+                                                  "type": "by_def",
+                                                  "family": "StandardSet",
+                                                  "kind": "StandardSet",
+                                                  "obj": "C"
+                                                }
+                                              ],
+                                              "predicate_signature": {
+                                                "type": "builtin"
+                                              },
+                                              "predicate_domain": []
+                                            },
+                                            "searched_proof": {
+                                              "type": "by_structural_membership",
+                                              "element": "a",
+                                              "set": "C",
+                                              "source": {
+                                                "type": "by_structural_membership",
+                                                "element": "a",
+                                                "set": "R",
+                                                "cite": {
+                                                  "type": "by_known_atomic",
+                                                  "cite_fact_id": "f452",
+                                                  "why_parameters_of_known_fact_are_equal_to_givens": [
+                                                    {
+                                                      "type": "by_they_are_the_same",
+                                                      "kind": "same_ir"
+                                                    },
+                                                    {
+                                                      "type": "by_they_are_the_same",
+                                                      "kind": "same_ir"
+                                                    }
+                                                  ]
+                                                },
+                                                "kind": "known"
+                                              },
+                                              "kind": "standard_superset"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "by_known",
+                                        "obj": "R",
+                                        "wd_id": "wd10"
+                                      }
+                                    ],
+                                    "predicate_signature": {
+                                      "type": "builtin"
+                                    },
+                                    "predicate_domain": []
+                                  },
+                                  "searched_proof": {
+                                    "type": "by_structural_membership",
+                                    "element": "x + a",
+                                    "set": "R",
+                                    "left": {
+                                      "type": "by_structural_membership",
+                                      "element": "x",
+                                      "set": "R",
+                                      "cite": {
+                                        "type": "by_known_atomic",
+                                        "cite_fact_id": "f526",
+                                        "why_parameters_of_known_fact_are_equal_to_givens": [
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          },
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          }
+                                        ]
+                                      },
+                                      "kind": "known"
+                                    },
+                                    "right": {
+                                      "type": "by_structural_membership",
+                                      "element": "a",
+                                      "set": "R",
+                                      "cite": {
+                                        "type": "by_known_atomic",
+                                        "cite_fact_id": "f452",
+                                        "why_parameters_of_known_fact_are_equal_to_givens": [
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          },
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          }
+                                        ]
+                                      },
+                                      "kind": "known"
+                                    },
+                                    "kind": "add"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "by_def",
+                                "family": "Literal",
+                                "kind": "Number",
+                                "obj": "0"
+                              }
+                            ],
+                            "requirement_fact_verified": []
+                          },
+                          {
+                            "type": "by_def",
+                            "family": "Structish",
+                            "kind": "StructObj",
+                            "obj": "&Box",
+                            "child_obj_well_defined": [],
+                            "requirement_fact_verified": []
+                          }
+                        ],
+                        "predicate_signature": {
+                          "type": "builtin"
+                        },
+                        "predicate_domain": []
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "CAP_S08",
+      "group": "struct",
+      "title": "Original direct claim: A function returns a struct with a callable field",
+      "file": "capability_probes/s08.lit",
+      "expect": "observe",
+      "fixture_sha256": "0b426fe6503100b1e1a2fd3897046f9a3be2e3c5ffc2c6e83346d7f218cad607",
+      "matches": null
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/capability_probes/h05.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "add_two(3) = 5",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "add_two(3) = 5"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "CAP_H05",
+      "group": "higher_order",
+      "title": "Original direct claim: Typed local binding of a returned closure",
+      "file": "capability_probes/h05.lit",
+      "expect": "observe",
+      "fixture_sha256": "7cce6a598a8f472612722ae109b9b4310e4ee87cc427d188fdf1707a227b5515",
+      "matches": null
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/capability_probes/d05.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "fn (x R) Z{0} $in \\maps<R, Z>",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "fn (x R) Z{0} $in \\maps<R, Z>"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "CAP_D05",
+      "group": "controls",
+      "title": "Original direct claim: Anonymous member of template-selected function space",
+      "file": "capability_probes/d05.lit",
+      "expect": "observe",
+      "fixture_sha256": "14563e5a18ddd417b6c07269af3600c0fb9b91a0cad2e0b9424d00410d6115f6",
+      "matches": null
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/capability_probes/d08.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "child",
+                  "obj": "\\box<2>.op",
+                  "failure": {
+                    "phase": "Structish",
+                    "failure": {
+                      "phase": "FieldAccess",
+                      "failure": {
+                        "message": "object has no definition-time struct carrier for field `op`"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "CAP_D08",
+      "group": "controls",
+      "title": "Original direct claim: Template-selected struct containing a named function",
+      "file": "capability_probes/d08.lit",
+      "expect": "observe",
+      "fixture_sha256": "00954d81ea73ee2da735a3bbf576a1d90315362c71b757e0994fd5118ca4c036",
+      "matches": null
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/capability_probes/d09.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "atomic_except_equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "child",
+                  "obj": "make(2).op",
+                  "failure": {
+                    "phase": "Structish",
+                    "failure": {
+                      "phase": "FieldAccess",
+                      "failure": {
+                        "message": "object has no definition-time struct carrier for field `op`"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "CAP_D09",
+      "group": "controls",
+      "title": "Original direct claim: Function returning a struct containing a named function",
+      "file": "capability_probes/d09.lit",
+      "expect": "observe",
+      "fixture_sha256": "d7c9462d09a0ad79fa182e2bb773c202186165039db1bfab155d8b37194e5efc",
+      "matches": null
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/capability_probes/field_premises.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "Structish",
+                "failure": {
+                  "phase": "FieldAccess",
+                  "failure": {
+                    "message": "object has no definition-time struct carrier for field `op`"
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "atomic_except_equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "Structish",
+                "failure": {
+                  "phase": "FieldAccess",
+                  "failure": {
+                    "message": "object has no definition-time struct carrier for field `op`"
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "\\box<2>.op(3) = step(3) = 4",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "chain",
+              "success": false,
+              "phase": "well_defined",
+              "fact": "\\box<2>.op(3) = step(3) = 4",
+              "failed_index": 0,
+              "succeeded_adjacent": [],
+              "failed_adjacent": {
+                "type": "equality",
+                "success": false,
+                "phase": "well_defined",
+                "failure": {
+                  "phase": "FnObj",
+                  "failure": {
+                    "phase": "child",
+                    "obj": "\\box<2>.op",
+                    "failure": {
+                      "phase": "Structish",
+                      "failure": {
+                        "phase": "FieldAccess",
+                        "failure": {
+                          "message": "object has no definition-time struct carrier for field `op`"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "CAP_FIELD_PREMISES",
+      "group": "struct",
+      "title": "Raw selected field equality and membership before call",
+      "file": "capability_probes/field_premises.lit",
+      "expect": "observe",
+      "fixture_sha256": "c05ca30599beedcba6919157e6b6a0c96e24caabe6f417d0c1f3f3d43f2fc112",
+      "matches": null
+    }
+  ],
+  "identity_stable": true,
+  "ok": true,
+  "counts": {
+    "total": 10,
+    "accepted": 0,
+    "rejected": 10,
+    "infrastructure_failures": 0
+  }
+}

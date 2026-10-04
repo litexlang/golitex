@@ -44,7 +44,46 @@ impl FromKnownNotSupersetBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => text(
+                "FromKnownNotSuperset",
+                "由已知非包含關係",
+                "對偶性：已知 `not B $superset A` 可證 `not A $subset B`",
+            ),
+            OutputLanguage::French => text(
+                "FromKnownNotSuperset",
+                "Depuis un non-sur-ensemble connu",
+                "Dualité : `not B $superset A` connu prouve `not A $subset B`",
+            ),
+            OutputLanguage::Russian => text(
+                "FromKnownNotSuperset",
+                "Из известного отсутствия надмножества",
+                "Двойственность: известное `not B $superset A` доказывает `not A $subset B`",
+            ),
+            OutputLanguage::Spanish => text(
+                "FromKnownNotSuperset",
+                "Desde no superconjunto conocido",
+                "Dualidad: `not B $superset A` conocido prueba `not A $subset B`",
+            ),
+            OutputLanguage::Arabic => text(
+                "FromKnownNotSuperset",
+                "من عدم احتواء معلوم",
+                "الثنائية: `not B $superset A` المعلومة تثبت `not A $subset B`",
+            ),
+            OutputLanguage::Japanese => text(
+                "FromKnownNotSuperset",
+                "既知の非包含関係から",
+                "双対性：既知の `not B $superset A` から `not A $subset B` を証明します",
+            ),
+            OutputLanguage::Korean => text(
+                "FromKnownNotSuperset",
+                "알려진 비상위집합에서",
+                "쌍대성: 알려진 `not B $superset A`로 `not A $subset B`를 증명합니다",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "FromKnownNotSuperset",
+                "Từ quan hệ không là tập cha đã biết",
+                "Đối ngẫu: `not B $superset A` đã biết chứng minh `not A $subset B`",
+            ),
         }
     }
 }
-

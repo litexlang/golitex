@@ -68,7 +68,7 @@ pub(in crate::json_output) fn project_def_thm_failure(failed: &crate::execute::E
     match failed {
         NameClash(text) | Introduce(text) | Store(text) => object_for(rt, vec![("phase", string(match failed { NameClash(_) => "name_clash", Introduce(_) => "introduce", _ => "store" })), ("message", string(text.clone()))]),
         GoalWd(result) => object_for(rt, vec![("phase", string("goal_well_defined")), ("result", project_verify_fact_wd_result(result, rt))]),
-        ProofBody(f) => object_for(rt, vec![("phase", string("proof_body")), ("index", JsonValue::Number(f.step_index as f64)), ("result", super::entry::project_stmt_detailed(&f.result, rt))]),
+        ProofBody(f) => object_for(rt, vec![("phase", string("proof_body")), ("index", JsonValue::Number(f.step_index as f64)), ("result", super::stmt::project_stmt_detailed(&f.result, rt))]),
         Conclusion { index, result } => object_for(rt, vec![("phase", string("conclusion")), ("index", JsonValue::Number(*index as f64)), ("result", project_verify_fact(result, rt))]),
     }
 }

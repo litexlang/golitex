@@ -47,9 +47,41 @@ sketch:
     have c R
     have f,g fn(k S) R
     finite_set_sum(S,fn(k S) R {c}) = finite_set_size(S)*c
-    finite_set_sum(S,fn(k S) R {f(k)+g(k)}) = finite_set_sum(S,f)+finite_set_sum(S,g)
-    finite_set_sum(S,fn(k S) R {f(k)-g(k)}) = finite_set_sum(S,f)-finite_set_sum(S,g)
-    finite_set_sum(S,fn(k S) R {c*f(k)}) = c*finite_set_sum(S,f)
+    claim:
+        ? finite_set_sum(S,fn(k S) R{f(k)+g(k)}) = finite_set_sum(S,f)+finite_set_sum(S,g)
+        thm complex_finite_sum_add:
+            ? forall T finite_set, F,G fn(k T) C:
+                finite_set_sum(T,fn(k T) C{F(k)+G(k)}) = finite_set_sum(T,F)+finite_set_sum(T,G)
+        forall t S:
+            f(t)+g(t) $in R
+        release thm fn_set_member(f,fn(k S) C)
+        release thm fn_set_member(g,fn(k S) C)
+        release thm complex_finite_sum_add(S,f,g)
+        release thm finite_set_sum_substitution(finite_set_sum(S,fn(k S) R{f(k)+g(k)}),finite_set_sum(S,fn(k S) C{f(k)+g(k)}))
+        finite_set_sum(S,fn(k S) R{f(k)+g(k)}) = finite_set_sum(S,fn(k S) C{f(k)+g(k)}) = finite_set_sum(S,f)+finite_set_sum(S,g)
+    claim:
+        ? finite_set_sum(S,fn(k S) R{f(k)-g(k)}) = finite_set_sum(S,f)-finite_set_sum(S,g)
+        thm complex_finite_sum_subtract:
+            ? forall T finite_set, F,G fn(k T) C:
+                finite_set_sum(T,fn(k T) C{F(k)-G(k)}) = finite_set_sum(T,F)-finite_set_sum(T,G)
+        forall t S:
+            f(t)-g(t) $in R
+        release thm fn_set_member(f,fn(k S) C)
+        release thm fn_set_member(g,fn(k S) C)
+        release thm complex_finite_sum_subtract(S,f,g)
+        release thm finite_set_sum_substitution(finite_set_sum(S,fn(k S) R{f(k)-g(k)}),finite_set_sum(S,fn(k S) C{f(k)-g(k)}))
+        finite_set_sum(S,fn(k S) R{f(k)-g(k)}) = finite_set_sum(S,fn(k S) C{f(k)-g(k)}) = finite_set_sum(S,f)-finite_set_sum(S,g)
+    claim:
+        ? finite_set_sum(S,fn(k S) R{c*f(k)}) = c*finite_set_sum(S,f)
+        thm complex_finite_sum_scale:
+            ? forall T finite_set, a C, F fn(k T) C:
+                finite_set_sum(T,fn(k T) C{a*F(k)}) = a*finite_set_sum(T,F)
+        forall t S:
+            c*f(t) $in R
+        release thm fn_set_member(f,fn(k S) C)
+        release thm complex_finite_sum_scale(S,c,f)
+        release thm finite_set_sum_substitution(finite_set_sum(S,fn(k S) R{c*f(k)}),finite_set_sum(S,fn(k S) C{c*f(k)}))
+        finite_set_sum(S,fn(k S) R{c*f(k)}) = finite_set_sum(S,fn(k S) C{c*f(k)}) = c*finite_set_sum(S,f)
 
 # P104: symbolic range bridge
 sketch:
@@ -71,4 +103,6 @@ sketch:
     algo flag(x R) R by cases:
         case x = 0: 0
         case x != 0: 1
-    finite_set_sum({1/3,2/3},flag) = 2
+    flag(1/3) = 1
+    flag(2/3) = 1
+    finite_set_sum({1/3,2/3},flag) = flag(1/3)+flag(2/3) = 1+1 = 2

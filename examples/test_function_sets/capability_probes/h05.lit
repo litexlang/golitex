@@ -1,0 +1,6 @@
+# H05: Typed local binding of a returned closure
+# Direct capability observation; --capabilities does not certify this claim.
+
+have fn add(x R) fn(y R) R = fn(y R) R {x + y}
+have add_two fn(y R) R = add(2)
+add_two(3) = 5

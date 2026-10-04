@@ -1,0 +1,10 @@
+# P09: Successful template with the same definition shape as N26.
+# Before: N26's failure showed only def_template.
+# template<a R>:
+#     have selected Z = a
+# Now: N26 reports body_have_equal -> membership -> a $in Z.
+# Active supported version; failure/recovery in the same Runtime is tested in Rust.
+
+template<a R>:
+    have selected R = a
+\selected<2> = 2

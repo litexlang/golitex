@@ -8,17 +8,6 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
-<!-- Blueprint spine: reasoning abundance from AI → scientific object → design hypothesis → measurable costs → potential capacity impact → dual bottlenecks of verification and understanding → two participation barriers → four language design choices → knowledge record left by each statement → Human–AI–Litex skill and knowledge-production protocol (including definition and verification) → replay, reuse, and Lean/Mathlib handoff of the record → ecosystem role → from AI for Math toward trustworthy, efficient reasoning in the AI era → success criterion -->
-
-<!--
-Litex four-layer positioning check (verify layer by layer while writing; emphasis may shift by audience, but layers must not be confused):
-- Scientific object: how checkable knowledge is represented and constructed step by step.
-- Scientific hypothesis: whether fact-oriented representation and transactional interaction form a new formal-language paradigm.
-- Scientific result variables: how that paradigm changes the cost for humans and AI to construct, understand, audit, repair, and reuse knowledge, and how much candidate reasoning can be handled reliably per unit time.
-- Societal impact: starting from AI for Math, lower the barrier to producing and auditing verifiable knowledge, so that verification capacity may keep pace with AI-generated candidate reasoning, and so that methods and infrastructure accumulate for broader trustworthy, efficient reasoning in the AI era.
-Writing boundary: the first three layers are Litex's scientific core; the fourth is potential impact. Do not use “thereby” to present unverified scientific results as already realized tool effects.
--->
-
 ## Table of Contents
 
 - [0. Litex Blueprint Overview](#overview)

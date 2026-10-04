@@ -1,0 +1,18 @@
+# Rule: PositiveCommonDivisorLeGcd
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_positive_common_divisor_gcd.lit
+# Formerly rejected:
+# claim:
+#     ? forall a, b Z, d N+:
+#         a != 0 or b != 0
+#         a % d = 0
+#         b % d = 0
+#         =>:
+#             d <= gcd(a, b)
+# Native gcd(0,0) remains ill-defined; missing remainder evidence is rejected.
+claim:
+    ? forall a, b Z, d N+:
+        a != 0 or b != 0
+        a % d = 0
+        b % d = 0
+        =>:
+            d <= gcd(a, b)

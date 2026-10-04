@@ -13800,6 +13800,12 @@
       "journal": "contra_rewrite_order_2026-10-04.json",
       "conclusion": "HashMap iteration order is used as greedy rewrite order. Overlapping i->0 and i*i->-1 entries destructively mask one another; only one final residual is attempted. Native ordering flips results; controlled order deterministically changes them.",
       "production_fix": false
+    },
+    {
+      "journal": "imaginary_contra_explicit_chain_2026-10-04.json",
+      "user_decision": "Keep existing substitution; repair Litex example with i*i=0*0=0.",
+      "example_status": "checkable",
+      "production_rust_change": false
     }
   ]
 }

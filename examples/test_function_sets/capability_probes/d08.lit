@@ -1,0 +1,10 @@
+# D08: Template-selected struct containing a named function
+# Direct capability observation; --capabilities does not certify this claim.
+
+struct Box:
+    op fn(x R) R
+    tag N
+have fn step(x R) R = x + 1
+template<a R>:
+    have box &Box = (step, 0)
+\box<2>.op(3) = 4

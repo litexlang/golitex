@@ -15,15 +15,18 @@ sketch:
 
 # P03: finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3
 sketch:
-    finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3
+    finite_set_reduce({1,2},fn(x Z) Z{x},fn(a,b Z) Z{a+b},0) = finite_set_sum({1,2},fn(x Z) Z{x}) = 3
 
 # P04: finite_set_reduce({2, 1}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3
 sketch:
-    finite_set_reduce({2, 1}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3
+    finite_set_reduce({2,1},fn(x Z) Z{x},fn(a,b Z) Z{a+b},0) = finite_set_sum({2,1},fn(x Z) Z{x}) = 3
 
 # P05: finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 10) = 13
 sketch:
-    finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 10) = 13
+    claim:
+        ? finite_set_reduce({1,2},fn(x Z) Z{x},fn(a,b Z) Z{a+b},10) = 13
+        let reduced = finite_set_reduce({1,2},fn(x Z) Z{x},fn(a,b Z) Z{a+b},10)
+        reduced = 13
 
 # P90: Nearest valid-domain control
 sketch:

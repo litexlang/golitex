@@ -17,11 +17,11 @@ finishes. Companion packages:
 | `Help` / `Version` | `-help` / `-version` | print and exit | none |
 | `Repl` | bare `litex` | `run_repl` | **cwd** `litex.config` (missing → empty) |
 | `Eval` | `-e <code>` | `run_eval` | **cwd** `litex.config` (missing → empty) |
-| `File` | `-f <file>` | `run_file` → `run_file_with_config` | **parent(file)** (missing → empty / isolated) |
-| `Repository` | `-r <dir>` | `run_repo` → `run_project` | **`<dir>`** (missing → hard error) |
+| `File` | `-f <file>` | `run_file_with_config` | **parent(file)** (missing → empty / isolated) |
+| `Repository` | `-r <dir>` | `run_project` | **`<dir>`** (missing → hard error) |
 
 Shared flags (where allowed): `-session` (keep last env → REPL), `-strict`
-(forbid `trust` / `trust have`; allow `abstract_prop` signatures), `-lang en|zh` (JSON /
+(forbid `trust` / `trust have`; allow `abstract_prop` signatures), `-lang en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi` (JSON /
 status output language; default `en`).
 
 The argv item immediately after `-e` is source data. Its leading minus or exact

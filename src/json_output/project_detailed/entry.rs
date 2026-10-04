@@ -1,6 +1,7 @@
 //! Entry points for Detailed JSON projection.
 
 use super::store::{project_have_store_ids, project_store_and_infer};
+use super::stmt::project_stmt_detailed;
 use super::verify::project_verify_fact;
 use super::wd::{project_param_type_wd, project_verify_obj_wd};
 use crate::ast::fact::AtomicFact;
@@ -11,7 +12,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::{
 use crate::execute::execute_fact_stmt::{ExecFactStmtResult, VerifyFactResult};
 use crate::execute::{
     ExecHaveObjEqualStmtResult, ExecHaveObjInNonemptySetStmtFailed,
-    ExecHaveObjInNonemptySetStmtResult, ExecStmtResult, ParamTypeFactCheckResult,
+    ExecHaveObjInNonemptySetStmtResult, ParamTypeFactCheckResult,
 };
 use crate::json_output::helper::{bool_value, object_for, string};
 use crate::json_output::project_normal::OutputDetail;
@@ -19,10 +20,6 @@ use crate::knowledge_base::JsonValue;
 use crate::run::run_command_outcome::RunLitexCodeResult;
 use crate::runtime::Runtime;
 use std::path::Path;
-
-pub fn project_stmt_detailed(result: &ExecStmtResult, runtime: &Runtime) -> JsonValue {
-    super::stmt::project_stmt_detailed(result, runtime)
-}
 
 pub fn project_run_detailed(
     run: &RunLitexCodeResult,

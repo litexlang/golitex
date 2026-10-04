@@ -429,7 +429,7 @@ fn run_owner_fixture(library: &str, code: &str) -> crate::run::RunFileResult {
     std::fs::write(root.join("library/litex.config"), "[export]\ndefinitions = \"./definitions.lit\"\n").unwrap();
     std::fs::write(root.join("library/definitions.lit"), library).unwrap();
     std::fs::write(root.join("target.lit"), code).unwrap();
-    let result = crate::run::run_file::run_file(LaunchCommand::File {
+    let result = crate::run_module::run_file_with_config(LaunchCommand::File {
         path: root.join("target.lit"), session: false, strict: true, language: OutputLanguage::English,
     }).expect("run registered/imported owner fixture");
     std::fs::remove_dir_all(root).unwrap();

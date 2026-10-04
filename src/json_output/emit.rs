@@ -3,7 +3,6 @@
 use super::project_compact::project_run_compact;
 use super::project_detailed::project_run_detailed;
 use super::project_normal::project_run_normal;
-use crate::knowledge_base::JsonValue;
 use crate::run::run_command_outcome::RunLitexCodeResult;
 use crate::runtime::Runtime;
 
@@ -35,9 +34,4 @@ pub fn emit_run_detailed(
     path: Option<&std::path::Path>,
 ) -> String {
     project_run_detailed(run, runtime, target, path).stringify_pretty()
-}
-
-/// Convenience: pretty-print one JsonValue.
-pub fn stringify_normal(value: &JsonValue) -> String {
-    value.stringify_pretty()
 }

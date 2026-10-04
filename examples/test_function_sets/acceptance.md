@@ -1,4 +1,138 @@
-# Explicit proof contract on 2026-10-04
+# Explicit proof and diagnostic cleanup — 2026-10-04
+
+The user's five decisions are implemented: use explicit proof steps, check the
+general tuple-constructor fact, expose template failure details, organize
+supported tests separately from direct capability probes, and migrate the old
+invalid function-set positive. Verification/search rules and protected
+AST/Runtime/Env/result contracts are unchanged by this cleanup. Trust delta: 0.
+
+## Field premises: one more declared binding is required
+
+Both of the user's premise orderings were tested in a persistent strict REPL
+and clean files after the successful tuple equation:
+
+```litex
+\box<2>.op = step
+\box<2>.op $in fn(x R) R
+```
+
+Both statements reject at `well_defined`, including when membership comes
+first, with `object has no definition-time struct carrier for field 'op'`.
+The equality/membership cannot be added before the field itself is legal.
+The current supported route preserves the selected value and result:
+
+```litex
+struct Box:
+    op fn(x R) R
+    tag N
+have fn step(x R) R = x + 1
+template<a R>:
+    have box &Box = (step, 0)
+\box<2> = (step, 0)
+have selected &Box = \box<2>
+selected.op = step
+selected.op $in fn(x R) R
+selected.op(3) = step(3) = 4
+```
+
+P02/D08 verify this template route; P06/D09 verify the corresponding returned
+struct route, including the original result-membership goal. Raw selected and
+returned field syntax remains a capability boundary; no field-view/search
+policy was changed to make the observation disappear.
+
+## General constructor bridge and explicit chains
+
+P07/S07 and P08/S08 first prove the requested ordinary universal fact:
+
+```litex
+forall f fn(x R) R:
+    (f, 0) $in &Box
+```
+
+The original closure value `(fn(x R) R {x + a}, 0)` and carrier `&Box` are
+preserved. Tuple equality, a typed local binding and explicit callable-value
+chains finish the template and returned-struct proofs. N25 still rejects tag
+-1 after the general fact succeeds. This accepts an authoring route without
+claiming closure-specific binder matching was repaired.
+
+T05 uses `shift_two(3) = \shift<2>(3) = 5`; H05 uses
+`add_two(3) = add(2)(3) = 5`. T03/D05 identify the template-selected carrier
+before membership/binding; S02 identifies the anonymous field and supplies its
+application in the chain. All nine supported regression fixtures now carry
+the checked explicit source. The original snippets remain intact under
+`capability_probes/` with `expect: observe`, `matches: null` and their actual
+phases. They are not successful mathematical negatives.
+
+## Template diagnostics
+
+Normal output retains outer `why_failed.phase: def_template` and adds the
+checked child in `why_failed.failure`. Detailed output exposes the same child
+under `failure`. The projector exhaustively consumes all existing
+`ExecDefTemplateStmtFailed` variants, including parameters, guards, each body
+constructor and unsupported bodies, without rerunning verification.
+
+```litex
+template<a R>:
+    have selected Z = a
+```
+
+Its diagnostic now identifies `body_have_equal` → `membership` →
+`search_proof` and the actual goal `a $in Z`. The focused tests execute real
+transactions and also check parameter/guard WD, nonempty-set failure, function
+body `x != 0`, invalid closure tuple membership, nested existential `0 != 0`,
+Chinese field keys, unpublished failed definitions and a later valid template.
+Parsing still reserves a failed declaration's name; recovery uses a fresh
+name, rather than assuming that parser-name reservation rolls back. Successful
+template projections retain their existing shape.
+
+## Old example
+
+`examples/test_objs/fn_set.lit` P04 formerly treated
+`let F = fn(x R) x` as a valid positive. The return carrier is forbidden to
+depend on x, and a real value is not a set. The replacement explicitly checks
+a different, valid template-selected family with fixed signatures:
+
+```litex
+template<S nonempty_set>:
+    have maps set = fn(x S) S
+$is_set(\maps<R>)
+\maps<R> = fn(x R) R
+```
+
+N27 preserves the exact obsolete declaration as a parser rejection. The Obj
+P01–P06 inventory and its three adjacent negative controls remain covered.
+This does not introduce dependent-return function signatures. EX01's separate
+`dependent_codomain.lit` migration is outside this cleanup and remains open.
+
+## Current executable receipts
+
+- [cleanup_2026-10-04.json](cleanup_2026-10-04.json): 85/85 matching strict
+  regressions, 58 accepted positives and 27 correctly rejected negatives.
+- [capabilities_2026-10-04.json](capabilities_2026-10-04.json): ten separately
+  observed direct claims; no infrastructure failures or mathematical PASS
+  labels are substituted for rejected true claims.
+- [cleanup_tests_2026-10-04.json](cleanup_tests_2026-10-04.json): focused Rust
+  gates, command exits and stable source/binary identity.
+- [old_fn_set_2026-10-04.json](old_fn_set_2026-10-04.json): complete old Obj
+  file and its three negatives.
+- [proof_journals/cleanup_2026-10-04.json](proof_journals/cleanup_2026-10-04.json):
+  twenty exact session frames and clean-file outcomes, including both raw
+  field premise orderings and diagnostic recovery.
+
+The first current-source build was blocked by concurrent output-language
+match arms; a later Rust test build was blocked by three language-test errors.
+Both were corrected by that task's owner before the final gate. Early test
+assumptions were corrected after real execution: `power_set(1)` did not trigger
+a parameter-WD failure, the unparenthesized equality guard did not parse, and
+parser-name reservation prevented same-name recovery. The final tracers reach
+the intended stage with their exact failed goals. These observations are kept
+in the cleanup receipt; earlier receipts below remain dated historical
+snapshots rather than current assertions. No full-repository, textbook or
+Lean acceptance is claimed.
+
+---
+
+# Historical explicit proof contract on 2026-10-04
 
 The user clarified that explicit equalities should select the intended proof
 route. A rejected direct assertion alone is not a request to broaden automatic

@@ -10,7 +10,7 @@ use crate::store_fact_and_infer::{
 
 impl Runtime {
     // When: `x $in N` / `N+|Q+|R+` / `Q-|Z-|R-` / `Q*|Z*|R*|C*`.
-    // Infers: nonnegativity / positivity(+weak) / negativity(+weak) / nonzero.
+    // Infers: nonnegativity / positivity(+weak,+nonzero) / negativity(+weak,+nonzero) / nonzero.
     // Example: `have a R+` ⇒ store `0 < a` and `0 <= a`.
     pub(super) fn infer_in_fact_signed_standard_set_rules(
         &mut self,
@@ -111,6 +111,22 @@ impl Runtime {
             StandardSet::Q | StandardSet::Z | StandardSet::R | StandardSet::C => {
                 return Ok(None);
             }
+        }
+
+        // Every strictly signed carrier excludes zero. Publish the certificate
+        // before another inferred fact needs division/modulo WD; e.g. d in N+.
+        if matches!(set, StandardSet::NPos | StandardSet::QPos | StandardSet::RPos
+            | StandardSet::QNeg | StandardSet::ZNeg | StandardSet::RNeg)
+        {
+            let fact_id = self.global_ids.allocate_fact_id();
+            derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
+                AtomicFact::NotEqualFact(NotEqualFact {
+                    fact_id,
+                    left: in_fact.element.clone(),
+                    right: zero_obj(),
+                    line_file: in_fact.line_file.clone(),
+                }),
+            ), verify_state)?);
         }
 
         Ok(Some(derived))

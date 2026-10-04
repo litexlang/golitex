@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "mode": "intended",
+  "built_from_current_source": true,
+  "binary_sha256": "40c56a295131ffa2778578d37b5e281fd6efd21f61816d4c8b7f87c8b69db9b0",
+  "source_sha256": "ae8edf742afa7ccf9afa7a194cb35720489b1297537087da292de5cfd9276cb0",
+  "ast_sha256": "cc5aa4a8bb44d298233a1e74f787aa990ecb2f5befe41103860c31ecc55fc357",
+  "objects": 1,
+  "positive_assertions": 6,
+  "observations": [
+    {
+      "observed": "accept",
+      "exit_code": 0,
+      "phase": "success",
+      "diagnostic": "",
+      "statements": 6,
+      "object": "fn_set",
+      "file": "fn_set.lit",
+      "kind": "positive",
+      "intended": "accept"
+    },
+    {
+      "observed": "reject",
+      "exit_code": 1,
+      "phase": "parse",
+      "diagnostic": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `Object`\", line: 2, path: Real(\"examples/test_objs/negative/fn_set__n01.lit\") }))",
+      "statements": 0,
+      "object": "fn_set",
+      "file": "negative/fn_set__n01.lit",
+      "kind": "negative",
+      "intended": "reject"
+    },
+    {
+      "observed": "reject",
+      "exit_code": 1,
+      "phase": "let",
+      "diagnostic": "{\"success\": false, \"statement\": \"let \u2026\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\", \"failure\": {\"success\": false, \"obj\": \"fn (x R: 1 / 0 = x) R\", \"phase\": \"well_defined\", \"failure\": {\"phase\": \"FunctionSpace\", \"failure\": {\"phase\": \"FnSet\", \"failure\": {\"phase\": \"domain_fact\", \"failure\": {\"phase\": \"ArithmeticOperator\", \"failure\": {\"phase\": \"Div\", \"failure\": {\"phase\": \"requirement\", \"obj\": \"1 / 0\", \"result\": {\"type\": \"atomic_except_equality\", \"success\": false, \"phase\": \"search_proof\", \"fact\": \"0 != 0\", \"well_defined\": {\"well_defined_of_each_parameter\": [{\"type\": \"by_def\", \"family\": \"Literal\", \"kind\": \"Number\", \"obj\": \"0\"}, {\"type\": \"by_def\", \"family\": \"Literal\", \"kind\": \"Number\", \"obj\": \"0\"}], \"predicate_signature\": {\"type\": \"builtin\"}, \"predicate_domain\": []}}}}}, \"index\": 0}}}}}, \"stores\": [], \"infers\": []}",
+      "statements": 1,
+      "object": "fn_set",
+      "file": "negative/fn_set__n02.lit",
+      "kind": "negative",
+      "intended": "reject"
+    },
+    {
+      "observed": "reject",
+      "exit_code": 1,
+      "phase": "search_proof",
+      "diagnostic": "{\"success\": false, \"statement\": \"fn (x R) R{x} $in fn (x R) N\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x R) R{x} $in fn (x R) N\"}, \"stores\": [], \"infers\": []}",
+      "statements": 1,
+      "object": "fn_set",
+      "file": "negative/fn_set__n03.lit",
+      "kind": "negative",
+      "intended": "reject"
+    }
+  ],
+  "failures": [],
+  "known_gaps": [],
+  "binary_stable": true,
+  "source_stable": true,
+  "ok": true
+}

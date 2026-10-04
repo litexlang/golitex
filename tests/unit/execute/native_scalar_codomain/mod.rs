@@ -1,6 +1,6 @@
 //! Native codomains must work through ordinary WD and preserve domain failures.
 use crate::execute::ExecStmtResult;
-use crate::json_output::{project_stmt_detailed, project_stmt_normal, stringify_normal};
+use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::knowledge_base::JsonValue;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
@@ -36,7 +36,7 @@ fn assert_accepts(code: &str) {
     assert!(
         !result.is_failed(),
         "{code}\n{}",
-        stringify_normal(&project_stmt_normal(&result, &rt)),
+        project_stmt_normal(&result, &rt).stringify_pretty(),
     );
 }
 
@@ -52,6 +52,39 @@ fn has_field(value: &JsonValue, key: &str, expected: &str) -> bool {
         JsonValue::Array(values) => values.iter().any(|v| has_field(v, key, expected)),
         _ => false,
     }
+}
+
+#[test]
+fn signed_carrier_nonzero_inference_is_known() {
+    for carrier in ["N+", "Q+", "R+", "Q-", "Z-", "R-"] {
+        let mut rt = runtime(OutputLanguage::English);
+        assert!(!exec(&mut rt, &format!("have x {carrier}")).is_failed());
+        let result = exec(&mut rt, "x != 0");
+        assert!(!result.is_failed());
+        assert!(has_field(&project_stmt_normal(&result, &rt), "type", "cite_known"));
+    }
+    let mut rt = runtime(OutputLanguage::English);
+    assert!(exec(&mut rt, "have x R+ = 0").is_failed());
+    assert!(exec(&mut rt, "$dvd(1, 0)").is_failed());
+    let mut rt = runtime(OutputLanguage::English);
+    assert!(!exec(&mut rt, "have x N").is_failed());
+    assert!(exec(&mut rt, "x != 0").is_failed());
+}
+
+#[test]
+fn positive_divisor_builder_inference_preserves_wd() {
+    let mut rt = runtime(OutputLanguage::English);
+    assert!(!exec(&mut rt, "have a, b Z").is_failed());
+    // The direct carrier check must return a checked outcome, never InternalBug.
+    // Its automatic subset proof is a separate capability from this inference.
+    exec(&mut rt, "have c power_set(N) = {d N+: $dvd(a, d), $dvd(b, d)}");
+    let mut rt = runtime(OutputLanguage::English);
+    assert!(!exec(&mut rt, "have a, b Z").is_failed());
+    let result = exec(&mut rt, "have c set = {d N+: $dvd(a, d), $dvd(b, d)}");
+    assert!(!result.is_failed(), "{}", project_stmt_detailed(&result, &rt).stringify_pretty());
+    assert!(!exec(&mut rt, "forall d c:\n    d $in N").is_failed());
+    assert!(!exec(&mut rt, "by def c $subset N").is_failed());
+    assert!(!exec(&mut rt, "c $in power_set(N)").is_failed());
 }
 
 #[test]
@@ -181,7 +214,59 @@ fn native_scalar_codomain_normal_and_detailed_keep_native_carrier() {
     }
     let mut rt = runtime(OutputLanguage::Chinese);
     let result = exec(&mut rt, "have a R\nsign(a) $in R");
-    let normal = stringify_normal(&project_stmt_normal(&result, &rt));
+    let normal = project_stmt_normal(&result, &rt).stringify_pretty();
     assert!(normal.contains("结构归属"));
     assert!(normal.contains("已检查运算的返回类型"));
+}
+
+
+#[test]
+fn finite_set_extrema_membership_preserves_wd_and_target() {
+    for (operator, rule) in [("finite_set_max", "FiniteSetMaxMember"), ("finite_set_min", "FiniteSetMinMember")] {
+        let source = format!("claim:\n    ? forall S finite_set:\n        S $subset R\n        $is_nonempty_set(S)\n        =>:\n            {operator}(S) $in S\n");
+        let mut rt = runtime(OutputLanguage::English);
+        let result = exec(&mut rt, &source);
+        assert!(!result.is_failed(), "{}", project_stmt_detailed(&result, &rt).stringify());
+        assert!(has_field(&project_stmt_detailed(&result, &rt), "rule", rule));
+        for bad in [
+            format!("{operator}({{}}) $in {{}}\n"),
+            format!("{operator}(R) $in R\n"),
+            format!("{operator}({{i}}) $in {{i}}\n"),
+            format!("have S finite_set = {{1,2}}\n{operator}(S) $in {{9}}\n"),
+            format!("have S finite_set\n{operator}(S) $in S\n"),
+        ] {
+            let mut negative = runtime(OutputLanguage::English);
+            let result = exec(&mut negative, &bad);
+            assert!(result.is_failed(), "wrongly accepted: {bad}");
+        }
+    }
+}
+
+
+#[test]
+fn positive_common_divisor_gcd_bound_requires_both_residues() {
+    let code = "claim:\n    ? forall a, b Z, d N+:\n        a != 0 or b != 0\n        a % d = 0\n        b % d = 0\n        =>:\n            d <= gcd(a,b)\n";
+    let mut rt = runtime(OutputLanguage::English);
+    let result = exec(&mut rt, code);
+    assert!(!result.is_failed(), "{}",project_stmt_detailed(&result,&rt).stringify());
+    let detail = project_stmt_detailed(&result,&rt);
+    assert!(has_field(&detail, "rule", "PositiveCommonDivisorLeGcd"));
+    let text = detail.stringify();
+    for field in ["divisor_in_n_pos_proof", "left_remainder_zero_proof", "right_remainder_zero_proof"] {
+        assert!(text.contains(field));
+    }
+    for bad in [
+        code.replace("        a % d = 0\n", ""),
+        code.replace("        b % d = 0\n", ""),
+        code.replace("        a != 0 or b != 0\n", ""),
+        code.replace("d <= gcd(a,b)", "d < gcd(a,b)"),
+        "0 <= gcd(0,0)\n".into(),
+        "have a Z = 12\nhave b Z = 18\nhave d N+ = 12\na != 0 or b != 0\na % d = 0\nd <= gcd(a,b)\n".into(),
+    ] {
+        let mut negative = runtime(OutputLanguage::English);
+        assert!(exec(&mut negative,&bad).is_failed(), "accepted: {bad}");
+    }
+    for (a,b) in [("0","-18"),("-12","0"),("-12","-18"),("-12","18")] {
+        assert_accepts(&format!("have a Z={a}\nhave b Z={b}\nhave d N+=6\na != 0 or b != 0\na%d=0\nb%d=0\nd<=gcd(a,b)\n"));
+    }
 }

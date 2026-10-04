@@ -10,4 +10,5 @@ template<a R>:
 \box<2> = (step, 0)
 have selected &Box = \box<2>
 selected.op = step
+selected.op $in fn(x R) R
 selected.op(3) = step(3) = 4

@@ -1,6 +1,10 @@
 # D05: Anonymous member of template-selected function space
-# Intended: accept; run via examples/test_function_sets/run.py
+# Supported explicit proof; original direct source in capability_probes/d05.lit.
 
 template<A, B nonempty_set>:
     have maps set = fn(x A) B
+$is_set(\maps<R, Z>)
+\maps<R, Z> = fn(x R) Z
 fn(x R) Z {0} $in \maps<R, Z>
+have f \maps<R, Z> = fn(x R) Z {0}
+f(2) = 0

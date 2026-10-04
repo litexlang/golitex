@@ -1491,19 +1491,24 @@
     "withdrawn_issue_ids": [
       "R02"
     ],
-    "remaining_topics": 31
+    "remaining_topics": 30,
+    "resolved_by_authoring_issue_ids": [
+      "R01"
+    ],
+    "issue_disposition_note": "R01 example resolved by explicit source proof at user request; frozen aggregate gate counts remain the original archived checkpoint. No fresh whole-corpus or Rust gate implied.",
+    "remaining_topics_before_authoring": 31
   },
   "issues": [
     {
       "id": "R01",
       "title": "虚数反证同源新进程结果不稳定",
-      "primary_blocker": "kernel_problem",
+      "primary_blocker": null,
       "classification": "已确认重叠等式替换的顺序依赖",
       "phase": "explicit proof / by_contra",
       "diagnosis_confidence": "70个逐条日志结果全部对应，固定两种顺序各20次干预确定改变结果。",
       "observed": "串行20次：12通过、8拒绝；同时直接 i!=0 通过。",
-      "next_action": "局部重写叶子修复重叠条目遮蔽可用路径；保持现有验证权限、终止与FactId证据。排序本身不足以构成一般修复。",
-      "execution_category": "根因已确认，正式实现未修复；局部重写叶子为下一步调查/修复拥有者。",
+      "next_action": "None for this example; retain shorter automatic-route observations as historical boundary.",
+      "execution_category": "Litex authoring solution accepted; no Rust change requested",
       "acceptance": "保持原数学目标、不增加 trust、不放宽 WD 或搜索权限；在固定 release 的 exec_stmt 路径验证下列输入及配套负例。",
       "discussion_boundary": "仅在确认需要改共享表示、状态生命周期、搜索契约或用户尚未确定的语义时讨论；本次不改实现。",
       "evidence": [
@@ -2080,7 +2085,7 @@
       },
       "correction_journal": "nonzero_union_correction_2026-10-04.json",
       "static_diagnosis": "Failure: negated_impossible equality search i*i=0 under the reverse assumption i=0. Detailed successes use ClosedNumericEqualSubstitution to 0*0=0. Static source diagnosis: unordered overlapping parent/child replacement entries can mask this route; failed searches do not retain attempted rewrite certificates.",
-      "status": "root_cause_confirmed_fix_pending",
+      "status": "resolved_example_by_user_selected_explicit_proof",
       "causal_followup_journal": "contra_rewrite_order_2026-10-04.json",
       "causal_followup_summary": {
         "summary": {
@@ -2111,6 +2116,14 @@
             "count": 36
           }
         ]
+      },
+      "authoring_solution": {
+        "journal": "imaginary_contra_explicit_chain_2026-10-04.json",
+        "case_id": "imaginary_unit-P103",
+        "code": "by contra:\n    ? i != 0\n    i * i = -1\n    i * i = 0 * 0 = 0\n    impossible i * i != 0\n",
+        "repeated_pass": 30,
+        "repeated_total": 30,
+        "rust_changed": false
       }
     },
     {

@@ -60,6 +60,22 @@ the stored parameterized fact. Detailed template output includes
 environment; that environment is omitted from JSON. Chinese output localizes
 these keys as `定义事实`, `来源命题编号`, and `存储与推理`.
 
+Failed templates retain the outer Normal `why_failed.phase: def_template`
+and expose the existing typed child reason under `why_failed.failure`.
+Detailed output exposes the same reason under `failure`. The projection
+distinguishes parameter WD, automatic struct opening, domain WD, every
+supported definition-body family, and unsupported-body messages. It does
+not rerun verification or publish a failed template.
+
+For example, `template<a R>: have selected Z = a` retains the path
+`body_have_equal -> membership -> search_proof` and the actual failed goal
+`a $in Z`. An undefined reciprocal function body retains its selected
+anonymous-function WD failure and `x != 0`. Existential body WD failures
+also retain their inner reason instead of stopping at a `well_defined`
+shell. A successful template's output remains unchanged. See
+`examples/test_function_sets/diagnostics/p09.lit`, its paired N26/N27
+fixtures, and `json_output::template_failure_tests` for execution gates.
+
 Template-alias application WD adds `function_equal` to the
 `template_definition` signature evidence. Tuple result/projection Detailed
 output keeps `subject_equal`, `function_equal`, and the template instance with
@@ -300,7 +316,7 @@ variant tags such as `kind` values may stay English.
 }
 ```
 
-`language` is `en` or `zh` from `-lang` (default `en`). Builtin `rule_name` /
+`language` is the canonical locale from `-lang`: `en`, `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, or `vi` (default `en`). Builtin `rule_name` /
 `message` follow this language via `json_output/explain/`.
 
 ## Acceptance (Normal + Compact + Detailed)
@@ -515,3 +531,57 @@ the sibling fact WD certifies that expression and its subobjects. Search alone
 does not establish WD. No synthetic FactId replaces a derived constructor proof.
 The regression test inspects nested power/subtraction/known certificates and
 both Normal output languages.
+
+## Output languages
+
+`-lang` supports English (`en`), simplified Chinese (`zh`), traditional Chinese
+(`zh-hant`), French (`fr`), Russian (`ru`), Spanish (`es`), Arabic (`ar`),
+Japanese (`ja`), Korean (`ko`), and Vietnamese (`vi`). Existing `english` and
+`chinese` aliases are retained; `zh-hans` also selects simplified Chinese.
+The other language names (`french`, `russian`, `spanish`, `arabic`, `japanese`,
+`korean`, `vietnamese`) are accepted. Tokens are case-insensitive.
+
+Non-English locales translate known JSON field names, Normal proof types,
+Normal/Compact failure phases, rule names, and explanation messages. Unknown
+field names keep their English spelling, as before. Detailed IR variant/stage
+tags retain their existing machine-oriented spelling. Source statements,
+formulas, names, paths, citations, numeric values, booleans and internal rule
+IDs remain independent of locale. Arabic output does not insert bidirectional
+control characters into source or JSON. Existing English/Chinese output is
+retained, including their legacy fallback copy.
+
+Locale selection changes presentation only; it does not change verification,
+proof search or Runtime ownership. Help documents the supported tokens; raw
+terminal errors and the complete help prose are not localized by this change.
+The unused `bilingual_stmt_pair` compatibility helper accepts only supplied
+English/Chinese copy and falls back to English for other locales; maintained
+output uses the exhaustive statement and rule explainers instead.
+
+Example command:
+
+```sh
+target/release/litex -lang ja -e '1 + 2 = 3'
+```
+
+The statement's Normal projection has the following fields (the CLI also
+includes its run envelope):
+
+```json
+{
+  "成功": true,
+  "文": "1 + 2 = 3",
+  "証明方法": {
+    "型": "閉じた式の計算",
+    "規則名": "閉じた式の計算",
+    "説明": "閉じた式を正確に評価し、証明探索を行いません"
+  },
+  "保存": ["1 + 2 = 3"],
+  "推論": []
+}
+```
+
+Acceptance covers ten-language success/failure projections, readable citations,
+field order and key collisions, positive/negative membership wording, all
+statement/proof-route copy, and the existing equality-rule acceptance inventory.
+Translations are authored technical copy; these checks establish coverage and
+behavioral compatibility, not independent native-speaker linguistic review.

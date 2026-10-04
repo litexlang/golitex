@@ -13,6 +13,17 @@ thm positive_divisor_le_abs:
         k = 0
         a = d * k = d * 0 = 0
         impossible a != 0
+    claim:
+        ? forall t R*:
+            abs(t) > 0
+        abs(t) >= 0
+        abs(t) != 0
+        by contra:
+            ? abs(t) > 0
+            abs(t) <= 0
+            abs(t) = 0
+            impossible abs(t) != 0
+    k $in R*
     abs(k) > 0
     abs(k) $in N+
     d * 1 <= d * abs(k)
@@ -26,7 +37,11 @@ thm common_divisor_set_is_finite_and_nonempty:
         =>:
             $is_finite_set({d N+: $dvd(a, d), $dvd(b, d)})
             $is_nonempty_set({d N+: $dvd(a, d), $dvd(b, d)})
-    have c power_set(N) = {d N+: $dvd(a, d), $dvd(b, d)}
+    have c set = {d N+: $dvd(a, d), $dvd(b, d)}
+    forall d c:
+        d $in N
+    by def c $subset N
+    c $in power_set(N)
     claim:
         ? $is_finite_set(c)
         by cases:
@@ -53,6 +68,8 @@ thm common_divisor_set_is_finite_and_nonempty:
                     release thm positive_divisor_le_abs(d, b)
                 by def c $subset closed_range(1, abs(b))
                 release thm subset_of_finite_set_is_finite(c, closed_range(1, abs(b)))
+    a % 1 = 0
+    b % 1 = 0
     witness $is_nonempty_set(c) from 1:
         1 $in N+
         witness exist k Z st {a = 1 * k} from a:
@@ -74,15 +91,9 @@ thm gcd_from_finite_divisors_eq_native:
         =>:
             gcd_from_finite_divisors(a, b) = gcd(a, b)
     release thm common_divisor_set_is_finite_and_nonempty(a, b)
+    by def {d N+: $dvd(a, d), $dvd(b, d)} $subset R
     gcd_from_finite_divisors(a, b) = finite_set_max({d N+: $dvd(a, d), $dvd(b, d)})
     finite_set_max({d N+: $dvd(a, d), $dvd(b, d)}) $in {d N+: $dvd(a, d), $dvd(b, d)}
-    gcd_from_finite_divisors(a, b) $in {d N+: $dvd(a, d), $dvd(b, d)}
-    $dvd(a, gcd_from_finite_divisors(a, b))
-    $dvd(b, gcd_from_finite_divisors(a, b))
-    obtain ka from exist k Z st {a = gcd_from_finite_divisors(a, b) * k}
-    obtain kb from exist k Z st {b = gcd_from_finite_divisors(a, b) * k}
-    a % gcd_from_finite_divisors(a, b) = (gcd_from_finite_divisors(a, b) * ka) % gcd_from_finite_divisors(a, b) = 0
-    b % gcd_from_finite_divisors(a, b) = (gcd_from_finite_divisors(a, b) * kb) % gcd_from_finite_divisors(a, b) = 0
     gcd_from_finite_divisors(a, b) <= gcd(a, b)
     gcd(a, b) $in N+
     a % gcd(a, b) = 0
@@ -91,4 +102,3 @@ thm gcd_from_finite_divisors_eq_native:
     by def $dvd(b, gcd(a, b))
     release thm set_builder_member(gcd(a, b), {d N+: $dvd(a, d), $dvd(b, d)})
     gcd(a, b) <= finite_set_max({d N+: $dvd(a, d), $dvd(b, d)})
-    gcd(a, b) <= gcd_from_finite_divisors(a, b)

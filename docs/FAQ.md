@@ -1712,6 +1712,9 @@ must still match. A local `value` cannot replace `Other::facts::value`.
 The [constant-source tracer](../examples/stmt_nodes/definition/forall_source_replay.lit)
 contains the complete checked proof. Tests also reject an unproved source,
 an ordinary `exist` source and a source whose premise was dropped.
+The [nested-function source tracer](../examples/proof_nodes/forall/known_exist_nested_function_alpha.lit)
+also checks renamed bound variables inside an existential function carrier.
+Domains, return carriers, guards and free identities must remain the same.
 
 ### Can decimal aliases, complex reciprocals and finite aggregates be checked directly?
 
