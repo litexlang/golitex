@@ -1,0 +1,9 @@
+# Before: aliases hide the stored tuple_dim equality needed by variable index WD.
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_known_special_property/known_cart_index_upper_bound.lit
+have n N+ = 3
+have c set = cart(R,R,R)
+forall p c, j closed_range(1,n):
+    p[j] $in R
+have fn vec(x R) cart(R,R) = (x,x)
+forall x R, j closed_range(1,2):
+    vec(x)[j] $in R

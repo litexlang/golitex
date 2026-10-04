@@ -1196,6 +1196,24 @@ Replacing the premise with `b - a >= 0` does not justify strict order. The
 [runnable example](../examples/proof_nodes/atomic/by_builtin_rule/greater_from_positive_difference.lit)
 also covers the corresponding `>` goals.
 
+Some routine consequences are saved when a verified fact enters the context.
+For example, saving `n >= 0` after `n $in Z` publishes `n $in N` in that same
+scope. More generally, a saved `b <= n` or `n >= b` needs both an integer
+certificate for `n` and an available nonnegative certificate for `b`. This
+lets a later call to a function with domain `N` cite its argument's carrier,
+including inside an induction goal's WD check. A nonnegative real value alone
+does not justify `N`, and a weak bound does not justify `N+`. See the
+[lower-bound infer tracer](../examples/infer/atomic/weak_integer_lower_bound_in_n.lit).
+
+For real-valued functions, routine carrier checks can also compose across
+field expressions. The target `f(x)^2 / 4 <= f(x)^2 / 4` first needs the
+fraction to be real, before the claim body runs. The constructor-closure
+builtin checks the function-return leaves and integer exponent with its
+existing limited premise permissions. Division still needs a valid nonzero
+denominator; a complex-only return does not gain a real carrier. The
+[real constructor tracer](../examples/proof_nodes/atomic/by_builtin_rule/real_arithmetic_constructor_closure.lit)
+retains this goal-WD example and the focused tests cover rejected boundaries.
+
 This does not mean Litex proves arbitrary goals by magic. It means Litex places
 ordinary mathematical structure inside the verifier and visible local
 background packages, then gives the user a fact-oriented interface to that

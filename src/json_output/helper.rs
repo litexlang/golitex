@@ -155,7 +155,7 @@ pub(super) fn builtin_rule_with_optional_cite(
     cite_fact_id: Option<FactId>,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    // Print rule_name + message only; rule_id stays internal to explain/.
+    // The localized payload contains only the displayed rule name and message.
     let mut entries = vec![
         ("type", string(type_value_builtin_rule(lang))),
         ("rule_name", string(text.rule_name.clone())),

@@ -175,6 +175,21 @@ Err → merge/invariant bugs (SessionError)
 - Success does not carry the closed temp env.
 - Binder locals (forall / prop params) are inner scopes inside the temp shell.
 
+## Real arithmetic constructor evidence
+
+`in_fact/real_arithmetic_constructor.rs` owns a bounded real-carrier builtin
+after the enclosing atomic object's WD. Its success struct contains an
+exhaustive constructor tree for field operations and integer powers; leaves
+carry ordinary `VerifyFactResult` evidence. Constructor descent removes AST
+nodes. Each terminal check inherits the existing builtin premise state, at
+most KnownSpecialProperty; no Direct, global state or rewrite contract changes.
+An already checked real composite can be a leaf even if its components are
+complex. Division and negative-power domains remain in the enclosing WD;
+integer-power nodes also retain their checked Z exponent. The search stores
+no new facts. Detailed JSON mirrors the tree and function-signature citations.
+The maintained tracer is
+`examples/proof_nodes/atomic/by_builtin_rule/real_arithmetic_constructor_closure.lit`.
+
 ## Induction scope and evidence
 
 `execute_by_stmt/exec_by_induc_stmt.rs` checks the integer base, then goal WD
@@ -185,6 +200,14 @@ ordinary or bounded strong IH. Only the final universal is stored in the
 parent. Success retains the WD, base, and step local environments and their
 ordered evidence; failed results distinguish base from successor and carry
 the failed goal or ordinary statement with its index.
+
+The unchanged domain-assumption store/infer stage can publish `n in N` from
+the integer parameter and a checked nonnegative lower bound. This comes from
+the local `WeakIntegerLowerBoundInN` infer rule, with its two premise proofs
+and derived FactId retained in `goal_domain_stored`. Nested function WD can
+then cite the carrier without reopening search or borrowing IH. A negative
+starting bound supplies no such carrier. See
+`examples/infer/atomic/weak_integer_lower_bound_in_n.lit`.
 
 `recover_induction_param.rs` finds the parsed free ID in all target object
 shapes and proof actions. It skips nested binders and qualified identifiers;

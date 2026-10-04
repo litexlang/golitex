@@ -21,8 +21,8 @@
         "next_identifier_id": 1
       },
       "global_ids_at_leave": {
-        "next_fact_id": 8,
-        "next_well_definedness_id": 6,
+        "next_fact_id": 10,
+        "next_well_definedness_id": 5,
         "next_prop_rewrite_property_id": 1,
         "next_identifier_id": 3
       }

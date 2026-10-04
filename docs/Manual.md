@@ -5113,6 +5113,20 @@ requirement. Other constructors remain terminal membership goals; this route
 does not unfold definitions or reenable nested strategies. See the
 [field-expression tracer](../examples/proof_nodes/atomic/by_builtin_strategy/field_arithmetic_carrier_closure.lit).
 
+The `RealArithmeticConstructorClosure` builtin composes real terminal
+certificates across addition, subtraction, negation, multiplication, division
+and integer powers. It descends through the finite expression syntax, checking
+real leaves and integer exponents with the existing builtin premise ceiling
+(at most KnownSpecialProperty). A function's checked return signature can be
+such a leaf, so a comparison target containing `f(x)^2 / 4` can check its real
+carrier before entering the proof body. Already checked composites can also
+be leaves, including an exactly calculated real value such as `i^2`.
+Detailed output keeps the constructor tree, terminal proofs and citations;
+the enclosing WD proof retains division and negative-power domain guards.
+The rule does not publish new memberships, unfold definitions, raise search
+permissions or infer signed/integer refinements. See the
+[real constructor tracer](../examples/proof_nodes/atomic/by_builtin_rule/real_arithmetic_constructor_closure.lit).
+
 Complex arithmetic being well-defined does not imply a real-valued result.
 General real closure now records `RealOperandArithmeticClosure` operand proofs,
 or `RealIntegerPower` with its real-base proof and the enclosing power WD's
@@ -5624,6 +5638,7 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 | `by fn_extension` success | Ordinary object equality `f = g`, so known-equality congruence can use it. |
 | Positive concrete or builtin predicate | Instantiated parameter-type and defining clauses. Proper inclusion exposes inclusion plus inequality; `$prime` exposes its lower bound and trial-divisor universal; `$coprime(a,b)` exposes `a != 0 or b != 0` and `gcd(a,b)=1`; `$dvd(x,y)` exposes `x % y = 0` and an integer multiple witness; mapping properties expose their exact definitions. Abstract predicates have no clauses to expose. |
 | Membership | Constructor-specific carrier, shape, bound, component, disjunction, or existential information listed below. |
+| Weak lower bound `b <= n` or `n >= b` | Stores `n $in N` when an integer certificate for `n` and a nonnegative certificate for `b` are available. These premise checks inherit the caller's ceiling and use at most KnownSpecialProperty; they do not invoke strategy or forall search. Weak bounds alone do not imply `N+` or nonzero. |
 | `$is_cart(C)` | The structural lower bound `2 <= cart_dim(C)`. Other positive/negative type predicates have no general inference branch. |
 | Subset or superset | One fresh universal membership consequence in the corresponding direction. A builder on the subset side skips this eager universal because builder membership already exposes its domain and filters. |
 | Proper inclusion | Through its builtin definition: ordinary inclusion and set inequality. |

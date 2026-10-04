@@ -1,0 +1,11 @@
+*** Begin Patch
+*** Update File: src/run_module/import_kb.rs
+@@
+ ) -> RuntimeResult<ImportKbHit> {
++    // The current cache carries no strict-validation provenance. Recheck the
++    // existing source under strict mode instead of installing non-strict defs.
++    if runtime.launch_command.is_strict() {
++        return Ok(ImportKbHit::Miss);
++    }
+     let fingerprint = match fingerprint_module_recursive(module_dir, config, std_root) {
+*** End Patch

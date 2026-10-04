@@ -4,84 +4,84 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     IsTupleFactSearchProofByBuiltinRule,
     TupleLiteralBuiltinRuleProof,
 };
-use crate::json_output::explain::fallback::BuiltinRuleText;
+use crate::json_output::explain::BuiltinRuleText;
 use crate::launch_command::OutputLanguage;
 use crate::runtime::FactId;
-use super::text::text;
+use crate::json_output::explain::text::text;
 
 impl IsTupleFactSearchProofByBuiltinRule {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
-            Self::TupleLiteral(p) => p.rule_id_and_message_en(),
+            Self::TupleLiteral(p) => p.rule_name_and_message_en(),
         }
     }
 
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
-            Self::TupleLiteral(p) => p.rule_id_and_message_zh(),
+            Self::TupleLiteral(p) => p.rule_name_and_message_zh(),
         }
     }
 
-    pub fn rule_id_and_message_zh_hant(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
-            Self::TupleLiteral(p) => p.rule_id_and_message_zh_hant(),
+            Self::TupleLiteral(p) => p.rule_name_and_message_zh_hant(),
         }
     }
 
-    pub fn rule_id_and_message_fr(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
-            Self::TupleLiteral(p) => p.rule_id_and_message_fr(),
+            Self::TupleLiteral(p) => p.rule_name_and_message_fr(),
         }
     }
 
-    pub fn rule_id_and_message_ru(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
-            Self::TupleLiteral(p) => p.rule_id_and_message_ru(),
+            Self::TupleLiteral(p) => p.rule_name_and_message_ru(),
         }
     }
 
-    pub fn rule_id_and_message_es(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
-            Self::TupleLiteral(p) => p.rule_id_and_message_es(),
+            Self::TupleLiteral(p) => p.rule_name_and_message_es(),
         }
     }
 
-    pub fn rule_id_and_message_ar(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
-            Self::TupleLiteral(p) => p.rule_id_and_message_ar(),
+            Self::TupleLiteral(p) => p.rule_name_and_message_ar(),
         }
     }
 
-    pub fn rule_id_and_message_ja(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
-            Self::TupleLiteral(p) => p.rule_id_and_message_ja(),
+            Self::TupleLiteral(p) => p.rule_name_and_message_ja(),
         }
     }
 
-    pub fn rule_id_and_message_ko(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
-            Self::TupleLiteral(p) => p.rule_id_and_message_ko(),
+            Self::TupleLiteral(p) => p.rule_name_and_message_ko(),
         }
     }
 
-    pub fn rule_id_and_message_vi(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
-            Self::TupleLiteral(p) => p.rule_id_and_message_vi(),
+            Self::TupleLiteral(p) => p.rule_name_and_message_vi(),
         }
     }
 
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_id_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_id_and_message_fr(),
-            OutputLanguage::Russian => self.rule_id_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_id_and_message_es(),
-            OutputLanguage::Arabic => self.rule_id_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_id_and_message_ja(),
-            OutputLanguage::Korean => self.rule_id_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_id_and_message_vi(),
+            OutputLanguage::English => self.rule_name_and_message_en(),
+            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_name_and_message_fr(),
+            OutputLanguage::Russian => self.rule_name_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_name_and_message_es(),
+            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
+            OutputLanguage::Korean => self.rule_name_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
         }
     }
 
@@ -93,90 +93,82 @@ impl IsTupleFactSearchProofByBuiltinRule {
 }
 
 impl TupleLiteralBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         text(
-            "TupleLiteral",
             "Tuple Literal",
             "Verified by the tuple Literal builtin rule",
         )
     }
 
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("TupleLiteral", "元组字面量", "元组字面量形状成立")
+    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
+        text("元组字面量", "元组字面量形状成立")
     }
 
-    pub fn rule_id_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("TupleLiteral", "元組字面值", "由元組字面值內建規則驗證")
+    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
+        text("元組字面值", "由元組字面值內建規則驗證")
     }
 
-    pub fn rule_id_and_message_fr(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         text(
-            "TupleLiteral",
             "Tuple littéral",
             "Vérifié par la règle intégrée du tuple littéral",
         )
     }
 
-    pub fn rule_id_and_message_ru(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         text(
-            "TupleLiteral",
             "Литерал кортежа",
             "Проверено встроенным правилом литерала кортежа",
         )
     }
 
-    pub fn rule_id_and_message_es(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         text(
-            "TupleLiteral",
             "Tupla literal",
             "Verificado por la regla incorporada de tupla literal",
         )
     }
 
-    pub fn rule_id_and_message_ar(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         text(
-            "TupleLiteral",
             "صف حرفي",
             "تم التحقق بقاعدة الصف الحرفي المدمجة",
         )
     }
 
-    pub fn rule_id_and_message_ja(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         text(
-            "TupleLiteral",
             "タプルリテラル",
             "タプルリテラルの組み込み規則で検証しました",
         )
     }
 
-    pub fn rule_id_and_message_ko(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         text(
-            "TupleLiteral",
             "튜플 리터럴",
             "튜플 리터럴 내장 규칙으로 검증했습니다",
         )
     }
 
-    pub fn rule_id_and_message_vi(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         text(
-            "TupleLiteral",
             "Bộ literal",
             "Đã kiểm chứng bằng quy tắc tích hợp bộ literal",
         )
     }
 
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_id_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_id_and_message_fr(),
-            OutputLanguage::Russian => self.rule_id_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_id_and_message_es(),
-            OutputLanguage::Arabic => self.rule_id_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_id_and_message_ja(),
-            OutputLanguage::Korean => self.rule_id_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_id_and_message_vi(),
+            OutputLanguage::English => self.rule_name_and_message_en(),
+            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_name_and_message_fr(),
+            OutputLanguage::Russian => self.rule_name_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_name_and_message_es(),
+            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
+            OutputLanguage::Korean => self.rule_name_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
         }
     }
 }

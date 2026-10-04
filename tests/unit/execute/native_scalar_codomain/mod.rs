@@ -320,3 +320,86 @@ fn strict_lower_bound_positive_infer_keeps_source_and_bound_proof() {
     assert!(fact.readable_string().contains("0 < x"));
     assert!(project_stmt_normal(&result, &rt).stringify_pretty().contains("0 < x"));
 }
+
+#[test]
+fn weak_integer_lower_bound_in_n_keeps_both_certificates() {
+    use crate::execute::ExecFactStmtResult;
+    use crate::execute::execute_fact_stmt::VerifyFactResult;
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
+        AtomicExceptEqualityFactSearchedProof, VerifyAtomicExceptEqualityFactResult,
+    };
+    use crate::store_fact_and_infer::{InferFactResult, InferAtomicFactResult, InferAtomicExceptEqualityResult};
+    for bound in ["0 <= n", "n >= 0", "1 / 2 <= n", "n >= 2"] {
+        let mut rt = runtime(OutputLanguage::English);
+        assert!(!exec(&mut rt, "have n Z = 3").is_failed());
+        let result = exec(&mut rt, bound);
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else { panic!("bound success") };
+        let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) = &success.store_and_infer_result.infer else { panic!("infer") };
+        let proof = rules.iter().find_map(|r| match r {
+            InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(p) => Some(p),
+            _ => None,
+        }).expect("integer and nonnegative-bound certificates");
+        assert_eq!(proof.source_fact_id, success.store_and_infer_result.primary_fact_id());
+        assert!(!proof.integer_proof.is_failed());
+        assert!(!proof.bound_nonnegative_proof.is_failed());
+        let VerifyFactResult::AtomicExceptEquality(integer) = &proof.integer_proof else { panic!("integer proof") };
+        let VerifyAtomicExceptEqualityFactResult::Success(integer) = integer.as_ref() else { panic!("proved integer") };
+        let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(cite) = &integer.searched_proof else { panic!("stored integer citation") };
+        assert_eq!(rt.fact_by_id_in_stack(cite.cite_fact_id).unwrap().readable_string(), "n $in Z");
+        let derived = proof.derived.primary_fact_id();
+        assert_eq!(rt.fact_by_id_in_stack(derived).unwrap().readable_string(), "n $in N");
+        for output in [project_stmt_normal(&result, &rt), project_stmt_detailed(&result, &rt)] {
+            let text = output.stringify_pretty();
+            assert!(text.contains("n $in N"), "{text}");
+        }
+        assert!(project_stmt_detailed(&result, &rt).stringify_pretty().contains(&derived.to_string()));
+        let use_result = exec(&mut rt, "n $in N");
+        assert!(!use_result.is_failed());
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(use_success)) = &use_result else { panic!("membership success") };
+        let VerifyFactResult::AtomicExceptEquality(member) = &use_success.verify_result else { panic!("membership proof") };
+        let VerifyAtomicExceptEqualityFactResult::Success(member) = member.as_ref() else { panic!("proved membership") };
+        let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(cite) = &member.searched_proof else { panic!("derived membership citation") };
+        assert_eq!(cite.cite_fact_id, derived);
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+    }
+}
+
+#[test]
+fn weak_integer_lower_bound_in_n_unblocks_nested_induction_wd() {
+    let proof = "have fn identity(n N) N = n\nby induc k from 0:\n    ? identity(k) >= 0\n    ? from k = 0:\n        identity(0) = 0\n    ? induc:\n        k $in N\n        k + 1 $in N\n        identity(k + 1) = k + 1\n        identity(k + 1) >= 0";
+    assert_accepts(proof);
+    assert_accepts(&proof.replace("by induc", "by strong_induc").replace("? induc:", "? strong_induc:"));
+    assert_accepts("have fn identity(n N) N = n\nforall b R, n Z:\n    b >= 0\n    n >= b\n    =>:\n        identity(n) = n");
+    assert_accepts("have fn identity(n N) N = n\nforall b R, n Z:\n    0 <= b\n    b <= n\n    =>:\n        identity(n) = n");
+}
+
+#[test]
+fn weak_integer_lower_bound_in_n_keeps_domain_scope_and_rollback() {
+    for (setup, bound) in [
+        ("have n R = 1 / 2", "n >= 0"),
+        ("have n Z = -1", "-2 <= n"),
+        ("have n Z = -1", "n <= 0"),
+    ] {
+        let mut rt = runtime(OutputLanguage::English);
+        assert!(!exec(&mut rt, setup).is_failed());
+        assert!(!exec(&mut rt, bound).is_failed());
+        assert!(exec(&mut rt, "n $in N").is_failed());
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+    }
+    let mut rt = runtime(OutputLanguage::English);
+    assert!(!exec(&mut rt, "have n Z = 0\n0 <= n").is_failed());
+    assert!(exec(&mut rt, "n $in N+").is_failed());
+    assert!(exec(&mut rt, "n != 0").is_failed());
+    let mut rt = runtime(OutputLanguage::English);
+    assert!(!exec(&mut rt, "forall n Z:\n    n >= 0\n    =>:\n        n $in N").is_failed());
+    assert!(!exec(&mut rt, "have n Z = -1").is_failed());
+    assert!(exec(&mut rt, "n $in N").is_failed());
+    let mut rt = runtime(OutputLanguage::English);
+    assert!(exec(&mut rt, "claim:\n    ? 0 = 1\n    have n Z = 3\n    0 <= n").is_failed());
+    assert!(!exec(&mut rt, "have n Z = -1").is_failed());
+    assert!(exec(&mut rt, "n $in N").is_failed());
+    assert_eq!(rt.execution_environments_stack.len(), 1);
+    let mut rt = runtime(OutputLanguage::English);
+    assert!(!exec(&mut rt, "have fn identity(n N) N = n").is_failed());
+    assert!(exec(&mut rt, "by induc k from -1:\n    ? identity(k) >= 0\n    ? from k = -1:\n        identity(-1) = -1\n    ? induc:\n        identity(k + 1) = k + 1").is_failed());
+}

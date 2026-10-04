@@ -22,6 +22,11 @@ use std::collections::HashMap;
 
 use super::subset::standard_set_is_subset_eq;
 
+mod real_arithmetic_constructor;
+pub use real_arithmetic_constructor::{
+    RealArithmeticConstructorClosureBuiltinRuleProof, RealArithmeticConstructorTree,
+};
+
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
     FiniteSetMaxMember(FiniteSetMaxMemberBuiltinRuleProof),
@@ -58,6 +63,9 @@ pub enum InFactSearchProofByBuiltinRule {
     RealArithmeticClosure(RealArithmeticClosureBuiltinRuleProof),
     // General arithmetic requires actual real operands, rather than only C WD.
     RealOperandArithmeticClosure(RealOperandArithmeticClosureBuiltinRuleProof),
+    // A finite constructor tree composes real terminal certificates using the
+    // unchanged builtin premise ceiling, without recursively searching rules.
+    RealArithmeticConstructorClosure(RealArithmeticConstructorClosureBuiltinRuleProof),
     // Pow WD currently proves an integer exponent; its base must also be real.
     RealIntegerPower(RealIntegerPowerBuiltinRuleProof),
     // Negation, absolute value, addition, subtraction and multiplication of
@@ -554,6 +562,9 @@ impl Runtime {
                     }
                     if let Some(proof) = self.real_operand_arithmetic_in_r_proof(fact, verify_state.clone())? {
                         return Ok(Some(proof));
+                    }
+                    if let Some(proof) = self.real_arithmetic_constructor_closure_proof(fact, verify_state)? {
+                        return Ok(Some(InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(proof)));
                     }
                 }
                 // `x - 1 $in N` from `x $in N` and `x >= 1`

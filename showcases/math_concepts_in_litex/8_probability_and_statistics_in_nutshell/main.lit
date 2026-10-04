@@ -89,7 +89,7 @@ thm expectation2_affine:
         expectation2(affine_combine2(X, Y, a, b), probs) = a * expectation2(X, probs) + b * expectation2(Y, probs)
     expectation2(X, probs) = X(1) * probs(1) + X(2) * probs(2)
     expectation2(Y, probs) = Y(1) * probs(1) + Y(2) * probs(2)
-    let combined = \affine_coordinates<X, Y, a, b>
+    have combined two_point_vector = \affine_coordinates<X, Y, a, b>
     expectation2(combined, probs) = combined(1) * probs(1) + combined(2) * probs(2)
     \affine_coordinates<X, Y, a, b>(1) = a * X(1) + b * Y(1)
     \affine_coordinates<X, Y, a, b>(2) = a * X(2) + b * Y(2)
@@ -99,7 +99,6 @@ thm expectation2_affine:
     combined(1) * probs(1) + combined(2) * probs(2) = (a * X(1) + b * Y(1)) * probs(1) + (a * X(2) + b * Y(2)) * probs(2)
     (a * X(1) + b * Y(1)) * probs(1) + (a * X(2) + b * Y(2)) * probs(2) = a * (X(1) * probs(1) + X(2) * probs(2)) + b * (Y(1) * probs(1) + Y(2) * probs(2))
     a * (X(1) * probs(1) + X(2) * probs(2)) + b * (Y(1) * probs(1) + Y(2) * probs(2)) = a * expectation2(X, probs) + b * expectation2(Y, probs)
-    expectation2(combined, probs) = a * expectation2(X, probs) + b * expectation2(Y, probs)
 
 # The two outcomes are 0 and 1, each with probability 1/2.
 have fn fair_coin_values(k N+: k <= 2) R = k - 1

@@ -251,7 +251,7 @@ fn new_rule_explanations_are_bilingual() {
             matches: vec![],
             certificate,
         });
-        assert_eq!(leaf.rule_id_and_message(lang).rule_name, text);
+        assert_eq!(leaf.rule_name_and_message(lang).rule_name, text);
     }
 }
 

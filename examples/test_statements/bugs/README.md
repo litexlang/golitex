@@ -58,6 +58,16 @@ K-gaps does not mean the whole kernel has no problems.
 
 ## Related statement folders
 
+The 2026-10-04 follow-up closes strict cache replay, the original bare induction
+regression and qualified geometry authoring. Only the unused struct parameter
+example still needs clarification; the earlier six abstract decisions are
+withdrawn. [Current acceptance](../../../tests/tooling/acceptance/conversation-clarifications-2026-10-04.md).
+New concrete source routes are [ByInducStmt](by_induc_stmt/limitations.md),
+the [phantom struct identity](def_struct_stmt/limitations.md),
+[strict import-cache safety](../../module_manager/strict_cache_policy/README.md),
+and [qualified geometry WD](../../../showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/problem_927/issues.md).
+These are not additional K-number groups or a claim of full-release coverage.
+
 - [DefAlgoByInducStmt](def_algo_by_induc_stmt/README.md) (cross-reference; no additional confirmed bug)
 - [TrustHaveStmt](trust_have_stmt/README.md) (cross-reference; no additional confirmed bug)
 - [HaveObjInNonemptySetStmt](have_obj_in_nonempty_set_stmt/README.md) (cross-reference; no additional confirmed bug)

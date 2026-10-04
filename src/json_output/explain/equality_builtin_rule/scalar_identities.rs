@@ -1,10 +1,10 @@
 //! Scalar and trigonometric proof enums own one explanation method per language.
 
-use crate::json_output::explain::fallback::BuiltinRuleText;
+use crate::json_output::explain::BuiltinRuleText;
 use crate::launch_command::OutputLanguage;
 
 impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_identities::ScalarIdentityBuiltinRuleProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         let (name, message) = match self {
 Self::FiniteSetMaxSelection(_) => ("Exact finite-set maximum", "Select an original rational member and certify every member is no greater"),
 Self::FiniteSetMinSelection(_) => ("Exact finite-set minimum", "Select an original rational member and certify every member is no smaller"),
@@ -17,10 +17,10 @@ Self::MinMaxAbsorption(_) => ("Minimum absorbs maximum", "min(a, max(a, b)) = a 
 Self::MaxMinAbsorption(_) => ("Maximum absorbs minimum", "max(a, min(a, b)) = a for real operands"),
 Self::LcmZero(_) => ("Zero argument of lcm", "The least common multiple is zero when either integer argument is zero"),
 };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         let (name, message) = match self {
 Self::FiniteSetMaxSelection(_) => ("有限集合最大值精确选取", "选取原有理数成员并证明每个成员不大于它"),
 Self::FiniteSetMinSelection(_) => ("有限集合最小值精确选取", "选取原有理数成员并证明每个成员不小于它"),
@@ -33,10 +33,10 @@ Self::MinMaxAbsorption(_) => ("最小值吸收最大值", "实数操作数满足
 Self::MaxMinAbsorption(_) => ("最大值吸收最小值", "实数操作数满足 max(a, min(a, b)) = a"),
 Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，结果为零"),
 };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_zh_hant(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::FiniteSetMaxSelection(_) => ("有限集合最大值精確選取", "選取原有理數成員並證明每個成員不大於它"),
             Self::FiniteSetMinSelection(_) => ("有限集合最小值精確選取", "選取原有理數成員並證明每個成員不小於它"),
@@ -49,10 +49,10 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::MaxMinAbsorption(_) => ("最大值吸收最小值", "實數運算元滿足 max(a, min(a, b)) = a"),
             Self::LcmZero(_) => ("lcm 的零引數", "任一整數引數為零時，最小公倍數為零"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_fr(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::FiniteSetMaxSelection(_) => ("Maximum exact d'un ensemble fini", "Choisir un membre rationnel original et certifier qu'aucun membre n'est plus grand"),
             Self::FiniteSetMinSelection(_) => ("Minimum exact d'un ensemble fini", "Choisir un membre rationnel original et certifier qu'aucun membre n'est plus petit"),
@@ -65,10 +65,10 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::MaxMinAbsorption(_) => ("Le maximum absorbe le minimum", "max(a, min(a, b)) = a pour des opérandes réels"),
             Self::LcmZero(_) => ("Argument nul de lcm", "Le plus petit commun multiple est nul si l'un des arguments entiers est nul"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_ru(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::FiniteSetMaxSelection(_) => ("Точный максимум конечного множества", "Выбрать исходный рациональный элемент и подтвердить, что ни один элемент не больше"),
             Self::FiniteSetMinSelection(_) => ("Точный минимум конечного множества", "Выбрать исходный рациональный элемент и подтвердить, что ни один элемент не меньше"),
@@ -81,10 +81,10 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::MaxMinAbsorption(_) => ("Максимум поглощает минимум", "max(a, min(a, b)) = a для вещественных операндов"),
             Self::LcmZero(_) => ("Нулевой аргумент lcm", "Наименьшее общее кратное равно нулю, если один из целых аргументов равен нулю"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_es(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::FiniteSetMaxSelection(_) => ("Máximo exacto de conjunto finito", "Elegir un miembro racional original y certificar que ningún miembro es mayor"),
             Self::FiniteSetMinSelection(_) => ("Mínimo exacto de conjunto finito", "Elegir un miembro racional original y certificar que ningún miembro es menor"),
@@ -97,10 +97,10 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::MaxMinAbsorption(_) => ("El máximo absorbe el mínimo", "max(a, min(a, b)) = a para operandos reales"),
             Self::LcmZero(_) => ("Argumento cero de lcm", "El mínimo común múltiplo es cero si cualquiera de los argumentos enteros es cero"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_ar(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::FiniteSetMaxSelection(_) => ("قيمة عظمى دقيقة لمجموعة منتهية", "اختيار عنصر نسبي أصلي وإثبات أن كل عنصر لا يزيد عليه"),
             Self::FiniteSetMinSelection(_) => ("قيمة صغرى دقيقة لمجموعة منتهية", "اختيار عنصر نسبي أصلي وإثبات أن كل عنصر لا يقل عنه"),
@@ -113,10 +113,10 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::MaxMinAbsorption(_) => ("القيمة العظمى تمتص القيمة الصغرى", "max(a, min(a, b)) = a للمعاملات الحقيقية"),
             Self::LcmZero(_) => ("وسيط صفري لـ lcm", "المضاعف المشترك الأصغر يساوي صفرًا إذا كان أحد الوسيطين الصحيحين صفرًا"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_ja(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::FiniteSetMaxSelection(_) => ("有限集合の正確な最大値", "元の有理数の要素を選び、すべての要素がそれ以下であることを証明します"),
             Self::FiniteSetMinSelection(_) => ("有限集合の正確な最小値", "元の有理数の要素を選び、すべての要素がそれ以上であることを証明します"),
@@ -129,10 +129,10 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::MaxMinAbsorption(_) => ("最大値による最小値の吸収", "実数の被演算子について max(a, min(a, b)) = a"),
             Self::LcmZero(_) => ("lcm のゼロ引数", "整数引数のいずれかがゼロなら最小公倍数はゼロです"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_ko(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::FiniteSetMaxSelection(_) => ("유한 집합의 정확한 최댓값", "원래의 유리수 원소를 선택하고 모든 원소가 그보다 크지 않음을 인증합니다"),
             Self::FiniteSetMinSelection(_) => ("유한 집합의 정확한 최솟값", "원래의 유리수 원소를 선택하고 모든 원소가 그보다 작지 않음을 인증합니다"),
@@ -145,10 +145,10 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::MaxMinAbsorption(_) => ("최댓값의 최솟값 흡수", "실수 피연산자에 대해 max(a, min(a, b)) = a"),
             Self::LcmZero(_) => ("lcm의 0 인수", "정수 인수 중 하나가 0이면 최소공배수는 0입니다"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_vi(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::FiniteSetMaxSelection(_) => ("Giá trị lớn nhất chính xác của tập hữu hạn", "Chọn phần tử hữu tỉ gốc và chứng nhận mọi phần tử không lớn hơn nó"),
             Self::FiniteSetMinSelection(_) => ("Giá trị nhỏ nhất chính xác của tập hữu hạn", "Chọn phần tử hữu tỉ gốc và chứng nhận mọi phần tử không nhỏ hơn nó"),
@@ -161,27 +161,27 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::MaxMinAbsorption(_) => ("Giá trị lớn nhất hấp thụ giá trị nhỏ nhất", "max(a, min(a, b)) = a với các toán hạng thực"),
             Self::LcmZero(_) => ("Đối số không của lcm", "Bội chung nhỏ nhất bằng không khi một trong hai đối số nguyên bằng không"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_id_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_id_and_message_fr(),
-            OutputLanguage::Russian => self.rule_id_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_id_and_message_es(),
-            OutputLanguage::Arabic => self.rule_id_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_id_and_message_ja(),
-            OutputLanguage::Korean => self.rule_id_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_id_and_message_vi(),
+            OutputLanguage::English => self.rule_name_and_message_en(),
+            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_name_and_message_fr(),
+            OutputLanguage::Russian => self.rule_name_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_name_and_message_es(),
+            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
+            OutputLanguage::Korean => self.rule_name_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
         }
     }
 }
 
 impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof {
-    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         let (name, message) = match self {
 Self::SinHalfPiShift(_) => ("Sine quarter-turn shift", "sin(x+pi/2)=cos(x) for checked real x"),
 Self::CosHalfPiShift(_) => ("Cosine quarter-turn shift", "cos(x+pi/2)=-sin(x) for checked real x"),
@@ -192,10 +192,10 @@ Self::CosDifference => ("Cosine difference formula", "cos(x-y)=cos(x)cos(y)+sin(
 Self::ComplexModulusProduct => ("Multiplicativity of complex modulus", "C_abs(z*w)=C_abs(z)*C_abs(w) for checked complex arguments"),
 _ => ("Trigonometric or complex coordinate identity", "Apply the trigonometric or complex coordinate identity with checked premises"),
 };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         let (name, message) = match self {
 Self::SinHalfPiShift(_) => ("正弦的半 pi 平移", "经验证的实数 x 满足 sin(x+pi/2)=cos(x)"),
 Self::CosHalfPiShift(_) => ("余弦的半 pi 平移", "经验证的实数 x 满足 cos(x+pi/2)=-sin(x)"),
@@ -206,10 +206,10 @@ Self::CosDifference => ("余弦差角公式", "经验证的实数参数满足 co
 Self::ComplexModulusProduct => ("复数模的乘法公式", "经验证的复数参数满足 C_abs(z*w)=C_abs(z)*C_abs(w)"),
 _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复坐标恒等式"),
 };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_zh_hant(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::SinHalfPiShift(_) => ("正弦的半 pi 平移", "經驗證的實數 x 滿足 sin(x+pi/2)=cos(x)"),
             Self::CosHalfPiShift(_) => ("餘弦的半 pi 平移", "經驗證的實數 x 滿足 cos(x+pi/2)=-sin(x)"),
@@ -220,10 +220,10 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::ComplexModulusProduct => ("複數模的乘法公式", "經驗證的複數引數滿足 C_abs(z*w)=C_abs(z)*C_abs(w)"),
             _ => ("三角或複數座標恆等式", "依已驗證的前提套用三角或複數座標恆等式"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_fr(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::SinHalfPiShift(_) => ("Translation d'un quart de tour du sinus", "sin(x+pi/2)=cos(x) pour x réel vérifié"),
             Self::CosHalfPiShift(_) => ("Translation d'un quart de tour du cosinus", "cos(x+pi/2)=-sin(x) pour x réel vérifié"),
@@ -234,10 +234,10 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::ComplexModulusProduct => ("Multiplicativité du module complexe", "C_abs(z*w)=C_abs(z)*C_abs(w) pour des arguments complexes vérifiés"),
             _ => ("Identité trigonométrique ou de coordonnées complexes", "Appliquer l'identité trigonométrique ou de coordonnées complexes avec les prémisses vérifiées"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_ru(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::SinHalfPiShift(_) => ("Сдвиг синуса на четверть оборота", "sin(x+pi/2)=cos(x) для проверенного вещественного x"),
             Self::CosHalfPiShift(_) => ("Сдвиг косинуса на четверть оборота", "cos(x+pi/2)=-sin(x) для проверенного вещественного x"),
@@ -248,10 +248,10 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::ComplexModulusProduct => ("Мультипликативность комплексного модуля", "C_abs(z*w)=C_abs(z)*C_abs(w) для проверенных комплексных аргументов"),
             _ => ("Тригонометрическое или комплексное координатное тождество", "Применить тригонометрическое или комплексное координатное тождество с проверенными предпосылками"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_es(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::SinHalfPiShift(_) => ("Desplazamiento de un cuarto de vuelta del seno", "sin(x+pi/2)=cos(x) para x real comprobado"),
             Self::CosHalfPiShift(_) => ("Desplazamiento de un cuarto de vuelta del coseno", "cos(x+pi/2)=-sin(x) para x real comprobado"),
@@ -262,10 +262,10 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::ComplexModulusProduct => ("Multiplicatividad del módulo complejo", "C_abs(z*w)=C_abs(z)*C_abs(w) para argumentos complejos comprobados"),
             _ => ("Identidad trigonométrica o de coordenadas complejas", "Aplicar la identidad trigonométrica o de coordenadas complejas con premisas comprobadas"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_ar(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::SinHalfPiShift(_) => ("إزاحة الجيب بربع دورة", "sin(x+pi/2)=cos(x) للعدد الحقيقي x المتحقق منه"),
             Self::CosHalfPiShift(_) => ("إزاحة جيب التمام بربع دورة", "cos(x+pi/2)=-sin(x) للعدد الحقيقي x المتحقق منه"),
@@ -276,10 +276,10 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::ComplexModulusProduct => ("ضربية المقياس المركب", "C_abs(z*w)=C_abs(z)*C_abs(w) للوسائط المركبة المتحقق منها"),
             _ => ("هوية مثلثية أو إحداثيات مركبة", "تطبيق الهوية المثلثية أو هوية الإحداثيات المركبة بالمقدمات المتحقق منها"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_ja(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::SinHalfPiShift(_) => ("正弦の四分の一回転の平行移動", "検証済みの実数 x について sin(x+pi/2)=cos(x)"),
             Self::CosHalfPiShift(_) => ("余弦の四分の一回転の平行移動", "検証済みの実数 x について cos(x+pi/2)=-sin(x)"),
@@ -290,10 +290,10 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::ComplexModulusProduct => ("複素数の絶対値の乗法性", "検証済みの複素数引数について C_abs(z*w)=C_abs(z)*C_abs(w)"),
             _ => ("三角関数または複素座標の恒等式", "検証済みの前提で三角関数または複素座標の恒等式を適用します"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_ko(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::SinHalfPiShift(_) => ("사인의 4분의 1회전 이동", "검증된 실수 x에 대해 sin(x+pi/2)=cos(x)"),
             Self::CosHalfPiShift(_) => ("코사인의 4분의 1회전 이동", "검증된 실수 x에 대해 cos(x+pi/2)=-sin(x)"),
@@ -304,10 +304,10 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::ComplexModulusProduct => ("복소수 절댓값의 곱셈성", "검증된 복소수 인수에 대해 C_abs(z*w)=C_abs(z)*C_abs(w)"),
             _ => ("삼각함수 또는 복소수 좌표 항등식", "검증된 전제로 삼각함수 또는 복소수 좌표 항등식을 적용합니다"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message_vi(&self) -> BuiltinRuleText {
+    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         let (name, message) = match self {
             Self::SinHalfPiShift(_) => ("Dịch sin một phần tư vòng", "sin(x+pi/2)=cos(x) với x thực đã kiểm tra"),
             Self::CosHalfPiShift(_) => ("Dịch cos một phần tư vòng", "cos(x+pi/2)=-sin(x) với x thực đã kiểm tra"),
@@ -318,21 +318,21 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::ComplexModulusProduct => ("Tính nhân của môđun phức", "C_abs(z*w)=C_abs(z)*C_abs(w) với các đối số phức đã kiểm tra"),
             _ => ("Đồng nhất thức lượng giác hoặc tọa độ phức", "Áp dụng đồng nhất thức lượng giác hoặc tọa độ phức với các tiền đề đã kiểm tra"),
         };
-        BuiltinRuleText {rule_id: self.rule_id(), rule_name: name.into(), message: message.into()}
+        BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
-            OutputLanguage::English => self.rule_id_and_message_en(),
-            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_id_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_id_and_message_fr(),
-            OutputLanguage::Russian => self.rule_id_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_id_and_message_es(),
-            OutputLanguage::Arabic => self.rule_id_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_id_and_message_ja(),
-            OutputLanguage::Korean => self.rule_id_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_id_and_message_vi(),
+            OutputLanguage::English => self.rule_name_and_message_en(),
+            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_name_and_message_fr(),
+            OutputLanguage::Russian => self.rule_name_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_name_and_message_es(),
+            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
+            OutputLanguage::Korean => self.rule_name_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
         }
     }
 }

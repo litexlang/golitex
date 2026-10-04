@@ -1,0 +1,12 @@
+# KnownSpecial: every Cartesian factor matches the target carrier.
+# Before: variable-index coordinate membership was unsupported by this leaf.
+# forall p cart(R,R,R), j closed_range(1,3):
+#     p[j] $in R
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_known_special_property/homogeneous_cart_coordinate.lit
+forall p cart(R,R,R), j closed_range(1,3):
+    p[j] $in R
+forall X set, p cart(X,X,X,X), j closed_range(1,4):
+    p[j] $in X
+have fn encode(p cart(R,R,R)) fn(k closed_range(1,3)) R = fn(j closed_range(1,3)) R {p[j]}
+forall p cart(R,R,R):
+    encode(p) = fn(j closed_range(1,3)) R {p[j]}

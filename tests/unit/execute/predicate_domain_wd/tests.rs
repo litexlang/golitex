@@ -173,27 +173,17 @@ fn predicate_domain_wd_dimension_codomain_requires_a_valid_shape() {
     assert!(!run.success);
     let mut rt = runtime();
     assert!(!rt.run_litex_code("tuple_dim(0) $in N\n").unwrap().success);
-    let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::English,
-    });
+    let mut rt = runtime();
     let run = rt
-        .run_litex_code("have A set\ntrust $is_cart(A)\ncart_dim(A) $in N\ncart_dim(A) >= 2\n")
+        .run_litex_code("have A set = cart(R, R)\ncart_dim(A) $in N\ncart_dim(A) >= 2\n")
         .unwrap();
     assert!(run.success, "{:?}", run.session_error);
-    let detailed = format!(
-        "{:?}",
-        crate::json_output::project_stmt_detailed(&run.statement_results[2], &rt)
-    );
-    // Both routes retain the numeric codomain only after cart shape WD.
-    assert!(
-        detailed.contains("CartDimInNatural")
-            || (detailed.contains("by_structural_membership")
-                && detailed.contains("intrinsic_codomain")),
-        "{detailed}"
-    );
+    // Shape is checked from a real Cartesian definition. Inferred N membership
+    // may now be cited directly; an earlier builtin label is not its contract.
+    assert!(rt.run_litex_code("cart_dim(A) = 2").unwrap().success);
+    for wrong in ["cart_dim(A) = 0", "cart_dim(A) = 1", "0 = 1"] {
+        assert!(!rt.run_litex_code(wrong).unwrap().success, "{wrong}");
+    }
 }
 
 #[test]

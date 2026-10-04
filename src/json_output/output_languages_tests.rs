@@ -242,21 +242,20 @@ fn positive_and_negative_numeric_membership_have_distinct_translations() {
         normal: "1/2".into(),
     };
     for language in OutputLanguage::ALL.into_iter().skip(2) {
-        let member = positive.rule_id_and_message(language);
-        let nonmember = negative.rule_id_and_message(language);
-        assert_eq!(member.rule_id, "ClosedNumericMembership");
-        assert_eq!(nonmember.rule_id, "ClosedNumericNonMembership");
+        let member = positive.rule_name_and_message(language);
+        let nonmember = negative.rule_name_and_message(language);
+        assert_ne!(member.rule_name, nonmember.rule_name, "{language:?}");
         assert_ne!(member.message, nonmember.message, "{language:?}");
     }
     assert_eq!(
         positive
-            .rule_id_and_message(OutputLanguage::Japanese)
+            .rule_name_and_message(OutputLanguage::Japanese)
             .message,
         "閉じた式の評価値は対象集合に属します"
     );
     assert_eq!(
         negative
-            .rule_id_and_message(OutputLanguage::Japanese)
+            .rule_name_and_message(OutputLanguage::Japanese)
             .message,
         "閉じた式の評価値は対象集合に属しません"
     );

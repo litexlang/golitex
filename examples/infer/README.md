@@ -71,3 +71,11 @@ exit $fail
 `atomic/subset_finite_upper_bound.lit` publishes lower-set finiteness from a stored inclusion and an available finite upper certificate; missing or infinite upper certificates do not trigger it.
 
 `atomic/strict_lower_bound_positive.lit` publishes positivity from a stored strict lower bound and an available nonnegative-bound proof; the original log goal keeps its `1 < x` premise.
+
+`atomic/weak_integer_lower_bound_in_n.lit` publishes N membership from a stored
+weak lower bound plus integer and nonnegative-bound certificates. It covers
+both order spellings, a fractional positive bound, and the original induction
+comparison WD shape. The focused `weak_integer_lower_bound_in_n` tests retain
+both premise proofs and citations, reject missing-domain/negative-bound/strict
+carrier conclusions, and check local scope, failed-statement rollback and
+ordinary/strong induction.

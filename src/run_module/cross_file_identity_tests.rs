@@ -8,10 +8,19 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 fn project(root: &Path) -> RunRepoResult {
+    project_in_mode(root, true)
+}
+
+// Cache replay is a non-strict optimization; strict always verifies sources.
+fn project_with_cache(root: &Path) -> RunRepoResult {
+    project_in_mode(root, false)
+}
+
+fn project_in_mode(root: &Path, strict: bool) -> RunRepoResult {
     run_project(LaunchCommand::Repository {
         path: root.to_path_buf(),
         session: false,
-        strict: true,
+        strict,
         language: OutputLanguage::English,
     })
     .expect("run actual project")
@@ -45,9 +54,9 @@ fn same_predicate_spelling_with_different_arities_keeps_its_owner_in_cached_impo
         write(&root.join(format!("{module}/facts.lit")), source);
     }
     write(&root.join("main.lit"), "prop relation(a, b, c R):\n    a = b\n    b = c\nby def $Left::facts::relation(0)\nby def $Right::facts::relation(1, 1)\nby def $relation(2, 2, 2)\n");
-    let cold = project(&root);
+    let cold = project_with_cache(&root);
     assert!(cold.run.success, "{:?}", cold.run.session_error);
-    let warm = project(&root);
+    let warm = project_with_cache(&root);
     assert!(warm.run.success, "{:?}", warm.run.session_error);
     assert_eq!(warm.files.len(), 1, "imported files must actually come from cache");
     write(&root.join("main.lit"), "forall x R:\n    $Left::facts::relation(x, x)\n    =>:\n        $Left::facts::relation(x, x)\n");
@@ -131,7 +140,7 @@ fn write_root_config(root: &Path, reverse: bool) {
 #[test]
 fn same_dependency_alias_is_local_in_cold_and_cached_imports() {
     let root = dependency_fixture();
-    let cold = project(&root);
+    let cold = project_with_cache(&root);
     assert!(cold.run.success, "{:?}", cold.run.session_error);
     assert_eq!(cold.files.len(), 6, "five distinct imports and the root");
     for module in ["sentinel", "left", "left/dep", "right", "right/dep"] {
@@ -140,7 +149,7 @@ fn same_dependency_alias_is_local_in_cold_and_cached_imports() {
             .join("__litex_knowledge_base__/manifest.json")
             .is_file());
     }
-    let cached = project(&root);
+    let cached = project_with_cache(&root);
     assert!(cached.run.success, "{:?}", cached.run.session_error);
     assert_eq!(
         cached.files.len(),
@@ -153,9 +162,9 @@ fn same_dependency_alias_is_local_in_cold_and_cached_imports() {
 #[test]
 fn cached_dependency_owners_survive_changed_import_order() {
     let root = dependency_fixture();
-    assert!(project(&root).run.success);
+    assert!(project_with_cache(&root).run.success);
     write_root_config(&root, true);
-    let reordered = project(&root);
+    let reordered = project_with_cache(&root);
     assert!(reordered.run.success, "{:?}", reordered.run.session_error);
     assert!(
         reordered.files.len() < 6,
@@ -168,11 +177,11 @@ fn cached_dependency_owners_survive_changed_import_order() {
 #[test]
 fn wrong_same_name_owner_value_is_rejected_after_all_imports_load() {
     let root = dependency_fixture();
-    assert!(project(&root).run.success);
+    assert!(project_with_cache(&root).run.success);
     let main = root.join("main.lit");
     let source = fs::read_to_string(&main).unwrap();
     write(&main, &(source + "Left::facts::value = 1\n"));
-    let wrong = project(&root);
+    let wrong = project_with_cache(&root);
     assert!(!wrong.run.success);
     assert!(matches!(
         wrong.run.session_error,
@@ -204,10 +213,10 @@ fn two_aliases_for_one_canonical_path_share_the_same_definition() {
     );
     write(&root.join("litex.config"), "[import]\nFirst = \"./library\"\nSecond = \"./library/../library\"\n[export]\nmain = \"./main.lit\"\n");
     write(&root.join("main.lit"), "release obj def First::facts::ident\nrelease obj def Second::facts::ident\nFirst::facts::ident = Second::facts::ident\nFirst::facts::ident(2) = 2\nSecond::facts::ident(2) = 2\n");
-    let cold = project(&root);
+    let cold = project_with_cache(&root);
     assert!(cold.run.success, "{:?}", cold.run.session_error);
     assert_eq!(cold.files.len(), 2, "same-path library executes once");
-    let cached = project(&root);
+    let cached = project_with_cache(&root);
     assert!(cached.run.success);
     assert_eq!(cached.files.len(), 1);
     fs::remove_dir_all(root).unwrap();

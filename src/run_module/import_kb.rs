@@ -41,6 +41,11 @@ pub fn try_finish_import_from_kb(
     mod_id: usize,
     exports: &[LitexConfigExport],
 ) -> RuntimeResult<ImportKbHit> {
+    // Definition caches do not certify that user trust was absent. Strict
+    // imports must execute the source through the existing strict checks.
+    if runtime.launch_command.is_strict() {
+        return Ok(ImportKbHit::Miss);
+    }
     let fingerprint = match fingerprint_module_recursive(module_dir, config, std_root) {
         Ok(fingerprint) => fingerprint,
         Err(_) => return Ok(ImportKbHit::Miss),

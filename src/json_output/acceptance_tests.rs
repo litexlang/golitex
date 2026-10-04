@@ -195,14 +195,14 @@ fn has_english_prose(s: &str) -> bool {
     false
 }
 
-fn assert_builtin_text_ok(rule_id: &str, lang: OutputLanguage, name: &str, message: &str) {
-    assert!(!name.is_empty(), "{rule_id} {lang:?} empty rule_name");
-    assert!(!message.is_empty(), "{rule_id} {lang:?} empty message");
+fn assert_builtin_text_ok(context: &str, lang: OutputLanguage, name: &str, message: &str) {
+    assert!(!name.is_empty(), "{context} {lang:?} empty rule_name");
+    assert!(!message.is_empty(), "{context} {lang:?} empty message");
     if matches!(lang, OutputLanguage::Chinese) {
         let combined = format!("{name} {message}");
         assert!(
             has_cjk(&combined) || !has_english_prose(&format!(" {combined} ")),
-            "{rule_id} Chinese text still has English prose: name={name:?} message={message:?}"
+            "{context} Chinese text still has English prose: name={name:?} message={message:?}"
         );
     }
 }
@@ -720,32 +720,34 @@ fn acceptance_equality_builtin_all_variants_bilingual() {
     let rules = all_equality_rules();
     // Four identity leaves moved to TheyAreTheSame; indexed lookup is now a class proof.
     assert_eq!(rules.len(), 190);
-    for rule in &rules {
-        let en = rule.rule_id_and_message(OutputLanguage::English);
-        let zh = rule.rule_id_and_message(OutputLanguage::Chinese);
-        assert!(!en.rule_id.is_empty());
+    for (index, rule) in rules.iter().enumerate() {
+        let context = format!("equality variant {index}");
+        let en = rule.rule_name_and_message(OutputLanguage::English);
+        let zh = rule.rule_name_and_message(OutputLanguage::Chinese);
         assert_builtin_text_ok(
-            en.rule_id,
+            &context,
             OutputLanguage::English,
             &en.rule_name,
             &en.message,
         );
-        assert_eq!(zh.rule_id, en.rule_id);
         assert_builtin_text_ok(
-            zh.rule_id,
+            &context,
             OutputLanguage::Chinese,
             &zh.rule_name,
             &zh.message,
         );
         for language in OutputLanguage::ALL.into_iter().skip(2) {
-            let localized = rule.rule_id_and_message(language);
-            assert_eq!(localized.rule_id, en.rule_id, "{language:?}");
-            assert!(!localized.rule_name.is_empty() && !localized.message.is_empty());
+            let localized = rule.rule_name_and_message(language);
+            assert_builtin_text_ok(
+                &context,
+                language,
+                &localized.rule_name,
+                &localized.message,
+            );
             if has_english_prose(&en.message) {
                 assert_ne!(
                     localized.message, en.message,
-                    "{} {language:?} fell back to English",
-                    en.rule_id
+                    "{context} {language:?} fell back to English"
                 );
             }
         }
@@ -756,24 +758,24 @@ fn acceptance_equality_builtin_all_variants_bilingual() {
 fn acceptance_equality_named_language_methods_match_dispatch_for_every_variant() {
     use crate::json_output::explain::BuiltinRuleText;
     let methods: [fn(&EqualitySearchProofByBuiltinRule) -> BuiltinRuleText; 10] = [
-        EqualitySearchProofByBuiltinRule::rule_id_and_message_en,
-        EqualitySearchProofByBuiltinRule::rule_id_and_message_zh,
-        EqualitySearchProofByBuiltinRule::rule_id_and_message_zh_hant,
-        EqualitySearchProofByBuiltinRule::rule_id_and_message_fr,
-        EqualitySearchProofByBuiltinRule::rule_id_and_message_ru,
-        EqualitySearchProofByBuiltinRule::rule_id_and_message_es,
-        EqualitySearchProofByBuiltinRule::rule_id_and_message_ar,
-        EqualitySearchProofByBuiltinRule::rule_id_and_message_ja,
-        EqualitySearchProofByBuiltinRule::rule_id_and_message_ko,
-        EqualitySearchProofByBuiltinRule::rule_id_and_message_vi,
+        EqualitySearchProofByBuiltinRule::rule_name_and_message_en,
+        EqualitySearchProofByBuiltinRule::rule_name_and_message_zh,
+        EqualitySearchProofByBuiltinRule::rule_name_and_message_zh_hant,
+        EqualitySearchProofByBuiltinRule::rule_name_and_message_fr,
+        EqualitySearchProofByBuiltinRule::rule_name_and_message_ru,
+        EqualitySearchProofByBuiltinRule::rule_name_and_message_es,
+        EqualitySearchProofByBuiltinRule::rule_name_and_message_ar,
+        EqualitySearchProofByBuiltinRule::rule_name_and_message_ja,
+        EqualitySearchProofByBuiltinRule::rule_name_and_message_ko,
+        EqualitySearchProofByBuiltinRule::rule_name_and_message_vi,
     ];
     for rule in all_equality_rules() {
         for (language, method) in OutputLanguage::ALL.into_iter().zip(methods) {
             let direct = method(&rule);
-            let selected = rule.rule_id_and_message(language);
+            let selected = rule.rule_name_and_message(language);
             assert_eq!(
-                (direct.rule_id, direct.rule_name, direct.message),
-                (selected.rule_id, selected.rule_name, selected.message),
+                (direct.rule_name, direct.message),
+                (selected.rule_name, selected.message),
                 "{language:?}",
             );
         }
@@ -789,26 +791,23 @@ fn localized_copy_states_the_actual_rule_instead_of_an_unrelated_formula() {
     let inverse = ArcsinSinRightInverseBuiltinRuleProof { proof_of_requirement_facts: vec![] };
     let nonzero = ZeroFromNatAndOneLeBuiltinRuleProof { proof_of_requirement_facts: vec![] };
     for lang in OutputLanguage::ALL {
-        let text = sqrt.rule_id_and_message(lang);
-        assert_eq!(text.rule_id, "SqrtSquare");
+        let text = sqrt.rule_name_and_message(lang);
         assert!(text.message.contains("(sqrt(x))^2 = x (x ≥ 0)"), "{lang:?}");
         assert!(!text.message.contains("sqrt(a²)"));
-        let text = difference.rule_id_and_message(lang);
-        assert_eq!(text.rule_id, "IntersectSetMinusSelfEmpty");
+        let text = difference.rule_name_and_message(lang);
         assert!(text.message.contains("A ∩ (B \\ A) = ∅"), "{lang:?}");
         assert!(!text.message.contains("A ∩ (A \\ B)"));
-        let text = inverse.rule_id_and_message(lang);
+        let text = inverse.rule_name_and_message(lang);
         assert!(text.message.contains("[-π/2, π/2]"), "{lang:?}");
         assert!(text.message.contains("arcsin(sin(x)) = x"));
-        let text = arcsin.rule_id_and_message(lang);
+        let text = arcsin.rule_name_and_message(lang);
         assert!(text.message.contains("arcsin(0) = 0"));
         assert_ne!(text.rule_name, "arcsin 0");
         assert_ne!(text.message, "arcsin(0) = 0");
-        let text = nonzero.rule_id_and_message(lang);
-        assert_eq!(text.rule_id, "ZeroFromNatAndOneLe");
+        let text = nonzero.rule_name_and_message(lang);
         assert!(text.message.contains("n ∈ N ∧ 1 ≤ n ⇒ n ≠ 0"), "{lang:?}");
     }
-    let zh = arcsin.rule_id_and_message_zh();
+    let zh = arcsin.rule_name_and_message_zh();
     assert_eq!(zh.rule_name, "反正弦函数在零处的值");
     assert_eq!(zh.message, "反正弦函数在零处的值为零，即 arcsin(0) = 0");
 }
@@ -1335,32 +1334,25 @@ fn acceptance_previously_stubbed_atomic_families_bilingual() {
     ];
 
     assert!(samples.len() >= 20);
-    for rule in &samples {
-        let en = rule.rule_id_and_message(OutputLanguage::English);
-        let zh = rule.rule_id_and_message(OutputLanguage::Chinese);
-        // must not be the old family stub id shape XxxFactBuiltin
-        assert!(
-            !en.rule_id.ends_with("FactBuiltin"),
-            "still family stub id: {}",
-            en.rule_id
-        );
+    for (index, rule) in samples.iter().enumerate() {
+        let context = format!("atomic family sample {index}");
+        let en = rule.rule_name_and_message(OutputLanguage::English);
+        let zh = rule.rule_name_and_message(OutputLanguage::Chinese);
         assert_builtin_text_ok(
-            &en.rule_id,
+            &context,
             OutputLanguage::English,
             &en.rule_name,
             &en.message,
         );
-        assert_eq!(zh.rule_id, en.rule_id);
         assert_builtin_text_ok(
-            &zh.rule_id,
+            &context,
             OutputLanguage::Chinese,
             &zh.rule_name,
             &zh.message,
         );
         assert!(
             has_cjk(&zh.rule_name) || has_cjk(&zh.message),
-            "{} zh",
-            zh.rule_id
+            "{context} zh"
         );
     }
 }

@@ -1,0 +1,37 @@
+# Focused acceptance: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/real_arithmetic_constructor_closure.lit
+# Formerly rejected on release24d: comparison goal WD could not compose
+# function return carriers across an integer power and division.
+# have fn showcase_carrier_identity(x R) R = x
+# 
+# forall x R:
+#     showcase_carrier_identity(x)^2 / 4 $in R
+# 
+# claim:
+#     ? forall x R:
+#         showcase_carrier_identity(x)^2 / 4 <= showcase_carrier_identity(x)^2 / 4
+#     showcase_carrier_identity(x) $in R
+#     showcase_carrier_identity(x)^2 $in R
+#     showcase_carrier_identity(x)^2 / 4 $in R
+#     showcase_carrier_identity(x)^2 / 4 <= showcase_carrier_identity(x)^2 / 4
+
+# Current: the exact former proof passes without a new premise or trust.
+have fn showcase_carrier_identity(x R) R = x
+
+forall x R:
+    showcase_carrier_identity(x)^2 / 4 $in R
+
+claim:
+    ? forall x R:
+        showcase_carrier_identity(x)^2 / 4 <= showcase_carrier_identity(x)^2 / 4
+    showcase_carrier_identity(x) $in R
+    showcase_carrier_identity(x)^2 $in R
+    showcase_carrier_identity(x)^2 / 4 $in R
+    showcase_carrier_identity(x)^2 / 4 <= showcase_carrier_identity(x)^2 / 4
+
+# All field constructors compose; terminal function returns remain checked.
+forall x R:
+    (-showcase_carrier_identity(x) + showcase_carrier_identity(x)^2 - 3) * showcase_carrier_identity(x) / 4 $in R
+
+# Remaining boundaries are executable Rust regressions: C-only results,
+# zero divisors, missing integer exponents, signed/integer refinements and
+# forbidden lower search stages do not inherit this R closure.

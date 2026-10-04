@@ -403,7 +403,7 @@ fn why_from_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    let text = rule.rule_id_and_message(lang);
+    let text = rule.rule_name_and_message(lang);
     builtin_rule_with_optional_cite(runtime, &text, rule.cite_fact_id())
 }
 
@@ -412,6 +412,6 @@ fn why_from_equal_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    let text = rule.rule_id_and_message(lang);
+    let text = rule.rule_name_and_message(lang);
     builtin_rule_with_optional_cite(runtime, &text, rule.cite_fact_id())
 }

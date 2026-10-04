@@ -71,6 +71,16 @@ store_fact_and_infer/
   inferred division/modulo WD consumes the value. `N` alone does not.
 - Order bound → sign spelling and mul-by-(−1) flip are **verify-time** only:
   `OrderSignFromPositive/NegativeLiteralBound`, `OrderFlipMulMinusOne`
+- A stored weak lower bound `b <= n` or `n >= b`, with available integer `n`
+  and nonnegative `b` certificates, publishes `n $in N` in the same scope.
+  `InferWeakIntegerLowerBoundInNResult` retains the bound's source FactId,
+  the integer and nonnegative-bound proof results, then the ordinary derived
+  store/infer result. Each premise check inherits the caller's ceiling and is
+  capped at KnownSpecialProperty; no strategy/forall or permission reset is
+  used. An exact visible N-membership guard in the existing membership bucket
+  stops the N-to-sign projection cycle. Normal output lists the consequence;
+  Detailed output retains its FactId through the existing flat infer projection.
+  The tracer is `examples/infer/atomic/weak_integer_lower_bound_in_n.lit`.
 - `$is_cart` → dim ≥ 2; Subset / Superset → elementwise forall
 
 ## Intentionally not migrated

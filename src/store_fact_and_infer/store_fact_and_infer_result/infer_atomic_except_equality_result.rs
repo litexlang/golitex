@@ -61,6 +61,8 @@ pub enum InferAtomicExceptEqualityResult {
     SubsetFiniteUpperBound(InferSubsetFiniteUpperBoundResult),
     // b < x and an available 0 <= b certificate => 0 < x.
     StrictLowerBoundPositive(InferStrictLowerBoundPositiveResult),
+    // b <= n, an integer n certificate and a nonnegative b certificate => n in N.
+    WeakIntegerLowerBoundInN(InferWeakIntegerLowerBoundInNResult),
     // `A $superset B` → `forall x B: x $in A`.
     SupersetElementwiseMembership(InferSupersetElementwiseMembershipResult),
 }
@@ -231,6 +233,13 @@ pub struct InferStrictLowerBoundPositiveResult {
     pub derived: Box<StoreFactAndInferResult>,
 }
 
+pub struct InferWeakIntegerLowerBoundInNResult {
+    pub source_fact_id: FactId,
+    pub integer_proof: crate::execute::execute_fact_stmt::VerifyFactResult,
+    pub bound_nonnegative_proof: crate::execute::execute_fact_stmt::VerifyFactResult,
+    pub derived: Box<StoreFactAndInferResult>,
+}
+
 pub struct InferSubsetFiniteUpperBoundResult {
     pub source_fact_id: FactId,
     pub upper_finite_proof: crate::execute::execute_fact_stmt::VerifyFactResult,
@@ -372,6 +381,7 @@ impl InferAtomicExceptEqualityResult {
             Self::SubsetElementwiseMembership(r) => r.derived.stored_fact_ids(),
             Self::SubsetFiniteUpperBound(r) => r.derived.stored_fact_ids(),
             Self::StrictLowerBoundPositive(r) => r.derived.stored_fact_ids(),
+            Self::WeakIntegerLowerBoundInN(r) => r.derived.stored_fact_ids(),
             Self::SupersetElementwiseMembership(r) => r.derived.stored_fact_ids(),
         }
     }

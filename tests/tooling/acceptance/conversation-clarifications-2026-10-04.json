@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "task": "Conversation clarification and bounded repair",
+  "binary": {
+    "path": "tmp/2026-10-04/conversation-clarifications/litex-final",
+    "sha256": "cebcd18987723bca656be8143137ff690413f7d89735f3999e197838a0c46270",
+    "build_receipt": "build-final.json"
+  },
+  "rust_lib_harness_sha256": "01f1ba8f4cc01d064a99c9467a9251bf42ff8bd4cdc9797458706f00dbc11eaa",
+  "compiled_src_rs_snapshot_sha256": "65e6fa1a5546509d005547b6c3704d29109d54bd043a10371326065590c0c8d5",
+  "build_src_equals_rust_src": true,
+  "final_scope": {
+    "rust_lib": {
+      "passed": 829,
+      "failed": 1,
+      "total": 830,
+      "failed_test_names": [
+        "execute::showcase_local_repair_tests::unique_function_templates_recover_hidden_carriers_and_work_in_nested_wd"
+      ]
+    },
+    "integration": {
+      "passed": 1,
+      "failed": 0
+    },
+    "run_module": {
+      "passed": 26,
+      "failed": 0
+    },
+    "statement": {
+      "statement_leaves": 50,
+      "checks": 378,
+      "passed": 378,
+      "unexpected_failures": 0,
+      "known_gaps": 0
+    },
+    "basic": {
+      "checks": 175,
+      "passed": 175,
+      "failed": 0
+    },
+    "clarification_controls": {
+      "count": 22,
+      "mismatches": 0
+    }
+  },
+  "final_capture_changed": {
+    "build-final": [],
+    "rust-final": [],
+    "stmt-final": [],
+    "basics-final": [],
+    "probes-final": []
+  },
+  "authorization": "Maintainer confirmed strict must reject every user trust statement; applied the earlier concrete strict-to-Miss guard without AST/state/cache-format edits.",
+  "closed": [
+    "Strict cache trust bypass, including transitive dependency controls",
+    "Bare induction current-source regression (concurrent checked inference implementation, verification here)",
+    "Original qualified geometry proof via four explicit releases",
+    "Old cache-hit and dimension-route test consumers"
+  ],
+  "pending_user_intent": "Unused K in Point<K,S>: intended tag K, or require identity even when unused? Original negative retained.",
+  "known_limit": "Nested-quantifier by-contra negation cannot be stored in current QF classified payloads; no new NotFact.",
+  "testing_work": "Complete collectors and audit expectations remain REL02/REL04, owned by Codex. No full release-green claim.",
+  "historical_only": [
+    "Earlier phase 871/871, normative docs225/225, tooling18/18; not rerun at final binary",
+    "Earlier lib817/820 and later lib827/828 snapshots are retained rather than overwritten"
+  ],
+  "attempts": [
+    {
+      "label": "build-record",
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--offline",
+        "--bin",
+        "litex",
+        "--target-dir",
+        "tmp/2026-10-04/conversation-clarifications/target"
+      ],
+      "returncode": 0,
+      "seconds": 0.3165619168430567,
+      "changed": []
+    },
+    {
+      "label": "module-rust",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--target-dir",
+        "tmp/2026-10-04/conversation-clarifications/target",
+        "run_module::",
+        "--",
+        "--nocapture"
+      ],
+      "returncode": 101,
+      "seconds": 76.46056229178794,
+      "changed": [
+        "src/json_output/README.md",
+        "tests/unit/execute/native_scalar_codomain/mod.rs"
+      ]
+    },
+    {
+      "label": "module-rust-fixed",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--target-dir",
+        "tmp/2026-10-04/conversation-clarifications/target",
+        "run_module::",
+        "--",
+        "--nocapture"
+      ],
+      "returncode": 0,
+      "seconds": 72.78171008313075,
+      "changed": [
+        "docs/FAQ.md",
+        "docs/Manual.md",
+        "src/execute/README.md",
+        "src/store_fact_and_infer/README.md",
+        "tests/unit/execute/equality_search/known_tuple.rs"
+      ]
+    },
+    {
+      "label": "rust-all-current",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--all-targets",
+        "--no-fail-fast",
+        "--target-dir",
+        "tmp/2026-10-04/conversation-clarifications/target"
+      ],
+      "returncode": 101,
+      "seconds": 73.6076204169076,
+      "changed": []
+    },
+    {
+      "label": "rust-all-fixed",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--all-targets",
+        "--no-fail-fast",
+        "--target-dir",
+        "tmp/2026-10-04/conversation-clarifications/target"
+      ],
+      "returncode": 101,
+      "seconds": 72.16300670802593,
+      "changed": [
+        "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_known_special_property.rs",
+        "src/json_output/project_detailed/known_special_property.rs",
+        "tests/unit/execute/equality_search/known_tuple.rs"
+      ]
+    },
+    {
+      "label": "stmt-current",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--binary",
+        "tmp/2026-10-04/conversation-clarifications/litex-verified",
+        "--require-no-gaps",
+        "--report",
+        "tmp/2026-10-04/conversation-clarifications/stmt-report.json"
+      ],
+      "returncode": 0,
+      "seconds": 3.1419709590263665,
+      "changed": []
+    },
+    {
+      "label": "basics-current",
+      "command": [
+        "python3",
+        "examples/test_statements/release_basics/run.py",
+        "--binary",
+        "tmp/2026-10-04/conversation-clarifications/litex-verified",
+        "--workdir",
+        "tmp/2026-10-04/conversation-clarifications/basic-work",
+        "--report",
+        "tmp/2026-10-04/conversation-clarifications/basic-report.json"
+      ],
+      "returncode": 2,
+      "seconds": 0.27485649986192584,
+      "changed": []
+    },
+    {
+      "label": "basics-current-fixed",
+      "command": [
+        "python3",
+        "examples/test_statements/release_basics/run.py",
+        "--binary",
+        "tmp/2026-10-04/conversation-clarifications/litex-verified",
+        "--manifest",
+        "examples/test_statements/release_basics/cases.json",
+        "--workdir",
+        "tmp/2026-10-04/conversation-clarifications/basic-work",
+        "--report",
+        "tmp/2026-10-04/conversation-clarifications/basic-report.json"
+      ],
+      "returncode": 0,
+      "seconds": 0.6534787078853697,
+      "changed": []
+    },
+    {
+      "label": "geo-release-file",
+      "command": [
+        "tmp/2026-10-04/conversation-clarifications/litex-verified",
+        "-strict",
+        "-f",
+        "tmp/2026-10-04/conversation-clarifications/geo/solution.lit"
+      ],
+      "returncode": 0,
+      "seconds": 1.760846541961655,
+      "changed": []
+    },
+    {
+      "label": "geo-current-file",
+      "command": [
+        "tmp/2026-10-04/conversation-clarifications/litex-verified",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/problem_927/solution.lit"
+      ],
+      "returncode": 0,
+      "seconds": 1.5102975841145962,
+      "changed": []
+    },
+    {
+      "label": "geo-current-repo",
+      "command": [
+        "tmp/2026-10-04/conversation-clarifications/litex-verified",
+        "-strict",
+        "-r",
+        "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/problem_927"
+      ],
+      "returncode": 0,
+      "seconds": 1.5119197499006987,
+      "changed": []
+    },
+    {
+      "label": "build-final",
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--offline",
+        "--bin",
+        "litex",
+        "--target-dir",
+        "tmp/2026-10-04/conversation-clarifications/target"
+      ],
+      "returncode": 0,
+      "seconds": 53.38304383284412,
+      "changed": []
+    },
+    {
+      "label": "rust-final",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--all-targets",
+        "--no-fail-fast",
+        "--target-dir",
+        "tmp/2026-10-04/conversation-clarifications/target"
+      ],
+      "returncode": 101,
+      "seconds": 70.53921895916574,
+      "changed": []
+    },
+    {
+      "label": "stmt-final",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--binary",
+        "tmp/2026-10-04/conversation-clarifications/litex-final",
+        "--require-no-gaps",
+        "--report",
+        "tmp/2026-10-04/conversation-clarifications/stmt-final-report.json"
+      ],
+      "returncode": 0,
+      "seconds": 5.416136792162433,
+      "changed": []
+    },
+    {
+      "label": "basics-final",
+      "command": [
+        "python3",
+        "examples/test_statements/release_basics/run.py",
+        "--binary",
+        "tmp/2026-10-04/conversation-clarifications/litex-final",
+        "--manifest",
+        "examples/test_statements/release_basics/cases.json",
+        "--workdir",
+        "tmp/2026-10-04/conversation-clarifications/basic-final-work",
+        "--report",
+        "tmp/2026-10-04/conversation-clarifications/basic-final-report.json"
+      ],
+      "returncode": 0,
+      "seconds": 2.959002999821678,
+      "changed": []
+    },
+    {
+      "label": "probes-final",
+      "command": [
+        "python3",
+        "tmp/2026-10-04/conversation-clarifications/final_probes.py"
+      ],
+      "returncode": 0,
+      "seconds": 6.046268374891952,
+      "changed": []
+    }
+  ],
+  "capture_scope_note": "Capture hashes src/tests/docs/examples/test_statements/hard_error_forwarding/.github/scripts and Cargo/README; it does not hash the whole repository. Explicit fixture files and changed-source copies are archived separately.",
+  "working_tree_note": "Other tasks concurrently edited sources and docs. Final compiled src snapshots and final captured gates were stable. Earlier runs recorded drift. An earlier canonical declaration-bindings test rewrote its pre-existing cache manifest; the updated test now uses a disposable copy. No unrelated cached files were removed.",
+  "archive": {
+    "filename": "conversation-clarifications-2026-10-04_receipts.zip",
+    "sha256": "35b1bcf1bea5d44a701c48b3db0edd1c90db770fb4351b46c561dfc8b8cd0b8c",
+    "bytes": 17858840,
+    "entries": 1391,
+    "verified_crc": true,
+    "compiled_source_copies_match": true
+  }
+}

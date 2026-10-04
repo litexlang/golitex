@@ -32,6 +32,12 @@ classified representation/proof-evidence discussion; dropping a quantifier,
 weakening WD, inventing a helper predicate or reintroducing generic NotFact
 is not a repair.
 
+The 2026-10-04 follow-up reconfirms the same `negation_unsupported` boundary.
+This is the nested-quantifier case the maintainer had already anticipated,
+not a newly discovered bug or a request to reopen the rejected unified NotFact
+design. Keep this as a known feature limit until nested support is requested.
+Existing compound `impossible` support is unaffected.
+
 ## Flat Boolean representation cost
 
 One flat Or-of-And Fact may require exponentially many branches when negating
