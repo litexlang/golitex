@@ -32,5 +32,5 @@ thm problem_639_perpendicular_bisector:
             geo::distance_sq(p, a) = geo::distance_sq(p, b)
 
     # 上述三个形式化前提逐项匹配 KB 定理 perpendicular_bisector_property。
-    by thm geo::perpendicular_bisector_property(a, b, o, p)
+    release thm geo::perpendicular_bisector_property(a, b, o, p)
     geo::distance_sq(p, a) = geo::distance_sq(p, b)

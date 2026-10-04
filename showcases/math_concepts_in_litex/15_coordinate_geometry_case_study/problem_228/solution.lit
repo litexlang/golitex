@@ -48,31 +48,35 @@ thm problem_228_coordinate_core:
             $geo::are_segments_congruent(pe, pg, pc, pg)
             $geo::is_perpendicular(pe, pg, pc, pg)
 
-    by thm geo::distance_sq_coordinate_formula(pe, pg)
-    by thm geo::distance_sq_coordinate_formula(pc, pg)
+    release thm geo::distance_sq_coordinate_formula(pe, pg)
+    release thm geo::distance_sq_coordinate_formula(pc, pg)
     geo::distance_sq(pe, pg) = (pg[1] - pe[1])^2 + (pg[2] - pe[2])^2
     geo::distance_sq(pc, pg) = (pg[1] - pc[1])^2 + (pg[2] - pc[2])^2
-    pg[1] - pe[1] = (a + x) / 2 - (x - y) / 2 by thm geo::subtract_equalities(pg[1], (a + x) / 2, pe[1], (x - y) / 2)
+    release thm geo::subtract_equalities(pg[1], (a + x) / 2, pe[1], (x - y) / 2)
+    pg[1] - pe[1] = (a + x) / 2 - (x - y) / 2
     (a + x) / 2 - (x - y) / 2 = (a + y) / 2
     pg[1] - pe[1] = (a + y) / 2
-    pg[2] - pe[2] = (a + y) / 2 - (x + y) / 2 by thm geo::subtract_equalities(pg[2], (a + y) / 2, pe[2], (x + y) / 2)
+    release thm geo::subtract_equalities(pg[2], (a + y) / 2, pe[2], (x + y) / 2)
+    pg[2] - pe[2] = (a + y) / 2 - (x + y) / 2
     (a + y) / 2 - (x + y) / 2 = (a - x) / 2
     pg[2] - pe[2] = (a - x) / 2
-    pg[1] - pc[1] = (a + x) / 2 - a by thm geo::subtract_equalities(pg[1], (a + x) / 2, pc[1], a)
+    release thm geo::subtract_equalities(pg[1], (a + x) / 2, pc[1], a)
+    pg[1] - pc[1] = (a + x) / 2 - a
     (a + x) / 2 - a = (x - a) / 2
     pg[1] - pc[1] = (x - a) / 2
-    pg[2] - pc[2] = (a + y) / 2 - 0 by thm geo::subtract_equalities(pg[2], (a + y) / 2, pc[2], 0)
+    release thm geo::subtract_equalities(pg[2], (a + y) / 2, pc[2], 0)
+    pg[2] - pc[2] = (a + y) / 2 - 0
     (a + y) / 2 - 0 = (a + y) / 2
     pg[2] - pc[2] = (a + y) / 2
     (pg[1] - pe[1])^2 + (pg[2] - pe[2])^2 = ((a + y) / 2)^2 + ((a - x) / 2)^2
     (pg[1] - pc[1])^2 + (pg[2] - pc[2])^2 = ((x - a) / 2)^2 + ((a + y) / 2)^2
     ((a + y) / 2)^2 + ((a - x) / 2)^2 = ((x - a) / 2)^2 + ((a + y) / 2)^2
     geo::distance_sq(pe, pg) = geo::distance_sq(pc, pg)
-    by thm geo::segments_congruent_from_distance_sq(pe, pg, pc, pg)
+    release thm geo::segments_congruent_from_distance_sq(pe, pg, pc, pg)
 
-    by thm geo::vec_coordinate_formula(pe, pg)
-    by thm geo::vec_coordinate_formula(pc, pg)
-    by thm geo::dot_coordinate_formula(geo::vec(pe, pg), geo::vec(pc, pg))
+    release thm geo::vec_coordinate_formula(pe, pg)
+    release thm geo::vec_coordinate_formula(pc, pg)
+    release thm geo::dot_coordinate_formula(geo::vec(pe, pg), geo::vec(pc, pg))
     geo::dot(geo::vec(pe, pg), geo::vec(pc, pg)) = (pg[1] - pe[1]) * (pg[1] - pc[1]) + (pg[2] - pe[2]) * (pg[2] - pc[2])
     (pg[1] - pe[1]) * (pg[1] - pc[1]) + (pg[2] - pe[2]) * (pg[2] - pc[2]) = ((a + y) / 2) * ((x - a) / 2) + ((a - x) / 2) * ((a + y) / 2)
     ((a + y) / 2) * ((x - a) / 2) + ((a - x) / 2) * ((a + y) / 2) = 0
@@ -82,13 +86,13 @@ thm problem_228_coordinate_core:
     (a - x) / 2 > 0
     pg[2] - pe[2] > 0
     pg[2] - pe[2] != 0
-    by thm problem_228_points_distinct_from_second_difference(pe, pg)
+    release thm problem_228_points_distinct_from_second_difference(pe, pg)
     a + y > 0
     (a + y) / 2 > 0
     pg[2] - pc[2] > 0
     pg[2] - pc[2] != 0
-    by thm problem_228_points_distinct_from_second_difference(pc, pg)
-    by thm geo::perpendicular_from_dot_zero(pe, pg, pc, pg)
+    release thm problem_228_points_distinct_from_second_difference(pc, pg)
+    release thm geo::perpendicular_from_dot_zero(pe, pg, pc, pg)
 
 # Figure 1: F lies on BC and E is the inward isosceles-right vertex.
 thm problem_228_figure1:
@@ -119,7 +123,7 @@ thm problem_228_figure1:
     pg[1] = (a + t) / 2
     pg[2] = (a + 0) / 2
     a + 0 > 0
-    by thm problem_228_coordinate_core(a, t, 0, pc, pe, pg)
+    release thm problem_228_coordinate_core(a, t, 0, pc, pe, pg)
 
 # Positive factor below one gives a strict product bound.
 thm problem_228_product_less_self:
@@ -174,4 +178,4 @@ thm problem_228_figure2:
     pe[2] = (t * co + (-t * si)) / 2
     pg[1] = (a + t * co) / 2
     pg[2] = (a + (-t * si)) / 2
-    by thm problem_228_coordinate_core(a, t * co, -t * si, pc, pe, pg)
+    release thm problem_228_coordinate_core(a, t * co, -t * si, pc, pe, pg)

@@ -43,12 +43,12 @@ thm parallelogram_coordinate_closure:
     by def $geo::is_parallel(a, b, d, c)
     by def $geo::is_parallel(a, d, b, c)
     by def $geo::is_triangle(a, b, d)
-    by thm geo::triangle_det_nonzero(a, b, d)
+    release thm geo::triangle_det_nonzero(a, b, d)
 
-    by thm geo::collinear_det_expand(a, b, (a[1] + c[1] - d[1], a[2] + c[2] - d[2]))
-    by thm geo::collinear_det_expand(a, d, (a[1] + c[1] - b[1], a[2] + c[2] - b[2]))
-    by thm geo::collinear_det_expand(d, c, b)
-    by thm geo::collinear_det_expand(b, c, d)
+    release thm geo::collinear_det_expand(a, b, (a[1] + c[1] - d[1], a[2] + c[2] - d[2]))
+    release thm geo::collinear_det_expand(a, d, (a[1] + c[1] - b[1], a[2] + c[2] - b[2]))
+    release thm geo::collinear_det_expand(d, c, b)
+    release thm geo::collinear_det_expand(b, c, d)
 
     geo::vec(a, b) = (b[1] - a[1], b[2] - a[2])
     geo::vec(a, d) = (d[1] - a[1], d[2] - a[2])
@@ -100,30 +100,30 @@ thm problem_1150_AE_eq_CF:
     f[1] = b[1] + s * (d[1] - b[1])
     f[2] = b[2] + s * (d[2] - b[2])
 
-    by thm geo::affine_distance_from_parameter(d, b, ep, t)
-    by thm geo::affine_distance_from_parameter(b, d, f, s)
-    by thm geo::distance_sq_symmetric(d, ep)
-    by thm geo::distance_sq_symmetric(b, f)
+    release thm geo::affine_distance_from_parameter(d, b, ep, t)
+    release thm geo::affine_distance_from_parameter(b, d, f, s)
+    release thm geo::distance_sq_symmetric(d, ep)
+    release thm geo::distance_sq_symmetric(b, f)
     by def $geo::are_segments_congruent(d, ep, b, f)
     geo::distance_sq(d, ep) = geo::distance_sq(ep, d) = t^2 * geo::distance_sq(d, b)
     geo::distance_sq(b, f) = geo::distance_sq(f, b) = s^2 * geo::distance_sq(b, d)
     geo::distance_sq(d, ep) = geo::distance_sq(b, f)
     t^2 * geo::distance_sq(d, b) = geo::distance_sq(d, ep) = geo::distance_sq(b, f) = s^2 * geo::distance_sq(b, d)
-    by thm geo::distance_sq_symmetric(d, b)
+    release thm geo::distance_sq_symmetric(d, b)
     s^2 * geo::distance_sq(b, d) = s^2 * geo::distance_sq(d, b)
     t^2 * geo::distance_sq(d, b) = s^2 * geo::distance_sq(d, b)
 
     by def $geo::is_triangle(a, b, d)
-    by thm geo::triangle_det_nonzero(a, b, d)
+    release thm geo::triangle_det_nonzero(a, b, d)
     b != d
-    by thm geo::distance_sq_positive_of_ne(d, b)
+    release thm geo::distance_sq_positive_of_ne(d, b)
     geo::distance_sq(d, b) > 0
-    by thm geo::cancel_positive_right_factor(t^2, s^2, geo::distance_sq(d, b))
+    release thm geo::cancel_positive_right_factor(t^2, s^2, geo::distance_sq(d, b))
     t^2 = s^2
-    by thm nonnegative_equal_of_equal_squares(t, s)
+    release thm nonnegative_equal_of_equal_squares(t, s)
     t = s
 
-    by thm parallelogram_coordinate_closure(a, b, c, d)
+    release thm parallelogram_coordinate_closure(a, b, c, d)
     d[1] = a[1] + c[1] - b[1]
     d[2] = a[2] + c[2] - b[2]
 
@@ -148,8 +148,8 @@ thm problem_1150_AE_eq_CF:
     ep[2] - a[2] = (a[2] + c[2] - f[2]) - a[2]
     (a[2] + c[2] - f[2]) - a[2] = c[2] - f[2]
 
-    by thm geo::distance_sq_coordinate_formula(a, ep)
-    by thm geo::distance_sq_coordinate_formula(c, f)
+    release thm geo::distance_sq_coordinate_formula(a, ep)
+    release thm geo::distance_sq_coordinate_formula(c, f)
     geo::distance_sq(a, ep) = (ep[1] - a[1])^2 + (ep[2] - a[2])^2
     geo::distance_sq(c, f) = (f[1] - c[1])^2 + (f[2] - c[2])^2
     (ep[1] - a[1])^2 = (c[1] - f[1])^2 = (f[1] - c[1])^2

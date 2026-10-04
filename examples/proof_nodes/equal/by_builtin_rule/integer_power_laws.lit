@@ -1,0 +1,14 @@
+# Before: the power-law premise matcher accepted only natural exponents.
+# forall x Q*, n N+:
+#     (x^n)^(-1) = x^(n * (-1))
+# Former result: rejected in search_proof.
+# Now: natural exponents allow zero bases; integer exponents require nonzero bases.
+forall x Q*, n N+:
+    (x^n)^(-1) = x^(n * (-1))
+forall x C*, m, n Z:
+    x^(m+n) = x^m*x^n
+    (x^m)^n = x^(m*n)
+forall x, y Q*, n Z:
+    (x*y)^n = x^n*y^n
+# Boundary: fractional exponents and negative powers of zero remain rejected.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/integer_power_laws.lit

@@ -84,7 +84,8 @@ thm setting_scalar_times_zero_vector:
     q = add_V(q, q)
     add_V(q, zero_V) = add_V(zero_V, q) = q
     add_V(q, q) = add_V(q, zero_V)
-    by thm setting_add_left_cancel(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, q, q, zero_V) => q = zero_V
+    release thm setting_add_left_cancel(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, q, q, zero_V)
+    q = zero_V
 
 # Tracer theorem: the common scalar field is part of the ambient setting, so
 # the proof needs no record projections or source/target field-equality fact.
@@ -98,7 +99,8 @@ thm setting_linear_map_sends_zero_to_zero:
     add_W(T(zero_V), T(zero_V)) = T(add_V(zero_V, zero_V)) = T(zero_V)
     add_W(T(zero_V), zero_W) = add_W(zero_W, T(zero_V)) = T(zero_V)
     add_W(T(zero_V), T(zero_V)) = add_W(T(zero_V), zero_W)
-    by thm setting_add_left_cancel(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, W, zero_W, add_W, smul_W, T(zero_V), T(zero_V), zero_W) => T(zero_V) = zero_W
+    release thm setting_add_left_cancel(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, W, zero_W, add_W, smul_W, T(zero_V), T(zero_V), zero_W)
+    T(zero_V) = zero_W
 
 prop is_subspace_in_setting(K nonempty_set, scalar_zero K, scalar_one K, scalar_add fn(x, y K) K, scalar_neg fn(x K) K, scalar_mul fn(x, y K) K, scalar_inv fn(x K) K, V nonempty_set, zero_V V, add_V fn(x, y V) V, smul_V fn(a K, x V) V, U power_set(V)):
     $VectorSpaceSetting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V)
@@ -121,9 +123,11 @@ thm setting_linear_map_kernel_is_subspace:
         $LinearMapSetting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, W, zero_V, add_V, smul_V, zero_W, add_W, smul_W, T)
         =>:
             $is_subspace_in_setting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, \setting_linear_kernel<V, W, zero_W, T>)
-    by thm setting_linear_map_sends_zero_to_zero(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, W, zero_V, add_V, smul_V, zero_W, add_W, smul_W, T) => T(zero_V) = zero_W
+    release thm setting_linear_map_sends_zero_to_zero(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, W, zero_V, add_V, smul_V, zero_W, add_W, smul_W, T)
+    T(zero_V) = zero_W
     \setting_linear_kernel<V, W, zero_W, T> = {candidate V: T(candidate) = zero_W}
-    by thm set_builder_member(zero_V, {candidate V: T(candidate) = zero_W}) => zero_V $in {candidate V: T(candidate) = zero_W}
+    release thm set_builder_member(zero_V, {candidate V: T(candidate) = zero_W})
+    zero_V $in {candidate V: T(candidate) = zero_W}
     zero_V $in \setting_linear_kernel<V, W, zero_W, T>
     claim:
         ? forall kernel_left, kernel_right V:
@@ -136,7 +140,8 @@ thm setting_linear_map_kernel_is_subspace:
         kernel_right $in {candidate V: T(candidate) = zero_W}
         T(kernel_right) = zero_W
         T(add_V(kernel_left, kernel_right)) = add_W(T(kernel_left), T(kernel_right)) = add_W(zero_W, zero_W) = zero_W
-        by thm set_builder_member(add_V(kernel_left, kernel_right), {candidate V: T(candidate) = zero_W}) => add_V(kernel_left, kernel_right) $in {candidate V: T(candidate) = zero_W}
+        release thm set_builder_member(add_V(kernel_left, kernel_right), {candidate V: T(candidate) = zero_W})
+        add_V(kernel_left, kernel_right) $in {candidate V: T(candidate) = zero_W}
         add_V(kernel_left, kernel_right) $in \setting_linear_kernel<V, W, zero_W, T>
     claim:
         ? forall coefficient K, kernel_vector V:
@@ -145,9 +150,11 @@ thm setting_linear_map_kernel_is_subspace:
                 smul_V(coefficient, kernel_vector) $in \setting_linear_kernel<V, W, zero_W, T>
         kernel_vector $in {candidate V: T(candidate) = zero_W}
         T(kernel_vector) = zero_W
-        by thm setting_scalar_times_zero_vector(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, W, zero_W, add_W, smul_W, coefficient) => smul_W(coefficient, zero_W) = zero_W
+        release thm setting_scalar_times_zero_vector(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, W, zero_W, add_W, smul_W, coefficient)
+        smul_W(coefficient, zero_W) = zero_W
         T(smul_V(coefficient, kernel_vector)) = smul_W(coefficient, T(kernel_vector)) = smul_W(coefficient, zero_W) = zero_W
-        by thm set_builder_member(smul_V(coefficient, kernel_vector), {candidate V: T(candidate) = zero_W}) => smul_V(coefficient, kernel_vector) $in {candidate V: T(candidate) = zero_W}
+        release thm set_builder_member(smul_V(coefficient, kernel_vector), {candidate V: T(candidate) = zero_W})
+        smul_V(coefficient, kernel_vector) $in {candidate V: T(candidate) = zero_W}
         smul_V(coefficient, kernel_vector) $in \setting_linear_kernel<V, W, zero_W, T>
     by def $is_subspace_in_setting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, \setting_linear_kernel<V, W, zero_W, T>)
 
@@ -219,7 +226,7 @@ thm setting_real_operation_values:
 thm setting_real_plane_is_vector_space:
     ? forall:
         $is_vector_space_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), (0, 0), setting_plane_add, setting_plane_smul)
-    by thm setting_real_numbers_form_field()
+    release thm setting_real_numbers_form_field()
     claim:
         ? forall x, y, z cart(R, R):
             setting_plane_add(setting_plane_add(x, y), z) = setting_plane_add(x, setting_plane_add(y, z))
@@ -251,7 +258,7 @@ thm setting_real_plane_is_vector_space:
         ? forall a, b R, x cart(R, R):
             setting_plane_smul(setting_real_mul(a, b), x) = setting_plane_smul(a, setting_plane_smul(b, x))
             setting_plane_smul(setting_real_add(a, b), x) = setting_plane_add(setting_plane_smul(a, x), setting_plane_smul(b, x))
-        by thm setting_real_operation_values(a, b)
+        release thm setting_real_operation_values(a, b)
         setting_plane_smul(b, x) = (b * x[1], b * x[2])
         setting_plane_smul(b, x)[1] = b * x[1]
         setting_plane_smul(b, x)[2] = b * x[2]
@@ -303,15 +310,15 @@ thm setting_projection_x_axis_value:
 thm setting_projection_x_axis_is_linear:
     ? forall:
         $is_linear_map_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, (0, 0), setting_plane_add, setting_plane_smul, setting_projection_x_axis)
-    by thm setting_real_numbers_form_field()
-    by thm setting_real_plane_is_vector_space()
+    release thm setting_real_numbers_form_field()
+    release thm setting_real_plane_is_vector_space()
     claim:
         ? forall u, v cart(R, R):
             setting_projection_x_axis(setting_plane_add(u, v)) = setting_plane_add(setting_projection_x_axis(u), setting_projection_x_axis(v))
-        by thm setting_plane_operation_values(0, u, v)
-        by thm setting_projection_x_axis_value(u)
-        by thm setting_projection_x_axis_value(v)
-        by thm setting_projection_x_axis_value(setting_plane_add(u, v))
+        release thm setting_plane_operation_values(0, u, v)
+        release thm setting_projection_x_axis_value(u)
+        release thm setting_projection_x_axis_value(v)
+        release thm setting_projection_x_axis_value(setting_plane_add(u, v))
         setting_projection_x_axis(u)[1] = u[1]
         setting_projection_x_axis(u)[2] = 0
         setting_projection_x_axis(v)[1] = v[1]
@@ -324,10 +331,10 @@ thm setting_projection_x_axis_is_linear:
     claim:
         ? forall coefficient R, v cart(R, R):
             setting_projection_x_axis(setting_plane_smul(coefficient, v)) = setting_plane_smul(coefficient, setting_projection_x_axis(v))
-        by thm setting_plane_operation_values(coefficient, v, v)
-        by thm setting_projection_x_axis_value(v)
-        by thm setting_projection_x_axis_value(setting_plane_smul(coefficient, v))
-        by thm setting_plane_operation_values(coefficient, setting_projection_x_axis(v), setting_projection_x_axis(v))
+        release thm setting_plane_operation_values(coefficient, v, v)
+        release thm setting_projection_x_axis_value(v)
+        release thm setting_projection_x_axis_value(setting_plane_smul(coefficient, v))
+        release thm setting_plane_operation_values(coefficient, setting_projection_x_axis(v), setting_projection_x_axis(v))
         setting_projection_x_axis(v)[1] = v[1]
         setting_projection_x_axis(v)[2] = 0
         coefficient * setting_projection_x_axis(v)[1] = coefficient * v[1]
@@ -340,13 +347,15 @@ thm setting_projection_x_axis_is_linear:
 thm setting_projection_kernel_is_subspace:
     ? forall:
         $is_subspace_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, \setting_linear_kernel<cart(R, R), cart(R, R), (0, 0), setting_projection_x_axis>)
-    by thm setting_projection_x_axis_is_linear()
-    by thm setting_linear_map_kernel_is_subspace(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, (0, 0), setting_plane_add, setting_plane_smul, setting_projection_x_axis)
+    release thm setting_projection_x_axis_is_linear()
+    release thm setting_linear_map_kernel_is_subspace(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, (0, 0), setting_plane_add, setting_plane_smul, setting_projection_x_axis)
 
 thm setting_vertical_vector_lies_in_projection_kernel:
     ? forall:
         (0, 7) $in \setting_linear_kernel<cart(R, R), cart(R, R), (0, 0), setting_projection_x_axis>
-    by thm setting_projection_x_axis_value((0, 7)) => setting_projection_x_axis((0, 7)) = (0, 0)
+    release thm setting_projection_x_axis_value((0, 7))
+    setting_projection_x_axis((0, 7)) = (0, 0)
     \setting_linear_kernel<cart(R, R), cart(R, R), (0, 0), setting_projection_x_axis> = {candidate cart(R, R): setting_projection_x_axis(candidate) = (0, 0)}
-    by thm set_builder_member((0, 7), {candidate cart(R, R): setting_projection_x_axis(candidate) = (0, 0)}) => (0, 7) $in {candidate cart(R, R): setting_projection_x_axis(candidate) = (0, 0)}
+    release thm set_builder_member((0, 7), {candidate cart(R, R): setting_projection_x_axis(candidate) = (0, 0)})
+    (0, 7) $in {candidate cart(R, R): setting_projection_x_axis(candidate) = (0, 0)}
     (0, 7) $in \setting_linear_kernel<cart(R, R), cart(R, R), (0, 0), setting_projection_x_axis>

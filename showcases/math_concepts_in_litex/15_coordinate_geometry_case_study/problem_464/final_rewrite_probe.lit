@@ -6,19 +6,19 @@ thm problem_464_final_det_rewrite:
         ux * cy - uy * cx = 0
         =>:
             cx * ady - cy * adx = 0
-    by thm geo::multiply_both_sides(ady, uy, cx)
+    release thm geo::multiply_both_sides(ady, uy, cx)
     ady * cx = uy * cx
     cx * ady = ady * cx
     uy * cx = cx * uy
     cx * ady = cx * uy
 
-    by thm geo::multiply_both_sides(adx, ux, cy)
+    release thm geo::multiply_both_sides(adx, ux, cy)
     adx * cy = ux * cy
     cy * adx = adx * cy
     ux * cy = cy * ux
     cy * adx = cy * ux
 
-    by thm geo::subtract_equalities(cx * ady, cx * uy, cy * adx, cy * ux)
+    release thm geo::subtract_equalities(cx * ady, cx * uy, cy * adx, cy * ux)
     cx * ady - cy * adx = cx * uy - cy * ux
     cx * uy - cy * ux = -1 * (ux * cy - uy * cx)
     cx * ady - cy * adx = cx * uy - cy * ux = -1 * (ux * cy - uy * cx) = 0

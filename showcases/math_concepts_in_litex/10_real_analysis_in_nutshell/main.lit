@@ -92,6 +92,10 @@ thm sequence_limit_unique:
         abs((0 - (a(n0) - L1))) = abs(a(n0) - L1)
         abs(L1 - a(n0)) = abs(a(n0) - L1)
         L1 - L2 = (L1 - a(n0)) + (a(n0) - L2)
+        a(n0) $in R
+        L1 - a(n0) $in R
+        a(n0) - L2 $in R
+        (L1 - a(n0)) + (a(n0) - L2) $in R
         abs((L1 - a(n0)) + (a(n0) - L2)) <= abs(L1 - a(n0)) + abs(a(n0) - L2)
         abs(L1 - L2) = abs((L1 - a(n0)) + (a(n0) - L2))
         abs(L1 - L2) <= abs(L1 - a(n0)) + abs(a(n0) - L2)
@@ -126,7 +130,7 @@ claim:
                 $has_limit(a, L2)
                 =>:
                     L1 = L2
-            by thm sequence_limit_unique(a, L1, L2) => L1 = L2
+            release thm sequence_limit_unique(a, L1, L2)
 
 have fn lim by exist!:
     ? forall a fn(index N+) R:

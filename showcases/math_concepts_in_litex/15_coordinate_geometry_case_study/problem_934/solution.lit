@@ -32,7 +32,7 @@ thm problem_934_angle_bisector_midpoint_perpendicular:
     by def $geo::is_perpendicular(a, d, b, c)
 
     # D 为 BC 中点且 AD⊥BC，所以 A 在 BC 的垂直平分线上。
-    by thm geo::perpendicular_bisector_equidistant(b, c, d, a)
+    release thm geo::perpendicular_bisector_equidistant(b, c, d, a)
     geo::distance_sq(a, b) = geo::distance_sq(a, c)
 
     # 将距离平方相等封装回题目要求的线段全等谓词 AB=AC。

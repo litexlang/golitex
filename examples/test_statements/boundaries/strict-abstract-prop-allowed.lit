@@ -1,0 +1,11 @@
+# Boundary: strict-abstract-prop-allowed
+# Owner: DefAbstractPropStmt
+# Before:
+# abstract_prop P(x)
+# Former behavior: declaration rejected by strict policy.
+abstract_prop P(x)
+forall x R:
+    $P(x)
+    =>:
+        $P(x)
+# Evidence: python3 examples/test_statements/run.py --leaf DefAbstractPropStmt --binary target/release/litex

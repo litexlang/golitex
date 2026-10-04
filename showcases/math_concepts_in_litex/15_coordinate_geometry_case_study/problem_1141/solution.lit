@@ -15,8 +15,8 @@ thm problem_1141_angle_equality:
             $geo::are_angles_congruent(b, a, m, c, d, m)
 
     # Expand the directed side equality and the midpoint coordinates.
-    by thm geo::vec_coordinate_formula(a, b)
-    by thm geo::vec_coordinate_formula(c, d)
+    release thm geo::vec_coordinate_formula(a, b)
+    release thm geo::vec_coordinate_formula(c, d)
     geo::vec(a, b)[1] = geo::vec(c, d)[1]
     geo::vec(a, b)[2] = geo::vec(c, d)[2]
     geo::vec(a, b)[1] = b[1] - a[1]
@@ -35,8 +35,8 @@ thm problem_1141_angle_equality:
     m[2] - c[2] = (b[2] - c[2]) / 2
 
     # First pair of SAS sides: AB = DC.
-    by thm geo::distance_sq_coordinate_formula(a, b)
-    by thm geo::distance_sq_coordinate_formula(d, c)
+    release thm geo::distance_sq_coordinate_formula(a, b)
+    release thm geo::distance_sq_coordinate_formula(d, c)
     geo::distance_sq(a, b) = (a[1] - b[1])^2 + (a[2] - b[2])^2
     geo::distance_sq(d, c) = (d[1] - c[1])^2 + (d[2] - c[2])^2
     a[1] - b[1] = -(b[1] - a[1])
@@ -50,13 +50,13 @@ thm problem_1141_angle_equality:
     (a[1] - b[1])^2 + (a[2] - b[2])^2 = (d[1] - c[1])^2 + (d[2] - c[2])^2
     geo::distance_sq(a, b) = (a[1] - b[1])^2 + (a[2] - b[2])^2 = (d[1] - c[1])^2 + (d[2] - c[2])^2 = geo::distance_sq(d, c)
     geo::distance_sq(a, b) = geo::distance_sq(d, c)
-    by thm geo::distance_sq_symmetric(a, b)
-    by thm geo::distance_sq_symmetric(d, c)
+    release thm geo::distance_sq_symmetric(a, b)
+    release thm geo::distance_sq_symmetric(d, c)
     geo::distance_sq(b, a) = geo::distance_sq(a, b) = geo::distance_sq(d, c) = geo::distance_sq(c, d)
     geo::distance_sq(b, a) = geo::distance_sq(c, d)
 
     # The midpoint of BC is also the midpoint of AD.
-    by thm geo::add_equalities(b[1] - a[1], d[1] - c[1], a[1] + c[1], a[1] + c[1])
+    release thm geo::add_equalities(b[1] - a[1], d[1] - c[1], a[1] + c[1], a[1] + c[1])
     (b[1] - a[1]) + (a[1] + c[1]) = (d[1] - c[1]) + (a[1] + c[1])
     (b[1] - a[1]) + (a[1] + c[1]) = b[1] + c[1]
     (d[1] - c[1]) + (a[1] + c[1]) = a[1] + d[1]
@@ -64,7 +64,7 @@ thm problem_1141_angle_equality:
     (b[1] + c[1]) / 2 = (a[1] + d[1]) / 2
     m[1] = (a[1] + d[1]) / 2
 
-    by thm geo::add_equalities(b[2] - a[2], d[2] - c[2], a[2] + c[2], a[2] + c[2])
+    release thm geo::add_equalities(b[2] - a[2], d[2] - c[2], a[2] + c[2], a[2] + c[2])
     (b[2] - a[2]) + (a[2] + c[2]) = (d[2] - c[2]) + (a[2] + c[2])
     (b[2] - a[2]) + (a[2] + c[2]) = b[2] + c[2]
     (d[2] - c[2]) + (a[2] + c[2]) = a[2] + d[2]
@@ -72,19 +72,19 @@ thm problem_1141_angle_equality:
     (b[2] + c[2]) / 2 = (a[2] + d[2]) / 2
     m[2] = (a[2] + d[2]) / 2
 
-    by thm tuple_equal_from_coordinates(m, (m[1], m[2]))
+    release thm tuple_equal_from_coordinates(m, (m[1], m[2]))
     (m[1], m[2]) = ((a[1] + d[1]) / 2, (a[2] + d[2]) / 2)
     m = (m[1], m[2]) = ((a[1] + d[1]) / 2, (a[2] + d[2]) / 2)
     by def $geo::is_midpoint(m, a, d)
-    by thm geo::midpoint_equidistant(a, d, m)
+    release thm geo::midpoint_equidistant(a, d, m)
     geo::distance_sq(a, m) = geo::distance_sq(d, m)
 
     # The original midpoint gives BM = CM.
-    by thm geo::midpoint_equidistant(b, c, m)
+    release thm geo::midpoint_equidistant(b, c, m)
     geo::distance_sq(b, m) = geo::distance_sq(c, m)
 
     # SSS for triangles BAM and CDM gives the target included-angle dot product.
-    by thm geo::sss_dot_equal(b, a, m, c, d, m)
+    release thm geo::sss_dot_equal(b, a, m, c, d, m)
     geo::dot(geo::vec(a, b), geo::vec(a, m)) = geo::dot(geo::vec(d, c), geo::vec(d, m))
 
     # Convert the SAS metric conclusions to the library's undirected-angle predicate.
@@ -94,13 +94,13 @@ thm problem_1141_angle_equality:
 
     geo::angle_cos_den(b, a, m) = geo::distance_sq(a, b) * geo::distance_sq(a, m)
     geo::angle_cos_den(c, d, m) = geo::distance_sq(d, c) * geo::distance_sq(d, m)
-    by thm geo::product_of_equal_factors(geo::distance_sq(a, b), geo::distance_sq(d, c), geo::distance_sq(a, m), geo::distance_sq(d, m))
+    release thm geo::product_of_equal_factors(geo::distance_sq(a, b), geo::distance_sq(d, c), geo::distance_sq(a, m), geo::distance_sq(d, m))
     geo::distance_sq(a, b) * geo::distance_sq(a, m) = geo::distance_sq(d, c) * geo::distance_sq(d, m)
     geo::angle_cos_den(b, a, m) = geo::angle_cos_den(c, d, m)
 
     geo::angle_cos_num(b, a, m)^2 * geo::angle_cos_den(c, d, m) = geo::angle_cos_num(c, d, m)^2 * geo::angle_cos_den(b, a, m)
     geo::angle_cos_num(c, d, m) = geo::angle_cos_num(b, a, m)
-    by thm geo::multiply_both_sides(geo::angle_cos_num(c, d, m), geo::angle_cos_num(b, a, m), geo::angle_cos_num(b, a, m))
+    release thm geo::multiply_both_sides(geo::angle_cos_num(c, d, m), geo::angle_cos_num(b, a, m), geo::angle_cos_num(b, a, m))
     geo::angle_cos_num(c, d, m) * geo::angle_cos_num(b, a, m) = geo::angle_cos_num(b, a, m) * geo::angle_cos_num(b, a, m)
     geo::angle_cos_num(b, a, m) * geo::angle_cos_num(c, d, m) = geo::angle_cos_num(c, d, m) * geo::angle_cos_num(b, a, m) = geo::angle_cos_num(b, a, m) * geo::angle_cos_num(b, a, m) = geo::angle_cos_num(b, a, m)^2
     geo::angle_cos_num(b, a, m)^2 >= 0

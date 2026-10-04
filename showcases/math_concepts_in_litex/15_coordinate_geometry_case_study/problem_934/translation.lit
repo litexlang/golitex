@@ -86,16 +86,16 @@ thm perpendicular_bisector_equidistant:
             distance_sq(p, a) = distance_sq(p, b)
     by def $is_midpoint(o, a, b)
     by def $is_perpendicular(p, o, a, b)
-    by thm perpendicular_dot_expand(p, o, a, b)
-    by thm distance_sq_coordinate_formula(p, a)
-    by thm distance_sq_coordinate_formula(p, b)
+    release thm perpendicular_dot_expand(p, o, a, b)
+    release thm distance_sq_coordinate_formula(p, a)
+    release thm distance_sq_coordinate_formula(p, b)
     o[1] = (a[1] + b[1]) / 2
     o[2] = (a[2] + b[2]) / 2
     (o[1] - p[1]) * (b[1] - a[1]) + (o[2] - p[2]) * (b[2] - a[2]) = 0
     2 * ((o[1] - p[1]) * (b[1] - a[1]) + (o[2] - p[2]) * (b[2] - a[2])) = 0
     2 * (o[1] - p[1]) * (b[1] - a[1]) = (b[1] - p[1])^2 - (a[1] - p[1])^2
     2 * (o[2] - p[2]) * (b[2] - a[2]) = (b[2] - p[2])^2 - (a[2] - p[2])^2
-    by thm add_equalities(2 * (o[1] - p[1]) * (b[1] - a[1]), (b[1] - p[1])^2 - (a[1] - p[1])^2, 2 * (o[2] - p[2]) * (b[2] - a[2]), (b[2] - p[2])^2 - (a[2] - p[2])^2)
+    release thm add_equalities(2 * (o[1] - p[1]) * (b[1] - a[1]), (b[1] - p[1])^2 - (a[1] - p[1])^2, 2 * (o[2] - p[2]) * (b[2] - a[2]), (b[2] - p[2])^2 - (a[2] - p[2])^2)
     2 * (o[1] - p[1]) * (b[1] - a[1]) + 2 * (o[2] - p[2]) * (b[2] - a[2]) = ((b[1] - p[1])^2 - (a[1] - p[1])^2) + ((b[2] - p[2])^2 - (a[2] - p[2])^2)
     ((b[1] - p[1])^2 - (a[1] - p[1])^2) + ((b[2] - p[2])^2 - (a[2] - p[2])^2) = 2 * (o[1] - p[1]) * (b[1] - a[1]) + 2 * (o[2] - p[2]) * (b[2] - a[2]) = 2 * ((o[1] - p[1]) * (b[1] - a[1]) + (o[2] - p[2]) * (b[2] - a[2])) = 0
     (b[1] - p[1])^2 - (a[1] - p[1])^2 + (b[2] - p[2])^2 - (a[2] - p[2])^2 = 0

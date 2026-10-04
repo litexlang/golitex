@@ -16,8 +16,8 @@ thm problem_911_same_quarter_turn_preserves_dot:
     by def $geo::rotated_90_ccw(e_point, a, d)
     
     # 展开两个点积为点坐标形式
-    by thm geo::perpendicular_dot_expand(a, c, a, e_point)
-    by thm geo::perpendicular_dot_expand(a, b, a, d)
+    release thm geo::perpendicular_dot_expand(a, c, a, e_point)
+    release thm geo::perpendicular_dot_expand(a, b, a, d)
     geo::dot(geo::vec(a, c), geo::vec(a, e_point)) = (c[1] - a[1]) * (e_point[1] - a[1]) + (c[2] - a[2]) * (e_point[2] - a[2])
     geo::dot(geo::vec(a, b), geo::vec(a, d)) = (b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2])
     
@@ -60,22 +60,22 @@ thm problem_911_congruence:
             # 结论：△ABD≌△ACE
             $geo::are_triangles_congruent(a, b, d, a, c, e_point)
     geo::distance_sq(a, b) = geo::distance_sq(a, c)
-    by thm geo::distance_sq_symmetric(a, b)
-    by thm geo::distance_sq_symmetric(a, c)
+    release thm geo::distance_sq_symmetric(a, b)
+    release thm geo::distance_sq_symmetric(a, c)
     geo::distance_sq(b, a) = geo::distance_sq(c, a)
 
-    by thm problem_911_same_quarter_turn_preserves_dot(a, b, c, d, e_point)
+    release thm problem_911_same_quarter_turn_preserves_dot(a, b, c, d, e_point)
     geo::dot(geo::vec(a, b), geo::vec(a, d)) = geo::dot(geo::vec(a, c), geo::vec(a, e_point))
 
-    by thm geo::sas_congruence(b, a, d, c, a, e_point)
+    release thm geo::sas_congruence(b, a, d, c, a, e_point)
     geo::distance_sq(b, d) = geo::distance_sq(c, e_point)
 
     # 准备全等谓词所需的三边相等
     # 边1: AB = AC (已给定)
     # 边2: BD = CE (SAS结论)
     # 边3: DA = EA，需要从前提 distance_sq(a,d) = distance_sq(a,e_point) 得到反向相等
-    by thm geo::distance_sq_symmetric(a, d)
-    by thm geo::distance_sq_symmetric(a, e_point)
+    release thm geo::distance_sq_symmetric(a, d)
+    release thm geo::distance_sq_symmetric(a, e_point)
     geo::distance_sq(d, a) = geo::distance_sq(a, d)
     geo::distance_sq(e_point, a) = geo::distance_sq(a, e_point)
     geo::distance_sq(d, a) = geo::distance_sq(e_point, a)

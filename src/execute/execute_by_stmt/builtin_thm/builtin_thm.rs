@@ -1,6 +1,6 @@
 //! Reserved theorem applications, separate from ordinary proof search.
 use super::helper::*;
-use super::{intersection, membership, real_analysis, sums};
+use super::{folds, intersection, membership, real_analysis, sums};
 use crate::ast::fact::Fact;
 use crate::ast::obj::*;
 use crate::ast::param::*;
@@ -39,6 +39,7 @@ fn prepare_contract(rt: &mut Runtime, id: BuiltinTheoremId, args: &[Obj]) -> Run
     use BuiltinTheoremId::*;
     let a = args[0].clone();
     let result = match id {
+        FiniteSetReduceSingleton => folds::prepare_singleton(rt, args),
         // A ⊆ B and B finite implies A finite; no finiteness premise on A.
         SubsetOfFiniteSetIsFinite => {
             let b = args[1].clone();

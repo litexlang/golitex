@@ -1,0 +1,6 @@
+# P03: Explicit call chain for returned-function alias
+# Explicit proof contract; strict release checked, no trust.
+
+have fn add(x R) fn(y R) R = fn(y R) R {x + y}
+have add_two fn(y R) R = add(2)
+add_two(3) = add(2)(3) = 5

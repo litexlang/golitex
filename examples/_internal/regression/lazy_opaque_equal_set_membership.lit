@@ -1,13 +1,10 @@
 abstract_prop marked(x)
-
 template<T set>:
     have selected power_set(T) = {x T: $marked(x)}
-
 have Ambient set = \selected<R>
-\selected<R> = \selected<R>
-
+\selected<R> = {y R: $marked(y)}
+Ambient = {y R: $marked(y)}
 thm opaque_equal_set_membership_is_available_on_demand:
     ? forall x Ambient:
         $marked(x)
-    x $in \selected<R>
-    x $in {y R: $marked(y)}
+    release thm defined_set_member(x, Ambient)

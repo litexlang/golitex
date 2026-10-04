@@ -124,7 +124,15 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
     let mut i = 0;
     while i < args.len() {
         let arg = &args[i];
-        if arg == "-session" || arg == "--session" {
+        if arg == "-e" {
+            rest.push(arg.clone());
+            i += 1;
+            // The next argv item is source, even when it spells a shared flag.
+            if let Some(code) = args.get(i) {
+                rest.push(code.clone());
+                i += 1;
+            }
+        } else if arg == "-session" || arg == "--session" {
             session = true;
             i += 1;
         } else if arg == "-strict" || arg == "--strict" {
@@ -163,7 +171,7 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
             }
             Ok(LaunchCommand::Version { language })
         }
-        [flag, value] if flag == "-e" && is_value(value) => Ok(LaunchCommand::Eval {
+        [flag, value] if flag == "-e" && !value.is_empty() => Ok(LaunchCommand::Eval {
             code: value.clone(),
             session,
             strict,

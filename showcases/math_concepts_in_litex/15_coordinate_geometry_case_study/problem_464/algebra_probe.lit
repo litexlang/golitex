@@ -8,14 +8,14 @@ thm problem_464_algebra_probe:
         (2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2) + 2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)) = 0
         =>:
             (dx + qx) * cy - (dy + qy) * cx = 0
-    by thm geo::dot_squared_plus_det_squared((qx, qy), (cx, cy))
+    release thm geo::dot_squared_plus_det_squared((qx, qy), (cx, cy))
     geo::dot((qx, qy), (cx, cy)) = qx * cx + qy * cy
     geo::det((qx, qy), (cx, cy)) = qx * cy - qy * cx
     geo::dot((qx, qy), (qx, qy)) = qx^2 + qy^2
     geo::dot((cx, cy), (cx, cy)) = cx^2 + cy^2
     (qx * cx + qy * cy)^2 + (qx * cy - qy * cx)^2 = (qx^2 + qy^2) * (cx^2 + cy^2)
     cx^2 + cy^2 = qx^2 + qy^2
-    by thm geo::multiply_both_sides(cx^2 + cy^2, qx^2 + qy^2, qx^2 + qy^2)
+    release thm geo::multiply_both_sides(cx^2 + cy^2, qx^2 + qy^2, qx^2 + qy^2)
     (qx^2 + qy^2) * (cx^2 + cy^2) = (qx^2 + qy^2) * (qx^2 + qy^2)
     (qx * cx + qy * cy)^2 + (qx * cy - qy * cx)^2 = (qx^2 + qy^2)^2
     (qx^2 + qy^2)^2 - (qx * cx + qy * cy)^2 = (qx * cy - qy * cx)^2
@@ -29,33 +29,33 @@ thm problem_464_algebra_probe:
         impossible qx * cy - qy * cx != 0
     qx^2 + qy^2 - qx * cx - qy * cy != 0
     (qx * cy - qy * cx)^2 = (qx^2 + qy^2 - qx * cx - qy * cy) * (qx^2 + qy^2 + qx * cx + qy * cy)
-    by thm geo::subtract_equalities((qx^2 + qy^2 - qx * cx - qy * cy)^2, (qx^2 + qy^2 - qx * cx - qy * cy)^2, (qx * cy - qy * cx)^2, (qx^2 + qy^2 - qx * cx - qy * cy) * (qx^2 + qy^2 + qx * cx + qy * cy))
+    release thm geo::subtract_equalities((qx^2 + qy^2 - qx * cx - qy * cy)^2, (qx^2 + qy^2 - qx * cx - qy * cy)^2, (qx * cy - qy * cx)^2, (qx^2 + qy^2 - qx * cx - qy * cy) * (qx^2 + qy^2 + qx * cx + qy * cy))
     (qx^2 + qy^2 - qx * cx - qy * cy)^2 - (qx * cy - qy * cx)^2 = (qx^2 + qy^2 - qx * cx - qy * cy)^2 - (qx^2 + qy^2 - qx * cx - qy * cy) * (qx^2 + qy^2 + qx * cx + qy * cy)
     (qx^2 + qy^2 - qx * cx - qy * cy)^2 - (qx^2 + qy^2 - qx * cx - qy * cy) * (qx^2 + qy^2 + qx * cx + qy * cy) = -2 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy)
     (qx^2 + qy^2 - qx * cx - qy * cy)^2 - (qx * cy - qy * cx)^2 = -2 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy)
-    by thm geo::multiply_both_sides((qx^2 + qy^2 - qx * cx - qy * cy)^2 - (qx * cy - qy * cx)^2, -2 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy), 4)
+    release thm geo::multiply_both_sides((qx^2 + qy^2 - qx * cx - qy * cy)^2 - (qx * cy - qy * cx)^2, -2 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy), 4)
     4 * ((qx^2 + qy^2 - qx * cx - qy * cy)^2 - (qx * cy - qy * cx)^2) = 4 * (-2 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy))
     (2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2 = 4 * ((qx^2 + qy^2 - qx * cx - qy * cy)^2 - (qx * cy - qy * cx)^2)
     4 * (-2 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy)) = -8 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy)
     (2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2 = -8 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy)
     (((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy)) + (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx)) = (qx^2 + qy^2) * ((dx + qx) * cy - (dy + qy) * cx)
-    by thm geo::multiply_both_sides((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2, -8 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy), 2 * ((dx + qx) * qy - (dy + qy) * qx))
+    release thm geo::multiply_both_sides((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2, -8 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy), 2 * ((dx + qx) * qy - (dy + qy) * qx))
     (2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2) = (2 * ((dx + qx) * qy - (dy + qy) * qx)) * (-8 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy))
     (2 * ((dx + qx) * qy - (dy + qy) * qx)) * (-8 * (qx * cx + qy * cy) * (qx^2 + qy^2 - qx * cx - qy * cy)) = -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy))
     (2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2) = -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy))
     2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)) = -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx))
-    by thm geo::add_equalities((2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2), -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy)), 2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)), -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx)))
+    release thm geo::add_equalities((2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2), -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy)), 2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)), -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx)))
     (2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2) + 2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)) = -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy)) + -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx))
     -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy)) + -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx)) = -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * ((((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy)) + (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx)))
     (2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2) + 2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)) = -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * ((((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy)) + (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx)))
-    by thm geo::multiply_both_sides((((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy)) + (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx)), (qx^2 + qy^2) * ((dx + qx) * cy - (dy + qy) * cx), -16 * (qx^2 + qy^2 - qx * cx - qy * cy))
+    release thm geo::multiply_both_sides((((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy)) + (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx)), (qx^2 + qy^2) * ((dx + qx) * cy - (dy + qy) * cx), -16 * (qx^2 + qy^2 - qx * cx - qy * cy))
     -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * ((((dx + qx) * qy - (dy + qy) * qx) * (qx * cx + qy * cy)) + (((dx + qx) * qx + (dy + qy) * qy) * (qx * cy - qy * cx))) = -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * ((qx^2 + qy^2) * ((dx + qx) * cy - (dy + qy) * cx))
     -16 * (qx^2 + qy^2 - qx * cx - qy * cy) * ((qx^2 + qy^2) * ((dx + qx) * cy - (dy + qy) * cx)) = 0
     -16 * ((qx^2 + qy^2) * ((qx^2 + qy^2 - qx * cx - qy * cy) * ((dx + qx) * cy - (dy + qy) * cx))) = 0
     -16 != 0
-    by thm geo::zero_factor_law(-16, (qx^2 + qy^2) * ((qx^2 + qy^2 - qx * cx - qy * cy) * ((dx + qx) * cy - (dy + qy) * cx)))
+    release thm geo::zero_factor_law(-16, (qx^2 + qy^2) * ((qx^2 + qy^2 - qx * cx - qy * cy) * ((dx + qx) * cy - (dy + qy) * cx)))
     (qx^2 + qy^2) * ((qx^2 + qy^2 - qx * cx - qy * cy) * ((dx + qx) * cy - (dy + qy) * cx)) = 0
-    by thm geo::zero_factor_law(qx^2 + qy^2, (qx^2 + qy^2 - qx * cx - qy * cy) * ((dx + qx) * cy - (dy + qy) * cx))
+    release thm geo::zero_factor_law(qx^2 + qy^2, (qx^2 + qy^2 - qx * cx - qy * cy) * ((dx + qx) * cy - (dy + qy) * cx))
     (qx^2 + qy^2 - qx * cx - qy * cy) * ((dx + qx) * cy - (dy + qy) * cx) = 0
-    by thm geo::zero_factor_law(qx^2 + qy^2 - qx * cx - qy * cy, (dx + qx) * cy - (dy + qy) * cx)
+    release thm geo::zero_factor_law(qx^2 + qy^2 - qx * cx - qy * cy, (dx + qx) * cy - (dy + qy) * cx)
     (dx + qx) * cy - (dy + qy) * cx = 0

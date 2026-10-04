@@ -20,7 +20,7 @@ fn count_facts(rt: &Runtime) -> usize {
 }
 
 #[test]
-fn builtin_theorem_catalogue_has_twenty_eight_native_tracers() {
+fn builtin_theorem_catalogue_has_twenty_nine_native_tracers() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/stmt_nodes/release_and_expand/builtin_thm");
     let mut count = 0;
     for entry in std::fs::read_dir(dir).unwrap() {
@@ -35,7 +35,38 @@ fn builtin_theorem_catalogue_has_twenty_eight_native_tracers() {
         assert!(result.session_error.is_none() && result.success, "{}\n{}", path.display(), crate::json_output::emit_run_detailed(&result, &rt, "test", None));
         count += 1;
     }
-    assert_eq!(count, 28);
+    assert_eq!(count, 29);
+}
+
+#[test]
+fn finite_set_reduce_singleton_checks_set_carrier_laws_and_rollback() {
+    for code in [
+        "release thm finite_set_reduce_singleton(finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0), 2)",
+        "release thm finite_set_reduce_singleton(finite_set_reduce({1/2}, fn(x Q) Q{x}, fn(a,b Q) Q{a*b}, 3), 1/2)",
+        "have S finite_set = {2}\nrelease thm finite_set_reduce_singleton(finite_set_reduce(S, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 7), 2)",
+    ] {
+        let mut rt = runtime();
+        let result = rt.run_litex_code(code).unwrap();
+        assert!(result.success && result.session_error.is_none(), "{code}\n{}", crate::json_output::emit_run_detailed(&result, &rt, "test", None));
+        let detailed = project_stmt_detailed(result.statement_results.last().unwrap(), &rt);
+        let serialized = format!("{detailed:?}");
+        assert!(serialized.contains("finite_set_reduce_singleton"));
+        assert!(serialized.contains("well_defined"));
+    }
+    for code in [
+        "release thm finite_set_reduce_singleton(finite_set_reduce({1,2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0), 1)",
+        "release thm finite_set_reduce_singleton(finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0), 3)",
+        "release thm finite_set_reduce_singleton(finite_set_reduce({}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0), 2)",
+        "release thm finite_set_reduce_singleton(finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a-b}, 0), 2)",
+        "release thm finite_set_reduce_singleton(finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 1/2), 2)",
+        "release thm finite_set_reduce_singleton(2, 2)",
+        "release thm finite_set_reduce_singleton(2)",
+    ] {
+        let mut rt = runtime();
+        let before = count_facts(&rt);
+        assert!(execute(&mut rt, code).is_failed(), "{code}");
+        assert_eq!(count_facts(&rt), before, "rejected singleton theorem must not publish facts");
+    }
 }
 
 #[test]

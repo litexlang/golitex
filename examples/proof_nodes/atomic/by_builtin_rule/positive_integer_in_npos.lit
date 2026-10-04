@@ -11,6 +11,7 @@ forall k Z:
         k - 1 $in Z
         k - 1 > 0
         k - 1 $in N+
+        k - 1 >= 1
 
 claim:
     ? forall k N+:
@@ -22,8 +23,23 @@ claim:
     k - 1 > 0
     k - 1 $in N+
 
+claim:
+    ? forall n N+:
+        n = 1 or n > 1
+    n >= 1
+    by cases:
+        ? n = 1 or n > 1
+        case n = 1
+        case n != 1:
+            by contra:
+                ? n > 1
+                n <= 1
+                n = 1
+                impossible n != 1
+
 have fn countdown(n N+) N by induc n from 1:
     case n = 1: 0
     case n > 1: countdown(n - 1)
 countdown(1) = 0
-countdown(2) = 0
+2 - 1 = 1
+countdown(2) = countdown(2 - 1) = countdown(1) = 0

@@ -1,0 +1,15 @@
+# Before: PositivePowerCancellation required a literal nonzero integer.
+# forall x, y Q+, n Z:
+#     n != 0
+#     x^n = y^n
+#     =>:
+#         x = y
+# Former result: search_proof failed for symbolic n.
+# Now: retain positive bases, integer/nonzero exponent proofs and the stored equality.
+forall x, y Q+, n Z:
+    n != 0
+    x^n = y^n
+    =>:
+        x = y
+# Boundary: exponent zero, noninteger exponents and arbitrary nonzero bases reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/positive_power_cancellation_symbolic.lit

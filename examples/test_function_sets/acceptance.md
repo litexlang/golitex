@@ -1,4 +1,167 @@
-# Function-set composition: observed behavior on 2026-10-04
+# Explicit proof contract on 2026-10-04
+
+The user clarified that explicit equalities should select the intended proof
+route. A rejected direct assertion alone is not a request to broaden automatic
+search. This follow-up changes only proof fixtures and records, with no kernel,
+AST, state, search-policy or trust changes. Strict current release observations
+are in [explicit_proofs_2026-10-04.json](explicit_proofs_2026-10-04.json); exact
+source-order attempts and the nine-case baseline are in
+[proof_journals/explicit_bridges_2026-10-04.json](proof_journals/explicit_bridges_2026-10-04.json).
+
+## The user's template alias chain passes
+
+```litex
+template<a R>:
+    have fn shift(x R) R = x + a
+let shift_two = \shift<2>
+shift_two(3) = \shift<2>(3) = 5
+```
+
+P01 preserves the alias and the final value. P03 likewise verifies
+`add_two(3) = add(2)(3) = 5` after binding the returned closure. N22/N24
+reject false values after both setup declarations succeed.
+
+## A struct call needs a declared field view as well as equality
+
+The user's exact sequence `\box<2> = (step, 0)` followed by
+`\box<2>.op(3) = step(3) = 4` still rejects at **well_defined** with
+`object has no definition-time struct carrier for field 'op'`. Adding
+`\box<2>.op = step` also fails at that same boundary. No numeric search is
+reached for the selected field. The executed current route is P02:
+
+```litex
+struct Box:
+    op fn(x R) R
+    tag N
+have fn step(x R) R = x + 1
+template<a R>:
+    have box &Box = (step, 0)
+\box<2> = (step, 0)
+have selected &Box = \box<2>
+selected.op = step
+selected.op(3) = step(3) = 4
+```
+
+The typed binding provides the current declaration-owned field view; the tuple
+and field equations expose the callable value. Removing the tuple equation
+was tested and the field equation/call then fails search_proof. P06 verifies
+the analogous sequence for `make(2)`. These are checked authoring routes for
+the same returned value; they do not make the original immediate field syntax
+well-defined. N23 rejects an incorrect final value after all six setup
+statements succeed.
+
+## Explicit routes for all nine retained probes
+
+| Original direct probe | Observed phase | Checked alternative |
+| --- | --- | --- |
+| T05 specialized callable alias | search_proof | P01: explicit specialized call in the equality chain |
+| H05 returned-function binding | search_proof | P03: explicit curried call in the equality chain |
+| S02 concrete anonymous function field | search_proof | P04: field equation then anonymous call chain |
+| T03 selected function-space binding | have_equal | P05: specialized carrier equation before binding |
+| D05 selected function-space membership | search_proof | P05: same carrier equation before membership |
+| D08 selected struct field | well_defined | P02: tuple equation, typed local binding, field equation |
+| D09 returned struct field | well_defined | P06: same steps for the returned value, including result membership |
+| S07 closure-valued struct template | def_template | P07: checked general tuple constructor rule, then explicit result route |
+| S08 closure-valued struct return | have_fn_equal/body_in_return_set | P08: same constructor rule and returned-value route |
+
+P07/P08 first verify this ordinary universal fact, without trust:
+
+```litex
+forall f fn(x R) R:
+    (f, 0) $in &Box
+```
+
+The original closure-specific universal claim was redundant after that general
+fact and was removed from the final fixtures. The template/function definitions
+retain `(fn(x R) R {x + a}, 0)` and carrier `&Box`. N25 changes the tag to -1
+and rejects the template definition; the general constructor fact does not
+admit an invalid field value. This demonstrates a working proof interface,
+without claiming the original closure-specific forall matching was repaired.
+
+The complete audit matches 73/82 expectations: all eight new positive routes
+and all 25 negatives behave as expected; nine original direct positives remain
+rejected. Each accepted fixture has a clean strict-file gate in addition to
+its discarded-sketch session probe. Original direct probes remain unchanged,
+so the runner's exit 1 continues to report their capability boundary. These
+results are not nine open kernel repair obligations.
+
+---
+
+# Function-body evaluation enhancement on 2026-10-04
+
+User-authorized local kernel repair after the initial fn-set audit. The
+current strict release receipt is [numeric_evaluation_2026-10-04.json](numeric_evaluation_2026-10-04.json);
+[numeric_evaluation_before_2026-10-04.json](numeric_evaluation_before_2026-10-04.json)
+is the immediate pre-repair baseline. Both record source, binary and fixture
+identity. The original failures below remain historical evidence.
+
+## Direct acceptance
+
+The exact requested code now verifies without intermediate equalities:
+
+```litex
+have fn add(x R) fn(y R) R = fn(y R) R {x + y}
+add(2) $in fn(y R) R
+add(2)(3) $in R
+add(2)(3) = 5
+add(1 / 3)(1 / 6) = 1 / 2
+add(0.1)(0.2) = 0.3
+```
+
+Active file: `numeric_evaluation/e01.lit`. The formerly rejected direct H01
+is unchanged. H03/H04/H06–H11, T04 and T07 also now verify: anonymous and
+three-level closures, named function returns, higher-order apply/composition,
+inner and outer guards, and direct template applications. This fixes eleven
+old positive goals. Previously accepted positives remain accepted; D01–D04
+still check their explicit equality chains. E02 adds arithmetic expressions
+with nested known calls inside a function body.
+
+All 21 CLI negatives reject at their expected phase after successful setup.
+In particular, N11–N14 preserve carriers/arity/guards, N17 rejects the result
+6, and N21 rejects the nearby decimal 0.500000000001 for the exact fraction
+1/2. The current full corpus accepts 40/49 positives and matches 61/70 total
+expectations. Its exit 1 is solely the nine retained intended positives:
+T03, T05, S02, S07, S08, H05, D05, D08 and D09.
+
+## Mechanism and boundary
+
+`normalize_function_body.rs` consumes curried argument groups in order,
+substitutes a known anonymous body, and continues the returned application.
+It also substitutes known calls in arguments and arithmetic children. Each
+step retains the callable application's WD, the chosen body source (stored
+equality path or specialized template definition), that body's own signature
+and guard WD, the substituted body, and the continued application. The final
+residual equality uses the existing restricted verifier and exact arithmetic.
+For add(2)(3), the two body steps end at 2+3; the residual proves 2+3=5.
+
+A checked single-step beta equality whose body exactly matches the target
+is retained before deeper substitution, preserving explicit symbolic body
+equations. The local route stops at a repeated active function head, 64 substitutions,
+or recursion depth 64. It expands mathematical function bodies only; it does
+not execute algorithms or change global proof-search permission levels. The
+shared single-beta helper and its aggregate/builtin consumers are unchanged.
+Detailed JSON now owns `normalization.expansions` in the named/template
+function-definition route; each known source contains `function_equal` and
+its citations. The existing displayed `expanded_body` and residual proof
+remain available. Typed evidence retains anonymous binder environments.
+
+Ten focused Rust tests check positive values, detailed evidence, nearest
+negative boundaries, a broader name signature with a guarded selected body,
+cyclic body equations, budget exhaustion, ignored legal arguments and subsequent session usability.
+The existing shared-level test now accepts the approved top-level
+wrapped(3)=4 calculation, while separately rejecting it under the strategy's
+restricted child state. This changes the numeric acceptance oracle without
+changing VerifyState or the search-stage schedule.
+
+Focused release gates are listed in [numeric_evaluation_tests.json](numeric_evaluation_tests.json).
+Source-order before/after discarded strict REPL probes are in
+[proof_journals/numeric_evaluation_2026-10-04.json](proof_journals/numeric_evaluation_2026-10-04.json).
+No trust, protected AST/state change, full examples/docs/textbook gate, Lean
+compilation or display-eval claim is included in this scoped acceptance.
+
+---
+
+# Initial function-set composition audit on 2026-10-04
 
 Task: the user's requested audit of function sets, templates, struct functions
 and functions returning functions. All snippets below point to executed

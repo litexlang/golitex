@@ -1,6 +1,6 @@
 # Migration blocker B06: see plan/迁移的plan/和example有关.md.
-# The singleton theorem verifies. The induction step now reaches the predecessor
-# index-function existence goal, where replay from finite_set_size_has_index is blocked.
+# General index existence uses the native finite-sequence bijection interface.
+# The remaining legacy induction/predicate replay is tracked in the migration plan.
 # Nonempty finite sets have an index function.
 # Induction on finite_set_size(s): base |s| = 1, then extend after removing a least element.
 
@@ -112,6 +112,25 @@ thm index_function_for_singleton:
         by def $is_index_fn(s, idx0)
         $is_index_fn(s, idx0)
 
+thm index_from_builtin:
+    ? forall s finite_set:
+        finite_set_size(s) >= 1
+        =>:
+            exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
+    release thm finite_set_has_bijective_index(s)
+    obtain raw from exist raw finite_seq(s, finite_set_size(s)) st {$bijective(closed_range(1, finite_set_size(s)), s, raw)}
+    $surjective(closed_range(1, finite_set_size(s)), s, raw)
+    have fn idx(i1 N+: i1 <= finite_set_size(s)) s = raw(i1)
+    witness exist idx0 fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx0)} from idx:
+        claim:
+            ? forall y s:
+                exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)}
+            obtain i1 from exist i1 closed_range(1, finite_set_size(s)) st {y = raw(i1)}
+            i1 $in N+
+            idx0(i1) = idx(i1) = raw(i1) = y
+            witness exist j N+ st {j <= finite_set_size(s), y = idx0(j)} from i1
+        by def $is_index_fn(s, idx0)
+
 thm index_function_step:
     ? forall n N+, s finite_set:
         $is_finite_set(s)
@@ -120,69 +139,8 @@ thm index_function_step:
         =>:
             exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
     n >= 1
-    n + 1 >= 1
     finite_set_size(s) = n + 1 >= 1
-    claim:
-        ? $is_nonempty_set(s)
-        by contra:
-            ? $is_nonempty_set(s)
-            s = {}
-            finite_set_size({}) = 0
-            finite_set_size(s) = finite_set_size({})
-            finite_set_size(s) = 0
-            impossible finite_set_size(s) >= 1
-    $is_nonempty_set(s)
-    have a s
-    a $in s
-    release thm intersect_with_singleton(s, a)
-    intersect(s, {a}) = {a}
-    finite_set_size({a}) = 1
-    $is_finite_set(set_minus(s, {a}))
-    $is_finite_set(intersect(s, {a}))
-    finite_set_size(intersect(s, {a})) = finite_set_size({a}) = 1
-    finite_set_size(s) - finite_set_size(intersect(s, {a})) = finite_set_size(s) - 1
-    finite_set_size(s) - 1 = (n + 1) - 1
-    finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = finite_set_size(s) - 1 = (n + 1) - 1 = n
-    $finite_set_size_has_index(n)
-    $is_finite_set(set_minus(s, {a}))
-    finite_set_size(set_minus(s, {a})) = n
-    exist prev fn(x N+: x <= finite_set_size(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}
-    obtain prev from exist prev fn(x N+: x <= finite_set_size(set_minus(s, {a}))) set_minus(s, {a}) st {$is_index_fn(set_minus(s, {a}), prev)}
-    set_minus(s, {a}) $subset s
-    have fn idx(i1 N+: i1 <= finite_set_size(s)) s by cases:
-        case i1 <= n: prev(i1)
-        case i1 > n: a
-    idx(1) = prev(1)
-    prev(1) $in set_minus(s, {a})
-    prev(1) $in s
-    idx(1) $in s
-    witness exist idx0 fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx0)} from idx:
-        claim:
-            ? forall y s => exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)}
-            y = a or y != a
-            by cases:
-                ? exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)}
-                case y = a:
-                    n + 1 <= finite_set_size(s)
-                    idx0(n + 1) = idx(n + 1) = a
-                    witness exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)} from n + 1:
-                        n + 1 <= finite_set_size(s)
-                        y = idx0(n + 1)
-                case y != a:
-                    not y $in {a}
-                    y $in set_minus(s, {a})
-                    exist i1 N+ st {i1 <= finite_set_size(set_minus(s, {a})), y = prev(i1)}
-                    obtain j from exist i1 N+ st {i1 <= finite_set_size(set_minus(s, {a})), y = prev(i1)}
-                    j <= finite_set_size(set_minus(s, {a}))
-                    j <= n
-                    n <= n + 1
-                    j <= n <= n + 1 = finite_set_size(s)
-                    idx0(j) = idx(j) = prev(j)
-                    witness exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)} from j:
-                        j <= finite_set_size(s)
-                        y = idx0(j)
-        by def $is_index_fn(s, idx0)
-        $is_index_fn(s, idx0)
+    release thm index_from_builtin(s)
 
 claim:
     ? forall n N+:

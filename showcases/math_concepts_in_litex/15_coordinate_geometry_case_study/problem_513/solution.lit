@@ -30,4 +30,4 @@ thm problem_513_eb_eq_ei:
         =>:
             # 【原题结论】EB=EI。
             $geo::are_segments_congruent(r, b, r, p)
-    by thm top_bridge::problem_513_public_bridge(a, b, c, o, p, d, r)
+    release thm top_bridge::problem_513_public_bridge(a, b, c, o, p, d, r)

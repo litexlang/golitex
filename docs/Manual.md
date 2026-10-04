@@ -93,9 +93,10 @@ objects, builtin verification and inference rules, imported assumptions, and
 every explicit `trust` or `axiom` are relevant to the trusted boundary.
 `trust` records an assumption; it is not a proof. A successful Litex check is
 therefore a claim relative to the checker, its builtin rules, and any visible
-trusted inputs. Use `-strict` when a run must reject user `trust`, `trust have`,
-and `abstract_prop` statements, including `trust have` inside templates and
-trust steps inside local proof bodies. The current strict gate does not reject
+trusted inputs. Use `-strict` when a run must reject user `trust` and `trust have`,
+including `trust have` inside templates and trust steps inside local proof
+bodies. Pure `abstract_prop` declarations are allowed: they introduce a
+predicate signature, not a proved instance or a definition body. The current strict gate does not reject
 `axiom` or the named set-theoretic releases; it is not an axiom-free mode.
 
 Lean rechecking is a separate experimental direction. The current `src/lib.rs`
@@ -4396,6 +4397,7 @@ its stated requirements before storing the conclusion:
 | `release thm rational_has_unique_reduced_fraction(q)` | `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}` |
 | `release thm subset_of_finite_set_is_finite(A, B)` | `$is_finite_set(A)` after checking `A $subset B` and finite `B` |
 | `release thm finite_set_has_bijective_index(s)` | `exist idx finite_seq(s, finite_set_size(s)) st {$bijective(closed_range(1, finite_set_size(s)), s, idx)}` |
+| `release thm finite_set_reduce_singleton(r, x)` | For a `finite_set_reduce(S,f,op,seed)` expression r, checks `S = {x}` and publishes `r = op(seed,f(x))`. Whole-conclusion WD retains the homogeneous carrier, seed and associative/commutative operation laws. |
 | `release thm real_least_upper_bound_exists(S, u)` | `exist L R st {$is_real_least_upper_bound(S, L)}`; real, nonempty S with supplied upper bound u |
 | `release thm real_member_le_least_upper_bound(S, L, x)` | `x <= L`; requires the LUB certificate and x in S |
 | `release thm real_least_upper_bound_le_upper_bound(S, L, u)` | `L <= u`; requires the certificate and an upper bound u |
@@ -4878,7 +4880,8 @@ forall a, b R+:
 > (`a >= 1` ⇒ `0 < a`, `a <= -1` ⇒ `a <= 0`); mul-by-`(-1)` order flip;
 > and `u - v = 0` ⇒ `u = v` (`EqualFromKnownDifferenceZero`).
 > Equality power laws (preview): `a^m * a^n = a^(m+n)`, `(a^m)^n = a^(m*n)`,
-> `(a*b)^n = a^n * b^n` (positive real base, positive natural exponents), and
+> `(a*b)^n = a^n * b^n` (complex bases with natural exponents, or nonzero
+> complex bases with integer exponents), and
 > `1/a = a^(-1)`, `a/b = a * b^(-1)` for nonzero denominators.
 > Equality identities wave 2 (preview): `1^a = 1` (`a` in `N`), `0^n = 0`
 > (`n` in `N+`); sqrt square / zero / one / of-square / product / quotient;
@@ -5176,6 +5179,17 @@ logarithms, and even-power absolute-value rules remain real-only.
 | `reduce` | Ascending left-fold evaluation for literals; empty range returns the seed; nonempty ranges consume the first or last value; adjacent ordered partition; order-preserving interval translation; pointwise congruence; additive seed `0` and multiplicative seed `1` bridge to `sum` and `product`. |
 | `finite_set_reduce` | Empty set returns the seed; displayed-set enumeration, insertion, disjoint union with one seed, closed-range ascending enumeration, congruence, and bijective substitution require an associative-commutative operation. Additive seed `0` and multiplicative seed `1` bridge to the finite-set aggregates. |
 | Remainder | `0%m=0` for nonzero integer `m`; `x%1=0`; `1%k=1` for `k>=2`; Euclidean uniqueness; negation normalization; power congruence; matching `+`, `-`, `*` congruence; same-modulus nesting; and `(a%m)%d=a%d` when positive `d` divides positive `m`. |
+
+The exponent-addition, iterated-power and product-power matchers preserve the
+natural-exponent branch on all complex bases, including zero. Their integer
+branch checks each original base is nonzero and each exponent belongs to `Z`;
+it does not infer these laws for arbitrary fractional exponents. The checked
+premises remain in `proof_of_requirement_facts`. Positive real bases also
+support cancellation from a stored `x^n = y^n` when `n $in Z` and `n != 0`,
+including symbolic `n`; both exponent guards are retained as requirements. See the
+[integer-power tracer](../examples/proof_nodes/equal/by_builtin_rule/integer_power_laws.lit).
+
+
 
 For positive real factors, a real exponent distributes over multiplication in
 either equality direction:

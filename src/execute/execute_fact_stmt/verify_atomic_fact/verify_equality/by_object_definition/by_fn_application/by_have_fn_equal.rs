@@ -30,9 +30,8 @@ pub struct AnonFnApplicationBodyProof {
 }
 
 impl Runtime {
-    // A builtin premise may cite a stored function body and check one beta
-    // substitution. Its residual is known/calculation-only, so this does not
-    // reopen definition or ordinary builtin search.
+    // The definition route expands a bounded sequence of checked bodies and
+    // verifies the residual with the caller's restricted premise permissions.
 
     pub(crate) fn try_unfold_named_have_fn_equal_application(
         &mut self,
@@ -70,6 +69,7 @@ impl Runtime {
         &mut self,
         fn_obj: &FnObj,
     ) -> RuntimeResult<Option<AnonFnApplicationBodyProof>> {
+        // Shared builtin/aggregate premises still request exactly one beta step.
         if fn_obj.body.len() != 1 {
             return Ok(None);
         }

@@ -16,7 +16,7 @@ thm problem_880_same_nonnegative_square:
         =>:
             x = y
     x^2 - y^2 = 0
-    by thm geo::difference_of_squares(x, y)
+    release thm geo::difference_of_squares(x, y)
     (x + y) * (x - y) = 0
     x = y or not x = y
     by cases:
@@ -26,7 +26,7 @@ thm problem_880_same_nonnegative_square:
         case not x = y:
             x - y != 0
             (x - y) * (x + y) = 0
-            by thm geo::zero_factor_law(x - y, x + y)
+            release thm geo::zero_factor_law(x - y, x + y)
             x + y = 0
             x <= x + y = 0
             x = 0
@@ -67,21 +67,21 @@ thm problem_880_nondegenerate:
     
     # Step 2: 计算AE和AD
     # AE² = |pe - a|²
-    by thm geo::distance_sq_coordinate_formula(a, pe)
+    release thm geo::distance_sq_coordinate_formula(a, pe)
     geo::distance_sq(a, pe) = (pe[1] - a[1])^2 + (pe[2] - a[2])^2
     (pe[1] - a[1])^2 + (pe[2] - a[2])^2 = (t_e * (b[1] - a[1]))^2 + (t_e * (b[2] - a[2]))^2
     (t_e * (b[1] - a[1]))^2 + (t_e * (b[2] - a[2]))^2 = t_e^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
-    by thm geo::distance_sq_coordinate_formula(a, b)
+    release thm geo::distance_sq_coordinate_formula(a, b)
     geo::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
     t_e^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = t_e^2 * geo::distance_sq(a, b)
     geo::distance_sq(a, pe) = t_e^2 * geo::distance_sq(a, b)
     
     # AD² = |d - a|²
-    by thm geo::distance_sq_coordinate_formula(a, d)
+    release thm geo::distance_sq_coordinate_formula(a, d)
     geo::distance_sq(a, d) = (d[1] - a[1])^2 + (d[2] - a[2])^2
     (d[1] - a[1])^2 + (d[2] - a[2])^2 = (t_d * (c[1] - a[1]))^2 + (t_d * (c[2] - a[2]))^2
     (t_d * (c[1] - a[1]))^2 + (t_d * (c[2] - a[2]))^2 = t_d^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)
-    by thm geo::distance_sq_coordinate_formula(a, c)
+    release thm geo::distance_sq_coordinate_formula(a, c)
     geo::distance_sq(a, c) = (c[1] - a[1])^2 + (c[2] - a[2])^2
     t_d^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) = t_d^2 * geo::distance_sq(a, c)
     geo::distance_sq(a, d) = t_d^2 * geo::distance_sq(a, c)
@@ -93,7 +93,7 @@ thm problem_880_nondegenerate:
     
     # Step 4: 计算BE和CD
     # BE² = |b - pe|²
-    by thm geo::distance_sq_coordinate_formula(b, pe)
+    release thm geo::distance_sq_coordinate_formula(b, pe)
     geo::distance_sq(b, pe) = (pe[1] - b[1])^2 + (pe[2] - b[2])^2
     pe[1] - b[1] = a[1] + t_e * (b[1] - a[1]) - b[1]
     a[1] + t_e * (b[1] - a[1]) - b[1] = a[1] - b[1] + t_e * (b[1] - a[1])
@@ -111,7 +111,7 @@ thm problem_880_nondegenerate:
     geo::distance_sq(b, pe) = (1 - t_e)^2 * geo::distance_sq(a, b)
     
     # CD² = |c - d|²
-    by thm geo::distance_sq_coordinate_formula(c, d)
+    release thm geo::distance_sq_coordinate_formula(c, d)
     geo::distance_sq(c, d) = (d[1] - c[1])^2 + (d[2] - c[2])^2
     d[1] - c[1] = a[1] + t_d * (c[1] - a[1]) - c[1]
     a[1] + t_d * (c[1] - a[1]) - c[1] = a[1] - c[1] + t_d * (c[1] - a[1])
@@ -139,17 +139,17 @@ thm problem_880_nondegenerate:
     (1 - t_e)^2 * geo::distance_sq(a, b) = (1 - t_d)^2 * geo::distance_sq(a, b)
     
     # 从(1-t_e)²·|AB|² = (1-t_d)²·|AB|²推出(1-t_e)² = (1-t_d)²
-    by thm geo::distance_sq_positive_of_ne(a, b)
+    release thm geo::distance_sq_positive_of_ne(a, b)
     0 < geo::distance_sq(a, b)
     geo::distance_sq(a, b) != 0
-    by thm geo::divide_both_sides((1 - t_e)^2, (1 - t_d)^2, geo::distance_sq(a, b))
+    release thm geo::divide_both_sides((1 - t_e)^2, (1 - t_d)^2, geo::distance_sq(a, b))
     (1 - t_e)^2 = (1 - t_d)^2
     
     # 从(1-t_e)² = (1-t_d)²和0≤t_e,t_d≤1推出1-t_e = 1-t_d（因为两者都非负）
     # 因此t_e = t_d
     0 <= 1 - t_e
     0 <= 1 - t_d
-    by thm problem_880_same_nonnegative_square(1 - t_e, 1 - t_d)
+    release thm problem_880_same_nonnegative_square(1 - t_e, 1 - t_d)
     1 - t_e = 1 - t_d
     t_e = t_e - (1 - t_e) + (1 - t_e) = t_e - 1 + 1 = t_e
     t_d = t_d - (1 - t_d) + (1 - t_d) = t_d - 1 + 1 = t_d
@@ -158,7 +158,7 @@ thm problem_880_nondegenerate:
     
     # Step 6: 利用t_e=t_d证明AE=AD
     # 重新计算AE²，现在用t_d表示
-    by thm geo::distance_sq_coordinate_formula(a, pe)
+    release thm geo::distance_sq_coordinate_formula(a, pe)
     geo::distance_sq(a, pe) = (pe[1] - a[1])^2 + (pe[2] - a[2])^2
     (pe[1] - a[1])^2 + (pe[2] - a[2])^2 = (t_e * (b[1] - a[1]))^2 + (t_e * (b[2] - a[2]))^2
     (t_e * (b[1] - a[1]))^2 + (t_e * (b[2] - a[2]))^2 = t_e^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
@@ -201,7 +201,7 @@ thm problem_880_nondegenerate:
     
     # 由t_e=t_d和点积交换律，得到角相等的条件
     t_e * geo::dot(geo::vec(a, c), geo::vec(a, b)) = t_d * geo::dot(geo::vec(a, c), geo::vec(a, b))
-    by thm geo::dot_symmetric(geo::vec(a, b), geo::vec(a, c))
+    release thm geo::dot_symmetric(geo::vec(a, b), geo::vec(a, c))
     geo::dot(geo::vec(a, b), geo::vec(a, c)) = geo::dot(geo::vec(a, c), geo::vec(a, b))
     t_d * geo::dot(geo::vec(a, c), geo::vec(a, b)) = t_d * geo::dot(geo::vec(a, b), geo::vec(a, c))
     geo::dot(geo::vec(a, c), geo::vec(a, pe)) = t_d * geo::dot(geo::vec(a, b), geo::vec(a, c))
@@ -220,15 +220,15 @@ thm problem_880_nondegenerate:
     # 前提2: distance_sq(a,d) = distance_sq(a,pe) ✓ (AD=AE)
     # 前提3: dot(vec(a,b), vec(a,d)) = dot(vec(a,c), vec(a,pe)) ✓ (角BAD=角CAE)
     # 结论: distance_sq(b,d) = distance_sq(c,pe) (BD=CE)
-    by thm geo::distance_sq_symmetric(a, b)
+    release thm geo::distance_sq_symmetric(a, b)
     geo::distance_sq(a, b) = geo::distance_sq(b, a)
-    by thm geo::distance_sq_symmetric(a, c)
+    release thm geo::distance_sq_symmetric(a, c)
     geo::distance_sq(a, c) = geo::distance_sq(c, a)
     geo::distance_sq(b, a) = geo::distance_sq(a, b) = geo::distance_sq(a, c) = geo::distance_sq(c, a)
     geo::distance_sq(a, d) = geo::distance_sq(a, pe)
     geo::dot(geo::vec(a, b), geo::vec(a, d)) = geo::dot(geo::vec(a, c), geo::vec(a, pe))
     
-    by thm geo::sas_third_side(b, a, d, c, a, pe)
+    release thm geo::sas_third_side(b, a, d, c, a, pe)
     geo::distance_sq(b, d) = geo::distance_sq(c, pe)
 
 
@@ -266,7 +266,7 @@ thm problem_880:
     a != b
     
     # 调用已验证的非退化引理
-    by thm problem_880_nondegenerate(a, b, c, d, pe)
+    release thm problem_880_nondegenerate(a, b, c, d, pe)
     geo::distance_sq(b, d) = geo::distance_sq(c, pe)
     
     # 反向包装为线段全等谓词：BD = CE

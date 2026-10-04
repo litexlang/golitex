@@ -54,15 +54,6 @@ impl Runtime {
                     crate::LITEX
                 )));
             }
-            match stmt {
-                Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(_)) => {
-                    return Err(RuntimeError::InvalidArguments(format!(
-                        "`abstract_prop` is forbidden under {} `-strict`",
-                        crate::LITEX
-                    )));
-                }
-                _ => {}
-            }
         }
         match stmt {
             Stmt::Fact(fact) => Ok(ExecStmtResult::Fact(self.execute_fact_statement(fact)?)),

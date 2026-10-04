@@ -48,7 +48,7 @@ thm affine_chord_distance_products:
         h[2] = a[2] + t * (d[2] - a[2])
         =>:
             geo::distance_sq(h, a) * geo::distance_sq(h, d) = (t * (1 - t) * geo::distance_sq(a, d))^2
-    by thm geo::affine_distance_from_parameter(a, d, h, t)
+    release thm geo::affine_distance_from_parameter(a, d, h, t)
     geo::distance_sq(h, a) = t^2 * geo::distance_sq(a, d)
     geo::distance_sq(h, d) = (1 - t)^2 * geo::distance_sq(a, d)
     geo::distance_sq(h, a) * geo::distance_sq(h, d) = (t^2 * geo::distance_sq(a, d)) * ((1 - t)^2 * geo::distance_sq(a, d))
@@ -105,17 +105,17 @@ thm problem_951_intersecting_chords:
     by def $geo::is_on_circle(b, o, r)
     by def $geo::is_on_circle(c, o, r)
     by def $geo::is_on_circle(d, o, r)
-    by thm geo::distance_sq_symmetric(o, a)
-    by thm geo::distance_sq_symmetric(o, b)
-    by thm geo::distance_sq_symmetric(o, c)
-    by thm geo::distance_sq_symmetric(o, d)
+    release thm geo::distance_sq_symmetric(o, a)
+    release thm geo::distance_sq_symmetric(o, b)
+    release thm geo::distance_sq_symmetric(o, c)
+    release thm geo::distance_sq_symmetric(o, d)
     geo::distance_sq(o, a) = r^2
     geo::distance_sq(o, b) = r^2
     geo::distance_sq(o, c) = r^2
     geo::distance_sq(o, d) = r^2
 
     # 对弦AD、BC分别应用Stewart定理。
-    by thm geo::stewart_theorem(o, a, d, h, t)
+    release thm geo::stewart_theorem(o, a, d, h, t)
     geo::distance_sq(o, h) = (1 - t) * geo::distance_sq(o, a) + t * geo::distance_sq(o, d) - t * (1 - t) * geo::distance_sq(a, d)
     (1 - t) * geo::distance_sq(o, a) = (1 - t) * r^2
     t * geo::distance_sq(o, d) = t * r^2
@@ -125,7 +125,7 @@ thm problem_951_intersecting_chords:
     (1 - t) * geo::distance_sq(o, a) + t * geo::distance_sq(o, d) - t * (1 - t) * geo::distance_sq(a, d) = r^2 - t * (1 - t) * geo::distance_sq(a, d)
     geo::distance_sq(o, h) = r^2 - t * (1 - t) * geo::distance_sq(a, d)
 
-    by thm geo::stewart_theorem(o, b, c, h, s)
+    release thm geo::stewart_theorem(o, b, c, h, s)
     geo::distance_sq(o, h) = (1 - s) * geo::distance_sq(o, b) + s * geo::distance_sq(o, c) - s * (1 - s) * geo::distance_sq(b, c)
     (1 - s) * geo::distance_sq(o, b) = (1 - s) * r^2
     s * geo::distance_sq(o, c) = s * r^2
@@ -137,24 +137,24 @@ thm problem_951_intersecting_chords:
 
     r^2 - t * (1 - t) * geo::distance_sq(a, d) = geo::distance_sq(o, h)
     r^2 - t * (1 - t) * geo::distance_sq(a, d) = r^2 - s * (1 - s) * geo::distance_sq(b, c)
-    by thm cancel_same_minuend(r^2, t * (1 - t) * geo::distance_sq(a, d), s * (1 - s) * geo::distance_sq(b, c))
+    release thm cancel_same_minuend(r^2, t * (1 - t) * geo::distance_sq(a, d), s * (1 - s) * geo::distance_sq(b, c))
     t * (1 - t) * geo::distance_sq(a, d) = s * (1 - s) * geo::distance_sq(b, c)
 
     # 仿射距离公式把参数幂转成H到弦端点的平方距离乘积。
-    by thm affine_chord_distance_products(a, d, h, t)
-    by thm affine_chord_distance_products(b, c, h, s)
+    release thm affine_chord_distance_products(a, d, h, t)
+    release thm affine_chord_distance_products(b, c, h, s)
     geo::distance_sq(h, a) * geo::distance_sq(h, d) = (t * (1 - t) * geo::distance_sq(a, d))^2
     geo::distance_sq(h, b) * geo::distance_sq(h, c) = (s * (1 - s) * geo::distance_sq(b, c))^2
     (t * (1 - t) * geo::distance_sq(a, d))^2 = (s * (1 - s) * geo::distance_sq(b, c))^2
     geo::distance_sq(h, a) * geo::distance_sq(h, d) = geo::distance_sq(h, b) * geo::distance_sq(h, c)
 
     # 从平方距离乘积恢复原题中的真实线段长度乘积。
-    by thm geo::distance_sq_nonnegative(h, a)
-    by thm geo::distance_sq_nonnegative(h, d)
-    by thm geo::distance_sq_nonnegative(h, b)
-    by thm geo::distance_sq_nonnegative(h, c)
-    by thm sqrt_product_square(geo::distance_sq(h, a), geo::distance_sq(h, d))
-    by thm sqrt_product_square(geo::distance_sq(h, b), geo::distance_sq(h, c))
+    release thm geo::distance_sq_nonnegative(h, a)
+    release thm geo::distance_sq_nonnegative(h, d)
+    release thm geo::distance_sq_nonnegative(h, b)
+    release thm geo::distance_sq_nonnegative(h, c)
+    release thm sqrt_product_square(geo::distance_sq(h, a), geo::distance_sq(h, d))
+    release thm sqrt_product_square(geo::distance_sq(h, b), geo::distance_sq(h, c))
     (sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)))^2 = geo::distance_sq(h, a) * geo::distance_sq(h, d)
     (sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c)))^2 = geo::distance_sq(h, b) * geo::distance_sq(h, c)
     (sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)))^2 = (sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c)))^2
@@ -164,4 +164,4 @@ thm problem_951_intersecting_chords:
     sqrt(geo::distance_sq(h, c)) >= 0
     sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)) >= 0
     sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c)) >= 0
-    by thm nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)), sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c)))
+    release thm nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)), sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c)))

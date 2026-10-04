@@ -1,3 +1,6 @@
+# Gate: target/release/litex -strict -f examples/infer/atomic/set_builder_projection_replay.lit
+# Before: the repeated equality below overflowed the stack after extension.
+# After: identical stored builder consequences are skipped; new ones remain.
 have s set
 by extension:
     ? s = {x s: 0 = 0}
@@ -14,3 +17,13 @@ let positive = {x R: x > 0}
 forall element positive:
     element $in R
     element > 0
+
+# A member may be known before its carrier acquires a builder equality.
+claim:
+    ? forall Carrier set, value R:
+        value $in Carrier
+        Carrier = {x R: x > 0}
+        =>:
+            value > 0
+    release thm set_builder_member(value, {x Carrier: 0 = 0})
+    value > 0

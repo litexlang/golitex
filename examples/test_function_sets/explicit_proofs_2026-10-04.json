@@ -1,0 +1,3808 @@
+{
+  "schema_version": 1,
+  "built_from_current_source": true,
+  "source_sha256": "b3a9519ed5c24c604ef33db173a77ffffed7250aa73b8aa2765b4576490b8af6",
+  "binary_sha256": "63d9eae79691e05a13c3f41ffb3b82b5844199fd149d2a4b42189b085df5175a",
+  "observations": [
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/basic/b01.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "B01",
+      "group": "basic",
+      "title": "Alpha-equivalent function-space membership",
+      "file": "basic/b01.lit",
+      "expect": "accept",
+      "fixture_sha256": "64b3d37850630b7e1276320fa976cf120713520a337e4ab552b8310908aea419",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/basic/b02.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "B02",
+      "group": "basic",
+      "title": "Anonymous function numeric call",
+      "file": "basic/b02.lit",
+      "expect": "accept",
+      "fixture_sha256": "fd897202728e222f9284a56e21dfdd5c983312820eb1cee49d87aa07a597cc94",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/basic/b03.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "B03",
+      "group": "basic",
+      "title": "Guarded named function call",
+      "file": "basic/b03.lit",
+      "expect": "accept",
+      "fixture_sha256": "8908c3d21af8bb0a27b7c6f82bd8df5631a8aa040136f4f499b2672a681c1d19",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/basic/b04.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "B04",
+      "group": "basic",
+      "title": "Function-set alias as declared carrier",
+      "file": "basic/b04.lit",
+      "expect": "accept",
+      "fixture_sha256": "11bb2da12871f920d09d211479b369fe6f89b55c3ccb967ab4f4da61cd771914",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/basic/b05.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "B05",
+      "group": "basic",
+      "title": "Arrow sugar for nested fixed return carriers",
+      "file": "basic/b05.lit",
+      "expect": "accept",
+      "fixture_sha256": "bc895cc55962b55628f896a6103ff3207a45bd54ef23b82bc8f668962fb466f7",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/t01.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "T01",
+      "group": "template",
+      "title": "Generic identity with independent specializations",
+      "file": "template/t01.lit",
+      "expect": "accept",
+      "fixture_sha256": "3543e4f8babd799d4e44271882ef77c4d7791741073eefb89c899c0ec6521b94",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/t02.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "T02",
+      "group": "template",
+      "title": "Value parameter substitution and specialization isolation",
+      "file": "template/t02.lit",
+      "expect": "accept",
+      "fixture_sha256": "6ceed1661e83959be78f4c01809a1582b9753b21ffc56b9ad0b32fad8f910ad3",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/t03.lit"
+      ],
+      "observed": "reject",
+      "phase": "have_equal",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `f`\", line: 8, path: Real(\"examples/test_function_sets/template/t03.lit\") }))",
+      "failures": [
+        {
+          "success": false,
+          "statement": "have … = …",
+          "why_failed": {
+            "type": "define_obj",
+            "rule_name": "Have with equality",
+            "message": "Introduce an object equal to a given well-defined value",
+            "phase": "have_equal"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "T03",
+      "group": "template",
+      "title": "Template selects a function-space carrier",
+      "file": "template/t03.lit",
+      "expect": "accept",
+      "fixture_sha256": "4798431b4a4fda9c806fc18dd2da56e4a4a28846ad8aac39dee7f12e1eca2966",
+      "matches": false
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/t04.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "T04",
+      "group": "template",
+      "title": "Higher-order apply through a template",
+      "file": "template/t04.lit",
+      "expect": "accept",
+      "fixture_sha256": "93538ca2ee07fc1dc35f0eb845eb189a0a932ffb01558e432e8fb3b35f2f8927",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/t05.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "shift_two(3) = 5",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "shift_two(3) = 5"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "T05",
+      "group": "template",
+      "title": "Callable alias of a specialized template",
+      "file": "template/t05.lit",
+      "expect": "accept",
+      "fixture_sha256": "c51155c962b54952677e6b92fb58a69aa3ea9625a0ff8d91b4dd0ac6141f6e41",
+      "matches": false
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/t06.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "T06",
+      "group": "template",
+      "title": "Template with retained domain guard",
+      "file": "template/t06.lit",
+      "expect": "accept",
+      "fixture_sha256": "6d51ba478046f71fbdf7874ceeb9143c3967bb9117e9370fc1fdaeaa767e4817",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/t07.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "T07",
+      "group": "template",
+      "title": "Template returns a function and calls it",
+      "file": "template/t07.lit",
+      "expect": "accept",
+      "fixture_sha256": "b4f24427f941846db1a565e30fa3d9a22bc0ef60e97c2f9b51b29ae70d789462",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/t08.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "T08",
+      "group": "template",
+      "title": "Outer template carrier fixed for curried signatures",
+      "file": "template/t08.lit",
+      "expect": "accept",
+      "fixture_sha256": "2695c66812e6873327ca8a76371dd09d894e33f24ded7b74cf7e4a7d7fe37cab",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/s01.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "S01",
+      "group": "struct",
+      "title": "Parameterized function-field argument and return carriers",
+      "file": "struct/s01.lit",
+      "expect": "accept",
+      "fixture_sha256": "438e770473369ceaf833c1f34002838ecec1754132808db36d9d5eff1b28f60f",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/s02.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "box.op(2) = 3",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "box.op(2) = 3"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "S02",
+      "group": "struct",
+      "title": "Concrete function field evaluates after typed construction",
+      "file": "struct/s02.lit",
+      "expect": "accept",
+      "fixture_sha256": "8c1ba9717921445ddce765867c0e36bc48b4939997326e36c943f0233da9711b",
+      "matches": false
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/s03.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "S03",
+      "group": "struct",
+      "title": "Function-field law from the struct definition",
+      "file": "struct/s03.lit",
+      "expect": "accept",
+      "fixture_sha256": "cee4809ec26b2fe4ad9d6eb586cb224717183bcb31c9c76cade8109b7473dc98",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/s04.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "S04",
+      "group": "struct",
+      "title": "Alias of a callable function field retains its signature",
+      "file": "struct/s04.lit",
+      "expect": "accept",
+      "fixture_sha256": "560b2565ae49414c40bb1825b8a71a17fb7c6cf2323fb26469352a4c004c867f",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/s05.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "S05",
+      "group": "struct",
+      "title": "Nested struct callable-field path",
+      "file": "struct/s05.lit",
+      "expect": "accept",
+      "fixture_sha256": "f72ca37d3f60c60fb028bf6264e889c0655c7b0392e4fa1c3a305539557d021c",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/s06.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "S06",
+      "group": "struct",
+      "title": "Function field returning a function is callable twice",
+      "file": "struct/s06.lit",
+      "expect": "accept",
+      "fixture_sha256": "a1b39570f9323d7219010e507273c1a95dc84dc8c7f7169a570bbbccbb80c1f3",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/s07.lit"
+      ],
+      "observed": "reject",
+      "phase": "def_template",
+      "statement_statuses": [
+        true,
+        true,
+        false,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "template …",
+          "why_failed": {
+            "type": "definition",
+            "rule_name": "Define template",
+            "message": "Define a reusable template",
+            "phase": "def_template"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "child",
+                  "obj": "\\box<2>.op",
+                  "failure": {
+                    "phase": "Structish",
+                    "failure": {
+                      "phase": "FieldAccess",
+                      "failure": {
+                        "phase": "child",
+                        "obj": "\\box<2>",
+                        "failure": {
+                          "phase": "InstantiatedTemplateObj",
+                          "failure": {
+                            "message": "template `box` is not defined"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "S07",
+      "group": "struct",
+      "title": "Template selects a struct containing a concrete function",
+      "file": "struct/s07.lit",
+      "expect": "accept",
+      "fixture_sha256": "baefc2598f0fa1b94d2032955841c0ead1f9f1d1c3b3cce304d44810f40059a2",
+      "matches": false
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/s08.lit"
+      ],
+      "observed": "reject",
+      "phase": "have_fn_equal",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `make`\", line: 12, path: Real(\"examples/test_function_sets/struct/s08.lit\") }))",
+      "failures": [
+        {
+          "success": false,
+          "statement": "have fn …",
+          "why_failed": {
+            "type": "define_fn",
+            "rule_name": "Have function equal",
+            "message": "Define a named function equal to an anonymous function",
+            "phase": "have_fn_equal",
+            "failure": {
+              "success": false,
+              "obj": "fn (a R) &Box{(fn (x R) R{x + a}, 0)}",
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FunctionSpace",
+                "failure": {
+                  "phase": "AnonymousFn",
+                  "failure": {
+                    "phase": "body_in_return_set",
+                    "failure": {
+                      "type": "atomic_except_equality",
+                      "success": false,
+                      "phase": "search_proof",
+                      "fact": "(fn (x R) R{x + a}, 0) $in &Box",
+                      "well_defined": {
+                        "well_defined_of_each_parameter": [
+                          {
+                            "type": "by_def",
+                            "family": "ProductShape",
+                            "kind": "Tuple",
+                            "obj": "(fn (x R) R{x + a}, 0)",
+                            "child_obj_well_defined": [
+                              {
+                                "type": "by_def",
+                                "family": "FunctionSpace",
+                                "kind": "AnonymousFn",
+                                "obj": "fn (x R) R{x + a}",
+                                "param_type_well_defined": [
+                                  {
+                                    "type": "by_known",
+                                    "obj": "R",
+                                    "wd_id": "wd10"
+                                  }
+                                ],
+                                "dom_fact_well_defined": [],
+                                "ret_set_well_defined": {
+                                  "type": "by_known",
+                                  "obj": "R",
+                                  "wd_id": "wd10"
+                                },
+                                "body_well_defined": {
+                                  "type": "by_def",
+                                  "family": "ArithmeticOperator",
+                                  "kind": "Add",
+                                  "obj": "x + a",
+                                  "child_obj_well_defined": [
+                                    {
+                                      "type": "by_def",
+                                      "family": "Identifier",
+                                      "kind": "Identifier",
+                                      "obj": "x"
+                                    },
+                                    {
+                                      "type": "by_def",
+                                      "family": "Identifier",
+                                      "kind": "Identifier",
+                                      "obj": "a"
+                                    }
+                                  ],
+                                  "requirement_fact_verified": [
+                                    {
+                                      "type": "atomic_except_equality",
+                                      "success": true,
+                                      "fact": "x $in C",
+                                      "well_defined": {
+                                        "well_defined_of_each_parameter": [
+                                          {
+                                            "type": "by_def",
+                                            "family": "Identifier",
+                                            "kind": "Identifier",
+                                            "obj": "x"
+                                          },
+                                          {
+                                            "type": "by_def",
+                                            "family": "StandardSet",
+                                            "kind": "StandardSet",
+                                            "obj": "C"
+                                          }
+                                        ],
+                                        "predicate_signature": {
+                                          "type": "builtin"
+                                        },
+                                        "predicate_domain": []
+                                      },
+                                      "searched_proof": {
+                                        "type": "by_structural_membership",
+                                        "element": "x",
+                                        "set": "C",
+                                        "source": {
+                                          "type": "by_structural_membership",
+                                          "element": "x",
+                                          "set": "R",
+                                          "cite": {
+                                            "type": "by_known_atomic",
+                                            "cite_fact_id": "f526",
+                                            "why_parameters_of_known_fact_are_equal_to_givens": [
+                                              {
+                                                "type": "by_they_are_the_same",
+                                                "kind": "same_ir"
+                                              },
+                                              {
+                                                "type": "by_they_are_the_same",
+                                                "kind": "same_ir"
+                                              }
+                                            ]
+                                          },
+                                          "kind": "known"
+                                        },
+                                        "kind": "standard_superset"
+                                      }
+                                    },
+                                    {
+                                      "type": "atomic_except_equality",
+                                      "success": true,
+                                      "fact": "a $in C",
+                                      "well_defined": {
+                                        "well_defined_of_each_parameter": [
+                                          {
+                                            "type": "by_def",
+                                            "family": "Identifier",
+                                            "kind": "Identifier",
+                                            "obj": "a"
+                                          },
+                                          {
+                                            "type": "by_def",
+                                            "family": "StandardSet",
+                                            "kind": "StandardSet",
+                                            "obj": "C"
+                                          }
+                                        ],
+                                        "predicate_signature": {
+                                          "type": "builtin"
+                                        },
+                                        "predicate_domain": []
+                                      },
+                                      "searched_proof": {
+                                        "type": "by_structural_membership",
+                                        "element": "a",
+                                        "set": "C",
+                                        "source": {
+                                          "type": "by_structural_membership",
+                                          "element": "a",
+                                          "set": "R",
+                                          "cite": {
+                                            "type": "by_known_atomic",
+                                            "cite_fact_id": "f452",
+                                            "why_parameters_of_known_fact_are_equal_to_givens": [
+                                              {
+                                                "type": "by_they_are_the_same",
+                                                "kind": "same_ir"
+                                              },
+                                              {
+                                                "type": "by_they_are_the_same",
+                                                "kind": "same_ir"
+                                              }
+                                            ]
+                                          },
+                                          "kind": "known"
+                                        },
+                                        "kind": "standard_superset"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "body_in_ret_set": {
+                                  "type": "atomic_except_equality",
+                                  "success": true,
+                                  "fact": "x + a $in R",
+                                  "well_defined": {
+                                    "well_defined_of_each_parameter": [
+                                      {
+                                        "type": "by_def",
+                                        "family": "ArithmeticOperator",
+                                        "kind": "Add",
+                                        "obj": "x + a",
+                                        "child_obj_well_defined": [
+                                          {
+                                            "type": "by_def",
+                                            "family": "Identifier",
+                                            "kind": "Identifier",
+                                            "obj": "x"
+                                          },
+                                          {
+                                            "type": "by_def",
+                                            "family": "Identifier",
+                                            "kind": "Identifier",
+                                            "obj": "a"
+                                          }
+                                        ],
+                                        "requirement_fact_verified": [
+                                          {
+                                            "type": "atomic_except_equality",
+                                            "success": true,
+                                            "fact": "x $in C",
+                                            "well_defined": {
+                                              "well_defined_of_each_parameter": [
+                                                {
+                                                  "type": "by_def",
+                                                  "family": "Identifier",
+                                                  "kind": "Identifier",
+                                                  "obj": "x"
+                                                },
+                                                {
+                                                  "type": "by_def",
+                                                  "family": "StandardSet",
+                                                  "kind": "StandardSet",
+                                                  "obj": "C"
+                                                }
+                                              ],
+                                              "predicate_signature": {
+                                                "type": "builtin"
+                                              },
+                                              "predicate_domain": []
+                                            },
+                                            "searched_proof": {
+                                              "type": "by_structural_membership",
+                                              "element": "x",
+                                              "set": "C",
+                                              "source": {
+                                                "type": "by_structural_membership",
+                                                "element": "x",
+                                                "set": "R",
+                                                "cite": {
+                                                  "type": "by_known_atomic",
+                                                  "cite_fact_id": "f526",
+                                                  "why_parameters_of_known_fact_are_equal_to_givens": [
+                                                    {
+                                                      "type": "by_they_are_the_same",
+                                                      "kind": "same_ir"
+                                                    },
+                                                    {
+                                                      "type": "by_they_are_the_same",
+                                                      "kind": "same_ir"
+                                                    }
+                                                  ]
+                                                },
+                                                "kind": "known"
+                                              },
+                                              "kind": "standard_superset"
+                                            }
+                                          },
+                                          {
+                                            "type": "atomic_except_equality",
+                                            "success": true,
+                                            "fact": "a $in C",
+                                            "well_defined": {
+                                              "well_defined_of_each_parameter": [
+                                                {
+                                                  "type": "by_def",
+                                                  "family": "Identifier",
+                                                  "kind": "Identifier",
+                                                  "obj": "a"
+                                                },
+                                                {
+                                                  "type": "by_def",
+                                                  "family": "StandardSet",
+                                                  "kind": "StandardSet",
+                                                  "obj": "C"
+                                                }
+                                              ],
+                                              "predicate_signature": {
+                                                "type": "builtin"
+                                              },
+                                              "predicate_domain": []
+                                            },
+                                            "searched_proof": {
+                                              "type": "by_structural_membership",
+                                              "element": "a",
+                                              "set": "C",
+                                              "source": {
+                                                "type": "by_structural_membership",
+                                                "element": "a",
+                                                "set": "R",
+                                                "cite": {
+                                                  "type": "by_known_atomic",
+                                                  "cite_fact_id": "f452",
+                                                  "why_parameters_of_known_fact_are_equal_to_givens": [
+                                                    {
+                                                      "type": "by_they_are_the_same",
+                                                      "kind": "same_ir"
+                                                    },
+                                                    {
+                                                      "type": "by_they_are_the_same",
+                                                      "kind": "same_ir"
+                                                    }
+                                                  ]
+                                                },
+                                                "kind": "known"
+                                              },
+                                              "kind": "standard_superset"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "by_known",
+                                        "obj": "R",
+                                        "wd_id": "wd10"
+                                      }
+                                    ],
+                                    "predicate_signature": {
+                                      "type": "builtin"
+                                    },
+                                    "predicate_domain": []
+                                  },
+                                  "searched_proof": {
+                                    "type": "by_structural_membership",
+                                    "element": "x + a",
+                                    "set": "R",
+                                    "left": {
+                                      "type": "by_structural_membership",
+                                      "element": "x",
+                                      "set": "R",
+                                      "cite": {
+                                        "type": "by_known_atomic",
+                                        "cite_fact_id": "f526",
+                                        "why_parameters_of_known_fact_are_equal_to_givens": [
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          },
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          }
+                                        ]
+                                      },
+                                      "kind": "known"
+                                    },
+                                    "right": {
+                                      "type": "by_structural_membership",
+                                      "element": "a",
+                                      "set": "R",
+                                      "cite": {
+                                        "type": "by_known_atomic",
+                                        "cite_fact_id": "f452",
+                                        "why_parameters_of_known_fact_are_equal_to_givens": [
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          },
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          }
+                                        ]
+                                      },
+                                      "kind": "known"
+                                    },
+                                    "kind": "add"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "by_def",
+                                "family": "Literal",
+                                "kind": "Number",
+                                "obj": "0"
+                              }
+                            ],
+                            "requirement_fact_verified": []
+                          },
+                          {
+                            "type": "by_def",
+                            "family": "Structish",
+                            "kind": "StructObj",
+                            "obj": "&Box",
+                            "child_obj_well_defined": [],
+                            "requirement_fact_verified": []
+                          }
+                        ],
+                        "predicate_signature": {
+                          "type": "builtin"
+                        },
+                        "predicate_domain": []
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "S08",
+      "group": "struct",
+      "title": "A function returns a struct with a callable field",
+      "file": "struct/s08.lit",
+      "expect": "accept",
+      "fixture_sha256": "43d46604664ae7140dc6ee97031939d1b7316a34f87555eaee0bedddfc8f235d",
+      "matches": false
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/s09.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "S09",
+      "group": "struct",
+      "title": "Earlier field defines a later function field carrier",
+      "file": "struct/s09.lit",
+      "expect": "accept",
+      "fixture_sha256": "b629e7bdbd530b30b398f958a67ed6c1f4f4b98a0764e440efe0dfb9fd8ea414",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h01.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "H01",
+      "group": "higher_order",
+      "title": "Named curried closure numeric equality",
+      "file": "higher_order/h01.lit",
+      "expect": "accept",
+      "fixture_sha256": "f5d1925703d9e6b79524aa88d468e0769be077231e1135eb5a7e31d38c0f1195",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h02.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "H02",
+      "group": "higher_order",
+      "title": "Function-valued result and second-call codomain",
+      "file": "higher_order/h02.lit",
+      "expect": "accept",
+      "fixture_sha256": "f5248c353e4d63967fa60407b536f17dcaa2bbdba6d43d6cbe05ed70e7792e9a",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h03.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "H03",
+      "group": "higher_order",
+      "title": "Anonymous curried closure numeric equality",
+      "file": "higher_order/h03.lit",
+      "expect": "accept",
+      "fixture_sha256": "f8fda9bd9993e95275b9e7add12964fc4c488d81c2753a63a6cddfef4857877b",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h04.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "H04",
+      "group": "higher_order",
+      "title": "A named function returns an existing named function",
+      "file": "higher_order/h04.lit",
+      "expect": "accept",
+      "fixture_sha256": "28ea03b56a1bc627caef59541c0759ca0cf10afae8457af1014163f2259d8155",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h05.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "add_two(3) = 5",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "add_two(3) = 5"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "H05",
+      "group": "higher_order",
+      "title": "Typed local binding of a returned closure",
+      "file": "higher_order/h05.lit",
+      "expect": "accept",
+      "fixture_sha256": "265cd269c8cc54c8cd217f3e7b236f539a34c5305b1ee1285210aea9c2d4dae7",
+      "matches": false
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h06.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "H06",
+      "group": "higher_order",
+      "title": "Function argument apply numeric result",
+      "file": "higher_order/h06.lit",
+      "expect": "accept",
+      "fixture_sha256": "1f1e9473bb1a19e6dc58e6c227388cc51aa80241e808ac44e39e8a84201a0692",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h07.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "H07",
+      "group": "higher_order",
+      "title": "Composition returns a closure capturing function arguments",
+      "file": "higher_order/h07.lit",
+      "expect": "accept",
+      "fixture_sha256": "c228f822eb4a7b7c9a7aef882a31b050b2ad5c0d5a8df3cb7baef2f48398fa50",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h08.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "H08",
+      "group": "higher_order",
+      "title": "Three levels of function-valued return",
+      "file": "higher_order/h08.lit",
+      "expect": "accept",
+      "fixture_sha256": "6dbecb16dd499ac4ac2d5559656f56ad2ac7ae518c6bd9041053988e4c987000",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h09.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "H09",
+      "group": "higher_order",
+      "title": "Guard of the returned function is retained",
+      "file": "higher_order/h09.lit",
+      "expect": "accept",
+      "fixture_sha256": "e1a931e85589fc976ee341521f5220069aa584d264c8aa359b2fd60be72c010a",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h10.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "H10",
+      "group": "higher_order",
+      "title": "Outer guard is checked before returning a function",
+      "file": "higher_order/h10.lit",
+      "expect": "accept",
+      "fixture_sha256": "816e6198d0af06e79e8be5cdbaf4c8cf5b81167f465a225eeaf4dac640c0f8c1",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/h11.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "H11",
+      "group": "higher_order",
+      "title": "Explicit returned-function equality before second call",
+      "file": "higher_order/h11.lit",
+      "expect": "accept",
+      "fixture_sha256": "024d85f88f915638ab0b2749a775a793faf827730a38e3fd5bbbad35da0c4c7c",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d01.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D01",
+      "group": "controls",
+      "title": "Higher-order apply with one explicit unfolding chain",
+      "file": "controls/d01.lit",
+      "expect": "accept",
+      "fixture_sha256": "8628e9f8dbd63c08a3e1f1f88d80ce4a8d1fcbdcc47126aec3a9b75d96a3a015",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d02.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D02",
+      "group": "controls",
+      "title": "Curried application with an explicit beta equality chain",
+      "file": "controls/d02.lit",
+      "expect": "accept",
+      "fixture_sha256": "bc292c76212d4884838965e9c376ad900958fedd9b6f8bcfb53e18b4c2a414fa",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d03.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D03",
+      "group": "controls",
+      "title": "Returned closure bound after its body equation is known",
+      "file": "controls/d03.lit",
+      "expect": "accept",
+      "fixture_sha256": "c52d7457f8287a7b60b7353e5091bcb88fdcae67526c4c4acd25d0b6cc987eb2",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d04.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D04",
+      "group": "controls",
+      "title": "Template higher-order apply with explicit inner evaluation",
+      "file": "controls/d04.lit",
+      "expect": "accept",
+      "fixture_sha256": "c8dcf0585d4abdd67e5798be2788a21ace27c080700da85e41e0d668a8f388cc",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d05.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "fn (x R) Z{0} $in \\maps<R, Z>",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "fn (x R) Z{0} $in \\maps<R, Z>"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "D05",
+      "group": "controls",
+      "title": "Anonymous member of template-selected function space",
+      "file": "controls/d05.lit",
+      "expect": "accept",
+      "fixture_sha256": "6a77541d2036ac76f7ee7fcceff5d755f84f1a1fb3f30f5daa8bd9b702a0013c",
+      "matches": false
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d06.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D06",
+      "group": "controls",
+      "title": "Concrete struct call through an explicitly known function",
+      "file": "controls/d06.lit",
+      "expect": "accept",
+      "fixture_sha256": "5fb2015ac3a30e1bd8f67de2b26b73de9a7de8e4ed98b74b8e2da9d3571d15e4",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d07.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D07",
+      "group": "controls",
+      "title": "Concrete struct containing a named function has a callable field",
+      "file": "controls/d07.lit",
+      "expect": "accept",
+      "fixture_sha256": "943d09294a47c555f675b345734552a7b566793f28e3bf84d6ec884f59efb7b7",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d08.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "child",
+                  "obj": "\\box<2>.op",
+                  "failure": {
+                    "phase": "Structish",
+                    "failure": {
+                      "phase": "FieldAccess",
+                      "failure": {
+                        "message": "object has no definition-time struct carrier for field `op`"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "D08",
+      "group": "controls",
+      "title": "Template-selected struct containing a named function",
+      "file": "controls/d08.lit",
+      "expect": "accept",
+      "fixture_sha256": "859d90c941530d5a232ec25b5756b0dad4e454390513a935a66bc547e71ef10f",
+      "matches": false
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d09.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "atomic_except_equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "child",
+                  "obj": "make(2).op",
+                  "failure": {
+                    "phase": "Structish",
+                    "failure": {
+                      "phase": "FieldAccess",
+                      "failure": {
+                        "message": "object has no definition-time struct carrier for field `op`"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "D09",
+      "group": "controls",
+      "title": "Function returning a struct containing a named function",
+      "file": "controls/d09.lit",
+      "expect": "accept",
+      "fixture_sha256": "d1c3f1c181452e4c2020eadef55b2a0c71b5984fcdf434c6eaa3ed78a57002b3",
+      "matches": false
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d10.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D10",
+      "group": "controls",
+      "title": "Anonymous function-valued return with explicit return parentheses",
+      "file": "controls/d10.lit",
+      "expect": "accept",
+      "fixture_sha256": "5e32958e3df10a9bfd0ab4063780fc78041882b209bc281f822ba8cfb9eb5451",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d11.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D11",
+      "group": "controls",
+      "title": "Three function-valued levels type-check",
+      "file": "controls/d11.lit",
+      "expect": "accept",
+      "fixture_sha256": "17cb3f6983ae11b21acf2e358044d9cf7a68fa9b208add07d0433e1e117f0388",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d12.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D12",
+      "group": "controls",
+      "title": "Explicit equality exposes template-selected function-space membership",
+      "file": "controls/d12.lit",
+      "expect": "accept",
+      "fixture_sha256": "479bffaf080b136065d742c8f491b4be5f482b13184b4ea96f27f189a4a4f49d",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d13.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D13",
+      "group": "controls",
+      "title": "Typed local struct binds the template-selected result",
+      "file": "controls/d13.lit",
+      "expect": "accept",
+      "fixture_sha256": "025df6780f3e03cd890f0d677b0d09f65cc42546beb09ee3ed272fe31cb662fb",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/controls/d14.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "D14",
+      "group": "controls",
+      "title": "Typed local struct binds a function result",
+      "file": "controls/d14.lit",
+      "expect": "accept",
+      "fixture_sha256": "197520d1433737d5542919b8854fca07b18c7c0f7c0809fa6185c1b78dc11e46",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/basic/n01.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "requirement",
+                  "obj": "step(i)",
+                  "result": {
+                    "type": "atomic_except_equality",
+                    "success": false,
+                    "phase": "search_proof",
+                    "fact": "i $in R",
+                    "well_defined": {
+                      "well_defined_of_each_parameter": [
+                        {
+                          "type": "by_def",
+                          "family": "Literal",
+                          "kind": "ImaginaryUnit",
+                          "obj": "i"
+                        },
+                        {
+                          "type": "by_def",
+                          "family": "StandardSet",
+                          "kind": "StandardSet",
+                          "obj": "R"
+                        }
+                      ],
+                      "predicate_signature": {
+                        "type": "builtin"
+                      },
+                      "predicate_domain": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N01",
+      "group": "basic",
+      "title": "Wrong function argument carrier",
+      "file": "basic/n01.lit",
+      "expect": "reject",
+      "fixture_sha256": "a49f3bf02808e8a5db3b67fe46daec7a895e36b8a4b03289aaa8c6f0a6ae8b13",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/basic/n02.lit"
+      ],
+      "observed": "reject",
+      "phase": "have_fn_equal",
+      "statement_statuses": [
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "have fn …",
+          "why_failed": {
+            "type": "define_fn",
+            "rule_name": "Have function equal",
+            "message": "Define a named function equal to an anonymous function",
+            "phase": "have_fn_equal",
+            "failure": {
+              "success": false,
+              "obj": "fn (x R) N{x}",
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FunctionSpace",
+                "failure": {
+                  "phase": "AnonymousFn",
+                  "failure": {
+                    "phase": "body_in_return_set",
+                    "failure": {
+                      "type": "atomic_except_equality",
+                      "success": false,
+                      "phase": "search_proof",
+                      "fact": "x $in N",
+                      "well_defined": {
+                        "well_defined_of_each_parameter": [
+                          {
+                            "type": "by_def",
+                            "family": "Identifier",
+                            "kind": "Identifier",
+                            "obj": "x"
+                          },
+                          {
+                            "type": "by_def",
+                            "family": "StandardSet",
+                            "kind": "StandardSet",
+                            "obj": "N"
+                          }
+                        ],
+                        "predicate_signature": {
+                          "type": "builtin"
+                        },
+                        "predicate_domain": []
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N02",
+      "group": "basic",
+      "title": "Function body outside its declared codomain",
+      "file": "basic/n02.lit",
+      "expect": "reject",
+      "fixture_sha256": "d7747a7f168d09fe15389fb133a1c72798401be8f7cd94bdff730059d2e3c278",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/basic/n03.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "message": "object well-definedness failed without child or requirement detail"
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N03",
+      "group": "basic",
+      "title": "Wrong application arity",
+      "file": "basic/n03.lit",
+      "expect": "reject",
+      "fixture_sha256": "624453109249f84e88ab5ab20a23cb2576ff3272f041c980915e3f0ba3adcb4e",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/n04.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "child",
+                  "obj": "\\shift<i>",
+                  "failure": {
+                    "phase": "InstantiatedTemplateObj",
+                    "failure": {
+                      "phase": "requirement",
+                      "obj": "\\shift<i>",
+                      "result": {
+                        "type": "atomic_except_equality",
+                        "success": false,
+                        "phase": "search_proof",
+                        "fact": "i $in R",
+                        "well_defined": {
+                          "well_defined_of_each_parameter": [
+                            {
+                              "type": "by_def",
+                              "family": "Literal",
+                              "kind": "ImaginaryUnit",
+                              "obj": "i"
+                            },
+                            {
+                              "type": "by_def",
+                              "family": "StandardSet",
+                              "kind": "StandardSet",
+                              "obj": "R"
+                            }
+                          ],
+                          "predicate_signature": {
+                            "type": "builtin"
+                          },
+                          "predicate_domain": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N04",
+      "group": "template",
+      "title": "Invalid value template argument",
+      "file": "template/n04.lit",
+      "expect": "reject",
+      "fixture_sha256": "7d923e22eee8f3a26631177f9c60ed628007870dbc2a96da2296a12b35db1415",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/n05.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "\\shift<2>(3) = \\shift<7>(3)",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "\\shift<2>(3) = \\shift<7>(3)"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N05",
+      "group": "template",
+      "title": "Specializations do not share defining values",
+      "file": "template/n05.lit",
+      "expect": "reject",
+      "fixture_sha256": "ea8f2599f84933986320e56fcc8510ae1014e89889b03209e89eb71efda36680",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/template/n06.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "requirement",
+                  "obj": "\\reciprocal<2>(2)",
+                  "result": {
+                    "type": "atomic_except_equality",
+                    "success": false,
+                    "phase": "search_proof",
+                    "fact": "2 != 2",
+                    "well_defined": {
+                      "well_defined_of_each_parameter": [
+                        {
+                          "type": "by_def",
+                          "family": "Literal",
+                          "kind": "Number",
+                          "obj": "2"
+                        },
+                        {
+                          "type": "by_def",
+                          "family": "Literal",
+                          "kind": "Number",
+                          "obj": "2"
+                        }
+                      ],
+                      "predicate_signature": {
+                        "type": "builtin"
+                      },
+                      "predicate_domain": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N06",
+      "group": "template",
+      "title": "Template function guard rejects the excluded point",
+      "file": "template/n06.lit",
+      "expect": "reject",
+      "fixture_sha256": "87b74574da0a7893fc965a0ae081dd3e45a90771f3f974f10ebf0d483021b10f",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/n07.lit"
+      ],
+      "observed": "reject",
+      "phase": "def_thm",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "thm",
+          "why_failed": {
+            "type": "definition",
+            "rule_name": "Define theorem",
+            "message": "Record a theorem",
+            "phase": "def_thm",
+            "failure": {
+              "phase": "goal_well_defined",
+              "result": {
+                "success": false,
+                "phase": "well_defined",
+                "failure": {
+                  "phase": "failed_then",
+                  "failure": {
+                    "phase": "FnObj",
+                    "failure": {
+                      "phase": "requirement",
+                      "obj": "s.op(i)",
+                      "result": {
+                        "type": "atomic_except_equality",
+                        "success": false,
+                        "phase": "search_proof",
+                        "fact": "i $in R",
+                        "well_defined": {
+                          "well_defined_of_each_parameter": [
+                            {
+                              "type": "by_def",
+                              "family": "Literal",
+                              "kind": "ImaginaryUnit",
+                              "obj": "i"
+                            },
+                            {
+                              "type": "by_def",
+                              "family": "StandardSet",
+                              "kind": "StandardSet",
+                              "obj": "R"
+                            }
+                          ],
+                          "predicate_signature": {
+                            "type": "builtin"
+                          },
+                          "predicate_domain": []
+                        }
+                      }
+                    }
+                  },
+                  "index": 0
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N07",
+      "group": "struct",
+      "title": "Function field rejects wrong generic argument type",
+      "file": "struct/n07.lit",
+      "expect": "reject",
+      "fixture_sha256": "b06b0db01557e7808c27beaadea4efc1e3767a38b0009aff57ec95ded3a6a09f",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/n08.lit"
+      ],
+      "observed": "reject",
+      "phase": "def_thm",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "thm",
+          "why_failed": {
+            "type": "definition",
+            "rule_name": "Define theorem",
+            "message": "Record a theorem",
+            "phase": "def_thm",
+            "failure": {
+              "phase": "goal_well_defined",
+              "result": {
+                "success": false,
+                "phase": "well_defined",
+                "failure": {
+                  "phase": "failed_then",
+                  "failure": {
+                    "phase": "FnObj",
+                    "failure": {
+                      "phase": "requirement",
+                      "obj": "s.op(0)",
+                      "result": {
+                        "type": "atomic_except_equality",
+                        "success": false,
+                        "phase": "search_proof",
+                        "fact": "0 != 0",
+                        "well_defined": {
+                          "well_defined_of_each_parameter": [
+                            {
+                              "type": "by_known",
+                              "obj": "0",
+                              "wd_id": "wd16"
+                            },
+                            {
+                              "type": "by_known",
+                              "obj": "0",
+                              "wd_id": "wd16"
+                            }
+                          ],
+                          "predicate_signature": {
+                            "type": "builtin"
+                          },
+                          "predicate_domain": []
+                        }
+                      }
+                    }
+                  },
+                  "index": 0
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N08",
+      "group": "struct",
+      "title": "Function field retains its guard",
+      "file": "struct/n08.lit",
+      "expect": "reject",
+      "fixture_sha256": "6da96a57eefc1236418bb4be4d9fd7dac8f4828cde5e26186020b2e29172fa22",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/n09.lit"
+      ],
+      "observed": "reject",
+      "phase": "def_thm",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "thm",
+          "why_failed": {
+            "type": "definition",
+            "rule_name": "Define theorem",
+            "message": "Record a theorem",
+            "phase": "def_thm",
+            "failure": {
+              "phase": "conclusion",
+              "index": 0,
+              "result": {
+                "type": "equality",
+                "success": false,
+                "phase": "search_proof",
+                "fact": "s.op(0) = 1",
+                "well_defined": {
+                  "left": {
+                    "type": "by_def",
+                    "family": "FnObj",
+                    "kind": "FnObj",
+                    "obj": "s.op(0)",
+                    "child_obj_well_defined": [
+                      {
+                        "type": "by_known",
+                        "obj": "s.op",
+                        "wd_id": "wd27"
+                      },
+                      {
+                        "type": "by_known",
+                        "obj": "0",
+                        "wd_id": "wd26"
+                      }
+                    ],
+                    "requirement_fact_verified": [
+                      {
+                        "type": "atomic_except_equality",
+                        "success": true,
+                        "fact": "0 $in R",
+                        "well_defined": {
+                          "well_defined_of_each_parameter": [
+                            {
+                              "type": "by_known",
+                              "obj": "0",
+                              "wd_id": "wd26"
+                            },
+                            {
+                              "type": "by_def",
+                              "family": "StandardSet",
+                              "kind": "StandardSet",
+                              "obj": "R"
+                            }
+                          ],
+                          "predicate_signature": {
+                            "type": "builtin"
+                          },
+                          "predicate_domain": []
+                        },
+                        "searched_proof": {
+                          "type": "by_closed_calculation",
+                          "kind": "in",
+                          "value": {
+                            "representation": "decimal",
+                            "normal": "0"
+                          },
+                          "set": "R"
+                        }
+                      }
+                    ],
+                    "domain_fn_set": {
+                      "type": "anonymous_literal",
+                      "fn_set": "fn (x R) R"
+                    }
+                  },
+                  "right": {
+                    "type": "by_def",
+                    "family": "Literal",
+                    "kind": "Number",
+                    "obj": "1"
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N09",
+      "group": "struct",
+      "title": "Struct does not assume arbitrary function-field laws",
+      "file": "struct/n09.lit",
+      "expect": "reject",
+      "fixture_sha256": "576090a4a6016ccc9176c195757f3368430dea1fce6af10725f640c46143f92b",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/struct/n10.lit"
+      ],
+      "observed": "reject",
+      "phase": "def_thm",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "thm",
+          "why_failed": {
+            "type": "definition",
+            "rule_name": "Define theorem",
+            "message": "Record a theorem",
+            "phase": "def_thm",
+            "failure": {
+              "phase": "goal_well_defined",
+              "result": {
+                "success": false,
+                "phase": "well_defined",
+                "failure": {
+                  "phase": "failed_then",
+                  "failure": {
+                    "phase": "FnObj",
+                    "failure": {
+                      "message": "no matching function signature"
+                    }
+                  },
+                  "index": 0
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N10",
+      "group": "struct",
+      "title": "Scalar field is not callable",
+      "file": "struct/n10.lit",
+      "expect": "reject",
+      "fixture_sha256": "ecb5771a418548474811a91cac494882838de492f4df2257020d1771257bfa4b",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/n11.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "requirement",
+                  "obj": "add(2)(i)",
+                  "result": {
+                    "type": "atomic_except_equality",
+                    "success": false,
+                    "phase": "search_proof",
+                    "fact": "i $in R",
+                    "well_defined": {
+                      "well_defined_of_each_parameter": [
+                        {
+                          "type": "by_def",
+                          "family": "Literal",
+                          "kind": "ImaginaryUnit",
+                          "obj": "i"
+                        },
+                        {
+                          "type": "by_def",
+                          "family": "StandardSet",
+                          "kind": "StandardSet",
+                          "obj": "R"
+                        }
+                      ],
+                      "predicate_signature": {
+                        "type": "builtin"
+                      },
+                      "predicate_domain": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N11",
+      "group": "higher_order",
+      "title": "Returned-function argument carrier is checked",
+      "file": "higher_order/n11.lit",
+      "expect": "reject",
+      "fixture_sha256": "f8bc0558c982d30c097bf14bd8bed3b0620b89047d9548aa3d0767de3b854ca4",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/n12.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "message": "object well-definedness failed without child or requirement detail"
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N12",
+      "group": "higher_order",
+      "title": "Returned-function argument arity is checked",
+      "file": "higher_order/n12.lit",
+      "expect": "reject",
+      "fixture_sha256": "690e110622af892791b1be3ba05c504c29a10286fc9cade67c40b4772864d9e5",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/n13.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "requirement",
+                  "obj": "choose(0)(0)",
+                  "result": {
+                    "type": "atomic_except_equality",
+                    "success": false,
+                    "phase": "search_proof",
+                    "fact": "0 != 0",
+                    "well_defined": {
+                      "well_defined_of_each_parameter": [
+                        {
+                          "type": "by_def",
+                          "family": "Literal",
+                          "kind": "Number",
+                          "obj": "0"
+                        },
+                        {
+                          "type": "by_def",
+                          "family": "Literal",
+                          "kind": "Number",
+                          "obj": "0"
+                        }
+                      ],
+                      "predicate_signature": {
+                        "type": "builtin"
+                      },
+                      "predicate_domain": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N13",
+      "group": "higher_order",
+      "title": "Returned-function guard is not dropped",
+      "file": "higher_order/n13.lit",
+      "expect": "reject",
+      "fixture_sha256": "b16f2936761f96f0eeba901b4bf40aa0a5be211c8029382f51bd74adb0221942",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/n14.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "requirement",
+                  "obj": "choose(0)(3)",
+                  "result": {
+                    "type": "atomic_except_equality",
+                    "success": false,
+                    "phase": "search_proof",
+                    "fact": "0 > 0",
+                    "well_defined": {
+                      "well_defined_of_each_parameter": [
+                        {
+                          "type": "by_def",
+                          "family": "Literal",
+                          "kind": "Number",
+                          "obj": "0"
+                        },
+                        {
+                          "type": "by_def",
+                          "family": "Literal",
+                          "kind": "Number",
+                          "obj": "0"
+                        }
+                      ],
+                      "predicate_signature": {
+                        "type": "builtin"
+                      },
+                      "predicate_domain": [
+                        {
+                          "requirement": "0 $in R",
+                          "verify": {
+                            "type": "atomic_except_equality",
+                            "success": true,
+                            "fact": "0 $in R",
+                            "well_defined": {
+                              "well_defined_of_each_parameter": [
+                                {
+                                  "type": "by_def",
+                                  "family": "Literal",
+                                  "kind": "Number",
+                                  "obj": "0"
+                                },
+                                {
+                                  "type": "by_def",
+                                  "family": "StandardSet",
+                                  "kind": "StandardSet",
+                                  "obj": "R"
+                                }
+                              ],
+                              "predicate_signature": {
+                                "type": "builtin"
+                              },
+                              "predicate_domain": []
+                            },
+                            "searched_proof": {
+                              "type": "by_closed_calculation",
+                              "kind": "in",
+                              "value": {
+                                "representation": "decimal",
+                                "normal": "0"
+                              },
+                              "set": "R"
+                            }
+                          }
+                        },
+                        {
+                          "requirement": "0 $in R",
+                          "verify": {
+                            "type": "atomic_except_equality",
+                            "success": true,
+                            "fact": "0 $in R",
+                            "well_defined": {
+                              "well_defined_of_each_parameter": [
+                                {
+                                  "type": "by_def",
+                                  "family": "Literal",
+                                  "kind": "Number",
+                                  "obj": "0"
+                                },
+                                {
+                                  "type": "by_def",
+                                  "family": "StandardSet",
+                                  "kind": "StandardSet",
+                                  "obj": "R"
+                                }
+                              ],
+                              "predicate_signature": {
+                                "type": "builtin"
+                              },
+                              "predicate_domain": []
+                            },
+                            "searched_proof": {
+                              "type": "by_closed_calculation",
+                              "kind": "in",
+                              "value": {
+                                "representation": "decimal",
+                                "normal": "0"
+                              },
+                              "set": "R"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N14",
+      "group": "higher_order",
+      "title": "Outer function guard is not dropped",
+      "file": "higher_order/n14.lit",
+      "expect": "reject",
+      "fixture_sha256": "cf6bcb9d82753ae527b9215922e35ec991b8276c6c546d8b2825805fe8448306",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/n15.lit"
+      ],
+      "observed": "reject",
+      "phase": "have_fn_equal",
+      "statement_statuses": [
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "have fn …",
+          "why_failed": {
+            "type": "define_fn",
+            "rule_name": "Have function equal",
+            "message": "Define a named function equal to an anonymous function",
+            "phase": "have_fn_equal",
+            "failure": {
+              "success": false,
+              "obj": "fn (x R) fn (y R) N{fn (y R) R{x + y}}",
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FunctionSpace",
+                "failure": {
+                  "phase": "AnonymousFn",
+                  "failure": {
+                    "phase": "body_in_return_set",
+                    "failure": {
+                      "type": "atomic_except_equality",
+                      "success": false,
+                      "phase": "search_proof",
+                      "fact": "fn (y R) R{x + y} $in fn (y R) N",
+                      "well_defined": {
+                        "well_defined_of_each_parameter": [
+                          {
+                            "type": "by_def",
+                            "family": "FunctionSpace",
+                            "kind": "AnonymousFn",
+                            "obj": "fn (y R) R{x + y}",
+                            "param_type_well_defined": [
+                              {
+                                "type": "by_known",
+                                "obj": "R",
+                                "wd_id": "wd1"
+                              }
+                            ],
+                            "dom_fact_well_defined": [],
+                            "ret_set_well_defined": {
+                              "type": "by_known",
+                              "obj": "R",
+                              "wd_id": "wd1"
+                            },
+                            "body_well_defined": {
+                              "type": "by_def",
+                              "family": "ArithmeticOperator",
+                              "kind": "Add",
+                              "obj": "x + y",
+                              "child_obj_well_defined": [
+                                {
+                                  "type": "by_def",
+                                  "family": "Identifier",
+                                  "kind": "Identifier",
+                                  "obj": "x"
+                                },
+                                {
+                                  "type": "by_def",
+                                  "family": "Identifier",
+                                  "kind": "Identifier",
+                                  "obj": "y"
+                                }
+                              ],
+                              "requirement_fact_verified": [
+                                {
+                                  "type": "atomic_except_equality",
+                                  "success": true,
+                                  "fact": "x $in C",
+                                  "well_defined": {
+                                    "well_defined_of_each_parameter": [
+                                      {
+                                        "type": "by_def",
+                                        "family": "Identifier",
+                                        "kind": "Identifier",
+                                        "obj": "x"
+                                      },
+                                      {
+                                        "type": "by_def",
+                                        "family": "StandardSet",
+                                        "kind": "StandardSet",
+                                        "obj": "C"
+                                      }
+                                    ],
+                                    "predicate_signature": {
+                                      "type": "builtin"
+                                    },
+                                    "predicate_domain": []
+                                  },
+                                  "searched_proof": {
+                                    "type": "by_structural_membership",
+                                    "element": "x",
+                                    "set": "C",
+                                    "source": {
+                                      "type": "by_structural_membership",
+                                      "element": "x",
+                                      "set": "R",
+                                      "cite": {
+                                        "type": "by_known_atomic",
+                                        "cite_fact_id": "f1",
+                                        "why_parameters_of_known_fact_are_equal_to_givens": [
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          },
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          }
+                                        ]
+                                      },
+                                      "kind": "known"
+                                    },
+                                    "kind": "standard_superset"
+                                  }
+                                },
+                                {
+                                  "type": "atomic_except_equality",
+                                  "success": true,
+                                  "fact": "y $in C",
+                                  "well_defined": {
+                                    "well_defined_of_each_parameter": [
+                                      {
+                                        "type": "by_def",
+                                        "family": "Identifier",
+                                        "kind": "Identifier",
+                                        "obj": "y"
+                                      },
+                                      {
+                                        "type": "by_def",
+                                        "family": "StandardSet",
+                                        "kind": "StandardSet",
+                                        "obj": "C"
+                                      }
+                                    ],
+                                    "predicate_signature": {
+                                      "type": "builtin"
+                                    },
+                                    "predicate_domain": []
+                                  },
+                                  "searched_proof": {
+                                    "type": "by_structural_membership",
+                                    "element": "y",
+                                    "set": "C",
+                                    "source": {
+                                      "type": "by_structural_membership",
+                                      "element": "y",
+                                      "set": "R",
+                                      "cite": {
+                                        "type": "by_known_atomic",
+                                        "cite_fact_id": "f76",
+                                        "why_parameters_of_known_fact_are_equal_to_givens": [
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          },
+                                          {
+                                            "type": "by_they_are_the_same",
+                                            "kind": "same_ir"
+                                          }
+                                        ]
+                                      },
+                                      "kind": "known"
+                                    },
+                                    "kind": "standard_superset"
+                                  }
+                                }
+                              ]
+                            },
+                            "body_in_ret_set": {
+                              "type": "atomic_except_equality",
+                              "success": true,
+                              "fact": "x + y $in R",
+                              "well_defined": {
+                                "well_defined_of_each_parameter": [
+                                  {
+                                    "type": "by_def",
+                                    "family": "ArithmeticOperator",
+                                    "kind": "Add",
+                                    "obj": "x + y",
+                                    "child_obj_well_defined": [
+                                      {
+                                        "type": "by_def",
+                                        "family": "Identifier",
+                                        "kind": "Identifier",
+                                        "obj": "x"
+                                      },
+                                      {
+                                        "type": "by_def",
+                                        "family": "Identifier",
+                                        "kind": "Identifier",
+                                        "obj": "y"
+                                      }
+                                    ],
+                                    "requirement_fact_verified": [
+                                      {
+                                        "type": "atomic_except_equality",
+                                        "success": true,
+                                        "fact": "x $in C",
+                                        "well_defined": {
+                                          "well_defined_of_each_parameter": [
+                                            {
+                                              "type": "by_def",
+                                              "family": "Identifier",
+                                              "kind": "Identifier",
+                                              "obj": "x"
+                                            },
+                                            {
+                                              "type": "by_def",
+                                              "family": "StandardSet",
+                                              "kind": "StandardSet",
+                                              "obj": "C"
+                                            }
+                                          ],
+                                          "predicate_signature": {
+                                            "type": "builtin"
+                                          },
+                                          "predicate_domain": []
+                                        },
+                                        "searched_proof": {
+                                          "type": "by_structural_membership",
+                                          "element": "x",
+                                          "set": "C",
+                                          "source": {
+                                            "type": "by_structural_membership",
+                                            "element": "x",
+                                            "set": "R",
+                                            "cite": {
+                                              "type": "by_known_atomic",
+                                              "cite_fact_id": "f1",
+                                              "why_parameters_of_known_fact_are_equal_to_givens": [
+                                                {
+                                                  "type": "by_they_are_the_same",
+                                                  "kind": "same_ir"
+                                                },
+                                                {
+                                                  "type": "by_they_are_the_same",
+                                                  "kind": "same_ir"
+                                                }
+                                              ]
+                                            },
+                                            "kind": "known"
+                                          },
+                                          "kind": "standard_superset"
+                                        }
+                                      },
+                                      {
+                                        "type": "atomic_except_equality",
+                                        "success": true,
+                                        "fact": "y $in C",
+                                        "well_defined": {
+                                          "well_defined_of_each_parameter": [
+                                            {
+                                              "type": "by_def",
+                                              "family": "Identifier",
+                                              "kind": "Identifier",
+                                              "obj": "y"
+                                            },
+                                            {
+                                              "type": "by_def",
+                                              "family": "StandardSet",
+                                              "kind": "StandardSet",
+                                              "obj": "C"
+                                            }
+                                          ],
+                                          "predicate_signature": {
+                                            "type": "builtin"
+                                          },
+                                          "predicate_domain": []
+                                        },
+                                        "searched_proof": {
+                                          "type": "by_structural_membership",
+                                          "element": "y",
+                                          "set": "C",
+                                          "source": {
+                                            "type": "by_structural_membership",
+                                            "element": "y",
+                                            "set": "R",
+                                            "cite": {
+                                              "type": "by_known_atomic",
+                                              "cite_fact_id": "f76",
+                                              "why_parameters_of_known_fact_are_equal_to_givens": [
+                                                {
+                                                  "type": "by_they_are_the_same",
+                                                  "kind": "same_ir"
+                                                },
+                                                {
+                                                  "type": "by_they_are_the_same",
+                                                  "kind": "same_ir"
+                                                }
+                                              ]
+                                            },
+                                            "kind": "known"
+                                          },
+                                          "kind": "standard_superset"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "by_known",
+                                    "obj": "R",
+                                    "wd_id": "wd1"
+                                  }
+                                ],
+                                "predicate_signature": {
+                                  "type": "builtin"
+                                },
+                                "predicate_domain": []
+                              },
+                              "searched_proof": {
+                                "type": "by_structural_membership",
+                                "element": "x + y",
+                                "set": "R",
+                                "left": {
+                                  "type": "by_structural_membership",
+                                  "element": "x",
+                                  "set": "R",
+                                  "cite": {
+                                    "type": "by_known_atomic",
+                                    "cite_fact_id": "f1",
+                                    "why_parameters_of_known_fact_are_equal_to_givens": [
+                                      {
+                                        "type": "by_they_are_the_same",
+                                        "kind": "same_ir"
+                                      },
+                                      {
+                                        "type": "by_they_are_the_same",
+                                        "kind": "same_ir"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "known"
+                                },
+                                "right": {
+                                  "type": "by_structural_membership",
+                                  "element": "y",
+                                  "set": "R",
+                                  "cite": {
+                                    "type": "by_known_atomic",
+                                    "cite_fact_id": "f76",
+                                    "why_parameters_of_known_fact_are_equal_to_givens": [
+                                      {
+                                        "type": "by_they_are_the_same",
+                                        "kind": "same_ir"
+                                      },
+                                      {
+                                        "type": "by_they_are_the_same",
+                                        "kind": "same_ir"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "known"
+                                },
+                                "kind": "add"
+                              }
+                            }
+                          },
+                          {
+                            "type": "by_def",
+                            "family": "FunctionSpace",
+                            "kind": "FnSet",
+                            "obj": "fn (y R) N",
+                            "param_type_well_defined": [
+                              {
+                                "type": "by_known",
+                                "obj": "R",
+                                "wd_id": "wd1"
+                              }
+                            ],
+                            "dom_fact_well_defined": [],
+                            "ret_set_well_defined": {
+                              "type": "by_def",
+                              "family": "StandardSet",
+                              "kind": "StandardSet",
+                              "obj": "N"
+                            }
+                          }
+                        ],
+                        "predicate_signature": {
+                          "type": "builtin"
+                        },
+                        "predicate_domain": []
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N15",
+      "group": "higher_order",
+      "title": "Function-valued definition rejects narrower codomain",
+      "file": "higher_order/n15.lit",
+      "expect": "reject",
+      "fixture_sha256": "2dde2bb1a141f0ff0f9aefa6269a3f4791fdc489fe61e5eafc572df9f0af9e9b",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/n16.lit"
+      ],
+      "observed": "reject",
+      "phase": "well_defined",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "<wd_failed>",
+          "why_failed": {
+            "phase": "well_defined",
+            "verification": {
+              "type": "equality",
+              "success": false,
+              "phase": "well_defined",
+              "failure": {
+                "phase": "FnObj",
+                "failure": {
+                  "phase": "requirement",
+                  "obj": "apply(complex_step, 2)",
+                  "result": {
+                    "type": "atomic_except_equality",
+                    "success": false,
+                    "phase": "search_proof",
+                    "fact": "complex_step $in fn (x R) R",
+                    "well_defined": {
+                      "well_defined_of_each_parameter": [
+                        {
+                          "type": "by_def",
+                          "family": "Identifier",
+                          "kind": "Identifier",
+                          "obj": "complex_step"
+                        },
+                        {
+                          "type": "by_def",
+                          "family": "FunctionSpace",
+                          "kind": "FnSet",
+                          "obj": "fn (x R) R",
+                          "param_type_well_defined": [
+                            {
+                              "type": "by_def",
+                              "family": "StandardSet",
+                              "kind": "StandardSet",
+                              "obj": "R"
+                            }
+                          ],
+                          "dom_fact_well_defined": [],
+                          "ret_set_well_defined": {
+                            "type": "by_known",
+                            "obj": "R",
+                            "wd_id": "wd15"
+                          }
+                        }
+                      ],
+                      "predicate_signature": {
+                        "type": "builtin"
+                      },
+                      "predicate_domain": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N16",
+      "group": "higher_order",
+      "title": "Higher-order apply rejects incompatible function",
+      "file": "higher_order/n16.lit",
+      "expect": "reject",
+      "fixture_sha256": "e64500ec2525b17f20dccbd67fafea4f395f1697050d363924ab751cd845699f",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/higher_order/n17.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "add(2)(3) = 6",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "add(2)(3) = 6"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N17",
+      "group": "higher_order",
+      "title": "Incorrect curried numeric equality",
+      "file": "higher_order/n17.lit",
+      "expect": "reject",
+      "fixture_sha256": "3157d4c39bccfcd322bc60e73ce1c2cdc927217ea90d1b7bb07af76e50e02a11",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/signature_boundary/n18.lit"
+      ],
+      "observed": "reject",
+      "phase": "parse",
+      "statement_statuses": [],
+      "exit_code": 1,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `S`\", line: 4, path: Real(\"examples/test_function_sets/signature_boundary/n18.lit\") }))",
+      "diagnostic": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `S`\", line: 4, path: Real(\"examples/test_function_sets/signature_boundary/n18.lit\") }))",
+      "failures": [],
+      "id": "N18",
+      "group": "signature_boundary",
+      "title": "Outer parameter cannot define the return carrier",
+      "file": "signature_boundary/n18.lit",
+      "expect": "reject",
+      "fixture_sha256": "1fb90d78c46525502fed7f417038b17dadbe8611f1bd08be0527d9d9b188b2f2",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/signature_boundary/n19.lit"
+      ],
+      "observed": "reject",
+      "phase": "parse",
+      "statement_statuses": [],
+      "exit_code": 1,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `x`\", line: 4, path: Real(\"examples/test_function_sets/signature_boundary/n19.lit\") }))",
+      "diagnostic": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `x`\", line: 4, path: Real(\"examples/test_function_sets/signature_boundary/n19.lit\") }))",
+      "failures": [],
+      "id": "N19",
+      "group": "signature_boundary",
+      "title": "Nested return condition cannot capture outer parameter",
+      "file": "signature_boundary/n19.lit",
+      "expect": "reject",
+      "fixture_sha256": "a875225f4953e99e336ae2837b267160687df1ece3fbac29394d0f4b4878a778",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/signature_boundary/n20.lit"
+      ],
+      "observed": "reject",
+      "phase": "parse",
+      "statement_statuses": [],
+      "exit_code": 1,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `x`\", line: 4, path: Real(\"examples/test_function_sets/signature_boundary/n20.lit\") }))",
+      "diagnostic": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `x`\", line: 4, path: Real(\"examples/test_function_sets/signature_boundary/n20.lit\") }))",
+      "failures": [],
+      "id": "N20",
+      "group": "signature_boundary",
+      "title": "A parameter-dependent singleton is not a fixed return carrier",
+      "file": "signature_boundary/n20.lit",
+      "expect": "reject",
+      "fixture_sha256": "f0f881185a8afb1903561c65bf650c83e3095266e3aab31de1df4228b0bcd289",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/numeric_evaluation/e01.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "E01",
+      "group": "numeric_evaluation",
+      "title": "Exact rational and decimal returned-closure values",
+      "file": "numeric_evaluation/e01.lit",
+      "expect": "accept",
+      "fixture_sha256": "d13950501f595f4cf9cd813e2526a5e3757299f05450168b8c7747f48f47e45f",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/numeric_evaluation/e02.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "E02",
+      "group": "numeric_evaluation",
+      "title": "Nested known calls in a function body",
+      "file": "numeric_evaluation/e02.lit",
+      "expect": "accept",
+      "fixture_sha256": "ed82e34f976009d4bce036ec6f80c08c3a25f268cb54033f661316658daff24b",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/numeric_evaluation/n21.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "add(1 / 3)(1 / 6) = 0.500000000001",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "add(1 / 3)(1 / 6) = 0.500000000001"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N21",
+      "group": "numeric_evaluation",
+      "title": "A nearby decimal is not an exact rational result",
+      "file": "numeric_evaluation/n21.lit",
+      "expect": "reject",
+      "fixture_sha256": "e9ab7ed53175bae8c1bfc22aee1629f4ac90f6dd24646fd39317e81c22fdf214",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/p01.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "P01",
+      "group": "explicit_proofs",
+      "title": "Explicit call chain for specialized template alias",
+      "file": "explicit_proofs/p01.lit",
+      "expect": "accept",
+      "fixture_sha256": "d234dd32c7816a4055a69e31735e15d1e11e21566f8748c9830bf296ee4c70a5",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/p02.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "P02",
+      "group": "explicit_proofs",
+      "title": "Template tuple equation and typed struct field bridge",
+      "file": "explicit_proofs/p02.lit",
+      "expect": "accept",
+      "fixture_sha256": "3dfe05768bb6cf281f8b0e14e75ff34a522795b55c05c9739b7efb18be6f4b85",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/p03.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "P03",
+      "group": "explicit_proofs",
+      "title": "Explicit call chain for returned-function alias",
+      "file": "explicit_proofs/p03.lit",
+      "expect": "accept",
+      "fixture_sha256": "c63cefa8cb70119403e4e18ceeee0dcfa0b2bf1e1b3bb80fbae98314306e0faf",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/p04.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "P04",
+      "group": "explicit_proofs",
+      "title": "Anonymous struct field equation and numeric call chain",
+      "file": "explicit_proofs/p04.lit",
+      "expect": "accept",
+      "fixture_sha256": "3f6b99c8e5b2fd2d931442194d503f602bc27b4185bf3f59669fd3598f61f856",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/p05.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "P05",
+      "group": "explicit_proofs",
+      "title": "Specialized function-space equation before membership and binding",
+      "file": "explicit_proofs/p05.lit",
+      "expect": "accept",
+      "fixture_sha256": "e405e589b0c52a785a74caaddb8fbdefcf25fd2cd9eb32a01819578feef3bf14",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/p06.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "P06",
+      "group": "explicit_proofs",
+      "title": "Returned tuple equation and typed struct field bridge",
+      "file": "explicit_proofs/p06.lit",
+      "expect": "accept",
+      "fixture_sha256": "c6b82f4a8f4ec3cea298d8fe1eed27e03bdee27155801a5d2731f07e8163f754",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/p07.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "P07",
+      "group": "explicit_proofs",
+      "title": "Checked general tuple membership before closure-valued template",
+      "file": "explicit_proofs/p07.lit",
+      "expect": "accept",
+      "fixture_sha256": "603251ebb4deb7e225d63015917b50a1250d0713697b75b6530dbea89e3b3813",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/p08.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "id": "P08",
+      "group": "explicit_proofs",
+      "title": "Checked general tuple membership before closure-valued return",
+      "file": "explicit_proofs/p08.lit",
+      "expect": "accept",
+      "fixture_sha256": "7e370dee5ccfe1bc5d51a1b1fc0fe0f91c0012a5eec1b6a38bba257249ae79f9",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/n22.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "shift_two(3) = \\shift<2>(3) = 6",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "shift_two(3) = \\shift<2>(3) = 6"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N22",
+      "group": "explicit_proofs",
+      "title": "False specialized-template call chain",
+      "file": "explicit_proofs/n22.lit",
+      "expect": "reject",
+      "fixture_sha256": "bee3e56e08951c1d66554700db381fdb87f818bfd18340b6ff7b3ed3c17baa97",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/n23.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "selected.op(3) = step(3) = 5",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "selected.op(3) = step(3) = 5"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N23",
+      "group": "explicit_proofs",
+      "title": "False typed struct field call chain",
+      "file": "explicit_proofs/n23.lit",
+      "expect": "reject",
+      "fixture_sha256": "9234744bf42a013a68059f4e0f3497bc1a7961e86118b8cf08fae8d71a525693",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/n24.lit"
+      ],
+      "observed": "reject",
+      "phase": "search_proof",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "add_two(3) = add(2)(3) = 6",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "add_two(3) = add(2)(3) = 6"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N24",
+      "group": "explicit_proofs",
+      "title": "False returned-function alias call chain",
+      "file": "explicit_proofs/n24.lit",
+      "expect": "reject",
+      "fixture_sha256": "b781fa22244da6fa3c415d4d8e08bdd0f3f7026be86e56f8f53869b5996b7d2b",
+      "matches": true
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_function_sets/explicit_proofs/n25.lit"
+      ],
+      "observed": "reject",
+      "phase": "def_template",
+      "statement_statuses": [
+        true,
+        true,
+        false
+      ],
+      "exit_code": 1,
+      "session_error": null,
+      "failures": [
+        {
+          "success": false,
+          "statement": "template …",
+          "why_failed": {
+            "type": "definition",
+            "rule_name": "Define template",
+            "message": "Define a reusable template",
+            "phase": "def_template"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "id": "N25",
+      "group": "explicit_proofs",
+      "title": "General constructor proof does not admit an invalid tag",
+      "file": "explicit_proofs/n25.lit",
+      "expect": "reject",
+      "fixture_sha256": "625d8546eae0aaf2b2167188af3af92ca87eace3566ca100408bdc83ed0433be",
+      "matches": true
+    }
+  ],
+  "identity_stable": true,
+  "ok": false,
+  "counts": {
+    "total": 82,
+    "positive": 57,
+    "negative": 25,
+    "passed": 73,
+    "unexpected": 9
+  }
+}

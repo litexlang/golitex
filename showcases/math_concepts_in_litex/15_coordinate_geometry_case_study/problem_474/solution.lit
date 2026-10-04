@@ -28,4 +28,4 @@ thm problem_474:
     # “BC为直径且O为圆心”直接给出O是BC的中点。
     by def $geo::is_diameter_endpoints(b, c, o)
     # 平行四边形两组对边的中点组成AOCE；公共定理同时保证四个顶点非退化。
-    by thm geo::midpoint_parallelogram_closure(a, b, c, d, o, ep)
+    release thm geo::midpoint_parallelogram_closure(a, b, c, d, o, ep)

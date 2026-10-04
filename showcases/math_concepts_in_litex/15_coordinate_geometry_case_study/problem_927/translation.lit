@@ -38,4 +38,4 @@ thm segments_congruent_reflexive_prop:
     ? forall a, b cart(R, R):
         =>:
             $are_segments_congruent(a, b, a, b)
-    by thm segments_congruent_reflexive(a, b)
+    release thm segments_congruent_reflexive(a, b)

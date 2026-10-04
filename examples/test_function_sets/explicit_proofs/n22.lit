@@ -1,0 +1,7 @@
+# N22: False specialized-template call chain
+# Explicit proof contract; strict release checked, no trust.
+
+template<a R>:
+    have fn shift(x R) R = x + a
+let shift_two = \shift<2>
+shift_two(3) = \shift<2>(3) = 6

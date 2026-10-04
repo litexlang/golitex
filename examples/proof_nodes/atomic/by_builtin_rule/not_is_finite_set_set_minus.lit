@@ -1,5 +1,36 @@
-# Node: atomic.ByBuiltinRule.NotIsFiniteSet.SetMinusInfiniteOfInfiniteFinite
-# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_is_finite_set_set_minus.lit
+# Direct builtin-rule probe: not $is_finite_set(set_minus(N, {0})) remains unsupported.
+# The checked proof uses N = union(set_minus(N, {0}), {0}) and finite-union closure.
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/not_is_finite_set_set_minus.lit
 
 not $is_finite_set(N)
-not $is_finite_set(set_minus(N, {0}))
+by contra:
+    ? not $is_finite_set(set_minus(N, {0}))
+    $is_finite_set(union(set_minus(N, {0}), {0}))
+    by extension:
+        ? N = union(set_minus(N, {0}), {0})
+        claim:
+            ? forall k N:
+                k $in union(set_minus(N, {0}), {0})
+            by cases:
+                ? k $in union(set_minus(N, {0}), {0})
+                case k = 0:
+                    k $in {0}
+                    k $in union(set_minus(N, {0}), {0})
+                case k != 0:
+                    not k $in {0}
+                    k $in set_minus(N, {0})
+                    k $in union(set_minus(N, {0}), {0})
+        claim:
+            ? forall k union(set_minus(N, {0}), {0}):
+                k $in N
+            k $in set_minus(N, {0}) or k $in {0}
+            by cases:
+                ? k $in N
+                case k $in set_minus(N, {0}):
+                    k $in N
+                case k $in {0}:
+                    k = 0
+                    k $in N
+    $is_finite_set(N)
+    impossible not $is_finite_set(N)
+

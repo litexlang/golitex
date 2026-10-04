@@ -1,0 +1,9 @@
+# Boundary: strict-abstract-instance-unproved
+# Owner: DefAbstractPropStmt
+abstract_prop P(x)
+$P(0)
+not $P(0)
+$P(0, 0)
+$P(1 / 0)
+by def $P(0)
+0 = 1

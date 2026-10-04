@@ -1,0 +1,10 @@
+# Tracer: negative-leading source operand
+# Before:
+# -2 < 0
+# Former behavior: `litex -strict -e '-2 < 0'` exited 2 with launch_error.
+# Now: the -e operand reaches the mathematical checker intact.
+-2 < 0
+# Boundary: `litex -strict -e '-2 > 0'` must reject the false fact.
+# Evidence: target/release/litex -strict -e '-2 < 0'
+# File gate: target/release/litex -strict -f examples/stmt_nodes/fact/negative_leading_code.lit
+# Launch contracts: cargo test --release launch_command_tests

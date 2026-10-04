@@ -71,12 +71,14 @@ thm topology_binary_union:
                 ? point $in family_union(family)
                 case point $in A:
                     A = A or A = B
-                    by thm set_builder_member(A, {choice power_set(X): choice = A or choice = B}) => A $in {choice power_set(X): choice = A or choice = B}
+                    release thm set_builder_member(A, {choice power_set(X): choice = A or choice = B})
+                    A $in {choice power_set(X): choice = A or choice = B}
                     A $in family
                     point $in family_union(family)
                 case point $in B:
                     B = A or B = B
-                    by thm set_builder_member(B, {choice power_set(X): choice = A or choice = B}) => B $in {choice power_set(X): choice = A or choice = B}
+                    release thm set_builder_member(B, {choice power_set(X): choice = A or choice = B})
+                    B $in {choice power_set(X): choice = A or choice = B}
                     B $in family
                     point $in family_union(family)
 
@@ -123,7 +125,8 @@ thm continuous_composition:
                     point $in direct_preimage
                 f(point) $in middle_open
                 g(f(point)) $in target_open
-                by thm set_builder_member(point, {x A: g(f(x)) $in target_open}) => point $in {x A: g(f(x)) $in target_open}
+                release thm set_builder_member(point, {x A: g(f(x)) $in target_open})
+                point $in {x A: g(f(x)) $in target_open}
             by def:
                 ? nested_preimage $subset direct_preimage
         claim:
@@ -132,9 +135,11 @@ thm continuous_composition:
                 ? forall point direct_preimage:
                     point $in nested_preimage
                 g(f(point)) $in target_open
-                by thm set_builder_member(f(point), {y B: g(y) $in target_open}) => f(point) $in {y B: g(y) $in target_open}
+                release thm set_builder_member(f(point), {y B: g(y) $in target_open})
+                f(point) $in {y B: g(y) $in target_open}
                 f(point) $in middle_open
-                by thm set_builder_member(point, {x A: f(x) $in middle_open}) => point $in {x A: f(x) $in middle_open}
+                release thm set_builder_member(point, {x A: f(x) $in middle_open})
+                point $in {x A: f(x) $in middle_open}
             by def:
                 ? direct_preimage $subset nested_preimage
         by extension:
@@ -152,7 +157,8 @@ thm continuous_composition:
                     point $in direct_preimage
                 fn(argument A) CarrierC {g(f(argument))}(point) = g(f(point))
                 g(f(point)) $in target_open
-                by thm set_builder_member(point, {candidate A: g(f(candidate)) $in target_open}) => point $in {candidate A: g(f(candidate)) $in target_open}
+                release thm set_builder_member(point, {candidate A: g(f(candidate)) $in target_open})
+                point $in {candidate A: g(f(candidate)) $in target_open}
             by def:
                 ? literal_preimage $subset direct_preimage
         claim:
@@ -163,7 +169,8 @@ thm continuous_composition:
                 g(f(point)) $in target_open
                 fn(argument A) CarrierC {g(f(argument))}(point) = g(f(point))
                 fn(argument A) CarrierC {g(f(argument))}(point) $in target_open
-                by thm set_builder_member(point, {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open}) => point $in {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open}
+                release thm set_builder_member(point, {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open})
+                point $in {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open}
             by def:
                 ? direct_preimage $subset literal_preimage
         by extension:
@@ -213,10 +220,12 @@ thm preimage_of_relative_complement:
                 by contra:
                     ? not f(point) $in F
                     f(point) $in F
-                    by thm set_builder_member(point, {x X: f(x) $in F}) => point $in {x X: f(x) $in F}
+                    release thm set_builder_member(point, {x X: f(x) $in F})
+                    point $in {x X: f(x) $in F}
                     impossible not point $in {x X: f(x) $in F}
             f(point) $in set_minus(Y, F)
-            by thm set_builder_member(point, {x X: f(x) $in set_minus(Y, F)}) => point $in {x X: f(x) $in set_minus(Y, F)}
+            release thm set_builder_member(point, {x X: f(x) $in set_minus(Y, F)})
+            point $in {x X: f(x) $in set_minus(Y, F)}
 
 # Together, these two directional theorems are the closed-set
 # characterization of continuity.
@@ -232,7 +241,8 @@ thm continuous_map_has_closed_preimages:
                 $is_closed(X, open_sets_X, {x X: f(x) $in F})
         set_minus(Y, F) $in open_sets_Y
         {x X: f(x) $in set_minus(Y, F)} $in open_sets_X
-        by thm preimage_of_relative_complement(X, Y, f, F) => {x X: f(x) $in set_minus(Y, F)} = set_minus(X, {x X: f(x) $in F})
+        release thm preimage_of_relative_complement(X, Y, f, F)
+        {x X: f(x) $in set_minus(Y, F)} = set_minus(X, {x X: f(x) $in F})
         set_minus(X, {x X: f(x) $in F}) $in open_sets_X
         by def $is_closed(X, open_sets_X, {x X: f(x) $in F})
     by def $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
@@ -283,9 +293,11 @@ thm closed_preimages_imply_continuous:
                             ? f(point) $in U
                             not f(point) $in U
                             f(point) $in set_minus(Y, U)
-                            by thm set_builder_member(point, {x X: f(x) $in set_minus(Y, U)}) => point $in {x X: f(x) $in set_minus(Y, U)}
+                            release thm set_builder_member(point, {x X: f(x) $in set_minus(Y, U)})
+                            point $in {x X: f(x) $in set_minus(Y, U)}
                             impossible not point $in {x X: f(x) $in set_minus(Y, U)}
-                    by thm set_builder_member(point, {x X: f(x) $in U}) => point $in {x X: f(x) $in U}
+                    release thm set_builder_member(point, {x X: f(x) $in U})
+                    point $in {x X: f(x) $in U}
         {x X: f(x) $in U} $in open_sets_X
     by def $is_continuous(X, open_sets_X, Y, open_sets_Y, f)
 
@@ -321,7 +333,8 @@ thm continuous_image_of_compact_is_compact:
                 have by fn_preimage: selected_index from target_open $in fn_range(cover)
                 target_open = cover(selected_index)
                 f(point) $in cover(selected_index)
-                by thm set_builder_member(point, {x X: f(x) $in cover(selected_index)}) => point $in {x X: f(x) $in cover(selected_index)}
+                release thm set_builder_member(point, {x X: f(x) $in cover(selected_index)})
+                point $in {x X: f(x) $in cover(selected_index)}
                 point $in pullback_cover(selected_index)
                 pullback_cover(selected_index) $in fn_range(pullback_cover)
                 point $in family_union(fn_range(pullback_cover))

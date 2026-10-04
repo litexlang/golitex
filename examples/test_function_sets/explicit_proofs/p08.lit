@@ -1,0 +1,13 @@
+# P08: Checked general tuple membership before closure-valued return
+# Explicit proof contract; strict release checked, no trust.
+
+struct Box:
+    op fn(x R) R
+    tag N
+forall f fn(x R) R:
+    (f, 0) $in &Box
+have fn make(a R) &Box = (fn(x R) R {x + a}, 0)
+make(2) = (fn(x R) R {x + 2}, 0)
+have selected &Box = make(2)
+selected.op = fn(x R) R {x + 2}
+selected.op(3) = fn(x R) R {x + 2}(3) = 5

@@ -11,12 +11,18 @@
 
 [完整机器记录](proof_journals/remaining_issues_2026-10-04.json) · [源码、程序及完整输出归档](proof_journals/remaining_issues_2026-10-04_receipts.zip)
 
+## 同日纠正
+
+独立门禁复用了早期代码，八项主动代码与最终固定文件不同。按实际固定文件重新提取并重跑，**640/651通过、11拒绝**。R02“同样代码依赖整文件上下文”撤回：被比较的是旧短输入与新完整证明。其余门禁记录保留原版本身份。原始receipt保持不变。
+
+[纠正说明](nonzero_union_correction_2026-10-04.md) · [新机器记录](proof_journals/nonzero_union_correction_2026-10-04.json) · [纠正receipt](proof_journals/nonzero_union_correction_2026-10-04_receipts.zip)。
+
 ## 核验结果
 
 | 门禁 | 最终固定版本结果 |
 | --- | --- |
 | Obj 整文件 | 93/99通过，6失败；665是库存正例ID数 |
-| 普通 Obj 独立正例 | 632/651通过，19拒绝 |
+| 普通 Obj 独立正例 | 640/651通过，11拒绝（同日按实际固定文件重新提取纠正） |
 | Obj 负例 | 309/309正确拒绝 |
 | 两个需要真实模块上下文的Obj文件 | 整文件通过；14个正例未拆到缺上下文的-e运行 |
 | Stmt | 377/377符合预期，含132个负例 |
@@ -32,9 +38,9 @@
 
 ### R01：虚数反证同源新进程结果不稳定
 
-- 分类：行为问题，根因暂定；主标签：`kernel_problem`；最早边界：explicit proof / by_contra。
+- 分类：重叠等式替换的顺序依赖已确认；主标签：`kernel_problem`；最早边界：explicit proof / by_contra / builtin rewrite。
 - 观察：串行20次：12通过、8拒绝；同时直接 i!=0 通过。
-- 下一步：保留成功/失败输出，先找 by_contra 中第一条分歧证据；机制尚未定位。
+- 下一步：在局部重写叶子修复重叠条目遮蔽证明路径的问题。新日志已确认：先`i->0`全部通过，先`i*i->-1`全部拒绝；两种固定顺序各20次验证。正式内核未修复。
 - 诊断：只确认以下输入的结果；未据此认定缺少整个数学能力或确定共用根因。
 
 **实际输入：contra-serial**
@@ -53,92 +59,27 @@ by contra:
 
 执行类别：诊断中，未修复。本项验收须保持原数学目标，并检查相关负例；共享表示/状态/搜索或尚未确定语义的修改须进入既有讨论边界。
 
-### R02：同一个 Obj 正例依赖整文件上下文
+**同日澄清**：源码已有`ImaginaryUnitNonzero`与`ClosedComplex` BT rule。以下直接输入在归档和新release各20/20通过，实际先命中精确`by_closed_calculation`：
 
-- 分类：行为问题，根因暂定；主标签：`kernel_problem`；最早边界：context / WD / search。
-- 观察：union 独立 sketch 10/10 拒绝，整个文件10/10通过；不是 -e 独有，上一检查点 -f 小片段也拒绝。上述各拥有者整文件通过，但独立正例仍拒绝。
-- 下一步：比较完整文件/独立块的第一条 WD 与搜索证据、绑定和环境标识；不要先推断为事实泄漏。
-- 诊断：只确认以下输入的结果；未据此认定缺少整个数学能力或确定共用根因。
+```lit
+i != 0
+3 + 4*i != 4 + 3*i
+```
 
-**实际输入：union-sketch**
+原反证在新release仍不稳定（20次6通过、14拒绝），失败是收尾`negated_impossible`对`i*i=0`的搜索，不是缺`i!=0`规则。详细成功证明将`i*i`重写为`0*0`。源码显示`HashMap`遍历中的父/子重叠替换存在顺序依赖；具体证据与已通过的对照证明见[纠正说明](nonzero_union_correction_2026-10-04.md)。本次未修实现。
+
+**后续因果确认**：[重写顺序诊断](contra_rewrite_order_2026-10-04.md)已保存失败时的实际遍历及残余目标。70次带日志运行全部吻合，40次固定顺序干预确定改变结果。原归档与新诊断版本分别记录；没有实现修复。
+
+### R02：撤回——两份不同证明被误作同一输入
+
+分类：审计错误；不是已确认的上下文内核问题。原短写法：
 
 ```lit
 sketch:
-    by extension union({1},{2})={1,2}
+    by extension union({1}, {2}) = {1, 2}
 ```
 
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "by extension", "why_failed": {"type": "by", "rule_name": "By set extension", "message": "Prove set equality by extension", "phase": "by_extension", "failure": {"phase": "left_to_right", "result": {"type": "atomic_except_equality", "success": false, "phase": "search_proof", "fact": "union({1}, {2}) $subset {1, 2}", "well_defined": {"well_defined_of_each_parameter": [{"type": "by_def", "family": "SetOperator", "kind": "Union", "obj": "union({1}, {2})", "child_obj_well_defined": [{"type": "by_def", "family": "SetFormer", "kind": "ListSet", "obj": "{1}", "child_obj_well_defined": [{"type": "by_def", "family": "Literal", "kind": "Number", "obj": "1"}], "requiremen…`。
-
-**实际输入：union-P05**
-
-```lit
-sketch:
-    not 3 $in union({1}, {2})
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "not 3 $in union({1}, {2})", "why_failed": {"phase": "search_proof", "goal": "not 3 $in union({1}, {2})"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
-
-**实际输入：intersect-P05**
-
-```lit
-sketch:
-    not 1 $in intersect({1, 2}, {2, 3})
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "not 1 $in intersect({1, 2}, {2, 3})", "why_failed": {"phase": "search_proof", "goal": "not 1 $in intersect({1, 2}, {2, 3})"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
-
-**实际输入：set_minus-P06**
-
-```lit
-sketch:
-    not 2 $in set_minus({1, 2}, {2})
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "not 2 $in set_minus({1, 2}, {2})", "why_failed": {"phase": "search_proof", "goal": "not 2 $in set_minus({1, 2}, {2})"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
-
-**实际输入：set_builder-P06**
-
-```lit
-sketch:
-    let y = 1
-    let A = {x R: x > y}
-    $is_set(A)
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 1, "result": {"success": false, "statement": "let …", "why_failed": {"type": "define_obj", "rule_name": "Let binding", "message": "Bind a name to a well-defined value", "phase": "let", "failure": {"success": false, "obj": "{x R: x > y}", "phase": "well_defined", "failure": {"phase": "SetFormer", "failure": {"phase": "SetBuilder", "failure": {"phase": "fact", "failure": {"phase": "predicate_domain", "completed_requirements": [{"requirement": "x $in R", "verify": {"type": "atomic_except_equality", "success": true, "fact": "x $in R", "well_defined": {"well_defined_of_each_parameter": [{"type": "by_def", "family": "Identifier", "kind": "Identifier", "obj": "x"}, {"type": "by_known", "obj": "R", "wd_id": "wd2…`。
-
-**实际输入：anonymous_fn-P06**
-
-```lit
-sketch:
-    let y = 3
-    fn(x R) R {x + y}(2) = 2 + y = 2 + 3 = 5
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 1, "result": {"success": false, "statement": "fn (x R) R{x + y}(2) = 2 + y = 2 + 3 = 5", "why_failed": {"phase": "search_proof", "goal": "fn (x R) R{x + y}(2) = 2 + y = 2 + 3 = 5"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
-
-**实际输入：instantiated_template_obj-P04**
-
-```lit
-sketch:
-    template<S set>:
-        have fn identity(x S) S = x
-    let f = \identity<R>
-    f(2) = 2
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 2, "result": {"success": false, "statement": "f(2) = 2", "why_failed": {"phase": "search_proof", "goal": "f(2) = 2"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
-
-对照：union-whole: 通过。
-
-执行类别：诊断中，未修复。本项验收须保持原数学目标，并检查相关负例；共享表示/状态/搜索或尚未确定语义的修改须进入既有讨论边界。
+实际固定文件的P01已展开两方向成员证明与分情况，独立执行通过，整文件通过。旧短写法没有这些证明步骤，它的拒绝不能证明完整代码依赖外部上下文。完整前后代码和八项对照见[纠正说明](nonzero_union_correction_2026-10-04.md)。旧输入/结果仍保存为历史直接自动化边界证据。
 
 ### R03：algo 聚合能 eval，等式证明失败
 
@@ -1726,68 +1667,13 @@ GATES = (("docs", "run_docs_markdown_files"),
 
 执行类别：诊断中，未修复。本项验收须保持原数学目标，并检查相关负例；共享表示/状态/搜索或尚未确定语义的修改须进入既有讨论边界。
 
-## Obj 独立失败全集（19项，不是19个独立根因）
+## Obj 独立失败全集（11项，不是11个独立根因）
 
-### union-P01
-
-拥有者：`union.lit`。
-
-```lit
-sketch:
-    by extension union({1}, {2}) = {1, 2}
-```
-
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "by extension", "why_failed": {"type": "by", "rule_name": "By set extension", "message": "Prove set equality by extension", "phase": "by_extension", "failure": {"phase": "left_to_right", "result": {"type": "atomic_except_equality", "success": false, "phase": "search_proof", "fact": "union({1}, {2}) $subset {1, 2}", "well_defined": {"well_defined_of_each_parameter": `。
-
-### union-P05
-
-拥有者：`union.lit`。
-
-```lit
-sketch:
-    not 3 $in union({1}, {2})
-```
-
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "not 3 $in union({1}, {2})", "why_failed": {"phase": "search_proof", "goal": "not 3 $in union({1}, {2})"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
-
-### intersect-P05
-
-拥有者：`intersect.lit`。
-
-```lit
-sketch:
-    not 1 $in intersect({1, 2}, {2, 3})
-```
-
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "not 1 $in intersect({1, 2}, {2, 3})", "why_failed": {"phase": "search_proof", "goal": "not 1 $in intersect({1, 2}, {2, 3})"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
-
-### set_minus-P06
-
-拥有者：`set_minus.lit`。
-
-```lit
-sketch:
-    not 2 $in set_minus({1, 2}, {2})
-```
-
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "not 2 $in set_minus({1, 2}, {2})", "why_failed": {"phase": "search_proof", "goal": "not 2 $in set_minus({1, 2}, {2})"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
-
-### set_builder-P06
-
-拥有者：`set_builder.lit`。
-
-```lit
-sketch:
-    let y = 1
-    let A = {x R: x > y}
-    $is_set(A)
-```
-
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 1, "result": {"success": false, "statement": "let …", "why_failed": {"type": "define_obj", "rule_name": "Let binding", "message": "Bind a name to a well-defined value", "phase": "let", "failure": {"success": false, "obj": "{x R: x > y}", "phase": "well_defined", "failure": {"phase": "SetFormer", "failure": {"phase": "SetBuilder", "failure": {"phase": "fact", "failure": {"phase": "predicate_domain", "completed_`。
+全部从实际固定源码文件新提取，旧八个简写失败已归为历史探针。
 
 ### fn_set-P04
 
-拥有者：`fn_set.lit`。
+拥有者：`examples/test_objs/fn_set.lit`。
 
 ```lit
 sketch:
@@ -1795,37 +1681,11 @@ sketch:
     $is_set(F)
 ```
 
-`success=false`；first failure：`"Runtime(ParseError(RuntimeParseError { message: \"undefined name `x`\", line: 2, path: Eval }))"`。
-
-### anonymous_fn-P06
-
-拥有者：`anonymous_fn.lit`。
-
-```lit
-sketch:
-    let y = 3
-    fn(x R) R {x + y}(2) = 2 + y = 2 + 3 = 5
-```
-
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 1, "result": {"success": false, "statement": "fn (x R) R{x + y}(2) = 2 + y = 2 + 3 = 5", "why_failed": {"phase": "search_proof", "goal": "fn (x R) R{x + y}(2) = 2 + y = 2 + 3 = 5"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
-
-### sum-P106
-
-拥有者：`sum.lit`。
-
-```lit
-sketch:
-    algo flag(x R) R by cases:
-        case x = 0: 0
-        case x != 0: 1
-    sum(0,3,flag) = 3
-```
-
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 1, "result": {"success": false, "statement": "sum(0, 3, flag) = 3", "why_failed": {"phase": "search_proof", "goal": "sum(0, 3, flag) = 3"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ### sum-P107
 
-拥有者：`sum.lit`。
+拥有者：`examples/test_objs/sum.lit`。
 
 ```lit
 sketch:
@@ -1838,11 +1698,11 @@ sketch:
     sum(1,n,fn(k Z) R {c*f(k)}) = c*sum(1,n,f)
 ```
 
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 3, "result": {"success": false, "statement": "sum(1, n, fn (k Z) R{c}) = n * c", "why_failed": {"phase": "search_proof", "goal": "sum(1, n, fn (k Z) R{c}) = n * c"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ### sum-P108
 
-拥有者：`sum.lit`。
+拥有者：`examples/test_objs/sum.lit`。
 
 ```lit
 sketch:
@@ -1852,11 +1712,11 @@ sketch:
     sum(1,n,fn(k Z) Z {k+k}) = sum(1,n,fn(j Z) Z {2*j})
 ```
 
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 3, "result": {"success": false, "statement": "sum(1, n, fn (k Z) Z{k + k}) = sum(1, n, fn (j Z) Z{2 * j})", "why_failed": {"phase": "search_proof", "goal": "sum(1, n, fn (k Z) Z{k + k}) = sum(1, n, fn (j Z) Z{2 * j})"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ### product-P103
 
-拥有者：`product.lit`。
+拥有者：`examples/test_objs/product.lit`。
 
 ```lit
 sketch:
@@ -1867,11 +1727,11 @@ sketch:
     product(1,n+1,f) = product(1,n,f)*product(n+1,n+1,f)
 ```
 
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 3, "result": {"success": false, "statement": "product(1, n, fn (k Z) R*{c}) = c ^ n", "why_failed": {"phase": "search_proof", "goal": "product(1, n, fn (k Z) R*{c}) = c ^ n"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ### sum_of_finite_set-P103
 
-拥有者：`sum_of_finite_set.lit`。
+拥有者：`examples/test_objs/sum_of_finite_set.lit`。
 
 ```lit
 sketch:
@@ -1884,11 +1744,11 @@ sketch:
     finite_set_sum(S,fn(k S) R {c*f(k)}) = c*finite_set_sum(S,f)
 ```
 
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 4, "result": {"success": false, "statement": "finite_set_sum(S, fn (k S) R{f(k) + g(k)}) = finite_set_sum(S, f) + finite_set_sum(S, g)", "why_failed": {"phase": "search_proof", "goal": "finite_set_sum(S, fn (k S) R{f(k) + g(k)}) = finite_set_sum(S, f) + finite_set_sum(S, g)"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ### sum_of_finite_set-P106
 
-拥有者：`sum_of_finite_set.lit`。
+拥有者：`examples/test_objs/sum_of_finite_set.lit`。
 
 ```lit
 sketch:
@@ -1898,11 +1758,11 @@ sketch:
     finite_set_sum({1/3,2/3},flag) = 2
 ```
 
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 1, "result": {"success": false, "statement": "finite_set_sum({1 / 3, 2 / 3}, flag) = 2", "why_failed": {"phase": "search_proof", "goal": "finite_set_sum({1 / 3, 2 / 3}, flag) = 2"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ### product_of_finite_set-P103
 
-拥有者：`product_of_finite_set.lit`。
+拥有者：`examples/test_objs/product_of_finite_set.lit`。
 
 ```lit
 sketch:
@@ -1913,65 +1773,51 @@ sketch:
     finite_set_product(S,fn(k S) R {f(k)*g(k)}) = finite_set_product(S,f)*finite_set_product(S,g)
 ```
 
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 4, "result": {"success": false, "statement": "finite_set_product(S, fn (k S) R{f(k) * g(k)}) = finite_set_product(S, f) * finite_set_product(S, g)", "why_failed": {"phase": "search_proof", "goal": "finite_set_product(S, fn (k S) R{f(k) * g(k)}) = finite_set_product(S, f) * finite_set_product(S, g)"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ### finite_set_reduce-P02
 
-拥有者：`finite_set_reduce.lit`。
+拥有者：`examples/test_objs/finite_set_reduce.lit`。
 
 ```lit
 sketch:
     finite_set_reduce({2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 2
 ```
 
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "finite_set_reduce({2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 2", "why_failed": {"phase": "search_proof", "goal": "finite_set_reduce({2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 2"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ### finite_set_reduce-P03
 
-拥有者：`finite_set_reduce.lit`。
+拥有者：`examples/test_objs/finite_set_reduce.lit`。
 
 ```lit
 sketch:
     finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3
 ```
 
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "finite_set_reduce({1, 2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 3", "why_failed": {"phase": "search_proof", "goal": "finite_set_reduce({1, 2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 3"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ### finite_set_reduce-P04
 
-拥有者：`finite_set_reduce.lit`。
+拥有者：`examples/test_objs/finite_set_reduce.lit`。
 
 ```lit
 sketch:
     finite_set_reduce({2, 1}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3
 ```
 
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "finite_set_reduce({2, 1}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 3", "why_failed": {"phase": "search_proof", "goal": "finite_set_reduce({2, 1}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 3"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ### finite_set_reduce-P05
 
-拥有者：`finite_set_reduce.lit`。
+拥有者：`examples/test_objs/finite_set_reduce.lit`。
 
 ```lit
 sketch:
     finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 10) = 13
 ```
 
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 0, "result": {"success": false, "statement": "finite_set_reduce({1, 2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 10) = 13", "why_failed": {"phase": "search_proof", "goal": "finite_set_reduce({1, 2}, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 10) = 13"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
-
-### instantiated_template_obj-P04
-
-拥有者：`instantiated_template_obj.lit`。
-
-```lit
-sketch:
-    template<S set>:
-        have fn identity(x S) S = x
-    let f = \identity<R>
-    f(2) = 2
-```
-
-`success=false`；first failure：`{"success": false, "statement": "sketch", "why_failed": {"type": "proof_block", "rule_name": "Sketch", "message": "Run a sketch proof block", "phase": "sketch", "failure": {"step_index": 2, "result": {"success": false, "statement": "f(2) = 2", "why_failed": {"phase": "search_proof", "goal": "f(2) = 2"}, "stores": [], "infers": []}}}, "stores": [], "infers": []}`。
+`success=false`；exit `1`；完整失败输出见纠正receipt。
 
 ## 旧输入复查全集与剩余边界
 

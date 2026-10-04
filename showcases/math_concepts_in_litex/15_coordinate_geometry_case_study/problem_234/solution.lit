@@ -58,14 +58,14 @@ thm problem_234_rotation_length_bridge:
         =>:
             sqrt(geo::distance_sq(b, ep)) + sqrt(geo::distance_sq(d, f)) = sqrt(geo::distance_sq(ep, f))
     by def $geo::main::are_segments_congruent(b, ep, d, ep1)
-    by thm geo::distance_sq_nonnegative(b, ep)
-    by thm geo::distance_sq_nonnegative(d, ep1)
+    release thm geo::distance_sq_nonnegative(b, ep)
+    release thm geo::distance_sq_nonnegative(d, ep1)
     sqrt(geo::distance_sq(b, ep)) >= 0
     sqrt(geo::distance_sq(d, ep1)) >= 0
     sqrt(geo::distance_sq(b, ep))^2 = geo::distance_sq(b, ep)
     sqrt(geo::distance_sq(d, ep1))^2 = geo::distance_sq(d, ep1)
     sqrt(geo::distance_sq(b, ep))^2 = sqrt(geo::distance_sq(d, ep1))^2
-    by thm problem_234_nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq(b, ep)), sqrt(geo::distance_sq(d, ep1)))
+    release thm problem_234_nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq(b, ep)), sqrt(geo::distance_sq(d, ep1)))
     sqrt(geo::distance_sq(b, ep)) = sqrt(geo::distance_sq(d, ep1))
     sqrt(geo::distance_sq(b, ep)) + sqrt(geo::distance_sq(d, f)) = sqrt(geo::distance_sq(d, ep1)) + sqrt(geo::distance_sq(d, f))
     sqrt(geo::distance_sq(d, ep1)) + sqrt(geo::distance_sq(d, f)) = sqrt(geo::distance_sq(ep1, f))
@@ -91,10 +91,10 @@ thm problem_234_part1:
         sqrt(geo::distance_sq(ep1, f)) = sqrt(geo::distance_sq(d, ep1)) + sqrt(geo::distance_sq(d, f))
         =>:
             sqrt(geo::distance_sq(b, ep)) + sqrt(geo::distance_sq(d, f)) = sqrt(geo::distance_sq(ep, f))
-    by thm problem_234_rotation_length_bridge(a, b, d, ep, ep1, f)
-    by thm geo::distance_sq_nonnegative(b, ep)
-    by thm geo::distance_sq_nonnegative(d, f)
-    by thm geo::distance_sq_nonnegative(ep, f)
+    release thm problem_234_rotation_length_bridge(a, b, d, ep, ep1, f)
+    release thm geo::distance_sq_nonnegative(b, ep)
+    release thm geo::distance_sq_nonnegative(d, f)
+    release thm geo::distance_sq_nonnegative(ep, f)
 
 # 第(2)问：原题条件、图示旋转证书和目标等式直接列在定理中。
 thm problem_234_part2:
@@ -114,11 +114,11 @@ thm problem_234_part2:
         sqrt(geo::distance_sq(ep1, f)) = sqrt(geo::distance_sq(d, ep1)) + sqrt(geo::distance_sq(d, f))
         =>:
             sqrt(geo::distance_sq(ep, f)) = sqrt(geo::distance_sq(b, ep)) + sqrt(geo::distance_sq(d, f))
-    by thm problem_234_rotation_length_bridge(a, b, d, ep, ep1, f)
+    release thm problem_234_rotation_length_bridge(a, b, d, ep, ep1, f)
     sqrt(geo::distance_sq(ep, f)) = sqrt(geo::distance_sq(b, ep)) + sqrt(geo::distance_sq(d, f))
-    by thm geo::distance_sq_nonnegative(ep, f)
-    by thm geo::distance_sq_nonnegative(b, ep)
-    by thm geo::distance_sq_nonnegative(d, f)
+    release thm geo::distance_sq_nonnegative(ep, f)
+    release thm geo::distance_sq_nonnegative(b, ep)
+    release thm geo::distance_sq_nonnegative(d, f)
 
 # 90°旋转把 AP 变为 AP1，所以△PAP1为等腰直角三角形，PP1²=2AP²。
 thm problem_234_part3_rotated_diagonal:
@@ -126,14 +126,14 @@ thm problem_234_part3_rotated_diagonal:
         $geo::main::rotated_90_ccw(p1, a, p)
         =>:
             sqrt(geo::distance_sq(p, p1)) = sqrt(2) * sqrt(geo::distance_sq(a, p))
-    by thm geo::rotated_90_creates_isosceles_right(p, a, p1)
+    release thm geo::rotated_90_creates_isosceles_right(p, a, p1)
     geo::distance_sq(a, p) = geo::distance_sq(a, p1)
     geo::dot(geo::vec(a, p), geo::vec(a, p1)) = 0
-    by thm geo::isosceles_right_hypotenuse_length(p, a, p1, geo::distance_sq(a, p))
+    release thm geo::isosceles_right_hypotenuse_length(p, a, p1, geo::distance_sq(a, p))
     geo::distance_sq(p, p1) = 2 * geo::distance_sq(a, p)
 
-    by thm geo::distance_sq_nonnegative(p, p1)
-    by thm geo::distance_sq_nonnegative(a, p)
+    release thm geo::distance_sq_nonnegative(p, p1)
+    release thm geo::distance_sq_nonnegative(a, p)
     sqrt(geo::distance_sq(p, p1)) >= 0
     sqrt(2) >= 0
     sqrt(geo::distance_sq(a, p)) >= 0
@@ -146,7 +146,7 @@ thm problem_234_part3_rotated_diagonal:
     2 * sqrt(geo::distance_sq(a, p))^2 = 2 * geo::distance_sq(a, p)
     (sqrt(2) * sqrt(geo::distance_sq(a, p)))^2 = 2 * geo::distance_sq(a, p)
     sqrt(geo::distance_sq(p, p1))^2 = (sqrt(2) * sqrt(geo::distance_sq(a, p)))^2
-    by thm problem_234_nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq(p, p1)), sqrt(2) * sqrt(geo::distance_sq(a, p)))
+    release thm problem_234_nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq(p, p1)), sqrt(2) * sqrt(geo::distance_sq(a, p)))
 
 # 第(3)问：原题条件、90°旋转构造、共线顺序和目标等式均直接列出。
 thm problem_234_part3:
@@ -166,14 +166,14 @@ thm problem_234_part3:
         =>:
             sqrt(geo::distance_sq(b, p)) + sqrt(geo::distance_sq(p, c)) = sqrt(2) * sqrt(geo::distance_sq(a, p))
     by def $geo::main::are_segments_congruent(b, p, c, p1)
-    by thm geo::distance_sq_nonnegative(b, p)
-    by thm geo::distance_sq_nonnegative(c, p1)
+    release thm geo::distance_sq_nonnegative(b, p)
+    release thm geo::distance_sq_nonnegative(c, p1)
     sqrt(geo::distance_sq(b, p)) >= 0
     sqrt(geo::distance_sq(c, p1)) >= 0
     sqrt(geo::distance_sq(b, p))^2 = geo::distance_sq(b, p)
     sqrt(geo::distance_sq(c, p1))^2 = geo::distance_sq(c, p1)
     sqrt(geo::distance_sq(b, p))^2 = sqrt(geo::distance_sq(c, p1))^2
-    by thm problem_234_nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq(b, p)), sqrt(geo::distance_sq(c, p1)))
+    release thm problem_234_nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq(b, p)), sqrt(geo::distance_sq(c, p1)))
     sqrt(geo::distance_sq(b, p)) = sqrt(geo::distance_sq(c, p1))
 
     sqrt(geo::distance_sq(p, p1)) = sqrt(geo::distance_sq(p, c)) + sqrt(geo::distance_sq(c, p1))
@@ -182,9 +182,9 @@ thm problem_234_part3:
     sqrt(geo::distance_sq(b, p)) + sqrt(geo::distance_sq(p, c)) = sqrt(geo::distance_sq(c, p1)) + sqrt(geo::distance_sq(p, c))
     sqrt(geo::distance_sq(b, p)) + sqrt(geo::distance_sq(p, c)) = sqrt(geo::distance_sq(p, p1))
 
-    by thm problem_234_part3_rotated_diagonal(a, p, p1)
+    release thm problem_234_part3_rotated_diagonal(a, p, p1)
     sqrt(geo::distance_sq(p, p1)) = sqrt(2) * sqrt(geo::distance_sq(a, p))
     sqrt(geo::distance_sq(b, p)) + sqrt(geo::distance_sq(p, c)) = sqrt(2) * sqrt(geo::distance_sq(a, p))
-    by thm geo::distance_sq_nonnegative(b, p)
-    by thm geo::distance_sq_nonnegative(p, c)
-    by thm geo::distance_sq_nonnegative(a, p)
+    release thm geo::distance_sq_nonnegative(b, p)
+    release thm geo::distance_sq_nonnegative(p, c)
+    release thm geo::distance_sq_nonnegative(a, p)

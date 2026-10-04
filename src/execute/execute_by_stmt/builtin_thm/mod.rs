@@ -3,6 +3,7 @@ mod helper;
 mod membership;
 mod intersection;
 mod sums;
+mod folds;
 mod real_analysis;
 
 pub(super) use builtin_thm::prepare_builtin_thm;

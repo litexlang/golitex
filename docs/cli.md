@@ -64,11 +64,11 @@ litex [-strict] [-session] [-lang <en|zh>] <command>
 
 With no command, `litex` starts the interactive REPL described above.
 
-Shared flags are collected from argv and may appear before or after the command:
+Shared flags outside command operands may appear before or after the command:
 
 | Flag | Meaning |
 |------|---------|
-| `-strict` | Forbid user `trust`, `trust have`, and `abstract_prop`. |
+| `-strict` | Forbid user `trust` and `trust have`; allow abstract predicate declarations. |
 | `-session` | After a successful `-e` / `-f` / `-r` run, keep the Runtime open and continue as REPL. |
 | `-lang <tok>` | Output language for JSON / status text. `en` \| `english` (default) or `zh` \| `chinese`. Does not change Litex source. |
 
@@ -76,6 +76,7 @@ Examples:
 
 ```bash
 litex -strict -e "1 = 1"
+litex -strict -e '-2 < 0'
 litex -session -f chapter.lit
 litex -lang zh -f examples/tmp.lit
 litex -f examples/tmp.lit
@@ -83,13 +84,19 @@ litex -f examples/tmp.lit
 
 The parser is a small whitelist. Unsupported options and trailing tokens are
 rejected. Both `-strict -e "1 = 1"` and `-e "1 = 1" -strict` work.
-Keep the source string quoted as one argument.
+Keep the source string quoted as one argument. The shell removes the quotes;
+the argv item immediately following `-e` is then consumed as source, including
+a leading minus or an exact option spelling. For example, `-e '-strict'`
+passes `-strict` to the Litex parser and fails as invalid source; it does not
+enable strict mode or start a REPL.
 
 The current whitelist does not include `-compact`, `-detailed`, `-runner`,
 `-before`, `-isolated`, graph flags, or `-lean`. Those older command recipes
 are not entrypoints for this build. Rust projection APIs are separate from CLI flags.
 
-`-strict` rejects `trust`, `trust have`, and `abstract_prop` when executed.
+`-strict` rejects `trust` and `trust have` when executed. An `abstract_prop`
+declaration is allowed: it introduces only a predicate signature, with no
+proved instances. Calls still require valid arguments, exact arity and proof.
 It still accepts `axiom` and named set-theoretic releases; imported cache hits
 are not rerun as a fresh strict audit. See the
 [trust boundary](Manual.md#trust-and-strict-mode).

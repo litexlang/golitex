@@ -6,20 +6,21 @@
 - Scope: DefAbstractPropStmt restriction and tooling observations.
 - Related workspace: golitex.
 
-These are explicit implementation restrictions, documented policy, or tooling drift. They are not counted among the ten open issue groups. If support is intended, make that decision before changing the existing rejection contract.
+These are implementation boundaries and policy observations, not additional open issue groups.
 
 ### Current strict-mode contract
 
-This is a checked policy boundary, not an additional bug. With `-strict` the CLI rejects this input:
+The maintainer authorized allowing pure abstract declarations on 2026-10-04.
+The old strict prohibition is removed; declaring a signature still proves no instances:
 
 ```litex
-# Boundary: strict-abstract-prop-rejected
-# Owner: DefAbstractPropStmt
-
 abstract_prop P(x)
+# Neither $P(0) nor not $P(0) follows from this declaration.
 ```
 
-Runnable control: [strict-abstract-prop-rejected.lit](../../boundaries/strict-abstract-prop-rejected.lit).
+Runnable positive control: [strict-abstract-prop-allowed.lit](../../boundaries/strict-abstract-prop-allowed.lit).
+Executable rejection controls: [strict-abstract-instance-unproved.lit](../../boundaries/strict-abstract-instance-unproved.lit).
+User `trust` / `trust have` remain forbidden, including template and nested proof forms.
 
 Malformed initial attempts and unsupported shorthand remain in the chronological journal; they are not silently promoted to confirmed bugs.
 

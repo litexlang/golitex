@@ -57,7 +57,7 @@ fn print_help_message() -> Vec<String> {
         format!("{} -help", bin),
         format!("{} -version", bin),
         "-session keeps the Runtime env open and continues as REPL after -e/-f/-r.".to_string(),
-        "-strict forbids `trust` / `trust have` / `abstract_prop`.".to_string(),
+        "-strict forbids `trust` / `trust have`; abstract predicate declarations are allowed.".to_string(),
         "-lang en|english|zh|chinese selects JSON / status output language (default en).".to_string(),
         "-extractpython / -extractc emit verified numeric/algo fragments as Python or C.".to_string(),
     ];

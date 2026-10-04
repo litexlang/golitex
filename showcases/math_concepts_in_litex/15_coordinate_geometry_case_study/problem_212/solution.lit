@@ -34,14 +34,14 @@ thm opposite_sign_equal_squares_sum_zero:
             x + y = 0
 
     x^2 - y^2 = 0
-    by thm geo::difference_of_squares(x, y)
+    release thm geo::difference_of_squares(x, y)
     x^2 - y^2 = (x + y) * (x - y)
     (x + y) * (x - y) = 0
 
     by contra:
         ? x + y = 0
         x + y != 0
-        by thm geo::zero_factor_law(x + y, x - y)
+        release thm geo::zero_factor_law(x + y, x - y)
         x - y = 0
         x = y
         x * y = x * x
@@ -72,15 +72,15 @@ thm final_metric_scalar_closure:
     2 * aa + 2 * bb - xx = 2 * aa + 2 * bb - (aa + bb - 2 * pp)
     2 * aa + 2 * bb - (aa + bb - 2 * pp) = aa + bb + 2 * pp
     qq + pp = 0
-    by thm geo::zero_sum_rearrange(qq, pp)
+    release thm geo::zero_sum_rearrange(qq, pp)
     -qq = pp
     pp = -qq
-    by thm geo::add_equalities(aa, dd, bb, cc)
+    release thm geo::add_equalities(aa, dd, bb, cc)
     aa + bb = dd + cc
-    by thm geo::multiply_both_sides(pp, -qq, 2)
+    release thm geo::multiply_both_sides(pp, -qq, 2)
     pp * 2 = (-qq) * 2
     2 * pp = pp * 2 = (-qq) * 2 = -2 * qq
-    by thm geo::add_equalities(aa + bb, dd + cc, 2 * pp, -2 * qq)
+    release thm geo::add_equalities(aa + bb, dd + cc, 2 * pp, -2 * qq)
     aa + bb + 2 * pp = (dd + cc) + (-2 * qq)
     (dd + cc) + (-2 * qq) = dd + cc - 2 * qq
     aa + bb + 2 * pp = dd + cc - 2 * qq
@@ -122,34 +122,34 @@ thm problem_212_oe_half_cd:
     # 两组等长条件使两个余弦分母相等。
     geo::angle_cos_den(a, o, b) = geo::distance_sq(o, a) * geo::distance_sq(o, b)
     geo::angle_cos_den(c, o, d) = geo::distance_sq(o, c) * geo::distance_sq(o, d)
-    by thm geo::multiply_both_sides(geo::distance_sq(o, a), geo::distance_sq(o, d), geo::distance_sq(o, b))
+    release thm geo::multiply_both_sides(geo::distance_sq(o, a), geo::distance_sq(o, d), geo::distance_sq(o, b))
     geo::distance_sq(o, a) * geo::distance_sq(o, b) = geo::distance_sq(o, d) * geo::distance_sq(o, b)
-    by thm geo::multiply_both_sides(geo::distance_sq(o, b), geo::distance_sq(o, c), geo::distance_sq(o, d))
+    release thm geo::multiply_both_sides(geo::distance_sq(o, b), geo::distance_sq(o, c), geo::distance_sq(o, d))
     geo::distance_sq(o, b) * geo::distance_sq(o, d) = geo::distance_sq(o, c) * geo::distance_sq(o, d)
     geo::distance_sq(o, d) * geo::distance_sq(o, b) = geo::distance_sq(o, b) * geo::distance_sq(o, d)
     geo::distance_sq(o, a) * geo::distance_sq(o, b) = geo::distance_sq(o, c) * geo::distance_sq(o, d)
     geo::angle_cos_den(a, o, b) = geo::angle_cos_den(c, o, d)
 
     # 四条射线非零，故共同分母为正，可以合法消去。
-    by thm geo::distance_sq_positive_of_ne(o, a)
+    release thm geo::distance_sq_positive_of_ne(o, a)
     0 < geo::distance_sq(o, a)
-    by thm geo::distance_sq_positive_of_ne(o, b)
+    release thm geo::distance_sq_positive_of_ne(o, b)
     0 < geo::distance_sq(o, b)
     0 < geo::distance_sq(o, a) * geo::distance_sq(o, b)
     0 < geo::angle_cos_den(a, o, b)
     geo::angle_cos_den(a, o, b) != 0
-    by thm geo::multiply_both_sides(geo::angle_cos_den(a, o, b), geo::angle_cos_den(c, o, d), geo::angle_cos_num(a, o, b)^2)
+    release thm geo::multiply_both_sides(geo::angle_cos_den(a, o, b), geo::angle_cos_den(c, o, d), geo::angle_cos_num(a, o, b)^2)
     geo::angle_cos_den(a, o, b) * geo::angle_cos_num(a, o, b)^2 = geo::angle_cos_den(c, o, d) * geo::angle_cos_num(a, o, b)^2
     geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(a, o, b) = geo::angle_cos_den(a, o, b) * geo::angle_cos_num(a, o, b)^2
     geo::angle_cos_den(c, o, d) * geo::angle_cos_num(a, o, b)^2 = geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(c, o, d)
     geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(a, o, b) = geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(c, o, d)
     geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(c, o, d) = geo::angle_cos_num(c, o, d)^2 * geo::angle_cos_den(a, o, b)
     geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(a, o, b) = geo::angle_cos_num(c, o, d)^2 * geo::angle_cos_den(a, o, b)
-    by thm geo::divide_both_sides(geo::angle_cos_num(a, o, b)^2, geo::angle_cos_num(c, o, d)^2, geo::angle_cos_den(a, o, b))
+    release thm geo::divide_both_sides(geo::angle_cos_num(a, o, b)^2, geo::angle_cos_num(c, o, d)^2, geo::angle_cos_den(a, o, b))
     geo::angle_cos_num(a, o, b)^2 = geo::angle_cos_num(c, o, d)^2
 
     # 实例化局部标量引理，得到两点积之和为零。
-    by thm opposite_sign_equal_squares_sum_zero(geo::angle_cos_num(a, o, b), geo::angle_cos_num(c, o, d))
+    release thm opposite_sign_equal_squares_sum_zero(geo::angle_cos_num(a, o, b), geo::angle_cos_num(c, o, d))
     geo::angle_cos_num(a, o, b) + geo::angle_cos_num(c, o, d) = 0
 
     # 展开余弦分子，得到向量点积关系。
@@ -157,7 +157,7 @@ thm problem_212_oe_half_cd:
     geo::angle_cos_num(c, o, d) = geo::dot(geo::vec(o, c), geo::vec(o, d))
     geo::dot(geo::vec(o, a), geo::vec(o, b)) = geo::angle_cos_num(a, o, b)
     geo::dot(geo::vec(o, c), geo::vec(o, d)) = geo::angle_cos_num(c, o, d)
-    by thm geo::add_equalities(geo::dot(geo::vec(o, a), geo::vec(o, b)), geo::angle_cos_num(a, o, b), geo::dot(geo::vec(o, c), geo::vec(o, d)), geo::angle_cos_num(c, o, d))
+    release thm geo::add_equalities(geo::dot(geo::vec(o, a), geo::vec(o, b)), geo::angle_cos_num(a, o, b), geo::dot(geo::vec(o, c), geo::vec(o, d)), geo::angle_cos_num(c, o, d))
     geo::dot(geo::vec(o, a), geo::vec(o, b)) + geo::dot(geo::vec(o, c), geo::vec(o, d)) = geo::angle_cos_num(a, o, b) + geo::angle_cos_num(c, o, d)
     geo::dot(geo::vec(o, a), geo::vec(o, b)) + geo::dot(geo::vec(o, c), geo::vec(o, d)) = geo::angle_cos_num(a, o, b) + geo::angle_cos_num(c, o, d) = 0
 
@@ -166,25 +166,25 @@ thm problem_212_oe_half_cd:
     2 * (m[2] - o[2]) = (a[2] - o[2]) + (b[2] - o[2])
 
     # 阿波罗尼斯公式将中点距离化为 OA、OB、AB 的平方距离。
-    by thm geo::apollonius_theorem(o, a, b, m)
+    release thm geo::apollonius_theorem(o, a, b, m)
     4 * geo::distance_sq(o, m) = 2 * geo::distance_sq(o, a) + 2 * geo::distance_sq(o, b) - geo::distance_sq(a, b)
 
     # 两个三角形的余弦定理，直接使用 O 点为夹角顶点的原生方向。
-    by thm geo::cosine_law(a, o, b)
+    release thm geo::cosine_law(a, o, b)
     geo::distance_sq(a, b) = geo::distance_sq(a, o) + geo::distance_sq(o, b) - 2 * geo::dot(geo::vec(o, a), geo::vec(o, b))
-    by thm geo::distance_sq_symmetric(o, a)
+    release thm geo::distance_sq_symmetric(o, a)
     geo::distance_sq(o, a) = geo::distance_sq(a, o)
     geo::distance_sq(a, o) + geo::distance_sq(o, b) - 2 * geo::dot(geo::vec(o, a), geo::vec(o, b)) = geo::distance_sq(o, a) + geo::distance_sq(o, b) - 2 * geo::dot(geo::vec(o, a), geo::vec(o, b))
     geo::distance_sq(o, a) + geo::distance_sq(o, b) - 2 * geo::dot(geo::vec(o, a), geo::vec(o, b)) = geo::distance_sq(a, b)
-    by thm geo::cosine_law(c, o, d)
+    release thm geo::cosine_law(c, o, d)
     geo::distance_sq(c, d) = geo::distance_sq(c, o) + geo::distance_sq(o, d) - 2 * geo::dot(geo::vec(o, c), geo::vec(o, d))
-    by thm geo::distance_sq_symmetric(o, c)
+    release thm geo::distance_sq_symmetric(o, c)
     geo::distance_sq(o, c) = geo::distance_sq(c, o)
     geo::distance_sq(c, o) + geo::distance_sq(o, d) - 2 * geo::dot(geo::vec(o, c), geo::vec(o, d)) = geo::distance_sq(o, c) + geo::distance_sq(o, d) - 2 * geo::dot(geo::vec(o, c), geo::vec(o, d))
     geo::distance_sq(o, c) + geo::distance_sq(o, d) - 2 * geo::dot(geo::vec(o, c), geo::vec(o, d)) = geo::distance_sq(c, d)
 
     # 将两次余弦定理、两组等长及点积抵消交给已验证的局部标量引理。
-    by thm final_metric_scalar_closure(geo::distance_sq(o, a), geo::distance_sq(o, b), geo::distance_sq(o, c), geo::distance_sq(o, d), geo::dot(geo::vec(o, a), geo::vec(o, b)), geo::dot(geo::vec(o, c), geo::vec(o, d)), geo::distance_sq(a, b), geo::distance_sq(c, d))
+    release thm final_metric_scalar_closure(geo::distance_sq(o, a), geo::distance_sq(o, b), geo::distance_sq(o, c), geo::distance_sq(o, d), geo::dot(geo::vec(o, a), geo::vec(o, b)), geo::dot(geo::vec(o, c), geo::vec(o, d)), geo::distance_sq(a, b), geo::distance_sq(c, d))
     2 * geo::distance_sq(o, a) + 2 * geo::distance_sq(o, b) - geo::distance_sq(a, b) = geo::distance_sq(c, d)
     4 * geo::distance_sq(o, m) = geo::distance_sq(c, d)
 

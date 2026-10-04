@@ -38,10 +38,10 @@ thm problem_511:
     f[1] = (2 / 3) * d[1] + (1 / 3) * c[1]
     f[2] = (2 / 3) * d[2] + (1 / 3) * c[2]
     f[1] - ep[1] = ((1 - 1 / 3) * d[1] + (1 / 3) * c[1]) - ((1 - 1 / 3) * a[1] + (1 / 3) * b[1])
-    by thm one_third_affine_difference(a[1], b[1], c[1], d[1], f[1] - ep[1])
+    release thm one_third_affine_difference(a[1], b[1], c[1], d[1], f[1] - ep[1])
     f[1] - ep[1] = (2 / 3) * (d[1] - a[1]) + (1 / 3) * (c[1] - b[1])
     f[2] - ep[2] = ((1 - 1 / 3) * d[2] + (1 / 3) * c[2]) - ((1 - 1 / 3) * a[2] + (1 / 3) * b[2])
-    by thm one_third_affine_difference(a[2], b[2], c[2], d[2], f[2] - ep[2])
+    release thm one_third_affine_difference(a[2], b[2], c[2], d[2], f[2] - ep[2])
     f[2] - ep[2] = (2 / 3) * (d[2] - a[2]) + (1 / 3) * (c[2] - b[2])
 
     # EF is a positive affine combination of the codirected parallel sides.
@@ -52,23 +52,23 @@ thm problem_511:
     geo::det(geo::vec(ep, f), geo::vec(b, c)) = (f[1] - ep[1]) * (c[2] - b[2]) - (f[2] - ep[2]) * (c[1] - b[1])
     geo::det(geo::vec(ep, f), geo::vec(b, c)) = ((2 / 3) * (d[1] - a[1]) + (1 / 3) * (c[1] - b[1])) * (c[2] - b[2]) - ((2 / 3) * (d[2] - a[2]) + (1 / 3) * (c[2] - b[2])) * (c[1] - b[1])
     ((2 / 3) * (d[1] - a[1]) + (1 / 3) * (c[1] - b[1])) * (c[2] - b[2]) - ((2 / 3) * (d[2] - a[2]) + (1 / 3) * (c[2] - b[2])) * (c[1] - b[1]) = (2 / 3) * ((d[1] - a[1]) * (c[2] - b[2]) - (d[2] - a[2]) * (c[1] - b[1]))
-    by thm geo::det_coordinate_formula(geo::vec(a, d), geo::vec(b, c))
+    release thm geo::det_coordinate_formula(geo::vec(a, d), geo::vec(b, c))
     geo::det(geo::vec(a, d), geo::vec(b, c)) = (d[1] - a[1]) * (c[2] - b[2]) - (d[2] - a[2]) * (c[1] - b[1])
     geo::det(geo::vec(ep, f), geo::vec(b, c)) = ((2 / 3) * (d[1] - a[1]) + (1 / 3) * (c[1] - b[1])) * (c[2] - b[2]) - ((2 / 3) * (d[2] - a[2]) + (1 / 3) * (c[2] - b[2])) * (c[1] - b[1]) = (2 / 3) * ((d[1] - a[1]) * (c[2] - b[2]) - (d[2] - a[2]) * (c[1] - b[1])) = (2 / 3) * geo::det(geo::vec(a, d), geo::vec(b, c))
     geo::det(geo::vec(ep, f), geo::vec(b, c)) = 0
 
     # Positivity proves that EF is not the zero segment.
     b != c
-    by thm geo::distance_sq_positive_of_ne(b, c)
-    by thm geo::vec_dot_self_is_distance(b, c)
+    release thm geo::distance_sq_positive_of_ne(b, c)
+    release thm geo::vec_dot_self_is_distance(b, c)
     geo::dot(geo::vec(b, c), geo::vec(b, c)) > 0
-    by thm geo::dot_coordinate_formula(geo::vec(ep, f), geo::vec(b, c))
+    release thm geo::dot_coordinate_formula(geo::vec(ep, f), geo::vec(b, c))
     geo::dot(geo::vec(ep, f), geo::vec(b, c)) = (f[1] - ep[1]) * (c[1] - b[1]) + (f[2] - ep[2]) * (c[2] - b[2])
     geo::dot(geo::vec(ep, f), geo::vec(b, c)) = ((2 / 3) * (d[1] - a[1]) + (1 / 3) * (c[1] - b[1])) * (c[1] - b[1]) + ((2 / 3) * (d[2] - a[2]) + (1 / 3) * (c[2] - b[2])) * (c[2] - b[2])
     ((2 / 3) * (d[1] - a[1]) + (1 / 3) * (c[1] - b[1])) * (c[1] - b[1]) + ((2 / 3) * (d[2] - a[2]) + (1 / 3) * (c[2] - b[2])) * (c[2] - b[2]) = (2 / 3) * ((d[1] - a[1]) * (c[1] - b[1]) + (d[2] - a[2]) * (c[2] - b[2])) + (1 / 3) * ((c[1] - b[1]) * (c[1] - b[1]) + (c[2] - b[2]) * (c[2] - b[2]))
-    by thm geo::dot_coordinate_formula(geo::vec(a, d), geo::vec(b, c))
+    release thm geo::dot_coordinate_formula(geo::vec(a, d), geo::vec(b, c))
     geo::dot(geo::vec(a, d), geo::vec(b, c)) = (d[1] - a[1]) * (c[1] - b[1]) + (d[2] - a[2]) * (c[2] - b[2])
-    by thm geo::dot_coordinate_formula(geo::vec(b, c), geo::vec(b, c))
+    release thm geo::dot_coordinate_formula(geo::vec(b, c), geo::vec(b, c))
     geo::dot(geo::vec(b, c), geo::vec(b, c)) = (c[1] - b[1]) * (c[1] - b[1]) + (c[2] - b[2]) * (c[2] - b[2])
     geo::dot(geo::vec(ep, f), geo::vec(b, c)) = ((2 / 3) * (d[1] - a[1]) + (1 / 3) * (c[1] - b[1])) * (c[1] - b[1]) + ((2 / 3) * (d[2] - a[2]) + (1 / 3) * (c[2] - b[2])) * (c[2] - b[2]) = (2 / 3) * ((d[1] - a[1]) * (c[1] - b[1]) + (d[2] - a[2]) * (c[2] - b[2])) + (1 / 3) * ((c[1] - b[1]) * (c[1] - b[1]) + (c[2] - b[2]) * (c[2] - b[2])) = (2 / 3) * geo::dot(geo::vec(a, d), geo::vec(b, c)) + (1 / 3) * geo::dot(geo::vec(b, c), geo::vec(b, c))
     2 / 3 > 0

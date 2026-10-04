@@ -86,3 +86,30 @@ fn false_builder_and_undefined_carrier_reject_and_rollback() {
     }
     assert_eq!(rt.execution_environments_stack.len(), 1);
 }
+
+#[test]
+fn late_carrier_equalities_retain_conditions_without_selecting_or_branches() {
+    for (domain, condition) in [
+        ("R", "value $in Carrier"),
+        ("R", "value $in Carrier and 0 = 0"),
+        ("Carrier", "0 = 0 = 0"),
+    ] {
+        let mut rt = runtime(true);
+        // The ordinary Carrier membership predates its defining equality.
+        let code = format!("claim:\n    ? forall Carrier set, value R:\n        value $in Carrier\n        Carrier = {{x R: x > 0}}\n        =>:\n            value > 0\n    release thm set_builder_member(value, {{x {domain}: {condition}}})\n    value > 0\n");
+        let run = rt.run_litex_code(&code).unwrap();
+        assert!(run.success && run.session_error.is_none(), "{code}");
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+    }
+    for code in [
+        "claim:\n    ? forall First, Second set, value R:\n        value $in Second\n        First = {x R: x > 0}\n        =>:\n            value > 0\n    release thm set_builder_member(value, {x R: x $in First or x $in Second})\n    value > 0\n",
+        "claim:\n    ? forall First, Second set, value R:\n        value $in First\n        Second = {x R: x > 0}\n        =>:\n            value > 0\n    release thm set_builder_member(value, {x First: 0 = 0})\n    value > 0\n",
+    ] {
+        let mut rt = runtime(true);
+        let before = sizes(&rt);
+        let run = rt.run_litex_code(code).unwrap();
+        assert!(!run.success && run.session_error.is_none(), "{code}");
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+        assert_eq!(sizes(&rt), before, "{code}");
+    }
+}

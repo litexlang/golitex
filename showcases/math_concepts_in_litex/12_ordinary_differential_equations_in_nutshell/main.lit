@@ -61,7 +61,8 @@ thm ode_solution_solves_equation:
     ? forall x R:
         $solves_ode_at(ode_solution, ode_rhs, x)
     witness $solves_ode_at(ode_solution, ode_rhs, x) from 2 * x:
-        by thm ode_solution_has_derivative(x) => $has_derivative_at(ode_solution, x, 2 * x)
+        release thm ode_solution_has_derivative(x)
+        $has_derivative_at(ode_solution, x, 2 * x)
         ode_rhs(x, ode_solution(x)) = 2 * x
 
 ode_solution(0) = 1
@@ -158,7 +159,8 @@ thm ode_solution_derivative_value:
     ? forall x R:
         $is_differentiable_at(ode_solution, x)
         derivative_at(ode_solution, x) = 2 * x
-    by thm ode_solution_has_derivative(x) => $has_derivative_at(ode_solution, x, 2 * x)
+    release thm ode_solution_has_derivative(x)
+    $has_derivative_at(ode_solution, x, 2 * x)
     release thm has_derivative_at_to_derivative_value(ode_solution, x, 2 * x)
 
 # Restate the ODE using the callable derivative interface rather than an

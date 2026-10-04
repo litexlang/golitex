@@ -91,4 +91,4 @@ thm problem_513_parameter_kernel:
     t * S * (b * c * (b + c)) = (b + c) * (t * S * b * c)
     (t * (b + c - a)) * (t * S * b * c) = (b + c) * (t * S * b * c)
     t * S * b * c > 0
-    by thm geo::cancel_positive_right_factor(t * (b + c - a), b + c, t * S * b * c)
+    release thm geo::cancel_positive_right_factor(t * (b + c - a), b + c, t * S * b * c)

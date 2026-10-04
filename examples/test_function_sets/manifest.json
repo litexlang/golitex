@@ -695,6 +695,126 @@
       "expect": "reject",
       "setup_statements": 1,
       "phase": "search_proof"
+    },
+    {
+      "id": "P01",
+      "group": "explicit_proofs",
+      "title": "Explicit call chain for specialized template alias",
+      "expect": "accept",
+      "phase": null,
+      "file": "explicit_proofs/p01.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "P02",
+      "group": "explicit_proofs",
+      "title": "Template tuple equation and typed struct field bridge",
+      "expect": "accept",
+      "phase": null,
+      "file": "explicit_proofs/p02.lit",
+      "statements": 7,
+      "setup_statements": 6
+    },
+    {
+      "id": "P03",
+      "group": "explicit_proofs",
+      "title": "Explicit call chain for returned-function alias",
+      "expect": "accept",
+      "phase": null,
+      "file": "explicit_proofs/p03.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "P04",
+      "group": "explicit_proofs",
+      "title": "Anonymous struct field equation and numeric call chain",
+      "expect": "accept",
+      "phase": null,
+      "file": "explicit_proofs/p04.lit",
+      "statements": 5,
+      "setup_statements": 4
+    },
+    {
+      "id": "P05",
+      "group": "explicit_proofs",
+      "title": "Specialized function-space equation before membership and binding",
+      "expect": "accept",
+      "phase": null,
+      "file": "explicit_proofs/p05.lit",
+      "statements": 6,
+      "setup_statements": 5
+    },
+    {
+      "id": "P06",
+      "group": "explicit_proofs",
+      "title": "Returned tuple equation and typed struct field bridge",
+      "expect": "accept",
+      "phase": null,
+      "file": "explicit_proofs/p06.lit",
+      "statements": 8,
+      "setup_statements": 7
+    },
+    {
+      "id": "P07",
+      "group": "explicit_proofs",
+      "title": "Checked general tuple membership before closure-valued template",
+      "expect": "accept",
+      "phase": null,
+      "file": "explicit_proofs/p07.lit",
+      "statements": 7,
+      "setup_statements": 6
+    },
+    {
+      "id": "P08",
+      "group": "explicit_proofs",
+      "title": "Checked general tuple membership before closure-valued return",
+      "expect": "accept",
+      "phase": null,
+      "file": "explicit_proofs/p08.lit",
+      "statements": 7,
+      "setup_statements": 6
+    },
+    {
+      "id": "N22",
+      "group": "explicit_proofs",
+      "title": "False specialized-template call chain",
+      "expect": "reject",
+      "phase": "search_proof",
+      "file": "explicit_proofs/n22.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "N23",
+      "group": "explicit_proofs",
+      "title": "False typed struct field call chain",
+      "expect": "reject",
+      "phase": "search_proof",
+      "file": "explicit_proofs/n23.lit",
+      "statements": 7,
+      "setup_statements": 6
+    },
+    {
+      "id": "N24",
+      "group": "explicit_proofs",
+      "title": "False returned-function alias call chain",
+      "expect": "reject",
+      "phase": "search_proof",
+      "file": "explicit_proofs/n24.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "N25",
+      "group": "explicit_proofs",
+      "title": "General constructor proof does not admit an invalid tag",
+      "expect": "reject",
+      "phase": "def_template",
+      "file": "explicit_proofs/n25.lit",
+      "statements": 3,
+      "setup_statements": 2
     }
   ]
 }
