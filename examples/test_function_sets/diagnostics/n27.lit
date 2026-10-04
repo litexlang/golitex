@@ -1,0 +1,2 @@
+# N27: Former fn_set.lit P04 is an invalid parameter-dependent return carrier.
+let F = fn(x R) x

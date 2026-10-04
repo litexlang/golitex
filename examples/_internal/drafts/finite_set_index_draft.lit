@@ -1,8 +1,8 @@
-# Migration blocker B06: see plan/迁移的plan/和example有关.md.
-# General index existence uses the native finite-sequence bijection interface.
-# The remaining legacy induction/predicate replay is tracked in the migration plan.
+# B06: migrated; strict acceptance and proof controls in Round22 journal.
+# Index witnesses use the native finite-sequence bijection interface.
+# Preserve positive-cardinality induction; finish by explicit size cases.
 # Nonempty finite sets have an index function.
-# Induction on finite_set_size(s): base |s| = 1, then extend after removing a least element.
+# Induction over positive cardinalities with a singleton base and checked step.
 
 prop injective_fn(S, T set, f fn(x S) T):
     forall x1, x2 S:
@@ -182,3 +182,19 @@ claim:
     have n N+ = finite_set_size(s)
     finite_set_size(s) = n
     $finite_set_size_has_index(n)
+    by cases:
+        ? exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
+        case n = 1:
+            finite_set_size(s) = 1
+            release thm index_function_for_singleton(s)
+        case n != 1:
+            by contra:
+                ? n > 1
+                n <= 1
+                n = 1
+                impossible n != 1
+            n - 1 > 0
+            n - 1 $in N+
+            finite_set_size(s) = n = (n - 1) + 1
+            $finite_set_size_has_index(n - 1)
+            release thm index_function_step(n - 1, s)

@@ -36,3 +36,11 @@ sketch:
 sketch:
     i / i = 1
     1 / i + i = 0
+
+# P103: nonzero by contradiction with explicit substitution
+sketch:
+    by contra:
+        ? i != 0
+        i * i = -1
+        i * i = 0 * 0 = 0
+        impossible i * i != 0

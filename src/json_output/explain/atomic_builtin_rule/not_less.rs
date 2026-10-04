@@ -49,6 +49,46 @@ impl ClosedNumericComparisonBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => text(
+                "ClosedNumericComparison",
+                "封閉數值比較",
+                "十進位值 L >= R 時，`not (left < right)`",
+            ),
+            OutputLanguage::French => text(
+                "ClosedNumericComparison",
+                "Comparaison numérique fermée",
+                "Si les valeurs décimales vérifient L >= R, alors `not (left < right)`",
+            ),
+            OutputLanguage::Russian => text(
+                "ClosedNumericComparison",
+                "Сравнение замкнутых числовых выражений",
+                "Если десятичные значения удовлетворяют L >= R, то `not (left < right)`",
+            ),
+            OutputLanguage::Spanish => text(
+                "ClosedNumericComparison",
+                "Comparación numérica cerrada",
+                "Si los valores decimales cumplen L >= R, entonces `not (left < right)`",
+            ),
+            OutputLanguage::Arabic => text(
+                "ClosedNumericComparison",
+                "مقارنة عددية مغلقة",
+                "إذا كانت القيم العشرية تحقق L >= R فإن `not (left < right)`",
+            ),
+            OutputLanguage::Japanese => text(
+                "ClosedNumericComparison",
+                "閉じた数値式の比較",
+                "小数値で L >= R なら `not (left < right)`",
+            ),
+            OutputLanguage::Korean => text(
+                "ClosedNumericComparison",
+                "닫힌 수치 식 비교",
+                "소수 값이 L >= R이면 `not (left < right)`",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "ClosedNumericComparison",
+                "So sánh số đóng",
+                "Nếu giá trị thập phân thỏa L >= R thì `not (left < right)`",
+            ),
         }
     }
 }
@@ -74,7 +114,44 @@ impl FromKnownGreaterBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => {
+                text("FromKnownGreater", "由已知大於", "`a > b` ⇒ `not (a < b)`")
+            }
+            OutputLanguage::French => text(
+                "FromKnownGreater",
+                "Depuis une inégalité supérieure connue",
+                "`a > b` ⇒ `not (a < b)`",
+            ),
+            OutputLanguage::Russian => text(
+                "FromKnownGreater",
+                "Из известного большего значения",
+                "`a > b` ⇒ `not (a < b)`",
+            ),
+            OutputLanguage::Spanish => text(
+                "FromKnownGreater",
+                "Desde desigualdad mayor conocida",
+                "`a > b` ⇒ `not (a < b)`",
+            ),
+            OutputLanguage::Arabic => text(
+                "FromKnownGreater",
+                "من علاقة أكبر معلومة",
+                "`a > b` ⇒ `not (a < b)`",
+            ),
+            OutputLanguage::Japanese => text(
+                "FromKnownGreater",
+                "既知の大なり関係から",
+                "`a > b` ⇒ `not (a < b)`",
+            ),
+            OutputLanguage::Korean => text(
+                "FromKnownGreater",
+                "알려진 큼 관계에서",
+                "`a > b` ⇒ `not (a < b)`",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "FromKnownGreater",
+                "Từ quan hệ lớn hơn đã biết",
+                "`a > b` ⇒ `not (a < b)`",
+            ),
         }
     }
 }
-

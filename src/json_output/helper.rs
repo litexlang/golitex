@@ -253,6 +253,15 @@ pub(super) fn split_have_fact_id_texts(
 pub(super) fn type_value_cite_known(lang: OutputLanguage) -> &'static str {
     match lang {
         OutputLanguage::English => "cite_known",
+        OutputLanguage::ChineseTraditional => "引用已知命題",
+        OutputLanguage::French => "Citation d'une proposition connue",
+        OutputLanguage::Russian => "Ссылка на известное утверждение",
+        OutputLanguage::Spanish => "Cita de proposición conocida",
+        OutputLanguage::Arabic => "استشهاد بقضية معلومة",
+        OutputLanguage::Japanese => "既知の命題の引用",
+        OutputLanguage::Korean => "알려진 명제 인용",
+        OutputLanguage::Vietnamese => "Trích dẫn mệnh đề đã biết",
+
         OutputLanguage::Chinese => "引用已知",
     }
 }
@@ -260,6 +269,15 @@ pub(super) fn type_value_cite_known(lang: OutputLanguage) -> &'static str {
 pub(super) fn type_value_cite_forall(lang: OutputLanguage) -> &'static str {
     match lang {
         OutputLanguage::English => "cite_forall",
+        OutputLanguage::ChineseTraditional => "引用全稱命題",
+        OutputLanguage::French => "Citation d'une proposition universelle",
+        OutputLanguage::Russian => "Ссылка на всеобщее утверждение",
+        OutputLanguage::Spanish => "Cita de proposición universal",
+        OutputLanguage::Arabic => "استشهاد بقضية كلية",
+        OutputLanguage::Japanese => "全称命題の引用",
+        OutputLanguage::Korean => "전칭 명제 인용",
+        OutputLanguage::Vietnamese => "Trích dẫn mệnh đề phổ quát",
+
         OutputLanguage::Chinese => "引用全称",
     }
 }
@@ -267,6 +285,15 @@ pub(super) fn type_value_cite_forall(lang: OutputLanguage) -> &'static str {
 pub(super) fn type_value_builtin_rule(lang: OutputLanguage) -> &'static str {
     match lang {
         OutputLanguage::English => "builtin_rule",
+        OutputLanguage::ChineseTraditional => "內建規則",
+        OutputLanguage::French => "Règle intégrée",
+        OutputLanguage::Russian => "Встроенное правило",
+        OutputLanguage::Spanish => "Regla incorporada",
+        OutputLanguage::Arabic => "قاعدة مدمجة",
+        OutputLanguage::Japanese => "組み込み規則",
+        OutputLanguage::Korean => "내장 규칙",
+        OutputLanguage::Vietnamese => "Quy tắc tích hợp",
+
         OutputLanguage::Chinese => "内置规则",
     }
 }
@@ -274,6 +301,15 @@ pub(super) fn type_value_builtin_rule(lang: OutputLanguage) -> &'static str {
 pub(super) fn phase_value_search_proof(lang: OutputLanguage) -> &'static str {
     match lang {
         OutputLanguage::English => "search_proof",
+        OutputLanguage::ChineseTraditional => "搜尋證明",
+        OutputLanguage::French => "Recherche de preuve",
+        OutputLanguage::Russian => "Поиск доказательства",
+        OutputLanguage::Spanish => "Búsqueda de prueba",
+        OutputLanguage::Arabic => "بحث عن برهان",
+        OutputLanguage::Japanese => "証明探索",
+        OutputLanguage::Korean => "증명 탐색",
+        OutputLanguage::Vietnamese => "Tìm kiếm chứng minh",
+
         OutputLanguage::Chinese => "搜索证明",
     }
 }
@@ -281,6 +317,15 @@ pub(super) fn phase_value_search_proof(lang: OutputLanguage) -> &'static str {
 pub(super) fn phase_value_well_defined(lang: OutputLanguage) -> &'static str {
     match lang {
         OutputLanguage::English => "well_defined",
+        OutputLanguage::ChineseTraditional => "良定性",
+        OutputLanguage::French => "Bonne définition",
+        OutputLanguage::Russian => "Корректность определения",
+        OutputLanguage::Spanish => "Buena definición",
+        OutputLanguage::Arabic => "حسن التعريف",
+        OutputLanguage::Japanese => "定義の適切性",
+        OutputLanguage::Korean => "정의의 타당성",
+        OutputLanguage::Vietnamese => "Tính xác định tốt",
+
         OutputLanguage::Chinese => "良定性",
     }
 }

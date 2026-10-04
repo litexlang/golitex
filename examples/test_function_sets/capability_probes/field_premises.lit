@@ -1,0 +1,11 @@
+# User-proposed field equality and function-carrier premises; observation only.
+struct Box:
+    op fn(x R) R
+    tag N
+have fn step(x R) R = x + 1
+template<a R>:
+    have box &Box = (step, 0)
+\box<2> = (step, 0)
+\box<2>.op = step
+\box<2>.op $in fn(x R) R
+\box<2>.op(3) = step(3) = 4

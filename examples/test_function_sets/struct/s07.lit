@@ -1,13 +1,14 @@
 # S07: Template selects a struct containing a concrete function
-# Intended: accept; run via examples/test_function_sets/run.py
+# Supported explicit proof; original direct source in capability_probes/s07.lit.
 
 struct Box:
     op fn(x R) R
     tag N
-claim:
-    ? forall a R:
-        (fn(x R) R {x + a}, 0) $in &Box
-    fn(x R) R {x + a} $in fn(t R) R
+forall f fn(x R) R:
+    (f, 0) $in &Box
 template<a R>:
     have box &Box = (fn(x R) R {x + a}, 0)
-\box<2>.op(3) = 5
+\box<2> = (fn(x R) R {x + 2}, 0)
+have selected &Box = \box<2>
+selected.op = fn(x R) R {x + 2}
+selected.op(3) = fn(x R) R {x + 2}(3) = 5

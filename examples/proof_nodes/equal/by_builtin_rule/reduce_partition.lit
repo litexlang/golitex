@@ -7,9 +7,11 @@
 have op fn(a,b R)R
 have f fn(k Z)R
 reduce(1,4,f,op,0) = reduce(3,4,f,op,reduce(1,2,f,op,0))
-forall a,b,c Z, s R, g fn(k Z)R, operation fn(x,y R)R:
-    a <= b
-    b < c
-    =>:
-        reduce(a,c,g,operation,s) = reduce(b+1,c,g,operation,reduce(a,b,g,operation,s))
+claim:
+    ? forall a, b, c Z, s R, g fn(k Z) R, operation fn(x,y R) R:
+        a <= b
+        b < c
+        =>:
+            reduce(a,c,g,operation,s) = reduce(b+1,c,g,operation,reduce(a,b,g,operation,s))
+    b <= c
 # Boundary: overlap, gap, changed seed/function/operation fail in Rust regressions.

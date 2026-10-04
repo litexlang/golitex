@@ -1,0 +1,14 @@
+# Path: ByKnownForallFact whole-source replay; nested existential function carrier alpha
+# Run: target/release/litex -strict -f examples/proof_nodes/forall/known_exist_nested_function_alpha.lit
+# Formerly rejected final assertion:
+# forall b R:
+#     exist g fn(y R) R st {g(b) = b}
+# Current checked prefix and replay (no trust):
+have fn identity(x R) R = x
+claim:
+    ? forall a R:
+        exist f fn(x R) R st {f(a) = a}
+    witness exist f fn(x R) R st {f(a) = a} from identity:
+        f(a) = identity(a) = a
+forall b R:
+    exist g fn(y R) R st {g(b) = b}

@@ -15,15 +15,18 @@ BINARY = ROOT / 'target/release/litex'
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--case', action='append', help='Select case IDs (repeatable)')
+    parser.add_argument('--capabilities', action='store_true',
+        help='Observe original direct claims separately from supported proof regressions')
     parser.add_argument('--report', type=Path, default=SUITE / 'results.json')
     args = parser.parse_args()
     manifest = json.loads((SUITE / 'manifest.json').read_text())
-    cases = manifest['cases']
-    if not cases or len({case['id'] for case in cases}) != len(cases):
+    inventory = manifest['cases'] + manifest.get('capability_probes', [])
+    if not inventory or len({case['id'] for case in inventory}) != len(inventory):
         raise ValueError('Empty inventory or duplicate case ID')
-    fixtures = {case['file'] for case in cases}
-    if len(fixtures) != len(cases) or fixtures != {str(path.relative_to(SUITE)) for path in SUITE.rglob('*.lit')}:
+    fixtures = {case['file'] for case in inventory}
+    if len(fixtures) != len(inventory) or fixtures != {str(path.relative_to(SUITE)) for path in SUITE.rglob('*.lit')}:
         raise ValueError('Fixture inventory differs from manifest')
+    cases = manifest.get('capability_probes', []) if args.capabilities else manifest['cases']
     if args.case:
         unknown = set(args.case) - {case['id'] for case in cases}
         if unknown:
@@ -37,6 +40,7 @@ def main():
         return 2
     binary_hash = hashlib.sha256(BINARY.read_bytes()).hexdigest()
     report = dict(schema_version=1, built_from_current_source=True,
+        mode='capability_observation' if args.capabilities else 'supported_regression',
         source_sha256=source, binary_sha256=binary_hash, observations=[])
     for case in cases:
         path = SUITE / case['file']
@@ -46,8 +50,10 @@ def main():
         result = evaluate(path)
         result.update({key: case[key] for key in ['id', 'group', 'title', 'file', 'expect']})
         result['fixture_sha256'] = hashlib.sha256(path.read_bytes()).hexdigest()
-        result['matches'] = result['observed'] == case['expect']
-        if case['expect'] == 'reject':
+        result['matches'] = None if args.capabilities else result['observed'] == case['expect']
+        if args.capabilities:
+            pass
+        elif case['expect'] == 'reject':
             statuses = result['statement_statuses']
             setup = case['setup_statements']
             if case['phase'] == 'parse':
@@ -56,13 +62,23 @@ def main():
                 result['matches'] &= result['phase'] == case['phase'] and statuses == [True] * setup + [False]
         else:
             result['matches'] &= result['statement_statuses'] == [True] * case['statements']
+        if not args.capabilities and case.get('failure_contains'):
+            failure_text = json.dumps(result.get('failures', []), ensure_ascii=False)
+            result['matches'] &= all(text in failure_text for text in case['failure_contains'])
         report['observations'].append(result)
-        print(('PASS' if result['matches'] else 'FAIL') + ' ' + case['id'] + ': ' + result['observed'] + '/' + result['phase'] + ' — ' + case['title'])
+        label = 'OBSERVED' if args.capabilities else ('PASS' if result['matches'] else 'FAIL')
+        print(label + ' ' + case['id'] + ': ' + result['observed'] + '/' + result['phase'] + ' — ' + case['title'])
     report['identity_stable'] = source == source_digest() and binary_hash == hashlib.sha256(BINARY.read_bytes()).hexdigest()
-    report['ok'] = report['identity_stable'] and all(item['matches'] for item in report['observations'])
-    report['counts'] = dict(total=len(cases), positive=sum(c['expect']=='accept' for c in cases),
-        negative=sum(c['expect']=='reject' for c in cases), passed=sum(o['matches'] for o in report['observations']),
-        unexpected=sum(not o['matches'] for o in report['observations']))
+    if args.capabilities:
+        report['ok'] = report['identity_stable'] and all(o['observed'] in ['accept', 'reject'] for o in report['observations'])
+        report['counts'] = dict(total=len(cases), accepted=sum(o['observed']=='accept' for o in report['observations']),
+            rejected=sum(o['observed']=='reject' for o in report['observations']),
+            infrastructure_failures=sum(o['observed'] not in ['accept', 'reject'] for o in report['observations']))
+    else:
+        report['ok'] = report['identity_stable'] and all(item['matches'] for item in report['observations'])
+        report['counts'] = dict(total=len(cases), positive=sum(c['expect']=='accept' for c in cases),
+            negative=sum(c['expect']=='reject' for c in cases), passed=sum(o['matches'] for o in report['observations']),
+            unexpected=sum(not o['matches'] for o in report['observations']))
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps(report['counts']) + '; identity_stable=' + str(report['identity_stable']))

@@ -21,10 +21,28 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
         match self {
             Self::ClosedSubtractionBound(_) => match lang {
                 OutputLanguage::English => text("ClosedSubtractionBound", "Subtract from a stored numeric bound", "The stored upper or lower bound remains sufficient after subtracting the closed constant"),
+                OutputLanguage::ChineseTraditional => text("ClosedSubtractionBound", "從已有數值界減去常數", "已有上界或下界減去封閉常數後仍足以滿足目標"),
+                OutputLanguage::French => text("ClosedSubtractionBound", "Soustraction d'une borne numérique stockée", "La borne supérieure ou inférieure stockée reste suffisante après soustraction de la constante fermée"),
+                OutputLanguage::Russian => text("ClosedSubtractionBound", "Вычитание из сохранённой числовой границы", "Сохранённая верхняя или нижняя граница остаётся достаточной после вычитания замкнутой константы"),
+                OutputLanguage::Spanish => text("ClosedSubtractionBound", "Resta de una cota numérica almacenada", "La cota superior o inferior almacenada sigue siendo suficiente al restar la constante cerrada"),
+                OutputLanguage::Arabic => text("ClosedSubtractionBound", "طرح من حد عددي مخزن", "يبقى الحد الأعلى أو الأدنى المخزن كافيًا بعد طرح الثابت المغلق"),
+                OutputLanguage::Japanese => text("ClosedSubtractionBound", "保存済みの数値の境界からの減算", "保存済みの上界または下界は閉じた定数を引いた後も十分です"),
+                OutputLanguage::Korean => text("ClosedSubtractionBound", "저장된 수치 경계에서 빼기", "저장된 상한 또는 하한은 닫힌 상수를 뺀 후에도 충분합니다"),
+                OutputLanguage::Vietnamese => text("ClosedSubtractionBound", "Trừ từ cận số đã lưu", "Cận trên hoặc dưới đã lưu vẫn đủ sau khi trừ hằng đóng"),
+
                 OutputLanguage::Chinese => text("ClosedSubtractionBound", "从已有数值界减去常数", "已有上界或下界减去闭式常数后满足目标弱序界"),
             },
             Self::ComplexModulusNonnegative => match lang {
                 OutputLanguage::English => text("ComplexModulusNonnegative", "Nonnegative complex modulus", "The principal complex modulus is nonnegative"),
+                OutputLanguage::ChineseTraditional => text("ComplexModulusNonnegative", "複數模長非負", "複數模長取非負主根"),
+                OutputLanguage::French => text("ComplexModulusNonnegative", "Module complexe non négatif", "Le module complexe principal est non négatif"),
+                OutputLanguage::Russian => text("ComplexModulusNonnegative", "Неотрицательный комплексный модуль", "Главный комплексный модуль неотрицателен"),
+                OutputLanguage::Spanish => text("ComplexModulusNonnegative", "Módulo complejo no negativo", "El módulo complejo principal es no negativo"),
+                OutputLanguage::Arabic => text("ComplexModulusNonnegative", "مقياس مركب غير سالب", "المقياس المركب الرئيسي غير سالب"),
+                OutputLanguage::Japanese => text("ComplexModulusNonnegative", "複素数の絶対値の非負性", "複素数の主絶対値は非負です"),
+                OutputLanguage::Korean => text("ComplexModulusNonnegative", "복소수 절댓값의 비음성", "복소수의 주 절댓값은 음이 아닙니다"),
+                OutputLanguage::Vietnamese => text("ComplexModulusNonnegative", "Môđun phức không âm", "Môđun phức chính không âm"),
+
                 OutputLanguage::Chinese => text("ComplexModulusNonnegative", "复数模长非负", "复数模长取非负主根"),
             },
             Self::FromKnownLessEqual(p) => p.rule_id_and_message(lang),
@@ -58,7 +76,6 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
     }
 }
 
-
 impl FromKnownInPositiveNaturalBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
         text(
@@ -80,6 +97,46 @@ impl FromKnownInPositiveNaturalBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => text(
+                "FromKnownInPositiveNatural",
+                "由已知正自然數成員",
+                "目標由已知正自然數成員關係得出",
+            ),
+            OutputLanguage::French => text(
+                "FromKnownInPositiveNatural",
+                "Depuis une appartenance connue aux naturels positifs",
+                "L'objectif découle d'une appartenance connue aux naturels positifs",
+            ),
+            OutputLanguage::Russian => text(
+                "FromKnownInPositiveNatural",
+                "Из известной принадлежности положительным натуральным",
+                "Цель следует из известной принадлежности положительным натуральным",
+            ),
+            OutputLanguage::Spanish => text(
+                "FromKnownInPositiveNatural",
+                "Desde pertenencia conocida a naturales positivos",
+                "El objetivo se deduce de pertenencia conocida a naturales positivos",
+            ),
+            OutputLanguage::Arabic => text(
+                "FromKnownInPositiveNatural",
+                "من انتماء معلوم للأعداد الطبيعية الموجبة",
+                "ينتج الهدف من انتماء معلوم للأعداد الطبيعية الموجبة",
+            ),
+            OutputLanguage::Japanese => text(
+                "FromKnownInPositiveNatural",
+                "既知の正の自然数への所属から",
+                "目標は既知の正の自然数への所属から導かれます",
+            ),
+            OutputLanguage::Korean => text(
+                "FromKnownInPositiveNatural",
+                "알려진 양의 자연수 소속에서",
+                "목표는 알려진 양의 자연수 소속에서 도출됩니다",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "FromKnownInPositiveNatural",
+                "Từ sự thuộc về số tự nhiên dương đã biết",
+                "Mục tiêu suy ra từ sự thuộc về số tự nhiên dương đã biết",
+            ),
         }
     }
 }
@@ -105,6 +162,46 @@ impl FromKnownGreaterBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => text(
+                "FromKnownGreater",
+                "由已知大於",
+                "弱序由已知嚴格大於命題得出",
+            ),
+            OutputLanguage::French => text(
+                "FromKnownGreater",
+                "Depuis une inégalité supérieure connue",
+                "L'ordre large découle d'une inégalité stricte supérieure connue",
+            ),
+            OutputLanguage::Russian => text(
+                "FromKnownGreater",
+                "Из известного большего значения",
+                "Нестрогий порядок следует из известного строгого превышения",
+            ),
+            OutputLanguage::Spanish => text(
+                "FromKnownGreater",
+                "Desde desigualdad mayor conocida",
+                "El orden débil se deduce de una desigualdad estricta mayor conocida",
+            ),
+            OutputLanguage::Arabic => text(
+                "FromKnownGreater",
+                "من علاقة أكبر معلومة",
+                "ينتج الترتيب غير الصارم من علاقة أكبر صارمة معلومة",
+            ),
+            OutputLanguage::Japanese => text(
+                "FromKnownGreater",
+                "既知の大なり関係から",
+                "広義順序は既知の狭義の大なり命題から導かれます",
+            ),
+            OutputLanguage::Korean => text(
+                "FromKnownGreater",
+                "알려진 큼 관계에서",
+                "약한 순서는 알려진 엄격한 큼 명제에서 도출됩니다",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "FromKnownGreater",
+                "Từ quan hệ lớn hơn đã biết",
+                "Thứ tự không nghiêm ngặt suy ra từ quan hệ lớn hơn nghiêm ngặt đã biết",
+            ),
         }
     }
 }
@@ -130,6 +227,42 @@ impl OrderReflexivityBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => {
+                text("OrderReflexivity", "序關係自反性", "任一量小於或等於自身")
+            }
+            OutputLanguage::French => text(
+                "OrderReflexivity",
+                "Réflexivité de l'ordre",
+                "Une quantité est inférieure ou égale à elle-même",
+            ),
+            OutputLanguage::Russian => text(
+                "OrderReflexivity",
+                "Рефлексивность порядка",
+                "Величина меньше или равна самой себе",
+            ),
+            OutputLanguage::Spanish => text(
+                "OrderReflexivity",
+                "Reflexividad del orden",
+                "Una cantidad es menor o igual a sí misma",
+            ),
+            OutputLanguage::Arabic => text(
+                "OrderReflexivity",
+                "انعكاسية الترتيب",
+                "الكمية أصغر من نفسها أو تساويها",
+            ),
+            OutputLanguage::Japanese => {
+                text("OrderReflexivity", "順序の反射性", "量は自身以下です")
+            }
+            OutputLanguage::Korean => text(
+                "OrderReflexivity",
+                "순서 반사성",
+                "양은 자기 자신보다 작거나 같습니다",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "OrderReflexivity",
+                "Tính phản xạ của thứ tự",
+                "Một đại lượng nhỏ hơn hoặc bằng chính nó",
+            ),
         }
     }
 }
@@ -155,6 +288,46 @@ impl ClosedNumericComparisonBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => text(
+                "ClosedNumericComparison",
+                "封閉數值比較",
+                "兩邊為封閉數值且符合所述比較",
+            ),
+            OutputLanguage::French => text(
+                "ClosedNumericComparison",
+                "Comparaison numérique fermée",
+                "Les deux membres sont des nombres fermés et satisfont la comparaison indiquée",
+            ),
+            OutputLanguage::Russian => text(
+                "ClosedNumericComparison",
+                "Сравнение замкнутых числовых выражений",
+                "Обе части являются замкнутыми числами и удовлетворяют указанному сравнению",
+            ),
+            OutputLanguage::Spanish => text(
+                "ClosedNumericComparison",
+                "Comparación numérica cerrada",
+                "Ambos lados son números cerrados y cumplen la comparación indicada",
+            ),
+            OutputLanguage::Arabic => text(
+                "ClosedNumericComparison",
+                "مقارنة عددية مغلقة",
+                "الطرفان عددان مغلقان ويحققان المقارنة المذكورة",
+            ),
+            OutputLanguage::Japanese => text(
+                "ClosedNumericComparison",
+                "閉じた数値式の比較",
+                "両辺は閉じた数値であり、指定された比較を満たします",
+            ),
+            OutputLanguage::Korean => text(
+                "ClosedNumericComparison",
+                "닫힌 수치 식 비교",
+                "양변은 닫힌 수이며 명시된 비교를 만족합니다",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "ClosedNumericComparison",
+                "So sánh số đóng",
+                "Hai vế là số đóng và thỏa so sánh đã nêu",
+            ),
         }
     }
 }
@@ -180,6 +353,46 @@ impl PredecessorNonNegFromAtLeastOneBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => text(
+                "PredecessorNonNegFromAtLeastOne",
+                "由 n ≥ 1 得 n-1 ≥ 0",
+                "值至少為一時，前驅非負",
+            ),
+            OutputLanguage::French => text(
+                "PredecessorNonNegFromAtLeastOne",
+                "n-1 ≥ 0 depuis n ≥ 1",
+                "Le prédécesseur est non négatif quand la valeur est au moins un",
+            ),
+            OutputLanguage::Russian => text(
+                "PredecessorNonNegFromAtLeastOne",
+                "n-1 ≥ 0 из n ≥ 1",
+                "Предыдущее значение неотрицательно, если исходное не меньше одного",
+            ),
+            OutputLanguage::Spanish => text(
+                "PredecessorNonNegFromAtLeastOne",
+                "n-1 ≥ 0 a partir de n ≥ 1",
+                "El predecesor es no negativo si el valor es al menos uno",
+            ),
+            OutputLanguage::Arabic => text(
+                "PredecessorNonNegFromAtLeastOne",
+                "n-1 ≥ 0 من n ≥ 1",
+                "السابق غير سالب عندما تكون القيمة واحدًا على الأقل",
+            ),
+            OutputLanguage::Japanese => text(
+                "PredecessorNonNegFromAtLeastOne",
+                "n ≥ 1 から n-1 ≥ 0",
+                "値が少なくとも一なら直前の値は非負です",
+            ),
+            OutputLanguage::Korean => text(
+                "PredecessorNonNegFromAtLeastOne",
+                "n ≥ 1에서 n-1 ≥ 0",
+                "값이 적어도 1이면 이전 값은 음이 아닙니다",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "PredecessorNonNegFromAtLeastOne",
+                "n-1 ≥ 0 từ n ≥ 1",
+                "Giá trị liền trước không âm khi giá trị ít nhất một",
+            ),
         }
     }
 }
@@ -194,17 +407,51 @@ impl FiniteSetSizeNonnegativeBuiltinRuleProof {
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "FiniteSetSizeNonnegative",
-            "|S| ≥ 0",
-            "有限集大小非负",
-        )
+        text("FiniteSetSizeNonnegative", "|S| ≥ 0", "有限集大小非负")
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => {
+                text("FiniteSetSizeNonnegative", "|S| ≥ 0", "有限集合的大小非負")
+            }
+            OutputLanguage::French => text(
+                "FiniteSetSizeNonnegative",
+                "|S| ≥ 0",
+                "La taille d'un ensemble fini est non négative",
+            ),
+            OutputLanguage::Russian => text(
+                "FiniteSetSizeNonnegative",
+                "|S| ≥ 0",
+                "Размер конечного множества неотрицателен",
+            ),
+            OutputLanguage::Spanish => text(
+                "FiniteSetSizeNonnegative",
+                "|S| ≥ 0",
+                "El tamaño de un conjunto finito es no negativo",
+            ),
+            OutputLanguage::Arabic => text(
+                "FiniteSetSizeNonnegative",
+                "|S| ≥ 0",
+                "حجم المجموعة المنتهية غير سالب",
+            ),
+            OutputLanguage::Japanese => text(
+                "FiniteSetSizeNonnegative",
+                "|S| ≥ 0",
+                "有限集合の大きさは非負です",
+            ),
+            OutputLanguage::Korean => text(
+                "FiniteSetSizeNonnegative",
+                "|S| ≥ 0",
+                "유한 집합의 크기는 음이 아닙니다",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "FiniteSetSizeNonnegative",
+                "|S| ≥ 0",
+                "Kích thước tập hữu hạn không âm",
+            ),
         }
     }
 }
@@ -230,6 +477,46 @@ impl FiniteSetSizeAtLeastOneBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => text(
+                "FiniteSetSizeAtLeastOne",
+                "|S| ≥ 1",
+                "非空有限集合的大小至少為一",
+            ),
+            OutputLanguage::French => text(
+                "FiniteSetSizeAtLeastOne",
+                "|S| ≥ 1",
+                "Un ensemble fini non vide a au moins un élément",
+            ),
+            OutputLanguage::Russian => text(
+                "FiniteSetSizeAtLeastOne",
+                "|S| ≥ 1",
+                "Непустое конечное множество имеет размер не меньше одного",
+            ),
+            OutputLanguage::Spanish => text(
+                "FiniteSetSizeAtLeastOne",
+                "|S| ≥ 1",
+                "Un conjunto finito no vacío tiene tamaño al menos uno",
+            ),
+            OutputLanguage::Arabic => text(
+                "FiniteSetSizeAtLeastOne",
+                "|S| ≥ 1",
+                "المجموعة المنتهية غير الخالية لها عنصر واحد على الأقل",
+            ),
+            OutputLanguage::Japanese => text(
+                "FiniteSetSizeAtLeastOne",
+                "|S| ≥ 1",
+                "空でない有限集合の大きさは少なくとも一です",
+            ),
+            OutputLanguage::Korean => text(
+                "FiniteSetSizeAtLeastOne",
+                "|S| ≥ 1",
+                "비어 있지 않은 유한 집합의 크기는 적어도 1입니다",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "FiniteSetSizeAtLeastOne",
+                "|S| ≥ 1",
+                "Tập hữu hạn không rỗng có kích thước ít nhất một",
+            ),
         }
     }
 }
@@ -255,6 +542,46 @@ impl OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => text(
+                "OrderFlipMulMinusOne",
+                "乘以 -1 反轉序",
+                "乘以 -1 反轉不等式方向",
+            ),
+            OutputLanguage::French => text(
+                "OrderFlipMulMinusOne",
+                "Inversion d'ordre par ×(-1)",
+                "Multiplier par -1 inverse l'inégalité",
+            ),
+            OutputLanguage::Russian => text(
+                "OrderFlipMulMinusOne",
+                "Обращение порядка при ×(-1)",
+                "Умножение на -1 обращает неравенство",
+            ),
+            OutputLanguage::Spanish => text(
+                "OrderFlipMulMinusOne",
+                "Inversión de orden por ×(-1)",
+                "Multiplicar por -1 invierte la desigualdad",
+            ),
+            OutputLanguage::Arabic => text(
+                "OrderFlipMulMinusOne",
+                "عكس الترتيب بالضرب في (-1)",
+                "الضرب في -1 يعكس المتباينة",
+            ),
+            OutputLanguage::Japanese => text(
+                "OrderFlipMulMinusOne",
+                "×(-1) による順序反転",
+                "-1 を掛けると不等号が反転します",
+            ),
+            OutputLanguage::Korean => text(
+                "OrderFlipMulMinusOne",
+                "×(-1)에 의한 순서 반전",
+                "-1을 곱하면 부등호가 반전됩니다",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "OrderFlipMulMinusOne",
+                "Đảo thứ tự bởi ×(-1)",
+                "Nhân với -1 đảo chiều bất đẳng thức",
+            ),
         }
     }
 }
@@ -262,8 +589,55 @@ impl OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof {
 impl FromKnownLessEqualBuiltinRuleProof {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
-            OutputLanguage::English => text("FromKnownLessEqual", "Known converse order", "The opposite-direction comparison is already known"),
-            OutputLanguage::Chinese => text("FromKnownLessEqual", "已知反向序关系", "引用已知的反向比较事实"),
+            OutputLanguage::English => text(
+                "FromKnownLessEqual",
+                "Known converse order",
+                "The opposite-direction comparison is already known",
+            ),
+            OutputLanguage::ChineseTraditional => {
+                text("FromKnownLessEqual", "已知反向序關係", "反方向比較已知")
+            }
+            OutputLanguage::French => text(
+                "FromKnownLessEqual",
+                "Ordre inverse connu",
+                "La comparaison dans le sens opposé est déjà connue",
+            ),
+            OutputLanguage::Russian => text(
+                "FromKnownLessEqual",
+                "Известный обратный порядок",
+                "Сравнение в обратном направлении уже известно",
+            ),
+            OutputLanguage::Spanish => text(
+                "FromKnownLessEqual",
+                "Orden inverso conocido",
+                "La comparación en sentido opuesto ya es conocida",
+            ),
+            OutputLanguage::Arabic => text(
+                "FromKnownLessEqual",
+                "ترتيب عكسي معلوم",
+                "المقارنة في الاتجاه المعاكس معلومة بالفعل",
+            ),
+            OutputLanguage::Japanese => text(
+                "FromKnownLessEqual",
+                "既知の逆向きの順序",
+                "逆向きの比較は既知です",
+            ),
+            OutputLanguage::Korean => text(
+                "FromKnownLessEqual",
+                "알려진 역방향 순서",
+                "반대 방향의 비교가 이미 알려져 있습니다",
+            ),
+            OutputLanguage::Vietnamese => text(
+                "FromKnownLessEqual",
+                "Thứ tự đảo chiều đã biết",
+                "So sánh theo chiều ngược đã biết",
+            ),
+
+            OutputLanguage::Chinese => text(
+                "FromKnownLessEqual",
+                "已知反向序关系",
+                "引用已知的反向比较事实",
+            ),
         }
     }
 }

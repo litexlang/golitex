@@ -3,7 +3,7 @@ use crate::ast::stmt::Stmt;
 use crate::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactResult;
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::execute::{ExecFactStmtResult, ExecFactStmtSuccessResult, ExecStmtResult};
-use crate::json_output::{project_stmt_detailed, project_stmt_normal, stringify_normal};
+use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::knowledge_base::JsonValue;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
@@ -40,7 +40,7 @@ fn assert_outcome(code: &str, accepted: bool) {
         !result.is_failed(),
         accepted,
         "{code}\n{}",
-        stringify_normal(&project_stmt_normal(&result, &rt))
+        project_stmt_normal(&result, &rt).stringify_pretty()
     );
 }
 
@@ -261,7 +261,7 @@ fn finite_set_cardinality_rule_normal_explains_actual_certificates_in_both_langu
             assert!(!result.is_failed());
             let conclusion = last_conclusion(result);
             let normal = project_stmt_normal(&conclusion, &rt);
-            let text = stringify_normal(&normal);
+            let text = normal.stringify_pretty();
             // Chinese Normal localizes field names as well as the explanation.
             assert!(text.contains(label), "{label}: {text}");
         }

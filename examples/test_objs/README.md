@@ -1,5 +1,9 @@
 # Obj regression corpus
 
+> **统一收尾入口：** [src收尾总清单.md](../../plan/src收尾总清单.md)（2026-10-04）。活动事项及跨来源去重在总清单维护；本页保留专项代码、决定和历史验收。新增进展应同步对应总清单ID，不能用旧快照覆盖新证据。
+
+原审计的32个问题主题按原编号列在[逐项清理计划](../../plan/src收尾总清单.md#obj-original-32)：第1项已按用户选择补显式Litex证明完成，第2项已撤回，其余与总清单对应卡和后续证据链接。
+
 This directory tests the terminal variants reachable from `Obj` in
 `src/ast/obj.rs`. Each variant has a dedicated, nonempty positive `.lit` file.
 Function-head variants and the `FnSetSpace` helper enum are audited as well.

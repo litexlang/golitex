@@ -1,9 +1,9 @@
 //! Localized explanations for JSON output.
 //!
-//! Keep all Chinese/English copy here. Verify/exec IR types stay language-free;
+//! Keep all localized copy here. Verify/exec IR types stay language-free;
 //! projection calls into this module with `OutputLanguage` from LaunchCommand.
 //!
-//! Policy: every Normal surface has English and Chinese `rule_name` / `message`,
+//! Policy: every Normal surface has localized `rule_name` / `message`,
 //! including every atomic builtin leaf (no family-level stubs).
 
 pub mod atomic_builtin_rule;

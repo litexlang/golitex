@@ -24,6 +24,8 @@ use super::subset::standard_set_is_subset_eq;
 
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
+    FiniteSetMaxMember(FiniteSetMaxMemberBuiltinRuleProof),
+    FiniteSetMinMember(FiniteSetMinMemberBuiltinRuleProof),
     // Closed numeric membership by decimal evaluation.
     // Mathematical property: a closed expression that evaluates to a normalized
     // decimal inhabits the matching standard set (N/Z/Q/R/C families).
@@ -243,6 +245,14 @@ pub struct StandardSetSubsetMembershipBuiltinRuleProof {
     pub source_membership_proof: VerifyFactResult,
 }
 
+pub struct FiniteSetMaxMemberBuiltinRuleProof {
+    pub set_equal: crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof,
+}
+
+pub struct FiniteSetMinMemberBuiltinRuleProof {
+    pub set_equal: crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof,
+}
+
 pub struct FiniteSetSubsetMembershipBuiltinRuleProof {
     pub source_set: Obj,
     pub source_membership_proof: VerifyFactResult,
@@ -377,6 +387,12 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.finite_set_max_membership_proof(fact) {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.finite_set_min_membership_proof(fact) {
+            return Ok(Some(proof));
+        }
         match &fact.set {
             Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => {
                 let Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) = &fact.element

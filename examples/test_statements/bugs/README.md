@@ -1,5 +1,7 @@
 # Statement issue index
 
+> **统一收尾入口：** [src收尾总清单.md](../../../plan/src收尾总清单.md)（2026-10-04）。活动事项及跨来源去重在总清单维护；本页保留专项代码、决定和历史验收。新增进展应同步对应总清单ID，不能用旧快照覆盖新证据。
+
 ## Task context
 
 - Task: per-statement regression suite requested on 2026-10-01; issue organization requested on 2026-10-02.

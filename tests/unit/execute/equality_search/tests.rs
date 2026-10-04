@@ -25,10 +25,17 @@ fn identity_and_alpha_work_without_builtin_entry() {
     ] {
         let mut runtime = runtime();
         let fact = equal(&mut runtime, code);
-        assert!(!runtime.verify_equal_fact_well_definedness(&fact, VerifyState::top_level()).unwrap().is_failed());
-        let proof = runtime.search_equal_fact_proof(
-            &fact, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct),
-        ).unwrap().expect("identity truth proof");
+        assert!(!runtime
+            .verify_equal_fact_well_definedness(&fact, VerifyState::top_level())
+            .unwrap()
+            .is_failed());
+        let proof = runtime
+            .search_equal_fact_proof(
+                &fact,
+                VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct),
+            )
+            .unwrap()
+            .expect("identity truth proof");
         let EqualFactSearchedProof::ByTheyAreTheSame(proof) = proof else {
             panic!("identity must own its route: {code}");
         };
@@ -65,7 +72,9 @@ fn alpha_preserves_free_ids_carriers_conditions_and_binder_dependencies() {
         let result = verify(
             &mut runtime,
             code,
-            VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty),
+            VerifyState::top_level().capped_at(
+                crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty,
+            ),
         );
         assert!(result.is_failed(), "must reject {code}");
     }
@@ -75,29 +84,52 @@ fn alpha_preserves_free_ids_carriers_conditions_and_binder_dependencies() {
         "fn(u R, v {u}) R = fn(w R, z {w}) R",
         "fn(u R, v {u}) R = fn(w R, z {0}) R",
     ] {
-        let blocks = Tokenizer::new().tokenize(code, runtime.current_file.clone()).unwrap();
+        let blocks = Tokenizer::new()
+            .tokenize(code, runtime.current_file.clone())
+            .unwrap();
         assert!(runtime.parse(&blocks).is_err(), "{code}");
     }
     let mut dependent = equal(&mut runtime, "fn(u R, v R) R = fn(w R, z R) R");
     for endpoint in [&mut dependent.left, &mut dependent.right] {
-        let crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(signature)) = endpoint else { panic!("fn set") };
+        let crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(signature)) =
+            endpoint
+        else {
+            panic!("fn set")
+        };
         let binder = &signature.set_bound_parameters.groups[0].params[0];
-        signature.set_bound_parameters.groups[1].param_type = Box::new(crate::ast::obj::Obj::SetFormer(
-            crate::ast::obj::SetFormer::ListSet(crate::ast::obj::ListSet {
-                list: vec![Box::new(crate::ast::obj::Obj::Identifier(crate::ast::obj::IdentifierObj::plain(binder.id, binder.name.clone())))],
-            }),
-        ));
+        signature.set_bound_parameters.groups[1].param_type =
+            Box::new(crate::ast::obj::Obj::SetFormer(
+                crate::ast::obj::SetFormer::ListSet(crate::ast::obj::ListSet {
+                    list: vec![Box::new(crate::ast::obj::Obj::Identifier(
+                        crate::ast::obj::IdentifierObj::plain(binder.id, binder.name.clone()),
+                    ))],
+                }),
+            ));
     }
-    assert!(super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same(&dependent).is_some());
-    let VerifyFactResult::Equality(result) = runtime.verify_equal_fact(&dependent, VerifyState::top_level()).unwrap() else { panic!("equality") };
-    assert!(matches!(*result, VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(_))));
+    assert!(
+        super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same(&dependent)
+            .is_some()
+    );
+    let VerifyFactResult::Equality(result) = runtime
+        .verify_equal_fact(&dependent, VerifyState::top_level())
+        .unwrap()
+    else {
+        panic!("equality")
+    };
+    assert!(matches!(
+        *result,
+        VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(_))
+    ));
     let mut wrong = equal(&mut runtime, "fn(u R, v R) R = fn(w R, z {0}) R");
     wrong.left = dependent.left;
-    assert!(super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same(&wrong).is_none());
+    assert!(
+        super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same(&wrong).is_none()
+    );
     assert!(verify(
         &mut runtime,
         "fn(u R, v R) R {u} = fn(w R, z R) R {z}",
-        VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty)
+        VerifyState::top_level()
+            .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty)
     )
     .is_failed());
 }
@@ -122,7 +154,8 @@ fn known_path_keeps_oriented_fact_ids_and_needs_no_peer_search() {
     let proof = runtime
         .search_equal_fact_proof_by_equivalence_class(
             &goal,
-            VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
+            VerifyState::top_level()
+                .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
         )
         .unwrap()
         .unwrap();
@@ -146,25 +179,23 @@ fn stored_alpha_paths_are_available_at_level_zero_without_peer_search() {
     }
     let goal = equal(&mut runtime, "b = d");
     let before = store_sizes(&runtime);
-    let proof = runtime.lookup_known_obj_equality(&goal.left, &goal.right).unwrap();
-    let EqualFactSearchedProof::ByEquivalenceClass(EqualFactSearchedProofByEquivalenceClass::AlphaPaths(proof)) = proof else {
+    let proof = runtime
+        .lookup_known_obj_equality(&goal.left, &goal.right)
+        .unwrap();
+    let EqualFactSearchedProof::ByEquivalenceClass(
+        EqualFactSearchedProofByEquivalenceClass::AlphaPaths(proof),
+    ) = proof
+    else {
         panic!("finite alpha path")
     };
     assert_eq!(proof.left_path.path.len(), 2);
     assert_eq!(proof.right_path.path.len(), 2);
-    check_path(
-        &runtime,
-        &proof.left_path,
-        &goal.left,
-        &proof.left,
-    );
-    check_path(
-        &runtime,
-        &proof.right_path,
-        &proof.right,
-        &goal.right,
-    );
-    assert!(matches!(proof.identity, TheyAreTheSameProof::SameFreeParamShape(_)));
+    check_path(&runtime, &proof.left_path, &goal.left, &proof.left);
+    check_path(&runtime, &proof.right_path, &proof.right, &goal.right);
+    assert!(matches!(
+        proof.identity,
+        TheyAreTheSameProof::SameFreeParamShape(_)
+    ));
     assert_eq!(
         store_sizes(&runtime),
         before,
@@ -187,7 +218,9 @@ fn peer_builtin_inherits_permission_and_handles_both_orientations() {
             runtime
                 .search_equal_fact_proof_by_equivalence_class(
                     &goal,
-                    VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty),
+                    VerifyState::top_level().capped_at(
+                        crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty
+                    ),
                 )
                 .unwrap()
                 .is_none(),
@@ -259,7 +292,11 @@ fn matching_inside_a_bridge_cannot_expand_another_peer() {
 fn peer_child_permissions_cannot_reenter_the_peer_stage() {
     use crate::execute::execute_fact_stmt::VerifyStateLevel::*;
     let state = VerifyState::top_level().for_premises(Strategy).unwrap();
-    for child in [state, state.for_premises(BuiltinRule).unwrap(), state.capped_at(Direct)] {
+    for child in [
+        state,
+        state.for_premises(BuiltinRule).unwrap(),
+        state.capped_at(Direct),
+    ] {
         assert!(!child.allows(Strategy));
         assert!(child.after_rewrite().is_none());
         assert!(child.level() <= state.level());
@@ -304,6 +341,7 @@ fn normal_identity_output_is_not_a_builtin_in_either_language() {
         let expected = match language {
             OutputLanguage::English => "they_are_the_same",
             OutputLanguage::Chinese => "同一对象",
+            _ => unreachable!("this regression checks the original English and Chinese outputs"),
         };
         assert!(json.contains(expected), "{json}");
         assert!(!json.contains("builtin_rule") && !json.contains("内置规则"));
@@ -323,7 +361,10 @@ fn builtin_ceiling_keeps_identity_calculation_and_stored_alpha_paths() {
         exec_ok(&mut runtime, "let h = fn(y R) R");
         let goal = Fact::AtomicFact(AtomicFact::EqualFact(equal(&mut runtime, code)));
         let VerifyFactResult::Equality(result) = runtime
-            .verify_fact(&goal, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
+            .verify_fact(
+                &goal,
+                VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
+            )
             .unwrap()
         else {
             panic!("equality")
@@ -334,7 +375,10 @@ fn builtin_ceiling_keeps_identity_calculation_and_stored_alpha_paths() {
         assert!(matches!(
             (expected, success.searched_proof),
             ("identity", EqualFactSearchedProof::ByTheyAreTheSame(_))
-                | ("calculation", EqualFactSearchedProof::ByClosedCalculation(_))
+                | (
+                    "calculation",
+                    EqualFactSearchedProof::ByClosedCalculation(_)
+                )
                 | ("class", EqualFactSearchedProof::ByEquivalenceClass(_))
         ));
     }
@@ -353,8 +397,14 @@ fn explicit_definition_chain_stores_endpoint_before_later_verification() {
     exec_ok(&mut runtime, "y = x + 1 = 3");
     for code in ["y = 3", "3 = y"] {
         let goal = equal(&mut runtime, code);
-        let path = runtime.equivalence_class_path(&goal.left, &goal.right).unwrap();
-        assert_eq!(path.len(), 1, "chain must store its endpoint equality directly");
+        let path = runtime
+            .equivalence_class_path(&goal.left, &goal.right)
+            .unwrap();
+        assert_eq!(
+            path.len(),
+            1,
+            "chain must store its endpoint equality directly"
+        );
         let stored = KnownEqualityPathProof::new(path);
         check_path(&runtime, &stored, &goal.left, &goal.right);
         let before = store_sizes(&runtime);
@@ -385,7 +435,9 @@ fn failed_definition_chain_does_not_store_its_endpoint() {
     assert!(exec(&mut runtime, "y = x + 1 = 4").is_failed());
     assert_eq!(store_sizes(&runtime), before, "failed chain must roll back");
     let goal = equal(&mut runtime, "y = 4");
-    assert!(runtime.equivalence_class_path(&goal.left, &goal.right).is_none());
+    assert!(runtime
+        .equivalence_class_path(&goal.left, &goal.right)
+        .is_none());
     assert!(verify(&mut runtime, "y = 4", VerifyState::top_level()).is_failed());
 }
 
@@ -478,9 +530,16 @@ fn check_path(
 #[test]
 fn compound_alpha_identity_preserves_ranges_bodies_and_free_ids_at_builtin_disabled() {
     let mut rt = runtime();
-    let state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty);
-    let fact = equal(&mut rt, "sum(1, 2, fn(x Z) R {x}) = sum(1, 2, fn(y Z) R {y})");
-    assert!(rt.search_equal_fact_proof(&fact, state.clone()).unwrap().is_some());
+    let state =
+        VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty);
+    let fact = equal(
+        &mut rt,
+        "sum(1, 2, fn(x Z) R {x}) = sum(1, 2, fn(y Z) R {y})",
+    );
+    assert!(rt
+        .search_equal_fact_proof(&fact, state.clone())
+        .unwrap()
+        .is_some());
     exec_ok(&mut rt, "have a R, b R");
     for code in [
         "sum(1, 2, fn(x Z) R {x}) = sum(1, 3, fn(y Z) R {y})",
@@ -489,7 +548,12 @@ fn compound_alpha_identity_preserves_ranges_bodies_and_free_ids_at_builtin_disab
         "sum(1, 2, fn(x Z) R {x + a}) = sum(1, 2, fn(y Z) R {y + b})",
     ] {
         let fact = equal(&mut rt, code);
-        assert!(rt.search_equal_fact_proof(&fact, state.clone()).unwrap().is_none(), "{code}");
+        assert!(
+            rt.search_equal_fact_proof(&fact, state.clone())
+                .unwrap()
+                .is_none(),
+            "{code}"
+        );
     }
 }
 
@@ -500,14 +564,30 @@ fn stored_sum_equality_is_reused_with_alpha_renamed_endpoints() {
     exec_ok(&mut rt, "axiom stored:\n    ? forall u, v R:\n        sum(1, 2, fn(x Z) R {x + u}) = sum(1, 2, fn(y Z) R {y + v})");
     exec_ok(&mut rt, "release thm stored(a, b)");
     let goal = "sum(1, 2, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + b})";
-    let VerifyEqualityResult::Success(success) = verify(&mut rt, goal, VerifyState::top_level()) else { panic!("stored alpha endpoints"); };
-    let EqualFactSearchedProof::ByEquivalenceClass(EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(p)) = success.searched_proof else { panic!("must cite checked equality"); };
+    let VerifyEqualityResult::Success(success) = verify(&mut rt, goal, VerifyState::top_level())
+    else {
+        panic!("stored alpha endpoints");
+    };
+    let EqualFactSearchedProof::ByEquivalenceClass(
+        EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(p),
+    ) = success.searched_proof
+    else {
+        panic!("must cite checked equality");
+    };
     assert!(rt.fact_by_id_in_stack(p.cited.fact_id).is_some());
-    assert!(!verify(&mut rt, "sum(1, 2, fn(k Z) R {k + b}) = sum(1, 2, fn(t Z) R {t + a})", VerifyState::top_level()).is_failed());
+    assert!(!verify(
+        &mut rt,
+        "sum(1, 2, fn(k Z) R {k + b}) = sum(1, 2, fn(t Z) R {t + a})",
+        VerifyState::top_level()
+    )
+    .is_failed());
     for goal in [
         "sum(1, 3, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + b})",
         "sum(1, 2, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + a + 1})",
     ] {
-        assert!(verify(&mut rt, goal, VerifyState::top_level()).is_failed(), "{goal}");
+        assert!(
+            verify(&mut rt, goal, VerifyState::top_level()).is_failed(),
+            "{goal}"
+        );
     }
 }

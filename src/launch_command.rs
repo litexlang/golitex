@@ -7,22 +7,59 @@ pub enum OutputLanguage {
     #[default]
     English,
     Chinese,
+    ChineseTraditional,
+    French,
+    Russian,
+    Spanish,
+    Arabic,
+    Japanese,
+    Korean,
+    Vietnamese,
 }
 
 impl OutputLanguage {
+    pub const ALL: [Self; 10] = [
+        Self::English,
+        Self::Chinese,
+        Self::ChineseTraditional,
+        Self::French,
+        Self::Russian,
+        Self::Spanish,
+        Self::Arabic,
+        Self::Japanese,
+        Self::Korean,
+        Self::Vietnamese,
+    ];
+
     pub fn as_str(self) -> &'static str {
         match self {
             OutputLanguage::English => "en",
             OutputLanguage::Chinese => "zh",
+            OutputLanguage::ChineseTraditional => "zh-hant",
+            OutputLanguage::French => "fr",
+            OutputLanguage::Russian => "ru",
+            OutputLanguage::Spanish => "es",
+            OutputLanguage::Arabic => "ar",
+            OutputLanguage::Japanese => "ja",
+            OutputLanguage::Korean => "ko",
+            OutputLanguage::Vietnamese => "vi",
         }
     }
 
     pub fn parse_token(token: &str) -> RuntimeResult<Self> {
         match token.trim().to_ascii_lowercase().as_str() {
             "en" | "english" => Ok(OutputLanguage::English),
-            "zh" | "chinese" => Ok(OutputLanguage::Chinese),
+            "zh" | "chinese" | "zh-hans" => Ok(OutputLanguage::Chinese),
+            "zh-hant" => Ok(OutputLanguage::ChineseTraditional),
+            "fr" | "french" => Ok(OutputLanguage::French),
+            "ru" | "russian" => Ok(OutputLanguage::Russian),
+            "es" | "spanish" => Ok(OutputLanguage::Spanish),
+            "ar" | "arabic" => Ok(OutputLanguage::Arabic),
+            "ja" | "japanese" => Ok(OutputLanguage::Japanese),
+            "ko" | "korean" => Ok(OutputLanguage::Korean),
+            "vi" | "vietnamese" => Ok(OutputLanguage::Vietnamese),
             _ => Err(RuntimeError::InvalidArguments(format!(
-                "`-lang` expects en|english|zh|chinese, got `{token}`"
+                "`-lang` expects en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi (English language names are also accepted), got `{token}`"
             ))),
         }
     }
@@ -142,7 +179,7 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
             i += 1;
             let Some(token) = args.get(i) else {
                 return Err(RuntimeError::InvalidArguments(
-                    "`-lang` requires a value: en|english|zh|chinese".to_string(),
+                    "`-lang` requires a value: en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi".to_string(),
                 ));
             };
             language = OutputLanguage::parse_token(token)?;
@@ -224,7 +261,7 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
             })
         }
         _ => Err(RuntimeError::InvalidArguments(
-            "supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-extractpython` / `-extractc` with code / `-f` / `-r`, optional `-session` / `-strict` / `-lang <en|zh>`, `-help`, `-version`"
+            "supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-extractpython` / `-extractc` with code / `-f` / `-r`, optional `-session` / `-strict` / `-lang <en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi>`, `-help`, `-version`"
                 .to_string(),
         )),
     }

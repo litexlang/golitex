@@ -1,0 +1,6 @@
+# D05: Anonymous member of template-selected function space
+# Direct capability observation; --capabilities does not certify this claim.
+
+template<A, B nonempty_set>:
+    have maps set = fn(x A) B
+fn(x R) Z {0} $in \maps<R, Z>

@@ -74,12 +74,12 @@
     {
       "id": "T03",
       "group": "template",
-      "title": "Template selects a function-space carrier",
+      "title": "Template selects a function-space carrier (explicit proof)",
       "expect": "accept",
       "phase": null,
       "file": "template/t03.lit",
-      "statements": 4,
-      "setup_statements": 3
+      "statements": 6,
+      "setup_statements": 5
     },
     {
       "id": "T04",
@@ -94,7 +94,7 @@
     {
       "id": "T05",
       "group": "template",
-      "title": "Callable alias of a specialized template",
+      "title": "Callable alias of a specialized template (explicit proof)",
       "expect": "accept",
       "phase": null,
       "file": "template/t05.lit",
@@ -144,12 +144,12 @@
     {
       "id": "S02",
       "group": "struct",
-      "title": "Concrete function field evaluates after typed construction",
+      "title": "Concrete function field evaluates after typed construction (explicit proof)",
       "expect": "accept",
       "phase": null,
       "file": "struct/s02.lit",
-      "statements": 4,
-      "setup_statements": 3
+      "statements": 5,
+      "setup_statements": 4
     },
     {
       "id": "S03",
@@ -194,22 +194,22 @@
     {
       "id": "S07",
       "group": "struct",
-      "title": "Template selects a struct containing a concrete function",
+      "title": "Template selects a struct containing a concrete function (explicit proof)",
       "expect": "accept",
       "phase": null,
       "file": "struct/s07.lit",
-      "statements": 4,
-      "setup_statements": 3
+      "statements": 7,
+      "setup_statements": 6
     },
     {
       "id": "S08",
       "group": "struct",
-      "title": "A function returns a struct with a callable field",
+      "title": "A function returns a struct with a callable field (explicit proof)",
       "expect": "accept",
       "phase": null,
       "file": "struct/s08.lit",
-      "statements": 4,
-      "setup_statements": 3
+      "statements": 7,
+      "setup_statements": 6
     },
     {
       "id": "S09",
@@ -264,7 +264,7 @@
     {
       "id": "H05",
       "group": "higher_order",
-      "title": "Typed local binding of a returned closure",
+      "title": "Typed local binding of a returned closure (explicit proof)",
       "expect": "accept",
       "phase": null,
       "file": "higher_order/h05.lit",
@@ -374,12 +374,12 @@
     {
       "id": "D05",
       "group": "controls",
-      "title": "Anonymous member of template-selected function space",
+      "title": "Anonymous member of template-selected function space (explicit proof)",
       "expect": "accept",
       "phase": null,
       "file": "controls/d05.lit",
-      "statements": 2,
-      "setup_statements": 1
+      "statements": 6,
+      "setup_statements": 5
     },
     {
       "id": "D06",
@@ -404,22 +404,22 @@
     {
       "id": "D08",
       "group": "controls",
-      "title": "Template-selected struct containing a named function",
+      "title": "Template-selected struct containing a named function (explicit proof)",
       "expect": "accept",
       "phase": null,
       "file": "controls/d08.lit",
-      "statements": 4,
-      "setup_statements": 3
+      "statements": 8,
+      "setup_statements": 6
     },
     {
       "id": "D09",
       "group": "controls",
-      "title": "Function returning a struct containing a named function",
+      "title": "Function returning a struct containing a named function (explicit proof)",
       "expect": "accept",
       "phase": null,
       "file": "controls/d09.lit",
-      "statements": 4,
-      "setup_statements": 3
+      "statements": 8,
+      "setup_statements": 7
     },
     {
       "id": "D10",
@@ -713,7 +713,7 @@
       "expect": "accept",
       "phase": null,
       "file": "explicit_proofs/p02.lit",
-      "statements": 7,
+      "statements": 8,
       "setup_statements": 6
     },
     {
@@ -815,6 +815,113 @@
       "file": "explicit_proofs/n25.lit",
       "statements": 3,
       "setup_statements": 2
+    },
+    {
+      "id": "P09",
+      "group": "diagnostics",
+      "title": "Successful template after diagnostic repair",
+      "expect": "accept",
+      "phase": null,
+      "file": "diagnostics/p09.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N26",
+      "group": "diagnostics",
+      "title": "Template failure retains the child membership goal",
+      "expect": "reject",
+      "phase": "def_template",
+      "file": "diagnostics/n26.lit",
+      "statements": 1,
+      "setup_statements": 0,
+      "failure_contains": [
+        "body_have_equal",
+        "membership",
+        "a $in Z"
+      ]
+    },
+    {
+      "id": "N27",
+      "group": "diagnostics",
+      "title": "Obsolete function-set return carrier still rejects",
+      "expect": "reject",
+      "phase": "parse",
+      "file": "diagnostics/n27.lit",
+      "statements": 1,
+      "setup_statements": 0
+    }
+  ],
+  "capability_probes": [
+    {
+      "id": "CAP_T03",
+      "group": "template",
+      "title": "Original direct claim: Template selects a function-space carrier",
+      "expect": "observe",
+      "file": "capability_probes/t03.lit"
+    },
+    {
+      "id": "CAP_T05",
+      "group": "template",
+      "title": "Original direct claim: Callable alias of a specialized template",
+      "expect": "observe",
+      "file": "capability_probes/t05.lit"
+    },
+    {
+      "id": "CAP_S02",
+      "group": "struct",
+      "title": "Original direct claim: Concrete function field evaluates after typed construction",
+      "expect": "observe",
+      "file": "capability_probes/s02.lit"
+    },
+    {
+      "id": "CAP_S07",
+      "group": "struct",
+      "title": "Original direct claim: Template selects a struct containing a concrete function",
+      "expect": "observe",
+      "file": "capability_probes/s07.lit"
+    },
+    {
+      "id": "CAP_S08",
+      "group": "struct",
+      "title": "Original direct claim: A function returns a struct with a callable field",
+      "expect": "observe",
+      "file": "capability_probes/s08.lit"
+    },
+    {
+      "id": "CAP_H05",
+      "group": "higher_order",
+      "title": "Original direct claim: Typed local binding of a returned closure",
+      "expect": "observe",
+      "file": "capability_probes/h05.lit"
+    },
+    {
+      "id": "CAP_D05",
+      "group": "controls",
+      "title": "Original direct claim: Anonymous member of template-selected function space",
+      "expect": "observe",
+      "file": "capability_probes/d05.lit"
+    },
+    {
+      "id": "CAP_D08",
+      "group": "controls",
+      "title": "Original direct claim: Template-selected struct containing a named function",
+      "expect": "observe",
+      "file": "capability_probes/d08.lit"
+    },
+    {
+      "id": "CAP_D09",
+      "group": "controls",
+      "title": "Original direct claim: Function returning a struct containing a named function",
+      "expect": "observe",
+      "file": "capability_probes/d09.lit"
+    },
+    {
+      "id": "CAP_FIELD_PREMISES",
+      "group": "struct",
+      "title": "Raw selected field equality and membership before call",
+      "expect": "observe",
+      "file": "capability_probes/field_premises.lit"
     }
   ]
 }

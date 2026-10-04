@@ -1,9 +1,13 @@
 # D09: Function returning a struct containing a named function
-# Intended: accept; run via examples/test_function_sets/run.py
+# Supported explicit proof; original direct source in capability_probes/d09.lit.
 
 struct Box:
     op fn(x R) R
     tag N
 have fn step(x R) R = x + 1
 have fn make(a R) &Box = (step, 0)
-make(2).op(3) $in R
+make(2) = (step, 0)
+have selected &Box = make(2)
+selected.op = step
+selected.op(3) = step(3) = 4
+selected.op(3) $in R

@@ -66,7 +66,9 @@ store_fact_and_infer/
 - InFact: list/union/intersect/set_minus, cart, ranges/intervals,
   set-builder, power_set, equal-FnSet / fn_range / finite_seq / seq,
   family_union / index_union / index_intersect / **index_cart**,
-  signed/nonzero standard-set sign (`N` / `R+` / `R-` / `R*` …)
+  signed/nonzero standard-set sign (`N` / `R+` / `R-` / `R*` …);
+  strict positive and negative carriers also publish `x != 0` before later
+  inferred division/modulo WD consumes the value. `N` alone does not.
 - Order bound → sign spelling and mul-by-(−1) flip are **verify-time** only:
   `OrderSignFromPositive/NegativeLiteralBound`, `OrderFlipMulMinusOne`
 - `$is_cart` → dim ≥ 2; Subset / Superset → elementwise forall

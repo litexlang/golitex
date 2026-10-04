@@ -17,10 +17,15 @@ sketch:
     let F = fn(x R) fn(y R) R
     $is_set(F)
 
-# P04: $is_set(F)
+# P04: A template parameter selects a fixed function-space carrier.
+# Former invalid positive: let F = fn(x R) x
+# Its rejection is tested in ../test_function_sets/diagnostics/n27.lit.
+# This is the supported family interface, not dependent function signatures.
 sketch:
-    let F = fn(x R) x
-    $is_set(F)
+    template<S nonempty_set>:
+        have maps set = fn(x S) S
+    $is_set(\maps<R>)
+    \maps<R> = fn(x R) R
 
 # P05: fn(x R) R {x} $in fn(y R) R
 sketch:

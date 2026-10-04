@@ -1,0 +1,8 @@
+# T03: Template selects a function-space carrier
+# Direct capability observation; --capabilities does not certify this claim.
+
+template<A, B nonempty_set>:
+    have maps set = fn(x A) B
+$is_set(\maps<R, Z>)
+have f \maps<R, Z> = fn(x R) Z {0}
+f(2) = 0

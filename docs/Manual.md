@@ -290,7 +290,14 @@ factorization. Rational logarithms require matching prime-valuation ratios;
 `eval log(2,3)` declines rather than supplying an approximate value. Existing
 decimal bounds remain in force for large-number calculations.
 
-`gcd(a,b)` requires integer arguments that are not both zero. `quot(a,d)` uses
+`gcd(a,b)` requires integer arguments that are not both zero. A positive
+common divisor satisfies `d <= gcd(a,b)` when `d $in N+`,
+`a % d = 0`, and `b % d = 0` are proved. The
+`PositiveCommonDivisorLeGcd` rule checks these three premises with the
+inherited search permissions and records their evidence; it retains the
+existing gcd and remainder WD requirements.
+
+`quot(a,d)` uses
 Euclidean division with `d $in N+`, so
 `a = d * quot(a,d) + a % d` with a nonnegative remainder. `lcm`, `floor`,
 `ceil`, `min`, and `max` have the domains shown in [Main object
@@ -1135,6 +1142,12 @@ associative-commutative `finite_set_reduce` interface instead.
 `finite_set_max(S)` and `finite_set_min(S)` are not total default-value
 operators. If finiteness, nonemptiness, or `S $subset R` is unavailable, the
 object is ill-defined rather than assigned an arbitrary endpoint.
+After these WD obligations hold, membership rules prove
+`finite_set_max(S) $in S` and `finite_set_min(S) $in S`. The target set
+must match the operator’s set structurally, allowing bound-variable renaming;
+these rules do not skip WD or establish membership in an unrelated set.
+Detailed output records `FiniteSetMaxMember` / `FiniteSetMinMember` and
+`set_equal` identity/alpha evidence.
 For displayed sets of closed rational numbers, the equality rule selects an
 original member and records every exact comparison against that member.
 Detailed output exposes `FiniteSetMaxSelection` or `FiniteSetMinSelection`,
@@ -2564,7 +2577,10 @@ An already proved whole `forall` can be replayed with renamed outer
 parameters and existential witnesses, including an outer parameter absent
 from the conclusion. Replay checks the goal's well-definedness, preserves
 the carriers, premises and free definition owners, and cites the stored
-source fact. It does not assign a value to an unused parameter.
+source fact. Existential function/set carriers also allow renaming their
+nested bound variables; their domains, return carriers, guards and free
+identities remain unchanged. Replay does not assign a value to an unused
+parameter.
 
 ```litex
 claim:
@@ -4875,7 +4891,8 @@ forall a, b R+:
 > union cardinality `<=` sum; and surjection codomain cardinality `<=` domain.
 > Also `finite_set_size` nonnegative / at-least-one / subset comparison.
 > Carrier → sign is eager infer again: `x $in N` ⇒ `0 <= x`;
-> `x $in R+/R-/R*` ⇒ `0 < x` (+ `0 <= x`) / `x < 0` (+ `x <= 0`) / `x != 0`.
+> `x $in R+/R-/R*` ⇒ `0 < x` (+ `0 <= x`, `x != 0`) / `x < 0` (+ `x <= 0`, `x != 0`) / `x != 0`.
+> Strict signed rational/integer carriers likewise publish nonzero; `N` alone does not.
 > Still verify-time (not eager infer): bound → sign spelling
 > (`a >= 1` ⇒ `0 < a`, `a <= -1` ⇒ `a <= 0`); mul-by-`(-1)` order flip;
 > and `u - v = 0` ⇒ `u = v` (`EqualFromKnownDifferenceZero`).

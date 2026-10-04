@@ -1,4 +1,3 @@
-# Draft: excluded from the published showcase gate until it verifies again.
 # Linear algebra begins with a scalar field and a vector space over that field.
 # Coordinate spaces appear later as instances of these interfaces.
 #
@@ -224,6 +223,7 @@ thm linear_map_kernel_is_subspace:
     let kernel = \linear_kernel<V, W, target.zero, T>
     release thm linear_map_sends_zero_to_zero(K, field, V, W, source, target, T)
     T(source.zero) = target.zero
+    \linear_kernel<V, W, target.zero, T> = {x V: T(x) = target.zero}
     kernel = {x V: T(x) = target.zero}
     release thm set_builder_member(source.zero, {x V: T(x) = target.zero})
     source.zero $in {x V: T(x) = target.zero}
@@ -271,16 +271,23 @@ thm injective_linear_map_has_trivial_kernel:
     T(source.zero) = target.zero
     by def:
         ? $injective(V, W, T)
+    \linear_kernel<V, W, target.zero, T> = {x V: T(x) = target.zero}
     kernel = {x V: T(x) = target.zero}
+    \zero_subspace<V, source.zero> = {source.zero}
     zero_space = {source.zero}
     by extension:
         ? kernel = zero_space
-        forall x kernel:
+        claim:
+            ? forall x kernel:
+                x $in zero_space
             T(x) = target.zero = T(source.zero)
             x = source.zero
             x $in {source.zero}
             x $in zero_space
-        forall x zero_space:
+        claim:
+            ? forall x zero_space:
+                x $in kernel
+            x $in {source.zero}
             x = source.zero
             T(x) = T(source.zero) = target.zero
             x $in kernel
@@ -295,10 +302,9 @@ thm trivial_kernel_implies_injective:
             $injective(V, W, T)
     let kernel = \linear_kernel<V, W, target.zero, T>
     let zero_space = \zero_subspace<V, source.zero>
-    let source_neg = \vector_neg<K, field, V, source>
-    let target_neg = \vector_neg<K, field, W, target>
-    let sub = \vector_sub<K, field, V, source>
+    \linear_kernel<V, W, target.zero, T> = {x V: T(x) = target.zero}
     kernel = {x V: T(x) = target.zero}
+    \zero_subspace<V, source.zero> = {source.zero}
     zero_space = {source.zero}
     claim:
         ? forall u, v V:
@@ -306,24 +312,24 @@ thm trivial_kernel_implies_injective:
             =>:
                 u = v
         release thm linear_map_sends_neg_to_neg(K, field, V, W, source, target, T, v)
-        T(source_neg(v)) = target_neg(T(v))
+        T(\vector_neg<K, field, V, source>(v)) = \vector_neg<K, field, W, target>(T(v))
         release thm vector_neg_spec(K, field, W, target, T(v))
-        target.add(T(v), target_neg(T(v))) = target.zero
-        sub(u, v) = source.add(u, source_neg(v))
-        T(sub(u, v)) = T(source.add(u, source_neg(v))) = target.add(T(u), T(source_neg(v))) = target.add(T(u), target_neg(T(v))) = target.add(T(v), target_neg(T(v))) = target.zero
-        release thm set_builder_member(sub(u, v), {x V: T(x) = target.zero})
-        sub(u, v) $in {x V: T(x) = target.zero}
-        sub(u, v) $in kernel
-        sub(u, v) $in zero_space
-        sub(u, v) $in {source.zero}
-        sub(u, v) = source.zero
-        source.add(u, source_neg(v)) = source.zero
-        source.add(source_neg(v), u) = source.add(u, source_neg(v)) = source.zero
+        target.add(T(v), \vector_neg<K, field, W, target>(T(v))) = target.zero
+        \vector_sub<K, field, V, source>(u, v) = source.add(u, \vector_neg<K, field, V, source>(v))
+        T(\vector_sub<K, field, V, source>(u, v)) = T(source.add(u, \vector_neg<K, field, V, source>(v))) = target.add(T(u), T(\vector_neg<K, field, V, source>(v))) = target.add(T(u), \vector_neg<K, field, W, target>(T(v))) = target.add(T(v), \vector_neg<K, field, W, target>(T(v))) = target.zero
+        release thm set_builder_member(\vector_sub<K, field, V, source>(u, v), {x V: T(x) = target.zero})
+        \vector_sub<K, field, V, source>(u, v) $in {x V: T(x) = target.zero}
+        \vector_sub<K, field, V, source>(u, v) $in kernel
+        \vector_sub<K, field, V, source>(u, v) $in zero_space
+        \vector_sub<K, field, V, source>(u, v) $in {source.zero}
+        \vector_sub<K, field, V, source>(u, v) = source.zero
+        source.add(u, \vector_neg<K, field, V, source>(v)) = source.zero
+        source.add(\vector_neg<K, field, V, source>(v), u) = source.add(u, \vector_neg<K, field, V, source>(v)) = source.zero
         release thm vector_neg_spec(K, field, V, source, v)
-        source.add(v, source_neg(v)) = source.zero
-        source.add(source_neg(v), v) = source.add(v, source_neg(v)) = source.zero
-        source.add(source_neg(v), u) = source.add(source_neg(v), v)
-        release thm add_left_cancel(K, field, V, source, source_neg(v), u, v)
+        source.add(v, \vector_neg<K, field, V, source>(v)) = source.zero
+        source.add(\vector_neg<K, field, V, source>(v), v) = source.add(v, \vector_neg<K, field, V, source>(v)) = source.zero
+        source.add(\vector_neg<K, field, V, source>(v), u) = source.add(\vector_neg<K, field, V, source>(v), v)
+        release thm add_left_cancel(K, field, V, source, \vector_neg<K, field, V, source>(v), u, v)
         u = v
     by def:
         ? $injective(V, W, T)
@@ -448,10 +454,20 @@ claim:
         plane_add((0, 0), x) = x
         exist inverse_x cart(R, R) st {plane_add(x, inverse_x) = (0, 0)}
     x = (x[1], x[2])
+    (0, 0)[1] = 0
+    (0, 0)[2] = 0
+    plane_add((0, 0), x) = ((0, 0)[1] + x[1], (0, 0)[2] + x[2])
+    x[1] $in R
+    x[2] $in R
+    (0, 0)[1] + x[1] = 0 + x[1] = x[1]
+    (0, 0)[2] + x[2] = 0 + x[2] = x[2]
+    ((0, 0)[1] + x[1], (0, 0)[2] + x[2]) = (x[1], x[2])
     plane_add((0, 0), x) = (x[1], x[2]) = x
     have inverse_x cart(R, R) = (0 - x[1], 0 - x[2])
     inverse_x[1] = 0 - x[1]
     inverse_x[2] = 0 - x[2]
+    x[1] + inverse_x[1] = x[1] + (0 - x[1]) = 0
+    x[2] + inverse_x[2] = x[2] + (0 - x[2]) = 0
     plane_add(x, inverse_x) = (x[1] + inverse_x[1], x[2] + inverse_x[2]) = (0, 0)
     witness exist inverse_x2 cart(R, R) st {plane_add(x, inverse_x2) = (0, 0)} from inverse_x
 
@@ -466,12 +482,16 @@ claim:
     plane_smul(b, x)[1] = b * x[1]
     plane_smul(b, x)[2] = b * x[2]
     plane_smul(a, plane_smul(b, x)) = (a * plane_smul(b, x)[1], a * plane_smul(b, x)[2]) = (a * (b * x[1]), a * (b * x[2]))
+    plane_smul(real_field.mul(a, b), x) = plane_smul(a * b, x)
+    plane_smul(a * b, x) = ((a * b) * x[1], (a * b) * x[2])
     plane_smul(real_field.mul(a, b), x) = ((a * b) * x[1], (a * b) * x[2]) = (a * (b * x[1]), a * (b * x[2])) = plane_smul(a, plane_smul(b, x))
     plane_smul(a, x) = (a * x[1], a * x[2])
     plane_smul(a, x)[1] = a * x[1]
     plane_smul(a, x)[2] = a * x[2]
     plane_smul(b, x) = (b * x[1], b * x[2])
     plane_add(plane_smul(a, x), plane_smul(b, x)) = (plane_smul(a, x)[1] + plane_smul(b, x)[1], plane_smul(a, x)[2] + plane_smul(b, x)[2]) = (a * x[1] + b * x[1], a * x[2] + b * x[2])
+    plane_smul(real_field.add(a, b), x) = plane_smul(a + b, x)
+    plane_smul(a + b, x) = ((a + b) * x[1], (a + b) * x[2])
     plane_smul(real_field.add(a, b), x) = ((a + b) * x[1], (a + b) * x[2]) = (a * x[1] + b * x[1], a * x[2] + b * x[2]) = plane_add(plane_smul(a, x), plane_smul(b, x))
 
 # Scalar multiplication distributes over vector addition coordinatewise.
@@ -489,6 +509,10 @@ claim:
     plane_smul(a, x)[2] = a * x[2]
     plane_smul(a, y)[1] = a * y[1]
     plane_smul(a, y)[2] = a * y[2]
+    plane_add(plane_smul(a, x), plane_smul(a, y)) = (plane_smul(a, x)[1] + plane_smul(a, y)[1], plane_smul(a, x)[2] + plane_smul(a, y)[2])
+    plane_smul(a, x)[1] + plane_smul(a, y)[1] = a * x[1] + a * y[1]
+    plane_smul(a, x)[2] + plane_smul(a, y)[2] = a * x[2] + a * y[2]
+    (plane_smul(a, x)[1] + plane_smul(a, y)[1], plane_smul(a, x)[2] + plane_smul(a, y)[2]) = (a * x[1] + a * y[1], a * x[2] + a * y[2])
     plane_add(plane_smul(a, x), plane_smul(a, y)) = (a * x[1] + a * y[1], a * x[2] + a * y[2])
     plane_smul(a, plane_add(x, y)) = (a * (x[1] + y[1]), a * (x[2] + y[2])) = (a * x[1] + a * y[1], a * x[2] + a * y[2]) = plane_add(plane_smul(a, x), plane_smul(a, y))
 
@@ -499,7 +523,11 @@ claim:
         plane_smul(real_field.one, x) = x
     release thm real_field_adapter_values(0, 0)
     x = (x[1], x[2])
+    plane_smul(real_field.one, x) = plane_smul(1, x)
+    plane_smul(1, x) = (1 * x[1], 1 * x[2]) = (x[1], x[2])
     plane_smul(real_field.one, x) = (x[1], x[2]) = x
+
+(0, 0) $in cart(R, R)
 
 release thm struct_member(((0, 0), plane_add, plane_smul), &VectorSpace<R, real_field, cart(R, R)>)
 
@@ -521,6 +549,14 @@ thm projection_x_axis_is_linear:
         projection_x_axis(real_plane.add(u, v)) = projection_x_axis(plane_add(u, v)) = (plane_add(u, v)[1], 0) = (u[1] + v[1], 0)
         projection_x_axis(u) = (u[1], 0)
         projection_x_axis(v) = (v[1], 0)
+        projection_x_axis(u)[1] = u[1]
+        projection_x_axis(u)[2] = 0
+        projection_x_axis(v)[1] = v[1]
+        projection_x_axis(v)[2] = 0
+        plane_add(projection_x_axis(u), projection_x_axis(v)) = (projection_x_axis(u)[1] + projection_x_axis(v)[1], projection_x_axis(u)[2] + projection_x_axis(v)[2])
+        projection_x_axis(u)[1] + projection_x_axis(v)[1] = u[1] + v[1]
+        projection_x_axis(u)[2] + projection_x_axis(v)[2] = 0 + 0 = 0
+        (projection_x_axis(u)[1] + projection_x_axis(v)[1], projection_x_axis(u)[2] + projection_x_axis(v)[2]) = (u[1] + v[1], 0)
         real_plane.add(projection_x_axis(u), projection_x_axis(v)) = plane_add(projection_x_axis(u), projection_x_axis(v)) = (u[1] + v[1], 0)
     claim:
         ? forall a R, v cart(R, R):
@@ -530,6 +566,12 @@ thm projection_x_axis_is_linear:
         plane_smul(a, v)[1] = a * v[1]
         projection_x_axis(real_plane.smul(a, v)) = projection_x_axis(plane_smul(a, v)) = (plane_smul(a, v)[1], 0) = (a * v[1], 0)
         projection_x_axis(v) = (v[1], 0)
+        projection_x_axis(v)[1] = v[1]
+        projection_x_axis(v)[2] = 0
+        plane_smul(a, projection_x_axis(v)) = (a * projection_x_axis(v)[1], a * projection_x_axis(v)[2])
+        a * projection_x_axis(v)[1] = a * v[1]
+        a * projection_x_axis(v)[2] = a * 0 = 0
+        (a * projection_x_axis(v)[1], a * projection_x_axis(v)[2]) = (a * v[1], 0)
         plane_smul(a, projection_x_axis(v)) = (a * v[1], 0)
         real_plane.smul(a, projection_x_axis(v)) = plane_smul(a, projection_x_axis(v)) = (a * v[1], 0)
     by def:
@@ -539,11 +581,15 @@ release thm projection_x_axis_is_linear()
 
 release thm linear_map_kernel_is_subspace(R, real_field, cart(R, R), cart(R, R), real_plane, real_plane, projection_x_axis)
 
+(0, 7)[1] = 0
+projection_x_axis((0, 7)) = ((0, 7)[1], 0) = (0, 0)
+real_plane.zero = (0, 0)
 projection_x_axis((0, 7)) = (0, 0) = real_plane.zero
 
 release thm set_builder_member((0, 7), {v cart(R, R): projection_x_axis(v) = real_plane.zero})
 (0, 7) $in {v cart(R, R): projection_x_axis(v) = real_plane.zero}
 
+\linear_kernel<cart(R, R), cart(R, R), real_plane.zero, projection_x_axis> = {v cart(R, R): projection_x_axis(v) = real_plane.zero}
 (0, 7) $in \linear_kernel<cart(R, R), cart(R, R), real_plane.zero, projection_x_axis>
 
 # Two vectors with the same x-coordinate but different y-coordinates give a
@@ -557,6 +603,10 @@ thm projection_x_axis_is_not_injective:
         $injective(cart(R, R), cart(R, R), projection_x_axis)
         by def:
             ? $injective(cart(R, R), cart(R, R), projection_x_axis)
+        (0, 1)[1] = 0
+        (0, 0)[1] = 0
+        projection_x_axis((0, 1)) = ((0, 1)[1], 0) = (0, 0)
+        projection_x_axis((0, 0)) = ((0, 0)[1], 0) = (0, 0)
         projection_x_axis((0, 1)) = (0, 0)
         projection_x_axis((0, 0)) = (0, 0)
         projection_x_axis((0, 1)) = projection_x_axis((0, 0))

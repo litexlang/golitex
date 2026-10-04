@@ -1,0 +1,280 @@
+{
+  "source_sha256": "ae8edf742afa7ccf9afa7a194cb35720489b1297537087da292de5cfd9276cb0",
+  "binary_sha256": "40c56a295131ffa2778578d37b5e281fd6efd21f61816d4c8b7f87c8b69db9b0",
+  "commands": [
+    {
+      "name": "persistent_probes",
+      "command": [
+        "python3",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/function-set-cleanup/probe.py"
+      ],
+      "exit_code": 0,
+      "test_summaries": []
+    },
+    {
+      "name": "template_failure_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--lib",
+        "json_output::template_failure_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "test_summaries": [
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 787 filtered out; finished in 0.02s"
+      ]
+    },
+    {
+      "name": "local_rust_repairs_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--lib",
+        "json_output::local_rust_repairs_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "test_summaries": [
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 786 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "name": "project_detailed_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--lib",
+        "json_output::project_detailed_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "test_summaries": [
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 786 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "name": "acceptance_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--lib",
+        "json_output::acceptance_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "test_summaries": [
+        "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 777 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "name": "template_definition_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--lib",
+        "execute_def_template_stmt::tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "test_summaries": [
+        "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 782 filtered out; finished in 0.73s"
+      ]
+    },
+    {
+      "name": "supported_regressions",
+      "command": [
+        "python3",
+        "examples/test_function_sets/run.py",
+        "--report",
+        "examples/test_function_sets/cleanup_2026-10-04.json"
+      ],
+      "exit_code": 0,
+      "test_summaries": []
+    },
+    {
+      "name": "capability_observations",
+      "command": [
+        "python3",
+        "examples/test_function_sets/run.py",
+        "--capabilities",
+        "--report",
+        "examples/test_function_sets/capabilities_2026-10-04.json"
+      ],
+      "exit_code": 0,
+      "test_summaries": []
+    },
+    {
+      "name": "old_fn_set",
+      "command": [
+        "python3",
+        "examples/test_objs/run.py",
+        "--object",
+        "fn_set",
+        "--report",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-04/function-set-cleanup/old_fn_set.json"
+      ],
+      "exit_code": 0,
+      "test_summaries": []
+    }
+  ],
+  "identity_stable": true,
+  "schema_version": 1,
+  "task": "Function-set explicit proof and template diagnostic cleanup",
+  "rust_tests_passed": 42,
+  "trust_delta": 0,
+  "contract_delta": "Diagnostic projection only; no verifier/search/AST/Runtime/Env/result contract changes in this cleanup.",
+  "initial_build_block": {
+    "error_count": 471,
+    "cause": "Concurrent OutputLanguage extension had unfinished exhaustive match branches.",
+    "resolution": "Language-task owner completed branches; a current-source successful build preceded execution."
+  },
+  "initial_test_build_block": {
+    "errors": [
+      {
+        "code": "E0063",
+        "file": "src/json_output/output_languages_tests.rs",
+        "message": "ClosedNumericNonMembershipBuiltinRuleProof initializer missing normal"
+      },
+      {
+        "code": "E0004",
+        "file": "tests/unit/execute/equality_search/tests.rs",
+        "message": "OutputLanguage match missing newly added locales"
+      },
+      {
+        "code": "E0004",
+        "file": "tests/unit/execute/closed_exact_elementary_calculation/tests.rs",
+        "message": "OutputLanguage match missing newly added locales"
+      }
+    ],
+    "resolution": "Fixed by concurrent language-task owner before passing Rust gates."
+  },
+  "test_development_corrections": [
+    {
+      "source": "template<a power_set(1)>:\n    have item R = 0\n",
+      "observed": "accept",
+      "correction": "Use an otherwise fixed FnSet carrier containing the checked 1/0 guard; parameter_type then retains 0 != 0."
+    },
+    {
+      "source": "template<a R: 1 / 0 = a>:\n    have item R = 0\n",
+      "observed": "parse: expected object, got colon",
+      "correction": "Use $is_set(1 / 0) as a delimited guard; domain_fact_well_defined then retains 0 != 0."
+    },
+    {
+      "source": "template<a R>:\n    have selected Z = a\n# then parse template<a R>:\n#     have selected R = a\n",
+      "observed": "Execution failure is unpublished, but parser keeps selected reserved; same-name parse rejects.",
+      "correction": "Check unpublished template use fails, then execute a valid recovered template with a fresh name; retain existing parser-name reservation."
+    }
+  ],
+  "superseded_identity_gate": {
+    "source_sha256": "fa1f8e8aa22a584850ce29738437026f59f765a3c75b8c39de8ba6cde85411b7",
+    "reason": "Concurrent source/binary changed during an otherwise passing gate; replayed all selected gates with stable identities."
+  },
+  "artifacts": {
+    "cleanup_2026-10-04.json": {
+      "sha256": "f9b280ac75e72dfcd351522afa0f38cba12a90256724a7f1e984e9fc7d496ac1",
+      "counts": {
+        "total": 85,
+        "positive": 58,
+        "negative": 27,
+        "passed": 85,
+        "unexpected": 0
+      }
+    },
+    "capabilities_2026-10-04.json": {
+      "sha256": "4d39b5977abef7341b08c132b97e8fc5410f760f360f558679942244460990ad",
+      "counts": {
+        "total": 10,
+        "accepted": 0,
+        "rejected": 10,
+        "infrastructure_failures": 0
+      }
+    },
+    "old_fn_set_2026-10-04.json": {
+      "sha256": "d105a3ffd4e1ca1a5bb60a6cda58de2aec670cf0ad2b1fb2aebc02c94febb21a",
+      "objects": 1,
+      "positive_assertions": 6,
+      "negative_files": 3
+    },
+    "proof_journals/cleanup_2026-10-04.json": {
+      "sha256": "1488ec5c4a795ec613c0da1c84e1472b7b23dd6cf6045bc91079359878c5d055",
+      "iterations": 20
+    }
+  },
+  "original_capability_source_identity": [
+    {
+      "id": "CAP_T03",
+      "historical_sha256": "4798431b4a4fda9c806fc18dd2da56e4a4a28846ad8aac39dee7f12e1eca2966",
+      "current_sha256": "2dd0686cdca150ca1574b8f602059e037d214e85404f5d54f59dbee77a8b28ef",
+      "delta": "Observation-label comment only; all executable source bytes and line positions preserved."
+    },
+    {
+      "id": "CAP_T05",
+      "historical_sha256": "c51155c962b54952677e6b92fb58a69aa3ea9625a0ff8d91b4dd0ac6141f6e41",
+      "current_sha256": "8ff6273cc357f08e42102e1466b6d229a69730c9b7066097331f27001fc6d79e",
+      "delta": "Observation-label comment only; all executable source bytes and line positions preserved."
+    },
+    {
+      "id": "CAP_S02",
+      "historical_sha256": "8c1ba9717921445ddce765867c0e36bc48b4939997326e36c943f0233da9711b",
+      "current_sha256": "8ef88f3e17f4656066adbefc1ea374aaaa72a5237364b33ccfd3b43d15047ac7",
+      "delta": "Observation-label comment only; all executable source bytes and line positions preserved."
+    },
+    {
+      "id": "CAP_S07",
+      "historical_sha256": "baefc2598f0fa1b94d2032955841c0ead1f9f1d1c3b3cce304d44810f40059a2",
+      "current_sha256": "ae0712f8e8048edd4be3ef044b6410a55e261e588abdab737ef225d3db306e34",
+      "delta": "Observation-label comment only; all executable source bytes and line positions preserved."
+    },
+    {
+      "id": "CAP_S08",
+      "historical_sha256": "43d46604664ae7140dc6ee97031939d1b7316a34f87555eaee0bedddfc8f235d",
+      "current_sha256": "0b426fe6503100b1e1a2fd3897046f9a3be2e3c5ffc2c6e83346d7f218cad607",
+      "delta": "Observation-label comment only; all executable source bytes and line positions preserved."
+    },
+    {
+      "id": "CAP_H05",
+      "historical_sha256": "265cd269c8cc54c8cd217f3e7b236f539a34c5305b1ee1285210aea9c2d4dae7",
+      "current_sha256": "7cce6a598a8f472612722ae109b9b4310e4ee87cc427d188fdf1707a227b5515",
+      "delta": "Observation-label comment only; all executable source bytes and line positions preserved."
+    },
+    {
+      "id": "CAP_D05",
+      "historical_sha256": "6a77541d2036ac76f7ee7fcceff5d755f84f1a1fb3f30f5daa8bd9b702a0013c",
+      "current_sha256": "14563e5a18ddd417b6c07269af3600c0fb9b91a0cad2e0b9424d00410d6115f6",
+      "delta": "Observation-label comment only; all executable source bytes and line positions preserved."
+    },
+    {
+      "id": "CAP_D08",
+      "historical_sha256": "859d90c941530d5a232ec25b5756b0dad4e454390513a935a66bc547e71ef10f",
+      "current_sha256": "00954d81ea73ee2da735a3bbf576a1d90315362c71b757e0994fd5118ca4c036",
+      "delta": "Observation-label comment only; all executable source bytes and line positions preserved."
+    },
+    {
+      "id": "CAP_D09",
+      "historical_sha256": "d1c3f1c181452e4c2020eadef55b2a0c71b5984fcdf434c6eaa3ed78a57002b3",
+      "current_sha256": "d7c9462d09a0ad79fa182e2bb773c202186165039db1bfab155d8b37194e5efc",
+      "delta": "Observation-label comment only; all executable source bytes and line positions preserved."
+    }
+  ],
+  "artifact_checks": {
+    "scoped_diff_check": "passed",
+    "new_rust_files_rustfmt_check": "passed",
+    "python_compile": "passed",
+    "obj_inventory": "99/99",
+    "function_fixture_inventory": "95/95",
+    "preserved_original_direct_sources": "9/9 exact executable bytes; observation-label comments updated",
+    "evidence_links": "passed",
+    "final_current_source_and_binary_match": "passed"
+  }
+}

@@ -3,4 +3,4 @@
 # Before: current release rejected this source.
 # finite_set_reduce({1, 2, 3}, fn(k R) R {k}, fn(a, b R) R {a + b}, 0) = 6
 # Now: checked operation/domain evidence is retained.
-finite_set_reduce({1, 2, 3}, fn(k R) R {k}, fn(a, b R) R {a + b}, 0) = 6
+finite_set_reduce({1, 2, 3}, fn(k R) R {k}, fn(a, b R) R {a + b}, 0) = finite_set_sum({1, 2, 3}, fn(k R) R {k}) = 6

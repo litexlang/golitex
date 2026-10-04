@@ -1106,6 +1106,13 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("strict_proof", project_verify_fact(&p.strict_proof, runtime)));
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::PositiveCommonDivisorLeGcd(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessEqualFact")),
+            ("rule", string("PositiveCommonDivisorLeGcd")),
+            ("divisor_in_n_pos_proof", project_verify_fact(&p.divisor_in_n_pos_proof, runtime)),
+            ("left_remainder_zero_proof", project_verify_fact(&p.left_remainder_zero_proof, runtime)),
+            ("right_remainder_zero_proof", project_verify_fact(&p.right_remainder_zero_proof, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetMaxMemberLe(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -1420,6 +1427,16 @@ pub(super) fn project_atomic_builtin_rule(
             ("type", string("builtin_rule")), ("family", string("InFact")),
             ("rule", string("RealIntegerPower")),
             ("base_in_real_proof", project_verify_fact(&p.base_in_real_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::FiniteSetMaxMember(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")),
+            ("rule", string("FiniteSetMaxMember")),
+            ("set_equal", super::searched::project_equal_searched(&p.set_equal, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::FiniteSetMinMember(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")),
+            ("rule", string("FiniteSetMinMember")),
+            ("set_equal", super::searched::project_equal_searched(&p.set_equal, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::AnonymousFnInDeclaredFnSet(_)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("InFact")),

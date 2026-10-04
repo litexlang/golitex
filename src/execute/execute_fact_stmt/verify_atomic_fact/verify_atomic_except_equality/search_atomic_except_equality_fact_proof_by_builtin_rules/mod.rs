@@ -38,3 +38,7 @@ pub use search_atomic_except_equality_fact_proof_by_builtin_rule_result::AtomicE
 pub mod order_complement;
 
 pub mod closed_subtraction_bound;
+
+pub mod finite_set_extremum_membership;
+
+pub mod gcd_common_divisor_bound;

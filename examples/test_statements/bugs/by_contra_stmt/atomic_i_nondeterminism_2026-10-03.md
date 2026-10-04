@@ -1,5 +1,7 @@
 # Identical squared-i contradiction proof varies across runs
 
+Latest disposition, 2026-10-04: the user chose to retain substitution behavior and fix Litex authoring only. The canonical example now supplies `i*i=0*0=0`; 30/30 independent current-release processes pass. [Verified authoring solution](../../../test_objs/experience/problem_notes/imaginary_contra_explicit_chain_2026-10-04.md). No Rust change is requested for this example. The remaining text records the historical baseline.
+
 Task: controlled baseline during classified contra work, 2026-10-03.
 Scope: ByContraStmt / existing atomic proof search under an inconsistent local assumption.
 Ownership: category 2 candidate; exact calculation/equality-search owner and

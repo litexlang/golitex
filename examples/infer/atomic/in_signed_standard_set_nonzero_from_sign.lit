@@ -1,0 +1,28 @@
+# Infer: InFact.SignedStandardSetSign publishes nonzero for strict signs.
+# Gate: target/release/litex -strict -f examples/infer/atomic/in_signed_standard_set_nonzero_from_sign.lit
+# Before, nonzero used a separate strict-order builtin rather than an inferred fact:
+# have n N+
+# n != 0
+have n N+
+n != 0
+have q Q+
+q != 0
+have r R+
+r != 0
+have nq Q-
+nq != 0
+have nz Z-
+nz != 0
+have nr R-
+nr != 0
+# Before, checking this carrier declaration raised an inferred-modulo WD InternalBug:
+# have a, b Z
+# have c power_set(N) = {d N+: $dvd(a,d), $dvd(b,d)}
+# Its automatic subset proof remains unavailable; prove the same carrier explicitly.
+have a, b Z
+have c set = {d N+: $dvd(a,d), $dvd(b,d)}
+forall d c:
+    d $in N
+by def c $subset N
+c $in power_set(N)
+# Boundary: N/R may contain zero; a zero divisor and zero in R+ still reject.

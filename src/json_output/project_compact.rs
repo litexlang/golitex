@@ -82,18 +82,12 @@ fn thin_to_compact(lang: OutputLanguage, normal_stmt: &JsonValue) -> JsonValue {
         .unwrap_or_else(|| string(""));
 
     if matches!(success, JsonValue::Bool(true)) {
-        return object(
-            lang,
-            vec![("success", success), ("statement", statement)],
-        );
+        return object(lang, vec![("success", success), ("statement", statement)]);
     }
 
     let fail_reason = match map.get(&why_failed_key) {
         Some(why) => thin_fail_reason(lang, why),
-        None => object(
-            lang,
-            vec![("phase", string(default_fail_phase(lang)))],
-        ),
+        None => object(lang, vec![("phase", string(default_fail_phase(lang)))]),
     };
     object(
         lang,
@@ -107,10 +101,7 @@ fn thin_to_compact(lang: OutputLanguage, normal_stmt: &JsonValue) -> JsonValue {
 
 fn thin_fail_reason(lang: OutputLanguage, why: &JsonValue) -> JsonValue {
     let Ok(map) = why.as_object() else {
-        return object(
-            lang,
-            vec![("phase", string(default_fail_phase(lang)))],
-        );
+        return object(lang, vec![("phase", string(default_fail_phase(lang)))]);
     };
     let phase_key = localize_key("phase", lang);
     let goal_key = localize_key("goal", lang);
@@ -133,6 +124,15 @@ fn thin_fail_reason(lang: OutputLanguage, why: &JsonValue) -> JsonValue {
 fn default_fail_phase(lang: OutputLanguage) -> &'static str {
     match lang {
         OutputLanguage::English => "failed",
+        OutputLanguage::ChineseTraditional => "失敗",
+        OutputLanguage::French => "Échec",
+        OutputLanguage::Russian => "Неудача",
+        OutputLanguage::Spanish => "Fallo",
+        OutputLanguage::Arabic => "فشل",
+        OutputLanguage::Japanese => "失敗",
+        OutputLanguage::Korean => "실패",
+        OutputLanguage::Vietnamese => "Thất bại",
+
         OutputLanguage::Chinese => "失败",
     }
 }

@@ -181,6 +181,7 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     IntegerDiffAtLeastOneLe(IntegerDiffAtLeastOneLeBuiltinRuleProof),
     // Members are at most the finite-set maximum.
     // Example: known `x $in S` proves `x <= finite_set_max(S)`.
+    PositiveCommonDivisorLeGcd(PositiveCommonDivisorLeGcdBuiltinRuleProof),
     FiniteSetMaxMemberLe(FiniteSetMaxMemberLeBuiltinRuleProof),
     // The finite-set minimum is at most every member.
     // Example: known `x $in S` proves `finite_set_min(S) <= x`.
@@ -412,6 +413,12 @@ pub struct IntegerDiffAtLeastOneLeBuiltinRuleProof {
     pub strict_proof: VerifyFactResult,
 }
 
+pub struct PositiveCommonDivisorLeGcdBuiltinRuleProof {
+    pub divisor_in_n_pos_proof: VerifyFactResult,
+    pub left_remainder_zero_proof: VerifyFactResult,
+    pub right_remainder_zero_proof: VerifyFactResult,
+}
+
 pub struct FiniteSetMaxMemberLeBuiltinRuleProof {
     pub member_proof: VerifyFactResult,
 }
@@ -525,6 +532,9 @@ impl Runtime {
         if let Some(proof) =
             self.search_order_div_mod_bridge_trans_less_equal_proof(fact, child_state.clone())?
         {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.positive_common_divisor_le_gcd_proof(fact, child_state.clone())? {
             return Ok(Some(proof));
         }
         if let Some(proof) =

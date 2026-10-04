@@ -1,6 +1,7 @@
 use super::run_command_outcome::{HelpResult, RunCommandOutcome, VersionResult};
-use super::{run_eval, run_extract, run_file, run_repl, run_repo};
+use super::{run_eval, run_extract, run_repl};
 use crate::launch_command::LaunchCommand;
+use crate::run_module::{run_file_with_config, run_project};
 use crate::runtime::RuntimeResult;
 use crate::LITEX;
 
@@ -25,11 +26,11 @@ pub fn run_command(command: LaunchCommand) -> RuntimeResult<RunCommandOutcome> {
             Ok(RunCommandOutcome::RunEval(result))
         }
         command @ LaunchCommand::File { .. } => {
-            let result = run_file::run_file(command)?;
+            let result = run_file_with_config(command)?;
             Ok(RunCommandOutcome::RunFile(result))
         }
         command @ LaunchCommand::Repository { .. } => {
-            let result = run_repo::run_repo(command)?;
+            let result = run_project(command)?;
             Ok(RunCommandOutcome::RunRepo(result))
         }
         command @ LaunchCommand::Extract { .. } => {
@@ -58,7 +59,7 @@ fn print_help_message() -> Vec<String> {
         format!("{} -version", bin),
         "-session keeps the Runtime env open and continues as REPL after -e/-f/-r.".to_string(),
         "-strict forbids `trust` / `trust have`; abstract predicate declarations are allowed.".to_string(),
-        "-lang en|english|zh|chinese selects JSON / status output language (default en).".to_string(),
+        "-lang en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi selects JSON / status output language (default en; English language names also accepted).".to_string(),
         "-extractpython / -extractc emit verified numeric/algo fragments as Python or C.".to_string(),
     ];
     println!("{}", entries[0]);

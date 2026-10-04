@@ -43,7 +43,21 @@ sketch:
     have n N+
     have c R*
     have f fn(k Z) R
-    product(1,n,fn(k Z) R* {c}) = c^n
+    claim:
+        ? product(1,n,fn(k Z) R* {c}) = c^n
+        by induc m from 1:
+            ? product(1,m,fn(k Z) R*{c}) = c^m
+            ? from m = 1:
+                product(1,m,fn(k Z) R*{c}) = product(1,1,fn(k Z) R*{c}) = fn(k Z) R*{c}(1) = c = c^m
+            ? induc:
+                m >= 1
+                fn(k Z) R*{c}(m+1) = c
+                m $in Z
+                c != 0
+                product(1,m+1,fn(k Z) R*{c}) = product(1,m,fn(k Z) R*{c}) * fn(k Z) R*{c}(m+1) = c^m*c = c^m*c^1 = c^(m+1)
+        n $in Z
+        n >= 1
+        product(1,n,fn(k Z) R*{c}) = c^n
     product(1,n+1,f) = product(1,n,f)*product(n+1,n+1,f)
 
 # P104: pointwise congruence and legal shift
