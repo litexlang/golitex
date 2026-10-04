@@ -1,0 +1,14 @@
+# Tracer: completeness produces an opaque certificate; projections consume it.
+# Before: the theorem existed, but certificate WD reported an undefined prop.
+# release thm real_least_upper_bound_exists({0}, 1)
+# Now: builtin signature/arity is recognized; recognition never grants truth.
+# Gate: target/release/litex -strict -f examples/wd/builtin_real_bound_certificates.lit
+release thm real_least_upper_bound_exists({0}, 1)
+obtain upper from exist L R st {$is_real_least_upper_bound({0}, L)}
+release thm real_member_le_least_upper_bound({0}, upper, 0)
+0 <= upper
+release thm real_greatest_lower_bound_exists({0}, -1)
+obtain lower from exist L R st {$is_real_greatest_lower_bound({0}, L)}
+release thm real_greatest_lower_bound_le_member({0}, lower, 0)
+lower <= 0
+# Bare certificates, by-def certificates, invalid bounds and arity reject in Rust.

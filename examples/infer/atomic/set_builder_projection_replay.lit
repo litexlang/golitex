@@ -1,0 +1,16 @@
+have s set
+by extension:
+    ? s = {x s: 0 = 0}
+    claim:
+        ? forall element s:
+            element $in {x s: 0 = 0}
+        release thm set_builder_member(element, {x s: 0 = 0})
+    claim:
+        ? forall element {x s: 0 = 0}:
+            element $in s
+s = {x s: 0 = 0}
+
+let positive = {x R: x > 0}
+forall element positive:
+    element $in R
+    element > 0

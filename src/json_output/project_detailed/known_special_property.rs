@@ -12,6 +12,13 @@ pub(super) fn project_known_special_property(
     runtime: &Runtime,
 ) -> JsonValue {
     let (rule, id, matches) = match proof {
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::StandardNumericSuperset(p)) => return object_for(runtime, vec![
+            ("type", string("by_known_special_property")),
+            ("rule", string("StandardNumericSuperset")),
+            ("source_set", string(crate::ast::obj::Obj::StandardSet(p.source_set.clone()).readable_string())),
+            ("target_set", string(crate::ast::obj::Obj::StandardSet(p.target_set.clone()).readable_string())),
+            ("source_membership_proof", super::searched::project_known_premise(&p.source_membership_proof, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::FoldInCarrier(p)) => {
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::FoldOperationSignatureProof;
             let signature=match &p.operation_signature {
@@ -39,11 +46,18 @@ pub(super) fn project_known_special_property(
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(p)) => return object_for(runtime, vec![
             ("type", string("by_known_special_property")),
             ("rule", string("TemplateApplicationInDeclaredCodomain")),
+            ("instance", string(crate::ast::obj::Obj::InstantiatedTemplateObj(p.instance.clone()).readable_string())),
+            ("function_equal", super::searched::project_known_equality_path(&p.function_equal, runtime)),
             ("declared_signature", string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.declared_signature.clone())).readable_string())),
             ("applied_return_set", string(p.applied_return_set.readable_string())),
             ("return_set_match", project_equal_searched(&p.return_set_match, runtime)),
             ("alternative_signature_matches", JsonValue::Array(p.alternative_signature_matches.iter().map(|candidate| object_for(runtime, vec![
                 ("cite_signature_fact_id", string(candidate.cite_signature_fact_id.to_string())),
+                ("return_set_match", project_equal_searched(&candidate.return_set_match, runtime)),
+            ])).collect())),
+            ("alternative_template_signature_matches", JsonValue::Array(p.alternative_template_signature_matches.iter().map(|candidate| object_for(runtime, vec![
+                ("instance", string(crate::ast::obj::Obj::InstantiatedTemplateObj(candidate.instance.clone()).readable_string())),
+                ("function_equal", super::searched::project_known_equality_path(&candidate.function_equal, runtime)),
                 ("return_set_match", project_equal_searched(&candidate.return_set_match, runtime)),
             ])).collect())),
         ]),

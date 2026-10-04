@@ -115,7 +115,7 @@ fn project_comparison(
     )
 }
 
-fn project_membership(
+pub(super) fn project_membership(
     kind: &str,
     proof: &ClosedMembershipCalculationProof,
     runtime: &Runtime,

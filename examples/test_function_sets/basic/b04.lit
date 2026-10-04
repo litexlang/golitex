@@ -1,0 +1,6 @@
+# B04: Function-set alias as declared carrier
+# Intended: accept; run via examples/test_function_sets/run.py
+
+let End = fn(x R) R
+have f End = fn(x R) R {x + 1}
+f(2) = 3

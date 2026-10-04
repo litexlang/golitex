@@ -54,3 +54,67 @@ sketch:
 # P121: closed exact elementary calculation
 sketch:
     sqrt(2)^3=2*sqrt(2)
+
+# P141: exact rational power calculation
+sketch:
+    8^(1/3)=2
+
+# P142: exact rational power calculation
+sketch:
+    16^(3/4)=8
+
+# P143: exact rational power calculation
+sketch:
+    (1/27)^(-1/3)=3
+
+# P144: exact rational power calculation
+sketch:
+    (8/27)^(2/3)=4/9
+
+# P145: exact rational power calculation
+sketch:
+    (4/9)^(1/2)=2/3
+
+# P146: exact rational power calculation
+sketch:
+    8^(2/6)=2
+
+# P147: exact rational power calculation
+sketch:
+    16^(0.75)=8
+
+# P148: exact rational power calculation
+sketch:
+    0.125^(1/3)=1/2
+
+# P149: exact rational power calculation
+sketch:
+    (81/16)^(3/4)=27/8
+
+# P150: exact rational power calculation
+sketch:
+    8^(-2/3)=1/4
+
+# P151: exact rational power calculation
+sketch:
+    8^(1/3)+1/3=7/3
+
+# P152: exact rational power calculation
+sketch:
+    8^(1/3) $in N+
+
+# P153: exact rational power calculation
+sketch:
+    (4/9)^(1/2)<3/4
+
+# P154: exact rational power calculation
+sketch:
+    eval 8^(1/3)
+
+# P155: exact rational power calculation
+sketch:
+    eval (4/9)^(1/2)
+
+# P156: exact rational power calculation
+sketch:
+    eval (1/27)^(-1/3)

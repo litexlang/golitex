@@ -124,3 +124,82 @@ fn forall_source_replay_stable_tracer_succeeds_without_trust() {
     assert!(run.session_error.is_none(), "{:?}", run.session_error);
     assert!(run.success);
 }
+
+#[test]
+fn proved_forall_replay_renames_nested_builders_and_cites_the_whole_source() {
+    use crate::ast::fact::Fact;
+    use crate::ast::stmt::Stmt;
+    use crate::execute::execute_fact_stmt::verify_forall_fact::{
+        VerifyForallFactProof, VerifyForallFactResult,
+    };
+    use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState, VerifyStateLevel};
+    use crate::tokenize::Tokenizer;
+    let mut rt = runtime();
+    assert!(rt.run_litex_code("have first, second set\nclaim:\n    ? forall element {x first: x = x}:\n        element $in {y first: y = y}\n    release thm set_builder_member(element, {y first: y = y})\n").unwrap().success);
+    let sizes = |rt: &Runtime| {
+        rt.execution_environments_stack
+            .iter()
+            .map(|e| {
+                (
+                    e.facts.facts_by_id.len(),
+                    e.well_defined_objects.object_to_wd_id.len(),
+                )
+            })
+            .collect::<Vec<_>>()
+    };
+    let before = sizes(&rt);
+    for (code, expected) in [
+        (
+            "forall object {z first: z = z}:\n    object $in {w first: w = w}\n",
+            true,
+        ),
+        (
+            "forall object {z second: z = z}:\n    object $in {w first: w = w}\n",
+            false,
+        ),
+        (
+            "forall object {z first: z = z}:\n    object $in {w second: w = w}\n",
+            false,
+        ),
+        (
+            "forall object {z first: z = z}:\n    object $in {w first: w != w}\n",
+            false,
+        ),
+        (
+            "forall object {z first: z = z}:\n    not object $in {w first: w = w}\n",
+            false,
+        ),
+    ] {
+        let tokens = Tokenizer::new()
+            .tokenize(code, rt.current_file.clone())
+            .unwrap();
+        let Stmt::Fact(Fact::ForallFact(goal)) = rt.parse(&tokens).unwrap().remove(0) else {
+            panic!("forall")
+        };
+        let matched = rt.match_known_forall_source(&goal);
+        assert_eq!(matched.is_some(), expected, "{code}");
+        if let Some((cite, renamings)) = matched {
+            assert!(matches!(
+                rt.fact_by_id_in_stack(cite),
+                Some(Fact::ForallFact(_))
+            ));
+            assert_eq!(renamings.len(), 1);
+            let result = rt
+                .verify_fact(
+                    &Fact::ForallFact(goal),
+                    VerifyState::new(VerifyStateLevel::Direct),
+                )
+                .unwrap();
+            let VerifyFactResult::ForallFact(result) = result else {
+                panic!("forall result")
+            };
+            let VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(proof)) =
+                result.as_ref()
+            else {
+                panic!("whole-source citation")
+            };
+            assert_eq!(proof.cite_fact_id, cite);
+        }
+        assert_eq!(before, sizes(&rt));
+    }
+}

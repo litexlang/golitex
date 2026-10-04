@@ -1,0 +1,6 @@
+# T06: Template with retained domain guard
+# Intended: accept; run via examples/test_function_sets/run.py
+
+template<a R>:
+    have fn reciprocal(x R: x != a) R = 1 / (x - a)
+\reciprocal<2>(3) = 1

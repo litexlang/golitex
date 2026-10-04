@@ -1,0 +1,5 @@
+# H09: Guard of the returned function is retained
+# Intended: accept; run via examples/test_function_sets/run.py
+
+have fn choose(k N) fn(x R: x != 0) R = fn(x R: x != 0) R {1 / x}
+choose(0)(2) = 1 / 2

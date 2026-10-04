@@ -47,6 +47,7 @@ pub(super) fn project_atomic_except_searched(
     runtime: &Runtime,
 ) -> JsonValue {
     match searched {
+        AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(p) => super::structural_membership::project_structural_membership(p, runtime),
         AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(p) => super::closed_calculation::project_atomic_calculation(p, runtime),
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(r) => {
             project_atomic_builtin_rule(r, runtime)
@@ -211,8 +212,8 @@ fn project_object_definition(
             EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(p) => object_for(runtime, vec![
                 ("type", string("by_object_definition")),
                 ("kind", string("fn_application_have_fn_equal")),
-                ("function_equal", project_known_equality_path(&p.function_equal, runtime)),
-                ("expanded_body", string(p.expanded_body.readable_string())),
+                ("normalization", super::function_body::project_function_body_normalization(&p.normalization, runtime)),
+                ("expanded_body", string(p.normalization.expanded_body.readable_string())),
                 (
                     "residual_equal",
                     project_verify_fact(&p.residual_equal, runtime),
@@ -256,7 +257,8 @@ fn project_object_definition(
             EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualApplication(p) => object_for(runtime, vec![
                     ("type", string("by_object_definition")),
                     ("kind", string("template_have_fn_equal_application")),
-                    ("expanded_body", string(p.expanded_body.readable_string())),
+                    ("normalization", super::function_body::project_function_body_normalization(&p.normalization, runtime)),
+                    ("expanded_body", string(p.normalization.expanded_body.readable_string())),
                     (
                         "residual_equal",
                         project_verify_fact(&p.residual_equal, runtime),

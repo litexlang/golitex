@@ -5,6 +5,7 @@ use crate::ast::fact::{
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::EquivalenceClassAdjacency;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::{
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, EqualFactSearchedProof,
 };
@@ -58,6 +59,9 @@ impl Runtime {
                 candidates.extend(knowns.iter().cloned());
             }
         }
+        // Candidate matching is read-only. Build the same visible graph once
+        // on demand instead of cloning it for every unsuccessful argument.
+        let mut adjacency = None;
         for known in candidates {
             let args = atomic_fact_args_ref(&known);
             if args.len() != goal_args.len() {
@@ -65,7 +69,7 @@ impl Runtime {
             }
             let mut matches = Vec::new();
             for (left, right) in args.iter().zip(&goal_args) {
-                let Some(proof) = self.lookup_known_obj_equality(left, right) else {
+                let Some(proof) = self.lookup_known_obj_equality_with_graph(left, right, &mut adjacency) else {
                     break;
                 };
                 matches.push(proof);
@@ -85,6 +89,15 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
     ) -> Option<EqualFactSearchedProof> {
+        self.lookup_known_obj_equality_with_graph(left, right, &mut None)
+    }
+
+    pub(in crate::execute) fn lookup_known_obj_equality_with_graph(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        adjacency: &mut Option<EquivalenceClassAdjacency>,
+    ) -> Option<EqualFactSearchedProof> {
         let comparison = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: left.clone(),
@@ -94,7 +107,7 @@ impl Runtime {
         if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(&comparison) {
             return Some(proof.into());
         }
-        let adjacency = self.visible_equivalence_class_adjacency();
+        let adjacency = adjacency.get_or_insert_with(|| self.visible_equivalence_class_adjacency());
         if let Some(path) = super::super::verify_equality::equivalence_class_graph::equivalence_class_path_in_adjacency(&adjacency, left, right) {
             return Some(EqualFactSearchedProof::ByEquivalenceClass(
                 KnownEqualityPathProof::new(path).into(),

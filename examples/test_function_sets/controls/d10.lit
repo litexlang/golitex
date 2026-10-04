@@ -1,0 +1,6 @@
+# D10: Anonymous function-valued return with explicit return parentheses
+# Intended: accept; run via examples/test_function_sets/run.py
+
+let add = fn(x R) (fn(u R) R) {fn(y R) R {x + y}}
+add(2) $in fn(y R) R
+add(2)(3) $in R

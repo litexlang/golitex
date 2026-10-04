@@ -1,0 +1,5 @@
+# N01: Wrong function argument carrier
+# Intended: reject; run via examples/test_function_sets/run.py
+
+have fn step(x R) R = x + 1
+step(i) = step(i)

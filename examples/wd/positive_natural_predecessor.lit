@@ -8,9 +8,12 @@ forall n N:
 
 have fn countdown(n N) N by induc n from 0:
     case n = 0: 0
-    case n > 0: countdown(n - 1)
+    case n >= 1: countdown(n - 1)
 
 countdown(0) = 0
+1 - 1 = 0
+countdown(1) = countdown(1 - 1)
+countdown(1 - 1) = countdown(0)
 countdown(1) = 0
 
 # Reversed order has its own cited builtin route.

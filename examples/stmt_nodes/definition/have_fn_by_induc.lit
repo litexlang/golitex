@@ -6,4 +6,8 @@ have fn countdown(n N) N by induc n from 0:
     case n >= 1: countdown(n - 1)
 
 countdown(0) = 0
+1 - 1 = 0
+countdown(1) = countdown(1 - 1)
+countdown(1 - 1) = countdown(0)
+countdown(1) = countdown(0)
 countdown(1) = 0

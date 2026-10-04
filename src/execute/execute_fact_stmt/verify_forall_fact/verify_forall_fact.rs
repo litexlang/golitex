@@ -2,6 +2,7 @@ use crate::ast::fact::{Fact, ForallFact};
 use crate::ast::obj::{IdentifierObj, Obj};
 use crate::ast::param::ParamType;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::{compound_objs_alpha_equal, quantifier_free_source_facts_alpha_equal};
 use crate::execute::execute_fact_stmt::verify_forall_fact::result::{
     forall_fact_result_from_success, forall_fact_result_from_then_fail,
     forall_fact_result_from_wd_fail,
@@ -154,7 +155,9 @@ impl Runtime {
                     .all(
                         |((_, src), (_, dst))| match self.inst_param_type(src, &subst) {
                             Ok(inst) => match (&inst, *dst) {
-                                (ParamType::Obj(a), ParamType::Obj(b)) => a.ir() == b.ir(),
+                                (ParamType::Obj(a), ParamType::Obj(b)) => {
+                                    compound_objs_alpha_equal(a, b)
+                                }
                                 (ParamType::Set(_), ParamType::Set(_))
                                 | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
                                 | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => true,
@@ -289,7 +292,8 @@ impl Runtime {
                 return Ok(Err(reason));
             }
         };
-        let store_and_infer: StoreFactAndInferResult = self.store_fact_and_infer(dom, verify_state)?;
+        let store_and_infer: StoreFactAndInferResult =
+            self.store_fact_and_infer(dom, verify_state)?;
         Ok(Ok(AssumeDomFactResult {
             well_defined,
             store_and_infer,
@@ -313,7 +317,7 @@ fn same_quantified_source_fact(source: &Fact, goal: &Fact) -> bool {
                     &b,
                 )
         }
-        _ => source.ir() == goal.ir(),
+        _ => source.ir() == goal.ir() || quantifier_free_source_facts_alpha_equal(source, goal),
     }
 }
 

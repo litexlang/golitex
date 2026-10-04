@@ -70,6 +70,10 @@ use super::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionBound(_) => match lang {
+                OutputLanguage::English => text("ClosedSubtractionBound", "Subtract from a stored numeric bound", "The stored upper or lower bound remains sufficient after subtracting the closed constant"),
+                OutputLanguage::Chinese => text("ClosedSubtractionBound", "从已有数值界减去常数", "已有上界或下界减去闭式常数后满足目标弱序界"),
+            },
             Self::ComplexModulusNonnegative => match lang {
                 OutputLanguage::English => text("ComplexModulusNonnegative", "Nonnegative complex modulus", "The principal complex modulus is nonnegative"),
                 OutputLanguage::Chinese => text("ComplexModulusNonnegative", "复数模长非负", "复数模长取非负主根"),
@@ -139,6 +143,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::ClosedSubtractionBound(p) => Some(p.bound.cite_fact_id),
             Self::FromKnownGreaterEqual(p) => p.premise_proof.cite_fact_id(),
             Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),
             Self::FromKnownLess(p) => p.premise_proof.cite_fact_id(),

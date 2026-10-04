@@ -20,7 +20,7 @@ fn count_facts(rt: &Runtime) -> usize {
 }
 
 #[test]
-fn builtin_theorem_catalogue_has_twenty_five_native_tracers() {
+fn builtin_theorem_catalogue_has_twenty_eight_native_tracers() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/stmt_nodes/release_and_expand/builtin_thm");
     let mut count = 0;
     for entry in std::fs::read_dir(dir).unwrap() {
@@ -35,7 +35,51 @@ fn builtin_theorem_catalogue_has_twenty_five_native_tracers() {
         assert!(result.session_error.is_none() && result.success, "{}\n{}", path.display(), crate::json_output::emit_run_detailed(&result, &rt, "test", None));
         count += 1;
     }
-    assert_eq!(count, 25);
+    assert_eq!(count, 28);
+}
+
+#[test]
+fn intersection_contracts_reject_missing_fibers_empty_family_and_bad_shapes() {
+    for code in [
+        "release thm family_intersect_member(2, family_intersect({{1}}))",
+        "release thm family_intersect_member(1, family_intersect({}))",
+        "release thm family_intersect_member(1, family_intersect({1}))",
+        "release thm family_intersect_member_facts(2, family_intersect({{1}}))",
+        "release thm family_intersect_member_facts(1, family_intersect({}))",
+        "release thm family_intersect_member(1, N)",
+        "release thm index_intersect_member(2, index_intersect({1}, N, fn(k {1}) power_set(N) {{1}}))",
+        "release thm index_intersect_member(1, index_intersect({}, N, fn(k {}) power_set(N) {{1}}))",
+        "release thm index_intersect_member(1, index_intersect({2}, N, fn(k {1}) power_set(N) {{1}}))",
+    ] {
+        let mut rt = runtime();
+        let before = count_facts(&rt);
+        let result = execute(&mut rt, code);
+        assert!(result.is_failed(), "{code}");
+        assert_eq!(count_facts(&rt), before, "failed contract must not publish facts");
+    }
+}
+
+#[test]
+fn literal_tuple_extensionality_checks_all_coordinates_and_dimension() {
+    for code in [
+        "have a cart({1}, {2})\nrelease thm tuple_equal_from_coordinates(a, (1, 2))",
+        "have a cart({1}, {2})\nrelease thm tuple_equal_from_coordinates((1, 2), a)",
+        "have a cart({1}, {2}, {3})\nrelease thm tuple_equal_from_coordinates(a, (1, 2, 3))",
+    ] {
+        let mut rt = runtime();
+        let result = rt.run_litex_code(code).unwrap();
+        assert!(result.success && result.session_error.is_none(), "{code}\n{}", crate::json_output::emit_run_detailed(&result, &rt, "test", None));
+    }
+    for code in [
+        "have a cart({1}, {2})\nrelease thm tuple_equal_from_coordinates(a, (1, 3))",
+        "have a cart({1}, {2}, {3})\nrelease thm tuple_equal_from_coordinates(a, (1, 2))",
+        "have a cart({1}, {2}, {3})\nrelease thm tuple_equal_from_coordinates(a, (1, 2, 4))",
+        "have a cart({1}, {2})\nrelease thm tuple_equal_from_coordinates((1, 3), a)",
+    ] {
+        let mut rt = runtime();
+        let result = rt.run_litex_code(code).unwrap();
+        assert!(!result.success && result.session_error.is_none(), "false tuple equality: {code}");
+    }
 }
 
 #[test]

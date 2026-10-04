@@ -1,0 +1,5 @@
+# B05: Arrow sugar for nested fixed return carriers
+# Intended: accept; run via examples/test_function_sets/run.py
+
+let Curried = R -> R -> R
+Curried = fn(x R) fn(y R) R

@@ -1,0 +1,3 @@
+prop has_any(a N):
+    exist x R st {x = 0}
+obtain z from $has_any(-1)

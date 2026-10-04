@@ -1,0 +1,21 @@
+# Before: only the quantified coordinate requirement was available for a literal peer.
+# claim:
+#     ? forall a cart({1}, {2}):
+#         a = (1, 2)
+#     release thm tuple_equal_from_coordinates(a, (1, 2))
+# Run: target/release/litex -strict -f examples/stmt_nodes/release_and_expand/literal_tuple_extensionality.lit
+# Now: dimension equality and every literal coordinate are checked explicitly.
+claim:
+    ? forall a cart({1}, {2}):
+        a = (1, 2)
+    tuple_dim(a) = 2
+    a[1] = 1
+    a[2] = 2
+    release thm tuple_equal_from_coordinates(a, (1, 2))
+# Boundary: the last coordinate and dimension cannot be omitted.
+sketch:
+    have a cart({1}, {2}, {3})
+    release thm tuple_equal_from_coordinates(a, (1, 2, 3))
+sketch:
+    have a cart({1}, {2})
+    release thm tuple_equal_from_coordinates((1, 2), a)

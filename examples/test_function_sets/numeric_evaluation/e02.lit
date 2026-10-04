@@ -1,0 +1,5 @@
+have fn step(x R) R = x + 1
+have fn compose(f, g fn(x R) R) fn(t R) R = fn(t R) R {f(g(t))}
+compose(step, step)(2) = 4
+have fn twice(x R) R = step(x) + step(x)
+twice(2) = 6

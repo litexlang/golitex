@@ -1,0 +1,3 @@
+# Must reject: tuple extensionality must check the final coordinate.
+have a cart({1}, {2}, {3})
+release thm tuple_equal_from_coordinates(a, (1, 2, 4))

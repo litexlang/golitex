@@ -1,0 +1,14 @@
+# Before: ambient membership plus the all-fiber premise had no introduction entry.
+# release thm index_intersect_member(x, index_intersect({1}, X, A))
+# Run: target/release/litex -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/index_intersect_member.lit
+# Now: preserve constructor WD and explicitly verify all fibers.
+thm singleton_indexed_member:
+    ? forall X set, A fn(k {1}) power_set(X), x X:
+        x $in A(1)
+        =>:
+            x $in index_intersect({1}, X, A)
+    by enumerate finite_set:
+        ? forall idx {1}:
+            x $in A(idx)
+    release thm index_intersect_member(x, index_intersect({1}, X, A))
+# Boundary: the exact function domain and a nonempty index are still required.

@@ -1,0 +1,2 @@
+forall y union({x R: x < 0}, {x R: x > 0}):
+    y $in {u R: u < 0} or y $in {v R: v > 0}

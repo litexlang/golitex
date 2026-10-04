@@ -55,6 +55,16 @@ sketch:
     algo flag(x R) R by cases:
         case x = 0: 0
         case x != 0: 1
+    flag(0) = 0
+    flag(1) = 1
+    flag(2) = 1
+    flag(3) = 1
+    sum(0,0,flag) = 0
+    sum(0,1,flag) = sum(0,0,flag) + flag(1)
+    sum(0,1,flag) = 1
+    sum(0,2,flag) = sum(0,1,flag) + flag(2)
+    sum(0,2,flag) = 2
+    sum(0,3,flag) = sum(0,2,flag) + flag(3)
     sum(0,3,flag) = 3
 
 # P107: symbolic constant, addition, subtraction and scalar

@@ -7,6 +7,10 @@ have fn ind_count(n N) N by induc n from 0:
     case n = 0: 0
     case n >= 1: ind_count(n - 1)
 ind_count(0) = 0
+1 - 1 = 0
+ind_count(1) = ind_count(1 - 1)
+ind_count(1 - 1) = ind_count(0)
+ind_count(1) = ind_count(0)
 ind_count(1) = 0
 ind_count(2) = ind_count(2 - 1) = ind_count(1) = 0
 

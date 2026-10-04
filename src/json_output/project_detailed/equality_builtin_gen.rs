@@ -922,6 +922,18 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             let _ = p;
             object_for(runtime, entries)
         },
+        EqualitySearchProofByBuiltinRule::FamilyUnionOfSingleton(p) => {
+            let entries = vec![("type", string("builtin_rule")), ("rule", string("FamilyUnionOfSingleton")),
+                ];
+            let _ = p;
+            object_for(runtime, entries)
+        },
+        EqualitySearchProofByBuiltinRule::FamilyUnionOfPowerSet(p) => {
+            let entries = vec![("type", string("builtin_rule")), ("rule", string("FamilyUnionOfPowerSet")),
+                ];
+            let _ = p;
+            object_for(runtime, entries)
+        },
         EqualitySearchProofByBuiltinRule::CartWithEmptyFactor(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("CartWithEmptyFactor"))];
             let _ = p;

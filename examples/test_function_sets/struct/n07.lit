@@ -1,0 +1,9 @@
+# N07: Function field rejects wrong generic argument type
+# Intended: reject; run via examples/test_function_sets/run.py
+
+struct Ops<A nonempty_set>:
+    op fn(x A) A
+    tag N
+thm invalid:
+    ? forall s &Ops<R>:
+        s.op(i) = s.op(i)

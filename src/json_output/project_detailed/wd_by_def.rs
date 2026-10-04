@@ -71,9 +71,10 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
                         ("fact_id", string(fact_id.to_string())),
                         ("function_equal", project_known_equality_path(function_equal, runtime)),
                     ]),
-                    FnObjDomainFnSetEvidence::TemplateDefinition { fn_set } => object_for(runtime, vec![
+                    FnObjDomainFnSetEvidence::TemplateDefinition { fn_set, function_equal } => object_for(runtime, vec![
                         ("type", string("template_definition")),
                         ("fn_set", string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(fn_set.clone())).readable_string())),
+                        ("function_equal", project_known_equality_path(function_equal, runtime)),
                     ]),
                     FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => object_for(runtime, vec![
                         ("type", string("anonymous_literal")),

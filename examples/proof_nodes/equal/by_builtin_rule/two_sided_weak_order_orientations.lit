@@ -1,0 +1,31 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/two_sided_weak_order_orientations.lit
+# Before: only the first <=/<= orientation was read by the existing rule;
+# equivalent >= and mixed orientations failed. Current source is unchanged:
+# forall a, b R:
+#     a >= b
+#     b >= a
+#     =>:
+#         a = b
+# Negative and read-only citation controls:
+# cargo test --release --offline weak_order_antisymmetry_tests -- --nocapture
+
+forall a, b R:
+    a <= b
+    b <= a
+    =>:
+        a = b
+forall a, b R:
+    a >= b
+    b >= a
+    =>:
+        a = b
+forall a, b R:
+    a <= b
+    a >= b
+    =>:
+        a = b
+forall a, b R:
+    b >= a
+    b <= a
+    =>:
+        a = b

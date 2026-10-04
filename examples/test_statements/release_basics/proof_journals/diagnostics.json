@@ -1,0 +1,498 @@
+[
+  {
+    "contracts": [],
+    "name": "natural-predecessor-carrier",
+    "repeat": 0,
+    "code": "forall n N:\n    n >= 1\n    =>:\n        n - 1 $in R\n        n - 1 $in N",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-e",
+      "forall n N:\n    n >= 1\n    =>:\n        n - 1 $in R\n        n - 1 $in N"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"eval\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"forall n N:\\n    n >= 1\\n    =>:\\n        n - 1 $in R\\n        n - 1 $in N\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Universal\",\n        \"message\": \"Verified as a forall fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"forall n N:\\n    n >= 1\\n    =>:\\n        n - 1 $in R\\n        n - 1 $in N\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.0034337921533733606,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "forall n N:\n    n >= 1\n    =>:\n        n - 1 $in R\n        n - 1 $in N",
+          "proof_method": {
+            "type": "compound_fact",
+            "rule_name": "Universal",
+            "message": "Verified as a forall fact (details omitted in Normal)"
+          },
+          "stores": [
+            "forall n N:\n    n >= 1\n    =>:\n        n - 1 $in R\n        n - 1 $in N"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  },
+  {
+    "contracts": [],
+    "name": "natural-predecessor-order",
+    "repeat": 0,
+    "code": "forall n N:\n    n >= 1\n    =>:\n        n - 1 < n",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-e",
+      "forall n N:\n    n >= 1\n    =>:\n        n - 1 < n"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"eval\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"forall n N:\\n    n >= 1\\n    =>:\\n        n - 1 < n\",\n      \"proof_method\": {\n        \"type\": \"compound_fact\",\n        \"rule_name\": \"Universal\",\n        \"message\": \"Verified as a forall fact (details omitted in Normal)\"\n      },\n      \"stores\": [\n        \"forall n N:\\n    n >= 1\\n    =>:\\n        n - 1 < n\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.0028961249627172947,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "forall n N:\n    n >= 1\n    =>:\n        n - 1 < n",
+          "proof_method": {
+            "type": "compound_fact",
+            "rule_name": "Universal",
+            "message": "Verified as a forall fact (details omitted in Normal)"
+          },
+          "stores": [
+            "forall n N:\n    n >= 1\n    =>:\n        n - 1 < n"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  },
+  {
+    "contracts": [],
+    "name": "induction-order-reflexive",
+    "repeat": 0,
+    "code": "by induc n from 0:\n    ? n >= n",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-e",
+      "by induc n from 0:\n    ? n >= n"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"eval\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"by induc\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By induction\",\n        \"message\": \"Prove by induction\"\n      },\n      \"stores\": [\n        \"forall n Z:\\n    n >= 0\\n    =>:\\n        n >= n\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.0032810410484671593,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "by induc",
+          "proof_method": {
+            "type": "by",
+            "rule_name": "By induction",
+            "message": "Prove by induction"
+          },
+          "stores": [
+            "forall n Z:\n    n >= 0\n    =>:\n        n >= n"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  },
+  {
+    "contracts": [],
+    "name": "strong-induction-order-reflexive",
+    "repeat": 0,
+    "code": "by strong_induc n from 0:\n    ? n >= n",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-e",
+      "by strong_induc n from 0:\n    ? n >= n"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"eval\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"by strong_induc\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By strong induction\",\n        \"message\": \"Prove by strong induction\"\n      },\n      \"stores\": [\n        \"forall n Z:\\n    n >= 0\\n    =>:\\n        n >= n\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.0035845828242599964,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "by strong_induc",
+          "proof_method": {
+            "type": "by",
+            "rule_name": "By strong induction",
+            "message": "Prove by strong induction"
+          },
+          "stores": [
+            "forall n Z:\n    n >= 0\n    =>:\n        n >= n"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  },
+  {
+    "contracts": [],
+    "name": "induction-positive-start",
+    "repeat": 0,
+    "code": "by induc n from 2:\n    ? n >= 2",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-e",
+      "by induc n from 2:\n    ? n >= 2"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"eval\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"by induc\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By induction\",\n        \"message\": \"Prove by induction\"\n      },\n      \"stores\": [\n        \"forall n Z:\\n    n >= 2\\n    =>:\\n        n >= 2\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.003321249969303608,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "by induc",
+          "proof_method": {
+            "type": "by",
+            "rule_name": "By induction",
+            "message": "Prove by induction"
+          },
+          "stores": [
+            "forall n Z:\n    n >= 2\n    =>:\n        n >= 2"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  },
+  {
+    "contracts": [],
+    "name": "nested-product-internal-error",
+    "repeat": 0,
+    "code": "product(1,3,fn(k N+) N+ {k}) $in N+",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-e",
+      "product(1,3,fn(k N+) N+ {k}) $in N+"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"eval\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"product(1, 3, fn (k N+) N+{k}) $in N+\",\n      \"proof_method\": {\n        \"type\": \"builtin_rule\",\n        \"rule_name\": \"Finite aggregate scalar carrier\",\n        \"message\": \"Checked summands or factors close the declared scalar carrier; empty sums include zero\"\n      },\n      \"stores\": [\n        \"product(1, 3, fn (k N+) N+{k}) $in N+\"\n      ],\n      \"infers\": [\n        \"0 < product(1, 3, fn (k N+) N+{k})\",\n        \"0 <= product(1, 3, fn (k N+) N+{k})\"\n      ]\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.0034444169141352177,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "product(1, 3, fn (k N+) N+{k}) $in N+",
+          "proof_method": {
+            "type": "builtin_rule",
+            "rule_name": "Finite aggregate scalar carrier",
+            "message": "Checked summands or factors close the declared scalar carrier; empty sums include zero"
+          },
+          "stores": [
+            "product(1, 3, fn (k N+) N+{k}) $in N+"
+          ],
+          "infers": [
+            "0 < product(1, 3, fn (k N+) N+{k})",
+            "0 <= product(1, 3, fn (k N+) N+{k})"
+          ]
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  },
+  {
+    "contracts": [],
+    "name": "nested-sum-internal-error",
+    "repeat": 0,
+    "code": "sum(1,3,fn(k N+) N+ {product(1,k,fn(j N+) N+ {j})}) = 9",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-e",
+      "sum(1,3,fn(k N+) N+ {product(1,k,fn(j N+) N+ {j})}) = 9"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"eval\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"sum(1, 3, fn (k N+) N+{product(1, k, fn (j N+) N+{j})}) = 9\",\n      \"proof_method\": {\n        \"type\": \"builtin_rule\",\n        \"rule_name\": \"Exact finite aggregate calculation\",\n        \"message\": \"Enumerate valid arguments, substitute checked function bodies and fold exact values\"\n      },\n      \"stores\": [\n        \"sum(1, 3, fn (k N+) N+{product(1, k, fn (j N+) N+{j})}) = 9\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.009201165987178683,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "sum(1, 3, fn (k N+) N+{product(1, k, fn (j N+) N+{j})}) = 9",
+          "proof_method": {
+            "type": "builtin_rule",
+            "rule_name": "Exact finite aggregate calculation",
+            "message": "Enumerate valid arguments, substitute checked function bodies and fold exact values"
+          },
+          "stores": [
+            "sum(1, 3, fn (k N+) N+{product(1, k, fn (j N+) N+{j})}) = 9"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  },
+  {
+    "contracts": [],
+    "name": "explicit-set-reorder",
+    "repeat": 0,
+    "code": "by extension {0,1} = {1,0}",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-e",
+      "by extension {0,1} = {1,0}"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"eval\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"by extension\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By set extension\",\n        \"message\": \"Prove set equality by extension\"\n      },\n      \"stores\": [\n        \"{0, 1} = {1, 0}\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.002894375007599592,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "by extension",
+          "proof_method": {
+            "type": "by",
+            "rule_name": "By set extension",
+            "message": "Prove set equality by extension"
+          },
+          "stores": [
+            "{0, 1} = {1, 0}"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  },
+  {
+    "contracts": [],
+    "name": "eval-rational-normalization",
+    "repeat": 0,
+    "code": "eval sqrt(0.36)",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-e",
+      "eval sqrt(0.36)"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"eval\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"eval sqrt (0.36)\",\n      \"proof_method\": {\n        \"type\": \"command\",\n        \"rule_name\": \"Eval\",\n        \"message\": \"Evaluate an exact numeric, function or finite aggregate expression\"\n      },\n      \"stores\": [],\n      \"infers\": [],\n      \"evaluated_object\": \"3 / 5\"\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.002625750144943595,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "eval sqrt (0.36)",
+          "proof_method": {
+            "type": "command",
+            "rule_name": "Eval",
+            "message": "Evaluate an exact numeric, function or finite aggregate expression"
+          },
+          "stores": [],
+          "infers": [],
+          "evaluated_object": "3 / 5"
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  },
+  {
+    "contracts": [],
+    "name": "eval-symbolic-sqrt",
+    "repeat": 0,
+    "code": "eval sqrt(2)",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-e",
+      "eval sqrt(2)"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"eval\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"eval sqrt (2)\",\n      \"proof_method\": {\n        \"type\": \"command\",\n        \"rule_name\": \"Eval\",\n        \"message\": \"Evaluate an exact numeric, function or finite aggregate expression\"\n      },\n      \"stores\": [],\n      \"infers\": [],\n      \"evaluated_object\": \"sqrt (2)\"\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.0024935828987509012,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "eval sqrt (2)",
+          "proof_method": {
+            "type": "command",
+            "rule_name": "Eval",
+            "message": "Evaluate an exact numeric, function or finite aggregate expression"
+          },
+          "stores": [],
+          "infers": [],
+          "evaluated_object": "sqrt (2)"
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  },
+  {
+    "contracts": [],
+    "name": "runtime-negative-code",
+    "repeat": 0,
+    "code": "-2 < 0",
+    "expected": true,
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-f",
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/cli-work/runtime-negative-code.lit"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"file\",\n  \"path\": \"/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/cli-work/runtime-negative-code.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"-2 < 0\",\n      \"proof_method\": {\n        \"type\": \"by_closed_calculation\",\n        \"rule_name\": \"Closed calculation\",\n        \"message\": \"Exact evaluation of closed expressions without proof search\"\n      },\n      \"stores\": [\n        \"-2 < 0\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": "",
+    "seconds": 0.0024677920155227184,
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "file",
+      "path": "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/cli-work/runtime-negative-code.lit",
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "-2 < 0",
+          "proof_method": {
+            "type": "by_closed_calculation",
+            "rule_name": "Closed calculation",
+            "message": "Exact evaluation of closed expressions without proof search"
+          },
+          "stores": [
+            "-2 < 0"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "errors": [],
+    "matches": true
+  }
+]

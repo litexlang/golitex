@@ -65,6 +65,13 @@ pub struct PowerSetOfSingletonBuiltinRuleProof {}
 // Builtin FamilyUnionOfEmpty: family_union({}) = {}.
 pub struct FamilyUnionOfEmptyBuiltinRuleProof {}
 
+// A family consisting of one set has exactly that set as its union.
+pub struct FamilyUnionOfSingletonBuiltinRuleProof {}
+
+// Every element of A occurs in its singleton subset; hence union(P(A))=A.
+pub struct FamilyUnionOfPowerSetBuiltinRuleProof {}
+
+
 // Builtin CartWithEmptyRight: cart(..., {}) = {}.
 // Example: have A set; cart(A, {}) = {}.
 pub struct CartWithEmptyFactorBuiltinRuleProof {}
@@ -104,6 +111,8 @@ pub enum EqualityIdentitiesWave13BuiltinRuleProof {
     PowerSetOfEmpty(PowerSetOfEmptyBuiltinRuleProof),
     PowerSetOfSingleton(PowerSetOfSingletonBuiltinRuleProof),
     FamilyUnionOfEmpty(FamilyUnionOfEmptyBuiltinRuleProof),
+    FamilyUnionOfSingleton(FamilyUnionOfSingletonBuiltinRuleProof),
+    FamilyUnionOfPowerSet(FamilyUnionOfPowerSetBuiltinRuleProof),
     CartWithEmptyFactor(CartWithEmptyFactorBuiltinRuleProof),
     UnionOverIntersectDistributive(UnionOverIntersectDistributiveBuiltinRuleProof),
     SetMinusChainToUnion(SetMinusChainToUnionBuiltinRuleProof),
@@ -194,6 +203,12 @@ impl Runtime {
                         FamilyUnionOfEmptyBuiltinRuleProof {},
                     ),
                 ));
+            }
+            if family_union_of_singleton_shape(left, right) {
+                return Ok(Some(EqualityIdentitiesWave13BuiltinRuleProof::FamilyUnionOfSingleton(FamilyUnionOfSingletonBuiltinRuleProof {})));
+            }
+            if family_union_of_power_set_shape(left, right) {
+                return Ok(Some(EqualityIdentitiesWave13BuiltinRuleProof::FamilyUnionOfPowerSet(FamilyUnionOfPowerSetBuiltinRuleProof {})));
             }
             if cart_with_empty_factor_shape(left, right) {
                 return Ok(Some(
@@ -585,6 +600,22 @@ fn power_set_of_singleton_shape(left: &Obj, right: &Obj) -> bool {
         }
     }
     saw_empty && saw_sing
+}
+
+// The outer equality WD has checked all children. Under Litex's set-coded
+// foundation every WD object is a set, so these structural set identities
+// have no additional truth premises and do not start recursive proof search.
+fn family_union_of_singleton_shape(left: &Obj, right: &Obj) -> bool {
+    let Obj::SetOperator(SetOperator::FamilyUnion(union)) = left else { return false; };
+    let Obj::SetFormer(SetFormer::ListSet(family)) = union.left.as_ref() else { return false; };
+    let [set] = family.list.as_slice() else { return false; };
+    set.ir() == right.ir()
+}
+
+fn family_union_of_power_set_shape(left: &Obj, right: &Obj) -> bool {
+    let Obj::SetOperator(SetOperator::FamilyUnion(union)) = left else { return false; };
+    let Obj::SetOperator(SetOperator::PowerSet(power)) = union.left.as_ref() else { return false; };
+    power.set.ir() == right.ir()
 }
 
 fn family_union_of_empty_shape(left: &Obj, right: &Obj) -> bool {

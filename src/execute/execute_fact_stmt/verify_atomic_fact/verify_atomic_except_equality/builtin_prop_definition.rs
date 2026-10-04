@@ -174,6 +174,23 @@ impl Runtime {
         fact: &InjectiveFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+        let Some(requirements) = self.injective_definition_requirements(fact) else {
+            return Ok(None);
+        };
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_definition_requirements(requirements, verify_state)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(BuiltinPropDefinitionProof::Injective(
+            BuiltinInjectiveDefinitionProof {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )))
+    }
+
+    fn injective_definition_requirements(&mut self, fact: &InjectiveFact) -> Option<Vec<Fact>> {
         let domain = fact.domain.clone();
         let function = fact.function.clone();
         let x1 = self.fresh_internal_param();
@@ -181,10 +198,10 @@ impl Runtime {
         let x1_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x1));
         let x2_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x2));
         let Some(fx1) = apply_fn_one_arg(&function, x1_obj.clone()) else {
-            return Ok(None);
+            return None;
         };
         let Some(fx2) = apply_fn_one_arg(&function, x2_obj.clone()) else {
-            return Ok(None);
+            return None;
         };
         let forall = Fact::ForallFact(ForallFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -205,17 +222,7 @@ impl Runtime {
             )],
             line_file: None,
         });
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(vec![forall], verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Injective(
-            BuiltinInjectiveDefinitionProof {
-                requirement_facts,
-                proof_of_requirement_facts,
-            },
-        )))
+        Some(vec![forall])
     }
 
     // $surjective(A, B, f)  ⇔  forall y B: exist x A: y = f(x)
@@ -224,6 +231,23 @@ impl Runtime {
         fact: &SurjectiveFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+        let Some(requirements) = self.surjective_definition_requirements(fact) else {
+            return Ok(None);
+        };
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_definition_requirements(requirements, verify_state)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(BuiltinPropDefinitionProof::Surjective(
+            BuiltinSurjectiveDefinitionProof {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )))
+    }
+
+    fn surjective_definition_requirements(&mut self, fact: &SurjectiveFact) -> Option<Vec<Fact>> {
         let domain = fact.domain.clone();
         let codomain = fact.codomain.clone();
         let function = fact.function.clone();
@@ -232,7 +256,7 @@ impl Runtime {
         let y_obj = Obj::Identifier(IdentifierObj::from_bound_name(&y));
         let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
         let Some(fx) = apply_fn_one_arg(&function, x_obj) else {
-            return Ok(None);
+            return None;
         };
         let exist = PlainExistFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -254,17 +278,7 @@ impl Runtime {
             then_facts: vec![ExistOrAndChainAtomicFact::ExistFact(exist)],
             line_file: None,
         });
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(vec![forall], verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Surjective(
-            BuiltinSurjectiveDefinitionProof {
-                requirement_facts,
-                proof_of_requirement_facts,
-            },
-        )))
+        Some(vec![forall])
     }
 
     // $bijective(A, B, f)  ⇔  $injective(A,B,f) and $surjective(A,B,f)
@@ -398,6 +412,8 @@ impl Runtime {
     /// builders serve verification and inference, preserving order for WD.
     pub(crate) fn builtin_atomic_definition_consequences(&mut self, fact: &AtomicFact) -> Vec<Fact> {
         match fact {
+            AtomicFact::InjectiveFact(f) => self.injective_definition_requirements(f).unwrap_or_default(),
+            AtomicFact::SurjectiveFact(f) => self.surjective_definition_requirements(f).unwrap_or_default(),
             AtomicFact::ProperSubsetFact(f) => self.proper_subset_definition_requirements(f),
             AtomicFact::ProperSupersetFact(f) => self.proper_superset_definition_requirements(f),
             AtomicFact::BijectiveFact(f) => self.bijective_definition_requirements(f),

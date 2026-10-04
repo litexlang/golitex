@@ -7,6 +7,7 @@ use crate::ast::obj::StandardSet;
 use crate::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart, Lcm, Ln, Log, Max, Min, Mod, Mul, Neg, Number, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan, IntegerOperator, Literal, TrigOperator};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::rational_expression::exact_rational::EvalRational;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -413,13 +414,24 @@ impl Runtime {
         value: &Pow,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        // Multi-branch pow domain: R×N (covers real trig powers), then C×N, then C×Z×base≠0.
+        // Closed Q+×Q also permits noninteger exponents, independently of
+        // whether the exact result is rational. Example: 8^(1/3) and 2^(1/3).
+        // Existing domains: R×N, C×N, then C×Z×base≠0.
         // Example: `sin(x)^2` is WD from `sin(x) $in R` and `2 $in N`.
         let proof = self.verify_binary_obj_well_definedness_by_def(
             value.base.as_ref(),
             value.exponent.as_ref(),
             verify_state.clone(),
         )?;
+        if let (Some(base), Some(exponent)) = (
+            EvalRational::from_obj(value.base.as_ref()),
+            EvalRational::from_obj(value.exponent.as_ref()),
+        ) {
+            if !base.is_zero() && !base.is_negative() && exponent.to_i128_if_integer().is_none() {
+                let reqs = self.try_pow_domain_positive_rational(value, verify_state)?;
+                return Ok(self.with_requirements(proof, reqs));
+            }
+        }
         let reqs_r = self.try_pow_domain_real_natural(value, verify_state.clone())?;
         if reqs_r.iter().all(|r| !r.is_failed()) {
             return Ok(self.with_requirements(proof, reqs_r));
@@ -843,6 +855,27 @@ impl Runtime {
             "obj must belong to required carrier".to_string(),
         )?);
         Ok(self.with_requirements(proof, reqs))
+    }
+
+    fn try_pow_domain_positive_rational(
+        &mut self,
+        value: &Pow,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Vec<VerifyFactResult>> {
+        let mut reqs = Vec::new();
+        reqs.push(self.require_obj_in_standard_set(
+            value.base.as_ref(),
+            StandardSet::QPos,
+            verify_state.clone(),
+            "closed rational power base must belong to Q+".to_string(),
+        )?);
+        reqs.push(self.require_obj_in_standard_set(
+            value.exponent.as_ref(),
+            StandardSet::Q,
+            verify_state,
+            "closed rational power exponent must belong to Q".to_string(),
+        )?);
+        Ok(reqs)
     }
 
     fn try_pow_domain_real_natural(

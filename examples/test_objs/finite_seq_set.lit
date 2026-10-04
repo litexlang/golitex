@@ -18,3 +18,9 @@ sketch:
 sketch:
     let S = finite_seq({}, 0)
     $is_set(S)
+
+# P05: explicit checked proof; restored from finite_seq_set-P05
+sketch:
+    forall x closed_range(1, 2):
+        fn(y closed_range(1, 2)) R {y}(x) $in R
+    release thm fn_set_member(fn(y closed_range(1, 2)) R {y}, finite_seq(R, 2))

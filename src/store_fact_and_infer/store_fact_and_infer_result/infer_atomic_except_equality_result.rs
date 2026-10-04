@@ -66,6 +66,8 @@ pub struct InferNormalAtomicParamTypesProjectedResult {
 }
 
 pub enum InferBuiltinDefinitionResult {
+    Injective(InferInjectiveDefinitionResult),
+    Surjective(InferSurjectiveDefinitionResult),
     Prime(InferPrimeDefinitionResult),
     Coprime(InferCoprimeDefinitionResult),
     ProperSubset(InferProperSubsetDefinitionResult),
@@ -73,6 +75,14 @@ pub enum InferBuiltinDefinitionResult {
     Dvd(InferDvdDefinitionResult),
     Bijective(InferBijectiveDefinitionResult),
     ChoiceFunction(InferChoiceFunctionDefinitionResult),
+}
+pub struct InferInjectiveDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+pub struct InferSurjectiveDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreFactAndInferResult>,
 }
 pub struct InferPrimeDefinitionResult {
     pub source_fact_id: FactId,
@@ -105,6 +115,8 @@ pub struct InferChoiceFunctionDefinitionResult {
 impl InferBuiltinDefinitionResult {
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
         match self {
+            Self::Injective(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
+            Self::Surjective(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
             Self::Prime(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
             Self::Coprime(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),
             Self::ProperSubset(r) => r.derived.iter().flat_map(|d| d.stored_fact_ids()).collect(),

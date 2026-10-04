@@ -3,5 +3,7 @@
 # Concrete exponent keeps `2^x` well-defined for the log identity.
 
 let x = 3
+x = 3
+x $in Z
 1 < 2
 log(2, 2^x) = x

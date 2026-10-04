@@ -1,0 +1,2 @@
+have fn next(x R) R = x + 1
+next(2) = 2 + 1 = 3

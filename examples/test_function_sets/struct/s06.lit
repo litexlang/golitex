@@ -1,0 +1,9 @@
+# S06: Function field returning a function is callable twice
+# Intended: accept; run via examples/test_function_sets/run.py
+
+struct Maker<A nonempty_set>:
+    make fn(x A) fn(y A) A
+    tag N
+thm curried_call:
+    ? forall B nonempty_set, s &Maker<B>, x, y B:
+        s.make(x)(y) $in B

@@ -16,3 +16,91 @@ sketch:
 sketch:
     let A = family_intersect({})
     $is_set(A)
+
+# P04: explicit checked proof; restored from family_intersect-P04
+sketch:
+    by contra:
+        ? {1} != {2}
+        1 $in {1}
+        1 $in {2}
+        impossible 1 $in {2}
+    let I = family_intersect({{1}, {2}})
+    I = I
+
+# P01: checked extension proof; restored from family_intersect-P01
+sketch:
+    by extension:
+        ? family_intersect({{1}}) = {1}
+        claim:
+            ? forall x family_intersect({{1}}):
+                x $in {1}
+            release thm family_intersect_member_facts(x, family_intersect({{1}}))
+            {1} $in {{1}}
+            x $in {1}
+        claim:
+            ? forall x {1}:
+                x $in family_intersect({{1}})
+            by enumerate finite_set:
+                ? forall B {{1}}:
+                    $is_set(B)
+            by enumerate finite_set:
+                ? forall B {{1}}:
+                    $is_set(B)
+                    =>:
+                        x $in B
+            release thm family_intersect_member(x, family_intersect({{1}}))
+
+# P02: checked extension proof; restored from family_intersect-P02
+sketch:
+    by contra:
+        ? {1, 2} != {2, 3}
+        1 $in {1, 2}
+        1 $in {2, 3}
+        impossible 1 $in {2, 3}
+    by extension:
+        ? family_intersect({{1, 2}, {2, 3}}) = {2}
+        claim:
+            ? forall x family_intersect({{1, 2}, {2, 3}}):
+                x $in {2}
+            release thm family_intersect_member_facts(x, family_intersect({{1, 2}, {2, 3}}))
+            {1, 2} $in {{1, 2}, {2, 3}}
+            {2, 3} $in {{1, 2}, {2, 3}}
+            x $in {1, 2}
+            x $in {2, 3}
+            x = 1 or x = 2
+            by cases:
+                ? x $in {2}
+                case x = 1:
+                    impossible 1 $in {2, 3}
+                case x = 2:
+                    x $in {2}
+        claim:
+            ? forall x {2}:
+                x $in family_intersect({{1, 2}, {2, 3}})
+            x = 2
+            by enumerate finite_set:
+                ? forall B {{1, 2}, {2, 3}}:
+                    $is_set(B)
+            by enumerate finite_set:
+                ? forall B {{1, 2}, {2, 3}}:
+                    $is_set(B)
+                    =>:
+                        x $in B
+            release thm family_intersect_member(x, family_intersect({{1, 2}, {2, 3}}))
+
+# P03: checked extension proof; restored from family_intersect-P03
+sketch:
+    by extension:
+        ? family_intersect({{1}, {}}) = {}
+        claim:
+            ? forall x family_intersect({{1}, {}}):
+                x $in {}
+            release thm family_intersect_member_facts(x, family_intersect({{1}, {}}))
+            {} $in {{1}, {}}
+            x $in {}
+        claim:
+            ? forall x {}:
+                x $in family_intersect({{1}, {}})
+            by contra:
+                ? x $in family_intersect({{1}, {}})
+                impossible x $in {}

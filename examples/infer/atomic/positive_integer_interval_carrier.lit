@@ -1,0 +1,7 @@
+# Before: interval bounds were exposed, but an N+ callable prefix lacked type evidence.
+# forall f fn(k N+: k <= 2) R, a closed_range(1, 2):
+#     f(a) = f(a)
+# Now: positive integer literal lower bounds publish the N+ integer carrier.
+# Gate: target/release/litex -strict -f examples/infer/atomic/positive_integer_interval_carrier.lit
+forall f fn(k N+: k <= 2) R, a closed_range(1, 2):
+    f(a) = f(a)

@@ -1,0 +1,9 @@
+# S09: Earlier field defines a later function field carrier
+# Intended: accept; run via examples/test_function_sets/run.py
+
+struct Dependent:
+    carrier power_set(R)
+    op fn(x carrier) R
+thm field_dependency:
+    ? forall d &Dependent, x d.carrier:
+        d.op(x) $in R

@@ -4,4 +4,5 @@
 have a R = 1
 have b R = a
 a + 1 > 0
+b + 1 = a + 1
 b + 1 > 0

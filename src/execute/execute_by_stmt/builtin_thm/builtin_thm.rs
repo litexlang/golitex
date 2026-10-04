@@ -1,6 +1,6 @@
 //! Reserved theorem applications, separate from ordinary proof search.
 use super::helper::*;
-use super::{membership, real_analysis, sums};
+use super::{intersection, membership, real_analysis, sums};
 use crate::ast::fact::Fact;
 use crate::ast::obj::*;
 use crate::ast::param::*;
@@ -75,6 +75,9 @@ fn prepare_contract(rt: &mut Runtime, id: BuiltinTheoremId, args: &[Obj]) -> Run
         | CartesianMemberFromCoordinates | IndexCartesianMember
         | IndexCartesianNonemptyByChoiceFromFamily | IndexCartesianNonemptyByChoiceFromPointwise
         | TupleEqualFromCoordinates => membership::prepare_membership(rt, id, args)?,
+        FamilyIntersectionMember | FamilyIntersectionMemberFacts | IndexedIntersectionMember => {
+            intersection::prepare_intersection(rt, id, args)
+        }
         SumLessEqualFromPointwise | FiniteSetSumLessEqualFromPointwise
         | FiniteSetSummandLessEqualSum | FiniteSetSumSubstitution
         | SumOverBijectiveFiniteSetEnumerations => sums::prepare_sums(rt, id, args)?,

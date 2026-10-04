@@ -1,0 +1,5 @@
+prop bad(n Z):
+    1 = 2
+by strong_induc n from 0:
+    ? $bad(n)
+1 = 2

@@ -2,7 +2,7 @@
 
 Task: add detailed regression files for every current Litex Obj variant.
 
-The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 594 positive cases, 289 rejection fixtures and 22 recorded gaps.
+The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 665 positive cases, 309 rejection fixtures and 0 recorded gaps.
 
 The earlier 2026-10-03 [audit](audit_2026-10-03.md) observed 67 direct
 rejections. The subsequent [F authoring repairs](experience/problem_notes/f_authoring_repairs_2026-10-03.md)
@@ -13,7 +13,19 @@ That F follow-up changed proofs and fixtures. The subsequent [exact numeric, per
 
 The [remaining elementary follow-up](experience/problem_notes/remaining_elementary_gaps_2026-10-03.md) closes the other eight requested extrema, inverse and log goals. The focused current-source report covers all 13 involved object families; unrelated gaps remain in the manifest.
 
+
+The [closed elementary calculation follow-up](experience/problem_notes/closed_exact_elementary_calculation_2026-10-03.md) adds 33 scoped positive cases and six rejection cases for fraction rounding, integer-valued operands, radicals, numeric complex parts and rational logarithms. These are additions to the existing inventory; earlier full-suite failure receipts remain historical.
+
+The [set-proof follow-up](experience/problem_notes/remaining_set_proof_repairs_2026-10-03.md) closes 17 of the remaining 22 gaps with checked Litex steps. That round left five gaps; the focused gate does not replace full-corpus historical failures.
+
+The [five-set follow-up](experience/problem_notes/five_set_gap_followup_2026-10-03.md) closes those last five gaps with explicit member contracts and extension proofs. Zero recorded gaps is an inventory status, not a whole-corpus acceptance.
+
 These counts describe coverage of written cases, not proof that the implementation is bug-free. The runner audits the enum tree and all `.lit` fixtures on every run.
+
+The [rational-power addition](experience/problem_notes/exact_rational_powers_2026-10-03.md)
+adds P141–P156 and N141–N149 to Pow. Its exact calculation/eval and domain
+boundaries have a stable focused certificate; three legacy mixed-module
+expectation failures are retained separately.
 
 | AST path | Positive file | Positive cases | Rejection fixtures | Recorded gaps |
 | --- | --- | ---: | ---: | ---: |
@@ -28,18 +40,18 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::ArithmeticOperator::Neg` | [neg](neg.lit) | 6 | 2 | 0 |
 | `Obj::ArithmeticOperator::Mul` | [mul](mul.lit) | 7 | 2 | 0 |
 | `Obj::ArithmeticOperator::Div` | [div](div.lit) | 10 | 8 | 0 |
-| `Obj::ArithmeticOperator::Pow` | [pow](pow.lit) | 12 | 3 | 0 |
+| `Obj::ArithmeticOperator::Pow` | [pow](pow.lit) | 29 | 12 | 0 |
 | `Obj::ArithmeticOperator::Abs` | [abs](abs.lit) | 6 | 2 | 0 |
 | `Obj::ArithmeticOperator::Min` | [min](min.lit) | 6 | 2 | 0 |
 | `Obj::ArithmeticOperator::Max` | [max](max.lit) | 6 | 2 | 0 |
-| `Obj::ArithmeticOperator::Floor` | [floor](floor.lit) | 6 | 2 | 0 |
-| `Obj::ArithmeticOperator::Ceil` | [ceil](ceil.lit) | 6 | 2 | 0 |
-| `Obj::ArithmeticOperator::Sign` | [sign](sign.lit) | 5 | 2 | 0 |
-| `Obj::IntegerOperator::Mod` | [mod](mod.lit) | 7 | 3 | 0 |
-| `Obj::IntegerOperator::Quot` | [quot](quot.lit) | 7 | 5 | 0 |
-| `Obj::IntegerOperator::Gcd` | [gcd](gcd.lit) | 6 | 3 | 0 |
-| `Obj::IntegerOperator::Lcm` | [lcm](lcm.lit) | 6 | 2 | 0 |
-| `Obj::IntegerOperator::Factorial` | [factorial](factorial.lit) | 6 | 3 | 0 |
+| `Obj::ArithmeticOperator::Floor` | [floor](floor.lit) | 9 | 3 | 0 |
+| `Obj::ArithmeticOperator::Ceil` | [ceil](ceil.lit) | 9 | 3 | 0 |
+| `Obj::ArithmeticOperator::Sign` | [sign](sign.lit) | 8 | 2 | 0 |
+| `Obj::IntegerOperator::Mod` | [mod](mod.lit) | 8 | 3 | 0 |
+| `Obj::IntegerOperator::Quot` | [quot](quot.lit) | 8 | 5 | 0 |
+| `Obj::IntegerOperator::Gcd` | [gcd](gcd.lit) | 8 | 3 | 0 |
+| `Obj::IntegerOperator::Lcm` | [lcm](lcm.lit) | 7 | 2 | 0 |
+| `Obj::IntegerOperator::Factorial` | [factorial](factorial.lit) | 7 | 3 | 0 |
 | `Obj::TrigOperator::Sin` | [sin](sin.lit) | 8 | 3 | 0 |
 | `Obj::TrigOperator::Cos` | [cos](cos.lit) | 8 | 2 | 0 |
 | `Obj::TrigOperator::Tan` | [tan](tan.lit) | 8 | 4 | 0 |
@@ -50,27 +62,27 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::TrigOperator::Arccot` | [arccot](arccot.lit) | 4 | 2 | 0 |
 | `Obj::ExpLogOperator::Exp` | [exp](exp.lit) | 6 | 2 | 0 |
 | `Obj::ExpLogOperator::Ln` | [ln](ln.lit) | 5 | 4 | 0 |
-| `Obj::ExpLogOperator::Log` | [log](log.lit) | 6 | 5 | 0 |
-| `Obj::ExpLogOperator::Sqrt` | [sqrt](sqrt.lit) | 7 | 3 | 0 |
-| `Obj::ComplexOperator::RealPart` | [real_part](real_part.lit) | 6 | 2 | 0 |
-| `Obj::ComplexOperator::ImaginaryPart` | [imaginary_part](imaginary_part.lit) | 6 | 2 | 0 |
+| `Obj::ExpLogOperator::Log` | [log](log.lit) | 10 | 6 | 0 |
+| `Obj::ExpLogOperator::Sqrt` | [sqrt](sqrt.lit) | 14 | 5 | 0 |
+| `Obj::ComplexOperator::RealPart` | [real_part](real_part.lit) | 9 | 2 | 0 |
+| `Obj::ComplexOperator::ImaginaryPart` | [imaginary_part](imaginary_part.lit) | 9 | 3 | 0 |
 | `Obj::ComplexOperator::ComplexAbs` | [complex_abs](complex_abs.lit) | 15 | 4 | 0 |
 | `Obj::SetOperator::Union` | [union](union.lit) | 6 | 2 | 0 |
 | `Obj::SetOperator::Intersect` | [intersect](intersect.lit) | 6 | 2 | 0 |
 | `Obj::SetOperator::SetMinus` | [set_minus](set_minus.lit) | 6 | 2 | 0 |
-| `Obj::SetOperator::FamilyUnion` | [family_union](family_union.lit) | 2 | 2 | 3 |
-| `Obj::SetOperator::FamilyIntersect` | [family_intersect](family_intersect.lit) | 3 | 2 | 4 |
-| `Obj::SetOperator::PowerSet` | [power_set](power_set.lit) | 5 | 2 | 1 |
-| `Obj::SetOperator::IndexUnion` | [index_union](index_union.lit) | 4 | 4 | 1 |
-| `Obj::SetOperator::IndexIntersect` | [index_intersect](index_intersect.lit) | 4 | 4 | 1 |
+| `Obj::SetOperator::FamilyUnion` | [family_union](family_union.lit) | 5 | 2 | 0 |
+| `Obj::SetOperator::FamilyIntersect` | [family_intersect](family_intersect.lit) | 7 | 4 | 0 |
+| `Obj::SetOperator::PowerSet` | [power_set](power_set.lit) | 6 | 2 | 0 |
+| `Obj::SetOperator::IndexUnion` | [index_union](index_union.lit) | 5 | 4 | 0 |
+| `Obj::SetOperator::IndexIntersect` | [index_intersect](index_intersect.lit) | 5 | 5 | 0 |
 | `Obj::SetOperator::IndexCart` | [index_cart](index_cart.lit) | 4 | 3 | 0 |
 | `Obj::SetFormer::ListSet` | [list_set](list_set.lit) | 8 | 3 | 0 |
 | `Obj::SetFormer::SetBuilder` | [set_builder](set_builder.lit) | 6 | 3 | 0 |
-| `Obj::SetFormer::Range` | [range](range.lit) | 5 | 2 | 2 |
-| `Obj::SetFormer::ClosedRange` | [closed_range](closed_range.lit) | 6 | 2 | 1 |
-| `Obj::SetFormer::FiniteSeqSet` | [finite_seq_set](finite_seq_set.lit) | 4 | 3 | 1 |
-| `Obj::SetFormer::SeqSet` | [seq_set](seq_set.lit) | 3 | 2 | 2 |
-| `Obj::ProductShape::Cart` | [cart](cart.lit) | 5 | 3 | 1 |
+| `Obj::SetFormer::Range` | [range](range.lit) | 7 | 2 | 0 |
+| `Obj::SetFormer::ClosedRange` | [closed_range](closed_range.lit) | 7 | 2 | 0 |
+| `Obj::SetFormer::FiniteSeqSet` | [finite_seq_set](finite_seq_set.lit) | 5 | 3 | 0 |
+| `Obj::SetFormer::SeqSet` | [seq_set](seq_set.lit) | 5 | 2 | 0 |
+| `Obj::ProductShape::Cart` | [cart](cart.lit) | 6 | 5 | 0 |
 | `Obj::ProductShape::Tuple` | [tuple](tuple.lit) | 6 | 2 | 0 |
 | `Obj::ProductShape::CartDim` | [cart_dim](cart_dim.lit) | 4 | 2 | 0 |
 | `Obj::ProductShape::TupleDim` | [tuple_dim](tuple_dim.lit) | 4 | 2 | 0 |
@@ -85,7 +97,7 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::IteratedOperator::ProductOfFiniteSet` | [product_of_finite_set](product_of_finite_set.lit) | 12 | 7 | 0 |
 | `Obj::IteratedOperator::Reduce` | [reduce](reduce.lit) | 5 | 3 | 0 |
 | `Obj::IteratedOperator::FiniteSetReduce` | [finite_set_reduce](finite_set_reduce.lit) | 6 | 3 | 0 |
-| `Obj::FiniteSetStat::FiniteSetSize` | [finite_set_size](finite_set_size.lit) | 6 | 3 | 1 |
+| `Obj::FiniteSetStat::FiniteSetSize` | [finite_set_size](finite_set_size.lit) | 7 | 3 | 0 |
 | `Obj::FiniteSetStat::FiniteSetMax` | [finite_set_max](finite_set_max.lit) | 6 | 5 | 0 |
 | `Obj::FiniteSetStat::FiniteSetMin` | [finite_set_min](finite_set_min.lit) | 6 | 5 | 0 |
 | `Obj::StructAndFieldAccessObj::StructObj` | [struct_obj](struct_obj.lit) | 4 | 3 | 0 |
@@ -114,8 +126,8 @@ These counts describe coverage of written cases, not proof that the implementati
 | `Obj::SetFormer::IntervalObj::LeftOpenRightClosed` | [interval_open_closed](interval_open_closed.lit) | 7 | 2 | 0 |
 | `Obj::SetFormer::IntervalObj::LeftClosedRightOpen` | [interval_closed_open](interval_closed_open.lit) | 7 | 2 | 0 |
 | `Obj::SetFormer::IntervalObj::LeftClosedRightClosed` | [interval_closed_closed](interval_closed_closed.lit) | 7 | 2 | 0 |
-| `Obj::Identifier::WithExportFileId` | [identifier_with_export_file_id](identifier_with_export_file_id/main.lit) | 5 | 3 | 2 |
-| `Obj::Identifier::WithModAndExportFileId` | [identifier_with_mod_and_export_file_id](identifier_with_mod_and_export_file_id/main.lit) | 5 | 3 | 2 |
+| `Obj::Identifier::WithExportFileId` | [identifier_with_export_file_id](identifier_with_export_file_id/main.lit) | 7 | 3 | 0 |
+| `Obj::Identifier::WithModAndExportFileId` | [identifier_with_mod_and_export_file_id](identifier_with_mod_and_export_file_id/main.lit) | 7 | 3 | 0 |
 
 ## Helper variants
 

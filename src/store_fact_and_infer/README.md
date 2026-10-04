@@ -84,6 +84,17 @@ store_fact_and_infer/
 
 ## Tracers
 
+Set-builder membership projection skips an exact visible fact before recursively
+storing that consequence. A stored `s = {x s: 0 = 0}` otherwise projects
+`element $in s` from that same already-stored membership indefinitely, including
+during a freshly parsed builder's WD check. This guard is local to the builder's
+carrier/body projections: it does not change truth lookup, global storage,
+permission, or result shapes; new carrier and defining-condition facts still
+follow the ordinary WD → store → infer path. The maintained strict tracer is
+`examples/infer/atomic/set_builder_projection_replay.lit`; focused tests also
+cover mutual carrier cycles, repeated body membership, false/undefined rejection,
+WD locality, and failed-statement rollback.
+
 One rule → one file under `examples/infer/` (see that README).
 
 ```bash

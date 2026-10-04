@@ -1,0 +1,8 @@
+# Must reject: one factor membership does not suffice for intersection.
+by contra:
+    ? {1} != {2}
+    1 $in {1}
+    1 $in {2}
+    impossible 1 $in {2}
+1 $in {1}
+release thm family_intersect_member(1, family_intersect({{1}, {2}}))

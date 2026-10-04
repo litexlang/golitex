@@ -1,0 +1,2 @@
+by induc n from 2:
+    ? n >= 2

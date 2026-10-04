@@ -1,0 +1,4 @@
+# N19: Nested return condition cannot capture outer parameter
+# Intended: reject; run via examples/test_function_sets/run.py
+
+let Invalid = fn(x R) fn(y R: y > x) R

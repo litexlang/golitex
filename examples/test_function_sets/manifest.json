@@ -1,0 +1,700 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "B01",
+      "group": "basic",
+      "title": "Alpha-equivalent function-space membership",
+      "expect": "accept",
+      "phase": null,
+      "file": "basic/b01.lit",
+      "statements": 1,
+      "setup_statements": 0
+    },
+    {
+      "id": "B02",
+      "group": "basic",
+      "title": "Anonymous function numeric call",
+      "expect": "accept",
+      "phase": null,
+      "file": "basic/b02.lit",
+      "statements": 1,
+      "setup_statements": 0
+    },
+    {
+      "id": "B03",
+      "group": "basic",
+      "title": "Guarded named function call",
+      "expect": "accept",
+      "phase": null,
+      "file": "basic/b03.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "B04",
+      "group": "basic",
+      "title": "Function-set alias as declared carrier",
+      "expect": "accept",
+      "phase": null,
+      "file": "basic/b04.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "B05",
+      "group": "basic",
+      "title": "Arrow sugar for nested fixed return carriers",
+      "expect": "accept",
+      "phase": null,
+      "file": "basic/b05.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "T01",
+      "group": "template",
+      "title": "Generic identity with independent specializations",
+      "expect": "accept",
+      "phase": null,
+      "file": "template/t01.lit",
+      "statements": 4,
+      "setup_statements": 3
+    },
+    {
+      "id": "T02",
+      "group": "template",
+      "title": "Value parameter substitution and specialization isolation",
+      "expect": "accept",
+      "phase": null,
+      "file": "template/t02.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "T03",
+      "group": "template",
+      "title": "Template selects a function-space carrier",
+      "expect": "accept",
+      "phase": null,
+      "file": "template/t03.lit",
+      "statements": 4,
+      "setup_statements": 3
+    },
+    {
+      "id": "T04",
+      "group": "template",
+      "title": "Higher-order apply through a template",
+      "expect": "accept",
+      "phase": null,
+      "file": "template/t04.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "T05",
+      "group": "template",
+      "title": "Callable alias of a specialized template",
+      "expect": "accept",
+      "phase": null,
+      "file": "template/t05.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "T06",
+      "group": "template",
+      "title": "Template with retained domain guard",
+      "expect": "accept",
+      "phase": null,
+      "file": "template/t06.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "T07",
+      "group": "template",
+      "title": "Template returns a function and calls it",
+      "expect": "accept",
+      "phase": null,
+      "file": "template/t07.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "T08",
+      "group": "template",
+      "title": "Outer template carrier fixed for curried signatures",
+      "expect": "accept",
+      "phase": null,
+      "file": "template/t08.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "S01",
+      "group": "struct",
+      "title": "Parameterized function-field argument and return carriers",
+      "expect": "accept",
+      "phase": null,
+      "file": "struct/s01.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "S02",
+      "group": "struct",
+      "title": "Concrete function field evaluates after typed construction",
+      "expect": "accept",
+      "phase": null,
+      "file": "struct/s02.lit",
+      "statements": 4,
+      "setup_statements": 3
+    },
+    {
+      "id": "S03",
+      "group": "struct",
+      "title": "Function-field law from the struct definition",
+      "expect": "accept",
+      "phase": null,
+      "file": "struct/s03.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "S04",
+      "group": "struct",
+      "title": "Alias of a callable function field retains its signature",
+      "expect": "accept",
+      "phase": null,
+      "file": "struct/s04.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "S05",
+      "group": "struct",
+      "title": "Nested struct callable-field path",
+      "expect": "accept",
+      "phase": null,
+      "file": "struct/s05.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "S06",
+      "group": "struct",
+      "title": "Function field returning a function is callable twice",
+      "expect": "accept",
+      "phase": null,
+      "file": "struct/s06.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "S07",
+      "group": "struct",
+      "title": "Template selects a struct containing a concrete function",
+      "expect": "accept",
+      "phase": null,
+      "file": "struct/s07.lit",
+      "statements": 4,
+      "setup_statements": 3
+    },
+    {
+      "id": "S08",
+      "group": "struct",
+      "title": "A function returns a struct with a callable field",
+      "expect": "accept",
+      "phase": null,
+      "file": "struct/s08.lit",
+      "statements": 4,
+      "setup_statements": 3
+    },
+    {
+      "id": "S09",
+      "group": "struct",
+      "title": "Earlier field defines a later function field carrier",
+      "expect": "accept",
+      "phase": null,
+      "file": "struct/s09.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "H01",
+      "group": "higher_order",
+      "title": "Named curried closure numeric equality",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h01.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "H02",
+      "group": "higher_order",
+      "title": "Function-valued result and second-call codomain",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h02.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "H03",
+      "group": "higher_order",
+      "title": "Anonymous curried closure numeric equality",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h03.lit",
+      "statements": 1,
+      "setup_statements": 0
+    },
+    {
+      "id": "H04",
+      "group": "higher_order",
+      "title": "A named function returns an existing named function",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h04.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "H05",
+      "group": "higher_order",
+      "title": "Typed local binding of a returned closure",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h05.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "H06",
+      "group": "higher_order",
+      "title": "Function argument apply numeric result",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h06.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "H07",
+      "group": "higher_order",
+      "title": "Composition returns a closure capturing function arguments",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h07.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "H08",
+      "group": "higher_order",
+      "title": "Three levels of function-valued return",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h08.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "H09",
+      "group": "higher_order",
+      "title": "Guard of the returned function is retained",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h09.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "H10",
+      "group": "higher_order",
+      "title": "Outer guard is checked before returning a function",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h10.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "H11",
+      "group": "higher_order",
+      "title": "Explicit returned-function equality before second call",
+      "expect": "accept",
+      "phase": null,
+      "file": "higher_order/h11.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "D01",
+      "group": "controls",
+      "title": "Higher-order apply with one explicit unfolding chain",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d01.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "D02",
+      "group": "controls",
+      "title": "Curried application with an explicit beta equality chain",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d02.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "D03",
+      "group": "controls",
+      "title": "Returned closure bound after its body equation is known",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d03.lit",
+      "statements": 4,
+      "setup_statements": 3
+    },
+    {
+      "id": "D04",
+      "group": "controls",
+      "title": "Template higher-order apply with explicit inner evaluation",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d04.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "D05",
+      "group": "controls",
+      "title": "Anonymous member of template-selected function space",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d05.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "D06",
+      "group": "controls",
+      "title": "Concrete struct call through an explicitly known function",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d06.lit",
+      "statements": 5,
+      "setup_statements": 4
+    },
+    {
+      "id": "D07",
+      "group": "controls",
+      "title": "Concrete struct containing a named function has a callable field",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d07.lit",
+      "statements": 4,
+      "setup_statements": 3
+    },
+    {
+      "id": "D08",
+      "group": "controls",
+      "title": "Template-selected struct containing a named function",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d08.lit",
+      "statements": 4,
+      "setup_statements": 3
+    },
+    {
+      "id": "D09",
+      "group": "controls",
+      "title": "Function returning a struct containing a named function",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d09.lit",
+      "statements": 4,
+      "setup_statements": 3
+    },
+    {
+      "id": "D10",
+      "group": "controls",
+      "title": "Anonymous function-valued return with explicit return parentheses",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d10.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "D11",
+      "group": "controls",
+      "title": "Three function-valued levels type-check",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d11.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "D12",
+      "group": "controls",
+      "title": "Explicit equality exposes template-selected function-space membership",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d12.lit",
+      "statements": 5,
+      "setup_statements": 4
+    },
+    {
+      "id": "D13",
+      "group": "controls",
+      "title": "Typed local struct binds the template-selected result",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d13.lit",
+      "statements": 5,
+      "setup_statements": 4
+    },
+    {
+      "id": "D14",
+      "group": "controls",
+      "title": "Typed local struct binds a function result",
+      "expect": "accept",
+      "phase": null,
+      "file": "controls/d14.lit",
+      "statements": 5,
+      "setup_statements": 4
+    },
+    {
+      "id": "N01",
+      "group": "basic",
+      "title": "Wrong function argument carrier",
+      "expect": "reject",
+      "phase": "well_defined",
+      "file": "basic/n01.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N02",
+      "group": "basic",
+      "title": "Function body outside its declared codomain",
+      "expect": "reject",
+      "phase": "have_fn_equal",
+      "file": "basic/n02.lit",
+      "statements": 1,
+      "setup_statements": 0
+    },
+    {
+      "id": "N03",
+      "group": "basic",
+      "title": "Wrong application arity",
+      "expect": "reject",
+      "phase": "well_defined",
+      "file": "basic/n03.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N04",
+      "group": "template",
+      "title": "Invalid value template argument",
+      "expect": "reject",
+      "phase": "well_defined",
+      "file": "template/n04.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N05",
+      "group": "template",
+      "title": "Specializations do not share defining values",
+      "expect": "reject",
+      "phase": "search_proof",
+      "file": "template/n05.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N06",
+      "group": "template",
+      "title": "Template function guard rejects the excluded point",
+      "expect": "reject",
+      "phase": "well_defined",
+      "file": "template/n06.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N07",
+      "group": "struct",
+      "title": "Function field rejects wrong generic argument type",
+      "expect": "reject",
+      "phase": "def_thm",
+      "file": "struct/n07.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N08",
+      "group": "struct",
+      "title": "Function field retains its guard",
+      "expect": "reject",
+      "phase": "def_thm",
+      "file": "struct/n08.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N09",
+      "group": "struct",
+      "title": "Struct does not assume arbitrary function-field laws",
+      "expect": "reject",
+      "phase": "def_thm",
+      "file": "struct/n09.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N10",
+      "group": "struct",
+      "title": "Scalar field is not callable",
+      "expect": "reject",
+      "phase": "def_thm",
+      "file": "struct/n10.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N11",
+      "group": "higher_order",
+      "title": "Returned-function argument carrier is checked",
+      "expect": "reject",
+      "phase": "well_defined",
+      "file": "higher_order/n11.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N12",
+      "group": "higher_order",
+      "title": "Returned-function argument arity is checked",
+      "expect": "reject",
+      "phase": "well_defined",
+      "file": "higher_order/n12.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N13",
+      "group": "higher_order",
+      "title": "Returned-function guard is not dropped",
+      "expect": "reject",
+      "phase": "well_defined",
+      "file": "higher_order/n13.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N14",
+      "group": "higher_order",
+      "title": "Outer function guard is not dropped",
+      "expect": "reject",
+      "phase": "well_defined",
+      "file": "higher_order/n14.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N15",
+      "group": "higher_order",
+      "title": "Function-valued definition rejects narrower codomain",
+      "expect": "reject",
+      "phase": "have_fn_equal",
+      "file": "higher_order/n15.lit",
+      "statements": 1,
+      "setup_statements": 0
+    },
+    {
+      "id": "N16",
+      "group": "higher_order",
+      "title": "Higher-order apply rejects incompatible function",
+      "expect": "reject",
+      "phase": "well_defined",
+      "file": "higher_order/n16.lit",
+      "statements": 3,
+      "setup_statements": 2
+    },
+    {
+      "id": "N17",
+      "group": "higher_order",
+      "title": "Incorrect curried numeric equality",
+      "expect": "reject",
+      "phase": "search_proof",
+      "file": "higher_order/n17.lit",
+      "statements": 2,
+      "setup_statements": 1
+    },
+    {
+      "id": "N18",
+      "group": "signature_boundary",
+      "title": "Outer parameter cannot define the return carrier",
+      "expect": "reject",
+      "phase": "parse",
+      "file": "signature_boundary/n18.lit",
+      "statements": 1,
+      "setup_statements": 0
+    },
+    {
+      "id": "N19",
+      "group": "signature_boundary",
+      "title": "Nested return condition cannot capture outer parameter",
+      "expect": "reject",
+      "phase": "parse",
+      "file": "signature_boundary/n19.lit",
+      "statements": 1,
+      "setup_statements": 0
+    },
+    {
+      "id": "N20",
+      "group": "signature_boundary",
+      "title": "A parameter-dependent singleton is not a fixed return carrier",
+      "expect": "reject",
+      "phase": "parse",
+      "file": "signature_boundary/n20.lit",
+      "statements": 1,
+      "setup_statements": 0
+    },
+    {
+      "id": "E01",
+      "group": "numeric_evaluation",
+      "title": "Exact rational and decimal returned-closure values",
+      "file": "numeric_evaluation/e01.lit",
+      "expect": "accept",
+      "statements": 6
+    },
+    {
+      "id": "E02",
+      "group": "numeric_evaluation",
+      "title": "Nested known calls in a function body",
+      "file": "numeric_evaluation/e02.lit",
+      "expect": "accept",
+      "statements": 5
+    },
+    {
+      "id": "N21",
+      "group": "numeric_evaluation",
+      "title": "A nearby decimal is not an exact rational result",
+      "file": "numeric_evaluation/n21.lit",
+      "expect": "reject",
+      "setup_statements": 1,
+      "phase": "search_proof"
+    }
+  ]
+}

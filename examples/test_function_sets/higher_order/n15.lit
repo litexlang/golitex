@@ -1,0 +1,4 @@
+# N15: Function-valued definition rejects narrower codomain
+# Intended: reject; run via examples/test_function_sets/run.py
+
+have fn invalid(x R) fn(y R) N = fn(y R) R {x + y}

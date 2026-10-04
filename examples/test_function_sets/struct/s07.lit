@@ -1,0 +1,13 @@
+# S07: Template selects a struct containing a concrete function
+# Intended: accept; run via examples/test_function_sets/run.py
+
+struct Box:
+    op fn(x R) R
+    tag N
+claim:
+    ? forall a R:
+        (fn(x R) R {x + a}, 0) $in &Box
+    fn(x R) R {x + a} $in fn(t R) R
+template<a R>:
+    have box &Box = (fn(x R) R {x + a}, 0)
+\box<2>.op(3) = 5

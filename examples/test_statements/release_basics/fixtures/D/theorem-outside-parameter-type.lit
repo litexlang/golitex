@@ -1,0 +1,5 @@
+thm only_natural:
+    ? forall n N:
+        n >= 0
+release thm only_natural(-1)
+-1 >= 0

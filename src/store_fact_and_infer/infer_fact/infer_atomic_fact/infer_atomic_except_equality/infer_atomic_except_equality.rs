@@ -1,5 +1,6 @@
 use crate::ast::fact::AtomicFact;
 use crate::runtime::{Runtime, RuntimeResult};
+use crate::store_fact_and_infer::{InferInjectiveDefinitionResult, InferSurjectiveDefinitionResult};
 use crate::store_fact_and_infer::{InferAtomicExceptEqualityResult, InferBuiltinDefinitionResult, InferPrimeDefinitionResult, InferCoprimeDefinitionResult, InferProperSubsetDefinitionResult, InferProperSupersetDefinitionResult, InferDvdDefinitionResult, InferBijectiveDefinitionResult, InferChoiceFunctionDefinitionResult};
 
 impl Runtime {
@@ -36,6 +37,20 @@ impl Runtime {
                         self.infer_superset_elementwise_membership(superset, verify_state)?,
                     ),
                 );
+            }
+            // A checked mapping property publishes its quantified definition,
+            // as legacy did: surjective(A,B,f) gives every y in B a preimage.
+            AtomicFact::InjectiveFact(f) => {
+                let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
+                    InferBuiltinDefinitionResult::Injective(InferInjectiveDefinitionResult { source_fact_id: f.fact_id, derived }),
+                ));
+            }
+            AtomicFact::SurjectiveFact(f) => {
+                let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
+                    InferBuiltinDefinitionResult::Surjective(InferSurjectiveDefinitionResult { source_fact_id: f.fact_id, derived }),
+                ));
             }
             AtomicFact::PrimeFact(f) => {
                 let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
@@ -103,8 +118,6 @@ impl Runtime {
             | AtomicFact::NotIsTupleFact(_)
             | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
-            | AtomicFact::InjectiveFact(_)
-            | AtomicFact::SurjectiveFact(_)
             | AtomicFact::NotProperSubsetFact(_)
             | AtomicFact::NotProperSupersetFact(_)
             | AtomicFact::NotPrimeFact(_)

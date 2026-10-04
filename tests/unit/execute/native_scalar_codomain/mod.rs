@@ -173,17 +173,15 @@ fn native_scalar_codomain_normal_and_detailed_keep_native_carrier() {
         let result = exec(&mut rt, &format!("{setup}\n{goal}"));
         assert!(!result.is_failed(), "{goal}");
         let normal = project_stmt_normal(&result, &rt);
-        assert!(has_field(&normal, "rule_name", "Native Scalar Codomain"));
-        assert!(has_field(&normal, "message", &format!(
-            "after input-domain WD, the native result belongs to {carrier} and its standard-set supertypes"
-        )));
+        assert!(has_field(&normal, "rule_name", "Structural membership"));
+        assert!(has_field(&normal, "type", "by_structural_membership"));
         let detailed = project_stmt_detailed(&result, &rt);
-        assert!(has_field(&detailed, "rule", "NativeScalarCodomain"));
-        assert!(has_field(&detailed, "codomain", carrier));
+        assert!(has_field(&detailed, "kind", "intrinsic_codomain"));
+        assert!(has_field(&detailed, "set", carrier));
     }
     let mut rt = runtime(OutputLanguage::Chinese);
     let result = exec(&mut rt, "have a R\nsign(a) $in R");
     let normal = stringify_normal(&project_stmt_normal(&result, &rt));
-    assert!(normal.contains("原生标量返回类型"));
-    assert!(normal.contains("属于 Z"));
+    assert!(normal.contains("结构归属"));
+    assert!(normal.contains("已检查运算的返回类型"));
 }

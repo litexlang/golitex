@@ -1,0 +1,3 @@
+# Expected rejection: pow N149, exact rational power boundary.
+# Run: target/release/litex -strict -f examples/test_objs/negative/pow__n149.lit
+eval (4/3)^(1/2)

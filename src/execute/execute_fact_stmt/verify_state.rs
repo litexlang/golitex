@@ -9,7 +9,7 @@ pub struct VerifyState {
 // Order denotes the maximum available truth-search stage, not recursion depth.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum VerifyStateLevel {
-    // Stored/identity evidence, then pure closed calculation; no search premises.
+    // Stored/identity evidence, closed calculation, structural carriers; no search premises.
     Direct = 0,
     KnownSpecialProperty = 1,
     BuiltinRule = 2,
@@ -18,7 +18,7 @@ pub enum VerifyStateLevel {
 }
 
 impl VerifyState {
-    // Explicit restricted entry, e.g. stored facts plus closed calculation.
+    // Explicit restricted entry, e.g. the deterministic Direct routes.
     // Recursive callers must derive their state from their parent instead.
     pub fn new(level: VerifyStateLevel) -> Self {
         Self {

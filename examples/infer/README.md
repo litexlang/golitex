@@ -20,6 +20,17 @@
 
 ## Acceptance
 
+`atomic/set_builder_projection_replay.lit` proves a self-carrier builder equality
+by extension, rechecks the stored equality, and checks a different builder's
+carrier and defining condition. Exact already-visible builder consequences are
+not recursively inferred again; new consequences are retained.
+
+```bash
+target/release/litex -strict -f examples/infer/atomic/set_builder_projection_replay.lit
+```
+
+Require exit 0, root `success: true`, and `session_error: null`.
+
 `atomic/choice_function_pointwise.lit` stores a positive choice-function
 certificate, releases its existing pointwise definition, then checks a fiber
 membership through the ordinary known-forall path.

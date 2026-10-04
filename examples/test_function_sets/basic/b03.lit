@@ -1,0 +1,5 @@
+# B03: Guarded named function call
+# Intended: accept; run via examples/test_function_sets/run.py
+
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2

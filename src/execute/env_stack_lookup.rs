@@ -131,40 +131,54 @@ impl Runtime {
     ) -> Option<&crate::exec_env::StoredIdentifierDefinition> {
         let name = match identifier {
             IdentifierObj::Plain { name, .. } => AtomicName::Plain { name: name.clone() },
-            IdentifierObj::WithExportFileId { export_file_id, name } => {
-                AtomicName::WithExportFileId {
-                    export_file_id: *export_file_id,
-                    name: name.clone(),
-                }
-            }
-            IdentifierObj::WithModAndExportFileId { global_mod_id, export_file_id, name } => {
-                AtomicName::WithModAndExportFileId {
-                    global_mod_id: *global_mod_id,
-                    export_file_id: *export_file_id,
-                    name: name.clone(),
-                }
-            }
+            IdentifierObj::WithExportFileId {
+                export_file_id,
+                name,
+            } => AtomicName::WithExportFileId {
+                export_file_id: *export_file_id,
+                name: name.clone(),
+            },
+            IdentifierObj::WithModAndExportFileId {
+                global_mod_id,
+                export_file_id,
+                name,
+            } => AtomicName::WithModAndExportFileId {
+                global_mod_id: *global_mod_id,
+                export_file_id: *export_file_id,
+                name: name.clone(),
+            },
         };
-        let definition = self.lookup_named_definition(&name, |env, plain| env.definitions.identifiers.get(plain))?;
-        if let Some(stored_id) = stored_identifier_binding_id(definition, name.local_name()) {
-            match identifier {
-                IdentifierObj::Plain { id, .. } if *id != stored_id => return None,
-                IdentifierObj::WithExportFileId { export_file_id, .. }
-                    if self.code_source.is_live_root_export(*export_file_id) => {
-                    if self.parse_scope_stack.first()?.plain.get(name.local_name()) != Some(&stored_id) {
-                        return None;
+        self.lookup_named_definition(&name, |env, plain| {
+            let definition = env.definitions.identifiers.get(plain)?;
+            if let Some(stored_id) = stored_identifier_binding_id(definition, plain) {
+                match identifier {
+                    IdentifierObj::Plain { id, .. } if *id != stored_id => return None,
+                    IdentifierObj::WithExportFileId { export_file_id, .. }
+                        if self.code_source.is_live_root_export(*export_file_id) =>
+                    {
+                        if self.parse_scope_stack.first()?.plain.get(plain) != Some(&stored_id) {
+                            return None;
+                        }
                     }
-                }
-                IdentifierObj::WithModAndExportFileId { global_mod_id, export_file_id, .. }
-                    if self.code_source.is_live_imported_export(*global_mod_id, *export_file_id) => {
-                    if self.parse_scope_stack.first()?.plain.get(name.local_name()) != Some(&stored_id) {
-                        return None;
+                    IdentifierObj::WithModAndExportFileId {
+                        global_mod_id,
+                        export_file_id,
+                        ..
+                    } if self
+                        .code_source
+                        .is_live_imported_export(*global_mod_id, *export_file_id) =>
+                    {
+                        if self.parse_scope_stack.first()?.plain.get(plain) != Some(&stored_id) {
+                            return None;
+                        }
                     }
+                    _ => {}
                 }
-                _ => {}
             }
-        }
-        Some(definition)
+            // A name-identical local binder has a different identity. Reject
+            // this candidate, not the outer binding already named by the AST.
+            Some(definition)
+        })
     }
 
     // Finished export file Env after that file recorded; None while still loading.
@@ -186,10 +200,7 @@ impl Runtime {
     }
 
     // WD memory: inner scopes first, then parents (same walk as definitions).
-    pub(crate) fn well_defined_visible_in_stack(
-        &self,
-        obj: &Obj,
-    ) -> Option<WellDefinednessId> {
+    pub(crate) fn well_defined_visible_in_stack(&self, obj: &Obj) -> Option<WellDefinednessId> {
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(wd_id) = env.well_defined_objects.lookup(obj) {
                 return Some(wd_id);
@@ -250,7 +261,10 @@ impl Runtime {
     }
 }
 
-fn stored_identifier_binding_id(definition: &StoredIdentifierDefinition, name: &str) -> Option<IdentifierId> {
+fn stored_identifier_binding_id(
+    definition: &StoredIdentifierDefinition,
+    name: &str,
+) -> Option<IdentifierId> {
     let params = match definition {
         StoredIdentifierDefinition::ParamType((bound, _)) => return Some(bound.id),
         StoredIdentifierDefinition::LetObj((_, stmt)) => return Some(stmt.name.id),
@@ -261,9 +275,19 @@ fn stored_identifier_binding_id(definition: &StoredIdentifierDefinition, name: &
         StoredIdentifierDefinition::HaveObjByExistFacts((_, stmt)) => &stmt.param_def,
         StoredIdentifierDefinition::TrustHave((_, stmt)) => &stmt.param_def,
         StoredIdentifierDefinition::HaveFnEqualCaseByCase((_, stmt)) => return Some(stmt.name.id),
-        StoredIdentifierDefinition::HaveFnByForallExistUnique((_, stmt)) => return Some(stmt.name.id),
+        StoredIdentifierDefinition::HaveFnByForallExistUnique((_, stmt)) => {
+            return Some(stmt.name.id)
+        }
         StoredIdentifierDefinition::HaveFnByInduc((_, stmt)) => return Some(stmt.name.id),
     };
-    params.groups.iter().flat_map(|group| &group.params)
-        .find(|bound| bound.name == name).map(|bound| bound.id)
+    params
+        .groups
+        .iter()
+        .flat_map(|group| &group.params)
+        .find(|bound| bound.name == name)
+        .map(|bound| bound.id)
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/witness_binding/tests.rs"]
+mod witness_binding_tests;

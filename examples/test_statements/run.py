@@ -153,6 +153,13 @@ def audit_inventory(manifest):
     listed = expected_files | {case['file'] for entry in manifest['statements']
                               for case in entry['negative']}
     listed |= {case['file'] for case in manifest['boundaries'] + manifest['known_gaps']}
+    if manifest.get('basic_contract_manifest'):
+        contract_path = checked_path(manifest['basic_contract_manifest'])
+        contracts = json.loads(contract_path.read_text())
+        for case in contracts['cases']:
+            relative = str((contract_path.parent / case['file']).relative_to(SUITE))
+            checked_path(relative)
+            listed.add(relative)
     actual_files = {str(file.relative_to(SUITE)) for file in SUITE.rglob('*.lit')}
     if listed != actual_files:
         raise ValueError('Missing or unlisted supporting .lit fixture')

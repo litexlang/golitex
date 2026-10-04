@@ -1,3 +1,4 @@
+use super::closed_subtraction_bound::ClosedSubtractionBoundCertificate;
 use super::order_complement::FromKnownOrderComplementBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::GreaterEqualFact;
@@ -12,6 +13,7 @@ use crate::execute::execute_fact_stmt::VerifyFactResult;
 
 // Builtin rules for `a >= b`.
 pub enum GreaterEqualFactSearchProofByBuiltinRule {
+    ClosedSubtractionBound(GreaterEqualClosedSubtractionBoundBuiltinRuleProof),
     ComplexModulusNonnegative,
     // Converse order, citing an existing opposite-direction comparison.
     FromKnownLessEqual(FromKnownLessEqualBuiltinRuleProof),
@@ -47,6 +49,10 @@ pub enum GreaterEqualFactSearchProofByBuiltinRule {
     OrderFlipMulMinusOne(
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_flip_mul_minus_one::OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof,
     ),
+}
+
+pub struct GreaterEqualClosedSubtractionBoundBuiltinRuleProof {
+    pub bound: ClosedSubtractionBoundCertificate,
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -167,6 +173,10 @@ impl Runtime {
             verify_state,
         )? {
             return Ok(Some(proof));
+        }
+
+        if let Some(proof) = self.search_closed_subtraction_weak_bound(&fact.left, &fact.right, true) {
+            return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(GreaterEqualClosedSubtractionBoundBuiltinRuleProof { bound: proof })));
         }
 
         // B1 — closed numeric

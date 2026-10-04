@@ -469,10 +469,11 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                     ),
                 ])
             }
-            crate::execute::execute_witness_stmt::ExecWitnessExistFactStmtResult::Failed(_) => {
+            crate::execute::execute_witness_stmt::ExecWitnessExistFactStmtResult::Failed(f) => {
                 object_for(runtime, vec![
                     ("success", bool_value(false)),
                     ("kind", string("witness_exist_fact")),
+                    ("failure", super::witness_failure::project_witness_exist_failure(f, runtime)),
                 ])
             }
         },
@@ -488,10 +489,11 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                     ),
                 ])
             }
-            crate::execute::execute_witness_stmt::ExecWitnessAtomicFactStmtResult::Failed(_) => {
+            crate::execute::execute_witness_stmt::ExecWitnessAtomicFactStmtResult::Failed(f) => {
                 object_for(runtime, vec![
                     ("success", bool_value(false)),
                     ("kind", string("witness_atomic_fact")),
+                    ("failure", super::witness_failure::project_witness_atomic_failure(f, runtime)),
                 ])
             }
         },
@@ -634,9 +636,10 @@ fn project_by_extension(result: &ExecByExtensionStmtResult, runtime: &Runtime) -
             ),
                         ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByExtensionStmtResult::Failed(_) => object_for(runtime, vec![
+        ExecByExtensionStmtResult::Failed(failure) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_extension")),
+            ("failure", super::proof_block_failure::project_extension_failure(failure, runtime)),
         ]),
     }
 }
@@ -716,6 +719,7 @@ fn project_by_contra(result: &ExecByContraStmtResult, runtime: &Runtime) -> Json
             let mut entries = vec![
                 ("success", bool_value(false)),
                 ("kind", string("by_contra")),
+                ("failure", super::proof_block_failure::project_contra_failure(failed, runtime)),
             ];
             if let ExecByContraStmtFailed::Closing(closing) = failed {
                 let failure = match closing {
@@ -766,9 +770,10 @@ fn project_by_cases(result: &ExecByCasesStmtResult, runtime: &Runtime) -> JsonVa
                 ),
             ),
         ]),
-        ExecByCasesStmtResult::Failed(_) => object_for(runtime, vec![
+        ExecByCasesStmtResult::Failed(failure) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_cases")),
+            ("failure", super::proof_block_failure::project_cases_failure(failure, runtime)),
         ]),
     }
 }
@@ -957,9 +962,10 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
                 ),
                                 ("stored", project_store_and_infer(&s.stored, runtime)),
             ]),
-            ExecClaimStmtResult::Failed(_) => object_for(runtime, vec![
+            ExecClaimStmtResult::Failed(failure) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("claim")),
+                ("failure", super::proof_block_failure::project_claim_failure(failure, runtime)),
             ]),
         },
         ExecProofBlockStmtResult::Sketch(r) => match r {
@@ -976,9 +982,10 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
                     ),
                 ),
                             ]),
-            ExecSketchStmtResult::Failed(_) => object_for(runtime, vec![
+            ExecSketchStmtResult::Failed(failure) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("sketch")),
+                ("failure", super::proof_block_failure::project_sketch_failure(failure, runtime)),
             ]),
         },
     }

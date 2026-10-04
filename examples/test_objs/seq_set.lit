@@ -14,3 +14,16 @@ sketch:
 sketch:
     let S = seq({})
     $is_set(S)
+
+# P03: explicit checked proof; restored from seq_set-P03
+sketch:
+    forall x N+:
+        fn(y N+) N {y}(x) $in N
+    release thm fn_set_member(fn(y N+) N {y}, seq(N))
+
+
+# P04: explicit checked proof; restored from seq_set-P04
+sketch:
+    forall x N+:
+        fn(y N+) R {0}(x) $in R
+    release thm fn_set_member(fn(y N+) R {0}, seq(R))

@@ -9,6 +9,7 @@ use crate::exec_env::known_forall_conclusion_memory::{
 use crate::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal;
 use crate::execute::execute_fact_stmt::verify_or_fact::result::{
     or_fact_result_from_search_fail, or_fact_result_from_success, or_fact_result_from_wd_fail,
 };
@@ -21,6 +22,10 @@ use crate::execute::execute_fact_stmt::{
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
+
+#[cfg(test)]
+#[path = "../../../../tests/unit/execute/known_or_nested_binders/tests.rs"]
+mod known_or_nested_binders_tests;
 
 impl Runtime {
     // Prove or: WD → builtin → selected branch (direct or ¬ atomic others) → known_or → known_forall.
@@ -82,7 +87,8 @@ impl Runtime {
             let (attempt, local_env) = self.run_in_local_env_and_take_env(|rt| {
                 if !other_branches_are_atomic(fact, selected_index) {
                     let selected = rt.verify_fact(
-                        &and_chain_as_fact(&fact.facts[selected_index]), verify_state.clone(),
+                        &and_chain_as_fact(&fact.facts[selected_index]),
+                        verify_state.clone(),
                     )?;
                     return Ok((!selected.is_failed()).then_some((Vec::new(), selected)));
                 }
@@ -116,7 +122,8 @@ impl Runtime {
             let AndChainAtomicFact::AtomicFact(atomic) = branch else {
                 return Ok(None);
             };
-            let Some(negated_atomic) = negate_atomic_fact(atomic, self.global_ids.allocate_fact_id())
+            let Some(negated_atomic) =
+                negate_atomic_fact(atomic, self.global_ids.allocate_fact_id())
             else {
                 return Ok(None);
             };
@@ -170,8 +177,11 @@ impl Runtime {
                 }
                 let args_match = known_args
                     .iter()
-                    .zip(class_per_arg.iter())
-                    .all(|(known_arg, class)| class.contains(&known_arg.ir()));
+                    .zip(goal_args.iter().zip(class_per_arg.iter()))
+                    .all(|(known_arg, (goal_arg, class))| {
+                        class.contains(&known_arg.ir())
+                            || compound_objs_alpha_equal(known_arg, goal_arg)
+                    });
                 if args_match {
                     return Ok(Some(OrFactSearchedProof::ByKnownOrFact(
                         OrFactSearchProofByKnownOrFact {
@@ -189,11 +199,13 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        if !verify_state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
+        if !verify_state
+            .allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
         {
             return Ok(None);
         }
-        let premise_state = verify_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
+        let premise_state = verify_state
+            .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
         let lookup_key = or_fact_index_key(fact);
         let mut candidates = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {

@@ -21,3 +21,9 @@ sketch:
 # P05: power_set({1}) = {{}, {1}}
 sketch:
     power_set({1}) = {{}, {1}}
+
+# P06: explicit checked proof; restored from power_set-P06
+sketch:
+    power_set({}) = {{}}
+    power_set({{}}) = {{}, {{}}}
+    power_set(power_set({})) = {{}, {{}}}

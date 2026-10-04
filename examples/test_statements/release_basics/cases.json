@@ -1,0 +1,1258 @@
+{
+  "schema_version": 1,
+  "contracts": [
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "W01",
+    "W02",
+    "W03",
+    "W04",
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "L01",
+    "L02",
+    "L03",
+    "L04",
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "P01",
+    "P02",
+    "P03",
+    "P04",
+    "S01",
+    "S02",
+    "S03",
+    "S04",
+    "M01",
+    "M02",
+    "M03",
+    "M04",
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "R01",
+    "R02",
+    "R03",
+    "R04"
+  ],
+  "cases": [
+    {
+      "contracts": [
+        "B01"
+      ],
+      "name": "exact-arithmetic",
+      "expected": true,
+      "statements": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "file": "fixtures/B/exact-arithmetic.lit"
+    },
+    {
+      "contracts": [
+        "B01"
+      ],
+      "name": "false-arithmetic-1",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/B/false-arithmetic-1.lit"
+    },
+    {
+      "contracts": [
+        "B01"
+      ],
+      "name": "false-arithmetic-2",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/B/false-arithmetic-2.lit"
+    },
+    {
+      "contracts": [
+        "B01"
+      ],
+      "name": "false-arithmetic-3",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/B/false-arithmetic-3.lit"
+    },
+    {
+      "contracts": [
+        "B01"
+      ],
+      "name": "false-arithmetic-4",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/B/false-arithmetic-4.lit"
+    },
+    {
+      "contracts": [
+        "B02"
+      ],
+      "name": "numeric-carriers",
+      "expected": true,
+      "statements": [
+        true,
+        true,
+        true
+      ],
+      "file": "fixtures/B/numeric-carriers.lit"
+    },
+    {
+      "contracts": [
+        "B02"
+      ],
+      "name": "negative-natural",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/B/negative-natural.lit"
+    },
+    {
+      "contracts": [
+        "B03"
+      ],
+      "name": "membership-subset",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/B/membership-subset.lit"
+    },
+    {
+      "contracts": [
+        "B03"
+      ],
+      "name": "false-membership-8",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/B/false-membership-8.lit"
+    },
+    {
+      "contracts": [
+        "B03"
+      ],
+      "name": "false-membership-9",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/B/false-membership-9.lit"
+    },
+    {
+      "contracts": [
+        "B03"
+      ],
+      "name": "false-membership-10",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/B/false-membership-10.lit"
+    },
+    {
+      "contracts": [
+        "B04"
+      ],
+      "name": "set-order-explicit-extension",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/B/set-order-explicit-extension.lit"
+    },
+    {
+      "contracts": [
+        "B04"
+      ],
+      "name": "set-literal-requires-distinct-elements",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/B/set-literal-requires-distinct-elements.lit"
+    },
+    {
+      "contracts": [
+        "B04"
+      ],
+      "name": "false-set-extension",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/B/false-set-extension.lit"
+    },
+    {
+      "contracts": [
+        "W01"
+      ],
+      "name": "undefined-reflexivity",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/W/undefined-reflexivity.lit"
+    },
+    {
+      "contracts": [
+        "W02"
+      ],
+      "name": "guarded-division",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/W/guarded-division.lit"
+    },
+    {
+      "contracts": [
+        "W02"
+      ],
+      "name": "missing-division-guard",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/W/missing-division-guard.lit"
+    },
+    {
+      "contracts": [
+        "W02"
+      ],
+      "name": "later-guard-cannot-rescue-wd",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/W/later-guard-cannot-rescue-wd.lit"
+    },
+    {
+      "contracts": [
+        "W02"
+      ],
+      "name": "iff-guard-cannot-cross",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/W/iff-guard-cannot-cross.lit"
+    },
+    {
+      "contracts": [
+        "W03"
+      ],
+      "name": "typed-function-call",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/W/typed-function-call.lit"
+    },
+    {
+      "contracts": [
+        "W03"
+      ],
+      "name": "bad-function-call-20",
+      "expected": false,
+      "statements": [
+        true,
+        false
+      ],
+      "file": "fixtures/W/bad-function-call-20.lit"
+    },
+    {
+      "contracts": [
+        "W03"
+      ],
+      "name": "bad-function-call-21",
+      "expected": false,
+      "statements": [
+        true,
+        false
+      ],
+      "file": "fixtures/W/bad-function-call-21.lit"
+    },
+    {
+      "contracts": [
+        "W03"
+      ],
+      "name": "bad-function-call-22",
+      "expected": false,
+      "statements": [
+        true,
+        false
+      ],
+      "file": "fixtures/W/bad-function-call-22.lit"
+    },
+    {
+      "contracts": [
+        "W04"
+      ],
+      "name": "tuple-dimension",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/W/tuple-dimension.lit"
+    },
+    {
+      "contracts": [
+        "W04"
+      ],
+      "name": "false-tuple-dimension",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/W/false-tuple-dimension.lit"
+    },
+    {
+      "contracts": [
+        "W04"
+      ],
+      "name": "tuple-projection",
+      "expected": true,
+      "statements": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "file": "fixtures/W/tuple-projection.lit"
+    },
+    {
+      "contracts": [
+        "W04"
+      ],
+      "name": "tuple-zero-index",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/W/tuple-zero-index.lit"
+    },
+    {
+      "contracts": [
+        "W04"
+      ],
+      "name": "tuple-out-of-bounds",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/W/tuple-out-of-bounds.lit"
+    },
+    {
+      "contracts": [
+        "E01",
+        "E04"
+      ],
+      "name": "chain-then-substitution",
+      "expected": true,
+      "statements": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "file": "fixtures/E/chain-then-substitution.lit"
+    },
+    {
+      "contracts": [
+        "E02",
+        "S04"
+      ],
+      "name": "failed-chain-no-endpoint",
+      "expected": false,
+      "statements": [
+        true,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "file": "fixtures/E/failed-chain-no-endpoint.lit"
+    },
+    {
+      "contracts": [
+        "E03"
+      ],
+      "name": "alpha-renamed-function-space",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/E/alpha-renamed-function-space.lit"
+    },
+    {
+      "contracts": [
+        "E03"
+      ],
+      "name": "different-function-carriers",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/E/different-function-carriers.lit"
+    },
+    {
+      "contracts": [
+        "E04"
+      ],
+      "name": "wrong-substituted-result",
+      "expected": false,
+      "statements": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "file": "fixtures/E/wrong-substituted-result.lit"
+    },
+    {
+      "contracts": [
+        "L01"
+      ],
+      "name": "and-or-true",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/L/and-or-true.lit"
+    },
+    {
+      "contracts": [
+        "L01"
+      ],
+      "name": "false-boolean-34",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/L/false-boolean-34.lit"
+    },
+    {
+      "contracts": [
+        "L01"
+      ],
+      "name": "false-boolean-35",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/L/false-boolean-35.lit"
+    },
+    {
+      "contracts": [
+        "L02"
+      ],
+      "name": "enumeration-36",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/L/enumeration-36.lit"
+    },
+    {
+      "contracts": [
+        "L02"
+      ],
+      "name": "enumeration-37",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/L/enumeration-37.lit"
+    },
+    {
+      "contracts": [
+        "L02"
+      ],
+      "name": "enumeration-38",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/L/enumeration-38.lit"
+    },
+    {
+      "contracts": [
+        "L02"
+      ],
+      "name": "not-just-first-enumerated-element",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/L/not-just-first-enumerated-element.lit"
+    },
+    {
+      "contracts": [
+        "L03"
+      ],
+      "name": "typed-existential-witness",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/L/typed-existential-witness.lit"
+    },
+    {
+      "contracts": [
+        "L03"
+      ],
+      "name": "outside-domain-witness",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/L/outside-domain-witness.lit"
+    },
+    {
+      "contracts": [
+        "L03"
+      ],
+      "name": "unique-witness",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/L/unique-witness.lit"
+    },
+    {
+      "contracts": [
+        "L03"
+      ],
+      "name": "not-unique-witness",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/L/not-unique-witness.lit"
+    },
+    {
+      "contracts": [
+        "L04"
+      ],
+      "name": "classified-negative-existence",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/L/classified-negative-existence.lit"
+    },
+    {
+      "contracts": [
+        "L04"
+      ],
+      "name": "classified-negative-forall",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/L/classified-negative-forall.lit"
+    },
+    {
+      "contracts": [
+        "L04"
+      ],
+      "name": "forall-iff",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/L/forall-iff.lit"
+    },
+    {
+      "contracts": [
+        "D01"
+      ],
+      "name": "function-explicit-chain",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/D/function-explicit-chain.lit"
+    },
+    {
+      "contracts": [
+        "D01"
+      ],
+      "name": "false-function-chain",
+      "expected": false,
+      "statements": [
+        true,
+        false
+      ],
+      "file": "fixtures/D/false-function-chain.lit"
+    },
+    {
+      "contracts": [
+        "D02",
+        "W03"
+      ],
+      "name": "typed-predicate-definition",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/D/typed-predicate-definition.lit"
+    },
+    {
+      "contracts": [
+        "D02",
+        "W03"
+      ],
+      "name": "bad-predicate-entry-50",
+      "expected": false,
+      "statements": [
+        true,
+        false
+      ],
+      "file": "fixtures/D/bad-predicate-entry-50.lit"
+    },
+    {
+      "contracts": [
+        "D02",
+        "W03"
+      ],
+      "name": "bad-predicate-entry-51",
+      "expected": false,
+      "statements": [
+        true,
+        false
+      ],
+      "file": "fixtures/D/bad-predicate-entry-51.lit"
+    },
+    {
+      "contracts": [
+        "D02",
+        "W03"
+      ],
+      "name": "bad-predicate-entry-52",
+      "expected": false,
+      "statements": [
+        true,
+        false
+      ],
+      "file": "fixtures/D/bad-predicate-entry-52.lit"
+    },
+    {
+      "contracts": [
+        "D02",
+        "W03"
+      ],
+      "name": "bad-predicate-entry-53",
+      "expected": false,
+      "statements": [
+        true,
+        false
+      ],
+      "file": "fixtures/D/bad-predicate-entry-53.lit"
+    },
+    {
+      "contracts": [
+        "D03"
+      ],
+      "name": "theorem-with-premise",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/D/theorem-with-premise.lit"
+    },
+    {
+      "contracts": [
+        "D03",
+        "S04",
+        "R04"
+      ],
+      "name": "self-dependent-theorem-missing-premise",
+      "expected": false,
+      "statements": [
+        true,
+        false,
+        false,
+        false
+      ],
+      "file": "fixtures/D/self-dependent-theorem-missing-premise.lit"
+    },
+    {
+      "contracts": [
+        "D03",
+        "W03"
+      ],
+      "name": "theorem-outside-parameter-type",
+      "expected": false,
+      "statements": [
+        true,
+        false,
+        false
+      ],
+      "file": "fixtures/D/theorem-outside-parameter-type.lit"
+    },
+    {
+      "contracts": [
+        "D04"
+      ],
+      "name": "template-instantiation-use",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/D/template-instantiation-use.lit"
+    },
+    {
+      "contracts": [
+        "D04"
+      ],
+      "name": "template-wrong-result",
+      "expected": false,
+      "statements": [
+        true,
+        false
+      ],
+      "file": "fixtures/D/template-wrong-result.lit"
+    },
+    {
+      "contracts": [
+        "D04",
+        "W04"
+      ],
+      "name": "struct-law-use",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "file": "fixtures/D/struct-law-use.lit"
+    },
+    {
+      "contracts": [
+        "P01"
+      ],
+      "name": "cases-exhaustive",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/P/cases-exhaustive.lit"
+    },
+    {
+      "contracts": [
+        "P01"
+      ],
+      "name": "cases-missing-branch",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/P/cases-missing-branch.lit"
+    },
+    {
+      "contracts": [
+        "P01"
+      ],
+      "name": "cases-false-goal",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/P/cases-false-goal.lit"
+    },
+    {
+      "contracts": [
+        "P02"
+      ],
+      "name": "contra-both-sides",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/P/contra-both-sides.lit"
+    },
+    {
+      "contracts": [
+        "P02"
+      ],
+      "name": "contra-missing-negative-side",
+      "expected": false,
+      "statements": [
+        false,
+        false
+      ],
+      "file": "fixtures/P/contra-missing-negative-side.lit"
+    },
+    {
+      "contracts": [
+        "P02"
+      ],
+      "name": "contra-missing-positive-side",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/P/contra-missing-positive-side.lit"
+    },
+    {
+      "contracts": [
+        "P03"
+      ],
+      "name": "induction-identity-induc",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/P/induction-identity-induc.lit"
+    },
+    {
+      "contracts": [
+        "P03"
+      ],
+      "name": "induction-order-reflexivity-induc",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/P/induction-order-reflexivity-induc.lit"
+    },
+    {
+      "contracts": [
+        "P03"
+      ],
+      "name": "induction-false-base-induc",
+      "expected": false,
+      "statements": [
+        true,
+        false,
+        false
+      ],
+      "file": "fixtures/P/induction-false-base-induc.lit"
+    },
+    {
+      "contracts": [
+        "P03"
+      ],
+      "name": "induction-fractional-start-induc",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/P/induction-fractional-start-induc.lit"
+    },
+    {
+      "contracts": [
+        "P03"
+      ],
+      "name": "induction-identity-strong_induc",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/P/induction-identity-strong_induc.lit"
+    },
+    {
+      "contracts": [
+        "P03"
+      ],
+      "name": "induction-order-reflexivity-strong_induc",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/P/induction-order-reflexivity-strong_induc.lit"
+    },
+    {
+      "contracts": [
+        "P03"
+      ],
+      "name": "induction-false-base-strong_induc",
+      "expected": false,
+      "statements": [
+        true,
+        false,
+        false
+      ],
+      "file": "fixtures/P/induction-false-base-strong_induc.lit"
+    },
+    {
+      "contracts": [
+        "P03"
+      ],
+      "name": "induction-fractional-start-strong_induc",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/P/induction-fractional-start-strong_induc.lit"
+    },
+    {
+      "contracts": [
+        "P03"
+      ],
+      "name": "induction-positive-start-order",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/P/induction-positive-start-order.lit"
+    },
+    {
+      "contracts": [
+        "P04"
+      ],
+      "name": "recursive-explicit-chain",
+      "expected": true,
+      "statements": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "file": "fixtures/P/recursive-explicit-chain.lit"
+    },
+    {
+      "contracts": [
+        "P04"
+      ],
+      "name": "nondecreasing-recursion",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/P/nondecreasing-recursion.lit"
+    },
+    {
+      "contracts": [
+        "S01"
+      ],
+      "name": "retry-failed-declaration",
+      "expected": false,
+      "statements": [
+        false,
+        true,
+        true,
+        false
+      ],
+      "file": "fixtures/S/retry-failed-declaration.lit"
+    },
+    {
+      "contracts": [
+        "S02"
+      ],
+      "name": "local-assumption-not-leaked",
+      "expected": false,
+      "statements": [
+        true,
+        false
+      ],
+      "file": "fixtures/S/local-assumption-not-leaked.lit"
+    },
+    {
+      "contracts": [
+        "S03"
+      ],
+      "name": "successful-prefix-after-parse-error",
+      "expected": false,
+      "statements": [
+        true
+      ],
+      "session_error": true,
+      "file": "fixtures/S/successful-prefix-after-parse-error.lit"
+    },
+    {
+      "contracts": [
+        "C02"
+      ],
+      "name": "exact-eval-values",
+      "expected": true,
+      "statements": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "values": [
+        "3",
+        "1/2",
+        "3",
+        "2"
+      ],
+      "file": "fixtures/C/exact-eval-values.lit"
+    },
+    {
+      "contracts": [
+        "C02"
+      ],
+      "name": "undefined-eval",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/C/undefined-eval.lit"
+    },
+    {
+      "contracts": [
+        "C02",
+        "P04"
+      ],
+      "name": "recursive-algorithm-eval",
+      "expected": true,
+      "statements": [
+        true,
+        true
+      ],
+      "values": [
+        "0"
+      ],
+      "file": "fixtures/C/recursive-algorithm-eval.lit"
+    },
+    {
+      "contracts": [
+        "C03"
+      ],
+      "name": "strict-trust-rejection",
+      "expected": false,
+      "statements": [],
+      "session_error": true,
+      "file": "fixtures/C/strict-trust-rejection.lit"
+    },
+    {
+      "contracts": [
+        "C04"
+      ],
+      "name": "undefined-name",
+      "expected": false,
+      "statements": [],
+      "session_error": true,
+      "file": "fixtures/C/undefined-name.lit"
+    },
+    {
+      "contracts": [
+        "C04"
+      ],
+      "name": "trailing-garbage",
+      "expected": false,
+      "statements": [],
+      "session_error": true,
+      "file": "fixtures/C/trailing-garbage.lit"
+    },
+    {
+      "contracts": [
+        "C01",
+        "C04"
+      ],
+      "name": "eval-code-starting-with-minus",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "input_mode": "eval",
+      "file": "fixtures/C/eval-code-starting-with-minus.lit"
+    },
+    {
+      "contracts": [
+        "R01"
+      ],
+      "name": "basic-positive-enumeration",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "file": "fixtures/R/basic-positive-enumeration.lit"
+    },
+    {
+      "contracts": [
+        "R01"
+      ],
+      "name": "zero-is-not-positive",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "file": "fixtures/R/zero-is-not-positive.lit"
+    },
+    {
+      "contracts": [
+        "R02",
+        "R04"
+      ],
+      "name": "function-theorem-composition",
+      "expected": true,
+      "statements": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "file": "fixtures/R/function-theorem-composition.lit"
+    },
+    {
+      "contracts": [
+        "R02"
+      ],
+      "name": "function-theorem-false-result",
+      "expected": false,
+      "statements": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "file": "fixtures/R/function-theorem-false-result.lit"
+    },
+    {
+      "contracts": [
+        "R03"
+      ],
+      "name": "imaginary-unit-contra-repeat",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "repeats": 20,
+      "file": "fixtures/R/imaginary-unit-contra-repeat.lit"
+    },
+    {
+      "contracts": [
+        "R03"
+      ],
+      "name": "imaginary-unit-direct-contra-repeat",
+      "expected": true,
+      "statements": [
+        true
+      ],
+      "repeats": 20,
+      "file": "fixtures/R/imaginary-unit-direct-contra-repeat.lit"
+    },
+    {
+      "contracts": [
+        "R03"
+      ],
+      "name": "false-contra-repeat",
+      "expected": false,
+      "statements": [
+        false
+      ],
+      "repeats": 20,
+      "file": "fixtures/R/false-contra-repeat.lit"
+    }
+  ],
+  "sessions": [
+    {
+      "contracts": [
+        "S01"
+      ],
+      "name": "same-runtime-declaration-retry",
+      "frames": [
+        "have k N = -1",
+        "have k N = 1",
+        "k = 1",
+        "0 = 1"
+      ],
+      "responses": [
+        false,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "contracts": [
+        "E02",
+        "S04"
+      ],
+      "name": "same-runtime-chain-rollback",
+      "frames": [
+        "have x R = 2",
+        "have y R = x + 1",
+        "y = x + 1 = 4",
+        "y = 4",
+        "y = x + 1 = 3",
+        "y = 3",
+        "0 = 1"
+      ],
+      "responses": [
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "contracts": [
+        "W01",
+        "S04"
+      ],
+      "name": "same-runtime-wd-rollback",
+      "frames": [
+        "1 / 0 = 1 / 0",
+        "let q = 1 / 0",
+        "let q = 1",
+        "q = 1",
+        "0 = 1"
+      ],
+      "responses": [
+        false,
+        false,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "contracts": [
+        "S02"
+      ],
+      "name": "same-runtime-sketch-binding",
+      "frames": [
+        "sketch:\n    let local = 2\n    local = 2",
+        "local = 2"
+      ],
+      "responses": [
+        true
+      ],
+      "error": true
+    }
+  ]
+}

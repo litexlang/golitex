@@ -2,11 +2,10 @@
 //!
 //! A closed numeric expression is a pure number-literal arithmetic tree:
 //! - leaves are only decimal Number values (e.g. `2`, `2.5`);
-//! - interior nodes are arithmetic / integer / detectable exp-log ops that
-//!   evaluate under evaluate_obj_to_normalized_decimal_number when defined:
+//! - interior nodes are arithmetic / integer / exp-log ops:
 //!   `+ - * / pow abs min max floor ceil sign`,
 //!   `% quot gcd lcm factorial` (integer-domain gate at classify time),
-//!   `sqrt` / `log` (children closed; fold only when perfect square / integer power).
+//!   `sqrt` / `log` (children closed; exact support depends on the calculator).
 //!
 //! It has no free identifiers, trig / set ops, or other Obj constructors.
 //!
@@ -17,15 +16,17 @@
 //!   `examples/stmt_nodes/command/eval_closed_numeric_complex.lit`
 //! e.g. `sqrt(4) * log(2, 8) + floor(2.5)! = 8`,
 //!      `((-7) % 3)^log(2, 4) + sqrt(0.36) = 4.6`.
-//! Examples that are not closed: `a + 1`, `2.5 % 1`, `sin(0)`, `sqrt(2)` (fold fails).
+//! Examples that are not closed: `a + 1`, `2.5 % 1`, `sin(0)`.
+//! `sqrt(2)` is closed and remains an exact radical; `log(2,3)` is closed
+//! but this calculator declines its irrational value. Classification does not
+//! certify source well-definedness or guarantee evaluation succeeds.
 //!
 //! Obj still owns the language surface. This enum is a classified view:
 //! try_from_obj succeeds only after the closed-numeric check, so a value of
 //! type ClosedNumericExpr already means "this tree is closed numeric".
-//! Actual numeric folding is not duplicated here: callers use the small shared
-//! calculator `evaluate_obj_to_normalized_decimal_number` (equality, order,
-//! membership, eval, and integer-domain gates). That single leaf is the
-//! maintainable core of closed-numeric runtime behavior.
+//! Numeric folding is not duplicated here: the shared decimal, rational,
+//! radical and complex producers own exact values. Integer-domain gates use
+//! the decimal entry, including its terminating exact-rational fallback.
 //! Closed-numeric store / rewrite paths should take this type (or produce it
 //! at the boundary) instead of re-testing Obj ad hoc.
 

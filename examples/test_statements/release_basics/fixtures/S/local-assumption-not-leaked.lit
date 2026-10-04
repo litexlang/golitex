@@ -1,0 +1,7 @@
+claim:
+    ? forall x R:
+        x = 0
+        =>:
+            x = 0
+    x = 0
+0 = 1

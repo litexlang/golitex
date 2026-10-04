@@ -1,0 +1,13 @@
+# Before: the final by-def failed at the equivalent callable codomain.
+# have fn family(alpha {1}) power_set({1}) = {1}
+# have fn choice(alpha {1}) {1} = 1
+# forall alpha {1}:
+#     choice(alpha) $in family(alpha)
+# by def $is_choice_function_for({1}, power_set({1}), family, choice)
+# Now: retain both callable signatures, prove equal carriers, check pointwise body.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_definition/builtin_choice_function.lit
+have fn family(alpha {1}) power_set({1}) = {1}
+have fn choice(alpha {1}) {1} = 1
+forall alpha {1}:
+    choice(alpha) $in family(alpha)
+by def $is_choice_function_for({1}, power_set({1}), family, choice)

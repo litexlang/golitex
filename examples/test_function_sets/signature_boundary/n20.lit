@@ -1,0 +1,4 @@
+# N20: A parameter-dependent singleton is not a fixed return carrier
+# Intended: reject; run via examples/test_function_sets/run.py
+
+have fn invalid(x R) {x} = x

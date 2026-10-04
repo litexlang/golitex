@@ -1,0 +1,9 @@
+# D12: Explicit equality exposes template-selected function-space membership
+# Intended: accept; run via examples/test_function_sets/run.py
+
+template<A, B nonempty_set>:
+    have maps set = fn(x A) B
+\maps<R, Z> = fn(x R) Z
+fn(x R) Z {0} $in \maps<R, Z>
+have f \maps<R, Z> = fn(x R) Z {0}
+f(2) = 0

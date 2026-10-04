@@ -53,6 +53,7 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `definition/def_struct*.lit` | Struct carrier | `struct Point:` fields |
 | `definition/def_template*.lit` | Parameterized def | `template<A set>:` one body |
 | [definition/template_definition_facts.lit](definition/template_definition_facts.lit) | Publish template definition facts | `forall` over template arguments, with body and header premises retained |
+| [definition/template_alias_struct_tuple.lit](definition/template_alias_struct_tuple.lit) | Template aliases and named tuple results | Checked callable signatures and stored value paths reach struct fields |
 | `definition/def_thm.lit` | Named theorem | `thm name: ? fact` + proof |
 | `definition/axiom.lit` | Named axiom (trusted forall) | `axiom name: ? forall …` |
 | `definition/def_strategy.lit` | Named strategy (proved forall) | `strategy name: ? forall …` + proof; later `$P` via known_strategy |
@@ -139,7 +140,7 @@ instance. Its explicit smaller-call equality is a proof step; the existing
 proof search may still need that step for recursive arithmetic evaluation.
 
 Native builtin release tracers: `release_and_expand/builtin_thm/` contains one
-strict runnable example for each of the 25 reserved theorem names. The
+strict runnable example for each of the 28 reserved theorem names. The
 examples verify the actual required premises before release and then reuse
 the conclusion. Parser migration tracers include
 `fact/inline_forall_premise.lit` and

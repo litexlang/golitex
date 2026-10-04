@@ -1,0 +1,6 @@
+# N04: Invalid value template argument
+# Intended: reject; run via examples/test_function_sets/run.py
+
+template<a R>:
+    have fn shift(x R) R = x + a
+\shift<i>(2) = \shift<i>(2)

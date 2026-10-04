@@ -1,0 +1,8 @@
+have fn next(x R) R = x + 1
+thm next_rule:
+    ? forall x R:
+        next(x) = x + 1
+    next(x) = x + 1
+next(2) = 2 + 1 = 3
+release thm next_rule(2)
+next(2) = 3

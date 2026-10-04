@@ -36,3 +36,5 @@ pub mod trig_bounds;
 pub use search_atomic_except_equality_fact_proof_by_builtin_rule_result::AtomicExceptEqualityFactSearchProofByBuiltinRule;
 
 pub mod order_complement;
+
+pub mod closed_subtraction_bound;

@@ -1,0 +1,4 @@
+# N02: Function body outside its declared codomain
+# Intended: reject; run via examples/test_function_sets/run.py
+
+have fn invalid(x R) N = x

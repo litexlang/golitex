@@ -1,0 +1,429 @@
+[
+  {
+    "object": "sum",
+    "code": "# AST: Obj::IteratedOperator::Sum\n# Run: target/release/litex -f examples/test_objs/sum.lit\n# Cases use discarded sketch scopes; no cross-case facts.\n\n# P01: sum(1, 1, fn(x Z) Z {x}) = 1\nsketch:\n    sum(1, 1, fn(x Z) Z {x}) = 1\n\n# P02: sum(-2, -2, fn(x Z) Z {x}) = -2\nsketch:\n    sum(-2, -2, fn(x Z) Z {x}) = -2\n\n# P03: sum(1, 3, fn(x Z) Z {x}) = 6\nsketch:\n    sum(1, 3, fn(x Z) Z {x}) = 6\n\n# P04: sum(1, 3, fn(x Z) Z {2}) = 6\nsketch:\n    sum(1, 3, fn(x Z) Z {2}) = 6\n\n# P05: sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + 3\nsketch:\n    sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + 3\n\n# P06: sum(0, 0, fn(x Z) Z {0}) = 0\nsketch:\n    sum(0, 0, fn(x Z) Z {0}) = 0\n\n# P101: negative endpoints and exact fractions\nsketch:\n    sum(-2,2,fn(k Z) Z {k*k}) = 10\n    sum(1,3,fn(k Z) Q {1/3}) = 1\n\n# P102: nested product and outer arithmetic\nsketch:\n    sum(1,3,fn(k N+) N+ {product(1,k,fn(j N+) N+ {j})}) = 9\n    sum(1,3,fn(k Z) Z {k}) + product(1,3,fn(k Z) Z {k}) = 12\n\n# P103: named function expansion\nsketch:\n    have fn square(k Z) Z = k*k\n    sum(1,3,square) = 14\n    eval sum(1,3,square)\n\n# P104: binder substitution retains outer free value\nsketch:\n    sum(1,3,fn(x Z) Z {sum(1,2,fn(y Z) Z {x+y})}) = 21\n\n# P105: every index satisfies the callable predicate\nsketch:\n    sum(1,3,fn(k Z:k!=0) Z {1}) = 3\n\n# P106: algorithm terms use proved case equations\nsketch:\n    algo flag(x R) R by cases:\n        case x = 0: 0\n        case x != 0: 1\n    sum(0,3,flag) = 3\n\n# P107: symbolic constant, addition, subtraction and scalar\nsketch:\n    have n N+\n    have c R\n    have f,g fn(k Z) R\n    sum(1,n,fn(k Z) R {c}) = n*c\n    sum(1,n,fn(k Z) R {f(k)+g(k)}) = sum(1,n,f)+sum(1,n,g)\n    sum(1,n,fn(k Z) R {f(k)-g(k)}) = sum(1,n,f)-sum(1,n,g)\n    sum(1,n,fn(k Z) R {c*f(k)}) = c*sum(1,n,f)\n\n# P108: symbolic adjacent partition and pointwise congruence\nsketch:\n    have n N+\n    have f fn(k Z) R\n    sum(1,n+1,f) = sum(1,n,f)+sum(n+1,n+1,f)\n    sum(1,n,fn(k Z) Z {k+k}) = sum(1,n,fn(j Z) Z {2*j})\n\n# P109: integer shift with legal source and target ranges\nsketch:\n    have f fn(k Z) R\n    forall a,b,t Z:\n        a <= b\n        a+t <= b+t\n        =>:\n            sum(a,b,fn(k Z) R {f(k+t)}) = sum(a+t,b+t,f)\n\n# P110: known numeric endpoint\nsketch:\n    have end Z = 3\n    sum(1,end,fn(k Z) Z {k}) = 6\n",
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-f",
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/examples/test_objs/sum.lit"
+    ],
+    "returncode": 1,
+    "output": {
+      "kind": "run",
+      "success": false,
+      "target": "file",
+      "path": "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/examples/test_objs/sum.lit",
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "sketch",
+          "why_failed": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block",
+            "phase": "sketch",
+            "failure": {
+              "step_index": 1,
+              "result": {
+                "success": false,
+                "statement": "sum(0, 3, flag) = 3",
+                "why_failed": {
+                  "phase": "search_proof",
+                  "goal": "sum(0, 3, flag) = 3"
+                },
+                "stores": [],
+                "infers": []
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "sketch",
+          "why_failed": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block",
+            "phase": "sketch",
+            "failure": {
+              "step_index": 3,
+              "result": {
+                "success": false,
+                "statement": "sum(1, n, fn (k Z) R{c}) = n * c",
+                "why_failed": {
+                  "phase": "search_proof",
+                  "goal": "sum(1, n, fn (k Z) R{c}) = n * c"
+                },
+                "stores": [],
+                "infers": []
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "sketch",
+          "why_failed": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block",
+            "phase": "sketch",
+            "failure": {
+              "step_index": 3,
+              "result": {
+                "success": false,
+                "statement": "sum(1, n, fn (k Z) Z{k + k}) = sum(1, n, fn (j Z) Z{2 * j})",
+                "why_failed": {
+                  "phase": "search_proof",
+                  "goal": "sum(1, n, fn (k Z) Z{k + k}) = sum(1, n, fn (j Z) Z{2 * j})"
+                },
+                "stores": [],
+                "infers": []
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "sketch",
+          "why_failed": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block",
+            "phase": "sketch",
+            "failure": {
+              "step_index": 1,
+              "result": {
+                "success": false,
+                "statement": "forall a, b, t Z:\n    a <= b\n    a + t <= b + t\n    =>:\n        sum(a, b, fn (k Z) R{f(k + t)}) = sum(a + t, b + t, f)",
+                "why_failed": {
+                  "phase": "search_proof",
+                  "goal": "forall a, b, t Z:\n    a <= b\n    a + t <= b + t\n    =>:\n        sum(a, b, fn (k Z) R{f(k + t)}) = sum(a + t, b + t, f)"
+                },
+                "stores": [],
+                "infers": []
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": false,\n  \"target\": \"file\",\n  \"path\": \"/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/examples/test_objs/sum.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": false,\n      \"statement\": \"sketch\",\n      \"why_failed\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\",\n        \"phase\": \"sketch\",\n        \"failure\": {\n          \"step_index\": 1,\n          \"result\": {\n            \"success\": false,\n            \"statement\": \"sum(0, 3, flag) = 3\",\n            \"why_failed\": {\n              \"phase\": \"search_proof\",\n              \"goal\": \"sum(0, 3, flag) = 3\"\n            },\n            \"stores\": [],\n            \"infers\": []\n          }\n        }\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": false,\n      \"statement\": \"sketch\",\n      \"why_failed\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\",\n        \"phase\": \"sketch\",\n        \"failure\": {\n          \"step_index\": 3,\n          \"result\": {\n            \"success\": false,\n            \"statement\": \"sum(1, n, fn (k Z) R{c}) = n * c\",\n            \"why_failed\": {\n              \"phase\": \"search_proof\",\n              \"goal\": \"sum(1, n, fn (k Z) R{c}) = n * c\"\n            },\n            \"stores\": [],\n            \"infers\": []\n          }\n        }\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": false,\n      \"statement\": \"sketch\",\n      \"why_failed\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\",\n        \"phase\": \"sketch\",\n        \"failure\": {\n          \"step_index\": 3,\n          \"result\": {\n            \"success\": false,\n            \"statement\": \"sum(1, n, fn (k Z) Z{k + k}) = sum(1, n, fn (j Z) Z{2 * j})\",\n            \"why_failed\": {\n              \"phase\": \"search_proof\",\n              \"goal\": \"sum(1, n, fn (k Z) Z{k + k}) = sum(1, n, fn (j Z) Z{2 * j})\"\n            },\n            \"stores\": [],\n            \"infers\": []\n          }\n        }\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": false,\n      \"statement\": \"sketch\",\n      \"why_failed\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\",\n        \"phase\": \"sketch\",\n        \"failure\": {\n          \"step_index\": 1,\n          \"result\": {\n            \"success\": false,\n            \"statement\": \"forall a, b, t Z:\\n    a <= b\\n    a + t <= b + t\\n    =>:\\n        sum(a, b, fn (k Z) R{f(k + t)}) = sum(a + t, b + t, f)\",\n            \"why_failed\": {\n              \"phase\": \"search_proof\",\n              \"goal\": \"forall a, b, t Z:\\n    a <= b\\n    a + t <= b + t\\n    =>:\\n        sum(a, b, fn (k Z) R{f(k + t)}) = sum(a + t, b + t, f)\"\n            },\n            \"stores\": [],\n            \"infers\": []\n          }\n        }\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": ""
+  },
+  {
+    "object": "product",
+    "code": "# AST: Obj::IteratedOperator::Product\n# Run: target/release/litex -f examples/test_objs/product.lit\n# Cases use discarded sketch scopes; no cross-case facts.\n\n# P01: product(1, 1, fn(x Z) Z {x}) = 1\nsketch:\n    product(1, 1, fn(x Z) Z {x}) = 1\n\n# P02: product(-2, -2, fn(x Z) Z {x}) = -2\nsketch:\n    product(-2, -2, fn(x Z) Z {x}) = -2\n\n# P03: product(1, 3, fn(x Z) Z {x}) = 6\nsketch:\n    product(1, 3, fn(x Z) Z {x}) = 6\n\n# P04: product(1, 3, fn(x Z) Z {2}) = 8\nsketch:\n    product(1, 3, fn(x Z) Z {2}) = 8\n\n# P05: product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * 3\nsketch:\n    product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * 3\n\n# P06: product(0, 0, fn(x Z) Z {0}) = 0\nsketch:\n    product(0, 0, fn(x Z) Z {0}) = 0\n\n# P101: negative factors, zero and exact fraction\nsketch:\n    product(-2,2,fn(k Z) Z {k}) = 0\n    product(1,3,fn(k Z) Q {1/2}) = 1/8\n\n# P102: nested sum and named function\nsketch:\n    product(1,3,fn(k N+) N+ {sum(1,k,fn(j N+) N+ {j})}) = 18\n    have fn square(k Z) Z = k*k\n    product(1,3,square) = 36\n    eval product(1,3,square)\n\n# P103: symbolic constant and adjacent partition\nsketch:\n    have n N+\n    have c R*\n    have f fn(k Z) R\n    product(1,n,fn(k Z) R* {c}) = c^n\n    product(1,n+1,f) = product(1,n,f)*product(n+1,n+1,f)\n\n# P104: pointwise congruence and legal shift\nsketch:\n    have f fn(k Z) R\n    forall a,b,t Z:\n        a <= b\n        a+t <= b+t\n        =>:\n            product(a,b,fn(k Z) R {f(k+t)}) = product(a+t,b+t,f)\n\n# P105: positive-natural closure\nsketch:\n    product(1,3,fn(k N+) N+ {k}) $in N+\n",
+    "command": [
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/target/release/litex",
+      "-f",
+      "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/examples/test_objs/product.lit"
+    ],
+    "returncode": 1,
+    "output": {
+      "kind": "run",
+      "success": false,
+      "target": "file",
+      "path": "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/examples/test_objs/product.lit",
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "sketch",
+          "why_failed": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block",
+            "phase": "sketch",
+            "failure": {
+              "step_index": 3,
+              "result": {
+                "success": false,
+                "statement": "product(1, n, fn (k Z) R*{c}) = c ^ n",
+                "why_failed": {
+                  "phase": "search_proof",
+                  "goal": "product(1, n, fn (k Z) R*{c}) = c ^ n"
+                },
+                "stores": [],
+                "infers": []
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": false,
+          "statement": "sketch",
+          "why_failed": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block",
+            "phase": "sketch",
+            "failure": {
+              "step_index": 1,
+              "result": {
+                "success": false,
+                "statement": "forall a, b, t Z:\n    a <= b\n    a + t <= b + t\n    =>:\n        product(a, b, fn (k Z) R{f(k + t)}) = product(a + t, b + t, f)",
+                "why_failed": {
+                  "phase": "search_proof",
+                  "goal": "forall a, b, t Z:\n    a <= b\n    a + t <= b + t\n    =>:\n        product(a, b, fn (k Z) R{f(k + t)}) = product(a + t, b + t, f)"
+                },
+                "stores": [],
+                "infers": []
+              }
+            }
+          },
+          "stores": [],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "sketch",
+          "proof_method": {
+            "type": "proof_block",
+            "rule_name": "Sketch",
+            "message": "Run a sketch proof block"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "stdout": "{\n  \"kind\": \"run\",\n  \"success\": false,\n  \"target\": \"file\",\n  \"path\": \"/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-03/src-basic-release-audit/snapshot/examples/test_objs/product.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": false,\n      \"statement\": \"sketch\",\n      \"why_failed\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\",\n        \"phase\": \"sketch\",\n        \"failure\": {\n          \"step_index\": 3,\n          \"result\": {\n            \"success\": false,\n            \"statement\": \"product(1, n, fn (k Z) R*{c}) = c ^ n\",\n            \"why_failed\": {\n              \"phase\": \"search_proof\",\n              \"goal\": \"product(1, n, fn (k Z) R*{c}) = c ^ n\"\n            },\n            \"stores\": [],\n            \"infers\": []\n          }\n        }\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": false,\n      \"statement\": \"sketch\",\n      \"why_failed\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\",\n        \"phase\": \"sketch\",\n        \"failure\": {\n          \"step_index\": 1,\n          \"result\": {\n            \"success\": false,\n            \"statement\": \"forall a, b, t Z:\\n    a <= b\\n    a + t <= b + t\\n    =>:\\n        product(a, b, fn (k Z) R{f(k + t)}) = product(a + t, b + t, f)\",\n            \"why_failed\": {\n              \"phase\": \"search_proof\",\n              \"goal\": \"forall a, b, t Z:\\n    a <= b\\n    a + t <= b + t\\n    =>:\\n        product(a, b, fn (k Z) R{f(k + t)}) = product(a + t, b + t, f)\"\n            },\n            \"stores\": [],\n            \"infers\": []\n          }\n        }\n      },\n      \"stores\": [],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"sketch\",\n      \"proof_method\": {\n        \"type\": \"proof_block\",\n        \"rule_name\": \"Sketch\",\n        \"message\": \"Run a sketch proof block\"\n      },\n      \"stores\": [],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+    "stderr": ""
+  }
+]

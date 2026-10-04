@@ -31,3 +31,12 @@ pub(in crate::json_output) use verify::project_verify_fact;
 pub(in crate::json_output) use stmt::{project_def_prop_failure, project_cases_definition_failure};
 
 mod closed_calculation;
+
+mod structural_membership;
+
+mod witness_failure;
+
+mod proof_block_failure;
+pub(in crate::json_output) use proof_block_failure::{project_claim_failure, project_extension_failure, project_cases_failure, project_contra_failure};
+
+mod function_body;

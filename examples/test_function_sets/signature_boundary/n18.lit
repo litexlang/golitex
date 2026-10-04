@@ -1,0 +1,4 @@
+# N18: Outer parameter cannot define the return carrier
+# Intended: reject; run via examples/test_function_sets/run.py
+
+let Invalid = fn(S power_set(R)) fn(x S) R

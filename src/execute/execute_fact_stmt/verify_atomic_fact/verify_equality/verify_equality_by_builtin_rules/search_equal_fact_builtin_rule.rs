@@ -494,6 +494,8 @@ fn map_equality_identities_wave13_proof(
         W::PowerSetOfEmpty(p) => EqualitySearchProofByBuiltinRule::PowerSetOfEmpty(p),
         W::PowerSetOfSingleton(p) => EqualitySearchProofByBuiltinRule::PowerSetOfSingleton(p),
         W::FamilyUnionOfEmpty(p) => EqualitySearchProofByBuiltinRule::FamilyUnionOfEmpty(p),
+        W::FamilyUnionOfSingleton(p) => EqualitySearchProofByBuiltinRule::FamilyUnionOfSingleton(p),
+        W::FamilyUnionOfPowerSet(p) => EqualitySearchProofByBuiltinRule::FamilyUnionOfPowerSet(p),
         W::CartWithEmptyFactor(p) => EqualitySearchProofByBuiltinRule::CartWithEmptyFactor(p),
         W::UnionOverIntersectDistributive(p) => {
             EqualitySearchProofByBuiltinRule::UnionOverIntersectDistributive(p)

@@ -40,4 +40,7 @@ sketch:
 
 # P06: not 2 $in set_minus({1, 2}, {2})
 sketch:
-    not 2 $in set_minus({1, 2}, {2})
+    by contra:
+        ? not 2 $in set_minus({1, 2}, {2})
+        not 2 $in {2}
+        impossible not 2 $in {2}

@@ -1,0 +1,65 @@
+{
+  "kind": "litex_kb_manifest",
+  "abi": "4",
+  "fingerprint": "16dd5d6da5b9cf80",
+  "self_mod_id": 0,
+  "mod_id_to_path": [
+    [
+      0,
+      "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/module_manager/export_order_repo/A"
+    ]
+  ],
+  "exports": [
+    {
+      "export_file_id": 0,
+      "name": "chap2",
+      "relative_path": "chap2.lit",
+      "global_ids_at_enter": {
+        "next_fact_id": 1,
+        "next_well_definedness_id": 1,
+        "next_prop_rewrite_property_id": 1,
+        "next_identifier_id": 1
+      },
+      "global_ids_at_leave": {
+        "next_fact_id": 5,
+        "next_well_definedness_id": 4,
+        "next_prop_rewrite_property_id": 1,
+        "next_identifier_id": 2
+      }
+    },
+    {
+      "export_file_id": 1,
+      "name": "chap3",
+      "relative_path": "chap3.lit",
+      "global_ids_at_enter": {
+        "next_fact_id": 5,
+        "next_well_definedness_id": 4,
+        "next_prop_rewrite_property_id": 1,
+        "next_identifier_id": 2
+      },
+      "global_ids_at_leave": {
+        "next_fact_id": 18,
+        "next_well_definedness_id": 7,
+        "next_prop_rewrite_property_id": 1,
+        "next_identifier_id": 3
+      }
+    },
+    {
+      "export_file_id": 2,
+      "name": "main",
+      "relative_path": "main.lit",
+      "global_ids_at_enter": {
+        "next_fact_id": 18,
+        "next_well_definedness_id": 7,
+        "next_prop_rewrite_property_id": 1,
+        "next_identifier_id": 3
+      },
+      "global_ids_at_leave": {
+        "next_fact_id": 27,
+        "next_well_definedness_id": 8,
+        "next_prop_rewrite_property_id": 1,
+        "next_identifier_id": 3
+      }
+    }
+  ]
+}

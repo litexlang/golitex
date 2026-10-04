@@ -7,8 +7,8 @@ use crate::ast::obj::{
     Abs, Add, ArithmeticOperator, Gcd, IntegerOperator, Literal, Mod, Mul, Neg, Number, Obj, Sign,
     Sub,
 };
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
+use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -22,7 +22,8 @@ pub struct GcdDividesArgumentBuiltinRuleProof {}
 //          (when WD of the mod expression succeeds).
 pub struct ProductModFactorZeroBuiltinRuleProof {}
 
-// Builtin EqualityFromTwoSidedWeakOrder: a = b from a <= b and b <= a.
+// Builtin EqualityFromTwoSidedWeakOrder: a = b from both weak-order directions.
+// Either direction may be stored as <= or its converse >=.
 // Example: have a R; have b R; trust a <= b; trust b <= a; a = b.
 pub struct EqualityFromTwoSidedWeakOrderBuiltinRuleProof {
     pub left_le_right_proof: AtomicExceptEqualityFactKnownProof,
@@ -86,9 +87,11 @@ impl Runtime {
         let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if gcd_divides_argument_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave7BuiltinRuleProof::GcdDividesArgument(
-                    GcdDividesArgumentBuiltinRuleProof {},
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave7BuiltinRuleProof::GcdDividesArgument(
+                        GcdDividesArgumentBuiltinRuleProof {},
+                    ),
+                ));
             }
             if product_mod_factor_zero_shape(left, right) {
                 return Ok(Some(
@@ -98,7 +101,9 @@ impl Runtime {
                 ));
             }
             if let Some(p) = self.try_sign_of_negation(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave7BuiltinRuleProof::SignOfNegation(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave7BuiltinRuleProof::SignOfNegation(p),
+                ));
             }
             if let Some(p) = self.try_sign_times_abs_equals_arg(left, right)? {
                 return Ok(Some(
@@ -111,7 +116,9 @@ impl Runtime {
                 ));
             }
             if let Some(p) = self.try_sign_of_product(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave7BuiltinRuleProof::SignOfProduct(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave7BuiltinRuleProof::SignOfProduct(p),
+                ));
             }
         }
         if let Some(p) = self.try_equality_from_two_sided_weak_order(fact, child.clone())? {
@@ -125,9 +132,9 @@ impl Runtime {
             ));
         }
         if let Some(p) = self.try_zero_product_cancel(fact, child.clone())? {
-            return Ok(Some(EqualityIdentitiesWave7BuiltinRuleProof::ZeroProductCancel(
-                p,
-            )));
+            return Ok(Some(
+                EqualityIdentitiesWave7BuiltinRuleProof::ZeroProductCancel(p),
+            ));
         }
         if let Some(p) = self.try_subtraction_from_known_addition(fact, child)? {
             return Ok(Some(
@@ -222,10 +229,7 @@ impl Runtime {
         let Some(arg) = match_sign(left) else {
             return Ok(None);
         };
-        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-            left: a,
-            right: b,
-        })) = arg
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: a, right: b })) = arg
         else {
             return Ok(None);
         };
@@ -258,10 +262,16 @@ impl Runtime {
     ) -> RuntimeResult<Option<EqualityFromTwoSidedWeakOrderBuiltinRuleProof>> {
         // Only cite already-known weak orders. Full verify_fact here re-enters
         // equality search and can stack-overflow on goals like min(a,a)=a.
-        let Some(left_le_right_proof) = self.known_less_equal_proof(&fact.left, &fact.right) else {
+        let Some(left_le_right_proof) = self
+            .known_less_equal_proof(&fact.left, &fact.right)
+            .or_else(|| self.known_greater_equal_proof(&fact.right, &fact.left))
+        else {
             return Ok(None);
         };
-        let Some(right_le_left_proof) = self.known_less_equal_proof(&fact.right, &fact.left) else {
+        let Some(right_le_left_proof) = self
+            .known_less_equal_proof(&fact.right, &fact.left)
+            .or_else(|| self.known_greater_equal_proof(&fact.left, &fact.right))
+        else {
             return Ok(None);
         };
         Ok(Some(EqualityFromTwoSidedWeakOrderBuiltinRuleProof {
@@ -326,8 +336,7 @@ impl Runtime {
                     else {
                         continue;
                     };
-                    for (factor, other) in
-                        [(f1.as_ref(), f2.as_ref()), (f2.as_ref(), f1.as_ref())]
+                    for (factor, other) in [(f1.as_ref(), f2.as_ref()), (f2.as_ref(), f1.as_ref())]
                     {
                         if factor.ir() != target.ir() {
                             continue;
@@ -338,7 +347,8 @@ impl Runtime {
                             right: zero.clone(),
                             line_file: None,
                         }));
-                        let nz_proof = self.verify_builtin_rule_premise(&nonzero, verify_state.clone())?;
+                        let nz_proof =
+                            self.verify_builtin_rule_premise(&nonzero, verify_state.clone())?;
                         if nz_proof.is_failed() {
                             continue;
                         }
@@ -348,7 +358,8 @@ impl Runtime {
                             right: zero.clone(),
                             line_file: None,
                         }));
-                        let pz_proof = self.verify_builtin_rule_premise(&product_zero, verify_state.clone())?;
+                        let pz_proof =
+                            self.verify_builtin_rule_premise(&product_zero, verify_state.clone())?;
                         if pz_proof.is_failed() {
                             continue;
                         }
@@ -367,11 +378,15 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubtractionFromKnownAdditionBuiltinRuleProof>> {
+        let zero = zero_obj();
         for (target, other) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
-            let Some((c, b)) = match_sub(other) else {
+            let Some((c, b)) =
+                match_sub(other).or_else(|| match_negation(other).map(|b| (&zero, b)))
+            else {
                 continue;
             };
-            // target = c - b  from  target + b = c  (or b + target = c)
+            // target = c - b from target + b = c (or b + target = c).
+            // Negation is the same additive inverse when c = 0.
             let sum1 = Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
                 left: Box::new(target.clone()),
                 right: Box::new(b.clone()),
@@ -420,10 +435,7 @@ fn product_mod_factor_zero_shape(remainder: &Obj, zero: &Obj) -> bool {
     let Some((dividend, modulus)) = match_mod(remainder) else {
         return false;
     };
-    let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-        left: a,
-        right: b,
-    })) = dividend
+    let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: a, right: b })) = dividend
     else {
         return false;
     };
@@ -529,3 +541,11 @@ fn is_one_obj(obj: &Obj) -> bool {
         Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "1"
     )
 }
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/weak_order_antisymmetry/tests.rs"]
+mod weak_order_antisymmetry_tests;
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/additive_inverse_cancellation/tests.rs"]
+mod additive_inverse_cancellation_tests;

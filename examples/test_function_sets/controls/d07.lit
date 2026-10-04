@@ -1,0 +1,9 @@
+# D07: Concrete struct containing a named function has a callable field
+# Intended: accept; run via examples/test_function_sets/run.py
+
+struct Box:
+    op fn(x R) R
+    tag N
+have fn step(x R) R = x + 1
+have box &Box = (step, 0)
+box.op(2) $in R

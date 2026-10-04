@@ -1,0 +1,22 @@
+# Tracer: a stored standard carrier supplies its intrinsic supersets.
+# Before (rejected):
+# forall x Z:
+#     x < 2
+#     =>:
+#         not x >= 2
+# Former behavior: restricted order premises could not cite x in R from x in Z.
+# Now: the stored source membership is cited; no child proof search is opened.
+forall x Z:
+    x < 2
+    =>:
+        not x >= 2
+
+forall x Z:
+    x < 2 or x >= 2
+
+have integer_input Z
+integer_input $in R
+
+# Boundary: R to Q, C to R and new composite arithmetic at this stage reject.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/atomic/by_known_special_property/standard_numeric_superset.lit
+# Tests: known_numeric_carrier; implementation: known-special-property search.

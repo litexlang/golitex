@@ -187,7 +187,13 @@ fn predicate_domain_wd_dimension_codomain_requires_a_valid_shape() {
         "{:?}",
         crate::json_output::project_stmt_detailed(&run.statement_results[2], &rt)
     );
-    assert!(detailed.contains("CartDimInNatural"), "{detailed}");
+    // Both routes retain the numeric codomain only after cart shape WD.
+    assert!(
+        detailed.contains("CartDimInNatural")
+            || (detailed.contains("by_structural_membership")
+                && detailed.contains("intrinsic_codomain")),
+        "{detailed}"
+    );
 }
 
 #[test]

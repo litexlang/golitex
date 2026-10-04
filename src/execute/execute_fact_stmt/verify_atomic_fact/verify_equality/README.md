@@ -53,7 +53,13 @@ Cartesian membership proves `p = (p[1],p[2])`; a stored path to `(a,b)` proves
 substitution. Application WD precedes this step, and all candidate WD
 signatures must agree with the selected definition's full signature, including
 domains. A signature ambiguity or non-tuple body misses without recursive
-unfolding. Tuple shape also supplies atomic `is_tuple`, literal index bounds,
+unfolding. Checked template declarations participate through equality aliases:
+the declaration signature and every competing stored/template signature must
+agree. `FnTupleValue` reads one tuple-valued application reached by a stored
+subject path, and `FnTupleProjection` can use that path for a named result.
+Neither route publishes a value equality or restarts definition search. See
+[the template alias tracer](../../../../../examples/stmt_nodes/definition/template_alias_struct_tuple.lit).
+Tuple shape also supplies atomic `is_tuple`, literal index bounds,
 coordinate carrier membership, and equality `tuple_dim(p) = n`.
 
 The shared reader in `known_tuple.rs` only traverses stored equality edges

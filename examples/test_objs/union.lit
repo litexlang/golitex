@@ -4,7 +4,30 @@
 
 # P01: union({1}, {2}) = {1, 2}
 sketch:
-    by extension union({1}, {2}) = {1, 2}
+    by extension:
+        ? union({1}, {2}) = {1, 2}
+        claim:
+            ? forall x union({1}, {2}):
+                x $in {1, 2}
+            x $in {1} or x $in {2}
+            by cases:
+                ? x $in {1, 2}
+                case x $in {1}:
+                    x = 1
+                    x $in {1, 2}
+                case x $in {2}:
+                    x = 2
+                    x $in {1, 2}
+        claim:
+            ? forall x {1, 2}:
+                x $in union({1}, {2})
+            x = 1 or x = 2
+            by cases:
+                ? x $in union({1}, {2})
+                case x = 1:
+                    x $in union({1}, {2})
+                case x = 2:
+                    x $in union({1}, {2})
 
 # P02: union({}, {1}) = {1}
 sketch:
@@ -20,7 +43,18 @@ sketch:
 
 # P05: not 3 $in union({1}, {2})
 sketch:
-    not 3 $in union({1}, {2})
+    by contra:
+        ? not 3 $in union({1}, {2})
+        claim:
+            ? 1 = 0
+            3 $in {1} or 3 $in {2}
+            by cases:
+                ? 1 = 0
+                case 3 $in {1}:
+                    impossible 3 $in {1}
+                case 3 $in {2}:
+                    impossible 3 $in {2}
+        impossible 1 = 0
 
 # P06: union(A, B) = union(B, A)
 sketch:

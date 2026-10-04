@@ -1,0 +1,5 @@
+# N14: Outer function guard is not dropped
+# Intended: reject; run via examples/test_function_sets/run.py
+
+have fn choose(k R: k > 0) fn(x R) R = fn(x R) R {x + k}
+choose(0)(3) = choose(0)(3)

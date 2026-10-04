@@ -1,0 +1,11 @@
+# S04: Alias of a callable function field retains its signature
+# Intended: accept; run via examples/test_function_sets/run.py
+
+struct Box:
+    op fn(x R) R
+    tag N
+thm alias:
+    ? forall b &Box, x R:
+        b.op(x) $in R
+    let call = b.op
+    call(x) = b.op(x)

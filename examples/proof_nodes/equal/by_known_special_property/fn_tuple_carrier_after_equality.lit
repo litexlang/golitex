@@ -1,0 +1,16 @@
+# Tracer: a tuple equality must not shadow the function's Cartesian codomain.
+# Before: with the vec equality below, the final dot expansion failed.
+# vec(a,b) = (b[1]-a[1],b[2]-a[2])
+# dot(vec(a,b),vec(a,b)) = vec(a,b)[1]*vec(a,b)[1] + vec(a,b)[2]*vec(a,b)[2]
+# The tuple-shape reader returned TupleEquality, whose cart() was None,
+# before reading the existing function codomain. Residual equality WD failed.
+# Now: carrier-bearing evidence is tried before dimension-only fallback.
+have fn vec(A,B cart(R,R)) cart(R,R) = (B[1]-A[1],B[2]-A[2])
+have fn dot(u,v cart(R,R)) R = u[1]*v[1]+u[2]*v[2]
+have a,b cart(R,R)
+vec(a,b) = (b[1]-a[1],b[2]-a[2])
+vec(a,b)[1] = b[1]-a[1]
+vec(a,b)[2] = b[2]-a[2]
+dot(vec(a,b),vec(a,b)) = vec(a,b)[1]*vec(a,b)[1] + vec(a,b)[2]*vec(a,b)[2]
+# Boundary: out-of-range projections and incompatible signatures still reject.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/equal/by_known_special_property/fn_tuple_carrier_after_equality.lit

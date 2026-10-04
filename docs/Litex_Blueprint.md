@@ -27,6 +27,7 @@ Writing boundary: the first three layers are Litex's scientific core; the fourth
   - [1.1 Fact-Oriented: Writing “What Holds” into the Source](#fact-oriented-interface)
   - [1.2 What Each Statement Leaves Behind: Checkable Knowledge Records](#execution-model)
 - [2. Start from Familiar Mathematics: Litex’s Set-Theoretic Foundation](#set-theory)
+  - [2.1 The Design Difficulty: Making Concrete Mathematics a Working Language](#design-difficulty)
 - [3. Let Established Knowledge Grow: Bottom-Up Proofs](#bottom-up)
 - [4. Humans, AI, and Litex Advance Proofs Together](#interaction-loop)
 - [5. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)](#compatibility)
@@ -236,7 +237,7 @@ This is not only an interface preference; it also saves a real cost: users need 
 
 #### How Litex Helps Users Search Verification Routes by Fact Shape
 
-When verifying a fact, Litex is not “inventing a proof.” A closer picture is constrained lookup: split the current goal into a predicate and an argument shape, then search the context and rule tables—somewhat like Ctrl+F by shape. The predicate name of an atomic fact (such as `>=`, `$is_positive`, or `$in`) is the key into those tables; after a hit, the kernel instantiates or replaces and checks that premises are ready; if nothing matches, it stops at the current goal. **The essence is matching and replacement, not free reasoning.** Precisely because it need not first compile into intermediate code and then refine, time and memory cost on a typical path are usually far lower than Lean’s compile–refine–kernel-check path—more like a huge fancy Ctrl+F than a full compile pipeline for a theorem prover.
+When verifying a fact, Litex is not “inventing a proof.” A closer picture is constrained lookup: split the current goal into a predicate and an argument shape, then search the context and rule tables—somewhat like Ctrl+F by shape. The predicate name of an atomic fact (such as `>=`, `$is_positive`, or `$in`) is the key into those tables; after a hit, the kernel instantiates or replaces and checks that premises are ready; if nothing matches, it stops at the current goal. **The essence is matching and replacement under supported rules, not unrestricted proof search.** This indexing can keep local checks light; actual time and memory use still need measurement on matched tasks and comparable libraries. The architecture alone does not establish that Litex is usually faster than Lean.
 
 Common matching targets fall into four kinds:
 
@@ -809,9 +810,19 @@ Definition-selected default struct field views remain a distinct annotation.
 
 This does not cancel static constraints or inference. Before accepting an expression, Litex still checks domains, return sets, structure fields, and other well-definedness obligations, and derives membership and carrier facts in proofs through dedicated rules. The difference is that such inference adds facts such as `e $in S` to the context, rather than inferring a privileged type `e : T` that decides the object's identity.
 
-Lean's technical route chooses Dependent Type Theory as its foundation. Litex's technical route chooses set theory as its foundation. Both can express the same mathematics, but they differ fundamentally in default interface, source style, and understanding cost. Lean chose a more abstract mathematical axiomatic system, which gives it general programming power and a smaller kernel that is easier to audit. Litex’s trusted implementation surface (verification and rule system) can be dozens of times Lean’s small kernel, so independent Lean replay is an intended additional check. The earlier compiler experiment is not wired into the current build. There is no ranking of superiority—only different technical-route choices.
+Lean's core is based on dependent type theory; Litex chooses to organize user-facing mathematics through sets and membership facts. Lean's `Set α` can also express set-theoretic mathematics, and Mathlib offers rich mathematical interfaces. The difference is in how each language asks authors to introduce objects, state facts, and supply verification grounds by default. Litex's current coverage is still expanding; a shared mathematical goal does not mean the two systems already have identical scope. Litex's verifier and builtin rules form their own trusted implementation surface, which makes independent Lean rechecking an important goal. The earlier compiler experiment is not wired into the current build.
 
 </details>
+
+<a id="design-difficulty"></a>
+
+### 2.1 The Design Difficulty: Making Concrete Mathematics a Working Language
+
+“More concrete” describes the default mathematical vocabulary presented to authors. It does not mean that Lean can only be written at a low level. As the [Lean Language Reference](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/) explains, Lean's surface syntax is elaborated into expressions in its core type theory, whose proof terms the kernel checks; compiler IR for executable programs belongs to a separate path. Lean also provides notation, automation, and Mathlib. Litex instead lets authors work directly with sets, elements, functions, and facts: `have a R = 2` introduces an object and leaves both `a $in R` and `a = 2`. The important difference is the default working interface, rather than exclusive access to ordinary mathematics.
+
+The difficulty is not adding familiar LaTeX symbols to a grammar. For a language to carry substantial proofs, arithmetic, set construction, functions, relations, quantifiers, witnesses, contradiction, and induction must work in combination. In the Cantor example above, `{x X: not x $in f(x)}` combines bounded set construction, function application, negation, and membership. Such combinations need explicit well-definedness conditions, checkable grounds for acceptance, reusable facts after success, and feedback that locates failure. Adding a notation completes only one part of that work.
+
+Litex leaves key constructions, intermediate claims, and witnesses to the author, while the verifier looks for local grounds; `claim`, `witness`, `by contra`, and induction remain available when explicit proof structure is needed. This division moves some complexity from authors into the language implementation. Its rules must cover enough common cases while remaining consistent and auditable when features interact. Litex is working toward rigorous checking, broad practical coverage, and ease of use together. Support for familiar LaTeX notation does not mean every proof is already supported. Current coverage and the planned independent Lean check still need to be assessed through examples, recorded failures, and further implementation.
 
 <a id="group-comparison"></a>
 
@@ -1488,7 +1499,9 @@ If you want to understand Litex’s design, the best way is to walk the path you
 
 Lean is a major reference point for Litex. An earlier compiler experiment explored translating Litex evidence to Lean, and the retained artifacts illustrate the intended connection. The current `src/` and Cargo targets do not build that compiler. Treat a readable Lean frontend as a research direction, not as a promise that current Litex programs already compile to Lean.
 
-Because Litex searches for the desired *how to verify* on your behalf, that search is rather complex in design; Litex must also have the common verify rules built in. So Litex’s full trusted verification-and-rules surface is on the order of a few hundred thousand lines of Rust—dozens of times Lean’s small kernel (about 5–8 thousand lines of C++). But the other side of the runtime story also holds: Litex need not first compile a proof into intermediate code and then refine it; at heart it is more like a huge, shape-based fancy Ctrl+F—constrained matching over a fact table and a rule table. So on a typical interaction path, the time and memory cost of search is usually far lower than Lean’s compile–refine–kernel-check path. That is also why Litex was almost impossible to finish before the AI era: for a language to succeed, its design should stay coherent, so the number of authors is preferably no more than two; yet Litex is so large that one or two people could not complete such an engineering effort without AI help—especially for a formal language that nearly tolerates zero bugs. Precisely because that trusted surface is huge, the Litex author must give Litex a compiler to Lean, so that Lean’s small kernel can independently recheck and help ensure Litex’s internal run is sound.
+This ease of use has an engineering cost: Litex's verifier must understand common mathematical objects and proof shapes, check well-definedness, give grounds for accepted facts, and leave records that later statements can use. Local matching indexed by predicate name saves authors from naming many grounds by hand and may keep supported local checks light; claims about speed or memory still need benchmarks on matched tasks with comparable libraries. The difficulty is not the size of any one rule, but how rules interact with other mathematical objects, logical forms, and failure feedback.
+
+The Lean comparison must also distinguish two paths: proofs are elaborated from surface syntax into core expressions that the kernel checks, while compiler IR serves executable programs. Litex puts more mathematics-specific rules into its own verification system, increasing the implementation and auditing burden. Earlier compiler experiments show a route for handing evidence to Lean, but that compiler is not wired into the current build. Independent Lean rechecking remains a goal rather than a current guarantee.
 
 <details>
 <summary><strong>Lean–Litex comparison examples</strong></summary>

@@ -1,0 +1,4 @@
+# B01: Alpha-equivalent function-space membership
+# Intended: accept; run via examples/test_function_sets/run.py
+
+fn(x R) R {x + 1} $in fn(t R) R

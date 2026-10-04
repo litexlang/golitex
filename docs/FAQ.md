@@ -43,7 +43,11 @@ application WD and one checked body substitution. Known shape supplies tuple
 and index requirements without a user-written membership bridge. This route
 retains source FactIds; it does not recursively unfold nested function bodies
 or accept an out-of-range index. See the
-[function tracer](../examples/proof_nodes/equal/by_known_special_property/fn_tuple_projection.lit).
+[function tracer](../examples/proof_nodes/equal/by_known_special_property/fn_tuple_projection.lit). A template function
+alias retains its checked signature through stored equality paths. A named
+application result can supply its tuple value or a coordinate without first
+asserting the complete tuple equality; see the
+[template alias tracer](../examples/stmt_nodes/definition/template_alias_struct_tuple.lit).
 
 An explicit chain such as `y = x + 1 = 3` checks its adjacent steps and also
 stores the endpoint `y = 3`. Subsequent facts can reuse that stored equality.
@@ -469,14 +473,14 @@ used at definition time and whenever the instantiated struct carrier is
 checked; the temporary facts never leak into the surrounding environment.
 
 Equality and other atomic facts share a search-level ceiling. Stored facts,
-identity/alpha and stored equality paths, followed by closed exact calculation,
-form level 0 (`Direct`). Special-property premises
+identity/alpha and stored equality paths, followed by closed exact calculation
+and structural membership, form level 0 (`Direct`). Special-property premises
 use level 0; builtin premises use level 1; strategy and definition/forall
 premises use level 2. Rewrite is available once at the highest level and keeps
 the residual goal's level. WD remains mandatory and inherits the current
 ceiling. Independent strategy/deep recursion budgets have been removed.
 
-Direct computation does not consult stored numeric representatives or unfold
+The closed-calculation branch does not consult stored numeric representatives or unfold
 functions. It evaluates closed numeric equality, real order and standard-set
 membership, and records exact values under `by_closed_calculation`. For example,
 `1/3 < 1/2` is available to a restricted premise. Given `a = 2`, the goal
@@ -485,6 +489,14 @@ truth search: `1/0=1/0` remains invalid. The finite enumeration example in the
 [Direct tracer](../examples/proof_nodes/equal/direct_closed_calculation.lit)
 works without first asserting the numeric memberships. This does not settle
 all remaining composition/geo failures; see the [current receipt](../src/execute/execute_fact_stmt/builtin_entry_verification.md).
+
+Deterministic carrier composition is also available at Direct. With `n in N`,
+`((n+1)+1)+1 in N` follows by traversing the addition tree, without consuming
+another search level per constructor. Likewise, `floor(x)+1 in Z` reads the
+checked floor codomain and addition closure. Each leaf cites an existing type
+or uses a closed calculation/fixed builtin signature; no SP or full search is
+called. Missing leaf types remain a miss, and all object WD obligations remain
+mandatory. See the [structural carrier tracer](../examples/proof_nodes/atomic/direct_structural_membership.lit).
 
 Separately, a full equality goal reuses the same constructor matcher while
 allowing each corresponding child equality to use the bounded builtin/equality
@@ -1753,6 +1765,25 @@ the nonnegative root. `eval C_abs(1+i)` displays `sqrt(2)` and publishes no
 fact. Detailed output records the period's integer evidence or the modulus's
 coordinates and squared value. See the [period tracer](../examples/proof_nodes/equal/by_builtin_rule/periodic_trig_exact_values.lit)
 and [modulus tracer](../examples/proof_nodes/equal/by_builtin_rule/numeric_complex_modulus.lit).
+
+### Can rational exponents compute exact rational values?
+
+Yes, for closed positive rational bases when the exact roots exist within
+checked `i128` arithmetic:
+
+```litex
+8^(1/3)=2
+16^(3/4)=8
+(1/27)^(-1/3)=3
+eval (4/9)^(1/2)
+```
+
+These use the central closed calculation and the same exact evaluator used by
+`eval`. The reduced exponent `p/q` requires exact `q`-th roots of the reduced
+base's numerator and denominator, followed by an integer power. Irrational
+results are not rounded: `let u=2^(1/3)` is well-defined, but `eval 2^(1/3)`
+declines. Nonpositive bases with noninteger exponents are outside this added
+domain. See the [rational-power tracer](../examples/proof_nodes/equal/by_builtin_rule/closed_rational_power_calculation.lit).
 
 ### Are fraction rounding, numeric radicals, complex parts and rational logs calculations or rules?
 

@@ -1,0 +1,7 @@
+struct Origin:
+    x R
+    y R
+    <=>:
+        x = 0
+forall p &Origin:
+    p.x = 0

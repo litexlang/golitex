@@ -93,7 +93,7 @@ use super::by_equality_identities_wave12::{
 use super::by_equality_identities_wave13::{
     CartWithEmptyFactorBuiltinRuleProof, ClosedRangeLiteralExpansionBuiltinRuleProof,
     ComplexAbsOfImagScaledBuiltinRuleProof, ComplexAbsOfNonnegRealBuiltinRuleProof,
-    EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof,
+    EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof, FamilyUnionOfSingletonBuiltinRuleProof, FamilyUnionOfPowerSetBuiltinRuleProof,
     FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,
     ImgOfRealBuiltinRuleProof, ImgOfRealPlusImagScaledBuiltinRuleProof,
     LnOfEulerBuiltinRuleProof, PowerSetOfEmptyBuiltinRuleProof,
@@ -302,6 +302,8 @@ pub enum EqualitySearchProofByBuiltinRule {
     PowerSetOfEmpty(PowerSetOfEmptyBuiltinRuleProof),
     PowerSetOfSingleton(PowerSetOfSingletonBuiltinRuleProof),
     FamilyUnionOfEmpty(FamilyUnionOfEmptyBuiltinRuleProof),
+    FamilyUnionOfSingleton(FamilyUnionOfSingletonBuiltinRuleProof),
+    FamilyUnionOfPowerSet(FamilyUnionOfPowerSetBuiltinRuleProof),
     CartWithEmptyFactor(CartWithEmptyFactorBuiltinRuleProof),
     UnionOverIntersectDistributive(UnionOverIntersectDistributiveBuiltinRuleProof),
     SetMinusChainToUnion(SetMinusChainToUnionBuiltinRuleProof),

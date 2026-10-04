@@ -215,6 +215,27 @@ max(1 / 3, 1 / 2) = 1 / 2
 eval 3^(-1)
 ```
 
+Closed positive rational bases also admit rational exponents. The exact
+calculator reduces the exponent to `p/q`, takes exact integer `q`-th roots of
+the reduced base's numerator and denominator, then applies the checked integer
+power `p`. This supports rational results without approximations and shares
+the same producer with `eval`:
+
+```litex
+8^(1 / 3) = 2
+16^(3 / 4) = 8
+(1 / 27)^(-1 / 3) = 3
+(8 / 27)^(2 / 3) = 4 / 9
+eval (4 / 9)^(1 / 2)
+```
+
+This new domain branch checks closed `Q+` bases and closed `Q` exponents;
+symbolic noninteger exponents and nonpositive bases with noninteger exponents are outside
+this extension. The domain does not depend on whether the result is rational:
+`let u = 2^(1/3)` is allowed, while `eval 2^(1/3)` declines. Nonperfect roots
+and checked `i128` overflow decline calculation; existing integer-power
+domains, including `0^0=1`, remain unchanged.
+
 Exact numeric calls normalize inside ordinary facts or `eval` statements:
 
 ```litex
@@ -743,9 +764,9 @@ similar set-valued syntax does not make them interchangeable:
 | Object | Construction requirement | Membership behavior |
 |---|---|---|
 | `family_union(F)` | `F` must be a well-defined family expression. | `A $in F` and `x $in A` introduce `x $in family_union(F)`. Conversely, known union membership exposes `exist A F st {x $in A}`. |
-| `family_intersect(F)` | `F` must be a well-defined family expression. | The current kernel has no matching automatic introduction/elimination package. Supply the needed family-membership theorem or facts explicitly. |
+| `family_intersect(F)` | `F` must be a well-defined family expression. | For a nonempty set-valued family, explicitly use `family_intersect_member` to check every factor, or `family_intersect_member_facts` to expose membership in each set-valued factor. |
 | `index_union(I, X, A)` | `I` is a nonempty set, `X` is a set, and `A $in fn(index I) power_set(X)`. The function domain must be exactly `I`. | `x $in A(i)` for one `i $in I` introduces membership. Stored membership exposes `exist i I st {x $in A(i)}` and `x $in X`. The result belongs to `power_set(X)`. |
-| `index_intersect(I, X, A)` | Same signature as `index_union`; `I` must be nonempty. | `x $in X` together with `forall i I: x $in A(i)` introduces membership. Stored membership exposes both facts. The result belongs to `power_set(X)`. |
+| `index_intersect(I, X, A)` | Same signature as `index_union`; `I` must be nonempty. | Explicit `index_intersect_member` checks `x $in X` and `forall idx I: x $in A(idx)` before introducing membership. Stored membership exposes both facts. The result belongs to `power_set(X)`. |
 | `have by replacement_axiom: Img from prop P, set A` | `P` must be a binary user `prop`/`abstract_prop`; the context must already prove that each `x $in A` has at most one set-valued output. | Introduces named image set `Img` with `$is_set(Img)` and introduction/elimination foralls. Prefer this over any anonymous `replacement(...)` Obj. |
 
 Indexed union, intersection and Cartesian-product objects now require a
@@ -1635,7 +1656,7 @@ Every row also requires its subobjects to be well-defined.
 | `a / b` | `a, b $in C` and `b != 0`. |
 | `abs(a)` | `a $in R`; use complex modulus for a general `C` argument. |
 | `a % b` | `a, b $in Z` and `b != 0`. |
-| `a^b` | One of Litex's supported real/integer power-domain combinations holds. |
+| `a^b` | A supported real/integer power-domain combination holds, or both operands evaluate exactly to a closed positive rational base and a rational exponent. |
 | `sqrt(a)` | `a $in R` and `0 <= a`. |
 | `log(base, a)` | Real arguments, `base > 0`, `a > 0`, and `base != 1`. |
 | `lcm(a, b)` | `a, b $in Z`. |
@@ -2120,6 +2141,19 @@ Mapping predicates describe standard function properties:
 | `$bijective(A, B, f)` | `f : A -> B` is bijective |
 | `$is_choice_function_for(I, S, g, f)` | `f` selects one member of `g(alpha)` for every `alpha` in `I` |
 
+A checked positive injective or surjective fact publishes its quantified
+definition for later use; a negative property does not. Explicit `by def`
+checks all defining clauses. For surjectivity, a checked universal preimage
+proof can use `witness exist x A st {y = f(x)} from ...`; one unrelated
+existential assertion is not that universal proof. See the
+[definition tracer](../examples/proof_nodes/atomic/by_definition/builtin_surjective.lit).
+
+Choice WD retains both `g : I -> S` and `f : I -> family_union(S)` obligations.
+Equivalent carrier spellings require checked equality to each declared
+signature. The identities `family_union({A}) = A` and
+`family_union(power_set(A)) = A` are direct builtin equalities after object WD;
+they support the [choice definition tracer](../examples/proof_nodes/atomic/by_definition/builtin_choice_function.lit).
+
 Function equality needs a compatible function interface, not merely two
 objects with the same value at one point:
 
@@ -2337,7 +2371,10 @@ transparent equality; it does not declare `chosen $in &Triple<R>` or attach a
 definition-owned struct carrier to `chosen`. Consequently, `chosen.first` and
 `triple_R(4, 5, 6).first` are errors. When field projection is needed, bind the
 result with the exact struct carrier, as `chosen_struct` does above. See the
-[complete runnable example](../examples/stmt_nodes/definition/let_template_struct_aliases.lit).
+[runnable template/tuple example](../examples/stmt_nodes/definition/template_alias_struct_tuple.lit).
+The field query can follow the stored equality to a checked tuple-valued
+application directly, so the intermediate `chosen = (1, 2, 3)` assertion is
+optional. Template guards and function argument domains are still checked.
 
 A callable struct field keeps its function parameters when it is named with
 `let`, including through nested field access:
@@ -3453,7 +3490,8 @@ For an ordinary atomic fact, Litex follows this public progression:
 6. On success, store the fact and run builtin inference on the new information.
 
 Atomic truth search uses one shared permission ceiling. Level 0 (`Direct`)
-first reads stored facts/identity/alpha paths, then tries closed exact calculation.
+first reads stored facts/identity/alpha paths, then tries closed exact calculation
+and deterministic structural membership.
 Special properties (level 1) may use level-0 premises; builtin rules (level 2)
 may use level 1; strategies (level 3) and definition/forall (level 4) may use
 level 2. Rewrite is available at level 4 once per branch and keeps level 4
@@ -3466,6 +3504,27 @@ values for symbols or unfold user functions. For example, `1/3 < 1/2` can close
 a level-0 premise; `1/0 = 1/0` still fails WD. Detailed JSON identifies this
 route as `by_closed_calculation` and retains normalized values. Unsupported or
 overflowing calculations return a search miss, never an assumed proof.
+
+Structural membership checks numeric carriers along strictly smaller expression
+subtrees. For example, nested natural addition and a squared real difference
+need no intermediate type assertions:
+
+```litex
+have n N
+((n+1)+1)+1 $in N
+have a,b cart(R,R)
+0 <= (b[1]-a[1])^2
+```
+
+Its leaves cite stored memberships, calculate closed values, or read the fixed
+codomain of a builtin whose object WD has already succeeded. Standard-set
+inclusion uses a finite table. It does not call SP, ordinary proof search,
+definition unfolding, or rewrite. User-function and tuple-projection types
+remain SP capabilities unless their memberships are already stored. Division,
+negative powers, finite cardinalities and projections retain all WD conditions;
+`m-n` is not automatically natural, nor is integer division automatically integer.
+Detailed output retains the constructor tree under `by_structural_membership`.
+This is type propagation; symbolic equalities and order proofs keep their own rules.
 
 This is goal-directed verification, not unrestricted theorem search. A builtin
 rule may ask for its documented premises, but it does not silently build an
@@ -3639,12 +3698,26 @@ This request fails because an abstract predicate has no definition to unfold.
 > `$is_nonempty_set(S)` after verifying `o $in S` — there is **no**
 > FnSet/codomain shortcut. `obtain … from exist` / `exist!` / `$P` is also
 > wired at top level and as a `template` body (still no indented body on
-> `obtain`). Within one claim, a later `obtain k` may rebind an earlier obtain
-> of the same surface name. `obtain k from exist k` after a prior `obtain k`
-> is allowed because obtain stashes those live bindings only while parsing its
-> own exist source — a later standalone `exist k` / `forall k` still collides.
+> `obtain`). A destination already visible in the current proof is rejected,
+> like a duplicate `let` or `have`. In `obtain k from exist k ...`, the source
+> quantifier ends before the fresh destination begins; their IDs are distinct.
 > Nested witness/WD locals may bind the same surface name as an ambient obtain
 > (e.g. `obtain k from $odd(n)` then `witness $odd(n) from k`).
+
+The existential binder and an ambient witness may also have the same spelling:
+
+```litex
+prop has_copy(a R):
+    exist g R st {g = a}
+have g R = 2
+witness $has_copy(g) from g
+```
+
+Lookup uses the identity already attached to each reference. A name-identical
+inner binder does not invalidate an outer witness or a qualified file-owned
+definition. Failed witnesses retain their failure phase and nested goal in
+Detailed output, and publish no target fact. See the
+[same-name witness tracer](../examples/wd/witness_same_named_binder.lit).
 
 
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
@@ -4308,13 +4381,16 @@ its stated requirements before storing the conclusion:
 | `release thm defined_set_member(x, S)` | `x $in S` after one stored set-valued definition |
 | `release thm struct_member(x, S)` | `x $in S` |
 | `release thm cart_member_from_coordinates(x, C)` | `x $in C` |
+| `release thm family_intersect_member(x, family_intersect(F))` | `x $in family_intersect(F)`; requires nonempty set F, every factor to be a set, and membership in every factor |
+| `release thm family_intersect_member_facts(x, family_intersect(F))` | `forall B F: $is_set(B) => x $in B`; requires nonempty set F and known intersection membership |
+| `release thm index_intersect_member(x, index_intersect(I, X, A))` | `x $in index_intersect(I, X, A)`; checks ambient membership, all fibers, and constructor WD |
 | `release thm index_cart_member(x, G)` | `x $in G` |
 | `release thm index_cart_nonempty_by_choice_from_family(G)` | `$is_nonempty_set(G)` |
 | `release thm index_cart_nonempty_by_choice_from_pointwise(G)` | `$is_nonempty_set(G)` |
 | `release thm sum_le_sum_from_pointwise(L, R)` | `L <= R` |
 | `release thm finite_set_sum_le_from_pointwise(L, R)` | `L <= R` |
 | `release thm finite_set_summand_le_sum(L, R)` | `L <= R` |
-| `release thm tuple_equal_from_coordinates(L, R)` | `L = R` |
+| `release thm tuple_equal_from_coordinates(L, R)` | `L = R`; checks tuple shape, dimension equality, and every coordinate (explicit finite obligations when either peer is a literal tuple; otherwise the quantified coordinate requirement) |
 | `release thm finite_set_sum_substitution(L, R)` | `L = R` |
 | `release thm sum_over_bijective_finite_set_enumerations(L, R)` | `L = R` |
 | `release thm rational_has_unique_reduced_fraction(q)` | `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}` |
@@ -4923,6 +4999,52 @@ strategy or rewrite search. Detailed output records `ListSetMembership` or
 `ListSetNonMembership`, its exact requirement facts and each child proof.
 Maintained examples: [membership](../examples/proof_nodes/atomic/by_builtin_strategy/list_set_membership.lit)
 and [nonmembership](../examples/proof_nodes/atomic/by_builtin_strategy/list_set_nonmembership.lit).
+
+Stored standard numeric memberships also supply their intrinsic supersets
+without verifying a new premise:
+
+```litex
+have integer_input Z
+integer_input $in R
+```
+
+The current Direct route records a `standard_superset` leaf inside
+`by_structural_membership`, both carriers and the cited source membership.
+The dedicated `StandardNumericSuperset` known-property producer remains a
+read-only fallback. That fallback only reads an existing membership; it does not
+calculate or unfold a composite expression, or infer a smaller carrier from a
+larger one. See the [stored-carrier tracer](../examples/proof_nodes/atomic/by_known_special_property/standard_numeric_superset.lit).
+
+Stored numeric order bounds also pass through subtraction of a closed constant:
+
+```litex
+forall x Z:
+    x >= 2
+    =>:
+        x - 1 >= 0
+```
+
+`ClosedSubtractionBound` records the original upper/lower bound citation, the
+exact subtrahend, the translated bound and the target endpoint. Both weak
+comparison orientations are supported. A bound must be sufficient; unknown
+constants, opposite bounds, undefined expressions and exact arithmetic overflow
+fail closed. This leaf performs no new premise search. See the
+[subtraction-bound tracer](../examples/proof_nodes/atomic/by_builtin_rule/closed_subtraction_bound.lit).
+
+Equality from two-sided weak order accepts either spelling of each direction:
+
+```litex
+forall a, b R:
+    a >= b
+    b >= a
+    =>:
+        a = b
+```
+
+`EqualityFromTwoSidedWeakOrder` cites both stored comparisons. It accepts
+`<=`, converse `>=`, and mixed spellings, but two copies of the same direction
+cannot prove equality. It does not search for missing bounds. See the
+[orientation tracer](../examples/proof_nodes/equal/by_builtin_rule/two_sided_weak_order_orientations.lit).
 
 Field expressions over `Q` and `R` have a structural carrier strategy:
 

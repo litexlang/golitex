@@ -60,6 +60,14 @@ the stored parameterized fact. Detailed template output includes
 environment; that environment is omitted from JSON. Chinese output localizes
 these keys as `定义事实`, `来源命题编号`, and `存储与推理`.
 
+Template-alias application WD adds `function_equal` to the
+`template_definition` signature evidence. Tuple result/projection Detailed
+output keeps `subject_equal`, `function_equal`, and the template instance with
+its signature matches. `FnTupleValue` additionally records `expanded_body` and
+`value_equal`; `FnTupleProjection` records `index` and `component_equal`.
+Normal output continues to use the existing known-property or enclosing
+class-path explanation.
+
 ## Equality provenance
 
 Structural identity is `they_are_the_same` in Normal output. Detailed output
@@ -401,6 +409,14 @@ existential witnesses include ambient WD, witness type checks, proof steps,
 body checks, and the optional `uniqueness_check` (`null` for ordinary exist).
 These are projections of existing checked evidence, not additional proof rules.
 
+Failed claim, sketch, cases, extension and contradiction blocks also retain
+their existing typed failure stage. Normal uses `why_failed.failure`; Detailed
+uses `failure`. A nested proof-body failure includes its zero-based
+`step_index` and failed child result; cases preserve the branch index and
+extension preserves `left_to_right` or `right_to_left`. Existing contradiction
+`closing` output remains available. Projection neither re-executes proof steps
+nor publishes their local facts.
+
 ### Local legacy capability evidence
 
 The elementary arithmetic and trig/complex equality families use named rule
@@ -484,3 +500,18 @@ order retains `left_normal`, `right_normal`, and the actual `comparison`;
 membership retains `value` and `set`. Calculation carries no fabricated FactId.
 Existing stored citations and identity/alpha paths keep their existing labels.
 The Direct entry result also distinguishes `NotFound`, which is not a proof.
+
+
+## Direct structural membership
+
+`DirectAtomicFactSearchResult::ByStructuralMembership` becomes the corresponding
+non-equality searched-proof variant. It has a separate tree from closed values.
+Normal output uses `by_structural_membership` / `结构归属`; Detailed retains
+`element`, `set`, and `kind`. Arithmetic nodes retain their child proofs; a
+`known` leaf retains its original citation, `closed` retains exact calculation,
+and `standard_superset` retains the source membership. Intrinsic codomain,
+division and power nodes identify `enclosing_object_wd` as their domain evidence:
+the sibling fact WD certifies that expression and its subobjects. Search alone
+does not establish WD. No synthetic FactId replaces a derived constructor proof.
+The regression test inspects nested power/subtraction/known certificates and
+both Normal output languages.

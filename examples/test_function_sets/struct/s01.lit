@@ -1,0 +1,9 @@
+# S01: Parameterized function-field argument and return carriers
+# Intended: accept; run via examples/test_function_sets/run.py
+
+struct Ops<A nonempty_set>:
+    op fn(x A) A
+    tag N
+thm typed_call:
+    ? forall B nonempty_set, s &Ops<B>, x B:
+        s.op(x) $in B

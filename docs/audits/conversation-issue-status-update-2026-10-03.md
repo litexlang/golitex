@@ -1,5 +1,12 @@
 # Conversation issue status update — 2026-10-03
 
+> Follow-up migration checkpoint: bounds certificate signatures, mapping
+> definition publication, checked surjective/choice proofs and the concrete
+> surjection-size example have newer evidence in
+> [builtin migration audit](builtin-prop-thm-migration-2026-10-03.md).
+> The template alias chain and single-field struct restriction remain open;
+> use the newer audit's explicit source/binary checkpoint for current status.
+
 本次重新构建并执行后的结论：**没有全部解决；部分修复仍有效，同时出现新的回归。**
 本次只复查和更新记录，没有修改 Rust、数学例子、公开配置或技能。
 旧检查点见 [上一次完整复查](conversation-issue-recheck-2026-10-03.md)。

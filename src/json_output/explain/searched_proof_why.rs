@@ -12,6 +12,13 @@ pub struct SearchedProofWhyText {
 
 pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedProofWhyText {
     let (type_tag, rule_name, message) = match (kind, lang) {
+        ("structural_membership", OutputLanguage::English) => (
+            "by_structural_membership", "Structural membership",
+            "Determine the carrier from stored types and checked constructors without proof search",
+        ),
+        ("structural_membership", OutputLanguage::Chinese) => (
+            "结构归属", "结构归属", "读取已存类型和已检查运算的返回类型，不递归搜索证明",
+        ),
         ("closed_calculation", OutputLanguage::English) => (
             "by_closed_calculation", "Closed calculation",
             "Exact evaluation of closed expressions without proof search",

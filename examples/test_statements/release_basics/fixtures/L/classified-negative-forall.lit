@@ -1,0 +1,3 @@
+witness exist x {0, 1} st {x != 0} from 1
+not forall x {0, 1}:
+    x = 0

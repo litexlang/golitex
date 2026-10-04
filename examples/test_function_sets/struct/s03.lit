@@ -1,0 +1,12 @@
+# S03: Function-field law from the struct definition
+# Intended: accept; run via examples/test_function_sets/run.py
+
+struct Identity<A nonempty_set>:
+    id fn(x A) A
+    tag N
+    <=>:
+        forall x A:
+            id(x) = x
+thm law:
+    ? forall B nonempty_set, s &Identity<B>, x B:
+        s.id(x) = x
