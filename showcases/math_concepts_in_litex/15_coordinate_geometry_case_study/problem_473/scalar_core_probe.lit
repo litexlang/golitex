@@ -39,16 +39,16 @@ thm problem_473_positive_scale_unique:
         t - 1 != 0
         u * w - v^2 != 0
         (t - 1) * ((u * w - v^2) * (u * t + u + 2 * v * t)) = 0
-        by thm geo::zero_factor_law(t - 1, (u * w - v^2) * (u * t + u + 2 * v * t))
+        release thm geo::zero_factor_law(t - 1, (u * w - v^2) * (u * t + u + 2 * v * t))
         (u * w - v^2) * (u * t + u + 2 * v * t) = 0
-        by thm geo::zero_factor_law(u * w - v^2, u * t + u + 2 * v * t)
+        release thm geo::zero_factor_law(u * w - v^2, u * t + u + 2 * v * t)
         u * t + u + 2 * v * t = 0
-        by thm geo::multiply_both_sides(u * t + u + 2 * v * t, 0, u * t + u + 2 * v * t)
+        release thm geo::multiply_both_sides(u * t + u + 2 * v * t, 0, u * t + u + 2 * v * t)
         (u * t + u + 2 * v * t) * (u * t + u + 2 * v * t) = 0
         (u * t + u + 2 * v * t)^2 = 0
-        by thm problem_473_square_identity(u, v, t)
+        release thm problem_473_square_identity(u, v, t)
         4 * t * (u + v) * (u + t * v) + u^2 * (t - 1)^2 = 0
-        by thm geo::zero_sum_rearrange(4 * t * (u + v) * (u + t * v), u^2 * (t - 1)^2)
+        release thm geo::zero_sum_rearrange(4 * t * (u + v) * (u + t * v), u^2 * (t - 1)^2)
         0 - 4 * t * (u + v) * (u + t * v) = u^2 * (t - 1)^2
         4 * t > 0
         4 * t * ((u + v) * (u + t * v)) >= 0

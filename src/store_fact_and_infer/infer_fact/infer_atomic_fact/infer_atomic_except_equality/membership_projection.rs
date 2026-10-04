@@ -14,28 +14,54 @@ impl Runtime {
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
-        if let Some(builder) = self.resolve_set_builder_for_membership_projection(&in_fact.set) {
+        if self
+            .resolve_set_builder_for_membership_projection(&in_fact.set)
+            .is_some()
+        {
             let mut derived = Vec::new();
-            let fact_id = self.global_ids.allocate_fact_id();
-            let base_in = AtomicFact::InFact(InFact {
-                fact_id,
-                element: in_fact.element.clone(),
-                set: builder.param_set.as_ref().clone(),
-                line_file: in_fact.line_file.clone(),
-            });
-            self.store_new_set_builder_projection(
-                &Fact::AtomicFact(base_in),
-                verify_state,
-                &mut derived,
-            )?;
-            let mut subst = std::collections::HashMap::new();
-            subst.insert(builder.param_binding.id, in_fact.element.clone());
-            for defining in &builder.facts {
-                let Ok(qf) = self.inst_quantifier_free_fact(defining, &subst) else {
+            let mut pending = vec![in_fact.clone()];
+            let mut expanded = std::collections::HashSet::new();
+            while let Some(member) = pending.pop() {
+                if !expanded.insert(member.ir()) {
+                    continue;
+                }
+                let Some(builder) = self.resolve_set_builder_for_membership_projection(&member.set)
+                else {
                     continue;
                 };
-                let projected = crate::instantiate::quantifier_free_fact_to_fact(qf);
-                self.store_new_set_builder_projection(&projected, verify_state, &mut derived)?;
+                let base_in = InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: member.element.clone(),
+                    set: builder.param_set.as_ref().clone(),
+                    line_file: member.line_file.clone(),
+                };
+                pending.push(base_in.clone());
+                self.store_new_set_builder_projection(
+                    &Fact::AtomicFact(AtomicFact::InFact(base_in)),
+                    verify_state,
+                    &mut derived,
+                )?;
+                let mut subst = std::collections::HashMap::new();
+                subst.insert(builder.param_binding.id, member.element.clone());
+                for defining in &builder.facts {
+                    let Ok(qf) = self.inst_quantifier_free_fact(defining, &subst) else {
+                        continue;
+                    };
+                    let projected = crate::instantiate::quantifier_free_fact_to_fact(qf);
+                    // A visible membership may predate a builder equality. Its
+                    // newly available carrier conditions still need projection.
+                    let atomics = match &projected {
+                        Fact::AtomicFact(atomic) => vec![atomic.clone()],
+                        Fact::AndFact(and) => and.facts.clone(),
+                        Fact::ChainFact(chain) => self.chain_adjacent_atomics(chain)?,
+                        _ => Vec::new(), // An Or does not establish either branch.
+                    };
+                    pending.extend(atomics.into_iter().filter_map(|atomic| match atomic {
+                        AtomicFact::InFact(member) => Some(member),
+                        _ => None,
+                    }));
+                    self.store_new_set_builder_projection(&projected, verify_state, &mut derived)?;
+                }
             }
             rules.push(InferAtomicExceptEqualityResult::InFactSetBuilder(
                 InferSetBuilderMembershipProjectionResult { derived },
@@ -68,7 +94,8 @@ impl Runtime {
 impl Runtime {
     // The source membership is stored before inference. A builder reached
     // through equality can project that same membership (or cycle through a
-    // second carrier). Re-inferencing a visible fact adds no consequence.
+    // second carrier). Skip repeated storage, while the local projection queue
+    // still visits known carriers whose defining conditions arrived later.
     // This guard belongs to this projection rule, not to truth search/store.
     fn store_new_set_builder_projection(
         &mut self,

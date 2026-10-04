@@ -84,30 +84,50 @@ impl Runtime {
                 if call.body.is_empty() || active_heads.contains(call.head.as_ref()) {
                     return Ok(None);
                 }
+                // Preserve one-step beta equalities such as outer(inner(x)) =
+                // inner(x)*inner(x), before normalizing their symbolic arguments.
+                if call.body.len() == 1 {
+                    if let Some(step) =
+                        self.checked_function_body_expansion(call, state, Some(stop_at))?
+                    {
+                        if expansions.len() >= MAX_BODY_EXPANSIONS {
+                            return Ok(None);
+                        }
+                        let body = step.expanded_body.clone();
+                        expansions.push(step);
+                        return Ok(Some(body));
+                    }
+                }
                 let mut normalized_call = call.clone();
                 // Normalize arguments before entering the body, so nested uses
                 // such as step(step(2)) are finite ordinary applications.
                 for (group, original_group) in normalized_call.body.iter_mut().zip(&call.body) {
                     for (arg, original_arg) in group.iter_mut().zip(original_group) {
-                        let Some(value) = self.normalize_function_body_rec(
+                        let before_argument = expansions.len();
+                        match self.normalize_function_body_rec(
                             original_arg,
                             stop_at,
                             state,
                             depth + 1,
                             expansions,
                             active_heads,
-                        )?
-                        else {
-                            return Ok(None);
-                        };
-                        **arg = value;
+                        )? {
+                            Some(value) => **arg = value,
+                            None => {
+                                // A checked function may ignore this argument.
+                                // Retain it symbolically; discard incomplete beta
+                                // evidence. If the body needs it, normalization
+                                // will still encounter the cycle/budget boundary.
+                                expansions.truncate(before_argument);
+                            }
+                        }
                     }
                 }
                 let prefix = FnObj {
                     head: normalized_call.head.clone(),
                     body: vec![normalized_call.body[0].clone()],
                 };
-                let Some(step) = self.checked_function_body_expansion(&prefix, state)? else {
+                let Some(step) = self.checked_function_body_expansion(&prefix, state, None)? else {
                     return Ok(Some(Obj::FnObj(normalized_call)));
                 };
                 if expansions.len() >= MAX_BODY_EXPANSIONS {
@@ -176,19 +196,27 @@ impl Runtime {
         &mut self,
         prefix: &FnObj,
         state: VerifyState,
+        expected_body: Option<&Obj>,
     ) -> RuntimeResult<Option<FunctionBodyExpansionProof>> {
         let application = Obj::FnObj(prefix.clone());
-        let application_well_defined =
-            match self.verify_obj_well_definedness(&application, state)? {
-                VerifyObjWellDefinedResult::Success(p) => p,
-                VerifyObjWellDefinedResult::Failed { .. } => return Ok(None),
-            };
         let args: Vec<Obj> = prefix.body[0].iter().map(|a| a.as_ref().clone()).collect();
         let candidates = self.function_body_candidates(prefix)?;
         for (anon, function_body) in candidates {
             if args.len() != set_bound_parameter_count(&anon.body.set_bound_parameters) {
                 continue;
             }
+            let subst = set_bound_params_to_arg_map(&anon.body.set_bound_parameters, &args);
+            let Ok(expanded_body) = self.inst_obj(anon.equal_to.as_ref(), &subst) else {
+                continue;
+            };
+            if expected_body.is_some_and(|expected| &expanded_body != expected) {
+                continue;
+            }
+            let application_well_defined =
+                match self.verify_obj_well_definedness(&application, state)? {
+                    VerifyObjWellDefinedResult::Success(p) => p,
+                    VerifyObjWellDefinedResult::Failed { .. } => return Ok(None),
+                };
             let literal_application = Obj::FnObj(FnObj {
                 head: Box::new(FnObjHead::AnonymousFnLiteral(Box::new(anon.clone()))),
                 body: prefix.body.clone(),
@@ -198,10 +226,6 @@ impl Runtime {
                     VerifyObjWellDefinedResult::Success(p) => p,
                     VerifyObjWellDefinedResult::Failed { .. } => continue,
                 };
-            let subst = set_bound_params_to_arg_map(&anon.body.set_bound_parameters, &args);
-            let Ok(expanded_body) = self.inst_obj(anon.equal_to.as_ref(), &subst) else {
-                continue;
-            };
             return Ok(Some(FunctionBodyExpansionProof {
                 application,
                 application_well_defined,

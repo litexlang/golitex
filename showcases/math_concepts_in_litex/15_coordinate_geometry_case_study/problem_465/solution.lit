@@ -26,35 +26,35 @@ thm basis_coefficient_unique:
     a * u[2] + b * v[2] = c * u[2] + d * v[2]
 
     # Eliminate the v coefficient.
-    by thm geo::multiply_both_sides(a * u[1] + b * v[1], c * u[1] + d * v[1], v[2])
+    release thm geo::multiply_both_sides(a * u[1] + b * v[1], c * u[1] + d * v[1], v[2])
     (a * u[1] + b * v[1]) * v[2] = (c * u[1] + d * v[1]) * v[2]
-    by thm geo::multiply_both_sides(a * u[2] + b * v[2], c * u[2] + d * v[2], v[1])
+    release thm geo::multiply_both_sides(a * u[2] + b * v[2], c * u[2] + d * v[2], v[1])
     (a * u[2] + b * v[2]) * v[1] = (c * u[2] + d * v[2]) * v[1]
-    by thm geo::subtract_equalities((a * u[1] + b * v[1]) * v[2], (c * u[1] + d * v[1]) * v[2], (a * u[2] + b * v[2]) * v[1], (c * u[2] + d * v[2]) * v[1])
+    release thm geo::subtract_equalities((a * u[1] + b * v[1]) * v[2], (c * u[1] + d * v[1]) * v[2], (a * u[2] + b * v[2]) * v[1], (c * u[2] + d * v[2]) * v[1])
     (a * u[1] + b * v[1]) * v[2] - (a * u[2] + b * v[2]) * v[1] = (c * u[1] + d * v[1]) * v[2] - (c * u[2] + d * v[2]) * v[1]
     (a * u[1] + b * v[1]) * v[2] - (a * u[2] + b * v[2]) * v[1] = a * (u[1] * v[2] - u[2] * v[1])
     (c * u[1] + d * v[1]) * v[2] - (c * u[2] + d * v[2]) * v[1] = c * (u[1] * v[2] - u[2] * v[1])
     a * (u[1] * v[2] - u[2] * v[1]) = c * (u[1] * v[2] - u[2] * v[1])
-    by thm geo::det_coordinate_formula(u, v)
+    release thm geo::det_coordinate_formula(u, v)
     geo::det(u, v) = u[1] * v[2] - u[2] * v[1]
     u[1] * v[2] - u[2] * v[1] != 0
-    by thm geo::divide_both_sides(a, c, u[1] * v[2] - u[2] * v[1])
+    release thm geo::divide_both_sides(a, c, u[1] * v[2] - u[2] * v[1])
     a = c
 
     # Eliminate the u coefficient.
-    by thm geo::multiply_both_sides(a * u[2] + b * v[2], c * u[2] + d * v[2], u[1])
+    release thm geo::multiply_both_sides(a * u[2] + b * v[2], c * u[2] + d * v[2], u[1])
     (a * u[2] + b * v[2]) * u[1] = (c * u[2] + d * v[2]) * u[1]
-    by thm geo::multiply_both_sides(a * u[1] + b * v[1], c * u[1] + d * v[1], u[2])
+    release thm geo::multiply_both_sides(a * u[1] + b * v[1], c * u[1] + d * v[1], u[2])
     (a * u[1] + b * v[1]) * u[2] = (c * u[1] + d * v[1]) * u[2]
-    by thm geo::subtract_equalities((a * u[2] + b * v[2]) * u[1], (c * u[2] + d * v[2]) * u[1], (a * u[1] + b * v[1]) * u[2], (c * u[1] + d * v[1]) * u[2])
+    release thm geo::subtract_equalities((a * u[2] + b * v[2]) * u[1], (c * u[2] + d * v[2]) * u[1], (a * u[1] + b * v[1]) * u[2], (c * u[1] + d * v[1]) * u[2])
     (a * u[2] + b * v[2]) * u[1] - (a * u[1] + b * v[1]) * u[2] = (c * u[2] + d * v[2]) * u[1] - (c * u[1] + d * v[1]) * u[2]
     (a * u[2] + b * v[2]) * u[1] - (a * u[1] + b * v[1]) * u[2] = b * (u[1] * v[2] - u[2] * v[1])
     (c * u[2] + d * v[2]) * u[1] - (c * u[1] + d * v[1]) * u[2] = d * (u[1] * v[2] - u[2] * v[1])
     b * (u[1] * v[2] - u[2] * v[1]) = d * (u[1] * v[2] - u[2] * v[1])
-    by thm geo::det_coordinate_formula(u, v)
+    release thm geo::det_coordinate_formula(u, v)
     geo::det(u, v) = u[1] * v[2] - u[2] * v[1]
     u[1] * v[2] - u[2] * v[1] != 0
-    by thm geo::divide_both_sides(b, d, u[1] * v[2] - u[2] * v[1])
+    release thm geo::divide_both_sides(b, d, u[1] * v[2] - u[2] * v[1])
     b = d
 
 # Scalar-coordinate form avoids constructing a synthetic tuple.
@@ -71,34 +71,34 @@ thm basis_coefficient_unique_coordinates:
     a * u[1] + b * v[1] = c * u[1] + d * v[1]
     a * u[2] + b * v[2] = c * u[2] + d * v[2]
 
-    by thm geo::multiply_both_sides(a * u[1] + b * v[1], c * u[1] + d * v[1], v[2])
+    release thm geo::multiply_both_sides(a * u[1] + b * v[1], c * u[1] + d * v[1], v[2])
     (a * u[1] + b * v[1]) * v[2] = (c * u[1] + d * v[1]) * v[2]
-    by thm geo::multiply_both_sides(a * u[2] + b * v[2], c * u[2] + d * v[2], v[1])
+    release thm geo::multiply_both_sides(a * u[2] + b * v[2], c * u[2] + d * v[2], v[1])
     (a * u[2] + b * v[2]) * v[1] = (c * u[2] + d * v[2]) * v[1]
-    by thm geo::subtract_equalities((a * u[1] + b * v[1]) * v[2], (c * u[1] + d * v[1]) * v[2], (a * u[2] + b * v[2]) * v[1], (c * u[2] + d * v[2]) * v[1])
+    release thm geo::subtract_equalities((a * u[1] + b * v[1]) * v[2], (c * u[1] + d * v[1]) * v[2], (a * u[2] + b * v[2]) * v[1], (c * u[2] + d * v[2]) * v[1])
     (a * u[1] + b * v[1]) * v[2] - (a * u[2] + b * v[2]) * v[1] = (c * u[1] + d * v[1]) * v[2] - (c * u[2] + d * v[2]) * v[1]
     (a * u[1] + b * v[1]) * v[2] - (a * u[2] + b * v[2]) * v[1] = a * (u[1] * v[2] - u[2] * v[1])
     (c * u[1] + d * v[1]) * v[2] - (c * u[2] + d * v[2]) * v[1] = c * (u[1] * v[2] - u[2] * v[1])
     a * (u[1] * v[2] - u[2] * v[1]) = c * (u[1] * v[2] - u[2] * v[1])
-    by thm geo::det_coordinate_formula(u, v)
+    release thm geo::det_coordinate_formula(u, v)
     geo::det(u, v) = u[1] * v[2] - u[2] * v[1]
     u[1] * v[2] - u[2] * v[1] != 0
-    by thm geo::divide_both_sides(a, c, u[1] * v[2] - u[2] * v[1])
+    release thm geo::divide_both_sides(a, c, u[1] * v[2] - u[2] * v[1])
     a = c
 
-    by thm geo::multiply_both_sides(a * u[2] + b * v[2], c * u[2] + d * v[2], u[1])
+    release thm geo::multiply_both_sides(a * u[2] + b * v[2], c * u[2] + d * v[2], u[1])
     (a * u[2] + b * v[2]) * u[1] = (c * u[2] + d * v[2]) * u[1]
-    by thm geo::multiply_both_sides(a * u[1] + b * v[1], c * u[1] + d * v[1], u[2])
+    release thm geo::multiply_both_sides(a * u[1] + b * v[1], c * u[1] + d * v[1], u[2])
     (a * u[1] + b * v[1]) * u[2] = (c * u[1] + d * v[1]) * u[2]
-    by thm geo::subtract_equalities((a * u[2] + b * v[2]) * u[1], (c * u[2] + d * v[2]) * u[1], (a * u[1] + b * v[1]) * u[2], (c * u[1] + d * v[1]) * u[2])
+    release thm geo::subtract_equalities((a * u[2] + b * v[2]) * u[1], (c * u[2] + d * v[2]) * u[1], (a * u[1] + b * v[1]) * u[2], (c * u[1] + d * v[1]) * u[2])
     (a * u[2] + b * v[2]) * u[1] - (a * u[1] + b * v[1]) * u[2] = (c * u[2] + d * v[2]) * u[1] - (c * u[1] + d * v[1]) * u[2]
     (a * u[2] + b * v[2]) * u[1] - (a * u[1] + b * v[1]) * u[2] = b * (u[1] * v[2] - u[2] * v[1])
     (c * u[2] + d * v[2]) * u[1] - (c * u[1] + d * v[1]) * u[2] = d * (u[1] * v[2] - u[2] * v[1])
     b * (u[1] * v[2] - u[2] * v[1]) = d * (u[1] * v[2] - u[2] * v[1])
-    by thm geo::det_coordinate_formula(u, v)
+    release thm geo::det_coordinate_formula(u, v)
     geo::det(u, v) = u[1] * v[2] - u[2] * v[1]
     u[1] * v[2] - u[2] * v[1] != 0
-    by thm geo::divide_both_sides(b, d, u[1] * v[2] - u[2] * v[1])
+    release thm geo::divide_both_sides(b, d, u[1] * v[2] - u[2] * v[1])
     b = d
 
 # Problem 465 Part 2: coefficient equations at E and F.
@@ -124,8 +124,8 @@ thm part2_coefficient_bus_probe:
             q * (1 - y) + y * (q - 1) * t = 0
             q * x = y * z
 
-    by thm geo::vec_coordinate_formula(a, b)
-    by thm geo::vec_coordinate_formula(a, c)
+    release thm geo::vec_coordinate_formula(a, b)
+    release thm geo::vec_coordinate_formula(a, c)
 
     h[1] - g[1] = q * (d[1] - g[1])
     h[2] - g[2] = q * (d[2] - g[2])
@@ -135,8 +135,8 @@ thm part2_coefficient_bus_probe:
     g[2] - a[2] = t * (b[2] - a[2])
     h[1] - g[1] = (h[1] - a[1]) - (g[1] - a[1])
     h[2] - g[2] = (h[2] - a[2]) - (g[2] - a[2])
-    by thm geo::subtract_equalities(h[1] - a[1], z * (c[1] - a[1]), g[1] - a[1], t * (b[1] - a[1]))
-    by thm geo::subtract_equalities(h[2] - a[2], z * (c[2] - a[2]), g[2] - a[2], t * (b[2] - a[2]))
+    release thm geo::subtract_equalities(h[1] - a[1], z * (c[1] - a[1]), g[1] - a[1], t * (b[1] - a[1]))
+    release thm geo::subtract_equalities(h[2] - a[2], z * (c[2] - a[2]), g[2] - a[2], t * (b[2] - a[2]))
     (h[1] - a[1]) - (g[1] - a[1]) = z * (c[1] - a[1]) - t * (b[1] - a[1])
     (h[2] - a[2]) - (g[2] - a[2]) = z * (c[2] - a[2]) - t * (b[2] - a[2])
     h[1] - g[1] = (h[1] - a[1]) - (g[1] - a[1]) = z * (c[1] - a[1]) - t * (b[1] - a[1])
@@ -145,12 +145,12 @@ thm part2_coefficient_bus_probe:
     q * (d[2] - g[2]) = h[2] - g[2] = z * (c[2] - a[2]) - t * (b[2] - a[2])
     g[1] - a[1] = t * (b[1] - a[1])
     g[2] - a[2] = t * (b[2] - a[2])
-    by thm geo::multiply_both_sides(g[1] - a[1], t * (b[1] - a[1]), q)
-    by thm geo::multiply_both_sides(g[2] - a[2], t * (b[2] - a[2]), q)
+    release thm geo::multiply_both_sides(g[1] - a[1], t * (b[1] - a[1]), q)
+    release thm geo::multiply_both_sides(g[2] - a[2], t * (b[2] - a[2]), q)
     q * (g[1] - a[1]) = q * t * (b[1] - a[1])
     q * (g[2] - a[2]) = q * t * (b[2] - a[2])
-    by thm geo::add_equalities(q * (d[1] - g[1]), z * (c[1] - a[1]) - t * (b[1] - a[1]), q * (g[1] - a[1]), q * t * (b[1] - a[1]))
-    by thm geo::add_equalities(q * (d[2] - g[2]), z * (c[2] - a[2]) - t * (b[2] - a[2]), q * (g[2] - a[2]), q * t * (b[2] - a[2]))
+    release thm geo::add_equalities(q * (d[1] - g[1]), z * (c[1] - a[1]) - t * (b[1] - a[1]), q * (g[1] - a[1]), q * t * (b[1] - a[1]))
+    release thm geo::add_equalities(q * (d[2] - g[2]), z * (c[2] - a[2]) - t * (b[2] - a[2]), q * (g[2] - a[2]), q * t * (b[2] - a[2]))
     q * (d[1] - g[1]) + q * (g[1] - a[1]) = (z * (c[1] - a[1]) - t * (b[1] - a[1])) + q * t * (b[1] - a[1])
     q * (d[2] - g[2]) + q * (g[2] - a[2]) = (z * (c[2] - a[2]) - t * (b[2] - a[2])) + q * t * (b[2] - a[2])
     q * (d[1] - a[1]) = q * (d[1] - g[1]) + q * (g[1] - a[1])
@@ -164,14 +164,14 @@ thm part2_coefficient_bus_probe:
     ee[2] = a[2] + r * (d[2] - a[2])
     ee[1] - a[1] = r * (d[1] - a[1])
     ee[2] - a[2] = r * (d[2] - a[2])
-    by thm geo::multiply_both_sides(ee[1] - a[1], r * (d[1] - a[1]), q)
-    by thm geo::multiply_both_sides(ee[2] - a[2], r * (d[2] - a[2]), q)
+    release thm geo::multiply_both_sides(ee[1] - a[1], r * (d[1] - a[1]), q)
+    release thm geo::multiply_both_sides(ee[2] - a[2], r * (d[2] - a[2]), q)
     q * (ee[1] - a[1]) = q * (r * (d[1] - a[1]))
     q * (ee[2] - a[2]) = q * (r * (d[2] - a[2]))
     q * (r * (d[1] - a[1])) = r * (q * (d[1] - a[1]))
     q * (r * (d[2] - a[2])) = r * (q * (d[2] - a[2]))
-    by thm geo::multiply_both_sides(q * (d[1] - a[1]), z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1]), r)
-    by thm geo::multiply_both_sides(q * (d[2] - a[2]), z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2]), r)
+    release thm geo::multiply_both_sides(q * (d[1] - a[1]), z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1]), r)
+    release thm geo::multiply_both_sides(q * (d[2] - a[2]), z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2]), r)
     r * (q * (d[1] - a[1])) = r * (z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1]))
     r * (q * (d[2] - a[2])) = r * (z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2]))
     q * (ee[1] - a[1]) = r * (q * (d[1] - a[1]))
@@ -182,8 +182,8 @@ thm part2_coefficient_bus_probe:
     q * (ee[2] - a[2]) = r * (q - 1) * t * geo::vec(a, b)[2] + r * z * geo::vec(a, c)[2]
     ee[1] - a[1] = (1 - s) * (b[1] - a[1]) + s * (c[1] - a[1])
     ee[2] - a[2] = (1 - s) * (b[2] - a[2]) + s * (c[2] - a[2])
-    by thm geo::multiply_both_sides(ee[1] - a[1], (1 - s) * (b[1] - a[1]) + s * (c[1] - a[1]), q)
-    by thm geo::multiply_both_sides(ee[2] - a[2], (1 - s) * (b[2] - a[2]) + s * (c[2] - a[2]), q)
+    release thm geo::multiply_both_sides(ee[1] - a[1], (1 - s) * (b[1] - a[1]) + s * (c[1] - a[1]), q)
+    release thm geo::multiply_both_sides(ee[2] - a[2], (1 - s) * (b[2] - a[2]) + s * (c[2] - a[2]), q)
     q * (ee[1] - a[1]) = q * ((1 - s) * (b[1] - a[1]) + s * (c[1] - a[1]))
     q * (ee[2] - a[2]) = q * ((1 - s) * (b[2] - a[2]) + s * (c[2] - a[2]))
     q * ((1 - s) * (b[1] - a[1]) + s * (c[1] - a[1])) = q * (1 - s) * geo::vec(a, b)[1] + q * s * geo::vec(a, c)[1]
@@ -191,59 +191,59 @@ thm part2_coefficient_bus_probe:
     q * (ee[1] - a[1]) = q * (1 - s) * geo::vec(a, b)[1] + q * s * geo::vec(a, c)[1]
     q * (ee[2] - a[2]) = q * (1 - s) * geo::vec(a, b)[2] + q * s * geo::vec(a, c)[2]
 
-    by thm basis_coefficient_unique_coordinates(geo::vec(a, b), geo::vec(a, c), q * (ee[1] - a[1]), q * (ee[2] - a[2]), r * (q - 1) * t, r * z, q * (1 - s), q * s)
+    release thm basis_coefficient_unique_coordinates(geo::vec(a, b), geo::vec(a, c), q * (ee[1] - a[1]), q * (ee[2] - a[2]), r * (q - 1) * t, r * z, q * (1 - s), q * s)
     r * (q - 1) * t = q * (1 - s)
     r * z = q * s
 
-    by thm geo::subtract_equalities(f[1], (1 - y) * b[1] + y * d[1], a[1], a[1])
+    release thm geo::subtract_equalities(f[1], (1 - y) * b[1] + y * d[1], a[1], a[1])
     f[1] - a[1] = ((1 - y) * b[1] + y * d[1]) - a[1]
     ((1 - y) * b[1] + y * d[1]) - a[1] = (1 - y) * (b[1] - a[1]) + y * (d[1] - a[1])
-    by thm geo::subtract_equalities(f[2], (1 - y) * b[2] + y * d[2], a[2], a[2])
+    release thm geo::subtract_equalities(f[2], (1 - y) * b[2] + y * d[2], a[2], a[2])
     f[2] - a[2] = ((1 - y) * b[2] + y * d[2]) - a[2]
     ((1 - y) * b[2] + y * d[2]) - a[2] = (1 - y) * (b[2] - a[2]) + y * (d[2] - a[2])
     f[1] - a[1] = (1 - y) * (b[1] - a[1]) + y * (d[1] - a[1])
     f[2] - a[2] = (1 - y) * (b[2] - a[2]) + y * (d[2] - a[2])
-    by thm geo::multiply_both_sides(f[1] - a[1], (1 - y) * (b[1] - a[1]) + y * (d[1] - a[1]), q)
-    by thm geo::multiply_both_sides(f[2] - a[2], (1 - y) * (b[2] - a[2]) + y * (d[2] - a[2]), q)
+    release thm geo::multiply_both_sides(f[1] - a[1], (1 - y) * (b[1] - a[1]) + y * (d[1] - a[1]), q)
+    release thm geo::multiply_both_sides(f[2] - a[2], (1 - y) * (b[2] - a[2]) + y * (d[2] - a[2]), q)
     q * (f[1] - a[1]) = q * ((1 - y) * (b[1] - a[1]) + y * (d[1] - a[1]))
     q * (f[2] - a[2]) = q * ((1 - y) * (b[2] - a[2]) + y * (d[2] - a[2]))
     q * ((1 - y) * (b[1] - a[1]) + y * (d[1] - a[1])) = q * (1 - y) * geo::vec(a, b)[1] + y * (q * (d[1] - a[1]))
     q * ((1 - y) * (b[2] - a[2]) + y * (d[2] - a[2])) = q * (1 - y) * geo::vec(a, b)[2] + y * (q * (d[2] - a[2]))
-    by thm geo::multiply_both_sides(q * (d[1] - a[1]), z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1]), y)
-    by thm geo::multiply_both_sides(q * (d[2] - a[2]), z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2]), y)
+    release thm geo::multiply_both_sides(q * (d[1] - a[1]), z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1]), y)
+    release thm geo::multiply_both_sides(q * (d[2] - a[2]), z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2]), y)
     y * (q * (d[1] - a[1])) = y * (z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1]))
     y * (q * (d[2] - a[2])) = y * (z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2]))
     y * (z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1])) = y * (q - 1) * t * geo::vec(a, b)[1] + y * z * geo::vec(a, c)[1]
     y * (z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2])) = y * (q - 1) * t * geo::vec(a, b)[2] + y * z * geo::vec(a, c)[2]
-    by thm geo::add_equalities(q * (1 - y) * geo::vec(a, b)[1], q * (1 - y) * geo::vec(a, b)[1], y * (q * (d[1] - a[1])), y * (z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1])))
+    release thm geo::add_equalities(q * (1 - y) * geo::vec(a, b)[1], q * (1 - y) * geo::vec(a, b)[1], y * (q * (d[1] - a[1])), y * (z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1])))
     q * (1 - y) * geo::vec(a, b)[1] + y * (q * (d[1] - a[1])) = q * (1 - y) * geo::vec(a, b)[1] + y * (z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1]))
-    by thm geo::add_equalities(q * (1 - y) * geo::vec(a, b)[1], q * (1 - y) * geo::vec(a, b)[1], y * (z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1])), y * (q - 1) * t * geo::vec(a, b)[1] + y * z * geo::vec(a, c)[1])
+    release thm geo::add_equalities(q * (1 - y) * geo::vec(a, b)[1], q * (1 - y) * geo::vec(a, b)[1], y * (z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1])), y * (q - 1) * t * geo::vec(a, b)[1] + y * z * geo::vec(a, c)[1])
     q * (1 - y) * geo::vec(a, b)[1] + y * (z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1])) = q * (1 - y) * geo::vec(a, b)[1] + (y * (q - 1) * t * geo::vec(a, b)[1] + y * z * geo::vec(a, c)[1])
     q * (1 - y) * geo::vec(a, b)[1] + (y * (q - 1) * t * geo::vec(a, b)[1] + y * z * geo::vec(a, c)[1]) = (q * (1 - y) + y * (q - 1) * t) * geo::vec(a, b)[1] + y * z * geo::vec(a, c)[1]
     q * (1 - y) * geo::vec(a, b)[1] + y * (q * (d[1] - a[1])) = (q * (1 - y) + y * (q - 1) * t) * geo::vec(a, b)[1] + y * z * geo::vec(a, c)[1]
-    by thm geo::add_equalities(q * (1 - y) * geo::vec(a, b)[2], q * (1 - y) * geo::vec(a, b)[2], y * (q * (d[2] - a[2])), y * (z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2])))
+    release thm geo::add_equalities(q * (1 - y) * geo::vec(a, b)[2], q * (1 - y) * geo::vec(a, b)[2], y * (q * (d[2] - a[2])), y * (z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2])))
     q * (1 - y) * geo::vec(a, b)[2] + y * (q * (d[2] - a[2])) = q * (1 - y) * geo::vec(a, b)[2] + y * (z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2]))
-    by thm geo::add_equalities(q * (1 - y) * geo::vec(a, b)[2], q * (1 - y) * geo::vec(a, b)[2], y * (z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2])), y * (q - 1) * t * geo::vec(a, b)[2] + y * z * geo::vec(a, c)[2])
+    release thm geo::add_equalities(q * (1 - y) * geo::vec(a, b)[2], q * (1 - y) * geo::vec(a, b)[2], y * (z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2])), y * (q - 1) * t * geo::vec(a, b)[2] + y * z * geo::vec(a, c)[2])
     q * (1 - y) * geo::vec(a, b)[2] + y * (z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2])) = q * (1 - y) * geo::vec(a, b)[2] + (y * (q - 1) * t * geo::vec(a, b)[2] + y * z * geo::vec(a, c)[2])
     q * (1 - y) * geo::vec(a, b)[2] + (y * (q - 1) * t * geo::vec(a, b)[2] + y * z * geo::vec(a, c)[2]) = (q * (1 - y) + y * (q - 1) * t) * geo::vec(a, b)[2] + y * z * geo::vec(a, c)[2]
     q * (1 - y) * geo::vec(a, b)[2] + y * (q * (d[2] - a[2])) = (q * (1 - y) + y * (q - 1) * t) * geo::vec(a, b)[2] + y * z * geo::vec(a, c)[2]
     q * (f[1] - a[1]) = (q * (1 - y) + y * (q - 1) * t) * geo::vec(a, b)[1] + y * z * geo::vec(a, c)[1]
     q * (f[2] - a[2]) = (q * (1 - y) + y * (q - 1) * t) * geo::vec(a, b)[2] + y * z * geo::vec(a, c)[2]
 
-    by thm geo::subtract_equalities(f[1], (1 - x) * a[1] + x * c[1], a[1], a[1])
+    release thm geo::subtract_equalities(f[1], (1 - x) * a[1] + x * c[1], a[1], a[1])
     f[1] - a[1] = ((1 - x) * a[1] + x * c[1]) - a[1]
     ((1 - x) * a[1] + x * c[1]) - a[1] = x * (c[1] - a[1])
-    by thm geo::subtract_equalities(f[2], (1 - x) * a[2] + x * c[2], a[2], a[2])
+    release thm geo::subtract_equalities(f[2], (1 - x) * a[2] + x * c[2], a[2], a[2])
     f[2] - a[2] = ((1 - x) * a[2] + x * c[2]) - a[2]
     ((1 - x) * a[2] + x * c[2]) - a[2] = x * (c[2] - a[2])
     f[1] - a[1] = x * (c[1] - a[1])
     f[2] - a[2] = x * (c[2] - a[2])
-    by thm geo::multiply_both_sides(f[1] - a[1], x * (c[1] - a[1]), q)
-    by thm geo::multiply_both_sides(f[2] - a[2], x * (c[2] - a[2]), q)
+    release thm geo::multiply_both_sides(f[1] - a[1], x * (c[1] - a[1]), q)
+    release thm geo::multiply_both_sides(f[2] - a[2], x * (c[2] - a[2]), q)
     q * (f[1] - a[1]) = q * (x * (c[1] - a[1])) = 0 * geo::vec(a, b)[1] + q * x * geo::vec(a, c)[1]
     q * (f[2] - a[2]) = q * (x * (c[2] - a[2])) = 0 * geo::vec(a, b)[2] + q * x * geo::vec(a, c)[2]
 
-    by thm basis_coefficient_unique_coordinates(geo::vec(a, b), geo::vec(a, c), q * (f[1] - a[1]), q * (f[2] - a[2]), q * (1 - y) + y * (q - 1) * t, y * z, 0, q * x)
+    release thm basis_coefficient_unique_coordinates(geo::vec(a, b), geo::vec(a, c), q * (f[1] - a[1]), q * (f[2] - a[2]), q * (1 - y) + y * (q - 1) * t, y * z, 0, q * x)
     q * (1 - y) + y * (q - 1) * t = 0
     y * z = q * x
     q * x = y * z
@@ -261,10 +261,10 @@ thm local_collinear_coordinates_imply_affine_parameter:
             witness exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]} from (p[1] - a[1]) / (b[1] - a[1]):
                 ((p[1] - a[1]) / (b[1] - a[1])) * (b[1] - a[1]) = p[1] - a[1]
                 p[1] = (1 - (p[1] - a[1]) / (b[1] - a[1])) * a[1] + ((p[1] - a[1]) / (b[1] - a[1])) * b[1]
-                by thm geo::multiply_both_sides(((p[1] - a[1]) / (b[1] - a[1])) * (b[1] - a[1]), p[1] - a[1], b[2] - a[2])
+                release thm geo::multiply_both_sides(((p[1] - a[1]) / (b[1] - a[1])) * (b[1] - a[1]), p[1] - a[1], b[2] - a[2])
                 (((p[1] - a[1]) / (b[1] - a[1])) * (b[1] - a[1])) * (b[2] - a[2]) = (p[1] - a[1]) * (b[2] - a[2])
                 (p[2] - a[2]) * (b[1] - a[1]) = (p[1] - a[1]) * (b[2] - a[2]) = (((p[1] - a[1]) / (b[1] - a[1])) * (b[1] - a[1])) * (b[2] - a[2]) = (((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2])) * (b[1] - a[1])
-                by thm geo::divide_both_sides(p[2] - a[2], ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]), b[1] - a[1])
+                release thm geo::divide_both_sides(p[2] - a[2], ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]), b[1] - a[1])
                 p[2] - a[2] = ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2])
                 p[2] = (p[2] - a[2]) + a[2] = ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]) + a[2] = (1 - (p[1] - a[1]) / (b[1] - a[1])) * a[2] + ((p[1] - a[1]) / (b[1] - a[1])) * b[2]
         case b[1] - a[1] = 0:
@@ -273,14 +273,14 @@ thm local_collinear_coordinates_imply_affine_parameter:
                 ? b[2] - a[2] != 0
                 b[2] - a[2] = 0
                 b[2] = a[2]
-                by thm tuple_equal_from_coordinates(a, (a[1], a[2]))
-                by thm tuple_equal_from_coordinates(b, (b[1], b[2]))
+                release thm tuple_equal_from_coordinates(a, (a[1], a[2]))
+                release thm tuple_equal_from_coordinates(b, (b[1], b[2]))
                 (a[1], a[2]) = (b[1], b[2])
                 a = (a[1], a[2]) = (b[1], b[2]) = b
                 impossible a != b
             witness exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]} from (p[2] - a[2]) / (b[2] - a[2]):
                 (p[1] - a[1]) * (b[2] - a[2]) = (p[1] - a[1]) * (b[2] - a[2]) - (p[2] - a[2]) * (b[1] - a[1]) = 0 = 0 * (b[2] - a[2])
-                by thm geo::divide_both_sides(p[1] - a[1], 0, b[2] - a[2])
+                release thm geo::divide_both_sides(p[1] - a[1], 0, b[2] - a[2])
                 p[1] - a[1] = 0
                 p[1] = a[1]
                 p[1] = a[1] = (1 - (p[2] - a[2]) / (b[2] - a[2])) * a[1] + ((p[2] - a[2]) / (b[2] - a[2])) * a[1] = (1 - (p[2] - a[2]) / (b[2] - a[2])) * a[1] + ((p[2] - a[2]) / (b[2] - a[2])) * b[1]
@@ -296,9 +296,9 @@ thm local_on_line_implies_affine_parameter:
     a != b
     p $in geo::line_of(a, b)
     geo::det(geo::vec(a, p), geo::vec(a, b)) = 0
-    by thm geo::collinear_det_expand(a, p, b)
+    release thm geo::collinear_det_expand(a, p, b)
     (p[1] - a[1]) * (b[2] - a[2]) - (p[2] - a[2]) * (b[1] - a[1]) = 0
-    by thm local_collinear_coordinates_imply_affine_parameter(a, b, p)
+    release thm local_collinear_coordinates_imply_affine_parameter(a, b, p)
     exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]}
 
 # Temporary probe: derive affine witnesses only from the original incidence predicates.
@@ -315,16 +315,16 @@ thm part2_affine_witness_probe:
     by def $geo::is_on_segment(g, a, b)
     obtain u_param from exist u0 R st {0 <= u0, u0 <= 1, g = (a[1] + u0 * (b[1] - a[1]), a[2] + u0 * (b[2] - a[2]))}
 
-    by thm local_on_line_implies_affine_parameter(g, d, h)
+    release thm local_on_line_implies_affine_parameter(g, d, h)
     obtain v_param from exist v0 R st {h[1] = (1 - v0) * g[1] + v0 * d[1], h[2] = (1 - v0) * g[2] + v0 * d[2]}
 
-    by thm local_on_line_implies_affine_parameter(a, c, h)
+    release thm local_on_line_implies_affine_parameter(a, c, h)
     obtain w_param from exist w0 R st {h[1] = (1 - w0) * a[1] + w0 * c[1], h[2] = (1 - w0) * a[2] + w0 * c[2]}
 
-    by thm local_on_line_implies_affine_parameter(a, c, f)
+    release thm local_on_line_implies_affine_parameter(a, c, f)
     obtain x_param from exist x0 R st {f[1] = (1 - x0) * a[1] + x0 * c[1], f[2] = (1 - x0) * a[2] + x0 * c[2]}
 
-    by thm local_on_line_implies_affine_parameter(b, d, f)
+    release thm local_on_line_implies_affine_parameter(b, d, f)
     obtain y_param from exist y0 R st {f[1] = (1 - y0) * b[1] + y0 * d[1], f[2] = (1 - y0) * b[2] + y0 * d[2]}
 
     witness exist u, v, w, x, y R st {0 <= u, u <= 1, g = (a[1] + u * (b[1] - a[1]), a[2] + u * (b[2] - a[2])), h[1] = (1 - v) * g[1] + v * d[1], h[2] = (1 - v) * g[2] + v * d[2], h[1] = (1 - w) * a[1] + w * c[1], h[2] = (1 - w) * a[2] + w * c[2], f[1] = (1 - x) * a[1] + x * c[1], f[2] = (1 - x) * a[2] + x * c[2], f[1] = (1 - y) * b[1] + y * d[1], f[2] = (1 - y) * b[2] + y * d[2]} from u_param, v_param, w_param, x_param, y_param
@@ -337,7 +337,7 @@ thm local_radius_b_linear:
         (a1 - o1)^2 + (a2 - o2)^2 = (b1 - o1)^2 + (b2 - o2)^2
         =>:
             2 * ((a1 - o1) * (b1 - a1) + (a2 - o2) * (b2 - a2)) + ((b1 - a1)^2 + (b2 - a2)^2) = 0
-    by thm geo::subtract_equalities((a1 - o1)^2 + (a2 - o2)^2, (b1 - o1)^2 + (b2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2)
+    release thm geo::subtract_equalities((a1 - o1)^2 + (a2 - o2)^2, (b1 - o1)^2 + (b2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2)
     ((a1 - o1)^2 + (a2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = ((b1 - o1)^2 + (b2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2)
     ((a1 - o1)^2 + (a2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = 0
     ((b1 - o1)^2 + (b2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = 2 * ((a1 - o1) * (b1 - a1) + (a2 - o2) * (b2 - a2)) + ((b1 - a1)^2 + (b2 - a2)^2)
@@ -350,7 +350,7 @@ thm local_radius_c_quadratic:
         c2 = a2 + s * (b2 - a2)
         =>:
             2 * s * ((a1 - o1) * (b1 - a1) + (a2 - o2) * (b2 - a2)) + s^2 * ((b1 - a1)^2 + (b2 - a2)^2) = 0
-    by thm geo::subtract_equalities((a1 - o1)^2 + (a2 - o2)^2, (c1 - o1)^2 + (c2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2)
+    release thm geo::subtract_equalities((a1 - o1)^2 + (a2 - o2)^2, (c1 - o1)^2 + (c2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2)
     ((a1 - o1)^2 + (a2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = ((c1 - o1)^2 + (c2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2)
     ((a1 - o1)^2 + (a2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = 0
     ((c1 - o1)^2 + (c2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = (((a1 + s * (b1 - a1)) - o1)^2 + ((a2 + s * (b2 - a2)) - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2)
@@ -363,10 +363,10 @@ thm local_circle_affine_eliminate:
         2 * s * U + s^2 * V = 0
         =>:
             s * (s - 1) * V = 0
-    by thm geo::multiply_both_sides(2 * U + V, 0, s)
+    release thm geo::multiply_both_sides(2 * U + V, 0, s)
     s * (2 * U + V) = 0 * s
     2 * s * U + s * V = s * (2 * U + V) = 0 * s = 0
-    by thm geo::subtract_equalities(2 * s * U + s^2 * V, 0, 2 * s * U + s * V, 0)
+    release thm geo::subtract_equalities(2 * s * U + s^2 * V, 0, 2 * s * U + s * V, 0)
     (2 * s * U + s^2 * V) - (2 * s * U + s * V) = 0 - 0
     s * (s - 1) * V = (2 * s * U + s^2 * V) - (2 * s * U + s * V) = 0
 
@@ -383,9 +383,9 @@ thm local_zero_factor:
         y != 0
         =>:
             x = 0
-    by thm local_swap_zero_product(x, y)
+    release thm local_swap_zero_product(x, y)
     y * x = 0
-    by thm geo::zero_factor_law(y, x)
+    release thm geo::zero_factor_law(y, x)
     x = 0
 
 thm concyclic_three_distinct_nondegenerate_probe:
@@ -399,11 +399,11 @@ thm concyclic_three_distinct_nondegenerate_probe:
     by contra:
         ? geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
         geo::det(geo::vec(a, b), geo::vec(a, c)) = 0
-        by thm geo::det_antisymmetric(geo::vec(a, c), geo::vec(a, b))
+        release thm geo::det_antisymmetric(geo::vec(a, c), geo::vec(a, b))
         geo::det(geo::vec(a, c), geo::vec(a, b)) = -(geo::det(geo::vec(a, b), geo::vec(a, c))) = 0
-        by thm geo::collinear_det_expand(a, c, b)
+        release thm geo::collinear_det_expand(a, c, b)
         (c[1] - a[1]) * (b[2] - a[2]) - (c[2] - a[2]) * (b[1] - a[1]) = 0
-        by thm local_collinear_coordinates_imply_affine_parameter(a, b, c)
+        release thm local_collinear_coordinates_imply_affine_parameter(a, b, c)
         exist s R st {c[1] = (1 - s) * a[1] + s * b[1], c[2] = (1 - s) * a[2] + s * b[2]}
         obtain s from exist s0 R st {c[1] = (1 - s0) * a[1] + s0 * b[1], c[2] = (1 - s0) * a[2] + s0 * b[2]}
 
@@ -412,42 +412,42 @@ thm concyclic_three_distinct_nondegenerate_probe:
         obtain o from exist o0 cart(R, R) st {geo::distance_sq(o0, a) = geo::distance_sq(o0, d), geo::distance_sq(o0, b) = geo::distance_sq(o0, d), geo::distance_sq(o0, c) = geo::distance_sq(o0, d)}
         geo::distance_sq(o, a) = geo::distance_sq(o, d) = geo::distance_sq(o, b)
         geo::distance_sq(o, a) = geo::distance_sq(o, d) = geo::distance_sq(o, c)
-        by thm geo::distance_sq_coordinate_formula(o, a)
-        by thm geo::distance_sq_coordinate_formula(o, b)
-        by thm geo::distance_sq_coordinate_formula(o, c)
+        release thm geo::distance_sq_coordinate_formula(o, a)
+        release thm geo::distance_sq_coordinate_formula(o, b)
+        release thm geo::distance_sq_coordinate_formula(o, c)
         (a[1] - o[1])^2 + (a[2] - o[2])^2 = (b[1] - o[1])^2 + (b[2] - o[2])^2
         (a[1] - o[1])^2 + (a[2] - o[2])^2 = (c[1] - o[1])^2 + (c[2] - o[2])^2
         c[1] = a[1] + s * (b[1] - a[1])
         c[2] = a[2] + s * (b[2] - a[2])
-        by thm local_radius_b_linear(a[1], a[2], b[1], b[2], o[1], o[2])
+        release thm local_radius_b_linear(a[1], a[2], b[1], b[2], o[1], o[2])
         2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])) + ((b[1] - a[1])^2 + (b[2] - a[2])^2) = 0
-        by thm local_radius_c_quadratic(a[1], a[2], b[1], b[2], c[1], c[2], o[1], o[2], s)
+        release thm local_radius_c_quadratic(a[1], a[2], b[1], b[2], c[1], c[2], o[1], o[2], s)
         2 * s * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])) + s^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = 0
-        by thm local_circle_affine_eliminate((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]), (b[1] - a[1])^2 + (b[2] - a[2])^2, s)
+        release thm local_circle_affine_eliminate((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]), (b[1] - a[1])^2 + (b[2] - a[2])^2, s)
         s * (s - 1) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = 0
-        by thm geo::point_difference_norm_pos(a, b)
+        release thm geo::point_difference_norm_pos(a, b)
         (b[1] - a[1])^2 + (b[2] - a[2])^2 > 0
         (b[1] - a[1])^2 + (b[2] - a[2])^2 != 0
-        by thm local_zero_factor(s * (s - 1), (b[1] - a[1])^2 + (b[2] - a[2])^2)
+        release thm local_zero_factor(s * (s - 1), (b[1] - a[1])^2 + (b[2] - a[2])^2)
         s * (s - 1) = 0
         by cases:
             ? geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
             case s = 0:
-                by thm geo::multiply_both_sides(s, 0, b[1] - a[1])
+                release thm geo::multiply_both_sides(s, 0, b[1] - a[1])
                 s * (b[1] - a[1]) = 0 * (b[1] - a[1]) = 0
-                by thm geo::multiply_both_sides(s, 0, b[2] - a[2])
+                release thm geo::multiply_both_sides(s, 0, b[2] - a[2])
                 s * (b[2] - a[2]) = 0 * (b[2] - a[2]) = 0
                 c[1] = a[1] + s * (b[1] - a[1]) = a[1] + 0 = a[1]
                 c[2] = a[2] + s * (b[2] - a[2]) = a[2] + 0 = a[2]
                 c = (c[1], c[2]) = (a[1], a[2]) = a
                 impossible a != c
             case s != 0:
-                by thm geo::zero_factor_law(s, s - 1)
+                release thm geo::zero_factor_law(s, s - 1)
                 s - 1 = 0
                 s = 1
-                by thm geo::multiply_both_sides(s, 1, b[1] - a[1])
+                release thm geo::multiply_both_sides(s, 1, b[1] - a[1])
                 s * (b[1] - a[1]) = 1 * (b[1] - a[1]) = b[1] - a[1]
-                by thm geo::multiply_both_sides(s, 1, b[2] - a[2])
+                release thm geo::multiply_both_sides(s, 1, b[2] - a[2])
                 s * (b[2] - a[2]) = 1 * (b[2] - a[2]) = b[2] - a[2]
                 c[1] = a[1] + s * (b[1] - a[1]) = a[1] + (b[1] - a[1]) = b[1]
                 c[2] = a[2] + s * (b[2] - a[2]) = a[2] + (b[2] - a[2]) = b[2]
@@ -466,16 +466,16 @@ thm local_scalar_basis_first_coefficient_zero:
             t = 0
     t * u1 = z * v1
     t * u2 = z * v2
-    by thm geo::multiply_both_sides(t * u1, z * v1, v2)
+    release thm geo::multiply_both_sides(t * u1, z * v1, v2)
     (t * u1) * v2 = (z * v1) * v2
-    by thm geo::multiply_both_sides(t * u2, z * v2, v1)
+    release thm geo::multiply_both_sides(t * u2, z * v2, v1)
     (t * u2) * v1 = (z * v2) * v1
-    by thm geo::subtract_equalities((t * u1) * v2, (z * v1) * v2, (t * u2) * v1, (z * v2) * v1)
+    release thm geo::subtract_equalities((t * u1) * v2, (z * v1) * v2, (t * u2) * v1, (z * v2) * v1)
     (t * u1) * v2 - (t * u2) * v1 = (z * v1) * v2 - (z * v2) * v1
     (t * u1) * v2 - (t * u2) * v1 = t * (u1 * v2 - u2 * v1)
     (z * v1) * v2 - (z * v2) * v1 = 0
     t * (u1 * v2 - u2 * v1) = 0
-    by thm local_zero_factor(t, u1 * v2 - u2 * v1)
+    release thm local_zero_factor(t, u1 * v2 - u2 * v1)
     t = 0
 
 thm local_point_basis_first_coefficient_zero:
@@ -487,10 +487,10 @@ thm local_point_basis_first_coefficient_zero:
         p[2] - a[2] = z * (c[2] - a[2])
         =>:
             t = 0
-    by thm geo::collinear_det_expand(a, b, c)
+    release thm geo::collinear_det_expand(a, b, c)
     geo::det(geo::vec(a, b), geo::vec(a, c)) = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])
     (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]) != 0
-    by thm local_scalar_basis_first_coefficient_zero(b[1] - a[1], b[2] - a[2], c[1] - a[1], c[2] - a[2], p[1] - a[1], p[2] - a[2], t, z)
+    release thm local_scalar_basis_first_coefficient_zero(b[1] - a[1], b[2] - a[2], c[1] - a[1], c[2] - a[2], p[1] - a[1], p[2] - a[2], t, z)
     t = 0
 
 # Problem 465 Part 2: the intended non-endpoint condition G != A excludes q=0.
@@ -515,7 +515,7 @@ thm part2_q_nonzero_from_nonendpoint:
         h[2] - a[2] = g[2] - a[2] = (a[2] + t * (b[2] - a[2])) - a[2] = t * (b[2] - a[2])
         h[1] - a[1] = ((1 - z) * a[1] + z * c[1]) - a[1] = z * (c[1] - a[1])
         h[2] - a[2] = ((1 - z) * a[2] + z * c[2]) - a[2] = z * (c[2] - a[2])
-        by thm local_point_basis_first_coefficient_zero(a, b, c, h, t, z)
+        release thm local_point_basis_first_coefficient_zero(a, b, c, h, t, z)
         t = 0
         g[1] = a[1]
         g[2] = a[2]
@@ -529,7 +529,7 @@ thm local_radius_linear:
         (a1 - o1)^2 + (a2 - o2)^2 = (b1 - o1)^2 + (b2 - o2)^2
         =>:
             2 * ((a1 - o1) * (b1 - a1) + (a2 - o2) * (b2 - a2)) + ((b1 - a1)^2 + (b2 - a2)^2) = 0
-    by thm geo::subtract_equalities((a1 - o1)^2 + (a2 - o2)^2, (b1 - o1)^2 + (b2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2)
+    release thm geo::subtract_equalities((a1 - o1)^2 + (a2 - o2)^2, (b1 - o1)^2 + (b2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2)
     ((a1 - o1)^2 + (a2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = ((b1 - o1)^2 + (b2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2)
     ((a1 - o1)^2 + (a2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = 0
     ((b1 - o1)^2 + (b2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = 2 * ((a1 - o1) * (b1 - a1) + (a2 - o2) * (b2 - a2)) + ((b1 - a1)^2 + (b2 - a2)^2)
@@ -540,8 +540,8 @@ thm local_square_both_sides:
         u = v
         =>:
             u^2 = v^2
-    by thm geo::multiply_both_sides(u, v, u)
-    by thm geo::multiply_both_sides(u, v, v)
+    release thm geo::multiply_both_sides(u, v, u)
+    release thm geo::multiply_both_sides(u, v, v)
     u^2 = u * u = v * u = u * v = v * v = v^2
 
 thm local_regroup_two_quadratics:
@@ -555,7 +555,7 @@ thm local_zero_sum_to_negative:
         x + y = 0
         =>:
             x = -y
-    by thm geo::subtract_equalities(x + y, 0, y, y)
+    release thm geo::subtract_equalities(x + y, 0, y, y)
     (x + y) - y = 0 - y
     x = (x + y) - y = 0 - y = -y
 
@@ -564,7 +564,7 @@ thm local_scale_linear:
         q * u = h * v - s * w
         =>:
             2 * q^2 * u = h * q * (2 * v) - q * s * (2 * w)
-    by thm geo::multiply_both_sides(q * u, h * v - s * w, 2 * q)
+    release thm geo::multiply_both_sides(q * u, h * v - s * w, 2 * q)
     (q * u) * (2 * q) = (h * v - s * w) * (2 * q)
     2 * q^2 * u = (q * u) * (2 * q)
     (h * v - s * w) * (2 * q) = h * q * (2 * v) - q * s * (2 * w)
@@ -576,11 +576,11 @@ thm local_weighted_coordinate_sum:
         q * u2 = h * v2 - s * w2
         =>:
             q * (r1 * u1 + r2 * u2) = h * (r1 * v1 + r2 * v2) - s * (r1 * w1 + r2 * w2)
-    by thm geo::multiply_both_sides(q * u1, h * v1 - s * w1, r1)
+    release thm geo::multiply_both_sides(q * u1, h * v1 - s * w1, r1)
     (q * u1) * r1 = (h * v1 - s * w1) * r1
-    by thm geo::multiply_both_sides(q * u2, h * v2 - s * w2, r2)
+    release thm geo::multiply_both_sides(q * u2, h * v2 - s * w2, r2)
     (q * u2) * r2 = (h * v2 - s * w2) * r2
-    by thm geo::add_equalities((q * u1) * r1, (h * v1 - s * w1) * r1, (q * u2) * r2, (h * v2 - s * w2) * r2)
+    release thm geo::add_equalities((q * u1) * r1, (h * v1 - s * w1) * r1, (q * u2) * r2, (h * v2 - s * w2) * r2)
     (q * u1) * r1 + (q * u2) * r2 = (h * v1 - s * w1) * r1 + (h * v2 - s * w2) * r2
     q * (r1 * u1 + r2 * u2) = (q * u1) * r1 + (q * u2) * r2
     (h * v1 - s * w1) * r1 + (h * v2 - s * w2) * r2 = h * (r1 * v1 + r2 * v2) - s * (r1 * w1 + r2 * w2)
@@ -599,24 +599,24 @@ thm cyclic_center_algebra_probe:
         =>:
             L * (h^2 + (1 - q)^2 * t^2 - h * q + q * (1 - q) * t) - 2 * h * (1 - q) * t * K = 0
 
-    by thm geo::distance_sq_coordinate_formula(o, a)
-    by thm geo::distance_sq_coordinate_formula(o, b)
-    by thm geo::distance_sq_coordinate_formula(o, c)
-    by thm geo::distance_sq_coordinate_formula(o, d)
+    release thm geo::distance_sq_coordinate_formula(o, a)
+    release thm geo::distance_sq_coordinate_formula(o, b)
+    release thm geo::distance_sq_coordinate_formula(o, c)
+    release thm geo::distance_sq_coordinate_formula(o, d)
 
     (a[1] - o[1])^2 + (a[2] - o[2])^2 = (b[1] - o[1])^2 + (b[2] - o[2])^2
     (a[1] - o[1])^2 + (a[2] - o[2])^2 = (c[1] - o[1])^2 + (c[2] - o[2])^2
     (a[1] - o[1])^2 + (a[2] - o[2])^2 = (d[1] - o[1])^2 + (d[2] - o[2])^2
 
-    by thm local_radius_linear(a[1], a[2], b[1], b[2], o[1], o[2])
+    release thm local_radius_linear(a[1], a[2], b[1], b[2], o[1], o[2])
     2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])) + ((b[1] - a[1])^2 + (b[2] - a[2])^2) = 0
     2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])) + L = 2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])) + ((b[1] - a[1])^2 + (b[2] - a[2])^2) = 0
-    by thm local_radius_linear(a[1], a[2], c[1], c[2], o[1], o[2])
+    release thm local_radius_linear(a[1], a[2], c[1], c[2], o[1], o[2])
     2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])) + ((c[1] - a[1])^2 + (c[2] - a[2])^2) = 0
     2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])) + L = 2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])) + ((c[1] - a[1])^2 + (c[2] - a[2])^2) = 0
-    by thm local_radius_linear(a[1], a[2], d[1], d[2], o[1], o[2])
+    release thm local_radius_linear(a[1], a[2], d[1], d[2], o[1], o[2])
     2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) + ((d[1] - a[1])^2 + (d[2] - a[2])^2) = 0
-    by thm geo::multiply_both_sides(2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) + ((d[1] - a[1])^2 + (d[2] - a[2])^2), 0, q^2)
+    release thm geo::multiply_both_sides(2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) + ((d[1] - a[1])^2 + (d[2] - a[2])^2), 0, q^2)
     q^2 * (2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) + ((d[1] - a[1])^2 + (d[2] - a[2])^2)) = q^2 * 0
     q^2 * 0 = 0
     q^2 * (2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) + ((d[1] - a[1])^2 + (d[2] - a[2])^2)) = 0
@@ -624,52 +624,52 @@ thm cyclic_center_algebra_probe:
 
     q * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) = h * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])) - (1 - q) * t * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]))
 
-    by thm local_square_both_sides(q * (d[1] - a[1]), h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1]))
+    release thm local_square_both_sides(q * (d[1] - a[1]), h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1]))
     (q * (d[1] - a[1]))^2 = (h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1]))^2
-    by thm local_square_both_sides(q * (d[2] - a[2]), h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2]))
+    release thm local_square_both_sides(q * (d[2] - a[2]), h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2]))
     (q * (d[2] - a[2]))^2 = (h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2]))^2
-    by thm geo::add_equalities((q * (d[1] - a[1]))^2, (h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1]))^2, (q * (d[2] - a[2]))^2, (h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2]))^2)
+    release thm geo::add_equalities((q * (d[1] - a[1]))^2, (h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1]))^2, (q * (d[2] - a[2]))^2, (h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2]))^2)
     (q * (d[1] - a[1]))^2 + (q * (d[2] - a[2]))^2 = (h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1]))^2 + (h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2]))^2
     q^2 * (d[1] - a[1])^2 = (q * (d[1] - a[1]))^2
     q^2 * (d[2] - a[2])^2 = (q * (d[2] - a[2]))^2
     q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = q^2 * (d[1] - a[1])^2 + q^2 * (d[2] - a[2])^2
     q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = (q * (d[1] - a[1]))^2 + (q * (d[2] - a[2]))^2
     q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = (h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1]))^2 + (h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2]))^2
-    by thm local_regroup_two_quadratics(c[1] - a[1], c[2] - a[2], b[1] - a[1], b[2] - a[2], h, (1 - q) * t)
+    release thm local_regroup_two_quadratics(c[1] - a[1], c[2] - a[2], b[1] - a[1], b[2] - a[2], h, (1 - q) * t)
     (h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1]))^2 + (h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2]))^2 = h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * ((1 - q) * t) * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) + ((1 - q) * t)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
     q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = (h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1]))^2 + (h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2]))^2 = h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * ((1 - q) * t) * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) + ((1 - q) * t)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
-    by thm geo::multiply_both_sides(L, (c[1] - a[1])^2 + (c[2] - a[2])^2, h^2)
+    release thm geo::multiply_both_sides(L, (c[1] - a[1])^2 + (c[2] - a[2])^2, h^2)
     h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) = h^2 * L
-    by thm geo::multiply_both_sides(K, (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]), -2 * h * ((1 - q) * t))
+    release thm geo::multiply_both_sides(K, (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]), -2 * h * ((1 - q) * t))
     -2 * h * ((1 - q) * t) * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) = -2 * h * ((1 - q) * t) * K
-    by thm geo::add_equalities(h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2), h^2 * L, -2 * h * ((1 - q) * t) * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])), -2 * h * ((1 - q) * t) * K)
+    release thm geo::add_equalities(h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2), h^2 * L, -2 * h * ((1 - q) * t) * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])), -2 * h * ((1 - q) * t) * K)
     h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * ((1 - q) * t) * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) = h^2 * L - 2 * h * ((1 - q) * t) * K
-    by thm geo::multiply_both_sides(L, (b[1] - a[1])^2 + (b[2] - a[2])^2, ((1 - q) * t)^2)
+    release thm geo::multiply_both_sides(L, (b[1] - a[1])^2 + (b[2] - a[2])^2, ((1 - q) * t)^2)
     ((1 - q) * t)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = ((1 - q) * t)^2 * L
-    by thm geo::add_equalities(h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * ((1 - q) * t) * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])), h^2 * L - 2 * h * ((1 - q) * t) * K, ((1 - q) * t)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2), ((1 - q) * t)^2 * L)
+    release thm geo::add_equalities(h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * ((1 - q) * t) * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])), h^2 * L - 2 * h * ((1 - q) * t) * K, ((1 - q) * t)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2), ((1 - q) * t)^2 * L)
     h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * ((1 - q) * t) * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) + ((1 - q) * t)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = h^2 * L - 2 * h * ((1 - q) * t) * K + ((1 - q) * t)^2 * L
     q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * ((1 - q) * t) * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) + ((1 - q) * t)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = h^2 * L - 2 * h * ((1 - q) * t) * K + ((1 - q) * t)^2 * L
     q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = h^2 * L + (1 - q)^2 * t^2 * L - 2 * h * (1 - q) * t * K
 
     2 * q^2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) + q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = 0
-    by thm local_zero_sum_to_negative(2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])), L)
+    release thm local_zero_sum_to_negative(2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])), L)
     2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])) = -L
-    by thm local_zero_sum_to_negative(2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])), L)
+    release thm local_zero_sum_to_negative(2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])), L)
     2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])) = -L
-    by thm local_scale_linear((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2]), (a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]), (a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]), q, h, (1 - q) * t)
+    release thm local_scale_linear((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2]), (a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]), (a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]), q, h, (1 - q) * t)
     2 * q^2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) = h * q * (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))) - q * ((1 - q) * t) * (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])))
     h * q * (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))) - q * ((1 - q) * t) * (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]))) = h * q * (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))) - q * (1 - q) * t * (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])))
-    by thm geo::multiply_both_sides(2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])), -L, h * q)
+    release thm geo::multiply_both_sides(2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])), -L, h * q)
     (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))) * (h * q) = (-L) * (h * q)
     h * q * (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))) = (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))) * (h * q) = (-L) * (h * q) = -h * q * L
-    by thm geo::multiply_both_sides(2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])), -L, -q * (1 - q) * t)
+    release thm geo::multiply_both_sides(2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])), -L, -q * (1 - q) * t)
     (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]))) * (-q * (1 - q) * t) = (-L) * (-q * (1 - q) * t)
     -q * (1 - q) * t * (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]))) = (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]))) * (-q * (1 - q) * t) = (-L) * (-q * (1 - q) * t) = q * (1 - q) * t * L
-    by thm geo::add_equalities(h * q * (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))), -h * q * L, -q * (1 - q) * t * (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]))), q * (1 - q) * t * L)
+    release thm geo::add_equalities(h * q * (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))), -h * q * L, -q * (1 - q) * t * (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]))), q * (1 - q) * t * L)
     h * q * (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))) + (-q * (1 - q) * t * (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])))) = -h * q * L + q * (1 - q) * t * L
     h * q * (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))) - q * (1 - q) * t * (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]))) = h * q * (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))) + (-q * (1 - q) * t * (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])))) = -h * q * L + q * (1 - q) * t * L
     2 * q^2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) = h * q * (2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]))) - q * (1 - q) * t * (2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]))) = -h * q * L + q * (1 - q) * t * L
-    by thm geo::add_equalities(2 * q^2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])), -h * q * L + q * (1 - q) * t * L, q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2), h^2 * L + (1 - q)^2 * t^2 * L - 2 * h * (1 - q) * t * K)
+    release thm geo::add_equalities(2 * q^2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])), -h * q * L + q * (1 - q) * t * L, q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2), h^2 * L + (1 - q)^2 * t^2 * L - 2 * h * (1 - q) * t * K)
     2 * q^2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) + q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = (-h * q * L + q * (1 - q) * t * L) + (h^2 * L + (1 - q)^2 * t^2 * L - 2 * h * (1 - q) * t * K)
     (-h * q * L + q * (1 - q) * t * L) + (h^2 * L + (1 - q)^2 * t^2 * L - 2 * h * (1 - q) * t * K) = 2 * q^2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) + q^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = 0
     L * (h^2 + (1 - q)^2 * t^2 - h * q + q * (1 - q) * t) - 2 * h * (1 - q) * t * K = 0
@@ -697,16 +697,16 @@ thm part2_equidistance_scaled_probe:
             L * (h^2 + t^2 - q^2 * (1 - t)^2) - 2 * h * t * K = 0
     by def $geo::are_segments_congruent(a, b, a, c)
     by def $geo::are_segments_congruent(b, g, d, g)
-    by thm geo::distance_sq_coordinate_formula(a, b)
-    by thm geo::distance_sq_coordinate_formula(a, c)
-    by thm geo::distance_sq_coordinate_formula(b, g)
-    by thm geo::distance_sq_coordinate_formula(d, g)
+    release thm geo::distance_sq_coordinate_formula(a, b)
+    release thm geo::distance_sq_coordinate_formula(a, c)
+    release thm geo::distance_sq_coordinate_formula(b, g)
+    release thm geo::distance_sq_coordinate_formula(d, g)
 
     geo::distance_sq(a, b) = L
     geo::distance_sq(a, c) = L
     g[1] - b[1] = -(1 - t) * (b[1] - a[1])
     g[2] - b[2] = -(1 - t) * (b[2] - a[2])
-    by thm geo::distance_sq_coordinate_formula(b, g)
+    release thm geo::distance_sq_coordinate_formula(b, g)
     geo::distance_sq(b, g) = (g[1] - b[1])^2 + (g[2] - b[2])^2
     (g[1] - b[1])^2 = (-(1 - t) * (b[1] - a[1]))^2
     (-(1 - t) * (b[1] - a[1]))^2 = (1 - t)^2 * (b[1] - a[1])^2
@@ -721,7 +721,7 @@ thm part2_equidistance_scaled_probe:
     (1 - t)^2 * (b[1] - a[1])^2 + (1 - t)^2 * (b[2] - a[2])^2 = (1 - t)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
     geo::distance_sq(b, g) = (1 - t)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
     (b[1] - a[1])^2 + (b[2] - a[2])^2 = L
-    by thm geo::multiply_both_sides((b[1] - a[1])^2 + (b[2] - a[2])^2, L, (1 - t)^2)
+    release thm geo::multiply_both_sides((b[1] - a[1])^2 + (b[2] - a[2])^2, L, (1 - t)^2)
     (1 - t)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = (1 - t)^2 * L
     geo::distance_sq(b, g) = (1 - t)^2 * L
 
@@ -733,15 +733,15 @@ thm part2_equidistance_scaled_probe:
     g[2] - a[2] = t * (b[2] - a[2])
     p[1] - g[1] = (p[1] - a[1]) - (g[1] - a[1])
     p[2] - g[2] = (p[2] - a[2]) - (g[2] - a[2])
-    by thm geo::subtract_equalities(p[1] - a[1], h * (c[1] - a[1]), g[1] - a[1], t * (b[1] - a[1]))
-    by thm geo::subtract_equalities(p[2] - a[2], h * (c[2] - a[2]), g[2] - a[2], t * (b[2] - a[2]))
+    release thm geo::subtract_equalities(p[1] - a[1], h * (c[1] - a[1]), g[1] - a[1], t * (b[1] - a[1]))
+    release thm geo::subtract_equalities(p[2] - a[2], h * (c[2] - a[2]), g[2] - a[2], t * (b[2] - a[2]))
     (p[1] - a[1]) - (g[1] - a[1]) = h * (c[1] - a[1]) - t * (b[1] - a[1])
     (p[2] - a[2]) - (g[2] - a[2]) = h * (c[2] - a[2]) - t * (b[2] - a[2])
     p[1] - g[1] = h * (c[1] - a[1]) - t * (b[1] - a[1])
     p[2] - g[2] = h * (c[2] - a[2]) - t * (b[2] - a[2])
     q * (d[1] - g[1]) = h * (c[1] - a[1]) - t * (b[1] - a[1])
     q * (d[2] - g[2]) = h * (c[2] - a[2]) - t * (b[2] - a[2])
-    by thm geo::distance_sq_coordinate_formula(d, g)
+    release thm geo::distance_sq_coordinate_formula(d, g)
     geo::distance_sq(d, g) = (g[1] - d[1])^2 + (g[2] - d[2])^2
     q * (g[1] - d[1]) = -(q * (d[1] - g[1]))
     -(q * (d[1] - g[1])) = -(h * (c[1] - a[1]) - t * (b[1] - a[1]))
@@ -765,29 +765,29 @@ thm part2_equidistance_scaled_probe:
     q^2 * geo::distance_sq(d, g) = (h * (c[1] - a[1]) - t * (b[1] - a[1]))^2 + (h * (c[2] - a[2]) - t * (b[2] - a[2]))^2
     (h * (c[1] - a[1]) - t * (b[1] - a[1]))^2 = h^2 * (c[1] - a[1])^2 - 2 * h * t * (c[1] - a[1]) * (b[1] - a[1]) + t^2 * (b[1] - a[1])^2
     (h * (c[2] - a[2]) - t * (b[2] - a[2]))^2 = h^2 * (c[2] - a[2])^2 - 2 * h * t * (c[2] - a[2]) * (b[2] - a[2]) + t^2 * (b[2] - a[2])^2
-    by thm geo::add_equalities((h * (c[1] - a[1]) - t * (b[1] - a[1]))^2, h^2 * (c[1] - a[1])^2 - 2 * h * t * (c[1] - a[1]) * (b[1] - a[1]) + t^2 * (b[1] - a[1])^2, (h * (c[2] - a[2]) - t * (b[2] - a[2]))^2, h^2 * (c[2] - a[2])^2 - 2 * h * t * (c[2] - a[2]) * (b[2] - a[2]) + t^2 * (b[2] - a[2])^2)
+    release thm geo::add_equalities((h * (c[1] - a[1]) - t * (b[1] - a[1]))^2, h^2 * (c[1] - a[1])^2 - 2 * h * t * (c[1] - a[1]) * (b[1] - a[1]) + t^2 * (b[1] - a[1])^2, (h * (c[2] - a[2]) - t * (b[2] - a[2]))^2, h^2 * (c[2] - a[2])^2 - 2 * h * t * (c[2] - a[2]) * (b[2] - a[2]) + t^2 * (b[2] - a[2])^2)
     (h * (c[1] - a[1]) - t * (b[1] - a[1]))^2 + (h * (c[2] - a[2]) - t * (b[2] - a[2]))^2 = (h^2 * (c[1] - a[1])^2 - 2 * h * t * (c[1] - a[1]) * (b[1] - a[1]) + t^2 * (b[1] - a[1])^2) + (h^2 * (c[2] - a[2])^2 - 2 * h * t * (c[2] - a[2]) * (b[2] - a[2]) + t^2 * (b[2] - a[2])^2)
     q^2 * geo::distance_sq(d, g) = (h^2 * (c[1] - a[1])^2 - 2 * h * t * (c[1] - a[1]) * (b[1] - a[1]) + t^2 * (b[1] - a[1])^2) + (h^2 * (c[2] - a[2])^2 - 2 * h * t * (c[2] - a[2]) * (b[2] - a[2]) + t^2 * (b[2] - a[2])^2)
-    by thm local_regroup_two_quadratics(c[1] - a[1], c[2] - a[2], b[1] - a[1], b[2] - a[2], h, t)
+    release thm local_regroup_two_quadratics(c[1] - a[1], c[2] - a[2], b[1] - a[1], b[2] - a[2], h, t)
     (h^2 * (c[1] - a[1])^2 - 2 * h * t * (c[1] - a[1]) * (b[1] - a[1]) + t^2 * (b[1] - a[1])^2) + (h^2 * (c[2] - a[2])^2 - 2 * h * t * (c[2] - a[2]) * (b[2] - a[2]) + t^2 * (b[2] - a[2])^2) = h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) + t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
     q^2 * geo::distance_sq(d, g) = h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) + t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
-    by thm geo::multiply_both_sides(L, (c[1] - a[1])^2 + (c[2] - a[2])^2, h^2)
+    release thm geo::multiply_both_sides(L, (c[1] - a[1])^2 + (c[2] - a[2])^2, h^2)
     h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) = h^2 * L
-    by thm geo::multiply_both_sides(K, (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]), -2 * h * t)
+    release thm geo::multiply_both_sides(K, (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]), -2 * h * t)
     -2 * h * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) = -2 * h * t * K
-    by thm geo::add_equalities(h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2), h^2 * L, -2 * h * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])), -2 * h * t * K)
+    release thm geo::add_equalities(h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2), h^2 * L, -2 * h * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])), -2 * h * t * K)
     h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) = h^2 * L - 2 * h * t * K
-    by thm geo::multiply_both_sides(L, (b[1] - a[1])^2 + (b[2] - a[2])^2, t^2)
+    release thm geo::multiply_both_sides(L, (b[1] - a[1])^2 + (b[2] - a[2])^2, t^2)
     t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = t^2 * L
-    by thm geo::add_equalities(h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])), h^2 * L - 2 * h * t * K, t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2), t^2 * L)
+    release thm geo::add_equalities(h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])), h^2 * L - 2 * h * t * K, t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2), t^2 * L)
     h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - 2 * h * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) + t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = h^2 * L - 2 * h * t * K + t^2 * L
     q^2 * geo::distance_sq(d, g) = h^2 * L - 2 * h * t * K + t^2 * L
     geo::distance_sq(d, g) = (1 - t)^2 * L
-    by thm geo::multiply_both_sides(geo::distance_sq(d, g), (1 - t)^2 * L, q^2)
+    release thm geo::multiply_both_sides(geo::distance_sq(d, g), (1 - t)^2 * L, q^2)
     q^2 * geo::distance_sq(d, g) = q^2 * ((1 - t)^2 * L)
     q^2 * geo::distance_sq(d, g) = q^2 * (1 - t)^2 * L
     q^2 * (1 - t)^2 * L = h^2 * L - 2 * h * t * K + t^2 * L
-    by thm geo::subtract_equalities(h^2 * L - 2 * h * t * K + t^2 * L, q^2 * (1 - t)^2 * L, q^2 * (1 - t)^2 * L, q^2 * (1 - t)^2 * L)
+    release thm geo::subtract_equalities(h^2 * L - 2 * h * t * K + t^2 * L, q^2 * (1 - t)^2 * L, q^2 * (1 - t)^2 * L, q^2 * (1 - t)^2 * L)
     (h^2 * L - 2 * h * t * K + t^2 * L) - q^2 * (1 - t)^2 * L = (q^2 * (1 - t)^2 * L) - q^2 * (1 - t)^2 * L
     (q^2 * (1 - t)^2 * L) - q^2 * (1 - t)^2 * L = 0
     (h^2 * L - 2 * h * t * K + t^2 * L) - q^2 * (1 - t)^2 * L = 0
@@ -810,12 +810,12 @@ thm part2_scaled_parameter_elimination_probe:
     -L * q * (h + q * t - q - t) * (-h + q * t - q - t + 1) = 0
     -L != 0
     -L * q != 0
-    by thm geo::zero_factor_law(-L * q, (h + q * t - q - t) * (-h + q * t - q - t + 1))
+    release thm geo::zero_factor_law(-L * q, (h + q * t - q - t) * (-h + q * t - q - t + 1))
     (h + q * t - q - t) * (-h + q * t - q - t + 1) = 0
-    by thm geo::zero_factor_law(h + q * t - q - t, -h + q * t - q - t + 1)
+    release thm geo::zero_factor_law(h + q * t - q - t, -h + q * t - q - t + 1)
     -h + q * t - q - t + 1 = 0
     (-h) + (q * t - q - t + 1) = 0
-    by thm geo::zero_sum_rearrange(-h, q * t - q - t + 1)
+    release thm geo::zero_sum_rearrange(-h, q * t - q - t + 1)
     h = q * t - q - t + 1
 
 # Local scalar helper for Problem 465, Part 2.
@@ -832,11 +832,11 @@ thm extension_parameters_exclude_spurious_factor:
     by contra:
         ? h + q * t - q - t != 0
         h + q * t - q - t = 0
-        by thm geo::rearrange_sum(h + q * t, q, t)
+        release thm geo::rearrange_sum(h + q * t, q, t)
         h + q * t = q + t
-        by thm geo::multiply_both_sides(h + q * t, q + t, r)
+        release thm geo::multiply_both_sides(h + q * t, q + t, r)
         (h + q * t) * r = (q + t) * r
-        by thm geo::subtract_equalities((h + q * t) * r, (q + t) * r, r * t, r * t)
+        release thm geo::subtract_equalities((h + q * t) * r, (q + t) * r, r * t, r * t)
         (h + q * t) * r - r * t = (q + t) * r - r * t
         (h + q * t) * r - r * t = r * h + r * (q - 1) * t
         (q + t) * r - r * t = r * q
@@ -847,7 +847,7 @@ thm extension_parameters_exclude_spurious_factor:
         r * q - q = 0
         r * q - q = q * (r - 1)
         q * (r - 1) = 0
-        by thm geo::zero_factor_law(q, r - 1)
+        release thm geo::zero_factor_law(q, r - 1)
         r - 1 = 0
         r = 1
         impossible r > 1
@@ -880,7 +880,7 @@ thm part2_f_parameter_product_probe:
     q * (1 - y) + y * (q - 1) * t = q - y * (q - (q - 1) * t)
     q - y * (q - (q - 1) * t) = 0
     q = y * (q - (q - 1) * t)
-    by thm geo::multiply_both_sides(q - (q - 1) * t, 1 - h, y)
+    release thm geo::multiply_both_sides(q - (q - 1) * t, 1 - h, y)
     (q - (q - 1) * t) * y = (1 - h) * y
     y * (q - (q - 1) * t) = y * (1 - h)
     q = y * (1 - h)
@@ -891,10 +891,10 @@ thm part2_f_parameter_product_probe:
         impossible q != 0
     q * x = (y * (1 - h)) * x = y * (1 - h) * x
     y * (1 - h) * x = y * h
-    by thm geo::subtract_equalities(y * (1 - h) * x, y * h, y * h, y * h)
+    release thm geo::subtract_equalities(y * (1 - h) * x, y * h, y * h, y * h)
     y * (1 - h) * x - y * h = y * h - y * h = 0
     y * ((1 - h) * x - h) = y * (1 - h) * x - y * h = 0
-    by thm local_zero_factor_law(y, (1 - h) * x - h)
+    release thm local_zero_factor_law(y, (1 - h) * x - h)
     (1 - h) * x - h = 0
     (1 - h) * x = h
     (x - h) * (1 - h) = h^2
@@ -915,55 +915,55 @@ thm part2_affine_metric_bridge:
         h^4 = (x - h)^2 * (1 - h)^2
         =>:
             geo::distance_sq(a, p)^2 = geo::distance_sq(p, f) * geo::distance_sq(p, c)
-    by thm geo::distance_sq_coordinate_formula(a, p)
-    by thm geo::distance_sq_coordinate_formula(p, f)
-    by thm geo::distance_sq_coordinate_formula(p, c)
+    release thm geo::distance_sq_coordinate_formula(a, p)
+    release thm geo::distance_sq_coordinate_formula(p, f)
+    release thm geo::distance_sq_coordinate_formula(p, c)
     p[1] - a[1] = h * (c[1] - a[1])
     p[2] - a[2] = h * (c[2] - a[2])
-    by thm geo::subtract_equalities(f[1], (1 - x) * a[1] + x * c[1], p[1], (1 - h) * a[1] + h * c[1])
+    release thm geo::subtract_equalities(f[1], (1 - x) * a[1] + x * c[1], p[1], (1 - h) * a[1] + h * c[1])
     f[1] - p[1] = ((1 - x) * a[1] + x * c[1]) - ((1 - h) * a[1] + h * c[1]) = (x - h) * (c[1] - a[1])
-    by thm geo::subtract_equalities(f[2], (1 - x) * a[2] + x * c[2], p[2], (1 - h) * a[2] + h * c[2])
+    release thm geo::subtract_equalities(f[2], (1 - x) * a[2] + x * c[2], p[2], (1 - h) * a[2] + h * c[2])
     f[2] - p[2] = ((1 - x) * a[2] + x * c[2]) - ((1 - h) * a[2] + h * c[2]) = (x - h) * (c[2] - a[2])
     c[1] = c[1]
-    by thm geo::subtract_equalities(c[1], c[1], p[1], (1 - h) * a[1] + h * c[1])
+    release thm geo::subtract_equalities(c[1], c[1], p[1], (1 - h) * a[1] + h * c[1])
     c[1] - p[1] = c[1] - ((1 - h) * a[1] + h * c[1]) = (1 - h) * (c[1] - a[1])
     c[2] = c[2]
-    by thm geo::subtract_equalities(c[2], c[2], p[2], (1 - h) * a[2] + h * c[2])
+    release thm geo::subtract_equalities(c[2], c[2], p[2], (1 - h) * a[2] + h * c[2])
     c[2] - p[2] = c[2] - ((1 - h) * a[2] + h * c[2]) = (1 - h) * (c[2] - a[2])
-    by thm geo::square_of_equal(p[1] - a[1], h * (c[1] - a[1]))
+    release thm geo::square_of_equal(p[1] - a[1], h * (c[1] - a[1]))
     (p[1] - a[1])^2 = (h * (c[1] - a[1]))^2
-    by thm geo::square_of_equal(p[2] - a[2], h * (c[2] - a[2]))
+    release thm geo::square_of_equal(p[2] - a[2], h * (c[2] - a[2]))
     (p[2] - a[2])^2 = (h * (c[2] - a[2]))^2
-    by thm geo::add_equalities((p[1] - a[1])^2, (h * (c[1] - a[1]))^2, (p[2] - a[2])^2, (h * (c[2] - a[2]))^2)
+    release thm geo::add_equalities((p[1] - a[1])^2, (h * (c[1] - a[1]))^2, (p[2] - a[2])^2, (h * (c[2] - a[2]))^2)
     (p[1] - a[1])^2 + (p[2] - a[2])^2 = (h * (c[1] - a[1]))^2 + (h * (c[2] - a[2]))^2
     (h * (c[1] - a[1]))^2 + (h * (c[2] - a[2]))^2 = h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)
     geo::distance_sq(a, p) = (p[1] - a[1])^2 + (p[2] - a[2])^2 = h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)
 
-    by thm geo::square_of_equal(f[1] - p[1], (x - h) * (c[1] - a[1]))
+    release thm geo::square_of_equal(f[1] - p[1], (x - h) * (c[1] - a[1]))
     (f[1] - p[1])^2 = ((x - h) * (c[1] - a[1]))^2
-    by thm geo::square_of_equal(f[2] - p[2], (x - h) * (c[2] - a[2]))
+    release thm geo::square_of_equal(f[2] - p[2], (x - h) * (c[2] - a[2]))
     (f[2] - p[2])^2 = ((x - h) * (c[2] - a[2]))^2
-    by thm geo::add_equalities((f[1] - p[1])^2, ((x - h) * (c[1] - a[1]))^2, (f[2] - p[2])^2, ((x - h) * (c[2] - a[2]))^2)
+    release thm geo::add_equalities((f[1] - p[1])^2, ((x - h) * (c[1] - a[1]))^2, (f[2] - p[2])^2, ((x - h) * (c[2] - a[2]))^2)
     (f[1] - p[1])^2 + (f[2] - p[2])^2 = ((x - h) * (c[1] - a[1]))^2 + ((x - h) * (c[2] - a[2]))^2
     ((x - h) * (c[1] - a[1]))^2 + ((x - h) * (c[2] - a[2]))^2 = (x - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)
     geo::distance_sq(p, f) = (f[1] - p[1])^2 + (f[2] - p[2])^2 = (x - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)
 
-    by thm geo::square_of_equal(c[1] - p[1], (1 - h) * (c[1] - a[1]))
+    release thm geo::square_of_equal(c[1] - p[1], (1 - h) * (c[1] - a[1]))
     (c[1] - p[1])^2 = ((1 - h) * (c[1] - a[1]))^2
-    by thm geo::square_of_equal(c[2] - p[2], (1 - h) * (c[2] - a[2]))
+    release thm geo::square_of_equal(c[2] - p[2], (1 - h) * (c[2] - a[2]))
     (c[2] - p[2])^2 = ((1 - h) * (c[2] - a[2]))^2
-    by thm geo::add_equalities((c[1] - p[1])^2, ((1 - h) * (c[1] - a[1]))^2, (c[2] - p[2])^2, ((1 - h) * (c[2] - a[2]))^2)
+    release thm geo::add_equalities((c[1] - p[1])^2, ((1 - h) * (c[1] - a[1]))^2, (c[2] - p[2])^2, ((1 - h) * (c[2] - a[2]))^2)
     (c[1] - p[1])^2 + (c[2] - p[2])^2 = ((1 - h) * (c[1] - a[1]))^2 + ((1 - h) * (c[2] - a[2]))^2
     ((1 - h) * (c[1] - a[1]))^2 + ((1 - h) * (c[2] - a[2]))^2 = (1 - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)
     geo::distance_sq(p, c) = (c[1] - p[1])^2 + (c[2] - p[2])^2 = (1 - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)
-    by thm geo::square_of_equal(geo::distance_sq(a, p), h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2))
+    release thm geo::square_of_equal(geo::distance_sq(a, p), h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2))
     geo::distance_sq(a, p)^2 = (h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2))^2
     (h^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2))^2 = h^4 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)^2
     geo::distance_sq(a, p)^2 = h^4 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)^2
     geo::distance_sq(p, f) * geo::distance_sq(p, c) = ((x - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)) * geo::distance_sq(p, c)
-    by thm geo::multiply_both_sides(geo::distance_sq(p, f), (x - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2), geo::distance_sq(p, c))
+    release thm geo::multiply_both_sides(geo::distance_sq(p, f), (x - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2), geo::distance_sq(p, c))
     ((x - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)) * geo::distance_sq(p, c) = ((x - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)) * ((1 - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2))
-    by thm geo::multiply_both_sides(geo::distance_sq(p, c), (1 - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2), (x - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2))
+    release thm geo::multiply_both_sides(geo::distance_sq(p, c), (1 - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2), (x - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2))
     ((x - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)) * ((1 - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)) = (x - h)^2 * (1 - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)^2
     h^4 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)^2 = (x - h)^2 * (1 - h)^2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2)^2
     geo::distance_sq(a, p)^2 = geo::distance_sq(p, f) * geo::distance_sq(p, c)
@@ -996,10 +996,10 @@ thm problem_465_part2:
             # 证明 AH^2=HF·HC；用平方距离消去根式。
             geo::distance_sq(a, h)^2 = geo::distance_sq(h, f) * geo::distance_sq(h, c)
 
-    by thm part2_affine_witness_probe(a, b, c, d, f, g, h)
+    release thm part2_affine_witness_probe(a, b, c, d, f, g, h)
     obtain t, q, z, x, y from exist t0, q0, z0, x0, y0 R st {0 <= t0, t0 <= 1, g = (a[1] + t0 * (b[1] - a[1]), a[2] + t0 * (b[2] - a[2])), h[1] = (1 - q0) * g[1] + q0 * d[1], h[2] = (1 - q0) * g[2] + q0 * d[2], h[1] = (1 - z0) * a[1] + z0 * c[1], h[2] = (1 - z0) * a[2] + z0 * c[2], f[1] = (1 - x0) * a[1] + x0 * c[1], f[2] = (1 - x0) * a[2] + x0 * c[2], f[1] = (1 - y0) * b[1] + y0 * d[1], f[2] = (1 - y0) * b[2] + y0 * d[2]}
 
-    by thm concyclic_three_distinct_nondegenerate_probe(a, b, c, d)
+    release thm concyclic_three_distinct_nondegenerate_probe(a, b, c, d)
     geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
 
     by def $geo::is_on_extension(e1, a, d)
@@ -1009,7 +1009,7 @@ thm problem_465_part2:
     obtain s from exist s0 R st {s0 > 1
     e1 = (b[1] + s0 * (c[1] - b[1]), b[2] + s0 * (c[2] - b[2]))}
 
-    by thm part2_coefficient_bus_probe(a, b, c, d, e1, f, g, h, t, q, z, x, y, r, s)
+    release thm part2_coefficient_bus_probe(a, b, c, d, e1, f, g, h, t, q, z, x, y, r, s)
     q * (d[1] - a[1]) = z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1])
     q * (d[2] - a[2]) = z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2])
     r * (q - 1) * t = q * (1 - s)
@@ -1017,7 +1017,7 @@ thm problem_465_part2:
     q * (1 - y) + y * (q - 1) * t = 0
     q * x = y * z
 
-    by thm part2_q_nonzero_from_nonendpoint(a, b, c, d, g, h, t, q, z)
+    release thm part2_q_nonzero_from_nonendpoint(a, b, c, d, g, h, t, q, z)
     q != 0
 
     by def $geo::are_concyclic(a, b, c, d)
@@ -1029,27 +1029,27 @@ thm problem_465_part2:
     q * (d[1] - a[1]) = z * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1])
     q * (d[2] - a[2]) = z * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2])
 
-    by thm geo::distance_sq_coordinate_formula(a, b)
-    by thm geo::distance_sq_coordinate_formula(a, c)
+    release thm geo::distance_sq_coordinate_formula(a, b)
+    release thm geo::distance_sq_coordinate_formula(a, c)
     by def $geo::are_segments_congruent(a, b, a, c)
     (b[1] - a[1])^2 + (b[2] - a[2])^2 = (c[1] - a[1])^2 + (c[2] - a[2])^2
 
-    by thm cyclic_center_algebra_probe(a, b, c, d, o, t, q, z, (b[1] - a[1])^2 + (b[2] - a[2])^2, (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]))
+    release thm cyclic_center_algebra_probe(a, b, c, d, o, t, q, z, (b[1] - a[1])^2 + (b[2] - a[2])^2, (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]))
     ( (b[1] - a[1])^2 + (b[2] - a[2])^2 ) * (z^2 + (1 - q)^2 * t^2 - z * q + q * (1 - q) * t) - 2 * z * (1 - q) * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) = 0
 
-    by thm part2_equidistance_scaled_probe(a, b, c, d, g, h, t, q, z, (b[1] - a[1])^2 + (b[2] - a[2])^2, (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]))
+    release thm part2_equidistance_scaled_probe(a, b, c, d, g, h, t, q, z, (b[1] - a[1])^2 + (b[2] - a[2])^2, (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]))
     ( (b[1] - a[1])^2 + (b[2] - a[2])^2 ) * (z^2 + t^2 - q^2 * (1 - t)^2) - 2 * z * t * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) = 0
 
-    by thm extension_parameters_exclude_spurious_factor(z, q, t, r, s)
+    release thm extension_parameters_exclude_spurious_factor(z, q, t, r, s)
     z + q * t - q - t != 0
-    by thm geo::point_difference_norm_pos(a, b)
+    release thm geo::point_difference_norm_pos(a, b)
     (b[1] - a[1])^2 + (b[2] - a[2])^2 != 0
 
-    by thm part2_scaled_parameter_elimination_probe(z, q, t, (b[1] - a[1])^2 + (b[2] - a[2])^2, (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]))
+    release thm part2_scaled_parameter_elimination_probe(z, q, t, (b[1] - a[1])^2 + (b[2] - a[2])^2, (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]))
     z = q * t - q - t + 1
     z = (q - 1) * (t - 1)
 
-    by thm part2_f_parameter_product_probe(z, q, t, x, y)
+    release thm part2_f_parameter_product_probe(z, q, t, x, y)
     z^4 = (x - z)^2 * (1 - z)^2
 
-    by thm part2_affine_metric_bridge(a, c, f, h, z, x)
+    release thm part2_affine_metric_bridge(a, c, f, h, z, x)

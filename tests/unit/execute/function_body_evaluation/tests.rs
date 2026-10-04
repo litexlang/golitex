@@ -150,20 +150,104 @@ fn the_selected_body_guard_is_required_even_with_a_broader_named_signature() {
 }
 
 #[test]
-fn a_long_acyclic_expansion_exhausts_the_local_budget_and_preserves_the_session() {
+fn many_sibling_calls_exhaust_the_local_budget_and_preserve_the_session() {
     let mut rt = runtime();
-    let mut source = String::from("have fn chain_0(x N) N = x+1\n");
-    for index in 1..=70 {
-        source.push_str(&format!(
-            "have fn chain_{index}(x N) N = chain_{}(x)+1\n",
-            index - 1
-        ));
+    let mut layer = vec![String::from("step(x)"); 70];
+    while layer.len() > 1 {
+        layer = layer
+            .chunks(2)
+            .map(|pair| {
+                if pair.len() == 1 {
+                    pair[0].clone()
+                } else {
+                    format!("({}+{})", pair[0], pair[1])
+                }
+            })
+            .collect();
     }
-    let setup = rt.run_litex_code(&source).unwrap();
-    assert!(setup.success && setup.session_error.is_none());
-    let limited = rt.run_litex_code("chain_70(0)=71\n").unwrap();
-    assert!(!limited.success && limited.session_error.is_none());
-    assert!(rt.run_litex_code("chain_0(0)=1\n").unwrap().success);
+    assert!(
+        rt.run_litex_code("have fn step(x R) R = x+1\n")
+            .unwrap()
+            .success
+    );
+    let code = format!("{}=70", layer[0].replace("step(x)", "step(0)"));
+    let tokens = crate::tokenize::Tokenizer::new()
+        .tokenize(&code, rt.current_file.clone())
+        .unwrap();
+    let mut stmts = rt.parse(&tokens).unwrap();
+    let crate::ast::stmt::Stmt::Fact(crate::ast::fact::Fact::AtomicFact(
+        crate::ast::fact::AtomicFact::EqualFact(goal),
+    )) = stmts.remove(0)
+    else {
+        panic!("one equality")
+    };
+    // Exercise the local substitution budget directly; the statement-level
+    // WD/transaction pipeline is covered by the value and guard tests above.
+    let limited = rt
+        .normalize_function_body(
+            &goal.left,
+            &goal.right,
+            crate::execute::execute_fact_stmt::VerifyState::new(
+                crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
+            ),
+        )
+        .unwrap();
+    assert!(limited.is_none());
+    assert!(rt.run_litex_code("step(0)=1\n").unwrap().success);
+}
+
+#[test]
+fn a_function_may_ignore_a_well_defined_argument_with_a_cyclic_body() {
+    let mut rt = runtime();
+    assert!(
+        rt.run_litex_code("have fn ignore(x R) R = 1\n")
+            .unwrap()
+            .success
+    );
+    let run = rt
+        .run_litex_code(
+            "forall f fn(x R) R:\n    f = fn(x R) R {f(x+1)}\n    =>:\n        ignore(f(0))=1\n",
+        )
+        .unwrap();
+    assert!(run.success && run.session_error.is_none());
+    assert!(!rt.run_litex_code("ignore(1/0)=1\n").unwrap().success);
+    assert!(rt.run_litex_code("1=1\n").unwrap().success);
+}
+
+#[test]
+fn one_step_beta_preserves_symbolic_arguments_and_checked_evidence() {
+    let mut rt = runtime();
+    let run = rt.run_litex_code(include_str!(
+        "../../../../examples/proof_nodes/equal/by_object_definition/nested_call_one_step.lit"
+    )).unwrap();
+    assert!(run.success && run.session_error.is_none());
+    for index in [3, 7] {
+        let detail = crate::json_output::project_stmt_detailed(&run.statement_results[index], &rt);
+        let normalization = field_rec(&detail, "normalization").unwrap();
+        let steps = normalization.as_object().unwrap().get("expansions").unwrap().as_array().unwrap();
+        assert_eq!(steps.len(), 1);
+        let step = steps[0].as_object().unwrap();
+        assert!(step.get("application_well_defined").is_some());
+        assert!(step.get("body_application_well_defined").is_some());
+        assert!(step.get("function_body").is_some());
+    }
+}
+
+#[test]
+fn exact_beta_body_still_requires_domains_and_does_not_accept_wrong_values() {
+    for (setup, bad) in [
+        ("have fn inner(x R) R = x+1\nhave fn outer(x R) R = x*x\nhave x R\n",
+         "outer(inner(x))=inner(x)*inner(x)+1\n"),
+        ("have fn inner(x R) R = x+1\nhave fn outer(x R) R = x*x\n",
+         "outer(inner(i))=inner(i)*inner(i)\n"),
+        ("", "forall f fn(x R) R:\n    f = fn(x R: x!=0) R {x*x}\n    =>:\n        f(0)=0*0\n"),
+    ] {
+        let mut rt = runtime();
+        assert!(rt.run_litex_code(setup).unwrap().success);
+        let run = rt.run_litex_code(bad).unwrap();
+        assert!(!run.success && run.session_error.is_none(), "{bad}");
+        assert!(rt.run_litex_code("1=1\n").unwrap().success);
+    }
 }
 
 fn field_rec(value: &JsonValue, name: &str) -> Option<JsonValue> {

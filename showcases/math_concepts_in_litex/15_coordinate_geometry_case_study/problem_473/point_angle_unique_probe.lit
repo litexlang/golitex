@@ -24,5 +24,5 @@ thm problem_473_point_angle_scale_unique:
     geo::dot((x[1] + y[1], x[2] + y[2]), x) * geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x) = geo::angle_cos_num(d, a, c) * geo::angle_cos_num(ep, c, b)
     geo::dot((x[1] + y[1], x[2] + y[2]), x) * geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x) >= 0
 
-    by thm vector_angle_unique_probe::problem_473_vector_angle_scale_unique(x, y, t)
+    release thm vector_angle_unique_probe::problem_473_vector_angle_scale_unique(x, y, t)
     t = 1

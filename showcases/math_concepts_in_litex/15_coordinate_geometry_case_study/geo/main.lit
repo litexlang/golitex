@@ -319,7 +319,7 @@ thm addition_cancel_left:
             a = b
     c + a = a + c
     c + b = b + c
-    by thm addition_cancel(a, b, c)
+    release thm addition_cancel(a, b, c)
 
 thm subtraction_cancel:
     ? forall a, b, c R:
@@ -370,16 +370,16 @@ thm half_equality_expand:
         (a + b - c) / 2 * x = (d + q - f) / 2 * y
         =>:
             a * x + b * x - c * x = d * y + q * y - f * y
-    by thm cancel_half_product(a + b - c, x)
-    by thm cancel_half_product(d + q - f, y)
+    release thm cancel_half_product(a + b - c, x)
+    release thm cancel_half_product(d + q - f, y)
     ((a + b - c) * x) / 2 = ((d + q - f) * y) / 2
-    by thm multiply_both_sides(((a + b - c) * x) / 2, ((d + q - f) * y) / 2, 2)
+    release thm multiply_both_sides(((a + b - c) * x) / 2, ((d + q - f) * y) / 2, 2)
     (((a + b - c) * x) / 2) * 2 = (((d + q - f) * y) / 2) * 2
-    by thm half_cancel((a + b - c) * x)
-    by thm half_cancel((d + q - f) * y)
+    release thm half_cancel((a + b - c) * x)
+    release thm half_cancel((d + q - f) * y)
     (a + b - c) * x = (d + q - f) * y
-    by thm expand_difference_product(a, b, c, x)
-    by thm expand_difference_product(d, q, f, y)
+    release thm expand_difference_product(a, b, c, x)
+    release thm expand_difference_product(d, q, f, y)
     a * x + b * x - c * x = d * y + q * y - f * y
 
 thm divide_both_sides:
@@ -631,10 +631,10 @@ thm solve_cosine_for_dot:
 thm cosine_law:
     ? forall p1, q1, r1 cart(R, R):
         distance_sq(p1, r1) = distance_sq(p1, q1) + distance_sq(q1, r1) - 2 * dot(vec(q1, p1), vec(q1, r1))
-    by thm distance_sq_coordinate_formula(p1, r1)
-    by thm distance_sq_coordinate_formula(p1, q1)
-    by thm distance_sq_coordinate_formula(q1, r1)
-    by thm perpendicular_dot_expand(q1, p1, q1, r1)
+    release thm distance_sq_coordinate_formula(p1, r1)
+    release thm distance_sq_coordinate_formula(p1, q1)
+    release thm distance_sq_coordinate_formula(q1, r1)
+    release thm perpendicular_dot_expand(q1, p1, q1, r1)
     r1[1] - p1[1] = (q1[1] - p1[1]) + (r1[1] - q1[1])
     r1[2] - p1[2] = (q1[2] - p1[2]) + (r1[2] - q1[2])
     (r1[1] - p1[1])^2 = (q1[1] - p1[1])^2 + (r1[1] - q1[1])^2 - 2 * (p1[1] - q1[1]) * (r1[1] - q1[1])
@@ -653,8 +653,8 @@ thm cosine_law:
 thm dot_from_cosine_law:
     ? forall p, q, r cart(R, R):
         dot(vec(q, p), vec(q, r)) = (distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)) / 2
-    by thm cosine_law(p, q, r)
-    by thm solve_cosine_for_dot(distance_sq(p, q), distance_sq(q, r), distance_sq(p, r), dot(vec(q, p), vec(q, r)))
+    release thm cosine_law(p, q, r)
+    release thm solve_cosine_for_dot(distance_sq(p, q), distance_sq(q, r), distance_sq(p, r), dot(vec(q, p), vec(q, r)))
 
 # thm midpoint_equidistant:
 #     ? forall a, b, m cart(R, R):
@@ -705,8 +705,8 @@ thm midpoint_half_distance:
         $is_midpoint(m, a, b)
         =>:
             distance_sq(a, m) = distance_sq(a, b) / 4
-    by thm distance_sq_coordinate_formula(a, m)
-    by thm distance_sq_coordinate_formula(a, b)
+    release thm distance_sq_coordinate_formula(a, m)
+    release thm distance_sq_coordinate_formula(a, b)
     distance_sq(a, m) = (m[1] - a[1])^2 + (m[2] - a[2])^2
     (m[1] - a[1])^2 + (m[2] - a[2])^2 = ((a[1] + b[1]) / 2 - a[1])^2 + ((a[2] + b[2]) / 2 - a[2])^2
     ((a[1] + b[1]) / 2 - a[1])^2 + ((a[2] + b[2]) / 2 - a[2])^2 = ((b[1] - a[1]) / 2)^2 + ((b[2] - a[2]) / 2)^2
@@ -801,8 +801,8 @@ thm point_difference_norm_pos:
         b[2] - a[2] = 0
         b[1] = a[1]
         b[2] = a[2]
-        by thm tuple_equal_from_coordinates(a, (a[1], a[2]))
-        by thm tuple_equal_from_coordinates(b, (b[1], b[2]))
+        release thm tuple_equal_from_coordinates(a, (a[1], a[2]))
+        release thm tuple_equal_from_coordinates(b, (b[1], b[2]))
         a = (a[1], a[2]) = (b[1], b[2]) = b
         impossible a != b
 
@@ -838,13 +838,13 @@ thm dot_det_eliminate:
     dx * (dx*vx + dy*vy) - dy * (dx*vy - dy*vx) = 0
     (dx^2 + dy^2) * vx = 0
     dx^2 + dy^2 != 0
-    by thm zero_factor_law(dx^2 + dy^2, vx)
+    release thm zero_factor_law(dx^2 + dy^2, vx)
     vx = 0
     dy * (dx*vx + dy*vy) = 0
     dx * (dx*vy - dy*vx) = 0
     dy * (dx*vx + dy*vy) + dx * (dx*vy - dy*vx) = 0
     (dx^2 + dy^2) * vy = 0
-    by thm zero_factor_law(dx^2 + dy^2, vy)
+    release thm zero_factor_law(dx^2 + dy^2, vy)
     vy = 0
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -900,7 +900,7 @@ thm one_dimensional_midpoint:
     (xm - xa)^2 - (xb - xm)^2 = 0
 
     # Apply difference of squares
-    by thm difference_of_squares((xm - xa), (xb - xm))
+    release thm difference_of_squares((xm - xa), (xb - xm))
     (xm - xa)^2 - (xb - xm)^2 = ((xm - xa) + (xb - xm)) * ((xm - xa) - (xb - xm))
     ((xm - xa) + (xb - xm)) * ((xm - xa) - (xb - xm)) = 0
 
@@ -915,11 +915,11 @@ thm one_dimensional_midpoint:
 
     # Apply zero factor law
     xb - xa != 0
-    by thm zero_factor_law(xb - xa, 2*xm - xa - xb)
+    release thm zero_factor_law(xb - xa, 2*xm - xa - xb)
     2*xm - xa - xb = 0
 
     # Rearrange to get 2*xm = xa + xb
-    by thm rearrange_sum(2*xm, xa, xb)
+    release thm rearrange_sum(2*xm, xa, xb)
     2*xm = xa + xb
     xm = (xa + xb) / 2
 
@@ -950,7 +950,7 @@ thm collinear_equidistant_implies_midpoint:
     (m[1] - a[1])^2 - (b[1] - m[1])^2 = (b[2] - m[2])^2 - (m[2] - a[2])^2
 
     # Apply difference of squares to x-component
-    by thm difference_of_squares(m[1] - a[1], b[1] - m[1])
+    release thm difference_of_squares(m[1] - a[1], b[1] - m[1])
     (m[1] - a[1])^2 - (b[1] - m[1])^2 = ((m[1] - a[1]) + (b[1] - m[1])) * ((m[1] - a[1]) - (b[1] - m[1]))
     (m[1] - a[1]) + (b[1] - m[1]) = b[1] - a[1]
     (m[1] - a[1]) - (b[1] - m[1]) = m[1] - a[1] - b[1] + m[1]
@@ -958,7 +958,7 @@ thm collinear_equidistant_implies_midpoint:
     (m[1] - a[1])^2 - (b[1] - m[1])^2 = (b[1] - a[1]) * (2*m[1] - a[1] - b[1])
 
     # Apply difference of squares to y-component
-    by thm difference_of_squares(b[2] - m[2], m[2] - a[2])
+    release thm difference_of_squares(b[2] - m[2], m[2] - a[2])
     (b[2] - m[2])^2 - (m[2] - a[2])^2 = ((b[2] - m[2]) + (m[2] - a[2])) * ((b[2] - m[2]) - (m[2] - a[2]))
     (b[2] - m[2]) + (m[2] - a[2]) = b[2] - a[2]
     (b[2] - m[2]) - (m[2] - a[2]) = b[2] - m[2] - m[2] + a[2]
@@ -990,7 +990,7 @@ thm collinear_equidistant_implies_midpoint:
     # Let's use the perpendicular bisector approach instead
 
     # From a != b, get norm positive
-    by thm point_difference_norm_pos(a, b)
+    release thm point_difference_norm_pos(a, b)
     (b[1] - a[1])^2 + (b[2] - a[2])^2 > 0
 
     # We have dot product = 0 from above
@@ -1007,14 +1007,14 @@ thm collinear_equidistant_implies_midpoint:
     # For now, let's directly apply the elimination lemma
     # even though we haven't fully derived the det equation in the right form
 
-    by thm dot_det_eliminate(b[1] - a[1], b[2] - a[2], 2*m[1] - (a[1] + b[1]), 2*m[2] - (a[2] + b[2]))
+    release thm dot_det_eliminate(b[1] - a[1], b[2] - a[2], 2*m[1] - (a[1] + b[1]), 2*m[2] - (a[2] + b[2]))
     2*m[1] - (a[1] + b[1]) = 0
     2*m[2] - (a[2] + b[2]) = 0
 
-    by thm rearrange_sum(2*m[1], a[1], b[1])
+    release thm rearrange_sum(2*m[1], a[1], b[1])
     m[1] = (a[1] + b[1]) / 2
 
-    by thm rearrange_sum(2*m[2], a[2], b[2])
+    release thm rearrange_sum(2*m[2], a[2], b[2])
     m[2] = (a[2] + b[2]) / 2
 
 # 原证明（验证失败，待修复）：
@@ -1251,8 +1251,8 @@ thm sas_third_side:
         dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
         =>:
             distance_sq(p, r) = distance_sq(u, w)
-    by thm cosine_law(p, q, r)
-    by thm cosine_law(u, v, w)
+    release thm cosine_law(p, q, r)
+    release thm cosine_law(u, v, w)
     distance_sq(p, r) = distance_sq(p, q) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r))
     distance_sq(u, w) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(v, u), vec(v, w))
     distance_sq(p, q) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r)) = distance_sq(u, v) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r))
@@ -1283,11 +1283,11 @@ thm sas_congruence:
             dot(vec(p, q), vec(p, r)) = dot(vec(u, v), vec(u, w))
             dot(vec(r, p), vec(r, q)) = dot(vec(w, u), vec(w, v))
     # First: third side from sas_third_side
-    by thm sas_third_side(p, q, r, u, v, w)
+    release thm sas_third_side(p, q, r, u, v, w)
     # Second and third: given premises (already true)
     # Fourth: angle at p equals angle at u
-    by thm dot_change_base(p, q, r)
-    by thm dot_change_base(u, v, w)
+    release thm dot_change_base(p, q, r)
+    release thm dot_change_base(u, v, w)
     dot(vec(q, p), vec(q, r)) + dot(vec(p, q), vec(p, r)) = distance_sq(p, q)
     dot(vec(v, u), vec(v, w)) + dot(vec(u, v), vec(u, w)) = distance_sq(u, v)
     dot(vec(p, q), vec(p, r)) = distance_sq(p, q) - dot(vec(q, p), vec(q, r))
@@ -1298,20 +1298,20 @@ thm sas_congruence:
     distance_sq(u, v) - dot(vec(v, u), vec(v, w)) = dot(vec(u, v), vec(u, w))
     dot(vec(p, q), vec(p, r)) = dot(vec(u, v), vec(u, w))
     # Fifth: angle at r equals angle at w
-    by thm dot_change_base(r, p, q)
-    by thm dot_change_base(w, u, v)
+    release thm dot_change_base(r, p, q)
+    release thm dot_change_base(w, u, v)
     dot(vec(p, r), vec(p, q)) + dot(vec(r, p), vec(r, q)) = distance_sq(r, p)
     dot(vec(u, w), vec(u, v)) + dot(vec(w, u), vec(w, v)) = distance_sq(w, u)
     dot(vec(r, p), vec(r, q)) = distance_sq(r, p) - dot(vec(p, r), vec(p, q))
     dot(vec(w, u), vec(w, v)) = distance_sq(w, u) - dot(vec(u, w), vec(u, v))
-    by thm distance_sq_symmetric(r, p)
-    by thm distance_sq_symmetric(w, u)
+    release thm distance_sq_symmetric(r, p)
+    release thm distance_sq_symmetric(w, u)
     distance_sq(r, p) = distance_sq(p, r)
     distance_sq(w, u) = distance_sq(u, w)
     dot(vec(r, p), vec(r, q)) = distance_sq(p, r) - dot(vec(p, r), vec(p, q))
     dot(vec(w, u), vec(w, v)) = distance_sq(u, w) - dot(vec(u, w), vec(u, v))
-    by thm dot_commutative(p, r, p, q)
-    by thm dot_commutative(u, w, u, v)
+    release thm dot_commutative(p, r, p, q)
+    release thm dot_commutative(u, w, u, v)
     dot(vec(p, r), vec(p, q)) = dot(vec(p, q), vec(p, r))
     dot(vec(u, w), vec(u, v)) = dot(vec(u, v), vec(u, w))
     distance_sq(p, r) - dot(vec(p, r), vec(p, q)) = distance_sq(p, r) - dot(vec(p, q), vec(p, r))
@@ -1338,8 +1338,8 @@ thm sss_congruence:
             dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
             dot(vec(r, p), vec(r, q)) = dot(vec(w, u), vec(w, v))
     # Angle at q equals angle at v: use cosine law to express dot products
-    by thm cosine_law(p, q, r)
-    by thm cosine_law(u, v, w)
+    release thm cosine_law(p, q, r)
+    release thm cosine_law(u, v, w)
     distance_sq(p, r) = distance_sq(p, q) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r))
     distance_sq(u, w) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(v, u), vec(v, w))
     # Use SSS premises to show the RHS of both cosine laws are equal
@@ -1354,33 +1354,33 @@ thm sss_congruence:
     # Combine with the second cosine law that states distance_sq(u,w) = distance_sq(u,v) + distance_sq(v,w) - 2*dot(v,u,v,w):
     distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(q, p), vec(q, r)) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(v, u), vec(v, w))
     # Use axiom to cancel common (distance_sq(u,v) + distance_sq(v,w)) term
-    by thm cancel_subtraction_in_sum(distance_sq(u, v), distance_sq(v, w), dot(vec(q, p), vec(q, r)), dot(vec(v, u), vec(v, w)))
+    release thm cancel_subtraction_in_sum(distance_sq(u, v), distance_sq(v, w), dot(vec(q, p), vec(q, r)), dot(vec(v, u), vec(v, w)))
     dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
     # Use dot_change_base to get the first conclusion
-    by thm dot_change_base(p, q, r)
-    by thm dot_change_base(u, v, w)
+    release thm dot_change_base(p, q, r)
+    release thm dot_change_base(u, v, w)
     dot(vec(q, p), vec(q, r)) = distance_sq(p, q) - dot(vec(p, q), vec(p, r))
     dot(vec(v, u), vec(v, w)) = distance_sq(u, v) - dot(vec(u, v), vec(u, w))
     distance_sq(p, q) - dot(vec(p, q), vec(p, r)) = dot(vec(q, p), vec(q, r))
     dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
     dot(vec(v, u), vec(v, w)) = distance_sq(u, v) - dot(vec(u, v), vec(u, w))
     distance_sq(p, q) - dot(vec(p, q), vec(p, r)) = distance_sq(u, v) - dot(vec(u, v), vec(u, w))
-    by thm subtract_equalities(distance_sq(p, q), distance_sq(u, v), dot(vec(u, v), vec(u, w)), dot(vec(u, v), vec(u, w)))
+    release thm subtract_equalities(distance_sq(p, q), distance_sq(u, v), dot(vec(u, v), vec(u, w)), dot(vec(u, v), vec(u, w)))
     distance_sq(p, q) - dot(vec(u, v), vec(u, w)) = distance_sq(u, v) - dot(vec(u, v), vec(u, w))
     distance_sq(p, q) - dot(vec(p, q), vec(p, r)) = distance_sq(p, q) - dot(vec(u, v), vec(u, w))
     dot(vec(p, q), vec(p, r)) = distance_sq(p, q) - (distance_sq(p, q) - dot(vec(p, q), vec(p, r))) = distance_sq(p, q) - (distance_sq(p, q) - dot(vec(u, v), vec(u, w))) = dot(vec(u, v), vec(u, w))
     # Second conclusion already proven above
     # Third conclusion: angle at r equals angle at w
     # Use cosine law with middle vertex at r and w (same pattern as angle_at_q)
-    by thm cosine_law(p, r, q)
-    by thm cosine_law(u, w, v)
+    release thm cosine_law(p, r, q)
+    release thm cosine_law(u, w, v)
     distance_sq(p, q) = distance_sq(p, r) + distance_sq(r, q) - 2 * dot(vec(r, p), vec(r, q))
     distance_sq(u, v) = distance_sq(u, w) + distance_sq(w, v) - 2 * dot(vec(w, u), vec(w, v))
     # Step 1: Replace distance_sq(p,r) with distance_sq(u,w) in first cosine law
     distance_sq(p, r) + distance_sq(r, q) - 2 * dot(vec(r, p), vec(r, q)) = distance_sq(u, w) + distance_sq(r, q) - 2 * dot(vec(r, p), vec(r, q))
     # Step 2: Replace distance_sq(r,q) with distance_sq(w,v) using symmetry
-    by thm distance_sq_symmetric(r, q)
-    by thm distance_sq_symmetric(w, v)
+    release thm distance_sq_symmetric(r, q)
+    release thm distance_sq_symmetric(w, v)
     distance_sq(r, q) = distance_sq(q, r)
     distance_sq(w, v) = distance_sq(v, w)
     distance_sq(u, w) + distance_sq(r, q) - 2 * dot(vec(r, p), vec(r, q)) = distance_sq(u, w) + distance_sq(q, r) - 2 * dot(vec(r, p), vec(r, q))
@@ -1393,7 +1393,7 @@ thm sss_congruence:
     distance_sq(u, v) = distance_sq(u, w) + distance_sq(w, v) - 2 * dot(vec(w, u), vec(w, v))
     distance_sq(u, w) + distance_sq(w, v) - 2 * dot(vec(w, u), vec(w, v)) = distance_sq(u, w) + distance_sq(v, w) - 2 * dot(vec(w, u), vec(w, v))
     distance_sq(u, w) + distance_sq(v, w) - 2 * dot(vec(r, p), vec(r, q)) = distance_sq(u, w) + distance_sq(v, w) - 2 * dot(vec(w, u), vec(w, v))
-    by thm cancel_subtraction_in_sum(distance_sq(u, w), distance_sq(v, w), dot(vec(r, p), vec(r, q)), dot(vec(w, u), vec(w, v)))
+    release thm cancel_subtraction_in_sum(distance_sq(u, w), distance_sq(v, w), dot(vec(r, p), vec(r, q)), dot(vec(w, u), vec(w, v)))
     dot(vec(r, p), vec(r, q)) = dot(vec(w, u), vec(w, v))
 
 
@@ -1418,9 +1418,9 @@ thm distance_sq_positive_of_ne:
     by contra:
         ? 0 < distance_sq(a, b)
         distance_sq(a, b) <= 0
-        by thm distance_sq_nonnegative(a, b)
+        release thm distance_sq_nonnegative(a, b)
         distance_sq(a, b) = 0
-        by thm distance_sq_coordinate_formula(a, b)
+        release thm distance_sq_coordinate_formula(a, b)
         (b[1] - a[1])^2 + (b[2] - a[2])^2 = 0
         0 <= (b[1] - a[1])^2
         0 <= (b[2] - a[2])^2
@@ -1463,10 +1463,10 @@ thm distance_sq_positive_of_ne:
 thm twice_dot_from_distances_direct:
     ? forall p, q, r cart(R, R):
         2 * dot(vec(q, p), vec(q, r)) = distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)
-    by thm distance_sq_coordinate_formula(p, q)
-    by thm distance_sq_coordinate_formula(q, r)
-    by thm distance_sq_coordinate_formula(p, r)
-    by thm perpendicular_dot_expand(q, p, q, r)
+    release thm distance_sq_coordinate_formula(p, q)
+    release thm distance_sq_coordinate_formula(q, r)
+    release thm distance_sq_coordinate_formula(p, r)
+    release thm perpendicular_dot_expand(q, p, q, r)
     dot(vec(q, p), vec(q, r)) = (p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2])
     distance_sq(p, q) = (q[1] - p[1])^2 + (q[2] - p[2])^2
     distance_sq(q, r) = (r[1] - q[1])^2 + (r[2] - q[2])^2
@@ -1490,41 +1490,41 @@ thm asa_scalar_core:
             B = b
 
     # Add the two angle equations.
-    by thm add_equalities(A * (c + b - a), a * (c + B - A), B * (c + a - b), b * (c + A - B))
+    release thm add_equalities(A * (c + b - a), a * (c + B - A), B * (c + a - b), b * (c + A - B))
 
     # Move the common right-hand side to zero.
-    by thm subtract_equalities(A * (c + b - a) + B * (c + a - b), a * (c + B - A) + b * (c + A - B), a * (c + B - A) + b * (c + A - B), a * (c + B - A) + b * (c + A - B))
+    release thm subtract_equalities(A * (c + b - a) + B * (c + a - b), a * (c + B - A) + b * (c + A - B), a * (c + B - A) + b * (c + A - B), a * (c + B - A) + b * (c + A - B))
     A * (c + b - a) + B * (c + a - b) - (a * (c + B - A) + b * (c + A - B)) = c * (A + B - a - b)
     (a * (c + B - A) + b * (c + A - B)) - (a * (c + B - A) + b * (c + A - B)) = 0
     c * (A + B - a - b) = 0
 
     c != 0
-    by thm zero_factor_law(c, A + B - a - b)
+    release thm zero_factor_law(c, A + B - a - b)
     A + B - a - b = 0
-    by thm rearrange_sum(A + B, a, b)
+    release thm rearrange_sum(A + B, a, b)
     A + B = a + b
 
     # Isolate B using the sum equation.
-    by thm subtract_equalities(A + B, a + b, A, A)
+    release thm subtract_equalities(A + B, a + b, A, A)
     A + B - A = a + b - A
     B = a + b - A
 
     # Substitute B in the first angle equation via explicit congruence steps.
-    by thm add_equalities(c, c, B, a + b - A)
+    release thm add_equalities(c, c, B, a + b - A)
     c + B = c + (a + b - A)
-    by thm subtract_equalities(c + B, c + (a + b - A), A, A)
+    release thm subtract_equalities(c + B, c + (a + b - A), A, A)
     c + B - A = c + (a + b - A) - A
-    by thm multiply_both_sides(c + B - A, c + (a + b - A) - A, a)
+    release thm multiply_both_sides(c + B - A, c + (a + b - A) - A, a)
     a * (c + B - A) = (c + B - A) * a = (c + (a + b - A) - A) * a = a * (c + (a + b - A) - A)
     A * (c + b - a) = a * (c + (a + b - A) - A)
-    by thm subtract_equalities(A * (c + b - a), a * (c + (a + b - A) - A), a * (c + (a + b - A) - A), a * (c + (a + b - A) - A))
+    release thm subtract_equalities(A * (c + b - a), a * (c + (a + b - A) - A), a * (c + (a + b - A) - A), a * (c + (a + b - A) - A))
     A * (c + b - a) - a * (c + (a + b - A) - A) = (c + a + b) * (A - a)
     a * (c + (a + b - A) - A) - a * (c + (a + b - A) - A) = 0
     (c + a + b) * (A - a) = 0
 
     c + a + b > 0
     c + a + b != 0
-    by thm zero_factor_law(c + a + b, A - a)
+    release thm zero_factor_law(c + a + b, A - a)
     A - a = 0
     A = a
 
@@ -1540,14 +1540,14 @@ thm asa_angle_equations_bridge:
             distance_sq(v, w) * (distance_sq(p, q) + distance_sq(p, r) - distance_sq(q, r)) = distance_sq(q, r) * (distance_sq(p, q) + distance_sq(u, w) - distance_sq(v, w))
             distance_sq(u, w) * (distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)) = distance_sq(p, r) * (distance_sq(p, q) + distance_sq(v, w) - distance_sq(u, w))
 
-    by thm twice_dot_from_distances_direct(q, p, r)
-    by thm twice_dot_from_distances_direct(v, u, w)
-    by thm twice_dot_from_distances_direct(p, q, r)
-    by thm twice_dot_from_distances_direct(u, v, w)
-    by thm distance_sq_symmetric(p, q)
-    by thm distance_sq_symmetric(u, v)
-    by thm distance_sq_symmetric(p, r)
-    by thm distance_sq_symmetric(u, w)
+    release thm twice_dot_from_distances_direct(q, p, r)
+    release thm twice_dot_from_distances_direct(v, u, w)
+    release thm twice_dot_from_distances_direct(p, q, r)
+    release thm twice_dot_from_distances_direct(u, v, w)
+    release thm distance_sq_symmetric(p, q)
+    release thm distance_sq_symmetric(u, v)
+    release thm distance_sq_symmetric(p, r)
+    release thm distance_sq_symmetric(u, w)
 
     distance_sq(q, p) = distance_sq(p, q)
     distance_sq(v, u) = distance_sq(u, v) = distance_sq(p, q)
@@ -1581,14 +1581,14 @@ thm asa_congruence:
             distance_sq(q, r) = distance_sq(v, w)
             distance_sq(p, r) = distance_sq(u, w)
 
-    by thm asa_angle_equations_bridge(p, q, r, u, v, w)
-    by thm distance_sq_positive_of_ne(p, q)
-    by thm distance_sq_nonnegative(q, r)
-    by thm distance_sq_nonnegative(p, r)
-    by thm distance_sq_nonnegative(v, w)
-    by thm distance_sq_nonnegative(u, w)
+    release thm asa_angle_equations_bridge(p, q, r, u, v, w)
+    release thm distance_sq_positive_of_ne(p, q)
+    release thm distance_sq_nonnegative(q, r)
+    release thm distance_sq_nonnegative(p, r)
+    release thm distance_sq_nonnegative(v, w)
+    release thm distance_sq_nonnegative(u, w)
 
-    by thm asa_scalar_core(distance_sq(q, r), distance_sq(p, r), distance_sq(p, q), distance_sq(v, w), distance_sq(u, w))
+    release thm asa_scalar_core(distance_sq(q, r), distance_sq(p, r), distance_sq(p, q), distance_sq(v, w), distance_sq(u, w))
 
     distance_sq(v, w) = distance_sq(q, r)
     distance_sq(u, w) = distance_sq(p, r)
@@ -1619,8 +1619,8 @@ thm sss_dot_equal:
         distance_sq(p, r) = distance_sq(u, w)
         =>:
             dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
-    by thm twice_dot_from_distances_direct(p, q, r)
-    by thm twice_dot_from_distances_direct(u, v, w)
+    release thm twice_dot_from_distances_direct(p, q, r)
+    release thm twice_dot_from_distances_direct(u, v, w)
     2 * dot(vec(q, p), vec(q, r)) = distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)
     distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r) = distance_sq(u, v) + distance_sq(v, w) - distance_sq(u, w)
     distance_sq(u, v) + distance_sq(v, w) - distance_sq(u, w) = 2 * dot(vec(v, u), vec(v, w))
@@ -1663,10 +1663,10 @@ thm stewart_theorem:
         d[2] = (1 - t) * b[2] + t * c[2]
         =>:
             distance_sq(a, d) = (1 - t) * distance_sq(a, b) + t * distance_sq(a, c) - t * (1 - t) * distance_sq(b, c)
-    by thm distance_sq_coordinate_formula(a, d)
-    by thm distance_sq_coordinate_formula(a, b)
-    by thm distance_sq_coordinate_formula(a, c)
-    by thm distance_sq_coordinate_formula(b, c)
+    release thm distance_sq_coordinate_formula(a, d)
+    release thm distance_sq_coordinate_formula(a, b)
+    release thm distance_sq_coordinate_formula(a, c)
+    release thm distance_sq_coordinate_formula(b, c)
     (d[1] - a[1])^2 + (d[2] - a[2])^2 = (((1 - t) * b[1] + t * c[1]) - a[1])^2 + (((1 - t) * b[2] + t * c[2]) - a[2])^2
     (((1 - t) * b[1] + t * c[1]) - a[1])^2 + (((1 - t) * b[2] + t * c[2]) - a[2])^2 = (1 - t) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + t * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - t * (1 - t) * ((c[1] - b[1])^2 + (c[2] - b[2])^2)
     distance_sq(a, d) = (d[1] - a[1])^2 + (d[2] - a[2])^2 = (((1 - t) * b[1] + t * c[1]) - a[1])^2 + (((1 - t) * b[2] + t * c[2]) - a[2])^2 = (1 - t) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + t * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - t * (1 - t) * ((c[1] - b[1])^2 + (c[2] - b[2])^2) = (1 - t) * distance_sq(a, b) + t * distance_sq(a, c) - t * (1 - t) * distance_sq(b, c)
@@ -1722,9 +1722,9 @@ thm triangle_area_det:
 thm det_bilinear_right:
     ? forall u, v, w cart(R, R):
         det(u, (v[1] + w[1], v[2] + w[2])) = det(u, v) + det(u, w)
-    by thm det_coordinate_formula(u, (v[1] + w[1], v[2] + w[2]))
-    by thm det_coordinate_formula(u, v)
-    by thm det_coordinate_formula(u, w)
+    release thm det_coordinate_formula(u, (v[1] + w[1], v[2] + w[2]))
+    release thm det_coordinate_formula(u, v)
+    release thm det_coordinate_formula(u, w)
     u[1] * (v[2] + w[2]) - u[2] * (v[1] + w[1]) = (u[1] * v[2] - u[2] * v[1]) + (u[1] * w[2] - u[2] * w[1])
     det(u, (v[1] + w[1], v[2] + w[2])) = u[1] * (v[2] + w[2]) - u[2] * (v[1] + w[1]) = (u[1] * v[2] - u[2] * v[1]) + (u[1] * w[2] - u[2] * w[1]) = det(u, v) + det(u, w)
 
@@ -1748,14 +1748,14 @@ thm cramer_first_circle_equation:
         =>:
             2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x1 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y1) = s1
     2 * delta != 0
-    by thm div_mul_cancel_probe(s1 * y2 - y1 * s2, 2 * delta)
-    by thm div_mul_cancel_probe(x1 * s2 - s1 * x2, 2 * delta)
+    release thm div_mul_cancel_probe(s1 * y2 - y1 * s2, 2 * delta)
+    release thm div_mul_cancel_probe(x1 * s2 - s1 * x2, 2 * delta)
     (2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x1 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y1)) * delta = (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x1 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y1
     (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x1 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y1 = (s1 * y2 - y1 * s2) * x1 + (x1 * s2 - s1 * x2) * y1
     (s1 * y2 - y1 * s2) * x1 + (x1 * s2 - s1 * x2) * y1 = s1 * (x1 * y2 - y1 * x2)
     s1 * (x1 * y2 - y1 * x2) = s1 * delta
     2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x1 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y1) * delta = s1 * delta
-    by thm divide_both_sides(2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x1 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y1), s1, delta)
+    release thm divide_both_sides(2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x1 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y1), s1, delta)
 
 thm cramer_second_circle_equation:
     ? forall x1, y1, x2, y2, s1, s2, delta R:
@@ -1764,14 +1764,14 @@ thm cramer_second_circle_equation:
         =>:
             2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x2 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y2) = s2
     2 * delta != 0
-    by thm div_mul_cancel_probe(s1 * y2 - y1 * s2, 2 * delta)
-    by thm div_mul_cancel_probe(x1 * s2 - s1 * x2, 2 * delta)
+    release thm div_mul_cancel_probe(s1 * y2 - y1 * s2, 2 * delta)
+    release thm div_mul_cancel_probe(x1 * s2 - s1 * x2, 2 * delta)
     (2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x2 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y2)) * delta = (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x2 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y2
     (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x2 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y2 = (s1 * y2 - y1 * s2) * x2 + (x1 * s2 - s1 * x2) * y2
     (s1 * y2 - y1 * s2) * x2 + (x1 * s2 - s1 * x2) * y2 = s2 * (x1 * y2 - y1 * x2)
     s2 * (x1 * y2 - y1 * x2) = s2 * delta
     2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x2 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y2) * delta = s2 * delta
-    by thm divide_both_sides(2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x2 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y2), s2, delta)
+    release thm divide_both_sides(2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x2 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y2), s2, delta)
 
 thm zero_sum_rearrange:
     ? forall a, b R:
@@ -1800,14 +1800,14 @@ thm cramer_third_circle_equation:
         =>:
             2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x3 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y3) = s3
     2 * delta != 0
-    by thm div_mul_cancel_probe(s1 * y2 - y1 * s2, 2 * delta)
-    by thm div_mul_cancel_probe(x1 * s2 - s1 * x2, 2 * delta)
+    release thm div_mul_cancel_probe(s1 * y2 - y1 * s2, 2 * delta)
+    release thm div_mul_cancel_probe(x1 * s2 - s1 * x2, 2 * delta)
     (2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x3 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y3)) * delta = (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x3 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y3
     (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x3 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y3 = (s1 * y2 - y1 * s2) * x3 + (x1 * s2 - s1 * x2) * y3
     (s1 * y2 - y1 * s2) * x3 + (x1 * s2 - s1 * x2) * y3 = -(s1 * (x2 * y3 - y2 * x3) - s2 * (x1 * y3 - y1 * x3))
     -(s1 * (x2 * y3 - y2 * x3) - s2 * (x1 * y3 - y1 * x3)) = s3 * delta
     2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x3 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y3) * delta = s3 * delta
-    by thm divide_both_sides(2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x3 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y3), s3, delta)
+    release thm divide_both_sides(2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x3 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y3), s3, delta)
 
 thm circle_equation_gives_equal_distance:
     ? forall ux, uy, x, y R:
@@ -1850,13 +1850,13 @@ thm translated_circle_equation_gives_distance:
         2 * (ux * x + uy * y) = x^2 + y^2
         =>:
             distance_sq(o, p) = distance_sq(o, d)
-    by thm circle_equation_gives_equal_distance(ux, uy, x, y)
-    by thm translated_difference_square(p[1], d[1], ux, x)
-    by thm translated_difference_square(p[2], d[2], uy, y)
-    by thm center_offset_square(d[1], ux)
-    by thm center_offset_square(d[2], uy)
-    by thm distance_sq_coordinate_formula(o, p)
-    by thm distance_sq_coordinate_formula(o, d)
+    release thm circle_equation_gives_equal_distance(ux, uy, x, y)
+    release thm translated_difference_square(p[1], d[1], ux, x)
+    release thm translated_difference_square(p[2], d[2], uy, y)
+    release thm center_offset_square(d[1], ux)
+    release thm center_offset_square(d[2], uy)
+    release thm distance_sq_coordinate_formula(o, p)
+    release thm distance_sq_coordinate_formula(o, d)
     distance_sq(o, p) = (p[1] - o[1])^2 + (p[2] - o[2])^2
     (p[1] - o[1])^2 + (p[2] - o[2])^2 = (p[1] - (d[1] + ux))^2 + (p[2] - (d[2] + uy))^2
     (p[1] - (d[1] + ux))^2 + (p[2] - (d[2] + uy))^2 = (ux - x)^2 + (uy - y)^2
@@ -1873,13 +1873,13 @@ thm concyclic_det_criterion_implies_concyclic:
         ((a[1] - d[1])^2 + (a[2] - d[2])^2) * ((b[1] - d[1]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[1] - d[1])) - ((b[1] - d[1])^2 + (b[2] - d[2])^2) * ((a[1] - d[1]) * (c[2] - d[2]) - (a[2] - d[2]) * (c[1] - d[1])) + ((c[1] - d[1])^2 + (c[2] - d[2])^2) * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])) = 0
         =>:
             $are_concyclic(a, b, c, d)
-    by thm cramer_first_circle_equation(a[1] - d[1], a[2] - d[2], b[1] - d[1], b[2] - d[2], (a[1] - d[1])^2 + (a[2] - d[2])^2, (b[1] - d[1])^2 + (b[2] - d[2])^2, (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))
-    by thm cramer_second_circle_equation(a[1] - d[1], a[2] - d[2], b[1] - d[1], b[2] - d[2], (a[1] - d[1])^2 + (a[2] - d[2])^2, (b[1] - d[1])^2 + (b[2] - d[2])^2, (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))
-    by thm cramer_third_circle_equation(a[1] - d[1], a[2] - d[2], b[1] - d[1], b[2] - d[2], c[1] - d[1], c[2] - d[2], (a[1] - d[1])^2 + (a[2] - d[2])^2, (b[1] - d[1])^2 + (b[2] - d[2])^2, (c[1] - d[1])^2 + (c[2] - d[2])^2, (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))
-    by thm translated_circle_equation_gives_distance(d, a, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))), (((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), ((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), a[1] - d[1], a[2] - d[2])
-    by thm translated_circle_equation_gives_distance(d, b, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))), (((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), ((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), b[1] - d[1], b[2] - d[2])
-    by thm translated_circle_equation_gives_distance(d, c, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))), (((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), ((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), c[1] - d[1], c[2] - d[2])
-    by thm common_center_implies_concyclic(a, b, c, d, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))))
+    release thm cramer_first_circle_equation(a[1] - d[1], a[2] - d[2], b[1] - d[1], b[2] - d[2], (a[1] - d[1])^2 + (a[2] - d[2])^2, (b[1] - d[1])^2 + (b[2] - d[2])^2, (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))
+    release thm cramer_second_circle_equation(a[1] - d[1], a[2] - d[2], b[1] - d[1], b[2] - d[2], (a[1] - d[1])^2 + (a[2] - d[2])^2, (b[1] - d[1])^2 + (b[2] - d[2])^2, (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))
+    release thm cramer_third_circle_equation(a[1] - d[1], a[2] - d[2], b[1] - d[1], b[2] - d[2], c[1] - d[1], c[2] - d[2], (a[1] - d[1])^2 + (a[2] - d[2])^2, (b[1] - d[1])^2 + (b[2] - d[2])^2, (c[1] - d[1])^2 + (c[2] - d[2])^2, (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))
+    release thm translated_circle_equation_gives_distance(d, a, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))), (((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), ((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), a[1] - d[1], a[2] - d[2])
+    release thm translated_circle_equation_gives_distance(d, b, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))), (((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), ((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), b[1] - d[1], b[2] - d[2])
+    release thm translated_circle_equation_gives_distance(d, c, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))), (((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), ((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), c[1] - d[1], c[2] - d[2])
+    release thm common_center_implies_concyclic(a, b, c, d, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))))
 
 thm concyclic_det_criterion:
     ? forall a, b, c, d cart(R, R):
@@ -1909,9 +1909,9 @@ thm concyclic_det_criterion:
 thm dot_bilinear_right:
     ? forall u, v, w cart(R, R):
         dot(u, (v[1] + w[1], v[2] + w[2])) = dot(u, v) + dot(u, w)
-    by thm dot_coordinate_formula(u, (v[1] + w[1], v[2] + w[2]))
-    by thm dot_coordinate_formula(u, v)
-    by thm dot_coordinate_formula(u, w)
+    release thm dot_coordinate_formula(u, (v[1] + w[1], v[2] + w[2]))
+    release thm dot_coordinate_formula(u, v)
+    release thm dot_coordinate_formula(u, w)
     u[1] * (v[1] + w[1]) + u[2] * (v[2] + w[2]) = (u[1] * v[1] + u[2] * v[2]) + (u[1] * w[1] + u[2] * w[2])
     dot(u, (v[1] + w[1], v[2] + w[2])) = u[1] * (v[1] + w[1]) + u[2] * (v[2] + w[2]) = (u[1] * v[1] + u[2] * v[2]) + (u[1] * w[1] + u[2] * w[2]) = dot(u, v) + dot(u, w)
 
@@ -1919,8 +1919,8 @@ thm dot_bilinear_right:
 thm dot_scale_right:
     ? forall u, v cart(R, R), k R:
         dot(u, (k * v[1], k * v[2])) = k * dot(u, v)
-    by thm dot_coordinate_formula(u, (k * v[1], k * v[2]))
-    by thm dot_coordinate_formula(u, v)
+    release thm dot_coordinate_formula(u, (k * v[1], k * v[2]))
+    release thm dot_coordinate_formula(u, v)
     u[1] * (k * v[1]) + u[2] * (k * v[2]) = k * (u[1] * v[1] + u[2] * v[2])
     dot(u, (k * v[1], k * v[2])) = u[1] * (k * v[1]) + u[2] * (k * v[2]) = k * (u[1] * v[1] + u[2] * v[2]) = k * dot(u, v)
 
@@ -1928,8 +1928,8 @@ thm dot_scale_right:
 thm det_scale_right:
     ? forall u, v cart(R, R), k R:
         det(u, (k * v[1], k * v[2])) = k * det(u, v)
-    by thm det_coordinate_formula(u, (k * v[1], k * v[2]))
-    by thm det_coordinate_formula(u, v)
+    release thm det_coordinate_formula(u, (k * v[1], k * v[2]))
+    release thm det_coordinate_formula(u, v)
     det(u, (k * v[1], k * v[2])) = u[1] * (k * v[2]) - u[2] * (k * v[1])
     det(u, v) = u[1] * v[2] - u[2] * v[1]
     u[1] * (k * v[2]) = k * (u[1] * v[2])
@@ -1937,7 +1937,7 @@ thm det_scale_right:
     u[1] * (k * v[2]) - u[2] * (k * v[1]) = k * (u[1] * v[2]) - k * (u[2] * v[1])
     k * (u[1] * v[2]) - k * (u[2] * v[1]) = k * (u[1] * v[2] - u[2] * v[1])
     u[1] * (k * v[2]) - u[2] * (k * v[1]) = k * (u[1] * v[2] - u[2] * v[1])
-    by thm multiply_both_sides(det(u, v), u[1] * v[2] - u[2] * v[1], k)
+    release thm multiply_both_sides(det(u, v), u[1] * v[2] - u[2] * v[1], k)
     det(u, v) * k = (u[1] * v[2] - u[2] * v[1]) * k
     k * det(u, v) = det(u, v) * k
     (u[1] * v[2] - u[2] * v[1]) * k = k * (u[1] * v[2] - u[2] * v[1])
@@ -2004,8 +2004,8 @@ thm affine_combination_distance_sq:
         $is_affine_combination(p, a, b, t)
         =>:
             distance_sq(a, p) = t^2 * distance_sq(a, b)
-    by thm distance_sq_coordinate_formula(a, p)
-    by thm distance_sq_coordinate_formula(a, b)
+    release thm distance_sq_coordinate_formula(a, p)
+    release thm distance_sq_coordinate_formula(a, b)
     distance_sq(a, p) = (p[1] - a[1])^2 + (p[2] - a[2])^2
     (p[1] - a[1])^2 + (p[2] - a[2])^2 = ((1 - t) * a[1] + t * b[1] - a[1])^2 + ((1 - t) * a[2] + t * b[2] - a[2])^2
     ((1 - t) * a[1] + t * b[1] - a[1])^2 + ((1 - t) * a[2] + t * b[2] - a[2])^2 = t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
@@ -2018,8 +2018,8 @@ thm midpoint_segment_ratio:
         $is_affine_combination(p, a, b, t)
         =>:
             distance_sq(a, p) = (2 * t)^2 * distance_sq(a, m)
-    by thm affine_combination_distance_sq(a, b, p, t)
-    by thm midpoint_half_distance(a, b, m)
+    release thm affine_combination_distance_sq(a, b, p, t)
+    release thm midpoint_half_distance(a, b, m)
     distance_sq(a, p) = t^2 * distance_sq(a, b)
     distance_sq(a, m) = distance_sq(a, b) / 4
     t^2 * distance_sq(a, b) = (2 * t)^2 * (distance_sq(a, b) / 4)
@@ -2050,8 +2050,8 @@ thm similar_triangles_ratio:
         w[2] - v[2] = k * (r[2] - q[2])
         =>:
             distance_sq(u, w) = k^2 * distance_sq(p, r)
-    by thm distance_sq_coordinate_formula(u, w)
-    by thm distance_sq_coordinate_formula(p, r)
+    release thm distance_sq_coordinate_formula(u, w)
+    release thm distance_sq_coordinate_formula(p, r)
     w[1] - u[1] = (w[1] - v[1]) - (u[1] - v[1])
     (w[1] - v[1]) - (u[1] - v[1]) = k * (r[1] - q[1]) - k * (p[1] - q[1])
     k * (r[1] - q[1]) - k * (p[1] - q[1]) = k * (r[1] - p[1])
@@ -2076,12 +2076,12 @@ thm similar_triangles_dot:
         w[2] - v[2] = k * (r[2] - q[2])
         =>:
             dot(vec(v, u), vec(v, w)) = k^2 * dot(vec(q, p), vec(q, r))
-    by thm vec_coordinate_formula(v, u)
-    by thm vec_coordinate_formula(v, w)
-    by thm vec_coordinate_formula(q, p)
-    by thm vec_coordinate_formula(q, r)
-    by thm dot_coordinate_formula(vec(v, u), vec(v, w))
-    by thm dot_coordinate_formula(vec(q, p), vec(q, r))
+    release thm vec_coordinate_formula(v, u)
+    release thm vec_coordinate_formula(v, w)
+    release thm vec_coordinate_formula(q, p)
+    release thm vec_coordinate_formula(q, r)
+    release thm dot_coordinate_formula(vec(v, u), vec(v, w))
+    release thm dot_coordinate_formula(vec(q, p), vec(q, r))
     (u[1] - v[1]) * (w[1] - v[1]) = (k * (p[1] - q[1])) * (k * (r[1] - q[1]))
     (k * (p[1] - q[1])) * (k * (r[1] - q[1])) = k^2 * ((p[1] - q[1]) * (r[1] - q[1]))
     (u[1] - v[1]) * (w[1] - v[1]) = k^2 * ((p[1] - q[1]) * (r[1] - q[1]))
@@ -2105,12 +2105,12 @@ thm similar_triangles_det:
         w[2] - v[2] = k * (r[2] - q[2])
         =>:
             det(vec(v, u), vec(v, w)) = k^2 * det(vec(q, p), vec(q, r))
-    by thm vec_coordinate_formula(v, u)
-    by thm vec_coordinate_formula(v, w)
-    by thm vec_coordinate_formula(q, p)
-    by thm vec_coordinate_formula(q, r)
-    by thm det_coordinate_formula(vec(v, u), vec(v, w))
-    by thm det_coordinate_formula(vec(q, p), vec(q, r))
+    release thm vec_coordinate_formula(v, u)
+    release thm vec_coordinate_formula(v, w)
+    release thm vec_coordinate_formula(q, p)
+    release thm vec_coordinate_formula(q, r)
+    release thm det_coordinate_formula(vec(v, u), vec(v, w))
+    release thm det_coordinate_formula(vec(q, p), vec(q, r))
     (u[1] - v[1]) * (w[2] - v[2]) = (k * (p[1] - q[1])) * (k * (r[2] - q[2]))
     (k * (p[1] - q[1])) * (k * (r[2] - q[2])) = k^2 * ((p[1] - q[1]) * (r[2] - q[2]))
     (u[1] - v[1]) * (w[2] - v[2]) = k^2 * ((p[1] - q[1]) * (r[2] - q[2]))
@@ -2295,10 +2295,10 @@ thm power_of_point_difference:
     (p[1]^2 - 2*p[1]*b[1] + b[1]^2) + (p[2]^2 - 2*p[2]*b[2] + b[2]^2) = (p[1]^2 + p[2]^2 - 2*p[1]*b[1] - 2*p[2]*b[2]) + (b[1]^2 + b[2]^2)
     (p[1]^2 + p[2]^2 - 2*p[1]*a[1] - 2*p[2]*a[2]) + (a[1]^2 + a[2]^2) = (p[1]^2 + p[2]^2 - 2*p[1]*b[1] - 2*p[2]*b[2]) + (b[1]^2 + b[2]^2)
     p[1]^2 + p[2]^2 - 2*p[1]*a[1] - 2*p[2]*a[2] + a[1]^2 + a[2]^2 = p[1]^2 + p[2]^2 - 2*p[1]*b[1] - 2*p[2]*b[2] + b[1]^2 + b[2]^2
-    by thm addition_cancel(- 2*p[1]*a[1] - 2*p[2]*a[2] + a[1]^2 + a[2]^2, - 2*p[1]*b[1] - 2*p[2]*b[2] + b[1]^2 + b[2]^2, p[1]^2 + p[2]^2)
+    release thm addition_cancel(- 2*p[1]*a[1] - 2*p[2]*a[2] + a[1]^2 + a[2]^2, - 2*p[1]*b[1] - 2*p[2]*b[2] + b[1]^2 + b[2]^2, p[1]^2 + p[2]^2)
     - 2*p[1]*a[1] - 2*p[2]*a[2] + a[1]^2 + a[2]^2 = - 2*p[1]*b[1] - 2*p[2]*b[2] + b[1]^2 + b[2]^2
-    by thm add_equalities(- 2*p[1]*a[1] - 2*p[2]*a[2] + a[1]^2 + a[2]^2, - 2*p[1]*b[1] - 2*p[2]*b[2] + b[1]^2 + b[2]^2, 2*p[1]*a[1] + 2*p[2]*a[2], 2*p[1]*a[1] + 2*p[2]*a[2])
-    by thm sub_add_cancel(a[1]^2 + a[2]^2, 2*p[1]*a[1] + 2*p[2]*a[2])
+    release thm add_equalities(- 2*p[1]*a[1] - 2*p[2]*a[2] + a[1]^2 + a[2]^2, - 2*p[1]*b[1] - 2*p[2]*b[2] + b[1]^2 + b[2]^2, 2*p[1]*a[1] + 2*p[2]*a[2], 2*p[1]*a[1] + 2*p[2]*a[2])
+    release thm sub_add_cancel(a[1]^2 + a[2]^2, 2*p[1]*a[1] + 2*p[2]*a[2])
     a[1]^2 + a[2]^2 = - 2*p[1]*b[1] - 2*p[2]*b[2] + b[1]^2 + b[2]^2 + 2*p[1]*a[1] + 2*p[2]*a[2]
     - 2*p[1]*b[1] - 2*p[2]*b[2] + b[1]^2 + b[2]^2 + 2*p[1]*a[1] + 2*p[2]*a[2] = 2*p[1]*(a[1] - b[1]) + 2*p[2]*(a[2] - b[2]) + b[1]^2 + b[2]^2
     a[1]^2 + a[2]^2 = 2*p[1]*(a[1] - b[1]) + 2*p[2]*(a[2] - b[2]) + b[1]^2 + b[2]^2
@@ -2317,16 +2317,16 @@ thm power_of_point_difference:
     (p[1]^2 - 2*p[1]*d[1] + d[1]^2) + (p[2]^2 - 2*p[2]*d[2] + d[2]^2) = (p[1]^2 + p[2]^2 - 2*p[1]*d[1] - 2*p[2]*d[2]) + (d[1]^2 + d[2]^2)
     (p[1]^2 + p[2]^2 - 2*p[1]*c[1] - 2*p[2]*c[2]) + (c[1]^2 + c[2]^2) = (p[1]^2 + p[2]^2 - 2*p[1]*d[1] - 2*p[2]*d[2]) + (d[1]^2 + d[2]^2)
     p[1]^2 + p[2]^2 - 2*p[1]*c[1] - 2*p[2]*c[2] + c[1]^2 + c[2]^2 = p[1]^2 + p[2]^2 - 2*p[1]*d[1] - 2*p[2]*d[2] + d[1]^2 + d[2]^2
-    by thm addition_cancel(- 2*p[1]*c[1] - 2*p[2]*c[2] + c[1]^2 + c[2]^2, - 2*p[1]*d[1] - 2*p[2]*d[2] + d[1]^2 + d[2]^2, p[1]^2 + p[2]^2)
+    release thm addition_cancel(- 2*p[1]*c[1] - 2*p[2]*c[2] + c[1]^2 + c[2]^2, - 2*p[1]*d[1] - 2*p[2]*d[2] + d[1]^2 + d[2]^2, p[1]^2 + p[2]^2)
     - 2*p[1]*c[1] - 2*p[2]*c[2] + c[1]^2 + c[2]^2 = - 2*p[1]*d[1] - 2*p[2]*d[2] + d[1]^2 + d[2]^2
-    by thm add_equalities(- 2*p[1]*c[1] - 2*p[2]*c[2] + c[1]^2 + c[2]^2, - 2*p[1]*d[1] - 2*p[2]*d[2] + d[1]^2 + d[2]^2, 2*p[1]*c[1] + 2*p[2]*c[2], 2*p[1]*c[1] + 2*p[2]*c[2])
-    by thm sub_add_cancel(c[1]^2 + c[2]^2, 2*p[1]*c[1] + 2*p[2]*c[2])
+    release thm add_equalities(- 2*p[1]*c[1] - 2*p[2]*c[2] + c[1]^2 + c[2]^2, - 2*p[1]*d[1] - 2*p[2]*d[2] + d[1]^2 + d[2]^2, 2*p[1]*c[1] + 2*p[2]*c[2], 2*p[1]*c[1] + 2*p[2]*c[2])
+    release thm sub_add_cancel(c[1]^2 + c[2]^2, 2*p[1]*c[1] + 2*p[2]*c[2])
     c[1]^2 + c[2]^2 = - 2*p[1]*d[1] - 2*p[2]*d[2] + d[1]^2 + d[2]^2 + 2*p[1]*c[1] + 2*p[2]*c[2]
     - 2*p[1]*d[1] - 2*p[2]*d[2] + d[1]^2 + d[2]^2 + 2*p[1]*c[1] + 2*p[2]*c[2] = 2*p[1]*(c[1] - d[1]) + 2*p[2]*(c[2] - d[2]) + d[1]^2 + d[2]^2
     c[1]^2 + c[2]^2 = 2*p[1]*(c[1] - d[1]) + 2*p[2]*(c[2] - d[2]) + d[1]^2 + d[2]^2
     c[1]^2 + c[2]^2 - d[1]^2 - d[2]^2 = 2*p[1]*(c[1] - d[1]) + 2*p[2]*(c[2] - d[2])
     
-    by thm subtract_equalities(a[1]^2 + a[2]^2 - b[1]^2 - b[2]^2, 2*p[1]*(a[1] - b[1]) + 2*p[2]*(a[2] - b[2]), c[1]^2 + c[2]^2 - d[1]^2 - d[2]^2, 2*p[1]*(c[1] - d[1]) + 2*p[2]*(c[2] - d[2]))
+    release thm subtract_equalities(a[1]^2 + a[2]^2 - b[1]^2 - b[2]^2, 2*p[1]*(a[1] - b[1]) + 2*p[2]*(a[2] - b[2]), c[1]^2 + c[2]^2 - d[1]^2 - d[2]^2, 2*p[1]*(c[1] - d[1]) + 2*p[2]*(c[2] - d[2]))
     (a[1]^2 + a[2]^2 - b[1]^2 - b[2]^2) - (c[1]^2 + c[2]^2 - d[1]^2 - d[2]^2) = (2*p[1]*(a[1] - b[1]) + 2*p[2]*(a[2] - b[2])) - (2*p[1]*(c[1] - d[1]) + 2*p[2]*(c[2] - d[2]))
     (2*p[1]*(a[1] - b[1]) + 2*p[2]*(a[2] - b[2])) - (2*p[1]*(c[1] - d[1]) + 2*p[2]*(c[2] - d[2])) = 2*p[1]*(a[1] - b[1] - c[1] + d[1]) + 2*p[2]*(a[2] - b[2] - c[2] + d[2])
     (a[1]^2 + a[2]^2 - b[1]^2 - b[2]^2) - (c[1]^2 + c[2]^2 - d[1]^2 - d[2]^2) = 2*p[1]*(a[1] - b[1] - c[1] + d[1]) + 2*p[2]*(a[2] - b[2] - c[2] + d[2])
@@ -2368,28 +2368,28 @@ thm isosceles_implies_equal_projections:
         =>:
             (a[1] - c[1]) * (b[1] - a[1]) + (a[2] - c[2]) * (b[2] - a[2]) - (b[1] - c[1]) * (a[1] - b[1]) - (b[2] - c[2]) * (a[2] - b[2]) = 0
 
-    by thm distance_sq_coordinate_formula(c, a)
-    by thm distance_sq_coordinate_formula(c, b)
+    release thm distance_sq_coordinate_formula(c, a)
+    release thm distance_sq_coordinate_formula(c, b)
     distance_sq(c, a) = (c[1] - a[1])^2 + (c[2] - a[2])^2
     distance_sq(c, b) = (c[1] - b[1])^2 + (c[2] - b[2])^2
     (c[1] - a[1])^2 + (c[2] - a[2])^2 - ((c[1] - b[1])^2 + (c[2] - b[2])^2) = 0
     distance_sq(c, a) - distance_sq(c, b) = 0
     distance_sq(c, a) = distance_sq(c, b)
 
-    by thm isosceles_base_dot(c, a, b)
+    release thm isosceles_base_dot(c, a, b)
     dot(vec(a, c), vec(a, b)) = dot(vec(b, c), vec(b, a))
 
-    by thm vec_coordinate_formula(a, c)
-    by thm vec_coordinate_formula(a, b)
-    by thm vec_coordinate_formula(b, c)
-    by thm vec_coordinate_formula(b, a)
+    release thm vec_coordinate_formula(a, c)
+    release thm vec_coordinate_formula(a, b)
+    release thm vec_coordinate_formula(b, c)
+    release thm vec_coordinate_formula(b, a)
     vec(a, c) = (c[1] - a[1], c[2] - a[2])
     vec(a, b) = (b[1] - a[1], b[2] - a[2])
     vec(b, c) = (c[1] - b[1], c[2] - b[2])
     vec(b, a) = (a[1] - b[1], a[2] - b[2])
 
-    by thm dot_coordinate_formula(vec(a, c), vec(a, b))
-    by thm dot_coordinate_formula(vec(b, c), vec(b, a))
+    release thm dot_coordinate_formula(vec(a, c), vec(a, b))
+    release thm dot_coordinate_formula(vec(b, c), vec(b, a))
     dot(vec(a, c), vec(a, b)) = (c[1] - a[1]) * (b[1] - a[1]) + (c[2] - a[2]) * (b[2] - a[2])
     dot(vec(b, c), vec(b, a)) = (c[1] - b[1]) * (a[1] - b[1]) + (c[2] - b[2]) * (a[2] - b[2])
 
@@ -2423,7 +2423,7 @@ thm equidistant_implies_perp_bisector_dot:
         =>:
             (p[1] - (a[1] + b[1])/2) * (b[1] - a[1]) + (p[2] - (a[2] + b[2])/2) * (b[2] - a[2]) = 0
 
-    by thm equidistant_dot_half(a, b, p)
+    release thm equidistant_dot_half(a, b, p)
     (p[1] - a[1])^2 + (p[2] - a[2])^2 - (p[1] - b[1])^2 - (p[2] - b[2])^2 = 2 * (p[1] - a[1]) * (b[1] - a[1]) + 2 * (p[2] - a[2]) * (b[2] - a[2]) - (b[1] - a[1])^2 - (b[2] - a[2])^2
     2 * (p[1] - a[1]) * (b[1] - a[1]) + 2 * (p[2] - a[2]) * (b[2] - a[2]) - (b[1] - a[1])^2 - (b[2] - a[2])^2 = 0
 
@@ -2433,7 +2433,7 @@ thm equidistant_implies_perp_bisector_dot:
     2 * ((p[1] - (a[1] + b[1])/2) * (b[1] - a[1]) + (p[2] - (a[2] + b[2])/2) * (b[2] - a[2])) = 2 * (p[1] - a[1]) * (b[1] - a[1]) + 2 * (p[2] - a[2]) * (b[2] - a[2]) - (b[1] - a[1])^2 - (b[2] - a[2])^2
     2 * ((p[1] - (a[1] + b[1])/2) * (b[1] - a[1]) + (p[2] - (a[2] + b[2])/2) * (b[2] - a[2])) = 0
 
-    by thm divide_both_sides((p[1] - (a[1] + b[1])/2) * (b[1] - a[1]) + (p[2] - (a[2] + b[2])/2) * (b[2] - a[2]), 0, 2)
+    release thm divide_both_sides((p[1] - (a[1] + b[1])/2) * (b[1] - a[1]) + (p[2] - (a[2] + b[2])/2) * (b[2] - a[2]), 0, 2)
     (p[1] - (a[1] + b[1])/2) * (b[1] - a[1]) + (p[2] - (a[2] + b[2])/2) * (b[2] - a[2]) = 0
 
 # parallel premise => proportional det vanishes
@@ -2451,7 +2451,7 @@ thm orthocenter_third_altitude:
         (h[1] - b[1]) * (c[1] - a[1]) + (h[2] - b[2]) * (c[2] - a[2]) = 0
         =>:
             (h[1] - c[1]) * (b[1] - a[1]) + (h[2] - c[2]) * (b[2] - a[2]) = 0
-    by thm subtract_equalities((h[1] - b[1]) * (c[1] - a[1]) + (h[2] - b[2]) * (c[2] - a[2]), 0, (h[1] - a[1]) * (c[1] - b[1]) + (h[2] - a[2]) * (c[2] - b[2]), 0)
+    release thm subtract_equalities((h[1] - b[1]) * (c[1] - a[1]) + (h[2] - b[2]) * (c[2] - a[2]), 0, (h[1] - a[1]) * (c[1] - b[1]) + (h[2] - a[2]) * (c[2] - b[2]), 0)
     (h[1] - c[1]) * (b[1] - a[1]) + (h[2] - c[2]) * (b[2] - a[2]) = ((h[1] - b[1]) * (c[1] - a[1]) + (h[2] - b[2]) * (c[2] - a[2])) - ((h[1] - a[1]) * (c[1] - b[1]) + (h[2] - a[2]) * (c[2] - b[2])) = 0 - 0 = 0
 
 # Equal squared distances from one center are transitive.
@@ -2461,7 +2461,7 @@ thm circumcenter_equidistant_triple:
         (o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - c[1])^2 - (o[2] - c[2])^2 = 0
         =>:
             (o[1] - b[1])^2 + (o[2] - b[2])^2 - (o[1] - c[1])^2 - (o[2] - c[2])^2 = 0
-    by thm subtract_equalities((o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - c[1])^2 - (o[2] - c[2])^2, 0, (o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - b[1])^2 - (o[2] - b[2])^2, 0)
+    release thm subtract_equalities((o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - c[1])^2 - (o[2] - c[2])^2, 0, (o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - b[1])^2 - (o[2] - b[2])^2, 0)
     (o[1] - b[1])^2 + (o[2] - b[2])^2 - (o[1] - c[1])^2 - (o[2] - c[2])^2 = ((o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - c[1])^2 - (o[2] - c[2])^2) - ((o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - b[1])^2 - (o[2] - b[2])^2) = 0 - 0 = 0
 
 # The public conclusion uses the existing midpoint predicate; coordinates remain
@@ -2473,14 +2473,14 @@ thm parallelogram_midpoint_diagonals:
         =>:
             exist m cart(R, R) st {$is_midpoint(m, a, c), $is_midpoint(m, b, d)}
     b[1] - a[1] = c[1] - d[1]
-    by thm add_equalities(b[1] - a[1], c[1] - d[1], a[1] + d[1], a[1] + d[1])
+    release thm add_equalities(b[1] - a[1], c[1] - d[1], a[1] + d[1], a[1] + d[1])
     (b[1] - a[1]) + (a[1] + d[1]) = b[1] + d[1]
     (c[1] - d[1]) + (a[1] + d[1]) = a[1] + c[1]
     a[1] + c[1] = (c[1] - d[1]) + (a[1] + d[1]) = (b[1] - a[1]) + (a[1] + d[1]) = b[1] + d[1]
     (a[1] + c[1]) / 2 = (b[1] + d[1]) / 2
     (a[1] + c[1]) / 2 - (b[1] + d[1]) / 2 = 0
     b[2] - a[2] = c[2] - d[2]
-    by thm add_equalities(b[2] - a[2], c[2] - d[2], a[2] + d[2], a[2] + d[2])
+    release thm add_equalities(b[2] - a[2], c[2] - d[2], a[2] + d[2], a[2] + d[2])
     (b[2] - a[2]) + (a[2] + d[2]) = b[2] + d[2]
     (c[2] - d[2]) + (a[2] + d[2]) = a[2] + c[2]
     a[2] + c[2] = (c[2] - d[2]) + (a[2] + d[2]) = (b[2] - a[2]) + (a[2] + d[2]) = b[2] + d[2]
@@ -2489,7 +2489,7 @@ thm parallelogram_midpoint_diagonals:
         m = ((a[1] + c[1]) / 2, (a[2] + c[2]) / 2)
         m[1] = (a[1] + c[1]) / 2 = (b[1] + d[1]) / 2
         m[2] = (a[2] + c[2]) / 2 = (b[2] + d[2]) / 2
-        by thm tuple_equal_from_coordinates(m, (m[1], m[2]))
+        release thm tuple_equal_from_coordinates(m, (m[1], m[2]))
         (m[1], m[2]) = ((b[1] + d[1]) / 2, (b[2] + d[2]) / 2)
         m = (m[1], m[2]) = ((b[1] + d[1]) / 2, (b[2] + d[2]) / 2)
         $is_midpoint(m, a, c)
@@ -2511,7 +2511,7 @@ thm concyclic_fourth_point:
         (o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - d[1])^2 - (o[2] - d[2])^2 = 0
         =>:
             (o[1] - c[1])^2 + (o[2] - c[2])^2 - (o[1] - d[1])^2 - (o[2] - d[2])^2 = 0
-    by thm subtract_equalities((o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - d[1])^2 - (o[2] - d[2])^2, 0, (o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - c[1])^2 - (o[2] - c[2])^2, 0)
+    release thm subtract_equalities((o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - d[1])^2 - (o[2] - d[2])^2, 0, (o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - c[1])^2 - (o[2] - c[2])^2, 0)
     (o[1] - c[1])^2 + (o[2] - c[2])^2 - (o[1] - d[1])^2 - (o[2] - d[2])^2 = ((o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - d[1])^2 - (o[2] - d[2])^2) - ((o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - c[1])^2 - (o[2] - c[2])^2) = 0 - 0 = 0
 
 # Perpendicular dot product implies coordinate rearrangement
@@ -2521,7 +2521,7 @@ thm perp_dot_zero_coordinate:
         =>:
             (b[1] - a[1]) * (d[1] - c[1]) = -(b[2] - a[2]) * (d[2] - c[2])
     (b[2] - a[2]) * (d[2] - c[2]) + (b[1] - a[1]) * (d[1] - c[1]) = 0
-    by thm zero_sum_rearrange((b[2] - a[2]) * (d[2] - c[2]), (b[1] - a[1]) * (d[1] - c[1]))
+    release thm zero_sum_rearrange((b[2] - a[2]) * (d[2] - c[2]), (b[1] - a[1]) * (d[1] - c[1]))
     -((b[2] - a[2]) * (d[2] - c[2])) = (b[1] - a[1]) * (d[1] - c[1])
     (b[1] - a[1]) * (d[1] - c[1]) = -(b[2] - a[2]) * (d[2] - c[2])
 
@@ -2540,7 +2540,7 @@ thm wu_circle_quartic:
         =>:
             p[1]^4 + 2 * p[1]^2 * p[2]^2 + p[2]^4 - 1 = 0
     p[1]^2 + p[2]^2 = p[1]^2 + p[2]^2 - 1 + 1 = 0 + 1 = 1
-    by thm multiply_both_sides(p[1]^2 + p[2]^2, 1, p[1]^2 + p[2]^2)
+    release thm multiply_both_sides(p[1]^2 + p[2]^2, 1, p[1]^2 + p[2]^2)
     (p[1]^2 + p[2]^2) * (p[1]^2 + p[2]^2) = 1 * (p[1]^2 + p[2]^2)
     1 * (p[1]^2 + p[2]^2) = 1
     (p[1]^2 + p[2]^2) * (p[1]^2 + p[2]^2) = 1
@@ -2575,9 +2575,9 @@ thm midpoint_equidistant_prop:
             $are_segments_congruent(m, a, m, b)
     m[1] = (a[1] + b[1]) / 2
     m[2] = (a[2] + b[2]) / 2
-    by thm midpoint_equidistant(a, b, m)
-    by thm distance_sq_symmetric(a, m)
-    by thm distance_sq_symmetric(b, m)
+    release thm midpoint_equidistant(a, b, m)
+    release thm distance_sq_symmetric(a, m)
+    release thm distance_sq_symmetric(b, m)
     distance_sq(m, a) = distance_sq(a, m) = distance_sq(b, m) = distance_sq(m, b)
 
 # M是AB中点 → A,M,B共线
@@ -2588,7 +2588,7 @@ thm midpoint_collinear_prop:
             $is_collinear(a, m, b)
     m[1] = (a[1] + b[1]) / 2
     m[2] = (a[2] + b[2]) / 2
-    by thm collinear_midpoint(a, b, m)
+    release thm collinear_midpoint(a, b, m)
 
 # ═══════════════════════════════════════════════════════════════════════
 # Pythagorean / Right angle
@@ -2600,7 +2600,7 @@ thm pythagorean_prop:
         $is_right_angle(a, b, c)
         =>:
             distance_sq(a, c) = distance_sq(a, b) + distance_sq(b, c)
-    by thm pythagorean_theorem(a, b, c)
+    release thm pythagorean_theorem(a, b, c)
 
 # ═══════════════════════════════════════════════════════════════════════
 # Collinearity
@@ -2612,7 +2612,7 @@ thm collinear_symmetric_prop:
         $is_collinear(p, q, r)
         =>:
             $is_collinear(q, p, r)
-    by thm collinear_symmetric(p, q, r)
+    release thm collinear_symmetric(p, q, r)
 
 # ═══════════════════════════════════════════════════════════════════════
 # Perpendicular / Right angle
@@ -2624,7 +2624,7 @@ thm perpendicular_symmetric_prop:
         $is_perpendicular(a, b, c, d)
         =>:
             $is_perpendicular(c, d, a, b)
-    by thm perpendicular_symmetric(a, b, c, d)
+    release thm perpendicular_symmetric(a, b, c, d)
 
 # ═══════════════════════════════════════════════════════════════════════
 # Parallel
@@ -2636,7 +2636,7 @@ thm parallel_symmetric_prop:
         $is_parallel(a, b, c, d)
         =>:
             $is_parallel(c, d, a, b)
-    by thm parallel_symmetric(a, b, c, d)
+    release thm parallel_symmetric(a, b, c, d)
 
 # ═══════════════════════════════════════════════════════════════════════
 # Segment congruence
@@ -2648,7 +2648,7 @@ thm segments_congruent_symmetric_prop:
         $are_segments_congruent(a, b, c, d)
         =>:
             $are_segments_congruent(c, d, a, b)
-    by thm segments_congruent_symmetric(a, b, c, d)
+    release thm segments_congruent_symmetric(a, b, c, d)
 
 # 线段全等传递
 thm segments_congruent_transitive_prop:
@@ -2657,14 +2657,14 @@ thm segments_congruent_transitive_prop:
         $are_segments_congruent(c, d, p, q)
         =>:
             $are_segments_congruent(a, b, p, q)
-    by thm segments_congruent_transitive(a, b, c, d, p, q)
+    release thm segments_congruent_transitive(a, b, c, d, p, q)
 
 # 线段全等自反
 thm segments_congruent_reflexive_prop:
     ? forall a, b cart(R, R):
         =>:
             $are_segments_congruent(a, b, a, b)
-    by thm segments_congruent_reflexive(a, b)
+    release thm segments_congruent_reflexive(a, b)
 
 # Bridge theorem: distance_sq equality → segments congruent
 thm segments_congruent_from_distance_sq:
@@ -2679,7 +2679,7 @@ thm distance_sq_symmetric_prop:
     ? forall a, b cart(R, R):
         =>:
             $are_segments_congruent(a, b, b, a)
-    by thm distance_sq_symmetric(a, b)
+    release thm distance_sq_symmetric(a, b)
 
 # ═══════════════════════════════════════════════════════════════════════
 # Isosceles triangle
@@ -2691,7 +2691,7 @@ thm isosceles_base_dot_prop:
         $are_segments_congruent(a, b, a, c)
         =>:
             dot(vec(b, a), vec(b, c)) = dot(vec(c, a), vec(c, b))
-    by thm isosceles_base_dot(a, b, c)
+    release thm isosceles_base_dot(a, b, c)
 
 # ═══════════════════════════════════════════════════════════════════════
 # SSS (三边相等 → dot相等，即角相等的坐标表达)
@@ -2705,7 +2705,7 @@ thm sss_dot_equal_prop:
         $are_segments_congruent(p, r, u, w)
         =>:
             dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
-    by thm sss_dot_equal(p, q, r, u, v, w)
+    release thm sss_dot_equal(p, q, r, u, v, w)
 
 # ═══════════════════════════════════════════════════════════════════════
 # SAS (两边+夹角 → 第三边)
@@ -2719,7 +2719,7 @@ thm sas_third_side_prop:
         dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
         =>:
             $are_segments_congruent(p, r, u, w)
-    by thm sas_third_side(p, q, r, u, v, w)
+    release thm sas_third_side(p, q, r, u, v, w)
 
 # ═══════════════════════════════════════════════════════════════════════
 # Cosine law / dot-distance 关系
@@ -2729,13 +2729,13 @@ thm sas_third_side_prop:
 thm cosine_law_prop:
     ? forall p, q, r cart(R, R):
         distance_sq(p, r) = distance_sq(p, q) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r))
-    by thm cosine_law(p, q, r)
+    release thm cosine_law(p, q, r)
 
 # dot用距离表达：dot(QP,QR) = (PQ²+QR²-PR²)/2
 thm dot_from_cosine_law_prop:
     ? forall p, q, r cart(R, R):
         dot(vec(q, p), vec(q, r)) = (distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)) / 2
-    by thm dot_from_cosine_law(p, q, r)
+    release thm dot_from_cosine_law(p, q, r)
 
 # ═══════════════════════════════════════════════════════════════════════
 # Median (中线长)
@@ -2749,7 +2749,7 @@ thm median_length_prop:
             4 * distance_sq(a, m) = 2 * distance_sq(a, b) + 2 * distance_sq(a, c) - distance_sq(b, c)
     m[1] = (b[1] + c[1]) / 2
     m[2] = (b[2] + c[2]) / 2
-    by thm median_length(a, b, c, m)
+    release thm median_length(a, b, c, m)
 
 # ═══════════════════════════════════════════════════════════════════════
 # Collinear (more)
@@ -2761,7 +2761,7 @@ thm collinear_third_prop:
         $is_collinear(p, q, r)
         =>:
             $is_collinear(r, p, q)
-    by thm collinear_third(p, q, r)
+    release thm collinear_third(p, q, r)
 
 # ═══════════════════════════════════════════════════════════════════════
 # Thales (直径上圆周角=90°)
@@ -2777,8 +2777,8 @@ thm thales_theorem_prop:
             $is_right_angle(a, p, b)
     by def $is_midpoint(o, a, b)
     by def $are_segments_congruent(o, p, o, a)
-    by thm distance_sq_coordinate_formula(o, p)
-    by thm distance_sq_coordinate_formula(o, a)
+    release thm distance_sq_coordinate_formula(o, p)
+    release thm distance_sq_coordinate_formula(o, a)
     distance_sq(o, p) = distance_sq(o, a)
     (p[1] - o[1])^2 + (p[2] - o[2])^2 = (a[1] - o[1])^2 + (a[2] - o[2])^2
     ((p[1] - o[1])^2 + (p[2] - o[2])^2) - ((a[1] - o[1])^2 + (a[2] - o[2])^2) = ((a[1] - o[1])^2 + (a[2] - o[2])^2) - ((a[1] - o[1])^2 + (a[2] - o[2])^2)
@@ -2786,11 +2786,11 @@ thm thales_theorem_prop:
     ((p[1] - o[1])^2 + (p[2] - o[2])^2) - ((a[1] - o[1])^2 + (a[2] - o[2])^2) = 0
     (p[1] - o[1])^2 + (p[2] - o[2])^2 = (p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2
     (a[1] - o[1])^2 + (a[2] - o[2])^2 = (a[1] - (a[1] + b[1]) / 2)^2 + (a[2] - (a[2] + b[2]) / 2)^2
-    by thm subtract_equalities((p[1] - o[1])^2 + (p[2] - o[2])^2, (p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2, (a[1] - o[1])^2 + (a[2] - o[2])^2, (a[1] - (a[1] + b[1]) / 2)^2 + (a[2] - (a[2] + b[2]) / 2)^2)
+    release thm subtract_equalities((p[1] - o[1])^2 + (p[2] - o[2])^2, (p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2, (a[1] - o[1])^2 + (a[2] - o[2])^2, (a[1] - (a[1] + b[1]) / 2)^2 + (a[2] - (a[2] + b[2]) / 2)^2)
     ((p[1] - o[1])^2 + (p[2] - o[2])^2) - ((a[1] - o[1])^2 + (a[2] - o[2])^2) = ((p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2) - ((a[1] - (a[1] + b[1]) / 2)^2 + (a[2] - (a[2] + b[2]) / 2)^2)
     ((p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2) - ((a[1] - (a[1] + b[1]) / 2)^2 + (a[2] - (a[2] + b[2]) / 2)^2) = 0
     (p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2 - (a[1] - (a[1] + b[1]) / 2)^2 - (a[2] - (a[2] + b[2]) / 2)^2 = 0
-    by thm thales_theorem(a, b, p)
+    release thm thales_theorem(a, b, p)
     by def $is_right_angle(a, p, b)
 
 thm double_midpoint_equal_sides:
@@ -2806,18 +2806,18 @@ thm double_midpoint_equal_sides:
     d[1] = (a[1] + f[1]) / 2
     d[2] = (a[2] + f[2]) / 2
     (b[1] + c[1]) / 2 = (a[1] + f[1]) / 2
-    by thm multiply_both_sides((b[1] + c[1]) / 2, (a[1] + f[1]) / 2, 2)
+    release thm multiply_both_sides((b[1] + c[1]) / 2, (a[1] + f[1]) / 2, 2)
     ((b[1] + c[1]) / 2) * 2 = b[1] + c[1]
     ((a[1] + f[1]) / 2) * 2 = a[1] + f[1]
     b[1] + c[1] = ((b[1] + c[1]) / 2) * 2 = ((a[1] + f[1]) / 2) * 2 = a[1] + f[1]
     f[1] = (a[1] + f[1]) - a[1] = (b[1] + c[1]) - a[1]
     (b[2] + c[2]) / 2 = (a[2] + f[2]) / 2
-    by thm multiply_both_sides((b[2] + c[2]) / 2, (a[2] + f[2]) / 2, 2)
+    release thm multiply_both_sides((b[2] + c[2]) / 2, (a[2] + f[2]) / 2, 2)
     ((b[2] + c[2]) / 2) * 2 = b[2] + c[2]
     ((a[2] + f[2]) / 2) * 2 = a[2] + f[2]
     b[2] + c[2] = ((b[2] + c[2]) / 2) * 2 = ((a[2] + f[2]) / 2) * 2 = a[2] + f[2]
     f[2] = (a[2] + f[2]) - a[2] = (b[2] + c[2]) - a[2]
-    by thm parallelogram_sides(b, a, c, f)
+    release thm parallelogram_sides(b, a, c, f)
     distance_sq(b, f) = distance_sq(a, c)
     distance_sq(a, c) = distance_sq(b, f)
 
@@ -2852,8 +2852,8 @@ thm rotation_90_cw_distance_prop:
             distance_sq(c, q) = distance_sq(c, p)
     q[1] - c[1] = c[2] - p[2]
     q[2] - c[2] = p[1] - c[1]
-    by thm distance_sq_coordinate_formula(c, q)
-    by thm distance_sq_coordinate_formula(c, p)
+    release thm distance_sq_coordinate_formula(c, q)
+    release thm distance_sq_coordinate_formula(c, p)
     (q[1] - c[1])^2 + (q[2] - c[2])^2 = (c[2] - p[2])^2 + (p[1] - c[1])^2
     (c[2] - p[2])^2 + (p[1] - c[1])^2 = (p[1] - c[1])^2 + (p[2] - c[2])^2
     (p[1] - c[1])^2 + (p[2] - c[2])^2 = (p[1] - c[1])^2 + (c[2] - p[2])^2
@@ -2900,8 +2900,8 @@ thm vertical_angles_sign_core:
 thm dot_two_scale:
     ? forall u, v cart(R, R), k, l R:
         dot((k * u[1], k * u[2]), (l * v[1], l * v[2])) = k * l * dot(u, v)
-    by thm dot_coordinate_formula((k * u[1], k * u[2]), (l * v[1], l * v[2]))
-    by thm dot_coordinate_formula(u, v)
+    release thm dot_coordinate_formula((k * u[1], k * u[2]), (l * v[1], l * v[2]))
+    release thm dot_coordinate_formula(u, v)
     (k * u[1]) * (l * v[1]) + (k * u[2]) * (l * v[2]) = k * l * (u[1] * v[1] + u[2] * v[2])
     dot((k * u[1], k * u[2]), (l * v[1], l * v[2])) = (k * u[1]) * (l * v[1]) + (k * u[2]) * (l * v[2]) = k * l * (u[1] * v[1] + u[2] * v[2]) = k * l * dot(u, v)
 
@@ -2913,12 +2913,12 @@ thm affine_dot_backward:
         o[2] = c[2] + s * (d[2] - c[2])
         =>:
             dot(vec(o, a), vec(o, c)) = t * s * dot(vec(a, b), vec(c, d))
-    by thm vec_coordinate_formula(o, a)
-    by thm vec_coordinate_formula(o, c)
-    by thm vec_coordinate_formula(a, b)
-    by thm vec_coordinate_formula(c, d)
-    by thm dot_coordinate_formula(vec(o, a), vec(o, c))
-    by thm dot_coordinate_formula(vec(a, b), vec(c, d))
+    release thm vec_coordinate_formula(o, a)
+    release thm vec_coordinate_formula(o, c)
+    release thm vec_coordinate_formula(a, b)
+    release thm vec_coordinate_formula(c, d)
+    release thm dot_coordinate_formula(vec(o, a), vec(o, c))
+    release thm dot_coordinate_formula(vec(a, b), vec(c, d))
     a[1] - o[1] = a[1] - (a[1] + t * (b[1] - a[1]))
     a[1] - (a[1] + t * (b[1] - a[1])) = -t * (b[1] - a[1])
     a[1] - o[1] = -t * (b[1] - a[1])
@@ -2946,12 +2946,12 @@ thm affine_dot_forward:
         o[2] = c[2] + s * (d[2] - c[2])
         =>:
             dot(vec(o, b), vec(o, d)) = (1 - t) * (1 - s) * dot(vec(a, b), vec(c, d))
-    by thm vec_coordinate_formula(o, b)
-    by thm vec_coordinate_formula(o, d)
-    by thm vec_coordinate_formula(a, b)
-    by thm vec_coordinate_formula(c, d)
-    by thm dot_coordinate_formula(vec(o, b), vec(o, d))
-    by thm dot_coordinate_formula(vec(a, b), vec(c, d))
+    release thm vec_coordinate_formula(o, b)
+    release thm vec_coordinate_formula(o, d)
+    release thm vec_coordinate_formula(a, b)
+    release thm vec_coordinate_formula(c, d)
+    release thm dot_coordinate_formula(vec(o, b), vec(o, d))
+    release thm dot_coordinate_formula(vec(a, b), vec(c, d))
     b[1] - o[1] = b[1] - (a[1] + t * (b[1] - a[1]))
     b[1] - (a[1] + t * (b[1] - a[1])) = (1 - t) * (b[1] - a[1])
     b[1] - o[1] = (1 - t) * (b[1] - a[1])
@@ -2988,11 +2988,11 @@ thm affine_distance_from_parameter:
     a[2] + t * (b[2] - a[2]) = (1 - (1 - t)) * b[2] + (1 - t) * a[2]
     o[2] = (1 - (1 - t)) * b[2] + (1 - t) * a[2]
     by def $is_affine_combination(o, b, a, 1 - t)
-    by thm affine_combination_distance_sq(a, b, o, t)
-    by thm affine_combination_distance_sq(b, a, o, 1 - t)
-    by thm distance_sq_symmetric(o, a)
-    by thm distance_sq_symmetric(o, b)
-    by thm distance_sq_symmetric(a, b)
+    release thm affine_combination_distance_sq(a, b, o, t)
+    release thm affine_combination_distance_sq(b, a, o, 1 - t)
+    release thm distance_sq_symmetric(o, a)
+    release thm distance_sq_symmetric(o, b)
+    release thm distance_sq_symmetric(a, b)
     distance_sq(o, a) = distance_sq(a, o)
     distance_sq(a, o) = t^2 * distance_sq(a, b)
     distance_sq(o, a) = t^2 * distance_sq(a, b)
@@ -3023,21 +3023,21 @@ thm vertical_angles_equal:
     o[1] = c[1] + s * (d[1] - c[1])
     o[2] = c[2] + s * (d[2] - c[2])
 
-    by thm vec_coordinate_formula(o, a)
-    by thm vec_coordinate_formula(o, b)
-    by thm vec_coordinate_formula(o, c)
-    by thm vec_coordinate_formula(o, d)
-    by thm vec_coordinate_formula(a, b)
-    by thm vec_coordinate_formula(c, d)
-    by thm dot_coordinate_formula(vec(o, a), vec(o, c))
-    by thm dot_coordinate_formula(vec(o, b), vec(o, d))
-    by thm dot_coordinate_formula(vec(a, b), vec(c, d))
+    release thm vec_coordinate_formula(o, a)
+    release thm vec_coordinate_formula(o, b)
+    release thm vec_coordinate_formula(o, c)
+    release thm vec_coordinate_formula(o, d)
+    release thm vec_coordinate_formula(a, b)
+    release thm vec_coordinate_formula(c, d)
+    release thm dot_coordinate_formula(vec(o, a), vec(o, c))
+    release thm dot_coordinate_formula(vec(o, b), vec(o, d))
+    release thm dot_coordinate_formula(vec(a, b), vec(c, d))
 
     dot(vec(o, a), vec(o, c)) = t * s * dot(vec(a, b), vec(c, d))
     dot(vec(o, b), vec(o, d)) = (1 - t) * (1 - s) * dot(vec(a, b), vec(c, d))
 
-    by thm affine_distance_from_parameter(a, b, o, t)
-    by thm affine_distance_from_parameter(c, d, o, s)
+    release thm affine_distance_from_parameter(a, b, o, t)
+    release thm affine_distance_from_parameter(c, d, o, s)
 
     distance_sq(o, a) = t^2 * distance_sq(a, b)
     distance_sq(o, b) = (1 - t)^2 * distance_sq(a, b)
@@ -3054,10 +3054,10 @@ thm vertical_angles_equal:
     (t * s * dot(vec(a, b), vec(c, d)))^2 * ((1 - t)^2 * distance_sq(a, b) * ((1 - s)^2 * distance_sq(c, d))) = ((1 - t) * (1 - s) * dot(vec(a, b), vec(c, d)))^2 * (t^2 * distance_sq(a, b) * (s^2 * distance_sq(c, d)))
     ((1 - t) * (1 - s) * dot(vec(a, b), vec(c, d)))^2 * (t^2 * distance_sq(a, b) * (s^2 * distance_sq(c, d))) = angle_cos_num(b, o, d)^2 * (t^2 * distance_sq(a, b) * (s^2 * distance_sq(c, d)))
     angle_cos_num(b, o, d)^2 * (t^2 * distance_sq(a, b) * (s^2 * distance_sq(c, d))) = angle_cos_num(b, o, d)^2 * angle_cos_den(a, o, c)
-    by thm vertical_angles_square_core(t, s, dot(vec(a, b), vec(c, d)), distance_sq(a, b), distance_sq(c, d))
+    release thm vertical_angles_square_core(t, s, dot(vec(a, b), vec(c, d)), distance_sq(a, b), distance_sq(c, d))
     angle_cos_num(a, o, c)^2 * angle_cos_den(b, o, d) = angle_cos_num(b, o, d)^2 * angle_cos_den(a, o, c)
 
-    by thm vertical_angles_sign_core(t, s, dot(vec(a, b), vec(c, d)))
+    release thm vertical_angles_sign_core(t, s, dot(vec(a, b), vec(c, d)))
     angle_cos_num(a, o, c) * angle_cos_num(b, o, d) >= 0
 
     by def $are_angles_congruent(a, o, c, b, o, d)
@@ -3077,13 +3077,13 @@ thm aas_scalar_first_side:
     H * X != 0
     H * X * y = H1 * x * y
     H * X * Y = H * X * y
-    by thm subtract_equalities(H * X * Y, H * X * y, H * X * y, H * X * y)
+    release thm subtract_equalities(H * X * Y, H * X * y, H * X * y, H * X * y)
     H * X * Y - H * X * y = H * X * y - H * X * y
     H * X * y - H * X * y = 0
     H * X * Y - H * X * y = 0
     H * X * Y - H * X * y = H * X * (Y - y)
     H * X * (Y - y) = 0
-    by thm zero_factor_law(H * X, Y - y)
+    release thm zero_factor_law(H * X, Y - y)
     Y - y = 0
     Y = y
 
@@ -3107,7 +3107,7 @@ thm aas_scalar_last_side:
         case x = X:
             x = X
         case x != X:
-            by thm zero_factor_law(x - X, x * X - (y - z)^2)
+            release thm zero_factor_law(x - X, x * X - (y - z)^2)
             x * X = (y - z)^2
             by cases:
                 ? x = X
@@ -3159,7 +3159,7 @@ thm aas_scalar_last_side:
                         ? x = X
                         x != X
                         x - X != 0
-                        by thm zero_factor_law(x - X, x - X)
+                        release thm zero_factor_law(x - X, x - X)
                         x - X = 0
                         x = X
                         impossible x != X
@@ -3202,7 +3202,7 @@ thm aas_scalar_last_side:
                         ? x = X
                         x != X
                         x - X != 0
-                        by thm zero_factor_law(x - X, x - X)
+                        release thm zero_factor_law(x - X, x - X)
                         x - X = 0
                         x = X
                         impossible x != X
@@ -3221,7 +3221,7 @@ thm cancel_positive_right_factor:
     a * z - b * z = (a - b) * z
     (a - b) * z = 0
     z * (a - b) = 0
-    by thm zero_factor_law(z, a - b)
+    release thm zero_factor_law(z, a - b)
     a - b = 0
     a = b
 
@@ -3242,7 +3242,7 @@ thm triangle_det_square_positive:
         not $is_collinear(a, b, c)
         =>:
             det(vec(a, b), vec(a, c))^2 > 0
-    by thm triangle_det_nonzero(a, b, c)
+    release thm triangle_det_nonzero(a, b, c)
     det(vec(a, b), vec(a, c)) != 0
     det(vec(a, b), vec(a, c))^2 > 0
 
@@ -3257,7 +3257,7 @@ thm cosine_square_to_det_square_ratio:
     D^2 * (d^2 + h) = D^2 * d^2 + D^2 * h
     d^2 * D^2 + d^2 * H = D^2 * d^2 + D^2 * h
     d^2 * D^2 = D^2 * d^2
-    by thm subtract_equalities(d^2 * D^2 + d^2 * H, D^2 * d^2 + D^2 * h, d^2 * D^2, D^2 * d^2)
+    release thm subtract_equalities(d^2 * D^2 + d^2 * H, D^2 * d^2 + D^2 * h, d^2 * D^2, D^2 * d^2)
     d^2 * D^2 + d^2 * H - d^2 * D^2 = D^2 * d^2 + D^2 * h - D^2 * d^2
     d^2 * D^2 + d^2 * H - d^2 * D^2 = d^2 * H
     D^2 * d^2 + D^2 * h - D^2 * d^2 = D^2 * h
@@ -3277,8 +3277,8 @@ thm congruent_angle_det_square_ratio:
     by def $are_angles_congruent(p, q, r, u, v, w)
     angle_cos_num(p, q, r)^2 * angle_cos_den(u, v, w) = angle_cos_num(u, v, w)^2 * angle_cos_den(p, q, r)
 
-    by thm dot_squared_plus_det_squared(vec(q, p), vec(q, r))
-    by thm dot_squared_plus_det_squared(vec(v, u), vec(v, w))
+    release thm dot_squared_plus_det_squared(vec(q, p), vec(q, r))
+    release thm dot_squared_plus_det_squared(vec(v, u), vec(v, w))
 
     angle_cos_num(p, q, r) = dot(vec(q, p), vec(q, r))
     angle_cos_num(u, v, w) = dot(vec(v, u), vec(v, w))
@@ -3293,7 +3293,7 @@ thm congruent_angle_det_square_ratio:
     angle_cos_den(u, v, w) = distance_sq(v, u) * distance_sq(v, w) = dot(vec(v, u), vec(v, u)) * dot(vec(v, w), vec(v, w)) = dot(vec(v, u), vec(v, w))^2 + det(vec(v, u), vec(v, w))^2 = angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2
 
     angle_cos_num(p, q, r)^2 * (angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2) = angle_cos_num(p, q, r)^2 * angle_cos_den(u, v, w) = angle_cos_num(u, v, w)^2 * angle_cos_den(p, q, r) = angle_cos_num(u, v, w)^2 * (angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2)
-    by thm cosine_square_to_det_square_ratio(angle_cos_num(p, q, r), angle_cos_num(u, v, w), det(vec(q, p), vec(q, r))^2, det(vec(v, u), vec(v, w))^2)
+    release thm cosine_square_to_det_square_ratio(angle_cos_num(p, q, r), angle_cos_num(u, v, w), det(vec(q, p), vec(q, r))^2, det(vec(v, u), vec(v, w))^2)
     det(vec(q, p), vec(q, r))^2 * (angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2) = det(vec(v, u), vec(v, w))^2 * (angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2)
     det(vec(q, p), vec(q, r))^2 * angle_cos_den(u, v, w) = det(vec(q, p), vec(q, r))^2 * (angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2) = det(vec(v, u), vec(v, w))^2 * (angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2) = det(vec(v, u), vec(v, w))^2 * angle_cos_den(p, q, r)
 
@@ -3309,12 +3309,12 @@ thm square_neg:
 thm triangle_det_squared_vertex:
     ? forall a, b, c cart(R, R):
         det(vec(a, b), vec(a, c))^2 = det(vec(b, a), vec(b, c))^2
-    by thm collinear_det_expand(a, b, c)
-    by thm collinear_det_expand(b, a, c)
+    release thm collinear_det_expand(a, b, c)
+    release thm collinear_det_expand(b, a, c)
     det(vec(a, b), vec(a, c)) = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])
     det(vec(b, a), vec(b, c)) = (a[1] - b[1]) * (c[2] - b[2]) - (a[2] - b[2]) * (c[1] - b[1])
     det(vec(b, a), vec(b, c)) = -(det(vec(a, b), vec(a, c)))
-    by thm square_neg(det(vec(a, b), vec(a, c)))
+    release thm square_neg(det(vec(a, b), vec(a, c)))
     det(vec(a, b), vec(a, c))^2 = (-det(vec(a, b), vec(a, c)))^2
     det(vec(b, a), vec(b, c))^2 = (-det(vec(a, b), vec(a, c)))^2
     det(vec(a, b), vec(a, c))^2 = det(vec(b, a), vec(b, c))^2
@@ -3335,23 +3335,23 @@ thm triangle_congruence_AAS:
     not $is_collinear(a, b, c)
     by def $is_triangle(d, e1, f)
     not $is_collinear(d, e1, f)
-    by thm triangle_det_square_positive(a, b, c)
+    release thm triangle_det_square_positive(a, b, c)
     det(vec(a, b), vec(a, c))^2 > 0
-    by thm triangle_det_square_positive(d, e1, f)
+    release thm triangle_det_square_positive(d, e1, f)
     det(vec(d, e1), vec(d, f))^2 > 0
-    by thm congruent_angle_det_square_ratio(b, a, c, e1, d, f)
+    release thm congruent_angle_det_square_ratio(b, a, c, e1, d, f)
     det(vec(a, b), vec(a, c))^2 * angle_cos_den(e1, d, f) = det(vec(d, e1), vec(d, f))^2 * angle_cos_den(b, a, c)
-    by thm congruent_angle_det_square_ratio(a, b, c, d, e1, f)
+    release thm congruent_angle_det_square_ratio(a, b, c, d, e1, f)
     det(vec(b, a), vec(b, c))^2 * angle_cos_den(d, e1, f) = det(vec(e1, d), vec(e1, f))^2 * angle_cos_den(a, b, c)
     distance_sq(b, c) = distance_sq(e1, f)
 
-    by thm triangle_det_squared_vertex(b, a, c)
+    release thm triangle_det_squared_vertex(b, a, c)
     det(vec(b, a), vec(b, c))^2 = det(vec(a, b), vec(a, c))^2
-    by thm triangle_det_squared_vertex(e1, d, f)
+    release thm triangle_det_squared_vertex(e1, d, f)
     det(vec(e1, d), vec(e1, f))^2 = det(vec(d, e1), vec(d, f))^2
-    by thm distance_sq_symmetric(d, e1)
+    release thm distance_sq_symmetric(d, e1)
     distance_sq(d, e1) = distance_sq(e1, d)
-    by thm distance_sq_symmetric(a, b)
+    release thm distance_sq_symmetric(a, b)
     distance_sq(a, b) = distance_sq(b, a)
 
     by def $are_angles_congruent(b, a, c, e1, d, f)
@@ -3370,13 +3370,13 @@ thm triangle_congruence_AAS:
     det(vec(b, a), vec(b, c))^2 * angle_cos_den(d, e1, f) = det(vec(b, a), vec(b, c))^2 * (distance_sq(e1, d) * distance_sq(e1, f))
     det(vec(b, a), vec(b, c))^2 * distance_sq(e1, d) * distance_sq(e1, f) = det(vec(e1, d), vec(e1, f))^2 * distance_sq(b, a) * distance_sq(b, c)
 
-    by thm distance_sq_positive_of_ne(c, b)
+    release thm distance_sq_positive_of_ne(c, b)
     0 < distance_sq(c, b)
-    by thm distance_sq_symmetric(c, b)
+    release thm distance_sq_symmetric(c, b)
     distance_sq(c, b) = distance_sq(b, c)
     distance_sq(b, c) > 0
 
-    by thm distance_sq_positive_of_ne(d, e1)
+    release thm distance_sq_positive_of_ne(d, e1)
     distance_sq(d, e1) > 0
 
     det(vec(a, b), vec(a, c))^2 * distance_sq(d, e1) * distance_sq(e1, f) = det(vec(a, b), vec(a, c))^2 * distance_sq(e1, d) * distance_sq(e1, f)
@@ -3388,15 +3388,15 @@ thm triangle_congruence_AAS:
     det(vec(a, b), vec(a, c))^2 * distance_sq(d, e1) * distance_sq(b, c) = det(vec(a, b), vec(a, c))^2 * distance_sq(d, e1) * distance_sq(e1, f)
     det(vec(a, b), vec(a, c))^2 * distance_sq(d, e1) * distance_sq(b, c) = det(vec(d, e1), vec(d, f))^2 * distance_sq(a, b) * distance_sq(b, c)
     (det(vec(a, b), vec(a, c))^2 * distance_sq(d, e1)) * distance_sq(b, c) = (det(vec(d, e1), vec(d, f))^2 * distance_sq(a, b)) * distance_sq(b, c)
-    by thm cancel_positive_right_factor(det(vec(a, b), vec(a, c))^2 * distance_sq(d, e1), det(vec(d, e1), vec(d, f))^2 * distance_sq(a, b), distance_sq(b, c))
+    release thm cancel_positive_right_factor(det(vec(a, b), vec(a, c))^2 * distance_sq(d, e1), det(vec(d, e1), vec(d, f))^2 * distance_sq(a, b), distance_sq(b, c))
     det(vec(a, b), vec(a, c))^2 * distance_sq(d, e1) = det(vec(d, e1), vec(d, f))^2 * distance_sq(a, b)
 
-    by thm aas_scalar_first_side(det(vec(a, b), vec(a, c))^2, det(vec(d, e1), vec(d, f))^2, distance_sq(a, b), distance_sq(a, c), distance_sq(d, e1), distance_sq(d, f))
+    release thm aas_scalar_first_side(det(vec(a, b), vec(a, c))^2, det(vec(d, e1), vec(d, f))^2, distance_sq(a, b), distance_sq(a, c), distance_sq(d, e1), distance_sq(d, f))
     distance_sq(d, f) = distance_sq(a, c)
     distance_sq(a, c) = distance_sq(d, f)
 
 
-    by thm distance_sq_positive_of_ne(a, b)
+    release thm distance_sq_positive_of_ne(a, b)
     distance_sq(a, b) > 0
 
     angle_cos_num(a, b, c) = dot(vec(b, a), vec(b, c))
@@ -3404,13 +3404,13 @@ thm triangle_congruence_AAS:
     angle_cos_num(b, a, c) = dot(vec(a, b), vec(a, c))
     angle_cos_num(e1, d, f) = dot(vec(d, e1), vec(d, f))
 
-    by thm twice_dot_from_distances_direct(a, b, c)
+    release thm twice_dot_from_distances_direct(a, b, c)
     2 * dot(vec(b, a), vec(b, c)) = distance_sq(a, b) + distance_sq(b, c) - distance_sq(a, c)
-    by thm twice_dot_from_distances_direct(d, e1, f)
+    release thm twice_dot_from_distances_direct(d, e1, f)
     2 * dot(vec(e1, d), vec(e1, f)) = distance_sq(d, e1) + distance_sq(e1, f) - distance_sq(d, f)
-    by thm twice_dot_from_distances_direct(b, a, c)
+    release thm twice_dot_from_distances_direct(b, a, c)
     2 * dot(vec(a, b), vec(a, c)) = distance_sq(b, a) + distance_sq(a, c) - distance_sq(b, c)
-    by thm twice_dot_from_distances_direct(e1, d, f)
+    release thm twice_dot_from_distances_direct(e1, d, f)
     2 * dot(vec(d, e1), vec(d, f)) = distance_sq(e1, d) + distance_sq(d, f) - distance_sq(e1, f)
 
 
@@ -3422,7 +3422,7 @@ thm triangle_congruence_AAS:
     angle_cos_num(d, e1, f)^2 * (distance_sq(b, a) * distance_sq(b, c)) = angle_cos_num(d, e1, f)^2 * (distance_sq(a, b) * distance_sq(b, c))
     angle_cos_num(a, b, c)^2 * distance_sq(d, e1) * distance_sq(b, c) = angle_cos_num(d, e1, f)^2 * distance_sq(a, b) * distance_sq(b, c)
     (angle_cos_num(a, b, c)^2 * distance_sq(d, e1)) * distance_sq(b, c) = (angle_cos_num(d, e1, f)^2 * distance_sq(a, b)) * distance_sq(b, c)
-    by thm cancel_positive_right_factor(angle_cos_num(a, b, c)^2 * distance_sq(d, e1), angle_cos_num(d, e1, f)^2 * distance_sq(a, b), distance_sq(b, c))
+    release thm cancel_positive_right_factor(angle_cos_num(a, b, c)^2 * distance_sq(d, e1), angle_cos_num(d, e1, f)^2 * distance_sq(a, b), distance_sq(b, c))
     angle_cos_num(a, b, c)^2 * distance_sq(d, e1) = angle_cos_num(d, e1, f)^2 * distance_sq(a, b)
 
     distance_sq(e1, f) = distance_sq(b, c)
@@ -3478,7 +3478,7 @@ thm triangle_congruence_AAS:
     (distance_sq(a, b) + distance_sq(a, c) - distance_sq(b, c)) * (distance_sq(d, e1) + distance_sq(a, c) - distance_sq(b, c)) = (2 * angle_cos_num(b, a, c)) * (2 * angle_cos_num(e1, d, f))
     (distance_sq(a, b) + distance_sq(a, c) - distance_sq(b, c)) * (distance_sq(d, e1) + distance_sq(a, c) - distance_sq(b, c)) >= 0
 
-    by thm aas_scalar_last_side(distance_sq(a, b), distance_sq(d, e1), distance_sq(a, c), distance_sq(b, c))
+    release thm aas_scalar_last_side(distance_sq(a, b), distance_sq(d, e1), distance_sq(a, c), distance_sq(b, c))
     distance_sq(a, b) = distance_sq(d, e1)
 
 
@@ -3502,29 +3502,29 @@ thm perpendicular_bisector_property:
     2 * o[2] = a[2] + b[2]
     o[1] = (2 * o[1]) / 2 = (a[1] + b[1]) / 2
     o[2] = (2 * o[2]) / 2 = (a[2] + b[2]) / 2
-    by thm distance_sq_coordinate_formula(p, a)
-    by thm distance_sq_coordinate_formula(p, b)
+    release thm distance_sq_coordinate_formula(p, a)
+    release thm distance_sq_coordinate_formula(p, b)
     2 * ((o[1] - p[1]) * (b[1] - a[1]) + (o[2] - p[2]) * (b[2] - a[2])) = 0
 
-    by thm subtract_equalities(o[1], (a[1] + b[1]) / 2, p[1], p[1])
+    release thm subtract_equalities(o[1], (a[1] + b[1]) / 2, p[1], p[1])
     o[1] - p[1] = (a[1] + b[1]) / 2 - p[1]
-    by thm multiply_both_sides(o[1] - p[1], (a[1] + b[1]) / 2 - p[1], 2 * (b[1] - a[1]))
+    release thm multiply_both_sides(o[1] - p[1], (a[1] + b[1]) / 2 - p[1], 2 * (b[1] - a[1]))
     (o[1] - p[1]) * (2 * (b[1] - a[1])) = ((a[1] + b[1]) / 2 - p[1]) * (2 * (b[1] - a[1]))
     2 * (o[1] - p[1]) * (b[1] - a[1]) = (o[1] - p[1]) * (2 * (b[1] - a[1]))
     ((a[1] + b[1]) / 2 - p[1]) * (2 * (b[1] - a[1])) = 2 * ((a[1] + b[1]) / 2 - p[1]) * (b[1] - a[1])
     2 * ((a[1] + b[1]) / 2 - p[1]) * (b[1] - a[1]) = (b[1] - p[1])^2 - (a[1] - p[1])^2
     2 * (o[1] - p[1]) * (b[1] - a[1]) = (o[1] - p[1]) * (2 * (b[1] - a[1])) = ((a[1] + b[1]) / 2 - p[1]) * (2 * (b[1] - a[1])) = 2 * ((a[1] + b[1]) / 2 - p[1]) * (b[1] - a[1]) = (b[1] - p[1])^2 - (a[1] - p[1])^2
 
-    by thm subtract_equalities(o[2], (a[2] + b[2]) / 2, p[2], p[2])
+    release thm subtract_equalities(o[2], (a[2] + b[2]) / 2, p[2], p[2])
     o[2] - p[2] = (a[2] + b[2]) / 2 - p[2]
-    by thm multiply_both_sides(o[2] - p[2], (a[2] + b[2]) / 2 - p[2], 2 * (b[2] - a[2]))
+    release thm multiply_both_sides(o[2] - p[2], (a[2] + b[2]) / 2 - p[2], 2 * (b[2] - a[2]))
     (o[2] - p[2]) * (2 * (b[2] - a[2])) = ((a[2] + b[2]) / 2 - p[2]) * (2 * (b[2] - a[2]))
     2 * (o[2] - p[2]) * (b[2] - a[2]) = (o[2] - p[2]) * (2 * (b[2] - a[2]))
     ((a[2] + b[2]) / 2 - p[2]) * (2 * (b[2] - a[2])) = 2 * ((a[2] + b[2]) / 2 - p[2]) * (b[2] - a[2])
     2 * ((a[2] + b[2]) / 2 - p[2]) * (b[2] - a[2]) = (b[2] - p[2])^2 - (a[2] - p[2])^2
     2 * (o[2] - p[2]) * (b[2] - a[2]) = (o[2] - p[2]) * (2 * (b[2] - a[2])) = ((a[2] + b[2]) / 2 - p[2]) * (2 * (b[2] - a[2])) = 2 * ((a[2] + b[2]) / 2 - p[2]) * (b[2] - a[2]) = (b[2] - p[2])^2 - (a[2] - p[2])^2
 
-    by thm add_equalities(2 * (o[1] - p[1]) * (b[1] - a[1]), (b[1] - p[1])^2 - (a[1] - p[1])^2, 2 * (o[2] - p[2]) * (b[2] - a[2]), (b[2] - p[2])^2 - (a[2] - p[2])^2)
+    release thm add_equalities(2 * (o[1] - p[1]) * (b[1] - a[1]), (b[1] - p[1])^2 - (a[1] - p[1])^2, 2 * (o[2] - p[2]) * (b[2] - a[2]), (b[2] - p[2])^2 - (a[2] - p[2])^2)
     2 * (o[1] - p[1]) * (b[1] - a[1]) + 2 * (o[2] - p[2]) * (b[2] - a[2]) = ((b[1] - p[1])^2 - (a[1] - p[1])^2) + ((b[2] - p[2])^2 - (a[2] - p[2])^2)
     ((b[1] - p[1])^2 - (a[1] - p[1])^2) + ((b[2] - p[2])^2 - (a[2] - p[2])^2) = 2 * (o[1] - p[1]) * (b[1] - a[1]) + 2 * (o[2] - p[2]) * (b[2] - a[2]) = 2 * ((o[1] - p[1]) * (b[1] - a[1]) + (o[2] - p[2]) * (b[2] - a[2])) = 0
     (b[1] - p[1])^2 - (a[1] - p[1])^2 + (b[2] - p[2])^2 - (a[2] - p[2])^2 = 0
@@ -3546,13 +3546,13 @@ thm perpendicular_bisector_equidistant_sq:
             distance_sq(p, a) = distance_sq(p, b)
     by def $is_midpoint(o, a, b)
     by def $is_perpendicular(p, o, a, b)
-    by thm perpendicular_dot_expand(p, o, a, b)
-    by thm distance_sq_coordinate_formula(p, a)
-    by thm distance_sq_coordinate_formula(p, b)
+    release thm perpendicular_dot_expand(p, o, a, b)
+    release thm distance_sq_coordinate_formula(p, a)
+    release thm distance_sq_coordinate_formula(p, b)
     o[1] = (a[1] + b[1]) / 2
     o[2] = (a[2] + b[2]) / 2
     (o[1] - p[1]) * (b[1] - a[1]) + (o[2] - p[2]) * (b[2] - a[2]) = 0
-    by thm perpendicular_bisector_property(a, b, o, p)
+    release thm perpendicular_bisector_property(a, b, o, p)
     distance_sq(p, a) = distance_sq(p, b)
 
 # Bridge theorem: dot product = 0 → perpendicular predicate
@@ -3580,28 +3580,28 @@ thm isosceles_right_triangle_vertex_formula:
             distance_sq(E, B) = distance_sq(E, F)
             dot(vec(E, B), vec(E, F)) = 0
 
-    by thm subtract_equalities(B[1], B[1], E[1], (B[1] + F[1]) / 2 - (F[2] - B[2]) / 2)
+    release thm subtract_equalities(B[1], B[1], E[1], (B[1] + F[1]) / 2 - (F[2] - B[2]) / 2)
     B[1] - E[1] = B[1] - ((B[1] + F[1]) / 2 - (F[2] - B[2]) / 2)
     B[1] - ((B[1] + F[1]) / 2 - (F[2] - B[2]) / 2) = ((B[1] - F[1] + F[2]) - B[2]) / 2
     B[1] - E[1] = ((B[1] - F[1] + F[2]) - B[2]) / 2
 
-    by thm subtract_equalities(B[2], B[2], E[2], (B[2] + F[2]) / 2 + (F[1] - B[1]) / 2)
+    release thm subtract_equalities(B[2], B[2], E[2], (B[2] + F[2]) / 2 + (F[1] - B[1]) / 2)
     B[2] - E[2] = B[2] - ((B[2] + F[2]) / 2 + (F[1] - B[1]) / 2)
     B[2] - ((B[2] + F[2]) / 2 + (F[1] - B[1]) / 2) = ((B[1] - F[1] + B[2]) - F[2]) / 2
     B[2] - E[2] = ((B[1] - F[1] + B[2]) - F[2]) / 2
 
-    by thm subtract_equalities(F[1], F[1], E[1], (B[1] + F[1]) / 2 - (F[2] - B[2]) / 2)
+    release thm subtract_equalities(F[1], F[1], E[1], (B[1] + F[1]) / 2 - (F[2] - B[2]) / 2)
     F[1] - E[1] = F[1] - ((B[1] + F[1]) / 2 - (F[2] - B[2]) / 2)
     F[1] - ((B[1] + F[1]) / 2 - (F[2] - B[2]) / 2) = ((F[1] - B[1] + F[2]) - B[2]) / 2
     F[1] - E[1] = ((F[1] - B[1] + F[2]) - B[2]) / 2
 
-    by thm subtract_equalities(F[2], F[2], E[2], (B[2] + F[2]) / 2 + (F[1] - B[1]) / 2)
+    release thm subtract_equalities(F[2], F[2], E[2], (B[2] + F[2]) / 2 + (F[1] - B[1]) / 2)
     F[2] - E[2] = F[2] - ((B[2] + F[2]) / 2 + (F[1] - B[1]) / 2)
     F[2] - ((B[2] + F[2]) / 2 + (F[1] - B[1]) / 2) = ((B[1] - F[1] + F[2]) - B[2]) / 2
     F[2] - E[2] = ((B[1] - F[1] + F[2]) - B[2]) / 2
 
-    by thm distance_sq_coordinate_formula(E, B)
-    by thm distance_sq_coordinate_formula(E, F)
+    release thm distance_sq_coordinate_formula(E, B)
+    release thm distance_sq_coordinate_formula(E, F)
     distance_sq(E, B) = (B[1] - E[1])^2 + (B[2] - E[2])^2
     distance_sq(E, F) = (F[1] - E[1])^2 + (F[2] - E[2])^2
     (B[1] - E[1])^2 + (B[2] - E[2])^2 = (((B[1] - F[1] + F[2]) - B[2]) / 2)^2 + (((B[1] - F[1] + B[2]) - F[2]) / 2)^2
@@ -3609,26 +3609,26 @@ thm isosceles_right_triangle_vertex_formula:
     (((B[1] - F[1] + F[2]) - B[2]) / 2)^2 + (((B[1] - F[1] + B[2]) - F[2]) / 2)^2 = (((F[1] - B[1] + F[2]) - B[2]) / 2)^2 + (((B[1] - F[1] + F[2]) - B[2]) / 2)^2
     distance_sq(E, B) = distance_sq(E, F)
 
-    by thm perpendicular_dot_expand(E, B, E, F)
+    release thm perpendicular_dot_expand(E, B, E, F)
     dot(vec(E, B), vec(E, F)) = (B[1] - E[1]) * (F[1] - E[1]) + (B[2] - E[2]) * (F[2] - E[2])
 
     (B[1] - E[1]) * (F[1] - E[1]) = (F[1] - E[1]) * (B[1] - E[1])
-    by thm multiply_both_sides(F[1] - E[1], ((F[1] - B[1] + F[2]) - B[2]) / 2, B[1] - E[1])
+    release thm multiply_both_sides(F[1] - E[1], ((F[1] - B[1] + F[2]) - B[2]) / 2, B[1] - E[1])
     (F[1] - E[1]) * (B[1] - E[1]) = ((F[1] - B[1] + F[2]) - B[2]) / 2 * (B[1] - E[1])
     ((F[1] - B[1] + F[2]) - B[2]) / 2 * (B[1] - E[1]) = (B[1] - E[1]) * ((F[1] - B[1] + F[2]) - B[2]) / 2
-    by thm multiply_both_sides(B[1] - E[1], ((B[1] - F[1] + F[2]) - B[2]) / 2, ((F[1] - B[1] + F[2]) - B[2]) / 2)
+    release thm multiply_both_sides(B[1] - E[1], ((B[1] - F[1] + F[2]) - B[2]) / 2, ((F[1] - B[1] + F[2]) - B[2]) / 2)
     (B[1] - E[1]) * ((F[1] - B[1] + F[2]) - B[2]) / 2 = ((B[1] - F[1] + F[2]) - B[2]) / 2 * ((F[1] - B[1] + F[2]) - B[2]) / 2
     (B[1] - E[1]) * (F[1] - E[1]) = ((B[1] - F[1] + F[2]) - B[2]) / 2 * ((F[1] - B[1] + F[2]) - B[2]) / 2
 
     (B[2] - E[2]) * (F[2] - E[2]) = (F[2] - E[2]) * (B[2] - E[2])
-    by thm multiply_both_sides(F[2] - E[2], ((B[1] - F[1] + F[2]) - B[2]) / 2, B[2] - E[2])
+    release thm multiply_both_sides(F[2] - E[2], ((B[1] - F[1] + F[2]) - B[2]) / 2, B[2] - E[2])
     (F[2] - E[2]) * (B[2] - E[2]) = ((B[1] - F[1] + F[2]) - B[2]) / 2 * (B[2] - E[2])
     ((B[1] - F[1] + F[2]) - B[2]) / 2 * (B[2] - E[2]) = (B[2] - E[2]) * ((B[1] - F[1] + F[2]) - B[2]) / 2
-    by thm multiply_both_sides(B[2] - E[2], ((B[1] - F[1] + B[2]) - F[2]) / 2, ((B[1] - F[1] + F[2]) - B[2]) / 2)
+    release thm multiply_both_sides(B[2] - E[2], ((B[1] - F[1] + B[2]) - F[2]) / 2, ((B[1] - F[1] + F[2]) - B[2]) / 2)
     (B[2] - E[2]) * ((B[1] - F[1] + F[2]) - B[2]) / 2 = ((B[1] - F[1] + B[2]) - F[2]) / 2 * ((B[1] - F[1] + F[2]) - B[2]) / 2
     (B[2] - E[2]) * (F[2] - E[2]) = ((B[1] - F[1] + B[2]) - F[2]) / 2 * ((B[1] - F[1] + F[2]) - B[2]) / 2
 
-    by thm add_equalities((B[1] - E[1]) * (F[1] - E[1]), ((B[1] - F[1] + F[2]) - B[2]) / 2 * ((F[1] - B[1] + F[2]) - B[2]) / 2, (B[2] - E[2]) * (F[2] - E[2]), ((B[1] - F[1] + B[2]) - F[2]) / 2 * ((B[1] - F[1] + F[2]) - B[2]) / 2)
+    release thm add_equalities((B[1] - E[1]) * (F[1] - E[1]), ((B[1] - F[1] + F[2]) - B[2]) / 2 * ((F[1] - B[1] + F[2]) - B[2]) / 2, (B[2] - E[2]) * (F[2] - E[2]), ((B[1] - F[1] + B[2]) - F[2]) / 2 * ((B[1] - F[1] + F[2]) - B[2]) / 2)
     (B[1] - E[1]) * (F[1] - E[1]) + (B[2] - E[2]) * (F[2] - E[2]) = ((B[1] - F[1] + F[2]) - B[2]) / 2 * ((F[1] - B[1] + F[2]) - B[2]) / 2 + ((B[1] - F[1] + B[2]) - F[2]) / 2 * ((B[1] - F[1] + F[2]) - B[2]) / 2
     ((B[1] - F[1] + F[2]) - B[2]) / 2 * ((F[1] - B[1] + F[2]) - B[2]) / 2 + ((B[1] - F[1] + B[2]) - F[2]) / 2 * ((B[1] - F[1] + F[2]) - B[2]) / 2 = 0
     dot(vec(E, B), vec(E, F)) = 0
@@ -3648,11 +3648,11 @@ thm square_orthogonal_parallel_quadrilateral_coordinates:
             d[1] = a[1] + c[1] - b[1]
             d[2] = a[2] + c[2] - b[2]
 
-    by thm perpendicular_dot_expand(a, d, a, b)
-    by thm collinear_det_expand(a, b, (a[1] + c[1] - d[1], a[2] + c[2] - d[2]))
-    by thm collinear_det_expand(a, d, (a[1] + c[1] - b[1], a[2] + c[2] - b[2]))
-    by thm collinear_det_expand(d, c, b)
-    by thm collinear_det_expand(b, c, d)
+    release thm perpendicular_dot_expand(a, d, a, b)
+    release thm collinear_det_expand(a, b, (a[1] + c[1] - d[1], a[2] + c[2] - d[2]))
+    release thm collinear_det_expand(a, d, (a[1] + c[1] - b[1], a[2] + c[2] - b[2]))
+    release thm collinear_det_expand(d, c, b)
+    release thm collinear_det_expand(b, c, d)
 
     vec(a, b) = (b[1] - a[1], b[2] - a[2])
     vec(a, d) = (d[1] - a[1], d[2] - a[2])
@@ -3665,13 +3665,13 @@ thm square_orthogonal_parallel_quadrilateral_coordinates:
     (b[1] - a[1]) * ((a[2] + c[2] - b[2] - d[2])) - (b[2] - a[2]) * ((a[1] + c[1] - b[1] - d[1])) = 0
     (d[1] - a[1]) * ((a[2] + c[2] - b[2] - d[2])) - (d[2] - a[2]) * ((a[1] + c[1] - b[1] - d[1])) = 0
 
-    by thm dot_symmetric(vec(a, d), vec(a, b))
+    release thm dot_symmetric(vec(a, d), vec(a, b))
     dot(vec(a, b), vec(a, d)) = 0
-    by thm dot_squared_plus_det_squared(vec(a, b), vec(a, d))
-    by thm distance_sq_positive_of_ne(a, b)
-    by thm distance_sq_positive_of_ne(a, d)
-    by thm vec_dot_self_is_distance(a, b)
-    by thm vec_dot_self_is_distance(a, d)
+    release thm dot_squared_plus_det_squared(vec(a, b), vec(a, d))
+    release thm distance_sq_positive_of_ne(a, b)
+    release thm distance_sq_positive_of_ne(a, d)
+    release thm vec_dot_self_is_distance(a, b)
+    release thm vec_dot_self_is_distance(a, d)
     dot(vec(a, b), vec(a, b)) > 0
     dot(vec(a, d), vec(a, d)) > 0
     dot(vec(a, b), vec(a, b)) * dot(vec(a, d), vec(a, d)) > 0
@@ -3712,13 +3712,13 @@ thm parallelogram_coordinate_difference:
         d = a + c - b
         =>:
             c - a = (b - a) + (d - a)
-    by thm subtract_equalities(d, a + c - b, d, d)
+    release thm subtract_equalities(d, a + c - b, d, d)
     d - d = (a + c - b) - d
     d - d = 0
     (a + c - b) - d = 0
-    by thm rearrange_sum(a + c, b, d)
+    release thm rearrange_sum(a + c, b, d)
     a + c = b + d
-    by thm subtract_equalities(a + c, b + d, 2 * a, 2 * a)
+    release thm subtract_equalities(a + c, b + d, 2 * a, 2 * a)
     (a + c) - 2 * a = (b + d) - 2 * a
     (a + c) - 2 * a = c - a
     (b + d) - 2 * a = (b - a) + (d - a)
@@ -3729,9 +3729,9 @@ thm square_of_equal:
         x = y
         =>:
             x^2 = y^2
-    by thm multiply_both_sides(x, y, x)
+    release thm multiply_both_sides(x, y, x)
     x * x = y * x
-    by thm multiply_both_sides(x, y, y)
+    release thm multiply_both_sides(x, y, y)
     x * y = y * y
     y * x = x * y
     x * x = y * y
@@ -3744,11 +3744,11 @@ thm orthogonal_coordinate_sum_square:
         x1 * y1 + x2 * y2 = 0
         =>:
             (x1 + y1)^2 + (x2 + y2)^2 = (x1^2 + x2^2) + (y1^2 + y2^2)
-    by thm dot_square_sum((x1, x2), (y1, y2))
-    by thm dot_coordinate_formula((x1 + y1, x2 + y2), (x1 + y1, x2 + y2))
-    by thm dot_coordinate_formula((x1, x2), (x1, x2))
-    by thm dot_coordinate_formula((x1, x2), (y1, y2))
-    by thm dot_coordinate_formula((y1, y2), (y1, y2))
+    release thm dot_square_sum((x1, x2), (y1, y2))
+    release thm dot_coordinate_formula((x1 + y1, x2 + y2), (x1 + y1, x2 + y2))
+    release thm dot_coordinate_formula((x1, x2), (x1, x2))
+    release thm dot_coordinate_formula((x1, x2), (y1, y2))
+    release thm dot_coordinate_formula((y1, y2), (y1, y2))
     dot((x1 + y1, x2 + y2), (x1 + y1, x2 + y2)) = (x1 + y1)^2 + (x2 + y2)^2
     dot((x1, x2), (x1, x2)) = x1^2 + x2^2
     dot((x1, x2), (y1, y2)) = x1 * y1 + x2 * y2 = 0
@@ -3769,18 +3769,18 @@ thm rotated_90_creates_isosceles_right:
     by def $rotated_90_ccw(E, F, A)
     E[1] - F[1] = A[2] - F[2]
     E[2] - F[2] = F[1] - A[1]
-    by thm distance_sq_coordinate_formula(F, A)
-    by thm distance_sq_coordinate_formula(F, E)
+    release thm distance_sq_coordinate_formula(F, A)
+    release thm distance_sq_coordinate_formula(F, E)
     distance_sq(F, E) = (E[1] - F[1])^2 + (E[2] - F[2])^2
     (E[1] - F[1])^2 + (E[2] - F[2])^2 = (A[2] - F[2])^2 + (F[1] - A[1])^2
     (A[2] - F[2])^2 + (F[1] - A[1])^2 = (A[1] - F[1])^2 + (A[2] - F[2])^2
     distance_sq(F, A) = (A[1] - F[1])^2 + (A[2] - F[2])^2
     distance_sq(F, E) = (E[1] - F[1])^2 + (E[2] - F[2])^2 = (A[1] - F[1])^2 + (A[2] - F[2])^2 = distance_sq(F, A)
     distance_sq(F, A) = distance_sq(F, E)
-    by thm vec_coordinate_formula(F, A)
-    by thm vec_coordinate_formula(F, E)
+    release thm vec_coordinate_formula(F, A)
+    release thm vec_coordinate_formula(F, E)
     vec(F, E) = (A[2] - F[2], F[1] - A[1])
-    by thm dot_coordinate_formula(vec(F, A), vec(F, E))
+    release thm dot_coordinate_formula(vec(F, A), vec(F, E))
     dot(vec(F, A), vec(F, E)) = (A[1] - F[1]) * (A[2] - F[2]) + (A[2] - F[2]) * (F[1] - A[1])
     (A[1] - F[1]) * (A[2] - F[2]) + (A[2] - F[2]) * (F[1] - A[1]) = 0
     dot(vec(F, A), vec(F, E)) = 0
@@ -3802,33 +3802,33 @@ thm square_diagonal_length:
     by def $is_parallel(a, d, b, c)
     by def $is_right_angle(d, a, b)
     by def $are_segments_congruent(a, b, b, c)
-    by thm square_orthogonal_parallel_quadrilateral_coordinates(a, b, c, d)
-    by thm parallelogram_sides(a, b, c, d)
+    release thm square_orthogonal_parallel_quadrilateral_coordinates(a, b, c, d)
+    release thm parallelogram_sides(a, b, c, d)
     distance_sq(a, d) = distance_sq(b, c)
     distance_sq(a, b) = distance_sq(b, c)
     distance_sq(a, d) = side_sq
-    by thm distance_sq_coordinate_formula(a, c)
-    by thm distance_sq_coordinate_formula(a, b)
-    by thm distance_sq_coordinate_formula(a, d)
-    by thm perpendicular_dot_expand(a, d, a, b)
+    release thm distance_sq_coordinate_formula(a, c)
+    release thm distance_sq_coordinate_formula(a, b)
+    release thm distance_sq_coordinate_formula(a, d)
+    release thm perpendicular_dot_expand(a, d, a, b)
     d[1] = a[1] + c[1] - b[1]
     d[2] = a[2] + c[2] - b[2]
-    by thm parallelogram_coordinate_difference(a[1], b[1], c[1], d[1])
-    by thm parallelogram_coordinate_difference(a[2], b[2], c[2], d[2])
+    release thm parallelogram_coordinate_difference(a[1], b[1], c[1], d[1])
+    release thm parallelogram_coordinate_difference(a[2], b[2], c[2], d[2])
     c[1] - a[1] = (b[1] - a[1]) + (d[1] - a[1])
     c[2] - a[2] = (b[2] - a[2]) + (d[2] - a[2])
-    by thm square_of_equal(c[1] - a[1], (b[1] - a[1]) + (d[1] - a[1]))
-    by thm square_of_equal(c[2] - a[2], (b[2] - a[2]) + (d[2] - a[2]))
-    by thm add_equalities((c[1] - a[1])^2, ((b[1] - a[1]) + (d[1] - a[1]))^2, (c[2] - a[2])^2, ((b[2] - a[2]) + (d[2] - a[2]))^2)
+    release thm square_of_equal(c[1] - a[1], (b[1] - a[1]) + (d[1] - a[1]))
+    release thm square_of_equal(c[2] - a[2], (b[2] - a[2]) + (d[2] - a[2]))
+    release thm add_equalities((c[1] - a[1])^2, ((b[1] - a[1]) + (d[1] - a[1]))^2, (c[2] - a[2])^2, ((b[2] - a[2]) + (d[2] - a[2]))^2)
     (c[1] - a[1])^2 + (c[2] - a[2])^2 = ((b[1] - a[1]) + (d[1] - a[1]))^2 + ((b[2] - a[2]) + (d[2] - a[2]))^2
     (d[1] - a[1]) * (b[1] - a[1]) + (d[2] - a[2]) * (b[2] - a[2]) = 0
     distance_sq(a, c) = (c[1] - a[1])^2 + (c[2] - a[2])^2 = ((b[1] - a[1]) + (d[1] - a[1]))^2 + ((b[2] - a[2]) + (d[2] - a[2]))^2
     ((b[1] - a[1]) + (d[1] - a[1]))^2 + ((b[2] - a[2]) + (d[2] - a[2]))^2 = ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((d[1] - a[1])^2 + (d[2] - a[2])^2)
-    by thm add_equalities(distance_sq(a, b), (b[1] - a[1])^2 + (b[2] - a[2])^2, distance_sq(a, d), (d[1] - a[1])^2 + (d[2] - a[2])^2)
+    release thm add_equalities(distance_sq(a, b), (b[1] - a[1])^2 + (b[2] - a[2])^2, distance_sq(a, d), (d[1] - a[1])^2 + (d[2] - a[2])^2)
     distance_sq(a, b) + distance_sq(a, d) = ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((d[1] - a[1])^2 + (d[2] - a[2])^2)
     ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((d[1] - a[1])^2 + (d[2] - a[2])^2) = distance_sq(a, b) + distance_sq(a, d)
     distance_sq(a, c) = distance_sq(a, b) + distance_sq(a, d)
-    by thm add_equalities(distance_sq(a, b), side_sq, distance_sq(a, d), side_sq)
+    release thm add_equalities(distance_sq(a, b), side_sq, distance_sq(a, d), side_sq)
     distance_sq(a, b) + distance_sq(a, d) = side_sq + side_sq
     distance_sq(a, c) = side_sq + side_sq
     side_sq + side_sq = 2 * side_sq
@@ -3841,12 +3841,12 @@ thm isosceles_right_hypotenuse_length:
         dot(vec(f, a), vec(f, e2)) = 0
         =>:
             distance_sq(a, e2) = 2 * leg_sq
-    by thm pythagorean_theorem(a, f, e2)
-    by thm distance_sq_symmetric(a, f)
+    release thm pythagorean_theorem(a, f, e2)
+    release thm distance_sq_symmetric(a, f)
     distance_sq(a, e2) = distance_sq(a, f) + distance_sq(f, e2)
     distance_sq(a, f) = distance_sq(f, a) = leg_sq
     distance_sq(f, e2) = leg_sq
-    by thm add_equalities(distance_sq(a, f), leg_sq, distance_sq(f, e2), leg_sq)
+    release thm add_equalities(distance_sq(a, f), leg_sq, distance_sq(f, e2), leg_sq)
     distance_sq(a, f) + distance_sq(f, e2) = leg_sq + leg_sq
     leg_sq + leg_sq = 2 * leg_sq
     distance_sq(a, e2) = 2 * leg_sq
@@ -3871,18 +3871,18 @@ thm strict_triangle_one_side:
         det(vec(a, b), vec(a, c)) = 0
         by def $is_collinear(a, b, c)
         impossible not $is_collinear(a, b, c)
-    by thm collinear_det_expand(a, b, c)
-    by thm collinear_det_expand(a, b, c)
-    by thm collinear_det_expand(a, b, c)
-    by thm perpendicular_dot_expand(a, b, b, c)
-    by thm distance_sq_coordinate_formula(a, b)
-    by thm distance_sq_coordinate_formula(b, c)
-    by thm distance_sq_coordinate_formula(a, c)
+    release thm collinear_det_expand(a, b, c)
+    release thm collinear_det_expand(a, b, c)
+    release thm collinear_det_expand(a, b, c)
+    release thm perpendicular_dot_expand(a, b, b, c)
+    release thm distance_sq_coordinate_formula(a, b)
+    release thm distance_sq_coordinate_formula(b, c)
+    release thm distance_sq_coordinate_formula(a, c)
 
     det(vec(a, b), vec(a, c)) != 0
-    by thm vec_coordinate_formula(a, b)
-    by thm vec_coordinate_formula(b, c)
-    by thm det_coordinate_formula(vec(a, b), vec(b, c))
+    release thm vec_coordinate_formula(a, b)
+    release thm vec_coordinate_formula(b, c)
+    release thm det_coordinate_formula(vec(a, b), vec(b, c))
     det(vec(a, b), vec(b, c)) = (b[1] - a[1]) * (c[2] - b[2]) - (b[2] - a[2]) * (c[1] - b[1])
     (b[1] - a[1]) * (c[2] - b[2]) - (b[2] - a[2]) * (c[1] - b[1]) = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])
     det(vec(a, b), vec(b, c)) = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])
@@ -3891,9 +3891,9 @@ thm strict_triangle_one_side:
     det(vec(a, b), vec(b, c)) != 0
     det(vec(a, b), vec(b, c))^2 > 0
 
-    by thm dot_squared_plus_det_squared(vec(a, b), vec(b, c))
-    by thm vec_dot_self_is_distance(a, b)
-    by thm vec_dot_self_is_distance(b, c)
+    release thm dot_squared_plus_det_squared(vec(a, b), vec(b, c))
+    release thm vec_dot_self_is_distance(a, b)
+    release thm vec_dot_self_is_distance(b, c)
     dot(vec(a, b), vec(b, c))^2 + det(vec(a, b), vec(b, c))^2 = dot(vec(a, b), vec(a, b)) * dot(vec(b, c), vec(b, c))
     dot(vec(a, b), vec(a, b)) = distance_sq(a, b)
     dot(vec(b, c), vec(b, c)) = distance_sq(b, c)
@@ -3902,9 +3902,9 @@ thm strict_triangle_one_side:
     dot(vec(a, b), vec(b, c))^2 < dot(vec(a, b), vec(b, c))^2 + det(vec(a, b), vec(b, c))^2
     dot(vec(a, b), vec(b, c))^2 < distance_sq(a, b) * distance_sq(b, c)
 
-    by thm distance_sq_nonnegative(a, b)
-    by thm distance_sq_nonnegative(b, c)
-    by thm distance_sq_nonnegative(a, c)
+    release thm distance_sq_nonnegative(a, b)
+    release thm distance_sq_nonnegative(b, c)
+    release thm distance_sq_nonnegative(a, c)
     sqrt(distance_sq(a, b)) >= 0
     sqrt(distance_sq(b, c)) >= 0
     sqrt(distance_sq(a, c)) >= 0
@@ -3923,16 +3923,16 @@ thm strict_triangle_one_side:
         impossible dot(vec(a, b), vec(b, c))^2 < distance_sq(a, b) * distance_sq(b, c)
 
 
-    by thm cosine_law(a, b, c)
-    by thm dot_neg_left(a, b, b, c)
+    release thm cosine_law(a, b, c)
+    release thm dot_neg_left(a, b, b, c)
     distance_sq(a, c) = distance_sq(a, b) + distance_sq(b, c) - 2 * dot(vec(b, a), vec(b, c))
     dot(vec(b, a), vec(b, c)) = -(dot(vec(a, b), vec(b, c)))
-    by thm multiply_both_sides(dot(vec(b, a), vec(b, c)), -(dot(vec(a, b), vec(b, c))), -2)
+    release thm multiply_both_sides(dot(vec(b, a), vec(b, c)), -(dot(vec(a, b), vec(b, c))), -2)
     dot(vec(b, a), vec(b, c)) * (-2) = -(dot(vec(a, b), vec(b, c))) * (-2)
     -2 * dot(vec(b, a), vec(b, c)) = dot(vec(b, a), vec(b, c)) * (-2)
     -(dot(vec(a, b), vec(b, c))) * (-2) = 2 * dot(vec(a, b), vec(b, c))
     -2 * dot(vec(b, a), vec(b, c)) = 2 * dot(vec(a, b), vec(b, c))
-    by thm add_equalities(-2 * dot(vec(b, a), vec(b, c)), 2 * dot(vec(a, b), vec(b, c)), distance_sq(a, b) + distance_sq(b, c), distance_sq(a, b) + distance_sq(b, c))
+    release thm add_equalities(-2 * dot(vec(b, a), vec(b, c)), 2 * dot(vec(a, b), vec(b, c)), distance_sq(a, b) + distance_sq(b, c), distance_sq(a, b) + distance_sq(b, c))
     -2 * dot(vec(b, a), vec(b, c)) + (distance_sq(a, b) + distance_sq(b, c)) = 2 * dot(vec(a, b), vec(b, c)) + (distance_sq(a, b) + distance_sq(b, c))
     distance_sq(a, b) + distance_sq(b, c) - 2 * dot(vec(b, a), vec(b, c)) = -2 * dot(vec(b, a), vec(b, c)) + (distance_sq(a, b) + distance_sq(b, c))
     2 * dot(vec(a, b), vec(b, c)) + (distance_sq(a, b) + distance_sq(b, c)) = distance_sq(a, b) + distance_sq(b, c) + 2 * dot(vec(a, b), vec(b, c))
@@ -3942,9 +3942,9 @@ thm strict_triangle_one_side:
     distance_sq(a, b) + distance_sq(b, c) + 2 * dot(vec(a, b), vec(b, c)) < distance_sq(a, b) + distance_sq(b, c) + 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c))
     distance_sq(a, c) < distance_sq(a, b) + distance_sq(b, c) + 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c))
     (sqrt(distance_sq(a, b)) + sqrt(distance_sq(b, c)))^2 = sqrt(distance_sq(a, b))^2 + sqrt(distance_sq(b, c))^2 + 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c))
-    by thm add_equalities(sqrt(distance_sq(a, b))^2, distance_sq(a, b), sqrt(distance_sq(b, c))^2, distance_sq(b, c))
+    release thm add_equalities(sqrt(distance_sq(a, b))^2, distance_sq(a, b), sqrt(distance_sq(b, c))^2, distance_sq(b, c))
     sqrt(distance_sq(a, b))^2 + sqrt(distance_sq(b, c))^2 = distance_sq(a, b) + distance_sq(b, c)
-    by thm add_equalities(sqrt(distance_sq(a, b))^2 + sqrt(distance_sq(b, c))^2, distance_sq(a, b) + distance_sq(b, c), 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c)), 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c)))
+    release thm add_equalities(sqrt(distance_sq(a, b))^2 + sqrt(distance_sq(b, c))^2, distance_sq(a, b) + distance_sq(b, c), 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c)), 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c)))
     sqrt(distance_sq(a, b))^2 + sqrt(distance_sq(b, c))^2 + 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c)) = distance_sq(a, b) + distance_sq(b, c) + 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c))
     distance_sq(a, b) + distance_sq(b, c) + 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c)) = sqrt(distance_sq(a, b))^2 + sqrt(distance_sq(b, c))^2 + 2 * sqrt(distance_sq(a, b)) * sqrt(distance_sq(b, c)) = (sqrt(distance_sq(a, b)) + sqrt(distance_sq(b, c)))^2
     sqrt(distance_sq(a, c))^2 < (sqrt(distance_sq(a, b)) + sqrt(distance_sq(b, c)))^2
@@ -3961,29 +3961,29 @@ thm triangle_inequality:
         not $is_collinear(a, b, c)
         =>:
             exist d_ab, d_bc, d_ac R st {d_ab >= 0, d_bc >= 0, d_ac >= 0, d_ab * d_ab = distance_sq(a, b), d_bc * d_bc = distance_sq(b, c), d_ac * d_ac = distance_sq(a, c), d_ab + d_bc > d_ac, d_bc + d_ac > d_ab, d_ab + d_ac > d_bc}
-    by thm strict_triangle_one_side(a, b, c)
+    release thm strict_triangle_one_side(a, b, c)
 
     by contra:
         ? not $is_collinear(a, c, b)
         $is_collinear(a, c, b)
-        by thm collinear_third_prop(a, c, b)
+        release thm collinear_third_prop(a, c, b)
         $is_collinear(b, a, c)
-        by thm collinear_symmetric_prop(b, a, c)
+        release thm collinear_symmetric_prop(b, a, c)
         $is_collinear(a, b, c)
         impossible not $is_collinear(a, b, c)
-    by thm strict_triangle_one_side(a, c, b)
+    release thm strict_triangle_one_side(a, c, b)
 
     by contra:
         ? not $is_collinear(b, a, c)
         $is_collinear(b, a, c)
-        by thm collinear_symmetric_prop(b, a, c)
+        release thm collinear_symmetric_prop(b, a, c)
         $is_collinear(a, b, c)
         impossible not $is_collinear(a, b, c)
-    by thm strict_triangle_one_side(b, a, c)
+    release thm strict_triangle_one_side(b, a, c)
 
-    by thm distance_sq_nonnegative(a, b)
-    by thm distance_sq_nonnegative(b, c)
-    by thm distance_sq_nonnegative(a, c)
+    release thm distance_sq_nonnegative(a, b)
+    release thm distance_sq_nonnegative(b, c)
+    release thm distance_sq_nonnegative(a, c)
     sqrt(distance_sq(a, b)) >= 0
     sqrt(distance_sq(b, c)) >= 0
     sqrt(distance_sq(a, c)) >= 0
@@ -3991,8 +3991,8 @@ thm triangle_inequality:
     sqrt(distance_sq(b, c))^2 = distance_sq(b, c)
     sqrt(distance_sq(a, c))^2 = distance_sq(a, c)
 
-    by thm distance_sq_symmetric(b, c)
-    by thm distance_sq_symmetric(a, b)
+    release thm distance_sq_symmetric(b, c)
+    release thm distance_sq_symmetric(a, b)
     sqrt(distance_sq(a, c)) + sqrt(distance_sq(b, c)) > sqrt(distance_sq(a, b))
     sqrt(distance_sq(b, c)) + sqrt(distance_sq(a, c)) = sqrt(distance_sq(a, c)) + sqrt(distance_sq(b, c))
     sqrt(distance_sq(b, c)) + sqrt(distance_sq(a, c)) > sqrt(distance_sq(a, b))
@@ -4026,12 +4026,12 @@ thm vertical_angles_dot_equal:
         =>:
             # ∠BDA = ∠CDB：两组射线均反向，dot积保持不变
             dot(vec(d, b), vec(d, a)) = dot(vec(d, c), vec(b, d))
-    by thm vec_coordinate_formula(d, b)
-    by thm vec_coordinate_formula(d, a)
-    by thm vec_coordinate_formula(d, c)
-    by thm vec_coordinate_formula(b, d)
-    by thm dot_coordinate_formula(vec(d, b), vec(d, a))
-    by thm dot_coordinate_formula(vec(d, c), vec(b, d))
+    release thm vec_coordinate_formula(d, b)
+    release thm vec_coordinate_formula(d, a)
+    release thm vec_coordinate_formula(d, c)
+    release thm vec_coordinate_formula(b, d)
+    release thm dot_coordinate_formula(vec(d, b), vec(d, a))
+    release thm dot_coordinate_formula(vec(d, c), vec(b, d))
     a[1] - d[1] = a[1] - (a[1] + c[1]) / 2
     a[1] - (a[1] + c[1]) / 2 = (a[1] + c[1]) / 2 - c[1]
     (a[1] + c[1]) / 2 - c[1] = d[1] - c[1]
@@ -4050,7 +4050,7 @@ thm vertical_angles_dot_equal:
     (b[2] - d[2]) * (d[2] - c[2]) = (d[2] - c[2]) * (b[2] - d[2])
     (d[2] - c[2]) * (b[2] - d[2]) = (c[2] - d[2]) * (d[2] - b[2])
     (b[2] - d[2]) * (a[2] - d[2]) = (c[2] - d[2]) * (d[2] - b[2])
-    by thm add_equalities((b[1] - d[1]) * (a[1] - d[1]), (c[1] - d[1]) * (d[1] - b[1]), (b[2] - d[2]) * (a[2] - d[2]), (c[2] - d[2]) * (d[2] - b[2]))
+    release thm add_equalities((b[1] - d[1]) * (a[1] - d[1]), (c[1] - d[1]) * (d[1] - b[1]), (b[2] - d[2]) * (a[2] - d[2]), (c[2] - d[2]) * (d[2] - b[2]))
     (b[1] - d[1]) * (a[1] - d[1]) + (b[2] - d[2]) * (a[2] - d[2]) = (c[1] - d[1]) * (d[1] - b[1]) + (c[2] - d[2]) * (d[2] - b[2])
     dot(vec(d, b), vec(d, a)) = dot(vec(d, c), vec(b, d))
 
@@ -4068,16 +4068,16 @@ thm reflected_vec_sum:
         d[2] = (b[2] + c[2]) / 2
         =>:
             vec(a, (2 * d[1] - a[1], 2 * d[2] - a[2])) = (vec(a, b)[1] + vec(a, c)[1], vec(a, b)[2] + vec(a, c)[2])
-    by thm vec_coordinate_formula(a, (2 * d[1] - a[1], 2 * d[2] - a[2]))
-    by thm vec_coordinate_formula(a, b)
-    by thm vec_coordinate_formula(a, c)
+    release thm vec_coordinate_formula(a, (2 * d[1] - a[1], 2 * d[2] - a[2]))
+    release thm vec_coordinate_formula(a, b)
+    release thm vec_coordinate_formula(a, c)
     vec(a, (2 * d[1] - a[1], 2 * d[2] - a[2]))[1] = 2 * d[1] - 2 * a[1]
     vec(a, (2 * d[1] - a[1], 2 * d[2] - a[2]))[2] = 2 * d[2] - 2 * a[2]
     vec(a, b)[1] + vec(a, c)[1] = b[1] + c[1] - 2 * a[1]
     vec(a, b)[2] + vec(a, c)[2] = b[2] + c[2] - 2 * a[2]
     2 * d[1] - 2 * a[1] = b[1] + c[1] - 2 * a[1]
     2 * d[2] - 2 * a[2] = b[2] + c[2] - 2 * a[2]
-    by thm tuple_equal_from_coordinates(vec(a, (2 * d[1] - a[1], 2 * d[2] - a[2])), (vec(a, b)[1] + vec(a, c)[1], vec(a, b)[2] + vec(a, c)[2]))
+    release thm tuple_equal_from_coordinates(vec(a, (2 * d[1] - a[1], 2 * d[2] - a[2])), (vec(a, b)[1] + vec(a, c)[1], vec(a, b)[2] + vec(a, c)[2]))
     vec(a, (2 * d[1] - a[1], 2 * d[2] - a[2])) = (vec(a, b)[1] + vec(a, c)[1], vec(a, b)[2] + vec(a, c)[2])
 
 thm median_inequality_distance:
@@ -4094,25 +4094,25 @@ thm median_inequality_distance:
             $is_collinear(a, b, (2 * d[1] - a[1], 2 * d[2] - a[2]))
             by def $is_collinear(a, b, (2 * d[1] - a[1], 2 * d[2] - a[2]))
             det(vec(a, b), vec(a, (2 * d[1] - a[1], 2 * d[2] - a[2]))) = 0
-            by thm reflected_vec_sum(a, b, c, d)
-            by thm det_bilinear_right(vec(a, b), vec(a, b), vec(a, c))
-            by thm det_coordinate_formula(vec(a, b), vec(a, b))
+            release thm reflected_vec_sum(a, b, c, d)
+            release thm det_bilinear_right(vec(a, b), vec(a, b), vec(a, c))
+            release thm det_coordinate_formula(vec(a, b), vec(a, b))
             det(vec(a, b), vec(a, b)) = 0
             det(vec(a, b), vec(a, (2 * d[1] - a[1], 2 * d[2] - a[2]))) = det(vec(a, b), (vec(a, b)[1] + vec(a, c)[1], vec(a, b)[2] + vec(a, c)[2])) = det(vec(a, b), vec(a, b)) + det(vec(a, b), vec(a, c)) = det(vec(a, b), vec(a, c))
             det(vec(a, b), vec(a, c)) = 0
             by def $is_collinear(a, b, c)
             $is_collinear(a, b, c)
             impossible not $is_collinear(a, b, c)
-    by thm triangle_inequality(a, b, (2 * d[1] - a[1], 2 * d[2] - a[2]))
+    release thm triangle_inequality(a, b, (2 * d[1] - a[1], 2 * d[2] - a[2]))
     obtain l_ab, l_be, l_ae from exist l_ab, l_be, l_ae R st {l_ab >= 0, l_be >= 0, l_ae >= 0, l_ab * l_ab = distance_sq(a, b), l_be * l_be = distance_sq(b, (2 * d[1] - a[1], 2 * d[2] - a[2])), l_ae * l_ae = distance_sq(a, (2 * d[1] - a[1], 2 * d[2] - a[2])), l_ab + l_be > l_ae, l_be + l_ae > l_ab, l_ab + l_ae > l_be}
-    by thm distance_sq_coordinate_formula(b, (2 * d[1] - a[1], 2 * d[2] - a[2]))
-    by thm distance_sq_coordinate_formula(a, c)
+    release thm distance_sq_coordinate_formula(b, (2 * d[1] - a[1], 2 * d[2] - a[2]))
+    release thm distance_sq_coordinate_formula(a, c)
     2 * d[1] - a[1] - b[1] = c[1] - a[1]
     2 * d[2] - a[2] - b[2] = c[2] - a[2]
     (2 * d[1] - a[1] - b[1])^2 + (2 * d[2] - a[2] - b[2])^2 = (c[1] - a[1])^2 + (c[2] - a[2])^2
     distance_sq(b, (2 * d[1] - a[1], 2 * d[2] - a[2])) = (2 * d[1] - a[1] - b[1])^2 + (2 * d[2] - a[2] - b[2])^2 = (c[1] - a[1])^2 + (c[2] - a[2])^2 = distance_sq(a, c)
-    by thm distance_sq_coordinate_formula(a, (2 * d[1] - a[1], 2 * d[2] - a[2]))
-    by thm distance_sq_coordinate_formula(a, d)
+    release thm distance_sq_coordinate_formula(a, (2 * d[1] - a[1], 2 * d[2] - a[2]))
+    release thm distance_sq_coordinate_formula(a, d)
     2 * d[1] - a[1] - a[1] = 2 * (d[1] - a[1])
     2 * d[2] - a[2] - a[2] = 2 * (d[2] - a[2])
     (2 * d[1] - a[1] - a[1])^2 + (2 * d[2] - a[2] - a[2])^2 = 4 * ((d[1] - a[1])^2 + (d[2] - a[2])^2)
@@ -4145,16 +4145,16 @@ thm perpendicular_bisector_equidistant:
             distance_sq(P, A) = distance_sq(P, B)
     by def $is_midpoint(O, A, B)
     by def $is_perpendicular(P, O, A, B)
-    by thm perpendicular_dot_expand(P, O, A, B)
-    by thm distance_sq_coordinate_formula(P, A)
-    by thm distance_sq_coordinate_formula(P, B)
+    release thm perpendicular_dot_expand(P, O, A, B)
+    release thm distance_sq_coordinate_formula(P, A)
+    release thm distance_sq_coordinate_formula(P, B)
     O[1] = (A[1] + B[1]) / 2
     O[2] = (A[2] + B[2]) / 2
     (O[1] - P[1]) * (B[1] - A[1]) + (O[2] - P[2]) * (B[2] - A[2]) = 0
     2 * ((O[1] - P[1]) * (B[1] - A[1]) + (O[2] - P[2]) * (B[2] - A[2])) = 0
     2 * (O[1] - P[1]) * (B[1] - A[1]) = (B[1] - P[1])^2 - (A[1] - P[1])^2
     2 * (O[2] - P[2]) * (B[2] - A[2]) = (B[2] - P[2])^2 - (A[2] - P[2])^2
-    by thm add_equalities(2 * (O[1] - P[1]) * (B[1] - A[1]), (B[1] - P[1])^2 - (A[1] - P[1])^2, 2 * (O[2] - P[2]) * (B[2] - A[2]), (B[2] - P[2])^2 - (A[2] - P[2])^2)
+    release thm add_equalities(2 * (O[1] - P[1]) * (B[1] - A[1]), (B[1] - P[1])^2 - (A[1] - P[1])^2, 2 * (O[2] - P[2]) * (B[2] - A[2]), (B[2] - P[2])^2 - (A[2] - P[2])^2)
     2 * (O[1] - P[1]) * (B[1] - A[1]) + 2 * (O[2] - P[2]) * (B[2] - A[2]) = ((B[1] - P[1])^2 - (A[1] - P[1])^2) + ((B[2] - P[2])^2 - (A[2] - P[2])^2)
     ((B[1] - P[1])^2 - (A[1] - P[1])^2) + ((B[2] - P[2])^2 - (A[2] - P[2])^2) = 2 * (O[1] - P[1]) * (B[1] - A[1]) + 2 * (O[2] - P[2]) * (B[2] - A[2]) = 2 * ((O[1] - P[1]) * (B[1] - A[1]) + (O[2] - P[2]) * (B[2] - A[2])) = 0
     (B[1] - P[1])^2 - (A[1] - P[1])^2 + (B[2] - P[2])^2 - (A[2] - P[2])^2 = 0
@@ -4172,7 +4172,7 @@ thm test_point_on_line_with_distance:
         target_dist > 0
         =>:
             exist g cart(R, R) st {det(vec(a, g), vec(a, b)) = 0, distance_sq(g, b) = target_dist^2}
-    by thm distance_sq_positive_of_ne(a, b)
+    release thm distance_sq_positive_of_ne(a, b)
     distance_sq(a, b) > 0
     sqrt(distance_sq(a, b)) > 0
     sqrt(distance_sq(a, b)) != 0
@@ -4181,14 +4181,14 @@ thm test_point_on_line_with_distance:
     have t R = target_dist / sqrt(distance_sq(a, b))
     t * sqrt(distance_sq(a, b)) = (target_dist / sqrt(distance_sq(a, b))) * sqrt(distance_sq(a, b)) = target_dist
     witness exist g cart(R, R) st {det(vec(a, g), vec(a, b)) = 0, distance_sq(g, b) = target_dist^2} from ((1 - t) * b[1] + t * a[1], (1 - t) * b[2] + t * a[2]):
-        by thm vec_coordinate_formula(a, g)
-        by thm vec_coordinate_formula(a, b)
-        by thm det_coordinate_formula(vec(a, g), vec(a, b))
+        release thm vec_coordinate_formula(a, g)
+        release thm vec_coordinate_formula(a, b)
+        release thm det_coordinate_formula(vec(a, g), vec(a, b))
         det(vec(a, g), vec(a, b)) = (g[1] - a[1]) * (b[2] - a[2]) - (g[2] - a[2]) * (b[1] - a[1]) = 0
         $is_affine_combination(g, b, a, t)
-        by thm affine_combination_distance_sq(b, a, g, t)
-        by thm distance_sq_symmetric(g, b)
-        by thm distance_sq_symmetric(a, b)
+        release thm affine_combination_distance_sq(b, a, g, t)
+        release thm distance_sq_symmetric(g, b)
+        release thm distance_sq_symmetric(a, b)
         distance_sq(g, b) = distance_sq(b, g) = t^2 * distance_sq(b, a) = t^2 * distance_sq(a, b)
         t^2 * distance_sq(a, b) = t^2 * sqrt(distance_sq(a, b))^2
         t^2 * sqrt(distance_sq(a, b))^2 = (t * sqrt(distance_sq(a, b)))^2
@@ -4210,9 +4210,9 @@ thm test_point_on_line_with_distance:
 thm dot_sub_right_coordinate:
     ? forall u, v cart(R, R):
         dot(u, (v[1] - u[1], v[2] - u[2])) = dot(u, v) - dot(u, u)
-    by thm dot_coordinate_formula(u, (v[1] - u[1], v[2] - u[2]))
-    by thm dot_coordinate_formula(u, v)
-    by thm dot_coordinate_formula(u, u)
+    release thm dot_coordinate_formula(u, (v[1] - u[1], v[2] - u[2]))
+    release thm dot_coordinate_formula(u, v)
+    release thm dot_coordinate_formula(u, u)
     dot(u, (v[1] - u[1], v[2] - u[2])) = u[1] * (v[1] - u[1]) + u[2] * (v[2] - u[2]) = (u[1] * v[1] + u[2] * v[2]) - (u[1] * u[1] + u[2] * u[2]) = dot(u, v) - dot(u, u)
 
 # A nondegenerate collinear point has an affine parameter.
@@ -4229,7 +4229,7 @@ thm collinear_coordinates_imply_affine_parameter:
                 ((p[1] - a[1]) / (b[1] - a[1])) * (b[1] - a[1]) = p[1] - a[1]
                 p[1] = (1 - (p[1] - a[1]) / (b[1] - a[1])) * a[1] + ((p[1] - a[1]) / (b[1] - a[1])) * b[1]
                 (p[2] - a[2]) * (b[1] - a[1]) = (((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2])) * (b[1] - a[1])
-                by thm divide_both_sides(p[2] - a[2], ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]), b[1] - a[1])
+                release thm divide_both_sides(p[2] - a[2], ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]), b[1] - a[1])
                 p[2] - a[2] = ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2])
                 p[2] = (p[2] - a[2]) + a[2] = ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]) + a[2] = (1 - (p[1] - a[1]) / (b[1] - a[1])) * a[2] + ((p[1] - a[1]) / (b[1] - a[1])) * b[2]
         case b[1] - a[1] = 0:
@@ -4238,14 +4238,14 @@ thm collinear_coordinates_imply_affine_parameter:
                 ? b[2] - a[2] != 0
                 b[2] - a[2] = 0
                 b[2] = a[2]
-                by thm tuple_equal_from_coordinates(a, (a[1], a[2]))
-                by thm tuple_equal_from_coordinates(b, (b[1], b[2]))
+                release thm tuple_equal_from_coordinates(a, (a[1], a[2]))
+                release thm tuple_equal_from_coordinates(b, (b[1], b[2]))
                 (a[1], a[2]) = (b[1], b[2])
                 a = (a[1], a[2]) = (b[1], b[2]) = b
                 impossible a != b
             witness exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]} from (p[2] - a[2]) / (b[2] - a[2]):
                 (p[1] - a[1]) * (b[2] - a[2]) = (p[1] - a[1]) * (b[2] - a[2]) - (p[2] - a[2]) * (b[1] - a[1]) = 0 = 0 * (b[2] - a[2])
-                by thm divide_both_sides(p[1] - a[1], 0, b[2] - a[2])
+                release thm divide_both_sides(p[1] - a[1], 0, b[2] - a[2])
                 p[1] - a[1] = 0
                 p[1] = a[1]
                 p[1] = a[1] = (1 - (p[2] - a[2]) / (b[2] - a[2])) * a[1] + ((p[2] - a[2]) / (b[2] - a[2])) * a[1] = (1 - (p[2] - a[2]) / (b[2] - a[2])) * a[1] + ((p[2] - a[2]) / (b[2] - a[2])) * b[1]
@@ -4261,9 +4261,9 @@ thm on_line_implies_affine_parameter:
     a != b
     p $in line_of(a, b)
     det(vec(a, p), vec(a, b)) = 0
-    by thm collinear_det_expand(a, p, b)
+    release thm collinear_det_expand(a, p, b)
     (p[1] - a[1]) * (b[2] - a[2]) - (p[2] - a[2]) * (b[1] - a[1]) = 0
-    by thm collinear_coordinates_imply_affine_parameter(a, b, p)
+    release thm collinear_coordinates_imply_affine_parameter(a, b, p)
     exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]}
 
 # Reusable nondegeneracy facts for right triangles.
@@ -4284,10 +4284,10 @@ thm right_angle_vertex_distinct_from_foot_on_opposite_line:
         foot $in line_of(a, b)
         det(vec(a, foot), vec(a, b)) = 0
         det(vec(a, c), vec(a, b)) = det(vec(a, foot), vec(a, b)) = 0
-        by thm det_antisymmetric(vec(a, b), vec(a, c))
+        release thm det_antisymmetric(vec(a, b), vec(a, c))
         det(vec(a, b), vec(a, c)) = -(det(vec(a, c), vec(a, b)))
         det(vec(a, b), vec(a, c)) = 0
-        by thm det_change_base(a, c, b)
+        release thm det_change_base(a, c, b)
         det(vec(c, a), vec(c, b)) = 0
 
         dot(vec(c, a), vec(c, b)) = 0
@@ -4296,15 +4296,15 @@ thm right_angle_vertex_distinct_from_foot_on_opposite_line:
         dot(vec(c, a), vec(c, b)) = (a[1] - c[1]) * (b[1] - c[1]) + (a[2] - c[2]) * (b[2] - c[2])
         det(vec(c, a), vec(c, b)) = (a[1] - c[1]) * (b[2] - c[2]) - (a[2] - c[2]) * (b[1] - c[1])
         c != a
-        by thm point_difference_norm_pos(c, a)
+        release thm point_difference_norm_pos(c, a)
         (a[1] - c[1])^2 + (a[2] - c[2])^2 > 0
-        by thm dot_det_eliminate(a[1] - c[1], a[2] - c[2], b[1] - c[1], b[2] - c[2])
+        release thm dot_det_eliminate(a[1] - c[1], a[2] - c[2], b[1] - c[1], b[2] - c[2])
         b[1] - c[1] = 0
         b[2] - c[2] = 0
         b[1] = c[1]
         b[2] = c[2]
-        by thm tuple_equal_from_coordinates(b, (b[1], b[2]))
-        by thm tuple_equal_from_coordinates(c, (c[1], c[2]))
+        release thm tuple_equal_from_coordinates(b, (b[1], b[2]))
+        release thm tuple_equal_from_coordinates(c, (c[1], c[2]))
         (b[1], b[2]) = (c[1], c[2])
         b = (b[1], b[2]) = (c[1], c[2]) = c
         impossible b != c
@@ -4325,10 +4325,10 @@ thm right_angle_vertex_not_on_opposite_line:
         p $in line_of(a, b)
         det(vec(a, p), vec(a, b)) = 0
         det(vec(a, c), vec(a, b)) = det(vec(a, p), vec(a, b)) = 0
-        by thm det_antisymmetric(vec(a, b), vec(a, c))
+        release thm det_antisymmetric(vec(a, b), vec(a, c))
         det(vec(a, b), vec(a, c)) = -(det(vec(a, c), vec(a, b)))
         det(vec(a, b), vec(a, c)) = 0
-        by thm det_change_base(a, c, b)
+        release thm det_change_base(a, c, b)
         det(vec(c, a), vec(c, b)) = 0
         dot(vec(c, a), vec(c, b)) = 0
         vec(c, a) = (a[1] - c[1], a[2] - c[2])
@@ -4336,15 +4336,15 @@ thm right_angle_vertex_not_on_opposite_line:
         dot(vec(c, a), vec(c, b)) = (a[1] - c[1]) * (b[1] - c[1]) + (a[2] - c[2]) * (b[2] - c[2])
         det(vec(c, a), vec(c, b)) = (a[1] - c[1]) * (b[2] - c[2]) - (a[2] - c[2]) * (b[1] - c[1])
         c != a
-        by thm point_difference_norm_pos(c, a)
+        release thm point_difference_norm_pos(c, a)
         (a[1] - c[1])^2 + (a[2] - c[2])^2 > 0
-        by thm dot_det_eliminate(a[1] - c[1], a[2] - c[2], b[1] - c[1], b[2] - c[2])
+        release thm dot_det_eliminate(a[1] - c[1], a[2] - c[2], b[1] - c[1], b[2] - c[2])
         b[1] - c[1] = 0
         b[2] - c[2] = 0
         b[1] = c[1]
         b[2] = c[2]
-        by thm tuple_equal_from_coordinates(b, (b[1], b[2]))
-        by thm tuple_equal_from_coordinates(c, (c[1], c[2]))
+        release thm tuple_equal_from_coordinates(b, (b[1], b[2]))
+        release thm tuple_equal_from_coordinates(c, (c[1], c[2]))
         (b[1], b[2]) = (c[1], c[2])
         b = (b[1], b[2]) = (c[1], c[2]) = c
         impossible b != c
@@ -4402,14 +4402,14 @@ thm right_triangle_foot_midpoints_distinct:
         vec(a, b) = (b[1] - a[1], b[2] - a[2])
         (f[1] - d[1], f[2] - d[2]) = (a[1] - c[1], a[2] - c[2])
         vec(d, f) = (f[1] - d[1], f[2] - d[2]) = (a[1] - c[1], a[2] - c[2]) = vec(c, a)
-        by thm dot_coordinate_formula(vec(d, f), vec(a, b))
+        release thm dot_coordinate_formula(vec(d, f), vec(a, b))
         dot(vec(d, f), vec(a, b)) = (f[1] - d[1]) * (b[1] - a[1]) + (f[2] - d[2]) * (b[2] - a[2])
         (f[1] - d[1]) * (b[1] - a[1]) + (f[2] - d[2]) * (b[2] - a[2]) = 0
         (a[1] - c[1]) * (b[1] - a[1]) + (a[2] - c[2]) * (b[2] - a[2]) = (f[1] - d[1]) * (b[1] - a[1]) + (f[2] - d[2]) * (b[2] - a[2]) = 0
-        by thm dot_coordinate_formula(vec(c, a), vec(a, b))
+        release thm dot_coordinate_formula(vec(c, a), vec(a, b))
         dot(vec(c, a), vec(a, b)) = (a[1] - c[1]) * (b[1] - a[1]) + (a[2] - c[2]) * (b[2] - a[2])
         dot(vec(c, a), vec(a, b)) = 0
-        by thm dot_coordinate_formula(vec(c, a), vec(c, b))
+        release thm dot_coordinate_formula(vec(c, a), vec(c, b))
         dot(vec(c, a), vec(c, b)) = (a[1] - c[1]) * (b[1] - c[1]) + (a[2] - c[2]) * (b[2] - c[2])
         (a[1] - c[1]) * (b[1] - c[1]) + (a[2] - c[2]) * (b[2] - c[2]) = 0
         (b[1] - a[1]) = (b[1] - c[1]) - (a[1] - c[1])
@@ -4419,10 +4419,10 @@ thm right_triangle_foot_midpoints_distinct:
         0 - ((a[1] - c[1])^2 + (a[2] - c[2])^2) = 0
         ((a[1] - c[1])^2 + (a[2] - c[2])^2) - ((a[1] - c[1])^2 + (a[2] - c[2])^2) = 0
         0 - ((a[1] - c[1])^2 + (a[2] - c[2])^2) = ((a[1] - c[1])^2 + (a[2] - c[2])^2) - ((a[1] - c[1])^2 + (a[2] - c[2])^2)
-        by thm subtraction_cancel(0, (a[1] - c[1])^2 + (a[2] - c[2])^2, (a[1] - c[1])^2 + (a[2] - c[2])^2)
+        release thm subtraction_cancel(0, (a[1] - c[1])^2 + (a[2] - c[2])^2, (a[1] - c[1])^2 + (a[2] - c[2])^2)
         0 = (a[1] - c[1])^2 + (a[2] - c[2])^2
         (a[1] - c[1])^2 + (a[2] - c[2])^2 = 0
-        by thm point_difference_norm_pos(c, a)
+        release thm point_difference_norm_pos(c, a)
         (a[1] - c[1])^2 + (a[2] - c[2])^2 > 0
         impossible (a[1] - c[1])^2 + (a[2] - c[2])^2 = 0
 
@@ -4431,25 +4431,25 @@ thm right_triangle_foot_midpoints_distinct:
 thm dot_scale_left:
     ? forall u, v cart(R, R), k R:
         dot((k * u[1], k * u[2]), v) = k * dot(u, v)
-    by thm dot_symmetric((k * u[1], k * u[2]), v)
-    by thm dot_scale_right(v, u, k)
-    by thm dot_symmetric(v, u)
+    release thm dot_symmetric((k * u[1], k * u[2]), v)
+    release thm dot_scale_right(v, u, k)
+    release thm dot_symmetric(v, u)
     dot((k * u[1], k * u[2]), v) = dot(v, (k * u[1], k * u[2])) = k * dot(v, u) = k * dot(u, v)
 
 thm dot_linear_left:
     ? forall u, v, w cart(R, R), a, b R:
         dot((a * u[1] + b * v[1], a * u[2] + b * v[2]), w) = a * dot(u, w) + b * dot(v, w)
-    by thm dot_add_left((a * u[1], a * u[2]), (b * v[1], b * v[2]), w)
-    by thm dot_scale_left(u, w, a)
-    by thm dot_scale_left(v, w, b)
+    release thm dot_add_left((a * u[1], a * u[2]), (b * v[1], b * v[2]), w)
+    release thm dot_scale_left(u, w, a)
+    release thm dot_scale_left(v, w, b)
     dot((a * u[1] + b * v[1], a * u[2] + b * v[2]), w) = dot((a * u[1], a * u[2]), w) + dot((b * v[1], b * v[2]), w) = a * dot(u, w) + b * dot(v, w)
 
 thm dot_linear_right:
     ? forall u, v, w cart(R, R), a, b R:
         dot(w, (a * u[1] + b * v[1], a * u[2] + b * v[2])) = a * dot(w, u) + b * dot(w, v)
-    by thm dot_bilinear_right(w, (a * u[1], a * u[2]), (b * v[1], b * v[2]))
-    by thm dot_scale_right(w, u, a)
-    by thm dot_scale_right(w, v, b)
+    release thm dot_bilinear_right(w, (a * u[1], a * u[2]), (b * v[1], b * v[2]))
+    release thm dot_scale_right(w, u, a)
+    release thm dot_scale_right(w, v, b)
     dot(w, (a * u[1] + b * v[1], a * u[2] + b * v[2])) = dot(w, (a * u[1], a * u[2])) + dot(w, (b * v[1], b * v[2])) = a * dot(w, u) + b * dot(w, v)
 
 thm orthogonal_midpoint_scalar_finish:
@@ -4468,19 +4468,19 @@ thm orthogonal_midpoint_vector_core:
         =>:
             dot(((-t / 2) * u[1] + ((t - s) / 2) * v[1], (-t / 2) * u[2] + ((t - s) / 2) * v[2]), ((1 - t) * u[1] + t * v[1], (1 - t) * u[2] + t * v[2])) = 0
 
-    by thm dot_symmetric(u, v)
+    release thm dot_symmetric(u, v)
     dot(v, u) = 0
 
-    by thm dot_linear_left(u, v, (v[1] - u[1], v[2] - u[2]), 1 - t, t - s)
-    by thm dot_linear_right(v, u, u, 1, -1)
-    by thm dot_linear_right(v, u, v, 1, -1)
-    by thm dot_coordinate_formula(u, (v[1] - u[1], v[2] - u[2]))
-    by thm dot_coordinate_formula(u, v)
-    by thm dot_coordinate_formula(u, u)
+    release thm dot_linear_left(u, v, (v[1] - u[1], v[2] - u[2]), 1 - t, t - s)
+    release thm dot_linear_right(v, u, u, 1, -1)
+    release thm dot_linear_right(v, u, v, 1, -1)
+    release thm dot_coordinate_formula(u, (v[1] - u[1], v[2] - u[2]))
+    release thm dot_coordinate_formula(u, v)
+    release thm dot_coordinate_formula(u, u)
     dot(u, (v[1] - u[1], v[2] - u[2])) = u[1] * (v[1] - u[1]) + u[2] * (v[2] - u[2]) = (u[1] * v[1] + u[2] * v[2]) - (u[1] * u[1] + u[2] * u[2]) = dot(u, v) - dot(u, u)
-    by thm dot_coordinate_formula(v, (v[1] - u[1], v[2] - u[2]))
-    by thm dot_coordinate_formula(v, v)
-    by thm dot_coordinate_formula(v, u)
+    release thm dot_coordinate_formula(v, (v[1] - u[1], v[2] - u[2]))
+    release thm dot_coordinate_formula(v, v)
+    release thm dot_coordinate_formula(v, u)
     dot(v, (v[1] - u[1], v[2] - u[2])) = v[1] * (v[1] - u[1]) + v[2] * (v[2] - u[2]) = (v[1] * v[1] + v[2] * v[2]) - (v[1] * u[1] + v[2] * u[2]) = dot(v, v) - dot(v, u)
     dot(u, (v[1] - u[1], v[2] - u[2])) = dot(u, v) - dot(u, u) = 0 - dot(u, u)
     0 - dot(u, u) = -dot(u, u)
@@ -4494,12 +4494,12 @@ thm orthogonal_midpoint_vector_core:
     (1 - t) * (-dot(u, u)) + (t - s) * dot(v, v) = -(1 - t) * dot(u, u) + (t - s) * dot(v, v)
     -(1 - t) * dot(u, u) + (t - s) * dot(v, v) = 0
 
-    by thm orthogonal_midpoint_scalar_finish(dot(u, u), dot(v, v), s, t)
+    release thm orthogonal_midpoint_scalar_finish(dot(u, u), dot(v, v), s, t)
     (-t / 2) * (1 - t) * dot(u, u) + ((t - s) / 2) * t * dot(v, v) = 0
 
-    by thm dot_linear_left(u, v, ((1 - t) * u[1] + t * v[1], (1 - t) * u[2] + t * v[2]), -t / 2, (t - s) / 2)
-    by thm dot_linear_right(u, v, u, 1 - t, t)
-    by thm dot_linear_right(u, v, v, 1 - t, t)
+    release thm dot_linear_left(u, v, ((1 - t) * u[1] + t * v[1], (1 - t) * u[2] + t * v[2]), -t / 2, (t - s) / 2)
+    release thm dot_linear_right(u, v, u, 1 - t, t)
+    release thm dot_linear_right(u, v, v, 1 - t, t)
     dot(u, ((1 - t) * u[1] + t * v[1], (1 - t) * u[2] + t * v[2])) = (1 - t) * dot(u, u) + t * dot(u, v)
     (1 - t) * dot(u, u) + t * dot(u, v) = (1 - t) * dot(u, u) + t * 0
     (1 - t) * dot(u, u) + t * 0 = (1 - t) * dot(u, u)
@@ -4556,7 +4556,7 @@ thm cross_product_positive_det_product_implies_same_sign:
     (x * y) * (d * k) = (d * y)^2
     (d * y)^2 >= 0
     (x * y) * (d * k) >= 0
-    by thm cancel_positive_factor_from_nonnegative_product(x * y, d * k)
+    release thm cancel_positive_factor_from_nonnegative_product(x * y, d * k)
 
 # Equal oriented tangent ratios and equal determinant signs force equal
 # undirected angles (the dot products have the same sign as well).
@@ -4570,12 +4570,12 @@ thm cross_ratio_same_det_sign_implies_angle_congruence:
         det(vec(q, p), vec(q, r)) * det(vec(v, u), vec(v, w)) > 0
         =>:
             $are_angles_congruent(p, q, r, u, v, w)
-    by thm dot_squared_plus_det_squared(vec(q, p), vec(q, r))
-    by thm dot_squared_plus_det_squared(vec(v, u), vec(v, w))
-    by thm vec_dot_self_is_distance(q, p)
-    by thm vec_dot_self_is_distance(q, r)
-    by thm vec_dot_self_is_distance(v, u)
-    by thm vec_dot_self_is_distance(v, w)
+    release thm dot_squared_plus_det_squared(vec(q, p), vec(q, r))
+    release thm dot_squared_plus_det_squared(vec(v, u), vec(v, w))
+    release thm vec_dot_self_is_distance(q, p)
+    release thm vec_dot_self_is_distance(q, r)
+    release thm vec_dot_self_is_distance(v, u)
+    release thm vec_dot_self_is_distance(v, w)
     angle_cos_num(p, q, r) = dot(vec(q, p), vec(q, r))
     angle_cos_num(u, v, w) = dot(vec(v, u), vec(v, w))
     angle_cos_den(p, q, r) = distance_sq(q, p) * distance_sq(q, r)
@@ -4584,62 +4584,62 @@ thm cross_ratio_same_det_sign_implies_angle_congruence:
     distance_sq(q, r) = dot(vec(q, r), vec(q, r))
     distance_sq(v, u) = dot(vec(v, u), vec(v, u))
     distance_sq(v, w) = dot(vec(v, w), vec(v, w))
-    by thm multiply_both_sides(dot(vec(q, p), vec(q, p)), distance_sq(q, p), dot(vec(q, r), vec(q, r)))
+    release thm multiply_both_sides(dot(vec(q, p), vec(q, p)), distance_sq(q, p), dot(vec(q, r), vec(q, r)))
     dot(vec(q, p), vec(q, p)) * dot(vec(q, r), vec(q, r)) = distance_sq(q, p) * dot(vec(q, r), vec(q, r))
-    by thm multiply_both_sides(dot(vec(q, r), vec(q, r)), distance_sq(q, r), distance_sq(q, p))
+    release thm multiply_both_sides(dot(vec(q, r), vec(q, r)), distance_sq(q, r), distance_sq(q, p))
     dot(vec(q, r), vec(q, r)) * distance_sq(q, p) = distance_sq(q, r) * distance_sq(q, p)
     distance_sq(q, p) * dot(vec(q, r), vec(q, r)) = dot(vec(q, r), vec(q, r)) * distance_sq(q, p)
     distance_sq(q, r) * distance_sq(q, p) = distance_sq(q, p) * distance_sq(q, r)
     dot(vec(q, p), vec(q, p)) * dot(vec(q, r), vec(q, r)) = distance_sq(q, p) * distance_sq(q, r)
-    by thm multiply_both_sides(dot(vec(v, u), vec(v, u)), distance_sq(v, u), dot(vec(v, w), vec(v, w)))
+    release thm multiply_both_sides(dot(vec(v, u), vec(v, u)), distance_sq(v, u), dot(vec(v, w), vec(v, w)))
     dot(vec(v, u), vec(v, u)) * dot(vec(v, w), vec(v, w)) = distance_sq(v, u) * dot(vec(v, w), vec(v, w))
-    by thm multiply_both_sides(dot(vec(v, w), vec(v, w)), distance_sq(v, w), distance_sq(v, u))
+    release thm multiply_both_sides(dot(vec(v, w), vec(v, w)), distance_sq(v, w), distance_sq(v, u))
     dot(vec(v, w), vec(v, w)) * distance_sq(v, u) = distance_sq(v, w) * distance_sq(v, u)
     distance_sq(v, u) * dot(vec(v, w), vec(v, w)) = dot(vec(v, w), vec(v, w)) * distance_sq(v, u)
     distance_sq(v, w) * distance_sq(v, u) = distance_sq(v, u) * distance_sq(v, w)
     dot(vec(v, u), vec(v, u)) * dot(vec(v, w), vec(v, w)) = distance_sq(v, u) * distance_sq(v, w)
     dot(vec(q, p), vec(q, r))^2 + det(vec(q, p), vec(q, r))^2 = distance_sq(q, p) * distance_sq(q, r)
     dot(vec(v, u), vec(v, w))^2 + det(vec(v, u), vec(v, w))^2 = distance_sq(v, u) * distance_sq(v, w)
-    by thm multiply_both_sides(angle_cos_num(p, q, r), dot(vec(q, p), vec(q, r)), det(vec(v, u), vec(v, w)))
+    release thm multiply_both_sides(angle_cos_num(p, q, r), dot(vec(q, p), vec(q, r)), det(vec(v, u), vec(v, w)))
     angle_cos_num(p, q, r) * det(vec(v, u), vec(v, w)) = dot(vec(q, p), vec(q, r)) * det(vec(v, u), vec(v, w))
-    by thm multiply_both_sides(angle_cos_num(u, v, w), dot(vec(v, u), vec(v, w)), det(vec(q, p), vec(q, r)))
+    release thm multiply_both_sides(angle_cos_num(u, v, w), dot(vec(v, u), vec(v, w)), det(vec(q, p), vec(q, r)))
     angle_cos_num(u, v, w) * det(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w)) * det(vec(q, p), vec(q, r))
     dot(vec(v, u), vec(v, w)) * det(vec(q, p), vec(q, r)) = det(vec(q, p), vec(q, r)) * dot(vec(v, u), vec(v, w))
     det(vec(q, p), vec(q, r)) * dot(vec(v, u), vec(v, w)) = det(vec(q, p), vec(q, r)) * angle_cos_num(u, v, w)
     angle_cos_num(p, q, r) * det(vec(v, u), vec(v, w)) = det(vec(q, p), vec(q, r)) * angle_cos_num(u, v, w)
-    by thm equal_products_have_equal_squares(angle_cos_num(p, q, r), det(vec(v, u), vec(v, w)), det(vec(q, p), vec(q, r)), angle_cos_num(u, v, w))
+    release thm equal_products_have_equal_squares(angle_cos_num(p, q, r), det(vec(v, u), vec(v, w)), det(vec(q, p), vec(q, r)), angle_cos_num(u, v, w))
     (angle_cos_num(p, q, r) * det(vec(v, u), vec(v, w)))^2 = (det(vec(q, p), vec(q, r)) * angle_cos_num(u, v, w))^2
     (angle_cos_num(p, q, r) * det(vec(v, u), vec(v, w)))^2 = angle_cos_num(p, q, r)^2 * det(vec(v, u), vec(v, w))^2
     (det(vec(q, p), vec(q, r)) * angle_cos_num(u, v, w))^2 = det(vec(q, p), vec(q, r))^2 * angle_cos_num(u, v, w)^2
     angle_cos_num(p, q, r)^2 * det(vec(v, u), vec(v, w))^2 = det(vec(q, p), vec(q, r))^2 * angle_cos_num(u, v, w)^2
     angle_cos_num(u, v, w) * 1 = dot(vec(v, u), vec(v, w)) * 1
-    by thm equal_products_have_equal_squares(angle_cos_num(u, v, w), 1, dot(vec(v, u), vec(v, w)), 1)
+    release thm equal_products_have_equal_squares(angle_cos_num(u, v, w), 1, dot(vec(v, u), vec(v, w)), 1)
     (angle_cos_num(u, v, w) * 1)^2 = (dot(vec(v, u), vec(v, w)) * 1)^2
     angle_cos_num(u, v, w)^2 = dot(vec(v, u), vec(v, w))^2
     angle_cos_num(p, q, r) * 1 = dot(vec(q, p), vec(q, r)) * 1
-    by thm equal_products_have_equal_squares(angle_cos_num(p, q, r), 1, dot(vec(q, p), vec(q, r)), 1)
+    release thm equal_products_have_equal_squares(angle_cos_num(p, q, r), 1, dot(vec(q, p), vec(q, r)), 1)
     (angle_cos_num(p, q, r) * 1)^2 = (dot(vec(q, p), vec(q, r)) * 1)^2
     angle_cos_num(p, q, r)^2 = dot(vec(q, p), vec(q, r))^2
-    by thm add_equalities(angle_cos_num(u, v, w)^2, dot(vec(v, u), vec(v, w))^2, det(vec(v, u), vec(v, w))^2, det(vec(v, u), vec(v, w))^2)
+    release thm add_equalities(angle_cos_num(u, v, w)^2, dot(vec(v, u), vec(v, w))^2, det(vec(v, u), vec(v, w))^2, det(vec(v, u), vec(v, w))^2)
     angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2 = dot(vec(v, u), vec(v, w))^2 + det(vec(v, u), vec(v, w))^2
     dot(vec(v, u), vec(v, w))^2 + det(vec(v, u), vec(v, w))^2 = angle_cos_den(u, v, w)
     angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2 = angle_cos_den(u, v, w)
-    by thm add_equalities(angle_cos_num(p, q, r)^2, dot(vec(q, p), vec(q, r))^2, det(vec(q, p), vec(q, r))^2, det(vec(q, p), vec(q, r))^2)
+    release thm add_equalities(angle_cos_num(p, q, r)^2, dot(vec(q, p), vec(q, r))^2, det(vec(q, p), vec(q, r))^2, det(vec(q, p), vec(q, r))^2)
     angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2 = dot(vec(q, p), vec(q, r))^2 + det(vec(q, p), vec(q, r))^2
     dot(vec(q, p), vec(q, r))^2 + det(vec(q, p), vec(q, r))^2 = angle_cos_den(p, q, r)
     angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2 = angle_cos_den(p, q, r)
-    by thm add_equalities(angle_cos_num(p, q, r)^2 * det(vec(v, u), vec(v, w))^2, det(vec(q, p), vec(q, r))^2 * angle_cos_num(u, v, w)^2, angle_cos_num(p, q, r)^2 * angle_cos_num(u, v, w)^2, angle_cos_num(p, q, r)^2 * angle_cos_num(u, v, w)^2)
+    release thm add_equalities(angle_cos_num(p, q, r)^2 * det(vec(v, u), vec(v, w))^2, det(vec(q, p), vec(q, r))^2 * angle_cos_num(u, v, w)^2, angle_cos_num(p, q, r)^2 * angle_cos_num(u, v, w)^2, angle_cos_num(p, q, r)^2 * angle_cos_num(u, v, w)^2)
     angle_cos_num(p, q, r)^2 * det(vec(v, u), vec(v, w))^2 + angle_cos_num(p, q, r)^2 * angle_cos_num(u, v, w)^2 = det(vec(q, p), vec(q, r))^2 * angle_cos_num(u, v, w)^2 + angle_cos_num(p, q, r)^2 * angle_cos_num(u, v, w)^2
     angle_cos_num(p, q, r)^2 * (angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2) = angle_cos_num(p, q, r)^2 * det(vec(v, u), vec(v, w))^2 + angle_cos_num(p, q, r)^2 * angle_cos_num(u, v, w)^2
     (angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2) * angle_cos_num(u, v, w)^2 = det(vec(q, p), vec(q, r))^2 * angle_cos_num(u, v, w)^2 + angle_cos_num(p, q, r)^2 * angle_cos_num(u, v, w)^2
     angle_cos_num(p, q, r)^2 * (angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2) = (angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2) * angle_cos_num(u, v, w)^2
-    by thm multiply_both_sides(angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2, angle_cos_den(u, v, w), angle_cos_num(p, q, r)^2)
+    release thm multiply_both_sides(angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2, angle_cos_den(u, v, w), angle_cos_num(p, q, r)^2)
     (angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2) * angle_cos_num(p, q, r)^2 = angle_cos_den(u, v, w) * angle_cos_num(p, q, r)^2
     angle_cos_num(p, q, r)^2 * (angle_cos_num(u, v, w)^2 + det(vec(v, u), vec(v, w))^2) = angle_cos_num(p, q, r)^2 * angle_cos_den(u, v, w)
-    by thm multiply_both_sides(angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2, angle_cos_den(p, q, r), angle_cos_num(u, v, w)^2)
+    release thm multiply_both_sides(angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2, angle_cos_den(p, q, r), angle_cos_num(u, v, w)^2)
     (angle_cos_num(p, q, r)^2 + det(vec(q, p), vec(q, r))^2) * angle_cos_num(u, v, w)^2 = angle_cos_den(p, q, r) * angle_cos_num(u, v, w)^2
     angle_cos_num(p, q, r)^2 * angle_cos_den(u, v, w) = angle_cos_den(p, q, r) * angle_cos_num(u, v, w)^2
-    by thm cross_product_positive_det_product_implies_same_sign(angle_cos_num(p, q, r), angle_cos_num(u, v, w), det(vec(q, p), vec(q, r)), det(vec(v, u), vec(v, w)))
+    release thm cross_product_positive_det_product_implies_same_sign(angle_cos_num(p, q, r), angle_cos_num(u, v, w), det(vec(q, p), vec(q, r)), det(vec(v, u), vec(v, w)))
     angle_cos_num(p, q, r) * angle_cos_num(u, v, w) >= 0
     by def $are_angles_congruent(p, q, r, u, v, w)
 
@@ -4666,9 +4666,9 @@ thm product_of_equal_factors:
         u = v
         =>:
             x * u = y * v
-    by thm multiply_both_sides(x, y, u)
+    release thm multiply_both_sides(x, y, u)
     x * u = y * u
-    by thm multiply_both_sides(u, v, y)
+    release thm multiply_both_sides(u, v, y)
     u * y = v * y
     y * u = u * y
     v * y = y * v
@@ -4683,7 +4683,7 @@ thm equal_centered_norms_same_chord_coordinate:
         =>:
             ((a1 - b1) * (d1 - b1) + (a2 - b2) * (d2 - b2)) * ((a1 - c1) * (d2 - c2) - (a2 - c2) * (d1 - c1)) = ((a1 - b1) * (d2 - b2) - (a2 - b2) * (d1 - b1)) * ((a1 - c1) * (d1 - c1) + (a2 - c2) * (d2 - c2))
     ((a1 - b1) * (d1 - b1) + (a2 - b2) * (d2 - b2)) * ((a1 - c1) * (d2 - c2) - (a2 - c2) * (d1 - c1)) - ((a1 - b1) * (d2 - b2) - (a2 - b2) * (d1 - b1)) * ((a1 - c1) * (d1 - c1) + (a2 - c2) * (d2 - c2)) = (b1 * c2 - b1 * d2 - b2 * c1 + b2 * d1 + c1 * d2 - c2 * d1) * (((a1 - o1)^2 + (a2 - o2)^2) - ((d1 - o1)^2 + (d2 - o2)^2)) + (-a1 * c2 + a1 * d2 + a2 * c1 - a2 * d1 - c1 * d2 + c2 * d1) * (((b1 - o1)^2 + (b2 - o2)^2) - ((d1 - o1)^2 + (d2 - o2)^2)) + (a1 * b2 - a1 * d2 - a2 * b1 + a2 * d1 + b1 * d2 - b2 * d1) * (((c1 - o1)^2 + (c2 - o2)^2) - ((d1 - o1)^2 + (d2 - o2)^2))
-    by thm equality_from_three_zero_terms(((a1 - b1) * (d1 - b1) + (a2 - b2) * (d2 - b2)) * ((a1 - c1) * (d2 - c2) - (a2 - c2) * (d1 - c1)), ((a1 - b1) * (d2 - b2) - (a2 - b2) * (d1 - b1)) * ((a1 - c1) * (d1 - c1) + (a2 - c2) * (d2 - c2)), b1 * c2 - b1 * d2 - b2 * c1 + b2 * d1 + c1 * d2 - c2 * d1, -a1 * c2 + a1 * d2 + a2 * c1 - a2 * d1 - c1 * d2 + c2 * d1, a1 * b2 - a1 * d2 - a2 * b1 + a2 * d1 + b1 * d2 - b2 * d1, ((a1 - o1)^2 + (a2 - o2)^2) - ((d1 - o1)^2 + (d2 - o2)^2), ((b1 - o1)^2 + (b2 - o2)^2) - ((d1 - o1)^2 + (d2 - o2)^2), ((c1 - o1)^2 + (c2 - o2)^2) - ((d1 - o1)^2 + (d2 - o2)^2))
+    release thm equality_from_three_zero_terms(((a1 - b1) * (d1 - b1) + (a2 - b2) * (d2 - b2)) * ((a1 - c1) * (d2 - c2) - (a2 - c2) * (d1 - c1)), ((a1 - b1) * (d2 - b2) - (a2 - b2) * (d1 - b1)) * ((a1 - c1) * (d1 - c1) + (a2 - c2) * (d2 - c2)), b1 * c2 - b1 * d2 - b2 * c1 + b2 * d1 + c1 * d2 - c2 * d1, -a1 * c2 + a1 * d2 + a2 * c1 - a2 * d1 - c1 * d2 + c2 * d1, a1 * b2 - a1 * d2 - a2 * b1 + a2 * d1 + b1 * d2 - b2 * d1, ((a1 - o1)^2 + (a2 - o2)^2) - ((d1 - o1)^2 + (d2 - o2)^2), ((b1 - o1)^2 + (b2 - o2)^2) - ((d1 - o1)^2 + (d2 - o2)^2), ((c1 - o1)^2 + (c2 - o2)^2) - ((d1 - o1)^2 + (d2 - o2)^2))
     ((a1 - b1) * (d1 - b1) + (a2 - b2) * (d2 - b2)) * ((a1 - c1) * (d2 - c2) - (a2 - c2) * (d1 - c1)) = ((a1 - b1) * (d2 - b2) - (a2 - b2) * (d1 - b1)) * ((a1 - c1) * (d1 - c1) + (a2 - c2) * (d2 - c2))
 
 # Common concyclic center relates the same chord's cross-ratio via four equidistances.
@@ -4694,32 +4694,32 @@ thm common_center_same_chord_cross_ratio:
         distance_sq(o, a) = distance_sq(o, d)
         =>:
             dot(vec(b, a), vec(b, d)) * det(vec(c, a), vec(c, d)) = det(vec(b, a), vec(b, d)) * dot(vec(c, a), vec(c, d))
-    by thm distance_sq_coordinate_formula(o, a)
-    by thm distance_sq_coordinate_formula(o, b)
-    by thm distance_sq_coordinate_formula(o, c)
-    by thm distance_sq_coordinate_formula(o, d)
+    release thm distance_sq_coordinate_formula(o, a)
+    release thm distance_sq_coordinate_formula(o, b)
+    release thm distance_sq_coordinate_formula(o, c)
+    release thm distance_sq_coordinate_formula(o, d)
     (a[1] - o[1])^2 + (a[2] - o[2])^2 = (d[1] - o[1])^2 + (d[2] - o[2])^2
     (b[1] - o[1])^2 + (b[2] - o[2])^2 = (d[1] - o[1])^2 + (d[2] - o[2])^2
     (c[1] - o[1])^2 + (c[2] - o[2])^2 = (d[1] - o[1])^2 + (d[2] - o[2])^2
     ((a[1] - o[1])^2 + (a[2] - o[2])^2) - ((d[1] - o[1])^2 + (d[2] - o[2])^2) = 0
     ((b[1] - o[1])^2 + (b[2] - o[2])^2) - ((d[1] - o[1])^2 + (d[2] - o[2])^2) = 0
     ((c[1] - o[1])^2 + (c[2] - o[2])^2) - ((d[1] - o[1])^2 + (d[2] - o[2])^2) = 0
-    by thm vec_coordinate_formula(b, a)
-    by thm vec_coordinate_formula(b, d)
-    by thm vec_coordinate_formula(c, a)
-    by thm vec_coordinate_formula(c, d)
-    by thm dot_coordinate_formula(vec(b, a), vec(b, d))
-    by thm dot_coordinate_formula(vec(c, a), vec(c, d))
-    by thm det_coordinate_formula(vec(b, a), vec(b, d))
-    by thm det_coordinate_formula(vec(c, a), vec(c, d))
+    release thm vec_coordinate_formula(b, a)
+    release thm vec_coordinate_formula(b, d)
+    release thm vec_coordinate_formula(c, a)
+    release thm vec_coordinate_formula(c, d)
+    release thm dot_coordinate_formula(vec(b, a), vec(b, d))
+    release thm dot_coordinate_formula(vec(c, a), vec(c, d))
+    release thm det_coordinate_formula(vec(b, a), vec(b, d))
+    release thm det_coordinate_formula(vec(c, a), vec(c, d))
     dot(vec(b, a), vec(b, d)) = (a[1] - b[1]) * (d[1] - b[1]) + (a[2] - b[2]) * (d[2] - b[2])
     det(vec(b, a), vec(b, d)) = (a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])
     dot(vec(c, a), vec(c, d)) = (a[1] - c[1]) * (d[1] - c[1]) + (a[2] - c[2]) * (d[2] - c[2])
     det(vec(c, a), vec(c, d)) = (a[1] - c[1]) * (d[2] - c[2]) - (a[2] - c[2]) * (d[1] - c[1])
     dot(vec(b, a), vec(b, d)) * det(vec(c, a), vec(c, d)) = ((a[1] - b[1]) * (d[1] - b[1]) + (a[2] - b[2]) * (d[2] - b[2])) * ((a[1] - c[1]) * (d[2] - c[2]) - (a[2] - c[2]) * (d[1] - c[1]))
-    by thm equal_centered_norms_same_chord_coordinate(a[1], a[2], b[1], b[2], c[1], c[2], d[1], d[2], o[1], o[2])
+    release thm equal_centered_norms_same_chord_coordinate(a[1], a[2], b[1], b[2], c[1], c[2], d[1], d[2], o[1], o[2])
     ((a[1] - b[1]) * (d[1] - b[1]) + (a[2] - b[2]) * (d[2] - b[2])) * ((a[1] - c[1]) * (d[2] - c[2]) - (a[2] - c[2]) * (d[1] - c[1])) = ((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])) * ((a[1] - c[1]) * (d[1] - c[1]) + (a[2] - c[2]) * (d[2] - c[2]))
-    by thm product_of_equal_factors(det(vec(b, a), vec(b, d)), (a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1]), dot(vec(c, a), vec(c, d)), (a[1] - c[1]) * (d[1] - c[1]) + (a[2] - c[2]) * (d[2] - c[2]))
+    release thm product_of_equal_factors(det(vec(b, a), vec(b, d)), (a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1]), dot(vec(c, a), vec(c, d)), (a[1] - c[1]) * (d[1] - c[1]) + (a[2] - c[2]) * (d[2] - c[2]))
     ((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])) * ((a[1] - c[1]) * (d[1] - c[1]) + (a[2] - c[2]) * (d[2] - c[2])) = det(vec(b, a), vec(b, d)) * dot(vec(c, a), vec(c, d))
     dot(vec(b, a), vec(b, d)) * det(vec(c, a), vec(c, d)) = ((a[1] - b[1]) * (d[1] - b[1]) + (a[2] - b[2]) * (d[2] - b[2])) * ((a[1] - c[1]) * (d[2] - c[2]) - (a[2] - c[2]) * (d[1] - c[1])) = ((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])) * ((a[1] - c[1]) * (d[1] - c[1]) + (a[2] - c[2]) * (d[2] - c[2])) = det(vec(b, a), vec(b, d)) * dot(vec(c, a), vec(c, d))
 
@@ -4735,8 +4735,8 @@ thm concyclic_same_chord_angles_congruent:
         =>:
             $are_angles_congruent(a, b, d, a, c, d)
     obtain o from $are_concyclic(a, b, c, d)
-    by thm common_center_same_chord_cross_ratio(a, b, c, d, o)
-    by thm cross_ratio_same_det_sign_implies_angle_congruence(a, b, d, a, c, d)
+    release thm common_center_same_chord_cross_ratio(a, b, c, d, o)
+    release thm cross_ratio_same_det_sign_implies_angle_congruence(a, b, d, a, c, d)
 
 # Compatibility predicates preserved from the public KB used by the archived proofs.
 prop is_circumcenter(o, a, b, c cart(R, R)):
@@ -4775,11 +4775,11 @@ thm nondegenerate_parallelogram_coordinate_formula:
     by def $is_parallel(a, b, d, c)
     by def $is_parallel(a, d, b, c)
     by def $is_triangle(a, b, d)
-    by thm triangle_det_nonzero(a, b, d)
-    by thm collinear_det_expand(a, b, ((a[1] + c[1]) - d[1], (a[2] + c[2]) - d[2]))
-    by thm collinear_det_expand(a, d, ((a[1] + c[1]) - b[1], (a[2] + c[2]) - b[2]))
-    by thm collinear_det_expand(d, c, b)
-    by thm collinear_det_expand(b, c, d)
+    release thm triangle_det_nonzero(a, b, d)
+    release thm collinear_det_expand(a, b, ((a[1] + c[1]) - d[1], (a[2] + c[2]) - d[2]))
+    release thm collinear_det_expand(a, d, ((a[1] + c[1]) - b[1], (a[2] + c[2]) - b[2]))
+    release thm collinear_det_expand(d, c, b)
+    release thm collinear_det_expand(b, c, d)
     vec(a, b) = (b[1] - a[1], b[2] - a[2])
     vec(a, d) = (d[1] - a[1], d[2] - a[2])
     vec(d, c) = (c[1] - d[1], c[2] - d[2])
@@ -4817,12 +4817,12 @@ thm midpoint_parallelogram_coordinates:
             o[2] - a[2] = c[2] - ep[2]
             ep[1] - a[1] = c[1] - o[1]
             ep[2] - a[2] = c[2] - o[2]
-    by thm nondegenerate_parallelogram_coordinate_formula(a, b, c, d)
+    release thm nondegenerate_parallelogram_coordinate_formula(a, b, c, d)
     d[1] = (a[1] + c[1]) - b[1]
     d[2] = (a[2] + c[2]) - b[2]
-    by thm midpoint_coordinate_formula(o, b, c)
+    release thm midpoint_coordinate_formula(o, b, c)
     o = ((b[1] + c[1]) / 2, (b[2] + c[2]) / 2)
-    by thm midpoint_coordinate_formula(ep, a, d)
+    release thm midpoint_coordinate_formula(ep, a, d)
     ep = ((a[1] + d[1]) / 2, (a[2] + d[2]) / 2)
     o[1] = (b[1] + c[1]) / 2
     o[2] = (b[2] + c[2]) / 2
@@ -4846,13 +4846,13 @@ thm midpoint_parallelogram_triangle:
         $is_midpoint(ep, a, d)
         =>:
             det(vec(a, o), vec(a, ep)) != 0
-    by thm nondegenerate_parallelogram_coordinate_formula(a, b, c, d)
+    release thm nondegenerate_parallelogram_coordinate_formula(a, b, c, d)
     d[1] = (a[1] + c[1]) - b[1]
     d[2] = (a[2] + c[2]) - b[2]
     c[1] = (b[1] + ((a[1] + c[1]) - b[1])) - a[1] = (b[1] + d[1]) - a[1]
     c[2] = (b[2] + ((a[2] + c[2]) - b[2])) - a[2] = (b[2] + d[2]) - a[2]
-    by thm midpoint_coordinate_formula(o, b, c)
-    by thm midpoint_coordinate_formula(ep, a, d)
+    release thm midpoint_coordinate_formula(o, b, c)
+    release thm midpoint_coordinate_formula(ep, a, d)
     o[1] = (b[1] + c[1]) / 2
     o[2] = (b[2] + c[2]) / 2
     ep[1] = (a[1] + d[1]) / 2
@@ -4861,12 +4861,12 @@ thm midpoint_parallelogram_triangle:
     o[2] - a[2] = (b[2] + ((b[2] + d[2]) - a[2])) / 2 - a[2] = b[2] - a[2] + (d[2] - a[2]) / 2
     ep[1] - a[1] = (a[1] + d[1]) / 2 - a[1] = (d[1] - a[1]) / 2
     ep[2] - a[2] = (a[2] + d[2]) / 2 - a[2] = (d[2] - a[2]) / 2
-    by thm vec_coordinate_formula(a, o)
-    by thm vec_coordinate_formula(a, ep)
-    by thm vec_coordinate_formula(a, b)
-    by thm vec_coordinate_formula(a, d)
-    by thm det_coordinate_formula(vec(a, o), vec(a, ep))
-    by thm det_coordinate_formula(vec(a, b), vec(a, d))
+    release thm vec_coordinate_formula(a, o)
+    release thm vec_coordinate_formula(a, ep)
+    release thm vec_coordinate_formula(a, b)
+    release thm vec_coordinate_formula(a, d)
+    release thm det_coordinate_formula(vec(a, o), vec(a, ep))
+    release thm det_coordinate_formula(vec(a, b), vec(a, d))
     det(vec(a, o), vec(a, ep)) = (o[1] - a[1]) * (ep[2] - a[2]) - (o[2] - a[2]) * (ep[1] - a[1])
     det(vec(a, b), vec(a, d)) = (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1])
     (o[1] - a[1]) * (ep[2] - a[2]) = (b[1] - a[1] + (d[1] - a[1]) / 2) * ((d[2] - a[2]) / 2)
@@ -4874,7 +4874,7 @@ thm midpoint_parallelogram_triangle:
     2 * ((o[1] - a[1]) * (ep[2] - a[2]) - (o[2] - a[2]) * (ep[1] - a[1])) = 2 * ((b[1] - a[1] + (d[1] - a[1]) / 2) * (d[2] - a[2]) / 2 - (b[2] - a[2] + (d[2] - a[2]) / 2) * (d[1] - a[1]) / 2) = (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1])
     2 * det(vec(a, o), vec(a, ep)) = 2 * ((o[1] - a[1]) * (ep[2] - a[2]) - (o[2] - a[2]) * (ep[1] - a[1])) = (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]) = det(vec(a, b), vec(a, d))
     by def $is_nondegenerate_parallelogram(a, b, c, d)
-    by thm triangle_det_nonzero(a, b, d)
+    release thm triangle_det_nonzero(a, b, d)
     by contra:
         ? det(vec(a, o), vec(a, ep)) != 0
         det(vec(a, o), vec(a, ep)) = 0
@@ -4889,11 +4889,11 @@ thm midpoint_parallelogram_closure:
         $is_midpoint(ep, a, d)
         =>:
             $is_parallelogram(a, o, c, ep)
-    by thm midpoint_parallelogram_coordinates(a, b, c, d, o, ep)
-    by thm midpoint_parallelogram_triangle(a, b, c, d, o, ep)
-    by thm vec_coordinate_formula(a, o)
-    by thm vec_coordinate_formula(a, ep)
-    by thm det_coordinate_formula(vec(a, o), vec(a, ep))
+    release thm midpoint_parallelogram_coordinates(a, b, c, d, o, ep)
+    release thm midpoint_parallelogram_triangle(a, b, c, d, o, ep)
+    release thm vec_coordinate_formula(a, o)
+    release thm vec_coordinate_formula(a, ep)
+    release thm det_coordinate_formula(vec(a, o), vec(a, ep))
     det(vec(a, o), vec(a, ep)) = (o[1] - a[1]) * (ep[2] - a[2]) - (o[2] - a[2]) * (ep[1] - a[1])
     by contra:
         ? a != o
@@ -4935,17 +4935,17 @@ thm midpoint_parallelogram_closure:
         det(vec(a, o), vec(a, ep)) = 0
         impossible det(vec(a, o), vec(a, ep)) != 0
     o != c
-    by thm vec_coordinate_formula(a, o)
-    by thm vec_coordinate_formula(ep, c)
-    by thm det_coordinate_formula(vec(a, o), vec(ep, c))
+    release thm vec_coordinate_formula(a, o)
+    release thm vec_coordinate_formula(ep, c)
+    release thm det_coordinate_formula(vec(a, o), vec(ep, c))
     det(vec(a, o), vec(ep, c)) = (o[1] - a[1]) * (c[2] - ep[2]) - (o[2] - a[2]) * (c[1] - ep[1])
     (o[1] - a[1]) * (c[2] - ep[2]) = (o[1] - a[1]) * (o[2] - a[2]) = (o[2] - a[2]) * (o[1] - a[1]) = (o[2] - a[2]) * (c[1] - ep[1])
     (o[1] - a[1]) * (c[2] - ep[2]) - (o[2] - a[2]) * (c[1] - ep[1]) = 0
     det(vec(a, o), vec(ep, c)) = 0
     by def $is_parallel(a, o, ep, c)
-    by thm vec_coordinate_formula(a, ep)
-    by thm vec_coordinate_formula(o, c)
-    by thm det_coordinate_formula(vec(a, ep), vec(o, c))
+    release thm vec_coordinate_formula(a, ep)
+    release thm vec_coordinate_formula(o, c)
+    release thm det_coordinate_formula(vec(a, ep), vec(o, c))
     det(vec(a, ep), vec(o, c)) = (ep[1] - a[1]) * (c[2] - o[2]) - (ep[2] - a[2]) * (c[1] - o[1])
     (ep[1] - a[1]) * (c[2] - o[2]) = (ep[1] - a[1]) * (ep[2] - a[2]) = (ep[2] - a[2]) * (ep[1] - a[1]) = (ep[2] - a[2]) * (c[1] - o[1])
     (ep[1] - a[1]) * (c[2] - o[2]) - (ep[2] - a[2]) * (c[1] - o[1]) = 0
@@ -4964,29 +4964,29 @@ thm circle_center_to_chord_midpoint_perpendicular:
             $is_perpendicular(o, m, a, c)
     by def $is_on_circle(a, o, r)
     by def $is_on_circle(c, o, r)
-    by thm distance_sq_symmetric(a, o)
-    by thm distance_sq_symmetric(c, o)
+    release thm distance_sq_symmetric(a, o)
+    release thm distance_sq_symmetric(c, o)
     distance_sq(o, a) = distance_sq(a, o) = r ^ 2 = distance_sq(c, o) = distance_sq(o, c)
-    by thm distance_sq_coordinate_formula(a, o)
-    by thm distance_sq_coordinate_formula(c, o)
+    release thm distance_sq_coordinate_formula(a, o)
+    release thm distance_sq_coordinate_formula(c, o)
     (o[1] - a[1])^2 + (o[2] - a[2])^2 = (o[1] - c[1])^2 + (o[2] - c[2])^2
-    by thm subtract_equalities((o[1] - a[1])^2 + (o[2] - a[2])^2, (o[1] - c[1])^2 + (o[2] - c[2])^2, (o[1] - c[1])^2 + (o[2] - c[2])^2, (o[1] - c[1])^2 + (o[2] - c[2])^2)
+    release thm subtract_equalities((o[1] - a[1])^2 + (o[2] - a[2])^2, (o[1] - c[1])^2 + (o[2] - c[2])^2, (o[1] - c[1])^2 + (o[2] - c[2])^2, (o[1] - c[1])^2 + (o[2] - c[2])^2)
     (o[1] - c[1])^2 + (o[2] - c[2])^2 - ((o[1] - c[1])^2 + (o[2] - c[2])^2) = 0
     (o[1] - a[1])^2 + (o[2] - a[2])^2 - ((o[1] - c[1])^2 + (o[2] - c[2])^2) = 0
     (o[1] - a[1])^2 + (o[2] - a[2])^2 - (o[1] - c[1])^2 - (o[2] - c[2])^2 = 0
-    by thm equidistant_implies_perp_bisector_dot(a, c, o)
+    release thm equidistant_implies_perp_bisector_dot(a, c, o)
     by def $is_midpoint(m, a, c)
     m[1] = (a[1] + c[1]) / 2
     m[2] = (a[2] + c[2]) / 2
     (o[1] - m[1]) * (c[1] - a[1]) = (o[1] - (a[1] + c[1]) / 2) * (c[1] - a[1])
     (o[2] - m[2]) * (c[2] - a[2]) = (o[2] - (a[2] + c[2]) / 2) * (c[2] - a[2])
-    by thm add_equalities((o[1] - m[1]) * (c[1] - a[1]), (o[1] - (a[1] + c[1]) / 2) * (c[1] - a[1]), (o[2] - m[2]) * (c[2] - a[2]), (o[2] - (a[2] + c[2]) / 2) * (c[2] - a[2]))
+    release thm add_equalities((o[1] - m[1]) * (c[1] - a[1]), (o[1] - (a[1] + c[1]) / 2) * (c[1] - a[1]), (o[2] - m[2]) * (c[2] - a[2]), (o[2] - (a[2] + c[2]) / 2) * (c[2] - a[2]))
     (o[1] - m[1]) * (c[1] - a[1]) + (o[2] - m[2]) * (c[2] - a[2]) = 0
-    by thm vec_coordinate_formula(m, o)
-    by thm vec_coordinate_formula(a, c)
-    by thm dot_coordinate_formula(vec(m, o), vec(a, c))
+    release thm vec_coordinate_formula(m, o)
+    release thm vec_coordinate_formula(a, c)
+    release thm dot_coordinate_formula(vec(m, o), vec(a, c))
     dot(vec(m, o), vec(a, c)) = (o[1] - m[1]) * (c[1] - a[1]) + (o[2] - m[2]) * (c[2] - a[2]) = 0
-    by thm dot_neg_left(m, o, a, c)
+    release thm dot_neg_left(m, o, a, c)
     dot(vec(o, m), vec(a, c)) = -1 * dot(vec(m, o), vec(a, c)) = 0
     by def $is_perpendicular(o, m, a, c)
 
@@ -5026,18 +5026,18 @@ thm common_line_feet_preserve_midpoint:
     p[1] = (b[1] + c[1]) / 2
     p[2] = (b[2] + c[2]) / 2
 
-    by thm vec_coordinate_formula(a0, a1)
+    release thm vec_coordinate_formula(a0, a1)
     vec(a0, a1) = (a1[1] - a0[1], a1[2] - a0[2])
 
-    by thm det_coordinate_formula(vec(a0, m), vec(a0, a1))
-    by thm vec_coordinate_formula(a0, m)
-    by thm vec_coordinate_formula(a0, a1)
+    release thm det_coordinate_formula(vec(a0, m), vec(a0, a1))
+    release thm vec_coordinate_formula(a0, m)
+    release thm vec_coordinate_formula(a0, a1)
     det(vec(a0, m), vec(a0, a1)) = (m[1] - a0[1]) * (a1[2] - a0[2]) - (m[2] - a0[2]) * (a1[1] - a0[1])
-    by thm det_coordinate_formula(vec(a0, n), vec(a0, a1))
-    by thm vec_coordinate_formula(a0, n)
+    release thm det_coordinate_formula(vec(a0, n), vec(a0, a1))
+    release thm vec_coordinate_formula(a0, n)
     det(vec(a0, n), vec(a0, a1)) = (n[1] - a0[1]) * (a1[2] - a0[2]) - (n[2] - a0[2]) * (a1[1] - a0[1])
-    by thm det_coordinate_formula(vec(a0, g), vec(a0, a1))
-    by thm vec_coordinate_formula(a0, g)
+    release thm det_coordinate_formula(vec(a0, g), vec(a0, a1))
+    release thm vec_coordinate_formula(a0, g)
     det(vec(a0, g), vec(a0, a1)) = (g[1] - a0[1]) * (a1[2] - a0[2]) - (g[2] - a0[2]) * (a1[1] - a0[1])
     (m[1] - a0[1]) * (a1[2] - a0[2]) - (m[2] - a0[2]) * (a1[1] - a0[1]) = 0
     (n[1] - a0[1]) * (a1[2] - a0[2]) - (n[2] - a0[2]) * (a1[1] - a0[1]) = 0
@@ -5048,14 +5048,14 @@ thm common_line_feet_preserve_midpoint:
     (-1 / 2) * ((m[1] - a0[1]) * (a1[2] - a0[2]) - (m[2] - a0[2]) * (a1[1] - a0[1])) + (-1 / 2) * ((n[1] - a0[1]) * (a1[2] - a0[2]) - (n[2] - a0[2]) * (a1[1] - a0[1])) + ((g[1] - a0[1]) * (a1[2] - a0[2]) - (g[2] - a0[2]) * (a1[1] - a0[1])) = 0
     (a1[1] - a0[1]) * ((m[2] + n[2]) / 2 - g[2]) - (a1[2] - a0[2]) * ((m[1] + n[1]) / 2 - g[1]) = (-1 / 2) * ((m[1] - a0[1]) * (a1[2] - a0[2]) - (m[2] - a0[2]) * (a1[1] - a0[1])) + (-1 / 2) * ((n[1] - a0[1]) * (a1[2] - a0[2]) - (n[2] - a0[2]) * (a1[1] - a0[1])) + ((g[1] - a0[1]) * (a1[2] - a0[2]) - (g[2] - a0[2]) * (a1[1] - a0[1])) = 0
 
-    by thm dot_coordinate_formula(vec(b, m), vec(a0, a1))
-    by thm vec_coordinate_formula(b, m)
+    release thm dot_coordinate_formula(vec(b, m), vec(a0, a1))
+    release thm vec_coordinate_formula(b, m)
     dot(vec(b, m), vec(a0, a1)) = (m[1] - b[1]) * (a1[1] - a0[1]) + (m[2] - b[2]) * (a1[2] - a0[2])
-    by thm dot_coordinate_formula(vec(c, n), vec(a0, a1))
-    by thm vec_coordinate_formula(c, n)
+    release thm dot_coordinate_formula(vec(c, n), vec(a0, a1))
+    release thm vec_coordinate_formula(c, n)
     dot(vec(c, n), vec(a0, a1)) = (n[1] - c[1]) * (a1[1] - a0[1]) + (n[2] - c[2]) * (a1[2] - a0[2])
-    by thm dot_coordinate_formula(vec(p, g), vec(a0, a1))
-    by thm vec_coordinate_formula(p, g)
+    release thm dot_coordinate_formula(vec(p, g), vec(a0, a1))
+    release thm vec_coordinate_formula(p, g)
     dot(vec(p, g), vec(a0, a1)) = (g[1] - p[1]) * (a1[1] - a0[1]) + (g[2] - p[2]) * (a1[2] - a0[2])
     (m[1] - b[1]) * (a1[1] - a0[1]) + (m[2] - b[2]) * (a1[2] - a0[2]) = 0
     (n[1] - c[1]) * (a1[1] - a0[1]) + (n[2] - c[2]) * (a1[2] - a0[2]) = 0
@@ -5072,14 +5072,14 @@ thm common_line_feet_preserve_midpoint:
     (a1[1] - a0[1]) * ((1 / 2) * (m[1] - b[1]) + (1 / 2) * (n[1] - c[1]) - (g[1] - p[1])) + (a1[2] - a0[2]) * ((1 / 2) * (m[2] - b[2]) + (1 / 2) * (n[2] - c[2]) - (g[2] - p[2])) = (1 / 2) * ((m[1] - b[1]) * (a1[1] - a0[1]) + (m[2] - b[2]) * (a1[2] - a0[2])) + (1 / 2) * ((n[1] - c[1]) * (a1[1] - a0[1]) + (n[2] - c[2]) * (a1[2] - a0[2])) + (-1) * ((g[1] - p[1]) * (a1[1] - a0[1]) + (g[2] - p[2]) * (a1[2] - a0[2]))
     (a1[1] - a0[1]) * ((m[1] + n[1]) / 2 - g[1]) + (a1[2] - a0[2]) * ((m[2] + n[2]) / 2 - g[2]) = (1 / 2) * ((m[1] - b[1]) * (a1[1] - a0[1]) + (m[2] - b[2]) * (a1[2] - a0[2])) + (1 / 2) * ((n[1] - c[1]) * (a1[1] - a0[1]) + (n[2] - c[2]) * (a1[2] - a0[2])) + (-1) * ((g[1] - p[1]) * (a1[1] - a0[1]) + (g[2] - p[2]) * (a1[2] - a0[2])) = 0
 
-    by thm point_difference_norm_pos(a0, a1)
+    release thm point_difference_norm_pos(a0, a1)
     (a1[1] - a0[1])^2 + (a1[2] - a0[2])^2 > 0
-    by thm dot_det_eliminate(a1[1] - a0[1], a1[2] - a0[2], (m[1] + n[1]) / 2 - g[1], (m[2] + n[2]) / 2 - g[2])
+    release thm dot_det_eliminate(a1[1] - a0[1], a1[2] - a0[2], (m[1] + n[1]) / 2 - g[1], (m[2] + n[2]) / 2 - g[2])
     (m[1] + n[1]) / 2 - g[1] = 0
     (m[2] + n[2]) / 2 - g[2] = 0
     g[1] = (m[1] + n[1]) / 2
     g[2] = (m[2] + n[2]) / 2
 
-    by thm tuple_equal_from_coordinates(g, (g[1], g[2]))
+    release thm tuple_equal_from_coordinates(g, (g[1], g[2]))
     g = (g[1], g[2]) = ((m[1] + n[1]) / 2, (m[2] + n[2]) / 2)
     by def $is_midpoint(g, m, n)

@@ -84,7 +84,8 @@ thm homomorphism_maps_identity:
             f(one_A) = one_B
     mul_A(one_A, one_A) = one_A
     mul_B(f(one_A), f(one_A)) = f(mul_A(one_A, one_A)) = f(one_A) = mul_B(f(one_A), one_B)
-    by thm group_left_cancel(B, mul_B, one_B, inv_B, f(one_A), f(one_A), one_B) => f(one_A) = one_B
+    release thm group_left_cancel(B, mul_B, one_B, inv_B, f(one_A), f(one_A), one_B)
+    f(one_A) = one_B
 
 # Tracer theorem: the setting keeps the ambient groups readable while the
 # proof works directly with the map and the two multiplications.
@@ -93,10 +94,12 @@ thm homomorphism_maps_inverse:
         $GroupHomomorphismSetting(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
         =>:
             f(inv_A(a)) = inv_B(f(a))
-    by thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f) => f(one_A) = one_B
+    release thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
+    f(one_A) = one_B
     mul_A(inv_A(a), a) = one_A
     mul_B(f(inv_A(a)), f(a)) = f(mul_A(inv_A(a), a)) = f(one_A) = one_B
-    by thm group_inverse_unique(B, mul_B, one_B, inv_B, f(a), f(inv_A(a))) => f(inv_A(a)) = inv_B(f(a))
+    release thm group_inverse_unique(B, mul_B, one_B, inv_B, f(a), f(inv_A(a)))
+    f(inv_A(a)) = inv_B(f(a))
 
 prop is_subgroup(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, H power_set(A)):
     $GroupSetting(A, mul, one, inv)
@@ -120,29 +123,37 @@ thm kernel_is_normal_subgroup:
             $is_normal_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
     claim:
         ? $is_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
-        by thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f) => f(one_A) = one_B
-        by thm set_builder_member(one_A, {candidate A: f(candidate) = one_B}) => one_A $in {candidate A: f(candidate) = one_B}
+        release thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
+        f(one_A) = one_B
+        release thm set_builder_member(one_A, {candidate A: f(candidate) = one_B})
+        one_A $in {candidate A: f(candidate) = one_B}
         claim:
             ? forall kernel_x, kernel_y {candidate A: f(candidate) = one_B}:
                 mul_A(kernel_x, kernel_y) $in {candidate A: f(candidate) = one_B}
             f(mul_A(kernel_x, kernel_y)) = mul_B(f(kernel_x), f(kernel_y)) = mul_B(one_B, one_B) = one_B
-            by thm set_builder_member(mul_A(kernel_x, kernel_y), {candidate A: f(candidate) = one_B}) => mul_A(kernel_x, kernel_y) $in {candidate A: f(candidate) = one_B}
+            release thm set_builder_member(mul_A(kernel_x, kernel_y), {candidate A: f(candidate) = one_B})
+            mul_A(kernel_x, kernel_y) $in {candidate A: f(candidate) = one_B}
         claim:
             ? forall kernel_x {candidate A: f(candidate) = one_B}:
                 inv_A(kernel_x) $in {candidate A: f(candidate) = one_B}
-            by thm homomorphism_maps_inverse(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f, kernel_x) => f(inv_A(kernel_x)) = inv_B(f(kernel_x))
-            by thm group_inverse_unique(B, mul_B, one_B, inv_B, one_B, one_B) => inv_B(one_B) = one_B
+            release thm homomorphism_maps_inverse(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f, kernel_x)
+            f(inv_A(kernel_x)) = inv_B(f(kernel_x))
+            release thm group_inverse_unique(B, mul_B, one_B, inv_B, one_B, one_B)
+            inv_B(one_B) = one_B
             f(inv_A(kernel_x)) = inv_B(f(kernel_x)) = inv_B(one_B) = one_B
-            by thm set_builder_member(inv_A(kernel_x), {candidate A: f(candidate) = one_B}) => inv_A(kernel_x) $in {candidate A: f(candidate) = one_B}
+            release thm set_builder_member(inv_A(kernel_x), {candidate A: f(candidate) = one_B})
+            inv_A(kernel_x) $in {candidate A: f(candidate) = one_B}
         by def $is_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
     claim:
         ? forall conjugator A, kernel_h {candidate A: f(candidate) = one_B}:
             mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)) $in {candidate A: f(candidate) = one_B}
         f(mul_A(conjugator, kernel_h)) = mul_B(f(conjugator), f(kernel_h))
-        by thm homomorphism_maps_inverse(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f, conjugator) => f(inv_A(conjugator)) = inv_B(f(conjugator))
+        release thm homomorphism_maps_inverse(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f, conjugator)
+        f(inv_A(conjugator)) = inv_B(f(conjugator))
         mul_B(f(conjugator), one_B) = f(conjugator)
         f(mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator))) = mul_B(f(mul_A(conjugator, kernel_h)), f(inv_A(conjugator))) = mul_B(mul_B(f(conjugator), f(kernel_h)), inv_B(f(conjugator))) = mul_B(mul_B(f(conjugator), one_B), inv_B(f(conjugator))) = mul_B(f(conjugator), inv_B(f(conjugator))) = one_B
-        by thm set_builder_member(mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)), {candidate A: f(candidate) = one_B}) => mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)) $in {candidate A: f(candidate) = one_B}
+        release thm set_builder_member(mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)), {candidate A: f(candidate) = one_B})
+        mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)) $in {candidate A: f(candidate) = one_B}
     by def $is_normal_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
 
 struct Group<A nonempty_set>:
@@ -310,7 +321,8 @@ thm group_homomorphism_preserves_identity:
             f(G.one) = H.one
     # Apply the general theorem proved above to the operations stored in G/H.
     $GroupHomomorphismSetting(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f)
-    by thm homomorphism_maps_identity(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f) => f(G.one) = H.one
+    release thm homomorphism_maps_identity(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f)
+    f(G.one) = H.one
 
 thm group_homomorphism_preserves_inverse:
     ? forall A nonempty_set, G &Group<A>, B nonempty_set, H &Group<B>, f fn(x A) B, a A:
@@ -318,7 +330,8 @@ thm group_homomorphism_preserves_inverse:
         =>:
             f(G.inv(a)) = H.inv(f(a))
     $GroupHomomorphismSetting(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f)
-    by thm homomorphism_maps_inverse(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f, a) => f(G.inv(a)) = H.inv(f(a))
+    release thm homomorphism_maps_inverse(A, G.mul, G.one, G.inv, B, H.mul, H.one, H.inv, f, a)
+    f(G.inv(a)) = H.inv(f(a))
 
 # Kernel of a ring homomorphism is an ideal.
 thm ring_homomorphism_kernel_is_ideal:
@@ -330,22 +343,26 @@ thm ring_homomorphism_kernel_is_ideal:
     claim:
         ? zero_A $in {candidate A: map(candidate) = zero_B}
         map(zero_A) = zero_B
-        by thm set_builder_member(zero_A, {candidate A: map(candidate) = zero_B}) => zero_A $in {candidate A: map(candidate) = zero_B}
+        release thm set_builder_member(zero_A, {candidate A: map(candidate) = zero_B})
+        zero_A $in {candidate A: map(candidate) = zero_B}
     claim:
         ? forall kernel_x, kernel_y {candidate A: map(candidate) = zero_B}:
             add_A(kernel_x, kernel_y) $in {candidate A: map(candidate) = zero_B}
         map(add_A(kernel_x, kernel_y)) = add_B(map(kernel_x), map(kernel_y)) = add_B(zero_B, zero_B) = zero_B
-        by thm set_builder_member(add_A(kernel_x, kernel_y), {candidate A: map(candidate) = zero_B}) => add_A(kernel_x, kernel_y) $in {candidate A: map(candidate) = zero_B}
+        release thm set_builder_member(add_A(kernel_x, kernel_y), {candidate A: map(candidate) = zero_B})
+        add_A(kernel_x, kernel_y) $in {candidate A: map(candidate) = zero_B}
     claim:
         ? forall kernel_x {candidate A: map(candidate) = zero_B}:
             neg_A(kernel_x) $in {candidate A: map(candidate) = zero_B}
         map(neg_A(kernel_x)) = neg_B(map(kernel_x)) = neg_B(zero_B) = zero_B
-        by thm set_builder_member(neg_A(kernel_x), {candidate A: map(candidate) = zero_B}) => neg_A(kernel_x) $in {candidate A: map(candidate) = zero_B}
+        release thm set_builder_member(neg_A(kernel_x), {candidate A: map(candidate) = zero_B})
+        neg_A(kernel_x) $in {candidate A: map(candidate) = zero_B}
     claim:
         ? forall scalar A, kernel_x {candidate A: map(candidate) = zero_B}:
             mul_A(scalar, kernel_x) $in {candidate A: map(candidate) = zero_B}
         map(mul_A(scalar, kernel_x)) = mul_B(map(scalar), map(kernel_x)) = mul_B(map(scalar), zero_B) = zero_B
-        by thm set_builder_member(mul_A(scalar, kernel_x), {candidate A: map(candidate) = zero_B}) => mul_A(scalar, kernel_x) $in {candidate A: map(candidate) = zero_B}
+        release thm set_builder_member(mul_A(scalar, kernel_x), {candidate A: map(candidate) = zero_B})
+        mul_A(scalar, kernel_x) $in {candidate A: map(candidate) = zero_B}
     by def $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, {candidate A: map(candidate) = zero_B})
 
 thm field_is_integral_domain:

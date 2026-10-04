@@ -31,5 +31,5 @@ thm problem_927_sss_congruence:
         =>:
             $geo::are_triangles_congruent(a, b, d, a, c, d)
 
-    by thm geo::segments_congruent_reflexive_prop(d, a)
+    release thm geo::segments_congruent_reflexive_prop(d, a)
     by def $geo::are_triangles_congruent(a, b, d, a, c, d)

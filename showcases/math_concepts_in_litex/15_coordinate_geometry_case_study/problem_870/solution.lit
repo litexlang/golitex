@@ -25,14 +25,14 @@ thm problem_870_product_substitution:
         x = y
         =>:
             n^2 * x = m^2 * y
-    by thm translation::multiply_both_sides(n, m, n)
+    release thm translation::multiply_both_sides(n, m, n)
     n * n = m * n
-    by thm translation::multiply_both_sides(n, m, m)
+    release thm translation::multiply_both_sides(n, m, m)
     n * m = m * m
     n^2 = n * n = m * n = n * m = m * m = m^2
-    by thm translation::multiply_both_sides(n^2, m^2, x)
+    release thm translation::multiply_both_sides(n^2, m^2, x)
     n^2 * x = m^2 * x
-    by thm translation::multiply_both_sides(x, y, m^2)
+    release thm translation::multiply_both_sides(x, y, m^2)
     x * m^2 = y * m^2
     m^2 * x = x * m^2 = y * m^2 = m^2 * y
 
@@ -48,11 +48,11 @@ thm problem_870_triangle_and_legs_counterexample:
             # 【原题条件】AB=AC。
             $translation::are_segments_congruent((0, 2), (-1, 0), (0, 2), (1, 0))
 
-    by thm translation::vec_coordinate_formula((0, 2), (-1, 0))
+    release thm translation::vec_coordinate_formula((0, 2), (-1, 0))
     translation::vec((0, 2), (-1, 0)) = (-1, -2)
-    by thm translation::vec_coordinate_formula((0, 2), (1, 0))
+    release thm translation::vec_coordinate_formula((0, 2), (1, 0))
     translation::vec((0, 2), (1, 0)) = (1, -2)
-    by thm translation::det_coordinate_formula((-1, -2), (1, -2))
+    release thm translation::det_coordinate_formula((-1, -2), (1, -2))
     translation::det((-1, -2), (1, -2)) = 4
     translation::det(translation::vec((0, 2), (-1, 0)), translation::vec((0, 2), (1, 0))) = 4
     by contra:
@@ -62,9 +62,9 @@ thm problem_870_triangle_and_legs_counterexample:
         impossible 4 != 0
     by def $translation::is_triangle((0, 2), (-1, 0), (1, 0))
 
-    by thm translation::distance_sq_coordinate_formula((0, 2), (-1, 0))
+    release thm translation::distance_sq_coordinate_formula((0, 2), (-1, 0))
     translation::distance_sq((0, 2), (-1, 0)) = 5
-    by thm translation::distance_sq_coordinate_formula((0, 2), (1, 0))
+    release thm translation::distance_sq_coordinate_formula((0, 2), (1, 0))
     translation::distance_sq((0, 2), (1, 0)) = 5
     by def $translation::are_segments_congruent((0, 2), (-1, 0), (0, 2), (1, 0))
 
@@ -91,9 +91,9 @@ thm problem_870_point_e_counterexample:
         (1 / 5, 8 / 5) = ((0, 2)[1] + (1 / 5) * ((1, 0)[1] - (0, 2)[1]), (0, 2)[2] + (1 / 5) * ((1, 0)[2] - (0, 2)[2]))
     by def $translation::is_on_segment((1 / 5, 8 / 5), (0, 2), (1, 0))
 
-    by thm translation::distance_sq_coordinate_formula((-1, 0), (1 / 5, 8 / 5))
+    release thm translation::distance_sq_coordinate_formula((-1, 0), (1 / 5, 8 / 5))
     translation::distance_sq((-1, 0), (1 / 5, 8 / 5)) = 4
-    by thm translation::distance_sq_coordinate_formula((-1, 0), (1, 0))
+    release thm translation::distance_sq_coordinate_formula((-1, 0), (1, 0))
     translation::distance_sq((-1, 0), (1, 0)) = 4
     by def $translation::are_segments_congruent((-1, 0), (1 / 5, 8 / 5), (-1, 0), (1, 0))
 
@@ -129,11 +129,11 @@ thm problem_870_point_d_counterexample:
         (0, 2) = (8 / 25, 44 / 25)
         0 = (0, 2)[1] = (8 / 25, 44 / 25)[1] = 8 / 25
         impossible 0 != 8 / 25
-    by thm translation::vec_coordinate_formula((0, 2), (8 / 25, 44 / 25))
+    release thm translation::vec_coordinate_formula((0, 2), (8 / 25, 44 / 25))
     translation::vec((0, 2), (8 / 25, 44 / 25)) = (8 / 25, -6 / 25)
-    by thm translation::vec_coordinate_formula((-1, 0), (1 / 5, 8 / 5))
+    release thm translation::vec_coordinate_formula((-1, 0), (1 / 5, 8 / 5))
     translation::vec((-1, 0), (1 / 5, 8 / 5)) = (6 / 5, 8 / 5)
-    by thm translation::dot_coordinate_formula((8 / 25, -6 / 25), (6 / 5, 8 / 5))
+    release thm translation::dot_coordinate_formula((8 / 25, -6 / 25), (6 / 5, 8 / 5))
     translation::dot((8 / 25, -6 / 25), (6 / 5, 8 / 5)) = 0
     translation::dot(translation::vec((0, 2), (8 / 25, 44 / 25)), translation::vec((-1, 0), (1 / 5, 8 / 5))) = 0
     by def $translation::is_perpendicular((0, 2), (8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5))
@@ -170,27 +170,27 @@ thm problem_870_conclusion_is_false:
         1 = (1, 0)[1] = (-1, 0)[1] = -1
         impossible 1 != -1
 
-    by thm translation::vec_coordinate_formula((8 / 25, 44 / 25), (0, 2))
+    release thm translation::vec_coordinate_formula((8 / 25, 44 / 25), (0, 2))
     translation::vec((8 / 25, 44 / 25), (0, 2)) = (-8 / 25, 6 / 25)
-    by thm translation::vec_coordinate_formula((8 / 25, 44 / 25), (1 / 5, 8 / 5))
+    release thm translation::vec_coordinate_formula((8 / 25, 44 / 25), (1 / 5, 8 / 5))
     translation::vec((8 / 25, 44 / 25), (1 / 5, 8 / 5)) = (-3 / 25, -4 / 25)
-    by thm translation::dot_coordinate_formula((-8 / 25, 6 / 25), (-3 / 25, -4 / 25))
+    release thm translation::dot_coordinate_formula((-8 / 25, 6 / 25), (-3 / 25, -4 / 25))
     translation::dot((-8 / 25, 6 / 25), (-3 / 25, -4 / 25)) = 0
 
-    by thm translation::vec_coordinate_formula((-1, 0), (0, 2))
+    release thm translation::vec_coordinate_formula((-1, 0), (0, 2))
     translation::vec((-1, 0), (0, 2)) = (1, 2)
-    by thm translation::vec_coordinate_formula((-1, 0), (1, 0))
+    release thm translation::vec_coordinate_formula((-1, 0), (1, 0))
     translation::vec((-1, 0), (1, 0)) = (2, 0)
-    by thm translation::dot_coordinate_formula((1, 2), (2, 0))
+    release thm translation::dot_coordinate_formula((1, 2), (2, 0))
     translation::dot((1, 2), (2, 0)) = 2
 
-    by thm translation::distance_sq_coordinate_formula((8 / 25, 44 / 25), (0, 2))
+    release thm translation::distance_sq_coordinate_formula((8 / 25, 44 / 25), (0, 2))
     translation::distance_sq((8 / 25, 44 / 25), (0, 2)) = 4 / 25
-    by thm translation::distance_sq_coordinate_formula((8 / 25, 44 / 25), (1 / 5, 8 / 5))
+    release thm translation::distance_sq_coordinate_formula((8 / 25, 44 / 25), (1 / 5, 8 / 5))
     translation::distance_sq((8 / 25, 44 / 25), (1 / 5, 8 / 5)) = 1 / 25
-    by thm translation::distance_sq_coordinate_formula((-1, 0), (0, 2))
+    release thm translation::distance_sq_coordinate_formula((-1, 0), (0, 2))
     translation::distance_sq((-1, 0), (0, 2)) = 5
-    by thm translation::distance_sq_coordinate_formula((-1, 0), (1, 0))
+    release thm translation::distance_sq_coordinate_formula((-1, 0), (1, 0))
     translation::distance_sq((-1, 0), (1, 0)) = 4
     # 与角全等定义中的六个标量因子逐字匹配，供反证展开后直接代入。
     (0 - 8 / 25) * (1 / 5 - 8 / 25) + (2 - 44 / 25) * (8 / 5 - 44 / 25) = 0
@@ -217,9 +217,9 @@ thm problem_870_conclusion_is_false:
         translation::angle_cos_num((0, 2), (-1, 0), (1, 0)) = 2
         translation::angle_cos_den((0, 2), (-1, 0), (1, 0)) = translation::distance_sq((-1, 0), (0, 2)) * translation::distance_sq((-1, 0), (1, 0))
         translation::angle_cos_den((0, 2), (-1, 0), (1, 0)) = 5 * 4
-        by thm problem_870_product_substitution(translation::angle_cos_num((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)), 0, translation::angle_cos_den((0, 2), (-1, 0), (1, 0)), 5 * 4)
+        release thm problem_870_product_substitution(translation::angle_cos_num((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)), 0, translation::angle_cos_den((0, 2), (-1, 0), (1, 0)), 5 * 4)
         translation::angle_cos_num((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5))^2 * translation::angle_cos_den((0, 2), (-1, 0), (1, 0)) = 0^2 * (5 * 4)
-        by thm problem_870_product_substitution(translation::angle_cos_num((0, 2), (-1, 0), (1, 0)), 2, translation::angle_cos_den((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)), (4 / 25) * (1 / 25))
+        release thm problem_870_product_substitution(translation::angle_cos_num((0, 2), (-1, 0), (1, 0)), 2, translation::angle_cos_den((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)), (4 / 25) * (1 / 25))
         translation::angle_cos_num((0, 2), (-1, 0), (1, 0))^2 * translation::angle_cos_den((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)) = 2^2 * ((4 / 25) * (1 / 25))
         0^2 * (5 * 4) = 2^2 * ((4 / 25) * (1 / 25))
         0^2 * (5 * 4) = 0
@@ -248,7 +248,7 @@ thm problem_870_full_counterexample:
             # 【原题结论的否定】△ADE不相似于△ABC，故原命题为假。
             not $translation::are_triangles_similar((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5), (0, 2), (-1, 0), (1, 0))
 
-    by thm problem_870_triangle_and_legs_counterexample(z)
-    by thm problem_870_point_e_counterexample(z)
-    by thm problem_870_point_d_counterexample(z)
-    by thm problem_870_conclusion_is_false(z)
+    release thm problem_870_triangle_and_legs_counterexample(z)
+    release thm problem_870_point_e_counterexample(z)
+    release thm problem_870_point_d_counterexample(z)
+    release thm problem_870_conclusion_is_false(z)

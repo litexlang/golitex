@@ -20,6 +20,49 @@ fn parses_eval_command() {
 }
 
 #[test]
+fn parses_negative_leading_eval_code_and_surrounding_flags() {
+    for parts in [
+        vec!["-e", "-2 < 0"],
+        vec!["-strict", "-e", "-2 < 0"],
+        vec!["-e", "-2 < 0", "-strict"],
+    ] {
+        assert_eq!(
+            parse_launch_command(&args(&parts)).unwrap(),
+            LaunchCommand::Eval {
+                code: "-2 < 0".to_string(),
+                session: false,
+                strict: parts.contains(&"-strict"),
+                language: OutputLanguage::English,
+            }
+        );
+    }
+}
+
+#[test]
+fn eval_operand_is_source_even_when_it_spells_a_cli_option() {
+    for code in ["-strict", "--strict", "-session", "--session", "-lang", "--lang", "-f", "-r", "-e", "-help", "-unknown"] {
+        assert_eq!(
+            parse_launch_command(&args(&["-e", code])).unwrap(),
+            LaunchCommand::Eval {
+                code: code.to_string(),
+                session: false,
+                strict: false,
+                language: OutputLanguage::English,
+            }
+        );
+    }
+    assert_eq!(
+        parse_launch_command(&args(&["-lang", "zh", "-e", "-strict", "-session"])).unwrap(),
+        LaunchCommand::Eval {
+            code: "-strict".to_string(),
+            session: true,
+            strict: false,
+            language: OutputLanguage::Chinese,
+        }
+    );
+}
+
+#[test]
 fn parses_session_and_strict_with_file() {
     assert_eq!(
         parse_launch_command(&args(&["-strict", "-f", "a.lit", "-session"])).unwrap(),
@@ -115,6 +158,9 @@ fn parses_lang_flag() {
 #[test]
 fn rejects_unknown_shape_and_bad_lang() {
     assert!(parse_launch_command(&args(&["-e"])).is_err());
+    assert!(parse_launch_command(&args(&["-e", ""])).is_err());
+    assert!(parse_launch_command(&args(&["-e", "1 = 1", "-foo"])).is_err());
+    assert!(parse_launch_command(&args(&["-e", "1 = 1", "2 = 2"])).is_err());
     assert!(parse_launch_command(&args(&["-foo", "-e", "1 = 1"])).is_err());
     assert!(parse_launch_command(&args(&["-strict", "-help"])).is_err());
     assert!(parse_launch_command(&args(&["-lang"])).is_err());

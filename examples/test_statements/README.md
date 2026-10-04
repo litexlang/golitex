@@ -4,13 +4,18 @@ Task: detailed per-statement tests requested on 2026-10-01.
 The authoritative inventory is `src/ast/stmt.rs`: 50 reachable statement
 leaves, including `Stmt::Fact`. Each leaf has one primary `.lit` file with
 multiple runnable scenarios. There are 172 positive scenarios,
-132 negative scenarios, 23 additional boundary/regression checks, and no open
+132 negative scenarios, 24 additional boundary/regression checks, and no open
 K-number gap reproduction. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
 Latest current-worktree completion scan: [2026-10-03 audit](audit_2026-10-03.md).
 All 377 CLI checks and the actual-AST integration pass; separate open kernel
 observations and semantic boundaries remain listed in that report.
+
+The [2026-10-04 CLI/strict acceptance](experience/problem_notes/cli-source-strict-abstract.md)
+allows pure abstract predicates in strict mode and fixes negative-leading `-e`
+source. Its scoped tests preserve unproved-instance, WD, arity and trust rejection.
+The dated 377-check scan above predates the added boundary.
 
 ## Run
 

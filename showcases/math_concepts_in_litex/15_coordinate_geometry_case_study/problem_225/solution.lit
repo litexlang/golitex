@@ -49,9 +49,9 @@ thm problem_225_rotation_perpendicular_core:
         =>:
             $geo::is_perpendicular((0, 0), (4 - 2 * s, 2 * c), (0, 6), (3 * c, 3 * s))
     by def $geo::is_perpendicular((0, 0), (4 - 2 * s, 2 * c), (0, 6), (3 * c, 3 * s))
-    by thm geo::vec_coordinate_formula((0, 0), (4 - 2 * s, 2 * c))
-    by thm geo::vec_coordinate_formula((0, 6), (3 * c, 3 * s))
-    by thm geo::dot_coordinate_formula(geo::vec((0, 0), (4 - 2 * s, 2 * c)), geo::vec((0, 6), (3 * c, 3 * s)))
+    release thm geo::vec_coordinate_formula((0, 0), (4 - 2 * s, 2 * c))
+    release thm geo::vec_coordinate_formula((0, 6), (3 * c, 3 * s))
+    release thm geo::dot_coordinate_formula(geo::vec((0, 0), (4 - 2 * s, 2 * c)), geo::vec((0, 6), (3 * c, 3 * s)))
     geo::dot(geo::vec((0, 0), (4 - 2 * s, 2 * c)), geo::vec((0, 6), (3 * c, 3 * s))) = (4 - 2 * s) * (3 * c) + (2 * c) * (3 * s - 6) = 0
 
 # Exact first counterclockwise collinear position.
@@ -67,11 +67,11 @@ thm problem_225_first_collinear_length_core:
             sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5
     sqrt(21)^2 = 21
     sqrt(21) > 0
-    by thm geo::square_of_equal(c, (6 - 4 * sqrt(21)) / 25)
-    by thm geo::square_of_equal(s, (8 + 3 * sqrt(21)) / 25)
+    release thm geo::square_of_equal(c, (6 - 4 * sqrt(21)) / 25)
+    release thm geo::square_of_equal(s, (8 + 3 * sqrt(21)) / 25)
     c^2 = ((6 - 4 * sqrt(21)) / 25)^2
     s^2 = ((8 + 3 * sqrt(21)) / 25)^2
-    by thm geo::add_equalities(c^2, ((6 - 4 * sqrt(21)) / 25)^2, s^2, ((8 + 3 * sqrt(21)) / 25)^2)
+    release thm geo::add_equalities(c^2, ((6 - 4 * sqrt(21)) / 25)^2, s^2, ((8 + 3 * sqrt(21)) / 25)^2)
     c^2 + s^2 = ((6 - 4 * sqrt(21)) / 25)^2 + ((8 + 3 * sqrt(21)) / 25)^2
     ((6 - 4 * sqrt(21)) / 25)^2 + ((8 + 3 * sqrt(21)) / 25)^2 = ((6 - 4 * sqrt(21))^2 + (8 + 3 * sqrt(21))^2) / 625
     ((6 - 4 * sqrt(21))^2 + (8 + 3 * sqrt(21))^2) / 625 = (36 - 48 * sqrt(21) + 16 * sqrt(21)^2 + 64 + 48 * sqrt(21) + 9 * sqrt(21)^2) / 625
@@ -80,11 +80,11 @@ thm problem_225_first_collinear_length_core:
     (100 + 25 * 21) / 625 = 1
     ((6 - 4 * sqrt(21)) / 25)^2 + ((8 + 3 * sqrt(21)) / 25)^2 = 1
     c^2 + s^2 = 1
-    by thm geo::multiply_both_sides(c, (6 - 4 * sqrt(21)) / 25, 3)
-    by thm geo::multiply_both_sides(s, (8 + 3 * sqrt(21)) / 25, 4)
+    release thm geo::multiply_both_sides(c, (6 - 4 * sqrt(21)) / 25, 3)
+    release thm geo::multiply_both_sides(s, (8 + 3 * sqrt(21)) / 25, 4)
     3 * c = 3 * ((6 - 4 * sqrt(21)) / 25)
     4 * s = 4 * ((8 + 3 * sqrt(21)) / 25)
-    by thm geo::add_equalities(3 * c, 3 * ((6 - 4 * sqrt(21)) / 25), 4 * s, 4 * ((8 + 3 * sqrt(21)) / 25))
+    release thm geo::add_equalities(3 * c, 3 * ((6 - 4 * sqrt(21)) / 25), 4 * s, 4 * ((8 + 3 * sqrt(21)) / 25))
     3 * c + 4 * s = 3 * ((6 - 4 * sqrt(21)) / 25) + 4 * ((8 + 3 * sqrt(21)) / 25)
     3 * ((6 - 4 * sqrt(21)) / 25) + 4 * ((8 + 3 * sqrt(21)) / 25) = (18 - 12 * sqrt(21) + 32 + 12 * sqrt(21)) / 25
     (18 - 12 * sqrt(21) + 32 + 12 * sqrt(21)) / 25 = 50 / 25
@@ -93,31 +93,31 @@ thm problem_225_first_collinear_length_core:
     8 + 3 * sqrt(21) > 0
     (8 + 3 * sqrt(21)) / 25 > 0
     s > 0
-    by thm geo::distance_sq_coordinate_formula((0, 0), f)
+    release thm geo::distance_sq_coordinate_formula((0, 0), f)
     geo::distance_sq((0, 0), f) = (f[1] - 0)^2 + (f[2] - 0)^2
     f[1] = 4 - 2 * s
     f[2] = 2 * c
     f[1] - 0 = 4 - 2 * s
     f[2] - 0 = 2 * c
-    by thm geo::square_of_equal(f[1] - 0, 4 - 2 * s)
-    by thm geo::square_of_equal(f[2] - 0, 2 * c)
+    release thm geo::square_of_equal(f[1] - 0, 4 - 2 * s)
+    release thm geo::square_of_equal(f[2] - 0, 2 * c)
     (f[1] - 0)^2 = (4 - 2 * s)^2
     (f[2] - 0)^2 = (2 * c)^2
-    by thm geo::add_equalities((f[1] - 0)^2, (4 - 2 * s)^2, (f[2] - 0)^2, (2 * c)^2)
+    release thm geo::add_equalities((f[1] - 0)^2, (4 - 2 * s)^2, (f[2] - 0)^2, (2 * c)^2)
     (f[1] - 0)^2 + (f[2] - 0)^2 = (4 - 2 * s)^2 + (2 * c)^2
     geo::distance_sq((0, 0), f) = (4 - 2 * s)^2 + (2 * c)^2
     s^2 + c^2 = c^2 + s^2 = 1
-    by thm geo::multiply_both_sides(s^2 + c^2, 1, 4)
+    release thm geo::multiply_both_sides(s^2 + c^2, 1, 4)
     (s^2 + c^2) * 4 = 4
     4 * (s^2 + c^2) = 4
     (4 - 2 * s)^2 + (2 * c)^2 = 16 - 16 * s + 4 * (s^2 + c^2)
-    by thm geo::add_equalities(16 - 16 * s, 16 - 16 * s, 4 * (s^2 + c^2), 4)
+    release thm geo::add_equalities(16 - 16 * s, 16 - 16 * s, 4 * (s^2 + c^2), 4)
     16 - 16 * s + 4 * (s^2 + c^2) = 16 - 16 * s + 4
     16 - 16 * s + 4 = 20 - 16 * s
     (4 - 2 * s)^2 + (2 * c)^2 = 20 - 16 * s
-    by thm geo::multiply_both_sides(s, (8 + 3 * sqrt(21)) / 25, -16)
+    release thm geo::multiply_both_sides(s, (8 + 3 * sqrt(21)) / 25, -16)
     -16 * s = -16 * ((8 + 3 * sqrt(21)) / 25)
-    by thm geo::add_equalities(20, 20, -16 * s, -16 * ((8 + 3 * sqrt(21)) / 25))
+    release thm geo::add_equalities(20, 20, -16 * s, -16 * ((8 + 3 * sqrt(21)) / 25))
     20 - 16 * s = 20 - 16 * ((8 + 3 * sqrt(21)) / 25)
     20 - 16 * ((8 + 3 * sqrt(21)) / 25) = (500 - 128 - 48 * sqrt(21)) / 25
     (500 - 128 - 48 * sqrt(21)) / 25 = (372 - 48 * sqrt(21)) / 25
@@ -140,7 +140,7 @@ thm problem_225_first_collinear_length_core:
     sqrt(geo::distance_sq((0, 0), f)) >= 0
     sqrt(geo::distance_sq((0, 0), f))^2 = geo::distance_sq((0, 0), f)
     sqrt(geo::distance_sq((0, 0), f))^2 = ((4 * sqrt(21) - 6) / 5)^2
-    by thm nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq((0, 0), f)), (4 * sqrt(21) - 6) / 5)
+    release thm nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq((0, 0), f)), (4 * sqrt(21) - 6) / 5)
     sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5
 
 # Exact second counterclockwise collinear position in a full turn.
@@ -155,11 +155,11 @@ thm problem_225_second_collinear_length_core:
             sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5
     sqrt(21)^2 = 21
     sqrt(21) > 0
-    by thm geo::square_of_equal(c, (6 + 4 * sqrt(21)) / 25)
-    by thm geo::square_of_equal(s, (8 - 3 * sqrt(21)) / 25)
+    release thm geo::square_of_equal(c, (6 + 4 * sqrt(21)) / 25)
+    release thm geo::square_of_equal(s, (8 - 3 * sqrt(21)) / 25)
     c^2 = ((6 + 4 * sqrt(21)) / 25)^2
     s^2 = ((8 - 3 * sqrt(21)) / 25)^2
-    by thm geo::add_equalities(c^2, ((6 + 4 * sqrt(21)) / 25)^2, s^2, ((8 - 3 * sqrt(21)) / 25)^2)
+    release thm geo::add_equalities(c^2, ((6 + 4 * sqrt(21)) / 25)^2, s^2, ((8 - 3 * sqrt(21)) / 25)^2)
     c^2 + s^2 = ((6 + 4 * sqrt(21)) / 25)^2 + ((8 - 3 * sqrt(21)) / 25)^2
     ((6 + 4 * sqrt(21)) / 25)^2 + ((8 - 3 * sqrt(21)) / 25)^2 = ((6 + 4 * sqrt(21))^2 + (8 - 3 * sqrt(21))^2) / 625
     ((6 + 4 * sqrt(21))^2 + (8 - 3 * sqrt(21))^2) / 625 = (36 + 48 * sqrt(21) + 16 * sqrt(21)^2 + 64 - 48 * sqrt(21) + 9 * sqrt(21)^2) / 625
@@ -168,40 +168,40 @@ thm problem_225_second_collinear_length_core:
     (100 + 25 * 21) / 625 = 1
     ((6 + 4 * sqrt(21)) / 25)^2 + ((8 - 3 * sqrt(21)) / 25)^2 = 1
     c^2 + s^2 = 1
-    by thm geo::multiply_both_sides(c, (6 + 4 * sqrt(21)) / 25, 3)
-    by thm geo::multiply_both_sides(s, (8 - 3 * sqrt(21)) / 25, 4)
+    release thm geo::multiply_both_sides(c, (6 + 4 * sqrt(21)) / 25, 3)
+    release thm geo::multiply_both_sides(s, (8 - 3 * sqrt(21)) / 25, 4)
     3 * c = 3 * ((6 + 4 * sqrt(21)) / 25)
     4 * s = 4 * ((8 - 3 * sqrt(21)) / 25)
-    by thm geo::add_equalities(3 * c, 3 * ((6 + 4 * sqrt(21)) / 25), 4 * s, 4 * ((8 - 3 * sqrt(21)) / 25))
+    release thm geo::add_equalities(3 * c, 3 * ((6 + 4 * sqrt(21)) / 25), 4 * s, 4 * ((8 - 3 * sqrt(21)) / 25))
     3 * c + 4 * s = 3 * ((6 + 4 * sqrt(21)) / 25) + 4 * ((8 - 3 * sqrt(21)) / 25)
     3 * ((6 + 4 * sqrt(21)) / 25) + 4 * ((8 - 3 * sqrt(21)) / 25) = (18 + 12 * sqrt(21) + 32 - 12 * sqrt(21)) / 25
     (18 + 12 * sqrt(21) + 32 - 12 * sqrt(21)) / 25 = 50 / 25
     50 / 25 = 2
     3 * c + 4 * s = 2
-    by thm geo::distance_sq_coordinate_formula((0, 0), f)
+    release thm geo::distance_sq_coordinate_formula((0, 0), f)
     f[1] = 4 - 2 * s
     f[2] = 2 * c
     f[1] - 0 = 4 - 2 * s
     f[2] - 0 = 2 * c
-    by thm geo::square_of_equal(f[1] - 0, 4 - 2 * s)
+    release thm geo::square_of_equal(f[1] - 0, 4 - 2 * s)
     (f[1] - 0)^2 = (4 - 2 * s)^2
-    by thm geo::square_of_equal(f[2] - 0, 2 * c)
+    release thm geo::square_of_equal(f[2] - 0, 2 * c)
     (f[2] - 0)^2 = (2 * c)^2
-    by thm geo::add_equalities((f[1] - 0)^2, (4 - 2 * s)^2, (f[2] - 0)^2, (2 * c)^2)
+    release thm geo::add_equalities((f[1] - 0)^2, (4 - 2 * s)^2, (f[2] - 0)^2, (2 * c)^2)
     (f[1] - 0)^2 + (f[2] - 0)^2 = (4 - 2 * s)^2 + (2 * c)^2
     geo::distance_sq((0, 0), f) = (4 - 2 * s)^2 + (2 * c)^2
     s^2 + c^2 = c^2 + s^2 = 1
-    by thm geo::multiply_both_sides(s^2 + c^2, 1, 4)
+    release thm geo::multiply_both_sides(s^2 + c^2, 1, 4)
     (s^2 + c^2) * 4 = 4
     4 * (s^2 + c^2) = 4
     (4 - 2 * s)^2 + (2 * c)^2 = 16 - 16 * s + 4 * (s^2 + c^2)
-    by thm geo::add_equalities(16 - 16 * s, 16 - 16 * s, 4 * (s^2 + c^2), 4)
+    release thm geo::add_equalities(16 - 16 * s, 16 - 16 * s, 4 * (s^2 + c^2), 4)
     16 - 16 * s + 4 * (s^2 + c^2) = 16 - 16 * s + 4
     16 - 16 * s + 4 = 20 - 16 * s
     (4 - 2 * s)^2 + (2 * c)^2 = 20 - 16 * s
-    by thm geo::multiply_both_sides(s, (8 - 3 * sqrt(21)) / 25, -16)
+    release thm geo::multiply_both_sides(s, (8 - 3 * sqrt(21)) / 25, -16)
     -16 * s = -16 * ((8 - 3 * sqrt(21)) / 25)
-    by thm geo::add_equalities(20, 20, -16 * s, -16 * ((8 - 3 * sqrt(21)) / 25))
+    release thm geo::add_equalities(20, 20, -16 * s, -16 * ((8 - 3 * sqrt(21)) / 25))
     20 - 16 * s = 20 - 16 * ((8 - 3 * sqrt(21)) / 25)
     20 - 16 * ((8 - 3 * sqrt(21)) / 25) = (500 - 128 + 48 * sqrt(21)) / 25
     (500 - 128 + 48 * sqrt(21)) / 25 = (372 + 48 * sqrt(21)) / 25
@@ -218,7 +218,7 @@ thm problem_225_second_collinear_length_core:
     sqrt(geo::distance_sq((0, 0), f)) >= 0
     sqrt(geo::distance_sq((0, 0), f))^2 = geo::distance_sq((0, 0), f)
     sqrt(geo::distance_sq((0, 0), f))^2 = ((4 * sqrt(21) + 6) / 5)^2
-    by thm nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq((0, 0), f)), (4 * sqrt(21) + 6) / 5)
+    release thm nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq((0, 0), f)), (4 * sqrt(21) + 6) / 5)
     sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5
 
 # Completeness of the two collinear rotation parameters.
@@ -230,7 +230,7 @@ thm problem_225_collinear_parameter_cases:
             s = (8 + 3 * sqrt(21)) / 25 or s = (8 - 3 * sqrt(21)) / 25
     sqrt(21)^2 = 21
     3 * c = 2 - 4 * s
-    by thm geo::square_of_equal(3 * c, 2 - 4 * s)
+    release thm geo::square_of_equal(3 * c, 2 - 4 * s)
     (3 * c)^2 = (2 - 4 * s)^2
     c^2 = 1 - s^2
     9 * c^2 = 9 * (1 - s^2)
@@ -240,11 +240,11 @@ thm problem_225_collinear_parameter_cases:
     (3 * c)^2 = 9 - 9 * s^2
     (2 - 4 * s)^2 = 9 - 9 * s^2
     4 - 16 * s + 16 * s^2 = 9 - 9 * s^2
-    by thm geo::subtract_equalities(4 - 16 * s + 16 * s^2, 9 - 9 * s^2, 9 - 9 * s^2, 9 - 9 * s^2)
+    release thm geo::subtract_equalities(4 - 16 * s + 16 * s^2, 9 - 9 * s^2, 9 - 9 * s^2, 9 - 9 * s^2)
     (4 - 16 * s + 16 * s^2) - (9 - 9 * s^2) = 0
     (4 - 16 * s + 16 * s^2) - (9 - 9 * s^2) = 25 * s^2 - 16 * s - 5
     25 * s^2 - 16 * s - 5 = 0
-    by thm geo::multiply_both_sides(25 * s^2 - 16 * s - 5, 0, 25)
+    release thm geo::multiply_both_sides(25 * s^2 - 16 * s - 5, 0, 25)
     (25 * s^2 - 16 * s - 5) * 25 = 0 * 25
     (25 * s^2 - 16 * s - 5) * 25 = 625 * s^2 - 400 * s - 125
     0 * 25 = 0
@@ -254,7 +254,7 @@ thm problem_225_collinear_parameter_cases:
     (3 * sqrt(21))^2 = 189
     (25 * s - 8)^2 - (3 * sqrt(21))^2 = 625 * s^2 - 400 * s - 125
     (25 * s - 8)^2 - (3 * sqrt(21))^2 = 0
-    by thm geo::difference_of_squares(25 * s - 8, 3 * sqrt(21))
+    release thm geo::difference_of_squares(25 * s - 8, 3 * sqrt(21))
     (25 * s - 8)^2 - (3 * sqrt(21))^2 = ((25 * s - 8) + 3 * sqrt(21)) * ((25 * s - 8) - 3 * sqrt(21))
     ((25 * s - 8) + 3 * sqrt(21)) * ((25 * s - 8) - 3 * sqrt(21)) = 0
     ((25 * s - 8) - 3 * sqrt(21)) * ((25 * s - 8) + 3 * sqrt(21)) = 0
@@ -271,10 +271,10 @@ thm problem_225_collinear_parameter_cases:
                 25 * s = 8 + 3 * sqrt(21)
                 s * 25 = ((8 + 3 * sqrt(21)) / 25) * 25
                 25 != 0
-                by thm geo::divide_both_sides(s, (8 + 3 * sqrt(21)) / 25, 25)
+                release thm geo::divide_both_sides(s, (8 + 3 * sqrt(21)) / 25, 25)
                 s = (8 + 3 * sqrt(21)) / 25
                 impossible not s = (8 + 3 * sqrt(21)) / 25
-            by thm geo::zero_factor_law(25 * s - (8 + 3 * sqrt(21)), 25 * s - (8 - 3 * sqrt(21)))
+            release thm geo::zero_factor_law(25 * s - (8 + 3 * sqrt(21)), 25 * s - (8 - 3 * sqrt(21)))
             25 * s - (8 - 3 * sqrt(21)) = 0
             s = (8 - 3 * sqrt(21)) / 25
             s = (8 + 3 * sqrt(21)) / 25 or s = (8 - 3 * sqrt(21)) / 25
@@ -288,7 +288,7 @@ thm problem_225_collinear_length_cases:
         f = (4 - 2 * s, 2 * c)
         =>:
             sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5 or sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5
-    by thm problem_225_collinear_parameter_cases(c, s)
+    release thm problem_225_collinear_parameter_cases(c, s)
     s = (8 + 3 * sqrt(21)) / 25 or s = (8 - 3 * sqrt(21)) / 25
     by cases:
         ? sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5 or sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5
@@ -298,9 +298,9 @@ thm problem_225_collinear_length_cases:
             2 - 4 * ((8 + 3 * sqrt(21)) / 25) = 3 * ((6 - 4 * sqrt(21)) / 25)
             c * 3 = 3 * c = 3 * ((6 - 4 * sqrt(21)) / 25) = ((6 - 4 * sqrt(21)) / 25) * 3
             3 != 0
-            by thm geo::divide_both_sides(c, (6 - 4 * sqrt(21)) / 25, 3)
+            release thm geo::divide_both_sides(c, (6 - 4 * sqrt(21)) / 25, 3)
             c = (6 - 4 * sqrt(21)) / 25
-            by thm problem_225_first_collinear_length_core(c, s, f)
+            release thm problem_225_first_collinear_length_core(c, s, f)
             sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5
             sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5 or sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5
         case s = (8 - 3 * sqrt(21)) / 25:
@@ -309,9 +309,9 @@ thm problem_225_collinear_length_cases:
             2 - 4 * ((8 - 3 * sqrt(21)) / 25) = 3 * ((6 + 4 * sqrt(21)) / 25)
             c * 3 = 3 * c = 3 * ((6 + 4 * sqrt(21)) / 25) = ((6 + 4 * sqrt(21)) / 25) * 3
             3 != 0
-            by thm geo::divide_both_sides(c, (6 + 4 * sqrt(21)) / 25, 3)
+            release thm geo::divide_both_sides(c, (6 + 4 * sqrt(21)) / 25, 3)
             c = (6 + 4 * sqrt(21)) / 25
-            by thm problem_225_second_collinear_length_core(c, s, f)
+            release thm problem_225_second_collinear_length_core(c, s, f)
             sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5
             sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5 or sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5
 
@@ -325,7 +325,7 @@ thm problem_225_rotation_perpendicular_from_translation:
             $translation::problem_225_perpendicular_target(co, si, d, ep, f)
 
     by def $translation::problem_225_rotation_certificate(co, si, d, ep, f)
-    by thm problem_225_rotation_perpendicular_core(co, si)
+    release thm problem_225_rotation_perpendicular_core(co, si)
     $geo::is_perpendicular((0, 0), f, (0, 6), d)
     by def $translation::problem_225_perpendicular_target(co, si, d, ep, f)
     $translation::problem_225_rotation_certificate(co, si, d, ep, f)
@@ -339,9 +339,9 @@ thm problem_225_collinear_answer_from_translation:
 
     by def $translation::problem_225_collinear_rotation_case(co, si, d, ep, f)
     by def $translation::problem_225_rotation_certificate(co, si, d, ep, f)
-    by thm problem_225_collinear_length_cases(co, si, f)
+    release thm problem_225_collinear_length_cases(co, si, f)
     sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5 or sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5
-    by thm geo::distance_sq_nonnegative((0, 0), f)
+    release thm geo::distance_sq_nonnegative((0, 0), f)
     0 <= geo::distance_sq((0, 0), f)
     by def $translation::problem_225_cf_length_answer(f)
     sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5 or sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5

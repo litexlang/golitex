@@ -38,7 +38,7 @@ thm problem_860_affine_parameter:
                 ((p[1] - a[1]) / (b[1] - a[1])) * (b[1] - a[1]) = p[1] - a[1]
                 p[1] = (1 - (p[1] - a[1]) / (b[1] - a[1])) * a[1] + ((p[1] - a[1]) / (b[1] - a[1])) * b[1]
                 (p[2] - a[2]) * (b[1] - a[1]) = (((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2])) * (b[1] - a[1])
-                by thm problem_860_divide_both_sides(p[2] - a[2], ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]), b[1] - a[1])
+                release thm problem_860_divide_both_sides(p[2] - a[2], ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]), b[1] - a[1])
                 p[2] - a[2] = ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2])
                 p[2] = (p[2] - a[2]) + a[2] = ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]) + a[2] = (1 - (p[1] - a[1]) / (b[1] - a[1])) * a[2] + ((p[1] - a[1]) / (b[1] - a[1])) * b[2]
         case b[1] - a[1] = 0:
@@ -47,14 +47,14 @@ thm problem_860_affine_parameter:
                 ? b[2] - a[2] != 0
                 b[2] - a[2] = 0
                 b[2] = a[2]
-                by thm tuple_equal_from_coordinates(a, (a[1], a[2]))
-                by thm tuple_equal_from_coordinates(b, (b[1], b[2]))
+                release thm tuple_equal_from_coordinates(a, (a[1], a[2]))
+                release thm tuple_equal_from_coordinates(b, (b[1], b[2]))
                 (a[1], a[2]) = (b[1], b[2])
                 a = (a[1], a[2]) = (b[1], b[2]) = b
                 impossible a != b
             witness exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]} from (p[2] - a[2]) / (b[2] - a[2]):
                 (p[1] - a[1]) * (b[2] - a[2]) = (p[1] - a[1]) * (b[2] - a[2]) - (p[2] - a[2]) * (b[1] - a[1]) = 0 = 0 * (b[2] - a[2])
-                by thm problem_860_divide_both_sides(p[1] - a[1], 0, b[2] - a[2])
+                release thm problem_860_divide_both_sides(p[1] - a[1], 0, b[2] - a[2])
                 p[1] - a[1] = 0
                 p[1] = a[1]
                 p[1] = a[1] = (1 - (p[2] - a[2]) / (b[2] - a[2])) * a[1] + ((p[2] - a[2]) / (b[2] - a[2])) * a[1] = (1 - (p[2] - a[2]) / (b[2] - a[2])) * a[1] + ((p[2] - a[2]) / (b[2] - a[2])) * b[1]
@@ -83,14 +83,14 @@ thm problem_860_shared_line_collinearity:
     by def $geo::is_collinear(b, q, d)
     by def $geo::is_collinear(b, p, d)
 
-    by thm geo::collinear_det_expand(b, q, d)
-    by thm geo::collinear_det_expand(b, p, d)
-    by thm problem_860_affine_parameter(b, d, q)
+    release thm geo::collinear_det_expand(b, q, d)
+    release thm geo::collinear_det_expand(b, p, d)
+    release thm problem_860_affine_parameter(b, d, q)
     obtain s from exist s0 R st {q[1] = (1 - s0) * b[1] + s0 * d[1], q[2] = (1 - s0) * b[2] + s0 * d[2]}
-    by thm problem_860_affine_parameter(b, d, p)
+    release thm problem_860_affine_parameter(b, d, p)
     obtain t from exist t0 R st {p[1] = (1 - t0) * b[1] + t0 * d[1], p[2] = (1 - t0) * b[2] + t0 * d[2]}
 
-    by thm geo::collinear_det_expand(a, p, q)
+    release thm geo::collinear_det_expand(a, p, q)
     geo::det(geo::vec(a, p), geo::vec(a, q)) = (p[1] - a[1]) * (q[2] - a[2]) - (p[2] - a[2]) * (q[1] - a[1]) = 0
 
     by contra:
@@ -100,8 +100,8 @@ thm problem_860_shared_line_collinearity:
         q[2] = (1 - s) * b[2] + s * d[2] = (1 - t) * b[2] + t * d[2] = p[2]
         q[1] = p[1]
         q[2] = p[2]
-        by thm tuple_equal_from_coordinates(q, (q[1], q[2]))
-        by thm tuple_equal_from_coordinates(p, (p[1], p[2]))
+        release thm tuple_equal_from_coordinates(q, (q[1], q[2]))
+        release thm tuple_equal_from_coordinates(p, (p[1], p[2]))
         (q[1], q[2]) = (p[1], p[2])
         q = (q[1], q[2]) = (p[1], p[2]) = p
         impossible q != p
@@ -110,11 +110,11 @@ thm problem_860_shared_line_collinearity:
     (((1 - t) * b[1] + t * d[1]) - a[1]) * (((1 - s) * b[2] + s * d[2]) - a[2]) - (((1 - t) * b[2] + t * d[2]) - a[2]) * (((1 - s) * b[1] + s * d[1]) - a[1]) = (t - s) * ((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1]))
     (t - s) * ((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])) = 0
     t - s != 0
-    by thm problem_860_divide_both_sides((t - s) * ((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])), 0, t - s)
+    release thm problem_860_divide_both_sides((t - s) * ((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])), 0, t - s)
     (a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1]) = 0
 
     (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]) = -((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])) = 0
-    by thm geo::collinear_det_expand(a, b, d)
+    release thm geo::collinear_det_expand(a, b, d)
     geo::det(geo::vec(a, b), geo::vec(a, d)) = (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]) = 0
     by def $geo::is_collinear(a, b, d)
 
@@ -181,12 +181,12 @@ thm problem_860:
         B[1] = D[1]
         B[2] = D[2]
         (B[1] - A[1]) * (D[2] - A[2]) - (B[2] - A[2]) * (D[1] - A[1]) = (B[1] - A[1]) * (B[2] - A[2]) - (B[2] - A[2]) * (B[1] - A[1]) = 0
-        by thm geo::collinear_det_expand(A, B, D)
+        release thm geo::collinear_det_expand(A, B, D)
         geo::det(geo::vec(A, B), geo::vec(A, D)) = (B[1] - A[1]) * (D[2] - A[2]) - (B[2] - A[2]) * (D[1] - A[1]) = 0
         by def $geo::is_collinear(A, B, D)
         impossible $geo::is_collinear(A, B, D)
 
-    by thm problem_860_shared_line_collinearity(A, B, D, E, G)
+    release thm problem_860_shared_line_collinearity(A, B, D, E, G)
     $geo::is_collinear(A, B, D)
     by contra:
         ? $geo::is_perpendicular(O, A, A, D)

@@ -87,10 +87,10 @@ thm right_angle_distance_sq3_bridge:
     (bx - ax)^2 + (b_y - ay)^2 + (bz - az)^2 = (dx - ax)^2 + (dy - ay)^2 + (dz - az)^2 + (dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2
     distance_sq3(ax, ay, az, bx, b_y, bz) = (dx - ax)^2 + (dy - ay)^2 + (dz - az)^2 + (dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2
     distance_sq3(ax, ay, az, bx, b_y, bz) = ((dx - ax)^2 + (dy - ay)^2 + (dz - az)^2) + ((dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2)
-    by thm add_right_context_bridge((dx - ax)^2 + (dy - ay)^2 + (dz - az)^2, distance_sq3(ax, ay, az, dx, dy, dz), (dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2)
+    release thm add_right_context_bridge((dx - ax)^2 + (dy - ay)^2 + (dz - az)^2, distance_sq3(ax, ay, az, dx, dy, dz), (dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2)
     ((dx - ax)^2 + (dy - ay)^2 + (dz - az)^2) + ((dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2) = distance_sq3(ax, ay, az, dx, dy, dz) + ((dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2)
     distance_sq3(ax, ay, az, bx, b_y, bz) = distance_sq3(ax, ay, az, dx, dy, dz) + ((dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2)
-    by thm add_left_context_bridge((dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2, distance_sq3(bx, b_y, bz, dx, dy, dz), distance_sq3(ax, ay, az, dx, dy, dz))
+    release thm add_left_context_bridge((dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2, distance_sq3(bx, b_y, bz, dx, dy, dz), distance_sq3(ax, ay, az, dx, dy, dz))
     distance_sq3(ax, ay, az, dx, dy, dz) + ((dx - bx)^2 + (dy - b_y)^2 + (dz - bz)^2) = distance_sq3(ax, ay, az, dx, dy, dz) + distance_sq3(bx, b_y, bz, dx, dy, dz)
     distance_sq3(ax, ay, az, bx, b_y, bz) = distance_sq3(ax, ay, az, dx, dy, dz) + distance_sq3(bx, b_y, bz, dx, dy, dz)
 
@@ -138,7 +138,7 @@ thm imo19_geometry_bridge_probe:
     # Rewrite the two altitude equations and apply the local vector bridge.
     (ax - hx) * ((cx - hx) - (bx - hx)) + (ay - hy) * ((cy - hy) - (b_y - hy)) + (az - hz) * ((cz - hz) - (bz - hz)) = 0
     (bx - hx) * ((ax - hx) - (cx - hx)) + (b_y - hy) * ((ay - hy) - (cy - hy)) + (bz - hz) * ((az - hz) - (cz - hz)) = 0
-    by thm orthocenter_dot3_bridge(ax - hx, ay - hy, az - hz, bx - hx, b_y - hy, bz - hz, cx - hx, cy - hy, cz - hz)
+    release thm orthocenter_dot3_bridge(ax - hx, ay - hy, az - hz, bx - hx, b_y - hy, bz - hz, cx - hx, cy - hy, cz - hz)
     (ax - hx) * (bx - hx) + (ay - hy) * (b_y - hy) + (az - hz) * (bz - hz) = (bx - hx) * (cx - hx) + (b_y - hy) * (cy - hy) + (bz - hz) * (cz - hz)
     (ax - hx) * (cx - hx) + (ay - hy) * (cy - hy) + (az - hz) * (cz - hz) = (bx - hx) * (cx - hx) + (b_y - hy) * (cy - hy) + (bz - hz) * (cz - hz)
 
@@ -150,7 +150,7 @@ thm imo19_geometry_bridge_probe:
     # Normalize the given right angle to H-relative coordinates, then extract the common dot product.
     ((bx - hx) - (dx - hx)) * ((cx - hx) - (dx - hx)) + ((b_y - hy) - (dy - hy)) * ((cy - hy) - (dy - hy)) + ((bz - hz) - (dz - hz)) * ((cz - hz) - (dz - hz)) = (bx - dx) * (cx - dx) + (b_y - dy) * (cy - dy) + (bz - dz) * (cz - dz)
     ((bx - hx) - (dx - hx)) * ((cx - hx) - (dx - hx)) + ((b_y - hy) - (dy - hy)) * ((cy - hy) - (dy - hy)) + ((bz - hz) - (dz - hz)) * ((cz - hz) - (dz - hz)) = 0
-    by thm translated_right_angle_bridge(bx - hx, b_y - hy, bz - hz, cx - hx, cy - hy, cz - hz, dx - hx, dy - hy, dz - hz)
+    release thm translated_right_angle_bridge(bx - hx, b_y - hy, bz - hz, cx - hx, cy - hy, cz - hz, dx - hx, dy - hy, dz - hz)
     (bx - hx) * (cx - hx) + (b_y - hy) * (cy - hy) + (bz - hz) * (cz - hz) + (dx - hx)^2 + (dy - hy)^2 + (dz - hz)^2 = 0
 
     # The orthocenter equalities transfer that common value to AB and CA.
@@ -160,22 +160,22 @@ thm imo19_geometry_bridge_probe:
     (cx - hx) * (ax - hx) + (cy - hy) * (ay - hy) + (cz - hz) * (az - hz) + (dx - hx)^2 + (dy - hy)^2 + (dz - hz)^2 = 0
 
     # Translate AB and CA back from H to D.
-    by thm translate_pair_back_bridge(ax - hx, ay - hy, az - hz, bx - hx, b_y - hy, bz - hz, dx - hx, dy - hy, dz - hz)
+    release thm translate_pair_back_bridge(ax - hx, ay - hy, az - hz, bx - hx, b_y - hy, bz - hz, dx - hx, dy - hy, dz - hz)
     ((ax - hx) - (dx - hx)) * ((bx - hx) - (dx - hx)) + ((ay - hy) - (dy - hy)) * ((b_y - hy) - (dy - hy)) + ((az - hz) - (dz - hz)) * ((bz - hz) - (dz - hz)) = 0
     (ax - dx) * (bx - dx) + (ay - dy) * (b_y - dy) + (az - dz) * (bz - dz) = ((ax - hx) - (dx - hx)) * ((bx - hx) - (dx - hx)) + ((ay - hy) - (dy - hy)) * ((b_y - hy) - (dy - hy)) + ((az - hz) - (dz - hz)) * ((bz - hz) - (dz - hz))
     (ax - dx) * (bx - dx) + (ay - dy) * (b_y - dy) + (az - dz) * (bz - dz) = 0
     (bx - dx) * (cx - dx) + (b_y - dy) * (cy - dy) + (bz - dz) * (cz - dz) = 0
-    by thm translate_pair_back_bridge(cx - hx, cy - hy, cz - hz, ax - hx, ay - hy, az - hz, dx - hx, dy - hy, dz - hz)
+    release thm translate_pair_back_bridge(cx - hx, cy - hy, cz - hz, ax - hx, ay - hy, az - hz, dx - hx, dy - hy, dz - hz)
     ((cx - hx) - (dx - hx)) * ((ax - hx) - (dx - hx)) + ((cy - hy) - (dy - hy)) * ((ay - hy) - (dy - hy)) + ((cz - hz) - (dz - hz)) * ((az - hz) - (dz - hz)) = 0
     (cx - dx) * (ax - dx) + (cy - dy) * (ay - dy) + (cz - dz) * (az - dz) = ((cx - hx) - (dx - hx)) * ((ax - hx) - (dx - hx)) + ((cy - hy) - (dy - hy)) * ((ay - hy) - (dy - hy)) + ((cz - hz) - (dz - hz)) * ((az - hz) - (dz - hz))
     (cx - dx) * (ax - dx) + (cy - dy) * (ay - dy) + (cz - dz) * (az - dz) = 0
 
     # Each zero coordinate dot product is exactly the corresponding Pythagorean identity.
-    by thm right_angle_distance_sq3_bridge(ax, ay, az, bx, b_y, bz, dx, dy, dz)
+    release thm right_angle_distance_sq3_bridge(ax, ay, az, bx, b_y, bz, dx, dy, dz)
     distance_sq3(ax, ay, az, bx, b_y, bz) = distance_sq3(ax, ay, az, dx, dy, dz) + distance_sq3(bx, b_y, bz, dx, dy, dz)
-    by thm right_angle_distance_sq3_bridge(bx, b_y, bz, cx, cy, cz, dx, dy, dz)
+    release thm right_angle_distance_sq3_bridge(bx, b_y, bz, cx, cy, cz, dx, dy, dz)
     distance_sq3(bx, b_y, bz, cx, cy, cz) = distance_sq3(bx, b_y, bz, dx, dy, dz) + distance_sq3(cx, cy, cz, dx, dy, dz)
-    by thm right_angle_distance_sq3_bridge(cx, cy, cz, ax, ay, az, dx, dy, dz)
+    release thm right_angle_distance_sq3_bridge(cx, cy, cz, ax, ay, az, dx, dy, dz)
     distance_sq3(cx, cy, cz, ax, ay, az) = distance_sq3(cx, cy, cz, dx, dy, dz) + distance_sq3(ax, ay, az, dx, dy, dz)
 
 # Scalar metric layer.
@@ -196,7 +196,7 @@ thm add_right_cancel_bridge:
         a + c = b + c
         =>:
             a = b
-    by thm add_right_context_bridge(a + c, b + c, -c)
+    release thm add_right_context_bridge(a + c, b + c, -c)
     a + c + (-c) = b + c + (-c)
     a + c + (-c) = a
     b + c + (-c) = b
@@ -209,14 +209,14 @@ thm combine_three_equalities:
         c = r
         =>:
             a + b + c = p + q + r
-    by thm add_right_context_bridge(a, p, b)
+    release thm add_right_context_bridge(a, p, b)
     a + b = p + b
-    by thm add_left_context_bridge(b, q, p)
+    release thm add_left_context_bridge(b, q, p)
     p + b = p + q
     a + b = p + q
-    by thm add_right_context_bridge(a + b, p + q, c)
+    release thm add_right_context_bridge(a + b, p + q, c)
     a + b + c = p + q + c
-    by thm add_left_context_bridge(c, r, p + q)
+    release thm add_left_context_bridge(c, r, p + q)
     p + q + c = p + q + r
     a + b + c = p + q + r
 
@@ -227,7 +227,7 @@ thm pythagorean_three_sum:
         z^2 = w^2 + u^2
         =>:
             x^2 + y^2 + z^2 = 2 * (u^2 + v^2 + w^2)
-    by thm combine_three_equalities(x^2, y^2, z^2, u^2 + v^2, v^2 + w^2, w^2 + u^2)
+    release thm combine_three_equalities(x^2, y^2, z^2, u^2 + v^2, v^2 + w^2, w^2 + u^2)
     x^2 + y^2 + z^2 = (u^2 + v^2) + (v^2 + w^2) + (w^2 + u^2)
     (u^2 + v^2) + (v^2 + w^2) + (w^2 + u^2) = 2 * (u^2 + v^2 + w^2)
     x^2 + y^2 + z^2 = 2 * (u^2 + v^2 + w^2)
@@ -239,9 +239,9 @@ thm pythagorean_three_sum_scaled:
         z^2 = w^2 + u^2
         =>:
             3 * (x^2 + y^2 + z^2) = 6 * (u^2 + v^2 + w^2)
-    by thm pythagorean_three_sum(x, y, z, u, v, w)
+    release thm pythagorean_three_sum(x, y, z, u, v, w)
     x^2 + y^2 + z^2 = 2 * (u^2 + v^2 + w^2)
-    by thm mul_left_context_bridge(x^2 + y^2 + z^2, 2 * (u^2 + v^2 + w^2), 3)
+    release thm mul_left_context_bridge(x^2 + y^2 + z^2, 2 * (u^2 + v^2 + w^2), 3)
     3 * (x^2 + y^2 + z^2) = 3 * (2 * (u^2 + v^2 + w^2))
     3 * (2 * (u^2 + v^2 + w^2)) = 6 * (u^2 + v^2 + w^2)
     3 * (x^2 + y^2 + z^2) = 6 * (u^2 + v^2 + w^2)
@@ -337,9 +337,9 @@ thm imo19_metric_inequality:
         z^2 = w^2 + u^2
         =>:
             (x + y + z)^2 <= 6 * (u^2 + v^2 + w^2)
-    by thm cauchy_three(x, y, z)
+    release thm cauchy_three(x, y, z)
     (x + y + z)^2 <= 3 * (x^2 + y^2 + z^2)
-    by thm pythagorean_three_sum_scaled(x, y, z, u, v, w)
+    release thm pythagorean_three_sum_scaled(x, y, z, u, v, w)
     3 * (x^2 + y^2 + z^2) = 6 * (u^2 + v^2 + w^2)
     (x + y + z)^2 <= 6 * (u^2 + v^2 + w^2)
 
@@ -358,30 +358,30 @@ thm imo19_metric_equality_only_if:
         =>:
             u = v
             v = w
-    by thm pythagorean_three_sum_scaled(x, y, z, u, v, w)
+    release thm pythagorean_three_sum_scaled(x, y, z, u, v, w)
     3 * (x^2 + y^2 + z^2) = 6 * (u^2 + v^2 + w^2)
     (x + y + z)^2 = 3 * (x^2 + y^2 + z^2)
-    by thm equality_three_only_if(x, y, z)
+    release thm equality_three_only_if(x, y, z)
     x = y
     y = z
     x^2 = y^2
     y^2 = z^2
     u^2 + v^2 = v^2 + w^2
-    by thm add_comm_bridge(v^2, w^2)
+    release thm add_comm_bridge(v^2, w^2)
     v^2 + w^2 = w^2 + v^2
     u^2 + v^2 = w^2 + v^2
-    by thm add_right_cancel_bridge(u^2, w^2, v^2)
+    release thm add_right_cancel_bridge(u^2, w^2, v^2)
     u^2 = w^2
 
     v^2 + w^2 = w^2 + u^2
-    by thm add_comm_bridge(w^2, u^2)
+    release thm add_comm_bridge(w^2, u^2)
     w^2 + u^2 = u^2 + w^2
     v^2 + w^2 = u^2 + w^2
-    by thm add_right_cancel_bridge(v^2, u^2, w^2)
+    release thm add_right_cancel_bridge(v^2, u^2, w^2)
     v^2 = u^2
-    by thm nonnegative_equal_of_equal_squares(u, w)
+    release thm nonnegative_equal_of_equal_squares(u, w)
     u = w
-    by thm nonnegative_equal_of_equal_squares(v, u)
+    release thm nonnegative_equal_of_equal_squares(v, u)
     v = u
     u = v
     v = w
@@ -405,26 +405,26 @@ thm imo19_metric_equality_if:
     v^2 = w^2
     w^2 = u^2
 
-    by thm add_right_context_bridge(u^2, v^2, v^2)
+    release thm add_right_context_bridge(u^2, v^2, v^2)
     u^2 + v^2 = v^2 + v^2
-    by thm add_left_context_bridge(v^2, w^2, v^2)
+    release thm add_left_context_bridge(v^2, w^2, v^2)
     v^2 + v^2 = v^2 + w^2
     u^2 + v^2 = v^2 + w^2
     x^2 = y^2
 
-    by thm add_right_context_bridge(v^2, w^2, w^2)
+    release thm add_right_context_bridge(v^2, w^2, w^2)
     v^2 + w^2 = w^2 + w^2
-    by thm add_left_context_bridge(w^2, u^2, w^2)
+    release thm add_left_context_bridge(w^2, u^2, w^2)
     w^2 + w^2 = w^2 + u^2
     v^2 + w^2 = w^2 + u^2
     y^2 = z^2
-    by thm nonnegative_equal_of_equal_squares(x, y)
+    release thm nonnegative_equal_of_equal_squares(x, y)
     x = y
-    by thm nonnegative_equal_of_equal_squares(y, z)
+    release thm nonnegative_equal_of_equal_squares(y, z)
     y = z
-    by thm equality_three_if(x, y, z)
+    release thm equality_three_if(x, y, z)
     (x + y + z)^2 = 3 * (x^2 + y^2 + z^2)
-    by thm pythagorean_three_sum_scaled(x, y, z, u, v, w)
+    release thm pythagorean_three_sum_scaled(x, y, z, u, v, w)
     3 * (x^2 + y^2 + z^2) = 6 * (u^2 + v^2 + w^2)
     (x + y + z)^2 = 6 * (u^2 + v^2 + w^2)
 
@@ -438,9 +438,9 @@ thm distance_identity_to_length_identity:
         X = U + V
         =>:
             x^2 = u^2 + v^2
-    by thm add_right_context_bridge(u^2, U, v^2)
+    release thm add_right_context_bridge(u^2, U, v^2)
     u^2 + v^2 = U + v^2
-    by thm add_left_context_bridge(v^2, V, U)
+    release thm add_left_context_bridge(v^2, V, U)
     U + v^2 = U + V
     u^2 + v^2 = U + V
     U + V = u^2 + v^2
@@ -498,19 +498,19 @@ thm imo_1970_5_inequality:
         =>:
             # NL conclusion: (AB+BC+CA)^2 <= 6(AD^2+BD^2+CD^2).
             (x + y + z)^2 <= 6 * (u^2 + v^2 + w^2)
-    by thm imo19_geometry_bridge_probe(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz)
+    release thm imo19_geometry_bridge_probe(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz)
     distance_sq3(ax, ay, az, bx, b_y, bz) = distance_sq3(ax, ay, az, dx, dy, dz) + distance_sq3(bx, b_y, bz, dx, dy, dz)
     distance_sq3(bx, b_y, bz, cx, cy, cz) = distance_sq3(bx, b_y, bz, dx, dy, dz) + distance_sq3(cx, cy, cz, dx, dy, dz)
     distance_sq3(cx, cy, cz, ax, ay, az) = distance_sq3(cx, cy, cz, dx, dy, dz) + distance_sq3(ax, ay, az, dx, dy, dz)
 
-    by thm distance_identity_to_length_identity(x, u, v, distance_sq3(ax, ay, az, bx, b_y, bz), distance_sq3(ax, ay, az, dx, dy, dz), distance_sq3(bx, b_y, bz, dx, dy, dz))
+    release thm distance_identity_to_length_identity(x, u, v, distance_sq3(ax, ay, az, bx, b_y, bz), distance_sq3(ax, ay, az, dx, dy, dz), distance_sq3(bx, b_y, bz, dx, dy, dz))
     x^2 = u^2 + v^2
-    by thm distance_identity_to_length_identity(y, v, w, distance_sq3(bx, b_y, bz, cx, cy, cz), distance_sq3(bx, b_y, bz, dx, dy, dz), distance_sq3(cx, cy, cz, dx, dy, dz))
+    release thm distance_identity_to_length_identity(y, v, w, distance_sq3(bx, b_y, bz, cx, cy, cz), distance_sq3(bx, b_y, bz, dx, dy, dz), distance_sq3(cx, cy, cz, dx, dy, dz))
     y^2 = v^2 + w^2
-    by thm distance_identity_to_length_identity(z, w, u, distance_sq3(cx, cy, cz, ax, ay, az), distance_sq3(cx, cy, cz, dx, dy, dz), distance_sq3(ax, ay, az, dx, dy, dz))
+    release thm distance_identity_to_length_identity(z, w, u, distance_sq3(cx, cy, cz, ax, ay, az), distance_sq3(cx, cy, cz, dx, dy, dz), distance_sq3(ax, ay, az, dx, dy, dz))
     z^2 = w^2 + u^2
 
-    by thm imo19_metric_inequality(x, y, z, u, v, w)
+    release thm imo19_metric_inequality(x, y, z, u, v, w)
     (x + y + z)^2 <= 6 * (u^2 + v^2 + w^2)
 
 
@@ -558,19 +558,19 @@ thm imo_1970_5_equality_only_if:
             u = v
             # NL conclusion, second equality: BD=CD; together these say AD=BD=CD.
             v = w
-    by thm imo19_geometry_bridge_probe(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz)
+    release thm imo19_geometry_bridge_probe(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz)
     distance_sq3(ax, ay, az, bx, b_y, bz) = distance_sq3(ax, ay, az, dx, dy, dz) + distance_sq3(bx, b_y, bz, dx, dy, dz)
     distance_sq3(bx, b_y, bz, cx, cy, cz) = distance_sq3(bx, b_y, bz, dx, dy, dz) + distance_sq3(cx, cy, cz, dx, dy, dz)
     distance_sq3(cx, cy, cz, ax, ay, az) = distance_sq3(cx, cy, cz, dx, dy, dz) + distance_sq3(ax, ay, az, dx, dy, dz)
 
-    by thm distance_identity_to_length_identity(x, u, v, distance_sq3(ax, ay, az, bx, b_y, bz), distance_sq3(ax, ay, az, dx, dy, dz), distance_sq3(bx, b_y, bz, dx, dy, dz))
+    release thm distance_identity_to_length_identity(x, u, v, distance_sq3(ax, ay, az, bx, b_y, bz), distance_sq3(ax, ay, az, dx, dy, dz), distance_sq3(bx, b_y, bz, dx, dy, dz))
     x^2 = u^2 + v^2
-    by thm distance_identity_to_length_identity(y, v, w, distance_sq3(bx, b_y, bz, cx, cy, cz), distance_sq3(bx, b_y, bz, dx, dy, dz), distance_sq3(cx, cy, cz, dx, dy, dz))
+    release thm distance_identity_to_length_identity(y, v, w, distance_sq3(bx, b_y, bz, cx, cy, cz), distance_sq3(bx, b_y, bz, dx, dy, dz), distance_sq3(cx, cy, cz, dx, dy, dz))
     y^2 = v^2 + w^2
-    by thm distance_identity_to_length_identity(z, w, u, distance_sq3(cx, cy, cz, ax, ay, az), distance_sq3(cx, cy, cz, dx, dy, dz), distance_sq3(ax, ay, az, dx, dy, dz))
+    release thm distance_identity_to_length_identity(z, w, u, distance_sq3(cx, cy, cz, ax, ay, az), distance_sq3(cx, cy, cz, dx, dy, dz), distance_sq3(ax, ay, az, dx, dy, dz))
     z^2 = w^2 + u^2
 
-    by thm imo19_metric_equality_only_if(x, y, z, u, v, w)
+    release thm imo19_metric_equality_only_if(x, y, z, u, v, w)
     u = v
     v = w
 
@@ -618,17 +618,17 @@ thm imo_1970_5_equality_if:
         =>:
             # NL conclusion: equality holds, so (AB+BC+CA)^2 = 6(AD^2+BD^2+CD^2).
             (x + y + z)^2 = 6 * (u^2 + v^2 + w^2)
-    by thm imo19_geometry_bridge_probe(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz)
+    release thm imo19_geometry_bridge_probe(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz)
     distance_sq3(ax, ay, az, bx, b_y, bz) = distance_sq3(ax, ay, az, dx, dy, dz) + distance_sq3(bx, b_y, bz, dx, dy, dz)
     distance_sq3(bx, b_y, bz, cx, cy, cz) = distance_sq3(bx, b_y, bz, dx, dy, dz) + distance_sq3(cx, cy, cz, dx, dy, dz)
     distance_sq3(cx, cy, cz, ax, ay, az) = distance_sq3(cx, cy, cz, dx, dy, dz) + distance_sq3(ax, ay, az, dx, dy, dz)
 
-    by thm distance_identity_to_length_identity(x, u, v, distance_sq3(ax, ay, az, bx, b_y, bz), distance_sq3(ax, ay, az, dx, dy, dz), distance_sq3(bx, b_y, bz, dx, dy, dz))
+    release thm distance_identity_to_length_identity(x, u, v, distance_sq3(ax, ay, az, bx, b_y, bz), distance_sq3(ax, ay, az, dx, dy, dz), distance_sq3(bx, b_y, bz, dx, dy, dz))
     x^2 = u^2 + v^2
-    by thm distance_identity_to_length_identity(y, v, w, distance_sq3(bx, b_y, bz, cx, cy, cz), distance_sq3(bx, b_y, bz, dx, dy, dz), distance_sq3(cx, cy, cz, dx, dy, dz))
+    release thm distance_identity_to_length_identity(y, v, w, distance_sq3(bx, b_y, bz, cx, cy, cz), distance_sq3(bx, b_y, bz, dx, dy, dz), distance_sq3(cx, cy, cz, dx, dy, dz))
     y^2 = v^2 + w^2
-    by thm distance_identity_to_length_identity(z, w, u, distance_sq3(cx, cy, cz, ax, ay, az), distance_sq3(cx, cy, cz, dx, dy, dz), distance_sq3(ax, ay, az, dx, dy, dz))
+    release thm distance_identity_to_length_identity(z, w, u, distance_sq3(cx, cy, cz, ax, ay, az), distance_sq3(cx, cy, cz, dx, dy, dz), distance_sq3(ax, ay, az, dx, dy, dz))
     z^2 = w^2 + u^2
 
-    by thm imo19_metric_equality_if(x, y, z, u, v, w)
+    release thm imo19_metric_equality_if(x, y, z, u, v, w)
     (x + y + z)^2 = 6 * (u^2 + v^2 + w^2)

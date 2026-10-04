@@ -29,10 +29,10 @@ thm problem_464_part1:
     by def $geo::is_on_circle(b, o, r)
     by def $geo::is_on_circle(c, o, r)
     by def $geo::is_on_circle(d, o, r)
-    by thm geo::distance_sq_symmetric(a, o)
-    by thm geo::distance_sq_symmetric(b, o)
-    by thm geo::distance_sq_symmetric(c, o)
-    by thm geo::distance_sq_symmetric(d, o)
+    release thm geo::distance_sq_symmetric(a, o)
+    release thm geo::distance_sq_symmetric(b, o)
+    release thm geo::distance_sq_symmetric(c, o)
+    release thm geo::distance_sq_symmetric(d, o)
     geo::distance_sq(o, a) = r^2
     geo::distance_sq(o, b) = r^2
     geo::distance_sq(o, c) = r^2
@@ -53,10 +53,10 @@ thm problem_464_part1:
     c[2] - b[2] = (c[2] - o[2]) - (b[2] - o[2])
 
     # 半径条件转为 q=OB、c=OC、d=OD 的等模平方。
-    by thm geo::distance_sq_coordinate_formula(o, a)
-    by thm geo::distance_sq_coordinate_formula(o, b)
-    by thm geo::distance_sq_coordinate_formula(o, c)
-    by thm geo::distance_sq_coordinate_formula(o, d)
+    release thm geo::distance_sq_coordinate_formula(o, a)
+    release thm geo::distance_sq_coordinate_formula(o, b)
+    release thm geo::distance_sq_coordinate_formula(o, c)
+    release thm geo::distance_sq_coordinate_formula(o, d)
     (a[1] - o[1])^2 + (a[2] - o[2])^2 = (b[1] - o[1])^2 + (b[2] - o[2])^2
     (b[1] - o[1])^2 + (b[2] - o[2])^2 = (c[1] - o[1])^2 + (c[2] - o[2])^2
     (b[1] - o[1])^2 + (b[2] - o[2])^2 = (d[1] - o[1])^2 + (d[2] - o[2])^2
@@ -67,23 +67,23 @@ thm problem_464_part1:
     (b[1] - o[1])^2 + (b[2] - o[2])^2 != 0
 
     # C、D位于直径AB同一严格侧，特别推出 det(OB,OC)≠0。
-    by thm geo::vec_coordinate_formula(a, b)
-    by thm geo::vec_coordinate_formula(a, c)
-    by thm geo::det_coordinate_formula(geo::vec(a, b), geo::vec(a, c))
+    release thm geo::vec_coordinate_formula(a, b)
+    release thm geo::vec_coordinate_formula(a, c)
+    release thm geo::det_coordinate_formula(geo::vec(a, b), geo::vec(a, c))
     geo::det(geo::vec(a, b), geo::vec(a, c)) = 2 * ((b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]))
     geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
-    by thm scale_probe::problem_464_scale_nonzero_probe(geo::det(geo::vec(a, b), geo::vec(a, c)), (b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]))
+    release thm scale_probe::problem_464_scale_nonzero_probe(geo::det(geo::vec(a, b), geo::vec(a, c)), (b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]))
     (b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]) != 0
 
     # 展开角和谓词，逐项得到代数核心所需的四个三角量。
     by def $translation::angle_plus_twice_angle_is_straight(d, a, b, a, b, c)
-    by thm geo::vec_coordinate_formula(a, d)
-    by thm geo::vec_coordinate_formula(b, a)
-    by thm geo::vec_coordinate_formula(b, c)
-    by thm geo::det_coordinate_formula(geo::vec(a, d), geo::vec(a, b))
-    by thm geo::dot_coordinate_formula(geo::vec(a, d), geo::vec(a, b))
-    by thm geo::dot_coordinate_formula(geo::vec(b, a), geo::vec(b, c))
-    by thm geo::det_coordinate_formula(geo::vec(b, a), geo::vec(b, c))
+    release thm geo::vec_coordinate_formula(a, d)
+    release thm geo::vec_coordinate_formula(b, a)
+    release thm geo::vec_coordinate_formula(b, c)
+    release thm geo::det_coordinate_formula(geo::vec(a, d), geo::vec(a, b))
+    release thm geo::dot_coordinate_formula(geo::vec(a, d), geo::vec(a, b))
+    release thm geo::dot_coordinate_formula(geo::vec(b, a), geo::vec(b, c))
+    release thm geo::det_coordinate_formula(geo::vec(b, a), geo::vec(b, c))
 
     geo::det(geo::vec(a, d), geo::vec(a, b)) = 2 * (((d[1] - o[1]) + (b[1] - o[1])) * (b[2] - o[2]) - ((d[2] - o[2]) + (b[2] - o[2])) * (b[1] - o[1]))
     geo::dot(geo::vec(a, d), geo::vec(a, b)) = 2 * (((d[1] - o[1]) + (b[1] - o[1])) * (b[1] - o[1]) + ((d[2] - o[2]) + (b[2] - o[2])) * (b[2] - o[2]))
@@ -91,7 +91,7 @@ thm problem_464_part1:
     geo::det(geo::vec(b, a), geo::vec(b, c)) = -2 * ((b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]))
 
     # 调用已独立验证的角和—代数封闭桥；巨大多项式不再暴露于正式证明。
-    by thm bridge2_probe::problem_464_angle_bridge_probe(a, b, c, d, o, r)
+    release thm bridge2_probe::problem_464_angle_bridge_probe(a, b, c, d, o, r)
     ((d[1] - o[1]) + (b[1] - o[1])) * (c[2] - o[2]) - ((d[2] - o[2]) + (b[2] - o[2])) * (c[1] - o[1]) = 0
 
     # 将代数结论折回公共几何平行谓词。
@@ -105,11 +105,11 @@ thm problem_464_part1:
     o != c
     a != d
 
-    by thm geo::vec_coordinate_formula(o, c)
-    by thm geo::vec_coordinate_formula(a, d)
-    by thm geo::det_coordinate_formula(geo::vec(o, c), geo::vec(a, d))
+    release thm geo::vec_coordinate_formula(o, c)
+    release thm geo::vec_coordinate_formula(a, d)
+    release thm geo::det_coordinate_formula(geo::vec(o, c), geo::vec(a, d))
     geo::det(geo::vec(o, c), geo::vec(a, d)) = (c[1] - o[1]) * (d[2] - a[2]) - (c[2] - o[2]) * (d[1] - a[1])
-    by thm final_rewrite_probe::problem_464_final_det_rewrite(d[1] - a[1], d[2] - a[2], (d[1] - o[1]) + (b[1] - o[1]), (d[2] - o[2]) + (b[2] - o[2]), c[1] - o[1], c[2] - o[2])
+    release thm final_rewrite_probe::problem_464_final_det_rewrite(d[1] - a[1], d[2] - a[2], (d[1] - o[1]) + (b[1] - o[1]), (d[2] - o[2]) + (b[2] - o[2]), c[1] - o[1], c[2] - o[2])
     (c[1] - o[1]) * (d[2] - a[2]) - (c[2] - o[2]) * (d[1] - a[1]) = 0
     geo::det(geo::vec(o, c), geo::vec(a, d)) = 0
     by def $geo::is_parallel(o, c, a, d)

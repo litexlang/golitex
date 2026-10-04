@@ -1,18 +1,16 @@
+# Removed $fn_eq is expressed as ordinary function equality; original restricted return-set existence goal retained.
 thm named_restricted_return_set_supports_nested_function_use:
     ? forall U set, u U, P set:
         P = {f fn(i1 closed_range(1, 2)) U: f(1) = u and f(2) = u}
         =>:
-            exist h fn(p {u}) P st {$fn_eq(h(u), fn(i1 closed_range(1, 2)) U {u})}
-    P = {f fn(i1 closed_range(1, 2)) U: f(1) = u and f(2) = u}
+            exist h fn(p {u}) P st {h(u) = fn(i1 closed_range(1, 2)) U {u}}
+    1 $in closed_range(1,2)
+    2 $in closed_range(1,2)
+    $is_set(closed_range(1,2))
     release thm fn_set_member(fn(i1 closed_range(1, 2)) U {u}, fn(i1 closed_range(1, 2)) U)
+    fn(i1 closed_range(1, 2)) U {u}(1) = u
+    fn(i1 closed_range(1, 2)) U {u}(2) = u
     release thm set_builder_member(fn(i1 closed_range(1, 2)) U {u}, {f fn(i1 closed_range(1, 2)) U: f(1) = u and f(2) = u})
     have fn encode(p {u}) P = fn(i1 closed_range(1, 2)) U {u}
-    encode(u)(1) = u
-    forall i1 closed_range(1, 2):
-        encode(u)(i1) = fn(j closed_range(1, 2)) U {u}(i1)
-    encode(u) $in P
-    encode(u) $in fn(i1 closed_range(1, 2)) U
-    by def $fn_eq(encode(u), fn(i1 closed_range(1, 2)) U {u})
-    $fn_eq(encode(u), fn(i1 closed_range(1, 2)) U {u})
-    witness exist h fn(p {u}) P st {$fn_eq(h(u), fn(i1 closed_range(1, 2)) U {u})} from encode:
-        $fn_eq(encode(u), fn(i1 closed_range(1, 2)) U {u})
+    encode(u) = fn(i1 closed_range(1, 2)) U {u}
+    witness exist h fn(p {u}) P st {h(u) = fn(i1 closed_range(1, 2)) U {u}} from encode

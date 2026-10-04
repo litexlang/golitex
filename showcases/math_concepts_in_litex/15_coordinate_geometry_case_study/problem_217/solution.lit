@@ -25,12 +25,12 @@ thm lagrange_dot_det_product_217:
     ? forall x, y, p cart(R, R):
         geo::dot(x, x) * geo::dot(y, p) = geo::dot(x, y) * geo::dot(x, p) + geo::det(x, y) * geo::det(x, p)
 
-    by thm geo::dot_coordinate_formula(x, x)
-    by thm geo::dot_coordinate_formula(y, p)
-    by thm geo::dot_coordinate_formula(x, y)
-    by thm geo::dot_coordinate_formula(x, p)
-    by thm geo::det_coordinate_formula(x, y)
-    by thm geo::det_coordinate_formula(x, p)
+    release thm geo::dot_coordinate_formula(x, x)
+    release thm geo::dot_coordinate_formula(y, p)
+    release thm geo::dot_coordinate_formula(x, y)
+    release thm geo::dot_coordinate_formula(x, p)
+    release thm geo::det_coordinate_formula(x, y)
+    release thm geo::det_coordinate_formula(x, p)
     geo::dot(x, x) = x[1] * x[1] + x[2] * x[2]
     geo::dot(y, p) = y[1] * p[1] + y[2] * p[2]
     geo::dot(x, y) = x[1] * y[1] + x[2] * y[2]
@@ -50,13 +50,13 @@ thm equal_orthogonal_cross_projection_217:
         =>:
             geo::det(p, x)^2 = geo::dot(p, y)^2
 
-    by thm lagrange_dot_det_product_217(x, y, p)
+    release thm lagrange_dot_det_product_217(x, y, p)
     geo::dot(x, x) * geo::dot(y, p) = geo::dot(x, y) * geo::dot(x, p) + geo::det(x, y) * geo::det(x, p) = 0 * geo::dot(x, p) + geo::det(x, y) * geo::det(x, p) = geo::det(x, y) * geo::det(x, p)
     (geo::dot(x, x) * geo::dot(y, p))^2 = (geo::det(x, y) * geo::det(x, p))^2
     (geo::dot(x, x) * geo::dot(y, p))^2 = geo::dot(x, x)^2 * geo::dot(y, p)^2
     (geo::det(x, y) * geo::det(x, p))^2 = geo::det(x, y)^2 * geo::det(x, p)^2
 
-    by thm geo::dot_squared_plus_det_squared(x, y)
+    release thm geo::dot_squared_plus_det_squared(x, y)
     geo::dot(x, y)^2 + geo::det(x, y)^2 = geo::dot(x, x) * geo::dot(y, y)
     geo::dot(x, y)^2 + geo::det(x, y)^2 = 0^2 + geo::det(x, y)^2 = geo::det(x, y)^2
     geo::det(x, y)^2 = geo::dot(x, x) * geo::dot(y, y)
@@ -64,11 +64,11 @@ thm equal_orthogonal_cross_projection_217:
     geo::dot(x, x)^2 * geo::dot(y, p)^2 = (geo::dot(x, x) * geo::dot(y, p))^2 = (geo::det(x, y) * geo::det(x, p))^2 = geo::det(x, y)^2 * geo::det(x, p)^2 = geo::dot(x, x)^2 * geo::det(x, p)^2
     geo::dot(x, x)^2 != 0
     geo::dot(y, p)^2 * geo::dot(x, x)^2 = geo::dot(x, x)^2 * geo::dot(y, p)^2 = geo::dot(x, x)^2 * geo::det(x, p)^2 = geo::det(x, p)^2 * geo::dot(x, x)^2
-    by thm geo::divide_both_sides(geo::dot(y, p)^2, geo::det(x, p)^2, geo::dot(x, x)^2)
+    release thm geo::divide_both_sides(geo::dot(y, p)^2, geo::det(x, p)^2, geo::dot(x, x)^2)
     geo::dot(y, p)^2 = geo::det(x, p)^2
 
-    by thm geo::dot_symmetric(y, p)
-    by thm geo::det_antisymmetric(x, p)
+    release thm geo::dot_symmetric(y, p)
+    release thm geo::det_antisymmetric(x, p)
     geo::dot(y, p) = geo::dot(p, y)
     geo::det(x, p) = -(geo::det(p, x))
     geo::dot(p, y)^2 = geo::dot(y, p)^2 = geo::det(x, p)^2 = (-(geo::det(p, x)))^2 = geo::det(p, x)^2
@@ -84,12 +84,12 @@ thm affine_cross_square_midpoint_217:
         =>:
             $geo::is_midpoint(m, b, d)
 
-    by thm geo::on_line_implies_affine_parameter(b, d, m)
+    release thm geo::on_line_implies_affine_parameter(b, d, m)
     obtain u from exist u0 R st {m[1] = (1 - u0) * b[1] + u0 * d[1], m[2] = (1 - u0) * b[2] + u0 * d[2]}
 
-    by thm geo::vec_coordinate_formula(a, m)
-    by thm geo::vec_coordinate_formula(a, b)
-    by thm geo::vec_coordinate_formula(a, d)
+    release thm geo::vec_coordinate_formula(a, m)
+    release thm geo::vec_coordinate_formula(a, b)
+    release thm geo::vec_coordinate_formula(a, d)
     geo::vec(a, m)[1] = m[1] - a[1]
     geo::vec(a, m)[2] = m[2] - a[2]
     geo::vec(a, b)[1] = b[1] - a[1]
@@ -99,24 +99,24 @@ thm affine_cross_square_midpoint_217:
     geo::vec(a, m)[1] = m[1] - a[1] = ((1 - u) * b[1] + u * d[1]) - a[1] = (1 - u) * (b[1] - a[1]) + u * (d[1] - a[1]) = (1 - u) * geo::vec(a, b)[1] + u * geo::vec(a, d)[1]
     geo::vec(a, m)[2] = m[2] - a[2] = ((1 - u) * b[2] + u * d[2]) - a[2] = (1 - u) * (b[2] - a[2]) + u * (d[2] - a[2]) = (1 - u) * geo::vec(a, b)[2] + u * geo::vec(a, d)[2]
 
-    by thm geo::det_coordinate_formula(p, geo::vec(a, m))
-    by thm geo::det_coordinate_formula(p, geo::vec(a, b))
-    by thm geo::det_coordinate_formula(p, geo::vec(a, d))
+    release thm geo::det_coordinate_formula(p, geo::vec(a, m))
+    release thm geo::det_coordinate_formula(p, geo::vec(a, b))
+    release thm geo::det_coordinate_formula(p, geo::vec(a, d))
     geo::det(p, geo::vec(a, m)) = p[1] * geo::vec(a, m)[2] - p[2] * geo::vec(a, m)[1] = p[1] * ((1 - u) * geo::vec(a, b)[2] + u * geo::vec(a, d)[2]) - p[2] * ((1 - u) * geo::vec(a, b)[1] + u * geo::vec(a, d)[1]) = (1 - u) * (p[1] * geo::vec(a, b)[2] - p[2] * geo::vec(a, b)[1]) + u * (p[1] * geo::vec(a, d)[2] - p[2] * geo::vec(a, d)[1]) = (1 - u) * geo::det(p, geo::vec(a, b)) + u * geo::det(p, geo::vec(a, d))
     (1 - u) * geo::det(p, geo::vec(a, b)) = -(u * geo::det(p, geo::vec(a, d)))
     ((1 - u) * geo::det(p, geo::vec(a, b)))^2 = (-(u * geo::det(p, geo::vec(a, d))))^2
     (1 - u)^2 * geo::det(p, geo::vec(a, b))^2 = ((1 - u) * geo::det(p, geo::vec(a, b)))^2 = (-(u * geo::det(p, geo::vec(a, d))))^2 = u^2 * geo::det(p, geo::vec(a, d))^2
     (1 - u)^2 * geo::det(p, geo::vec(a, b))^2 = u^2 * geo::det(p, geo::vec(a, d))^2 = u^2 * geo::det(p, geo::vec(a, b))^2
     geo::det(p, geo::vec(a, b))^2 != 0
-    by thm geo::divide_both_sides((1 - u)^2, u^2, geo::det(p, geo::vec(a, b))^2)
+    release thm geo::divide_both_sides((1 - u)^2, u^2, geo::det(p, geo::vec(a, b))^2)
     (1 - u)^2 = u^2
     (u - 0)^2 = (1 - u)^2
-    by thm geo::one_dimensional_midpoint(0, 1, u)
+    release thm geo::one_dimensional_midpoint(0, 1, u)
     u = (0 + 1) / 2 = 1 / 2
 
     m[1] = (1 - u) * b[1] + u * d[1] = (b[1] + d[1]) / 2
     m[2] = (1 - u) * b[2] + u * d[2] = (b[2] + d[2]) / 2
-    by thm tuple_equal_from_coordinates(m, (m[1], m[2]))
+    release thm tuple_equal_from_coordinates(m, (m[1], m[2]))
     m = (m[1], m[2]) = ((b[1] + d[1]) / 2, (b[2] + d[2]) / 2)
     by def $geo::is_midpoint(m, b, d)
 
@@ -153,42 +153,42 @@ thm problem_217_midpoint:
 
     geo::dot(x, y) = geo::dot(geo::vec(a, b), geo::vec(a, c)) = 0
     geo::dot(p, q) = geo::dot(geo::vec(a, pe), geo::vec(a, d)) = 0
-    by thm geo::distance_sq_coordinate_formula(a, b)
-    by thm geo::distance_sq_coordinate_formula(a, c)
-    by thm geo::distance_sq_coordinate_formula(a, pe)
-    by thm geo::distance_sq_coordinate_formula(a, d)
+    release thm geo::distance_sq_coordinate_formula(a, b)
+    release thm geo::distance_sq_coordinate_formula(a, c)
+    release thm geo::distance_sq_coordinate_formula(a, pe)
+    release thm geo::distance_sq_coordinate_formula(a, d)
     geo::dot(x, x) = geo::dot(geo::vec(a, b), geo::vec(a, b)) = geo::distance_sq(a, b) = geo::distance_sq(a, c) = geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::dot(y, y)
     geo::dot(p, p) = geo::dot(geo::vec(a, pe), geo::vec(a, pe)) = geo::distance_sq(a, pe) = geo::distance_sq(a, d) = geo::dot(geo::vec(a, d), geo::vec(a, d)) = geo::dot(q, q)
 
-    by thm geo::distance_sq_positive_of_ne(a, b)
-    by thm geo::distance_sq_positive_of_ne(a, pe)
+    release thm geo::distance_sq_positive_of_ne(a, b)
+    release thm geo::distance_sq_positive_of_ne(a, pe)
     geo::dot(x, x) > 0
     geo::dot(p, p) > 0
     geo::dot(x, x) != 0
     geo::dot(p, p) != 0
 
     # ∠AEC=90°：(-p)·(y-p)=0，所以 p·y=p·p。
-    by thm geo::vec_neg(pe, a)
+    release thm geo::vec_neg(pe, a)
     geo::vec(pe, a) = (-(geo::vec(a, pe)[1]), -(geo::vec(a, pe)[2])) = (-(p[1]), -(p[2]))
-    by thm geo::vec_coordinate_formula(a, c)
+    release thm geo::vec_coordinate_formula(a, c)
     y = geo::vec(a, c) = (c[1] - a[1], c[2] - a[2])
-    by thm geo::vec_coordinate_formula(a, pe)
+    release thm geo::vec_coordinate_formula(a, pe)
     p = geo::vec(a, pe) = (pe[1] - a[1], pe[2] - a[2])
-    by thm geo::vec_coordinate_formula(pe, c)
+    release thm geo::vec_coordinate_formula(pe, c)
     geo::vec(pe, c) = (c[1] - pe[1], c[2] - pe[2]) = (y[1] - p[1], y[2] - p[2])
     0 = geo::dot(geo::vec(pe, a), geo::vec(pe, c)) = (-(p[1])) * (y[1] - p[1]) + (-(p[2])) * (y[2] - p[2]) = -(p[1] * y[1] + p[2] * y[2]) + (p[1] * p[1] + p[2] * p[2])
     geo::dot(p, y) = p[1] * y[1] + p[2] * y[2]
     geo::dot(p, p) = p[1] * p[1] + p[2] * p[2]
-    by thm geo::zero_sum_rearrange(-(p[1] * y[1] + p[2] * y[2]), p[1] * p[1] + p[2] * p[2])
+    release thm geo::zero_sum_rearrange(-(p[1] * y[1] + p[2] * y[2]), p[1] * p[1] + p[2] * p[2])
     -(-(p[1] * y[1] + p[2] * y[2])) = p[1] * p[1] + p[2] * p[2]
     p[1] * y[1] + p[2] * y[2] = -(-(p[1] * y[1] + p[2] * y[2])) = p[1] * p[1] + p[2] * p[2]
     geo::dot(p, y) = p[1] * y[1] + p[2] * y[2] = p[1] * p[1] + p[2] * p[2] = geo::dot(p, p)
 
-    by thm equal_orthogonal_cross_projection_217(x, y, p)
+    release thm equal_orthogonal_cross_projection_217(x, y, p)
     geo::det(p, x)^2 = geo::dot(p, y)^2 = geo::dot(p, p)^2
-    by thm geo::dot_symmetric(q, p)
+    release thm geo::dot_symmetric(q, p)
     geo::dot(q, p) = 0
-    by thm equal_orthogonal_cross_projection_217(q, p, p)
+    release thm equal_orthogonal_cross_projection_217(q, p, p)
     geo::det(p, q)^2 = geo::dot(p, p)^2
     geo::det(p, x)^2 = geo::det(p, q)^2
     geo::det(p, x)^2 > 0
@@ -202,11 +202,11 @@ thm problem_217_midpoint:
     by def $geo::is_on_extension(m, pe, a)
     obtain t from exist t0 R st {t0 > 1
     m = (pe[1] + t0 * (a[1] - pe[1]), pe[2] + t0 * (a[2] - pe[2]))}
-    by thm geo::vec_coordinate_formula(a, m)
+    release thm geo::vec_coordinate_formula(a, m)
     geo::vec(a, m) = (m[1] - a[1], m[2] - a[2])
     geo::vec(a, m)[1] = m[1] - a[1] = pe[1] + t * (a[1] - pe[1]) - a[1] = (1 - t) * (pe[1] - a[1]) = (1 - t) * p[1]
     geo::vec(a, m)[2] = m[2] - a[2] = pe[2] + t * (a[2] - pe[2]) - a[2] = (1 - t) * (pe[2] - a[2]) = (1 - t) * p[2]
-    by thm geo::det_coordinate_formula(p, geo::vec(a, m))
+    release thm geo::det_coordinate_formula(p, geo::vec(a, m))
     geo::det(p, geo::vec(a, m)) = p[1] * geo::vec(a, m)[2] - p[2] * geo::vec(a, m)[1]
     p[1] * geo::vec(a, m)[2] - p[2] * geo::vec(a, m)[1] = p[1] * ((1 - t) * p[2]) - p[2] * ((1 - t) * p[1])
     p[1] * ((1 - t) * p[2]) - p[2] * ((1 - t) * p[1]) = (1 - t) * p[1] * p[2] - (1 - t) * p[2] * p[1] = 0
@@ -218,4 +218,4 @@ thm problem_217_midpoint:
     geo::det(p, geo::vec(a, b))^2 = geo::det(p, x)^2 = geo::det(p, q)^2 = geo::det(p, geo::vec(a, d))^2
     geo::det(p, geo::vec(a, b)) != 0
 
-    by thm affine_cross_square_midpoint_217(a, b, d, m, p)
+    release thm affine_cross_square_midpoint_217(a, b, d, m, p)

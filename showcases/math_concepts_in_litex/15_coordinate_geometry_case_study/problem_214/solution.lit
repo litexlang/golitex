@@ -110,8 +110,8 @@ thm problem_214_median_double_angle:
     pn[2] = pa[2] + t * (pb[2] - pa[2])
 
     # 共享角平方等式的公共分母因子 D(CB)D(CM) 为正，可安全约去。
-    by thm geo::distance_sq_positive_of_ne(pc, pb)
-    by thm geo::distance_sq_positive_of_ne(pc, pm)
+    release thm geo::distance_sq_positive_of_ne(pc, pb)
+    release thm geo::distance_sq_positive_of_ne(pc, pm)
     geo::distance_sq(pc, pb) > 0
     geo::distance_sq(pc, pm) > 0
     geo::distance_sq(pc, pb) * geo::distance_sq(pc, pm) > 0
@@ -125,12 +125,12 @@ thm problem_214_median_double_angle:
     geo::angle_cos_den(pb, pc, pm) = geo::distance_sq(pc, pb) * geo::distance_sq(pc, pm) > 0
     geo::angle_cos_den(pb, pc, pm) != 0
     geo::angle_cos_num(pb, pc, pn)^2 * geo::angle_cos_den(pb, pc, pm) = geo::angle_cos_num(pb, pc, pm)^2 * geo::angle_cos_den(pb, pc, pn) = geo::angle_cos_num(pb, pc, pm)^2 * (4 * geo::angle_cos_den(pb, pc, pm)) = (4 * geo::angle_cos_num(pb, pc, pm)^2) * geo::angle_cos_den(pb, pc, pm)
-    by thm cancel_nonzero_factor_214(geo::angle_cos_num(pb, pc, pn)^2, 4 * geo::angle_cos_num(pb, pc, pm)^2, geo::angle_cos_den(pb, pc, pm))
+    release thm cancel_nonzero_factor_214(geo::angle_cos_num(pb, pc, pn)^2, 4 * geo::angle_cos_num(pb, pc, pm)^2, geo::angle_cos_den(pb, pc, pm))
     geo::angle_cos_num(pb, pc, pn)^2 = 4 * geo::angle_cos_num(pb, pc, pm)^2
 
     # 同号条件在角分子层选出正根，排除补角对应的负根。
     geo::angle_cos_num(pb, pc, pn) * geo::angle_cos_num(pb, pc, pm) >= 0
-    by thm same_sign_double_from_squares_214(geo::angle_cos_num(pb, pc, pn), geo::angle_cos_num(pb, pc, pm))
+    release thm same_sign_double_from_squares_214(geo::angle_cos_num(pb, pc, pn), geo::angle_cos_num(pb, pc, pm))
     geo::angle_cos_num(pb, pc, pn) = 2 * geo::angle_cos_num(pb, pc, pm)
 
     # 按已验证的显式桥模式展开角分子为点积。
@@ -139,16 +139,16 @@ thm problem_214_median_double_angle:
     geo::dot(geo::vec(pc, pb), geo::vec(pc, pn)) = geo::angle_cos_num(pb, pc, pn) = 2 * geo::angle_cos_num(pb, pc, pm) = 2 * geo::dot(geo::vec(pc, pb), geo::vec(pc, pm))
 
     # 将 CN^2=4CM^2 展开为坐标范数恒等式。
-    by thm geo::distance_sq_coordinate_formula(pc, pn)
-    by thm geo::distance_sq_coordinate_formula(pc, pm)
+    release thm geo::distance_sq_coordinate_formula(pc, pn)
+    release thm geo::distance_sq_coordinate_formula(pc, pm)
     geo::distance_sq(pc, pn) = 4 * geo::distance_sq(pc, pm)
     (pn[1] - pc[1])^2 + (pn[2] - pc[2])^2 = geo::distance_sq(pc, pn)
     4 * geo::distance_sq(pc, pm) = 4 * ((pm[1] - pc[1])^2 + (pm[2] - pc[2])^2)
     (pn[1] - pc[1])^2 + (pn[2] - pc[2])^2 = geo::distance_sq(pc, pn) = 4 * geo::distance_sq(pc, pm) = 4 * ((pm[1] - pc[1])^2 + (pm[2] - pc[2])^2)
 
     # 将点积关系展开为坐标交叉项恒等式。
-    by thm geo::dot_coordinate_formula(geo::vec(pc, pb), geo::vec(pc, pn))
-    by thm geo::dot_coordinate_formula(geo::vec(pc, pb), geo::vec(pc, pm))
+    release thm geo::dot_coordinate_formula(geo::vec(pc, pb), geo::vec(pc, pn))
+    release thm geo::dot_coordinate_formula(geo::vec(pc, pb), geo::vec(pc, pm))
     geo::dot(geo::vec(pc, pb), geo::vec(pc, pn)) = (pb[1] - pc[1]) * (pn[1] - pc[1]) + (pb[2] - pc[2]) * (pn[2] - pc[2])
     geo::dot(geo::vec(pc, pb), geo::vec(pc, pm)) = geo::dot(geo::vec(pc, pm), geo::vec(pc, pb))
     geo::dot(geo::vec(pc, pm), geo::vec(pc, pb)) = (pm[1] - pc[1]) * (pb[1] - pc[1]) + (pm[2] - pc[2]) * (pb[2] - pc[2])
@@ -156,14 +156,14 @@ thm problem_214_median_double_angle:
     (pb[1] - pc[1]) * (pn[1] - pc[1]) + (pb[2] - pc[2]) * (pn[2] - pc[2]) = 2 * geo::dot(geo::vec(pc, pb), geo::vec(pc, pm)) = 2 * geo::dot(geo::vec(pc, pm), geo::vec(pc, pb)) = 2 * ((pm[1] - pc[1]) * (pb[1] - pc[1]) + (pm[2] - pc[2]) * (pb[2] - pc[2]))
 
     # 六个坐标量代入恒等式，得到 AC^2=BN^2。
-    by thm median_double_angle_scalar_finish_214(pb[1] - pc[1], pb[2] - pc[2], pm[1] - pc[1], pm[2] - pc[2], pn[1] - pc[1], pn[2] - pc[2])
+    release thm median_double_angle_scalar_finish_214(pb[1] - pc[1], pb[2] - pc[2], pm[1] - pc[1], pm[2] - pc[2], pn[1] - pc[1], pn[2] - pc[2])
     (2 * (pm[1] - pc[1]) - (pb[1] - pc[1]))^2 + (2 * (pm[2] - pc[2]) - (pb[2] - pc[2]))^2 = ((pn[1] - pc[1]) - (pb[1] - pc[1]))^2 + ((pn[2] - pc[2]) - (pb[2] - pc[2]))^2
     pa[1] - pc[1] = 2 * (pm[1] - pc[1]) - (pb[1] - pc[1])
     pa[2] - pc[2] = 2 * (pm[2] - pc[2]) - (pb[2] - pc[2])
     pn[1] - pb[1] = (pn[1] - pc[1]) - (pb[1] - pc[1])
     pn[2] - pb[2] = (pn[2] - pc[2]) - (pb[2] - pc[2])
-    by thm geo::distance_sq_coordinate_formula(pc, pa)
-    by thm geo::distance_sq_coordinate_formula(pb, pn)
+    release thm geo::distance_sq_coordinate_formula(pc, pa)
+    release thm geo::distance_sq_coordinate_formula(pb, pn)
     geo::distance_sq(pc, pa) = (pa[1] - pc[1])^2 + (pa[2] - pc[2])^2
     (pa[1] - pc[1])^2 = (2 * (pm[1] - pc[1]) - (pb[1] - pc[1]))^2
     (pa[2] - pc[2])^2 = (2 * (pm[2] - pc[2]) - (pb[2] - pc[2]))^2
@@ -173,6 +173,6 @@ thm problem_214_median_double_angle:
     ((pn[1] - pc[1]) - (pb[1] - pc[1]))^2 + ((pn[2] - pc[2]) - (pb[2] - pc[2]))^2 = (pn[1] - pb[1])^2 + (pn[2] - pb[2])^2
     geo::distance_sq(pb, pn) = (pn[1] - pb[1])^2 + (pn[2] - pb[2])^2
     geo::distance_sq(pc, pa) = (pa[1] - pc[1])^2 + (pa[2] - pc[2])^2 = (2 * (pm[1] - pc[1]) - (pb[1] - pc[1]))^2 + (2 * (pm[2] - pc[2]) - (pb[2] - pc[2]))^2 = ((pn[1] - pc[1]) - (pb[1] - pc[1]))^2 + ((pn[2] - pc[2]) - (pb[2] - pc[2]))^2 = (pn[1] - pb[1])^2 + (pn[2] - pb[2])^2 = geo::distance_sq(pb, pn)
-    by thm geo::distance_sq_symmetric(pa, pc)
+    release thm geo::distance_sq_symmetric(pa, pc)
     geo::distance_sq(pa, pc) = geo::distance_sq(pc, pa)
     geo::distance_sq(pa, pc) = geo::distance_sq(pc, pa) = geo::distance_sq(pb, pn)

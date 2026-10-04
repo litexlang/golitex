@@ -18,6 +18,6 @@ thm problem_464_dot_rewrite_probe:
     da1 * ba1 = (x + u) * (2 * u)
     da2 * ba2 = (y + v) * (2 * v)
     da1 * ba1 + da2 * ba2 = (x + u) * (2 * u) + (y + v) * (2 * v)
-    by thm problem_464_dot_split_probe(x, y, u, v)
+    release thm problem_464_dot_split_probe(x, y, u, v)
     (x + u) * (2 * u) + (y + v) * (2 * v) = 2 * ((x + u) * u + (y + v) * v)
     da1 * ba1 + da2 * ba2 = 2 * ((x + u) * u + (y + v) * v)

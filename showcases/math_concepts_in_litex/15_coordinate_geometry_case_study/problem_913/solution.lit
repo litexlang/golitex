@@ -24,11 +24,11 @@ thm problem_913_parallel_preserved_on_extension:
     f[1] = d[1] + t * (ep[1] - d[1])
     f[2] = d[2] + t * (ep[2] - d[2])
     
-    by thm geo::vec_coordinate_formula(b, c)
-    by thm geo::vec_coordinate_formula(d, ep)
-    by thm geo::vec_coordinate_formula(f, ep)
-    by thm geo::det_coordinate_formula(geo::vec(b, c), geo::vec(d, ep))
-    by thm geo::det_coordinate_formula(geo::vec(b, c), geo::vec(f, ep))
+    release thm geo::vec_coordinate_formula(b, c)
+    release thm geo::vec_coordinate_formula(d, ep)
+    release thm geo::vec_coordinate_formula(f, ep)
+    release thm geo::det_coordinate_formula(geo::vec(b, c), geo::vec(d, ep))
+    release thm geo::det_coordinate_formula(geo::vec(b, c), geo::vec(f, ep))
 
     geo::det(geo::vec(b, c), geo::vec(d, ep)) = (c[1] - b[1]) * (ep[2] - d[2]) - (c[2] - b[2]) * (ep[1] - d[1])
     geo::det(geo::vec(b, c), geo::vec(f, ep)) = (c[1] - b[1]) * (ep[2] - f[2]) - (c[2] - b[2]) * (ep[1] - f[1])
@@ -67,13 +67,13 @@ thm problem_913_rhombus:
     # 从两个等边三角形及AC=CD推出BC=CE。
     by def $geo::is_equilateral(a, b, c)
     by def $geo::is_equilateral(c, d, ep)
-    by thm geo::segments_congruent_symmetric_prop(a, b, b, c)
-    by thm geo::segments_congruent_transitive_prop(b, c, a, b, a, c)
-    by thm geo::segments_congruent_transitive_prop(b, c, a, c, c, d)
-    by thm geo::segments_congruent_transitive_prop(b, c, c, d, c, ep)
+    release thm geo::segments_congruent_symmetric_prop(a, b, b, c)
+    release thm geo::segments_congruent_transitive_prop(b, c, a, b, a, c)
+    release thm geo::segments_congruent_transitive_prop(b, c, a, c, c, d)
+    release thm geo::segments_congruent_transitive_prop(b, c, c, d, c, ep)
 
     # F在DE延长线上且BC∥DE，所以BC∥FE。
-    by thm problem_913_parallel_preserved_on_extension(b, c, d, ep, f)
+    release thm problem_913_parallel_preserved_on_extension(b, c, d, ep, f)
 
     # 两组对边分别平行，故BCEF是平行四边形；再由BC=CE得菱形。
     by def $geo::is_rhombus(b, c, ep, f)

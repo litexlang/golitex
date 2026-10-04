@@ -52,10 +52,10 @@ thm problem_924_rotation_congruence:
     #       =>: distance_sq(a2, b2) = distance_sq(a, b)
     
     # 构造向量点
-    by thm geo::vec_coordinate_formula(a, b)
-    by thm geo::vec_coordinate_formula(a, c)
-    by thm geo::vec_coordinate_formula(a, d)
-    by thm geo::vec_coordinate_formula(a, f)
+    release thm geo::vec_coordinate_formula(a, b)
+    release thm geo::vec_coordinate_formula(a, c)
+    release thm geo::vec_coordinate_formula(a, d)
+    release thm geo::vec_coordinate_formula(a, f)
     geo::vec(a, b)[1] = b[1] - a[1]
     geo::vec(a, b)[2] = b[2] - a[2]
     geo::vec(a, c)[1] = c[1] - a[1]
@@ -72,7 +72,7 @@ thm problem_924_rotation_congruence:
     geo::vec(a, f)[2] = f[2] - a[2] = s0 * (d[1] - a[1]) + c0 * (d[2] - a[2]) = s0 * geo::vec(a, d)[1] + c0 * geo::vec(a, d)[2]
     
     # 应用 rotation_preserves_distance 到 vec(a,b) → vec(a,c) 和 vec(a,d) → vec(a,f)
-    by thm geo::rotation_preserves_distance(geo::vec(a, b), geo::vec(a, d), geo::vec(a, c), geo::vec(a, f), c0, s0)
+    release thm geo::rotation_preserves_distance(geo::vec(a, b), geo::vec(a, d), geo::vec(a, c), geo::vec(a, f), c0, s0)
     geo::distance_sq(geo::vec(a, c), geo::vec(a, f)) = geo::distance_sq(geo::vec(a, b), geo::vec(a, d))
     
     # Step 3: 向量距离等于点距离（通过 distance_sq_translate）

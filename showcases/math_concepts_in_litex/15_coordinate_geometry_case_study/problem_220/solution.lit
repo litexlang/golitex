@@ -40,8 +40,8 @@ thm problem_220_part1_coordinate_core:
     t^2 > 0
     a^2 + t^2 > 0
     a^2 + t^2 != 0
-    by thm geo::distance_sq_coordinate_formula((2 * a * t^2 / (a^2 + t^2), 2 * a^2 * t / (a^2 + t^2)), (2 * a * t / (a + t), a))
-    by thm geo::distance_sq_coordinate_formula((a, a), (2 * a * t / (a + t), a))
+    release thm geo::distance_sq_coordinate_formula((2 * a * t^2 / (a^2 + t^2), 2 * a^2 * t / (a^2 + t^2)), (2 * a * t / (a + t), a))
+    release thm geo::distance_sq_coordinate_formula((a, a), (2 * a * t / (a + t), a))
     (2 * a * t / (a + t) - 2 * a * t^2 / (a^2 + t^2))^2 + (a - 2 * a^2 * t / (a^2 + t^2))^2 = (2 * a * t / (a + t) - a)^2 + (a - a)^2
 
 # Part (2): O is the origin, A=(a1,a2), B=(b1,b2), C=B/2.
@@ -63,16 +63,16 @@ thm problem_220_part2_parameter_core:
         =>:
             # AE=lambda·AO、BE=r·AO，故 lambda=r+1 对应 AE=AO+BE。
             lambda = r + 1
-    by thm geo::distance_sq_coordinate_formula((a1, a2), (d1, d2))
-    by thm geo::distance_sq_coordinate_formula((0, 0), (a1, a2))
-    by thm geo::distance_sq_coordinate_formula((b1 / 2, b2 / 2), (d1, d2))
-    by thm geo::distance_sq_coordinate_formula((0, 0), (b1 / 2, b2 / 2))
+    release thm geo::distance_sq_coordinate_formula((a1, a2), (d1, d2))
+    release thm geo::distance_sq_coordinate_formula((0, 0), (a1, a2))
+    release thm geo::distance_sq_coordinate_formula((b1 / 2, b2 / 2), (d1, d2))
+    release thm geo::distance_sq_coordinate_formula((0, 0), (b1 / 2, b2 / 2))
 
     (d1 - a1)^2 + (d2 - a2)^2 = a1^2 + a2^2
     (d1 - b1 / 2)^2 + (d2 - b2 / 2)^2 = (b1 / 2)^2 + (b2 / 2)^2
     (d1 - a1)^2 + (d2 - a2)^2 = d1^2 + d2^2 - 2 * (a1 * d1 + a2 * d2) + a1^2 + a2^2
     a1^2 + a2^2 = d1^2 + d2^2 - 2 * (a1 * d1 + a2 * d2) + a1^2 + a2^2
-    by thm geo::subtract_equalities(a1^2 + a2^2, d1^2 + d2^2 - 2 * (a1 * d1 + a2 * d2) + a1^2 + a2^2, a1^2 + a2^2, a1^2 + a2^2)
+    release thm geo::subtract_equalities(a1^2 + a2^2, d1^2 + d2^2 - 2 * (a1 * d1 + a2 * d2) + a1^2 + a2^2, a1^2 + a2^2, a1^2 + a2^2)
     (a1^2 + a2^2) - (a1^2 + a2^2) = (d1^2 + d2^2 - 2 * (a1 * d1 + a2 * d2) + a1^2 + a2^2) - (a1^2 + a2^2)
     (a1^2 + a2^2) - (a1^2 + a2^2) = 0
     (d1^2 + d2^2 - 2 * (a1 * d1 + a2 * d2) + a1^2 + a2^2) - (a1^2 + a2^2) = d1^2 + d2^2 - 2 * (a1 * d1 + a2 * d2)
@@ -81,7 +81,7 @@ thm problem_220_part2_parameter_core:
     d1^2 + d2^2 = 2 * (a1 * d1 + a2 * d2)
     (d1 - b1 / 2)^2 + (d2 - b2 / 2)^2 = d1^2 + d2^2 - (b1 * d1 + b2 * d2) + (b1 / 2)^2 + (b2 / 2)^2
     (b1 / 2)^2 + (b2 / 2)^2 = d1^2 + d2^2 - (b1 * d1 + b2 * d2) + (b1 / 2)^2 + (b2 / 2)^2
-    by thm geo::subtract_equalities((b1 / 2)^2 + (b2 / 2)^2, d1^2 + d2^2 - (b1 * d1 + b2 * d2) + (b1 / 2)^2 + (b2 / 2)^2, (b1 / 2)^2 + (b2 / 2)^2, (b1 / 2)^2 + (b2 / 2)^2)
+    release thm geo::subtract_equalities((b1 / 2)^2 + (b2 / 2)^2, d1^2 + d2^2 - (b1 * d1 + b2 * d2) + (b1 / 2)^2 + (b2 / 2)^2, (b1 / 2)^2 + (b2 / 2)^2, (b1 / 2)^2 + (b2 / 2)^2)
     ((b1 / 2)^2 + (b2 / 2)^2) - ((b1 / 2)^2 + (b2 / 2)^2) = (d1^2 + d2^2 - (b1 * d1 + b2 * d2) + (b1 / 2)^2 + (b2 / 2)^2) - ((b1 / 2)^2 + (b2 / 2)^2)
     ((b1 / 2)^2 + (b2 / 2)^2) - ((b1 / 2)^2 + (b2 / 2)^2) = 0
     (d1^2 + d2^2 - (b1 * d1 + b2 * d2) + (b1 / 2)^2 + (b2 / 2)^2) - ((b1 / 2)^2 + (b2 / 2)^2) = d1^2 + d2^2 - (b1 * d1 + b2 * d2)
@@ -91,7 +91,7 @@ thm problem_220_part2_parameter_core:
 
     a1 + lambda * (d1 - a1) = lambda * d1 + (1 - lambda) * a1
     b1 + r * a1 = lambda * d1 + (1 - lambda) * a1
-    by thm geo::subtract_equalities(b1 + r * a1, lambda * d1 + (1 - lambda) * a1, (1 - lambda) * a1, (1 - lambda) * a1)
+    release thm geo::subtract_equalities(b1 + r * a1, lambda * d1 + (1 - lambda) * a1, (1 - lambda) * a1, (1 - lambda) * a1)
     (b1 + r * a1) - (1 - lambda) * a1 = (lambda * d1 + (1 - lambda) * a1) - (1 - lambda) * a1
     (b1 + r * a1) - (1 - lambda) * a1 = b1 + (r + lambda - 1) * a1
     (lambda * d1 + (1 - lambda) * a1) - (1 - lambda) * a1 = lambda * d1
@@ -99,62 +99,62 @@ thm problem_220_part2_parameter_core:
 
     a2 + lambda * (d2 - a2) = lambda * d2 + (1 - lambda) * a2
     b2 + r * a2 = lambda * d2 + (1 - lambda) * a2
-    by thm geo::subtract_equalities(b2 + r * a2, lambda * d2 + (1 - lambda) * a2, (1 - lambda) * a2, (1 - lambda) * a2)
+    release thm geo::subtract_equalities(b2 + r * a2, lambda * d2 + (1 - lambda) * a2, (1 - lambda) * a2, (1 - lambda) * a2)
     (b2 + r * a2) - (1 - lambda) * a2 = (lambda * d2 + (1 - lambda) * a2) - (1 - lambda) * a2
     (b2 + r * a2) - (1 - lambda) * a2 = b2 + (r + lambda - 1) * a2
     (lambda * d2 + (1 - lambda) * a2) - (1 - lambda) * a2 = lambda * d2
     lambda * d2 = b2 + (r + lambda - 1) * a2
-    by thm geo::multiply_both_sides(lambda * d1, b1 + (r + lambda - 1) * a1, d1)
+    release thm geo::multiply_both_sides(lambda * d1, b1 + (r + lambda - 1) * a1, d1)
     (lambda * d1) * d1 = (b1 + (r + lambda - 1) * a1) * d1
     (lambda * d1) * d1 = lambda * d1^2
     (b1 + (r + lambda - 1) * a1) * d1 = b1 * d1 + (r + lambda - 1) * (a1 * d1)
     lambda * d1^2 = b1 * d1 + (r + lambda - 1) * (a1 * d1)
-    by thm geo::multiply_both_sides(lambda * d2, b2 + (r + lambda - 1) * a2, d2)
+    release thm geo::multiply_both_sides(lambda * d2, b2 + (r + lambda - 1) * a2, d2)
     (lambda * d2) * d2 = (b2 + (r + lambda - 1) * a2) * d2
     (lambda * d2) * d2 = lambda * d2^2
     (b2 + (r + lambda - 1) * a2) * d2 = b2 * d2 + (r + lambda - 1) * (a2 * d2)
     lambda * d2^2 = b2 * d2 + (r + lambda - 1) * (a2 * d2)
-    by thm geo::add_equalities(lambda * d1^2, b1 * d1 + (r + lambda - 1) * (a1 * d1), lambda * d2^2, b2 * d2 + (r + lambda - 1) * (a2 * d2))
+    release thm geo::add_equalities(lambda * d1^2, b1 * d1 + (r + lambda - 1) * (a1 * d1), lambda * d2^2, b2 * d2 + (r + lambda - 1) * (a2 * d2))
     lambda * d1^2 + lambda * d2^2 = (b1 * d1 + (r + lambda - 1) * (a1 * d1)) + (b2 * d2 + (r + lambda - 1) * (a2 * d2))
     lambda * (d1^2 + d2^2) = lambda * d1^2 + lambda * d2^2
     (b1 * d1 + (r + lambda - 1) * (a1 * d1)) + (b2 * d2 + (r + lambda - 1) * (a2 * d2)) = (b1 * d1 + b2 * d2) + ((r + lambda - 1) * (a1 * d1) + (r + lambda - 1) * (a2 * d2))
     (r + lambda - 1) * (a1 * d1) + (r + lambda - 1) * (a2 * d2) = (r + lambda - 1) * (a1 * d1 + a2 * d2)
     lambda * (d1^2 + d2^2) = (b1 * d1 + b2 * d2) + (r + lambda - 1) * (a1 * d1 + a2 * d2)
-    by thm geo::multiply_both_sides(lambda * (d1^2 + d2^2), (b1 * d1 + b2 * d2) + (r + lambda - 1) * (a1 * d1 + a2 * d2), 2)
+    release thm geo::multiply_both_sides(lambda * (d1^2 + d2^2), (b1 * d1 + b2 * d2) + (r + lambda - 1) * (a1 * d1 + a2 * d2), 2)
     (lambda * (d1^2 + d2^2)) * 2 = ((b1 * d1 + b2 * d2) + (r + lambda - 1) * (a1 * d1 + a2 * d2)) * 2
     (lambda * (d1^2 + d2^2)) * 2 = 2 * lambda * (d1^2 + d2^2)
     ((b1 * d1 + b2 * d2) + (r + lambda - 1) * (a1 * d1 + a2 * d2)) * 2 = 2 * (b1 * d1 + b2 * d2) + 2 * (r + lambda - 1) * (a1 * d1 + a2 * d2)
     2 * lambda * (d1^2 + d2^2) = 2 * (b1 * d1 + b2 * d2) + 2 * (r + lambda - 1) * (a1 * d1 + a2 * d2)
 
     b1 * d1 + b2 * d2 = d1^2 + d2^2
-    by thm geo::multiply_both_sides(b1 * d1 + b2 * d2, d1^2 + d2^2, 2)
+    release thm geo::multiply_both_sides(b1 * d1 + b2 * d2, d1^2 + d2^2, 2)
     (b1 * d1 + b2 * d2) * 2 = (d1^2 + d2^2) * 2
     (b1 * d1 + b2 * d2) * 2 = 2 * (b1 * d1 + b2 * d2)
     (d1^2 + d2^2) * 2 = 2 * (d1^2 + d2^2)
     2 * (b1 * d1 + b2 * d2) = 2 * (d1^2 + d2^2)
 
     2 * (a1 * d1 + a2 * d2) = d1^2 + d2^2
-    by thm geo::multiply_both_sides(2 * (a1 * d1 + a2 * d2), d1^2 + d2^2, r + lambda - 1)
+    release thm geo::multiply_both_sides(2 * (a1 * d1 + a2 * d2), d1^2 + d2^2, r + lambda - 1)
     (2 * (a1 * d1 + a2 * d2)) * (r + lambda - 1) = (d1^2 + d2^2) * (r + lambda - 1)
     (2 * (a1 * d1 + a2 * d2)) * (r + lambda - 1) = 2 * (r + lambda - 1) * (a1 * d1 + a2 * d2)
     (d1^2 + d2^2) * (r + lambda - 1) = (r + lambda - 1) * (d1^2 + d2^2)
     2 * (r + lambda - 1) * (a1 * d1 + a2 * d2) = (r + lambda - 1) * (d1^2 + d2^2)
 
-    by thm geo::add_equalities(2 * (b1 * d1 + b2 * d2), 2 * (d1^2 + d2^2), 2 * (r + lambda - 1) * (a1 * d1 + a2 * d2), (r + lambda - 1) * (d1^2 + d2^2))
+    release thm geo::add_equalities(2 * (b1 * d1 + b2 * d2), 2 * (d1^2 + d2^2), 2 * (r + lambda - 1) * (a1 * d1 + a2 * d2), (r + lambda - 1) * (d1^2 + d2^2))
     2 * (b1 * d1 + b2 * d2) + 2 * (r + lambda - 1) * (a1 * d1 + a2 * d2) = 2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2)
     2 * lambda * (d1^2 + d2^2) = 2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2)
 
-    by thm geo::subtract_equalities(2 * lambda * (d1^2 + d2^2), 2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2), 2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2), 2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2))
+    release thm geo::subtract_equalities(2 * lambda * (d1^2 + d2^2), 2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2), 2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2), 2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2))
     (2 * lambda * (d1^2 + d2^2)) - (2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2)) = (2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2)) - (2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2))
     (2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2)) - (2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2)) = 0
     (2 * lambda * (d1^2 + d2^2)) - (2 * (d1^2 + d2^2) + (r + lambda - 1) * (d1^2 + d2^2)) = (lambda - r - 1) * (d1^2 + d2^2)
     (lambda - r - 1) * (d1^2 + d2^2) = 0
 
     (0, 0) != (d1, d2)
-    by thm geo::point_difference_norm_pos((0, 0), (d1, d2))
+    release thm geo::point_difference_norm_pos((0, 0), (d1, d2))
     (d1 - 0)^2 + (d2 - 0)^2 > 0
     (d1 - 0)^2 + (d2 - 0)^2 = d1^2 + d2^2
     d1^2 + d2^2 > 0
     d1^2 + d2^2 != 0
-    by thm geo::rearrange_sum(lambda, r, 1)
+    release thm geo::rearrange_sum(lambda, r, 1)
     lambda = r + 1

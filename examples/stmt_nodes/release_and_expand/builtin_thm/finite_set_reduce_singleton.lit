@@ -1,0 +1,10 @@
+# Before: the bare singleton fold equality was rejected in ordinary search.
+# finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0) = 2
+# Now: explicitly release the checked singleton defining equation.
+# Gate: target/release/litex -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/finite_set_reduce_singleton.lit
+# Boundary: a nonsingleton source, wrong element, bad seed, or operation
+# without the existing associative/commutative WD laws must reject.
+release thm finite_set_reduce_singleton(finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0), 2)
+fn(x Z) Z{x}(2) = 2
+fn(a,b Z) Z{a+b}(0, fn(x Z) Z{x}(2)) = 2
+finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0) = fn(a,b Z) Z{a+b}(0, fn(x Z) Z{x}(2)) = 2

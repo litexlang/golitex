@@ -103,7 +103,8 @@ thm two_variable_am_gm:
 
 arithmetic_mean(10, 14) = (10 + 14) / 2 = 12
 
-by thm two_variable_am_gm(9, 16) => geometric_mean(9, 16) <= arithmetic_mean(9, 16)
+release thm two_variable_am_gm(9, 16)
+geometric_mean(9, 16) <= arithmetic_mean(9, 16)
 
 geometric_mean(9, 16) = sqrt(9 * 16) = 12
 
@@ -225,7 +226,8 @@ circle_center(1, 2, 5) = {p cart(R, R): (p[1] - 1)^2 + (p[2] - 2)^2 = 5^2}
 
 9 / 9 + 0 / 4 = 1
 
-by thm set_builder_member((3, 0), {p cart(R, R): p[1]^2 / 3^2 + p[2]^2 / 2^2 = 1}) => (3, 0) $in {p cart(R, R): p[1]^2 / 3^2 + p[2]^2 / 2^2 = 1}
+release thm set_builder_member((3, 0), {p cart(R, R): p[1]^2 / 3^2 + p[2]^2 / 2^2 = 1})
+(3, 0) $in {p cart(R, R): p[1]^2 / 3^2 + p[2]^2 / 2^2 = 1}
 
 ellipse(3, 2) = {p cart(R, R): p[1]^2 / 3^2 + p[2]^2 / 2^2 = 1}
 
@@ -283,7 +285,8 @@ have fn cube_surface_area(edge R) R = 6 * edge^2
 
 dot3((1, 0, 0), (0, 1, 0)) = 0
 
-by thm set_builder_member((2, -3, 0), {p cart(R, R, R): p[3] = 0}) => (2, -3, 0) $in {p cart(R, R, R): p[3] = 0}
+release thm set_builder_member((2, -3, 0), {p cart(R, R, R): p[3] = 0})
+(2, -3, 0) $in {p cart(R, R, R): p[3] = 0}
 
 horizontal_plane(0) = {p cart(R, R, R): p[3] = 0}
 
@@ -298,7 +301,8 @@ cube_surface_area(3) = 54
 # Application: check another point on the ground plane and compute a box
 # volume from three side lengths.
 
-by thm set_builder_member((7, -2, 0), {p cart(R, R, R): p[3] = 0}) => (7, -2, 0) $in {p cart(R, R, R): p[3] = 0}
+release thm set_builder_member((7, -2, 0), {p cart(R, R, R): p[3] = 0})
+(7, -2, 0) $in {p cart(R, R, R): p[3] = 0}
 
 (7, -2, 0) $in horizontal_plane(0)
 

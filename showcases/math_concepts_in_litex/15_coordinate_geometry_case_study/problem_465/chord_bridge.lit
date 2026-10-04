@@ -5,7 +5,7 @@ thm local_radius_linear:
         (a1 - o1)^2 + (a2 - o2)^2 = (b1 - o1)^2 + (b2 - o2)^2
         =>:
             2 * ((a1 - o1) * (b1 - a1) + (a2 - o2) * (b2 - a2)) + ((b1 - a1)^2 + (b2 - a2)^2) = 0
-    by thm geo::subtract_equalities((a1 - o1)^2 + (a2 - o2)^2, (b1 - o1)^2 + (b2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2)
+    release thm geo::subtract_equalities((a1 - o1)^2 + (a2 - o2)^2, (b1 - o1)^2 + (b2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2, (a1 - o1)^2 + (a2 - o2)^2)
     ((a1 - o1)^2 + (a2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = ((b1 - o1)^2 + (b2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2)
     ((a1 - o1)^2 + (a2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = 0
     ((b1 - o1)^2 + (b2 - o2)^2) - ((a1 - o1)^2 + (a2 - o2)^2) = 2 * ((a1 - o1) * (b1 - a1) + (a2 - o2) * (b2 - a2)) + ((b1 - a1)^2 + (b2 - a2)^2)
@@ -19,24 +19,24 @@ thm same_chord_radius_scalar:
         t * r = s * q + (1 - s) * p
         =>:
             t * M = L
-    by thm geo::multiply_both_sides(2 * r + M, 0, t)
+    release thm geo::multiply_both_sides(2 * r + M, 0, t)
     t * (2 * r + M) = 0
     t * (2 * r + M) = 2 * (t * r) + t * M
     2 * (t * r) + t * M = 0
-    by thm geo::multiply_both_sides(2 * q + L, 0, s)
+    release thm geo::multiply_both_sides(2 * q + L, 0, s)
     s * (2 * q + L) = 0
-    by thm geo::multiply_both_sides(2 * p + L, 0, 1 - s)
+    release thm geo::multiply_both_sides(2 * p + L, 0, 1 - s)
     (1 - s) * (2 * p + L) = 0
-    by thm geo::add_equalities(s * (2 * q + L), 0, (1 - s) * (2 * p + L), 0)
+    release thm geo::add_equalities(s * (2 * q + L), 0, (1 - s) * (2 * p + L), 0)
     s * (2 * q + L) + (1 - s) * (2 * p + L) = 0
     s * (2 * q + L) + (1 - s) * (2 * p + L) = 2 * (s * q + (1 - s) * p) + L
     2 * (s * q + (1 - s) * p) + L = 0
-    by thm geo::multiply_both_sides(t * r, s * q + (1 - s) * p, 2)
+    release thm geo::multiply_both_sides(t * r, s * q + (1 - s) * p, 2)
     (t * r) * 2 = (s * q + (1 - s) * p) * 2
-    by thm geo::add_equalities((t * r) * 2, (s * q + (1 - s) * p) * 2, L, L)
+    release thm geo::add_equalities((t * r) * 2, (s * q + (1 - s) * p) * 2, L, L)
     (t * r) * 2 + L = (s * q + (1 - s) * p) * 2 + L
     2 * (t * r) + L = (t * r) * 2 + L = (s * q + (1 - s) * p) * 2 + L = 2 * (s * q + (1 - s) * p) + L = 0
-    by thm geo::subtract_equalities(2 * (t * r) + t * M, 0, 2 * (t * r) + L, 0)
+    release thm geo::subtract_equalities(2 * (t * r) + t * M, 0, 2 * (t * r) + L, 0)
     (2 * (t * r) + t * M) - (2 * (t * r) + L) = 0
     (2 * (t * r) + t * M) - (2 * (t * r) + L) = t * M - L
     t * M - L = 0
@@ -65,9 +65,9 @@ thm affine_linear_form_scalar:
         t * dy = s * cy + (1 - s) * bz
         =>:
             t * (px * dx + py * dy) = s * (px * cx + py * cy) + (1 - s) * (px * bx + py * bz)
-    by thm geo::multiply_both_sides(t * dx, s * cx + (1 - s) * bx, px)
-    by thm geo::multiply_both_sides(t * dy, s * cy + (1 - s) * bz, py)
-    by thm geo::add_equalities(t * dx * px, (s * cx + (1 - s) * bx) * px, t * dy * py, (s * cy + (1 - s) * bz) * py)
+    release thm geo::multiply_both_sides(t * dx, s * cx + (1 - s) * bx, px)
+    release thm geo::multiply_both_sides(t * dy, s * cy + (1 - s) * bz, py)
+    release thm geo::add_equalities(t * dx * px, (s * cx + (1 - s) * bx) * px, t * dy * py, (s * cy + (1 - s) * bz) * py)
     t * dx * px + t * dy * py = (s * cx + (1 - s) * bx) * px + (s * cy + (1 - s) * bz) * py
     t * (px * dx + py * dy) = t * dx * px + t * dy * py
     (s * cx + (1 - s) * bx) * px + (s * cy + (1 - s) * bz) * py = (s * cx * px + (1 - s) * bx * px) + (s * cy * py + (1 - s) * bz * py)
@@ -88,10 +88,10 @@ thm same_chord_scalar_bus:
         =>:
             t * (M - UW) = s * (L - UV)
             t * (-DUW) = s * (-DUV)
-    by thm same_chord_radius_scalar(p, q, r, L, M, t, s)
+    release thm same_chord_radius_scalar(p, q, r, L, M, t, s)
     t * M = L
-    by thm same_chord_dot_scalar(L, M, UW, UV, t, s)
-    by thm same_chord_det_scalar(DUW, DUV, t, s)
+    release thm same_chord_dot_scalar(L, M, UW, UV, t, s)
+    release thm same_chord_det_scalar(DUW, DUV, t, s)
 
 
 # Point-coordinate bridge.  The affine relation says
@@ -108,29 +108,29 @@ thm same_chord_point_coordinate_bridge:
             t * ((b[1] - d[1]) * (a[1] - d[1]) + (b[2] - d[2]) * (a[2] - d[2])) = s * ((a[1] - b[1]) * (c[1] - b[1]) + (a[2] - b[2]) * (c[2] - b[2]))
             t * ((b[1] - d[1]) * (a[2] - d[2]) - (b[2] - d[2]) * (a[1] - d[1])) = s * ((a[1] - b[1]) * (c[2] - b[2]) - (a[2] - b[2]) * (c[1] - b[1]))
 
-    by thm local_radius_linear(a[1], a[2], b[1], b[2], o[1], o[2])
+    release thm local_radius_linear(a[1], a[2], b[1], b[2], o[1], o[2])
     2 * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2])) + ((b[1] - a[1])^2 + (b[2] - a[2])^2) = 0
-    by thm local_radius_linear(a[1], a[2], c[1], c[2], o[1], o[2])
+    release thm local_radius_linear(a[1], a[2], c[1], c[2], o[1], o[2])
     2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])) + ((c[1] - a[1])^2 + (c[2] - a[2])^2) = 0
-    by thm geo::add_equalities((b[1] - a[1])^2 + (b[2] - a[2])^2, (c[1] - a[1])^2 + (c[2] - a[2])^2, 2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])), 2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])))
+    release thm geo::add_equalities((b[1] - a[1])^2 + (b[2] - a[2])^2, (c[1] - a[1])^2 + (c[2] - a[2])^2, 2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])), 2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])))
     2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])) + ((b[1] - a[1])^2 + (b[2] - a[2])^2) = 2 * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])) + ((c[1] - a[1])^2 + (c[2] - a[2])^2) = 0
-    by thm local_radius_linear(a[1], a[2], d[1], d[2], o[1], o[2])
+    release thm local_radius_linear(a[1], a[2], d[1], d[2], o[1], o[2])
     2 * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) + ((d[1] - a[1])^2 + (d[2] - a[2])^2) = 0
 
-    by thm affine_linear_form_scalar(d[1] - a[1], d[2] - a[2], c[1] - a[1], c[2] - a[2], b[1] - a[1], b[2] - a[2], a[1] - o[1], a[2] - o[2], t, s)
+    release thm affine_linear_form_scalar(d[1] - a[1], d[2] - a[2], c[1] - a[1], c[2] - a[2], b[1] - a[1], b[2] - a[2], a[1] - o[1], a[2] - o[2], t, s)
     t * ((a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2])) = s * ((a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2])) + (1 - s) * ((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]))
 
-    by thm affine_linear_form_scalar(d[1] - a[1], d[2] - a[2], c[1] - a[1], c[2] - a[2], b[1] - a[1], b[2] - a[2], b[1] - a[1], b[2] - a[2], t, s)
+    release thm affine_linear_form_scalar(d[1] - a[1], d[2] - a[2], c[1] - a[1], c[2] - a[2], b[1] - a[1], b[2] - a[2], b[1] - a[1], b[2] - a[2], t, s)
     t * ((b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2])) = s * ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])) + (1 - s) * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
 
-    by thm affine_linear_form_scalar(d[1] - a[1], d[2] - a[2], c[1] - a[1], c[2] - a[2], b[1] - a[1], b[2] - a[2], -(b[2] - a[2]), b[1] - a[1], t, s)
+    release thm affine_linear_form_scalar(d[1] - a[1], d[2] - a[2], c[1] - a[1], c[2] - a[2], b[1] - a[1], b[2] - a[2], -(b[2] - a[2]), b[1] - a[1], t, s)
     t * ((-(b[2] - a[2])) * (d[1] - a[1]) + (b[1] - a[1]) * (d[2] - a[2])) = s * ((-(b[2] - a[2])) * (c[1] - a[1]) + (b[1] - a[1]) * (c[2] - a[2])) + (1 - s) * ((-(b[2] - a[2])) * (b[1] - a[1]) + (b[1] - a[1]) * (b[2] - a[2]))
     (-(b[2] - a[2])) * (b[1] - a[1]) + (b[1] - a[1]) * (b[2] - a[2]) = 0
     t * ((b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1])) = t * ((-(b[2] - a[2])) * (d[1] - a[1]) + (b[1] - a[1]) * (d[2] - a[2]))
     s * ((-(b[2] - a[2])) * (c[1] - a[1]) + (b[1] - a[1]) * (c[2] - a[2])) + (1 - s) * ((-(b[2] - a[2])) * (b[1] - a[1]) + (b[1] - a[1]) * (b[2] - a[2])) = s * ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]))
     t * ((b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1])) = s * ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]))
 
-    by thm same_chord_scalar_bus((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]), (a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]), (a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2]), (b[1] - a[1])^2 + (b[2] - a[2])^2, (d[1] - a[1])^2 + (d[2] - a[2])^2, (b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2]), (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]), (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]), (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]), t, s)
+    release thm same_chord_scalar_bus((a[1] - o[1]) * (b[1] - a[1]) + (a[2] - o[2]) * (b[2] - a[2]), (a[1] - o[1]) * (c[1] - a[1]) + (a[2] - o[2]) * (c[2] - a[2]), (a[1] - o[1]) * (d[1] - a[1]) + (a[2] - o[2]) * (d[2] - a[2]), (b[1] - a[1])^2 + (b[2] - a[2])^2, (d[1] - a[1])^2 + (d[2] - a[2])^2, (b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2]), (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2]), (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]), (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]), t, s)
 
     t * (((d[1] - a[1])^2 + (d[2] - a[2])^2) - ((b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2]))) = s * (((b[1] - a[1])^2 + (b[2] - a[2])^2) - ((b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])))
     t * (-((b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]))) = s * (-((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])))

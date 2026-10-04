@@ -242,7 +242,7 @@ fn stored_paths_remain_available_at_level_zero_and_keep_wd() {
 }
 
 #[test]
-fn definition_and_strategy_premises_do_not_restore_definition_search() {
+fn bounded_definition_body_normalization_keeps_strategy_premises_restricted() {
     use VerifyStateLevel::*;
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn bump(x Z) Z = x+1");
@@ -254,7 +254,10 @@ fn definition_and_strategy_premises_do_not_restore_definition_search() {
         .verify_strategy_requirements(vec![goal], child)
         .unwrap()
         .is_none());
-    assert!(verify(&mut rt, "wrapped(3)=4", VerifyState::top_level()).is_failed());
+    // Top-level definition evaluation now expands the two known bodies locally.
+    // This does not grant definition search to a strategy's restricted child.
+    assert!(verify(&mut rt, "wrapped(3)=4", child).is_failed());
+    assert!(!verify(&mut rt, "wrapped(3)=4", VerifyState::top_level()).is_failed());
     exec_ok(&mut rt, "bump(3)=4");
     assert!(!verify(&mut rt, "wrapped(3)=4", VerifyState::top_level()).is_failed());
 }

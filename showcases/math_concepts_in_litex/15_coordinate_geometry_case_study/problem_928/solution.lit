@@ -34,5 +34,5 @@ thm problem_928_quadrilateral_congruence:
         =>:
             $geo::are_triangles_congruent(a, b, d, c, d, b)
 
-    by thm geo::distance_sq_symmetric(b, d)
+    release thm geo::distance_sq_symmetric(b, d)
     by def $geo::are_triangles_congruent(a, b, d, c, d, b)

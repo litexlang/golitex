@@ -50,10 +50,10 @@ thm problem_296_equilateral_altitude_midpoint_distance:
     geo::vec(pd, pb) = (pb[1] - pd[1], pb[2] - pd[2])
     pb[1] - pd[1] = -s * (pc[1] - pb[1])
     pb[2] - pd[2] = -s * (pc[2] - pb[2])
-    by thm geo::dot_coordinate_formula(geo::vec(pd, pa), geo::vec(pd, pb))
+    release thm geo::dot_coordinate_formula(geo::vec(pd, pa), geo::vec(pd, pb))
     geo::dot(geo::vec(pd, pa), geo::vec(pd, pb)) = (pa[1] - pd[1]) * (pb[1] - pd[1]) + (pa[2] - pd[2]) * (pb[2] - pd[2])
     (pa[1] - pd[1]) * (pb[1] - pd[1]) + (pa[2] - pd[2]) * (pb[2] - pd[2]) = s * ((pd[1] - pa[1]) * (pc[1] - pb[1]) + (pd[2] - pa[2]) * (pc[2] - pb[2]))
-    by thm geo::dot_coordinate_formula(geo::vec(pa, pd), geo::vec(pb, pc))
+    release thm geo::dot_coordinate_formula(geo::vec(pa, pd), geo::vec(pb, pc))
     geo::dot(geo::vec(pa, pd), geo::vec(pb, pc)) = (pd[1] - pa[1]) * (pc[1] - pb[1]) + (pd[2] - pa[2]) * (pc[2] - pb[2])
     (pd[1] - pa[1]) * (pc[1] - pb[1]) + (pd[2] - pa[2]) * (pc[2] - pb[2]) = 0
     s * ((pd[1] - pa[1]) * (pc[1] - pb[1]) + (pd[2] - pa[2]) * (pc[2] - pb[2])) = s * 0
@@ -64,7 +64,7 @@ thm problem_296_equilateral_altitude_midpoint_distance:
     geo::vec(pd, pc) = (pc[1] - pd[1], pc[2] - pd[2])
     pc[1] - pd[1] = (1 - s) * (pc[1] - pb[1])
     pc[2] - pd[2] = (1 - s) * (pc[2] - pb[2])
-    by thm geo::dot_coordinate_formula(geo::vec(pd, pa), geo::vec(pd, pc))
+    release thm geo::dot_coordinate_formula(geo::vec(pd, pa), geo::vec(pd, pc))
     geo::dot(geo::vec(pd, pa), geo::vec(pd, pc)) = (pa[1] - pd[1]) * (pc[1] - pd[1]) + (pa[2] - pd[2]) * (pc[2] - pd[2])
     (pa[1] - pd[1]) * (pc[1] - pd[1]) + (pa[2] - pd[2]) * (pc[2] - pd[2]) = (1 - s) * ((pa[1] - pd[1]) * (pc[1] - pb[1]) + (pa[2] - pd[2]) * (pc[2] - pb[2]))
     (pa[1] - pd[1]) * (pc[1] - pb[1]) + (pa[2] - pd[2]) * (pc[2] - pb[2]) = -((pd[1] - pa[1]) * (pc[1] - pb[1]) + (pd[2] - pa[2]) * (pc[2] - pb[2]))
@@ -77,8 +77,8 @@ thm problem_296_equilateral_altitude_midpoint_distance:
     geo::dot(geo::vec(pd, pa), geo::vec(pd, pc)) = 0
 
     # 两次勾股，结合等边条件 AB²=AC²，得到 DB²=DC²。
-    by thm geo::pythagorean_theorem(pa, pd, pb)
-    by thm geo::pythagorean_theorem(pa, pd, pc)
+    release thm geo::pythagorean_theorem(pa, pd, pb)
+    release thm geo::pythagorean_theorem(pa, pd, pc)
     geo::distance_sq(pa, pb) = geo::distance_sq(pa, pd) + geo::distance_sq(pd, pb)
     geo::distance_sq(pa, pc) = geo::distance_sq(pa, pd) + geo::distance_sq(pd, pc)
     geo::distance_sq(pa, pb) = geo::distance_sq(pa, pc)
@@ -86,26 +86,26 @@ thm problem_296_equilateral_altitude_midpoint_distance:
     geo::distance_sq(pa, pb) - geo::distance_sq(pa, pd) = geo::distance_sq(pa, pc) - geo::distance_sq(pa, pd)
     geo::distance_sq(pa, pc) - geo::distance_sq(pa, pd) = geo::distance_sq(pd, pc)
     geo::distance_sq(pd, pb) = geo::distance_sq(pa, pb) - geo::distance_sq(pa, pd) = geo::distance_sq(pa, pc) - geo::distance_sq(pa, pd) = geo::distance_sq(pd, pc)
-    by thm geo::distance_sq_symmetric(pd, pb)
+    release thm geo::distance_sq_symmetric(pd, pb)
     geo::distance_sq(pb, pd) = geo::distance_sq(pd, pc)
 
     # D 的线段参数给出 B,D,C 共线；共线且到两端等距，所以 D 是 BC 中点。
     geo::vec(pb, pd) = (pd[1] - pb[1], pd[2] - pb[2])
     pd[1] - pb[1] = s * (pc[1] - pb[1])
     pd[2] - pb[2] = s * (pc[2] - pb[2])
-    by thm geo::det_coordinate_formula(geo::vec(pb, pd), geo::vec(pb, pc))
+    release thm geo::det_coordinate_formula(geo::vec(pb, pd), geo::vec(pb, pc))
     geo::det(geo::vec(pb, pd), geo::vec(pb, pc)) = (pd[1] - pb[1]) * (pc[2] - pb[2]) - (pd[2] - pb[2]) * (pc[1] - pb[1])
     (pd[1] - pb[1]) * (pc[2] - pb[2]) - (pd[2] - pb[2]) * (pc[1] - pb[1]) = s * (pc[1] - pb[1]) * (pc[2] - pb[2]) - s * (pc[2] - pb[2]) * (pc[1] - pb[1])
     s * (pc[1] - pb[1]) * (pc[2] - pb[2]) - s * (pc[2] - pb[2]) * (pc[1] - pb[1]) = 0
     geo::det(geo::vec(pb, pd), geo::vec(pb, pc)) = 0
     by def $geo::is_collinear(pb, pd, pc)
-    by thm geo::collinear_equidistant_implies_midpoint(pb, pc, pd)
+    release thm geo::collinear_equidistant_implies_midpoint(pb, pc, pd)
     pd[1] = (pb[1] + pc[1]) / 2
     pd[2] = (pb[2] + pc[2]) / 2
 
     # D、E 分别为 BC、AC 中点，故 DE²=AB²/4；等边又给 AB²=BC²，而 BD²=BC²/4。
-    by thm geo::distance_sq_coordinate_formula(pd, pe)
-    by thm geo::distance_sq_coordinate_formula(pa, pb)
+    release thm geo::distance_sq_coordinate_formula(pd, pe)
+    release thm geo::distance_sq_coordinate_formula(pa, pb)
     geo::distance_sq(pd, pe) = (pe[1] - pd[1])^2 + (pe[2] - pd[2])^2
     pe[1] - pd[1] = (pa[1] + pc[1]) / 2 - pd[1]
     (pa[1] + pc[1]) / 2 - pd[1] = (pa[1] + pc[1]) / 2 - (pb[1] + pc[1]) / 2
@@ -124,7 +124,7 @@ thm problem_296_equilateral_altitude_midpoint_distance:
     (pa[1] - pb[1])^2 = (pb[1] - pa[1])^2
     (pa[2] - pb[2])^2 = (pb[2] - pa[2])^2
     (pa[1] - pb[1])^2 + (pa[2] - pb[2])^2 = (pb[1] - pa[1])^2 + (pb[2] - pa[2])^2
-    by thm geo::distance_sq_coordinate_formula(pa, pb)
+    release thm geo::distance_sq_coordinate_formula(pa, pb)
     geo::distance_sq(pa, pb) = (pb[1] - pa[1])^2 + (pb[2] - pa[2])^2
     (pb[1] - pa[1])^2 + (pb[2] - pa[2])^2 = geo::distance_sq(pa, pb)
     ((pa[1] - pb[1])^2 + (pa[2] - pb[2])^2) / 4 = ((pb[1] - pa[1])^2 + (pb[2] - pa[2])^2) / 4
@@ -132,8 +132,8 @@ thm problem_296_equilateral_altitude_midpoint_distance:
     ((pa[1] - pb[1]) / 2)^2 + ((pa[2] - pb[2]) / 2)^2 = geo::distance_sq(pa, pb) / 4
     geo::distance_sq(pd, pe) = geo::distance_sq(pa, pb) / 4
 
-    by thm geo::distance_sq_coordinate_formula(pb, pd)
-    by thm geo::distance_sq_coordinate_formula(pb, pc)
+    release thm geo::distance_sq_coordinate_formula(pb, pd)
+    release thm geo::distance_sq_coordinate_formula(pb, pc)
     geo::distance_sq(pb, pd) = (pd[1] - pb[1])^2 + (pd[2] - pb[2])^2
     pd[1] - pb[1] = (pb[1] + pc[1]) / 2 - pb[1]
     (pb[1] + pc[1]) / 2 - pb[1] = (pc[1] - pb[1]) / 2

@@ -3700,13 +3700,22 @@
     },
     {
       "leaf": "DefAbstractPropStmt",
-      "name": "strict-abstract-prop-rejected",
-      "file": "boundaries/strict-abstract-prop-rejected.lit",
+      "name": "strict-abstract-prop-allowed",
+      "file": "boundaries/strict-abstract-prop-allowed.lit",
+      "strict": true,
+      "expect": {
+        "success": true,
+        "statement_success": [true, true]
+      }
+    },
+    {
+      "leaf": "DefAbstractPropStmt",
+      "name": "strict-abstract-instance-unproved",
+      "file": "boundaries/strict-abstract-instance-unproved.lit",
       "strict": true,
       "expect": {
         "success": false,
-        "statement_success": [],
-        "session_error_contains": "Runtime(InvalidArguments(\"`abstract_prop` is forbidden under Litex `-strict`\"))"
+        "statement_success": [true, false, false, false, false, false, false]
       }
     },
     {

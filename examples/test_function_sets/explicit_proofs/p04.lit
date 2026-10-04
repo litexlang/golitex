@@ -1,0 +1,10 @@
+# P04: Anonymous struct field equation and numeric call chain
+# Explicit proof contract; strict release checked, no trust.
+
+struct Box:
+    op fn(x R) R
+    tag N
+fn(x R) R {x + 1} $in fn(t R) R
+have box &Box = (fn(x R) R {x + 1}, 0)
+box.op = fn(x R) R {x + 1}
+box.op(2) = fn(x R) R {x + 1}(2) = 3

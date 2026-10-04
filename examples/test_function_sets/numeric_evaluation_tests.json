@@ -1,0 +1,321 @@
+{
+  "source_sha256": "8ab41c20238de0320864cd18bbf41b0557d34cf5b36c95f8cb8145ff650cb748",
+  "source_stable": true,
+  "gates": [
+    {
+      "filter": "function_body_evaluation_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "function_body_evaluation_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "counts": [
+        [
+          "ok",
+          "10",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ]
+      ],
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "filter": "function_application_wd_evidence_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "function_application_wd_evidence_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "counts": [
+        [
+          "ok",
+          "3",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ]
+      ],
+      "passed": 3,
+      "failed": 0
+    },
+    {
+      "filter": "builtin_entry_policy_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "builtin_entry_policy_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "counts": [
+        [
+          "ok",
+          "13",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ]
+      ],
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "filter": "function_signature_scope_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "function_signature_scope_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "counts": [
+        [
+          "ok",
+          "6",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ]
+      ],
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "filter": "execute_def_template_stmt::tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "execute_def_template_stmt::tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "counts": [
+        [
+          "ok",
+          "10",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ]
+      ],
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "filter": "struct_field_instantiation_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "struct_field_instantiation_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "counts": [
+        [
+          "ok",
+          "5",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ]
+      ],
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "filter": "special_property_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "special_property_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "counts": [
+        [
+          "ok",
+          "8",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ]
+      ],
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "filter": "known_does_not_recursively_unfold_nested_function_bodies",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "known_does_not_recursively_unfold_nested_function_bodies",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "counts": [
+        [
+          "ok",
+          "1",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ]
+      ],
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "filter": "json_output::acceptance_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "json_output::acceptance_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "counts": [
+        [
+          "ok",
+          "14",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0"
+        ]
+      ],
+      "passed": 14,
+      "failed": 0
+    }
+  ],
+  "ok": true,
+  "fixed_previous_positive_ids": [
+    "T04",
+    "T07",
+    "H01",
+    "H03",
+    "H04",
+    "H06",
+    "H07",
+    "H08",
+    "H09",
+    "H10",
+    "H11"
+  ],
+  "regressed_previous_positive_ids": [],
+  "all_current_negatives_reject": true,
+  "full_corpus_receipt": "numeric_evaluation_2026-10-04.json",
+  "full_corpus_intended_positive_failures": [
+    "T03",
+    "T05",
+    "S02",
+    "S07",
+    "S08",
+    "H05",
+    "D05",
+    "D08",
+    "D09"
+  ],
+  "total_passed": 70,
+  "binary_sha256": "3a6e45073cd757e9fece7105a986067fe2fe9be381b90411587aad353ff6c47b",
+  "previous_verified_checkpoint": {
+    "source_sha256": "bd166f4fa79f076e5c2efccd9c873e394bab74d38b254abedb4ed075ad2ca023",
+    "binary_sha256": "16086dcfba21a4172533f1c755a25e203661a3eb8ba9d597ca5a8c3c0eeba00e",
+    "total_passed": 68,
+    "receipt": "numeric_evaluation_checkpoint_2026-10-04.json"
+  }
+}

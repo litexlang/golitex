@@ -21,7 +21,7 @@ thm problem_505_same_sign_equal_squares:
         =>:
             x = y
     x^2 - y^2 = 0
-    by thm geo::difference_of_squares(x, y)
+    release thm geo::difference_of_squares(x, y)
     x^2 - y^2 = (x + y) * (x - y)
     (x + y) * (x - y) = 0
     (x - y) * (x + y) = 0
@@ -31,10 +31,10 @@ thm problem_505_same_sign_equal_squares:
             x = y
         case x != y:
             x - y != 0
-            by thm geo::zero_factor_law(x - y, x + y)
+            release thm geo::zero_factor_law(x - y, x + y)
             x + y = 0
             y + x = 0
-            by thm geo::zero_sum_rearrange(y, x)
+            release thm geo::zero_sum_rearrange(y, x)
             -y = x
             x = -y
             by contra:
@@ -83,7 +83,7 @@ thm problem_505_directed_angle_metric_bridge:
     (geo::angle_cos_num(p, q, r) * geo::angle_cos_num(u, v, w)) * (geo::distance_sq(v, u) * geo::distance_sq(q, p)) >= 0
     (geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u)) * (geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p)) = (geo::angle_cos_num(p, q, r) * geo::angle_cos_num(u, v, w)) * (geo::distance_sq(v, u) * geo::distance_sq(q, p))
     (geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u)) * (geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p)) >= 0
-    by thm problem_505_same_sign_equal_squares(geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u), geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p))
+    release thm problem_505_same_sign_equal_squares(geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u), geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p))
     geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u) = geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p)
     geo::angle_cos_num(p, q, r) = geo::dot(geo::vec(q, p), geo::vec(q, r))
     geo::angle_cos_num(u, v, w) = geo::dot(geo::vec(v, u), geo::vec(v, w))
@@ -93,7 +93,7 @@ thm problem_505_directed_angle_metric_bridge:
     geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p) = geo::dot(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)
     geo::dot(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u) = geo::dot(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)
 
-    by thm geo::congruent_angle_det_square_ratio(p, q, r, u, v, w)
+    release thm geo::congruent_angle_det_square_ratio(p, q, r, u, v, w)
     geo::det(geo::vec(q, p), geo::vec(q, r))^2 * geo::angle_cos_den(u, v, w) = geo::det(geo::vec(v, u), geo::vec(v, w))^2 * geo::angle_cos_den(p, q, r)
     (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u))^2 = geo::det(geo::vec(q, p), geo::vec(q, r))^2 * geo::distance_sq(v, u)^2
     geo::det(geo::vec(q, p), geo::vec(q, r))^2 * geo::distance_sq(v, u)^2 = geo::det(geo::vec(q, p), geo::vec(q, r))^2 * geo::angle_cos_den(u, v, w)
@@ -105,7 +105,7 @@ thm problem_505_directed_angle_metric_bridge:
     (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::det(geo::vec(v, u), geo::vec(v, w))) * (geo::distance_sq(v, u) * geo::distance_sq(q, p)) >= 0
     (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u)) * (geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)) = (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::det(geo::vec(v, u), geo::vec(v, w))) * (geo::distance_sq(v, u) * geo::distance_sq(q, p))
     (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u)) * (geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)) >= 0
-    by thm problem_505_same_sign_equal_squares(geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u), geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p))
+    release thm problem_505_same_sign_equal_squares(geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u), geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p))
 
 # A common scaled rotation preserves dot products once the scale is nonzero.
 thm problem_505_scaled_rotation_preserves_dot:
@@ -118,8 +118,8 @@ thm problem_505_scaled_rotation_preserves_dot:
         c^2 + s^2 = n^2
         =>:
             geo::dot(x, z) = geo::dot(y, w)
-    by thm geo::dot_coordinate_formula(x, z)
-    by thm geo::dot_coordinate_formula(y, w)
+    release thm geo::dot_coordinate_formula(x, z)
+    release thm geo::dot_coordinate_formula(y, w)
     geo::dot(x, z) = x[1] * z[1] + x[2] * z[2]
     geo::dot(y, w) = y[1] * w[1] + y[2] * w[2]
     n^2 > 0
@@ -128,7 +128,7 @@ thm problem_505_scaled_rotation_preserves_dot:
     (c * x[1] - s * x[2]) * (c * z[1] - s * z[2]) + (s * x[1] + c * x[2]) * (s * z[1] + c * z[2]) = (c^2 + s^2) * (x[1] * z[1] + x[2] * z[2])
     (c^2 + s^2) * (x[1] * z[1] + x[2] * z[2]) = n^2 * (x[1] * z[1] + x[2] * z[2])
     (y[1] * w[1] + y[2] * w[2]) * n^2 = (x[1] * z[1] + x[2] * z[2]) * n^2
-    by thm geo::cancel_positive_right_factor(y[1] * w[1] + y[2] * w[2], x[1] * z[1] + x[2] * z[2], n^2)
+    release thm geo::cancel_positive_right_factor(y[1] * w[1] + y[2] * w[2], x[1] * z[1] + x[2] * z[2], n^2)
     geo::dot(x, z) = geo::dot(y, w)
 
 # If one directed rotation sends x to y and z to w, it preserves the cross dot.
@@ -152,8 +152,8 @@ thm problem_505_rotation_pair_dot:
     geo::dot(y, w) = y[1] * w[1] + y[2] * w[2]
     # Lagrange's identity first shows that the common squared norm of x,y
     # equals the common squared norm of z,w.
-    by thm geo::dot_squared_plus_det_squared(x, y)
-    by thm geo::dot_squared_plus_det_squared(z, w)
+    release thm geo::dot_squared_plus_det_squared(x, y)
+    release thm geo::dot_squared_plus_det_squared(z, w)
     geo::dot(x, y)^2 + geo::det(x, y)^2 = geo::dot(x, x) * geo::dot(y, y)
     geo::dot(z, w)^2 + geo::det(z, w)^2 = geo::dot(z, z) * geo::dot(w, w)
     # Compare the two Lagrange left sides using the common dot and det values.
@@ -171,7 +171,7 @@ thm problem_505_rotation_pair_dot:
     x[1]^2 + x[2]^2 >= 0
     z[1]^2 + z[2]^2 >= 0
     (x[1]^2 + x[2]^2) * (z[1]^2 + z[2]^2) >= 0
-    by thm problem_505_same_sign_equal_squares(x[1]^2 + x[2]^2, z[1]^2 + z[2]^2)
+    release thm problem_505_same_sign_equal_squares(x[1]^2 + x[2]^2, z[1]^2 + z[2]^2)
     x[1]^2 + x[2]^2 = z[1]^2 + z[2]^2
 
     x[1]^2 + x[2]^2 = 0 or not x[1]^2 + x[2]^2 = 0
@@ -235,7 +235,7 @@ thm problem_505_rotation_pair_dot:
             (x[1]^2 + x[2]^2) * w[2] = (x[1] * y[2] - x[2] * y[1]) * z[1] + (x[1] * y[1] + x[2] * y[2]) * z[2]
             (x[1] * y[1] + x[2] * y[2])^2 + (x[1] * y[2] - x[2] * y[1])^2 = geo::dot(x, y)^2 + geo::det(x, y)^2
             (x[1] * y[1] + x[2] * y[2])^2 + (x[1] * y[2] - x[2] * y[1])^2 = (x[1]^2 + x[2]^2)^2
-            by thm problem_505_scaled_rotation_preserves_dot(x, y, z, w, x[1]^2 + x[2]^2, x[1] * y[1] + x[2] * y[2], x[1] * y[2] - x[2] * y[1])
+            release thm problem_505_scaled_rotation_preserves_dot(x, y, z, w, x[1]^2 + x[2]^2, x[1] * y[1] + x[2] * y[2], x[1] * y[2] - x[2] * y[1])
             geo::dot(x, z) = geo::dot(y, w)
 
 
@@ -251,14 +251,14 @@ thm problem_505_cross_scaled_rotation_pair_dot:
         geo::dot(z, z) > 0
         =>:
             geo::dot(x, z) = geo::dot(y, w)
-    by thm geo::dot_coordinate_formula(x, y)
-    by thm geo::dot_coordinate_formula(z, w)
-    by thm geo::det_coordinate_formula(x, y)
-    by thm geo::det_coordinate_formula(z, w)
-    by thm geo::dot_coordinate_formula(x, x)
-    by thm geo::dot_coordinate_formula(y, y)
-    by thm geo::dot_coordinate_formula(z, z)
-    by thm geo::dot_coordinate_formula(w, w)
+    release thm geo::dot_coordinate_formula(x, y)
+    release thm geo::dot_coordinate_formula(z, w)
+    release thm geo::det_coordinate_formula(x, y)
+    release thm geo::det_coordinate_formula(z, w)
+    release thm geo::dot_coordinate_formula(x, x)
+    release thm geo::dot_coordinate_formula(y, y)
+    release thm geo::dot_coordinate_formula(z, z)
+    release thm geo::dot_coordinate_formula(w, w)
 
     geo::dot(x, x) * geo::dot(z, z) > 0
 
@@ -307,7 +307,7 @@ thm problem_505_cross_scaled_rotation_pair_dot:
     (geo::dot(x, x) * geo::dot(z, z)) * w[2] = (geo::det(x, y) * geo::dot(z, z)) * z[1] + (geo::dot(x, y) * geo::dot(z, z)) * z[2]
 
     # Lagrange's identity gives c^2+s^2=n^2.
-    by thm geo::dot_squared_plus_det_squared(x, y)
+    release thm geo::dot_squared_plus_det_squared(x, y)
     geo::dot(x, y)^2 + geo::det(x, y)^2 = geo::dot(x, x) * geo::dot(y, y)
     geo::dot(x, x) * geo::dot(y, y) = geo::dot(x, x) * geo::dot(x, x)
     geo::dot(x, x) * geo::dot(x, x) = geo::dot(x, x)^2
@@ -318,7 +318,7 @@ thm problem_505_cross_scaled_rotation_pair_dot:
     geo::dot(x, x)^2 * geo::dot(z, z)^2 = (geo::dot(x, x) * geo::dot(z, z))^2
     (geo::dot(x, y) * geo::dot(z, z))^2 + (geo::det(x, y) * geo::dot(z, z))^2 = (geo::dot(x, x) * geo::dot(z, z))^2
 
-    by thm problem_505_scaled_rotation_preserves_dot(x, y, z, w, geo::dot(x, x) * geo::dot(z, z), geo::dot(x, y) * geo::dot(z, z), geo::det(x, y) * geo::dot(z, z))
+    release thm problem_505_scaled_rotation_preserves_dot(x, y, z, w, geo::dot(x, x) * geo::dot(z, z), geo::dot(x, y) * geo::dot(z, z), geo::det(x, y) * geo::dot(z, z))
     geo::dot(x, z) = geo::dot(y, w)
 
 thm problem_505:
@@ -333,15 +333,15 @@ thm problem_505:
             $geo::are_triangles_congruent(a, b, c, a, d, ep)
     by def $geo::are_segments_congruent(a, b, a, d)
     by def $geo::are_segments_congruent(a, c, a, ep)
-    by thm problem_505_directed_angle_metric_bridge(b, a, d, c, a, ep)
+    release thm problem_505_directed_angle_metric_bridge(b, a, d, c, a, ep)
     by def $translation::are_directed_angles_congruent(b, a, d, c, a, ep)
     by def $geo::are_angles_congruent(b, a, d, c, a, ep)
-    by thm geo::distance_sq_positive_of_ne(a, b)
-    by thm geo::distance_sq_positive_of_ne(a, c)
-    by thm geo::distance_sq_coordinate_formula(a, b)
-    by thm geo::distance_sq_coordinate_formula(a, d)
-    by thm geo::distance_sq_coordinate_formula(a, c)
-    by thm geo::distance_sq_coordinate_formula(a, ep)
+    release thm geo::distance_sq_positive_of_ne(a, b)
+    release thm geo::distance_sq_positive_of_ne(a, c)
+    release thm geo::distance_sq_coordinate_formula(a, b)
+    release thm geo::distance_sq_coordinate_formula(a, d)
+    release thm geo::distance_sq_coordinate_formula(a, c)
+    release thm geo::distance_sq_coordinate_formula(a, ep)
 
     # Record the reverse direction before using it inside products.
     geo::dot(geo::vec(a, b), geo::vec(a, b)) = geo::distance_sq(a, b)
@@ -367,20 +367,20 @@ thm problem_505:
     geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::dot(geo::vec(a, ep), geo::vec(a, ep))
     geo::dot(geo::vec(a, b), geo::vec(a, b)) > 0
     geo::dot(geo::vec(a, c), geo::vec(a, c)) > 0
-    by thm problem_505_cross_scaled_rotation_pair_dot(geo::vec(a, b), geo::vec(a, d), geo::vec(a, c), geo::vec(a, ep))
+    release thm problem_505_cross_scaled_rotation_pair_dot(geo::vec(a, b), geo::vec(a, d), geo::vec(a, c), geo::vec(a, ep))
 
     # SAS is instantiated as (b,a,c) and (d,a,ep), so orient the first side accordingly.
-    by thm geo::distance_sq_symmetric(a, b)
-    by thm geo::distance_sq_symmetric(a, d)
+    release thm geo::distance_sq_symmetric(a, b)
+    release thm geo::distance_sq_symmetric(a, d)
     geo::distance_sq(b, a) = geo::distance_sq(a, b)
     geo::distance_sq(a, b) = geo::distance_sq(a, d)
     geo::distance_sq(a, d) = geo::distance_sq(d, a)
     geo::distance_sq(b, a) = geo::distance_sq(d, a)
-    by thm geo::sas_congruence(b, a, c, d, a, ep)
+    release thm geo::sas_congruence(b, a, c, d, a, ep)
 
     # The triangle-congruence definition orients the third side as CA and EP-A.
-    by thm geo::distance_sq_symmetric(a, c)
-    by thm geo::distance_sq_symmetric(a, ep)
+    release thm geo::distance_sq_symmetric(a, c)
+    release thm geo::distance_sq_symmetric(a, ep)
     geo::distance_sq(c, a) = geo::distance_sq(a, c)
     geo::distance_sq(a, c) = geo::distance_sq(a, ep)
     geo::distance_sq(a, ep) = geo::distance_sq(ep, a)

@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "target": "examples/test_function_sets",
+  "session_command": [
+    "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+    "-strict"
+  ],
+  "workflow_deviation": "CLI has no try/before/runner/compact; independent sketch scopes are discarded. Binary replacement justifies restarting the before session. REPL blank lines terminate a frame, so fixture-internal blank lines are omitted inside wrappers.",
+  "session_restart_evidence": [
+    {
+      "diagnostic": "session_error: unexpected indent at line 1 in <repl>\nparse_error: unexpected indent at line 1 in <repl>",
+      "cause": "A fixture-internal blank line ended its sketch frame before the indented statements. The session exited; replay uses the same code with frame-internal blank lines removed.",
+      "mathematical_verdict": "not classified; framing failure"
+    }
+  ],
+  "proof_spine": [
+    "Check both function carriers and all guards",
+    "Cite each chosen mathematical function body and substitute bound parameters per call group",
+    "Verify the exact arithmetic residual without reopening definition search"
+  ],
+  "before": {
+    "binary_sha256": "d47a2b0ca55a0f8235810fdd57fde3a1fe74968cfa979172efdad7270a7a02ab",
+    "attempts": [
+      {
+        "candidate": "have fn add(x R) fn(y R) R = fn(y R) R {x+y}\nadd(2)(3)=5\n",
+        "submitted_frame": "sketch:\n    have fn add(x R) fn(y R) R = fn(y R) R {x+y}\n    add(2)(3)=5\n\n",
+        "verifier_evidence": "... ... ... error\nlitex> ",
+        "result": "rejected"
+      },
+      {
+        "candidate": "have fn add(x R) fn(y R) R = fn(y R) R {x+y}\nadd(2) $in fn(y R) R\nadd(2)(3) $in R\n",
+        "submitted_frame": "sketch:\n    have fn add(x R) fn(y R) R = fn(y R) R {x+y}\n    add(2) $in fn(y R) R\n    add(2)(3) $in R\n\n",
+        "verifier_evidence": "... ... ... ... success\nlitex> ",
+        "result": "accepted"
+      },
+      {
+        "candidate": "have fn add(x R) fn(y R) R = fn(y R) R {x+y}\nadd(2)=fn(y R) R {2+y}\nadd(2)(3)=fn(y R) R {2+y}(3)=5\n",
+        "submitted_frame": "sketch:\n    have fn add(x R) fn(y R) R = fn(y R) R {x+y}\n    add(2)=fn(y R) R {2+y}\n    add(2)(3)=fn(y R) R {2+y}(3)=5\n\n",
+        "verifier_evidence": "... ... ... ... success\nlitex> ",
+        "result": "accepted"
+      }
+    ]
+  },
+  "after": {
+    "source_sha256": "bd166f4fa79f076e5c2efccd9c873e394bab74d38b254abedb4ed075ad2ca023",
+    "binary_sha256": "16086dcfba21a4172533f1c755a25e203661a3eb8ba9d597ca5a8c3c0eeba00e",
+    "attempts": [
+      {
+        "id": "primary_0",
+        "candidate": "have fn add(x R) fn(y R) R = fn(y R) R {x+y}\nadd(2)(3)=5\n",
+        "submitted_frame": "sketch:\n    have fn add(x R) fn(y R) R = fn(y R) R {x+y}\n    add(2)(3)=5\n\n",
+        "result": "accepted",
+        "verifier_evidence": "... ... ... success\nlitex> "
+      },
+      {
+        "id": "primary_1",
+        "candidate": "have fn add(x R) fn(y R) R = fn(y R) R {x+y}\nadd(2) $in fn(y R) R\nadd(2)(3) $in R\n",
+        "submitted_frame": "sketch:\n    have fn add(x R) fn(y R) R = fn(y R) R {x+y}\n    add(2) $in fn(y R) R\n    add(2)(3) $in R\n\n",
+        "result": "accepted",
+        "verifier_evidence": "... ... ... ... success\nlitex> "
+      },
+      {
+        "id": "primary_2",
+        "candidate": "have fn add(x R) fn(y R) R = fn(y R) R {x+y}\nadd(2)=fn(y R) R {2+y}\nadd(2)(3)=fn(y R) R {2+y}(3)=5\n",
+        "submitted_frame": "sketch:\n    have fn add(x R) fn(y R) R = fn(y R) R {x+y}\n    add(2)=fn(y R) R {2+y}\n    add(2)(3)=fn(y R) R {2+y}(3)=5\n\n",
+        "result": "accepted",
+        "verifier_evidence": "... ... ... ... success\nlitex> "
+      },
+      {
+        "id": "composition",
+        "candidate": "# H07: Composition returns a closure capturing function arguments\n# Intended: accept; run via examples/test_function_sets/run.py\n\nhave fn compose(f, g fn(x R) R) fn(t R) R = fn(t R) R {f(g(t))}\nhave fn step(x R) R = x + 1\ncompose(step, step)(2) = 4\n",
+        "submitted_frame": "sketch:\n    # H07: Composition returns a closure capturing function arguments\n    # Intended: accept; run via examples/test_function_sets/run.py\n    have fn compose(f, g fn(x R) R) fn(t R) R = fn(t R) R {f(g(t))}\n    have fn step(x R) R = x + 1\n    compose(step, step)(2) = 4\n\n",
+        "result": "accepted",
+        "verifier_evidence": "... ... ... ... ... ... success\nlitex> "
+      },
+      {
+        "id": "template_return",
+        "candidate": "# T07: Template returns a function and calls it\n# Intended: accept; run via examples/test_function_sets/run.py\n\ntemplate<A nonempty_set>:\n    have fn constant(x A) fn(y A) A = fn(y A) A {x}\n\\constant<R>(2)(3) = 2\n",
+        "submitted_frame": "sketch:\n    # T07: Template returns a function and calls it\n    # Intended: accept; run via examples/test_function_sets/run.py\n    template<A nonempty_set>:\n        have fn constant(x A) fn(y A) A = fn(y A) A {x}\n    \\constant<R>(2)(3) = 2\n\n",
+        "result": "accepted",
+        "verifier_evidence": "... ... ... ... ... ... success\nlitex> "
+      },
+      {
+        "id": "exact_numbers",
+        "candidate": "# Primary direct-value regression: formerly rejected at search_proof.\nhave fn add(x R) fn(y R) R = fn(y R) R {x + y}\nadd(2) $in fn(y R) R\nadd(2)(3) $in R\nadd(2)(3) = 5\nadd(1 / 3)(1 / 6) = 1 / 2\nadd(0.1)(0.2) = 0.3\n",
+        "submitted_frame": "sketch:\n    # Primary direct-value regression: formerly rejected at search_proof.\n    have fn add(x R) fn(y R) R = fn(y R) R {x + y}\n    add(2) $in fn(y R) R\n    add(2)(3) $in R\n    add(2)(3) = 5\n    add(1 / 3)(1 / 6) = 1 / 2\n    add(0.1)(0.2) = 0.3\n\n",
+        "result": "accepted",
+        "verifier_evidence": "... ... ... ... ... ... ... ... success\nlitex> "
+      },
+      {
+        "id": "false_value",
+        "candidate": "# N17: Incorrect curried numeric equality\n# Intended: reject; run via examples/test_function_sets/run.py\n\nhave fn add(x R) fn(y R) R = fn(y R) R {x + y}\nadd(2)(3) = 6\n",
+        "submitted_frame": "sketch:\n    # N17: Incorrect curried numeric equality\n    # Intended: reject; run via examples/test_function_sets/run.py\n    have fn add(x R) fn(y R) R = fn(y R) R {x + y}\n    add(2)(3) = 6\n\n",
+        "result": "rejected",
+        "verifier_evidence": "... ... ... ... ... error\nlitex> "
+      },
+      {
+        "id": "precision_boundary",
+        "candidate": "have fn add(x R) fn(y R) R = fn(y R) R {x + y}\nadd(1 / 3)(1 / 6) = 0.500000000001\n",
+        "submitted_frame": "sketch:\n    have fn add(x R) fn(y R) R = fn(y R) R {x + y}\n    add(1 / 3)(1 / 6) = 0.500000000001\n\n",
+        "result": "rejected",
+        "verifier_evidence": "... ... ... error\nlitex> "
+      },
+      {
+        "id": "inner_guard",
+        "candidate": "# N13: Returned-function guard is not dropped\n# Intended: reject; run via examples/test_function_sets/run.py\n\nhave fn choose(k N) fn(x R: x != 0) R = fn(x R: x != 0) R {1 / x}\nchoose(0)(0) = choose(0)(0)\n",
+        "submitted_frame": "sketch:\n    # N13: Returned-function guard is not dropped\n    # Intended: reject; run via examples/test_function_sets/run.py\n    have fn choose(k N) fn(x R: x != 0) R = fn(x R: x != 0) R {1 / x}\n    choose(0)(0) = choose(0)(0)\n\n",
+        "result": "rejected",
+        "verifier_evidence": "... ... ... ... ... error\nlitex> "
+      }
+    ],
+    "clean_file_gate_receipt": "numeric_evaluation_checkpoint_2026-10-04.json"
+  },
+  "clean_file_gate_receipt": "numeric_evaluation_2026-10-04.json",
+  "rust_gate_receipt": "numeric_evaluation_tests.json",
+  "trust_delta": 0,
+  "fixed_old_positive_ids": [
+    "T04",
+    "T07",
+    "H01",
+    "H03",
+    "H04",
+    "H06",
+    "H07",
+    "H08",
+    "H09",
+    "H10",
+    "H11"
+  ],
+  "remaining_intended_positives": [
+    "T03",
+    "T05",
+    "S02",
+    "S07",
+    "S08",
+    "H05",
+    "D05",
+    "D08",
+    "D09"
+  ],
+  "final_release_refresh": {
+    "reason": "Parallel source changes added checked single-step beta compatibility and membership projection work. Rebuilt/rechecked the current source; original after probes retain checkpoint identity.",
+    "source_sha256": "8ab41c20238de0320864cd18bbf41b0557d34cf5b36c95f8cb8145ff650cb748",
+    "binary_sha256": "3a6e45073cd757e9fece7105a986067fe2fe9be381b90411587aad353ff6c47b",
+    "attempts": [
+      {
+        "file": "numeric_evaluation/e01.lit",
+        "candidate": "# Primary direct-value regression: formerly rejected at search_proof.\nhave fn add(x R) fn(y R) R = fn(y R) R {x + y}\nadd(2) $in fn(y R) R\nadd(2)(3) $in R\nadd(2)(3) = 5\nadd(1 / 3)(1 / 6) = 1 / 2\nadd(0.1)(0.2) = 0.3\n",
+        "submitted_frame": "sketch:\n    # Primary direct-value regression: formerly rejected at search_proof.\n    have fn add(x R) fn(y R) R = fn(y R) R {x + y}\n    add(2) $in fn(y R) R\n    add(2)(3) $in R\n    add(2)(3) = 5\n    add(1 / 3)(1 / 6) = 1 / 2\n    add(0.1)(0.2) = 0.3\n\n",
+        "result": "accepted",
+        "verifier_evidence": "... ... ... ... ... ... ... ... success\nlitex> "
+      },
+      {
+        "file": "higher_order/h07.lit",
+        "candidate": "# H07: Composition returns a closure capturing function arguments\n# Intended: accept; run via examples/test_function_sets/run.py\n\nhave fn compose(f, g fn(x R) R) fn(t R) R = fn(t R) R {f(g(t))}\nhave fn step(x R) R = x + 1\ncompose(step, step)(2) = 4\n",
+        "submitted_frame": "sketch:\n    # H07: Composition returns a closure capturing function arguments\n    # Intended: accept; run via examples/test_function_sets/run.py\n    have fn compose(f, g fn(x R) R) fn(t R) R = fn(t R) R {f(g(t))}\n    have fn step(x R) R = x + 1\n    compose(step, step)(2) = 4\n\n",
+        "result": "accepted",
+        "verifier_evidence": "... ... ... ... ... ... success\nlitex> "
+      },
+      {
+        "file": "template/t07.lit",
+        "candidate": "# T07: Template returns a function and calls it\n# Intended: accept; run via examples/test_function_sets/run.py\n\ntemplate<A nonempty_set>:\n    have fn constant(x A) fn(y A) A = fn(y A) A {x}\n\\constant<R>(2)(3) = 2\n",
+        "submitted_frame": "sketch:\n    # T07: Template returns a function and calls it\n    # Intended: accept; run via examples/test_function_sets/run.py\n    template<A nonempty_set>:\n        have fn constant(x A) fn(y A) A = fn(y A) A {x}\n    \\constant<R>(2)(3) = 2\n\n",
+        "result": "accepted",
+        "verifier_evidence": "... ... ... ... ... ... success\nlitex> "
+      },
+      {
+        "file": "higher_order/n17.lit",
+        "candidate": "# N17: Incorrect curried numeric equality\n# Intended: reject; run via examples/test_function_sets/run.py\n\nhave fn add(x R) fn(y R) R = fn(y R) R {x + y}\nadd(2)(3) = 6\n",
+        "submitted_frame": "sketch:\n    # N17: Incorrect curried numeric equality\n    # Intended: reject; run via examples/test_function_sets/run.py\n    have fn add(x R) fn(y R) R = fn(y R) R {x + y}\n    add(2)(3) = 6\n\n",
+        "result": "rejected",
+        "verifier_evidence": "... ... ... ... ... error\nlitex> "
+      },
+      {
+        "file": "numeric_evaluation/n21.lit",
+        "candidate": "have fn add(x R) fn(y R) R = fn(y R) R {x + y}\nadd(1 / 3)(1 / 6) = 0.500000000001\n",
+        "submitted_frame": "sketch:\n    have fn add(x R) fn(y R) R = fn(y R) R {x + y}\n    add(1 / 3)(1 / 6) = 0.500000000001\n\n",
+        "result": "rejected",
+        "verifier_evidence": "... ... ... error\nlitex> "
+      },
+      {
+        "file": "higher_order/n13.lit",
+        "candidate": "# N13: Returned-function guard is not dropped\n# Intended: reject; run via examples/test_function_sets/run.py\n\nhave fn choose(k N) fn(x R: x != 0) R = fn(x R: x != 0) R {1 / x}\nchoose(0)(0) = choose(0)(0)\n",
+        "submitted_frame": "sketch:\n    # N13: Returned-function guard is not dropped\n    # Intended: reject; run via examples/test_function_sets/run.py\n    have fn choose(k N) fn(x R: x != 0) R = fn(x R: x != 0) R {1 / x}\n    choose(0)(0) = choose(0)(0)\n\n",
+        "result": "rejected",
+        "verifier_evidence": "... ... ... ... ... error\nlitex> "
+      }
+    ],
+    "clean_file_gate_receipt": "numeric_evaluation_2026-10-04.json",
+    "rust_gate_receipt": "numeric_evaluation_tests.json"
+  },
+  "completion": {
+    "approved_numeric_contract_verified": true,
+    "old_positives_fixed": 11,
+    "positive_regressions": 0,
+    "negative_boundaries": 21,
+    "focused_rust_tests": 70,
+    "remaining_intended_positives": [
+      "T03",
+      "T05",
+      "S02",
+      "S07",
+      "S08",
+      "H05",
+      "D05",
+      "D08",
+      "D09"
+    ],
+    "trust_delta": 0
+  }
+}

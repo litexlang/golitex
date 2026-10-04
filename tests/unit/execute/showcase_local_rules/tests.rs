@@ -116,6 +116,40 @@ fn natural_power_laws_cover_existing_domains_and_keep_evidence() {
     }
 }
 #[test]
+fn integer_power_laws_require_nonzero_bases_and_integer_exponents() {
+    let detailed = check(
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/integer_power_laws.lit")), true,
+    );
+    for rule in ["PowerProductSameBase", "PowerOfPower", "PowerOfProduct", "proof_of_requirement_facts"] {
+        assert!(detailed.contains(rule), "{rule}");
+    }
+    for code in [
+        "forall x C, m,n Z:\n    (x^m)^n=x^(m*n)",
+        "forall x,y C, n Z:\n    (x*y)^n=x^n*y^n",
+        "forall x R*, m,n R:\n    (x^m)^n=x^(m*n)",
+        "forall x C*, m,n Z:\n    (x^m)^n=x^(m+n)",
+        "0^(-1)=1",
+    ] { check(code, false); }
+    check("forall x R, m,n N:\n    (x^m)^n=x^(m*n)", true);
+}
+
+#[test]
+fn symbolic_positive_power_cancellation_keeps_exponent_guards() {
+    let detailed = check(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+        "/examples/proof_nodes/equal/by_builtin_rule/positive_power_cancellation_symbolic.lit")), true);
+    assert!(detailed.contains("PositivePowerCancellation"));
+    assert!(detailed.contains("requirements"));
+    for code in [
+        "forall x,y R+, n Z:\n    x^n=y^n\n    =>:\n        x=y",
+        "forall x,y R+, n R*:\n    x^n=y^n\n    =>:\n        x=y",
+        "forall x,y R*:\n    x^2=y^2\n    =>:\n        x=y",
+        "forall x,y R+:\n    x^0=y^0\n    =>:\n        x=y",
+    ] { check(code, false); }
+    check("forall x,y R+:\n    x^(-2)=y^(-2)\n    =>:\n        x=y", true);
+}
+
+#[test]
 fn full_add2_chain_and_projection_boundaries() {
     let detailed = check(
         include_str!(concat!(

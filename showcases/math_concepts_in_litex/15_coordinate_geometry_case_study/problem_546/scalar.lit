@@ -29,9 +29,9 @@ thm problem_546_scalar_finish:
     9 * ((t - 1)^2 * s) = 9 * 16 = 144
     4 * t * z = 9 * (t - 1) * z
 
-    by thm geo::divide_both_sides(4 * t, 9 * (t - 1), z)
+    release thm geo::divide_both_sides(4 * t, 9 * (t - 1), z)
     4 * t = 9 * (t - 1)
-    by thm geo::subtract_equalities(9 * t, 9 * t, 4 * t, 9 * (t - 1))
+    release thm geo::subtract_equalities(9 * t, 9 * t, 4 * t, 9 * (t - 1))
     9 * t - 4 * t = 9 * t - 9 * (t - 1)
     9 * t - 4 * t = 5 * t
     9 * t - 9 * (t - 1) = 9
@@ -40,18 +40,18 @@ thm problem_546_scalar_finish:
     (9 / 5) * 5 = 9
     t * 5 = (9 / 5) * 5
     5 != 0
-    by thm geo::divide_both_sides(t, 9 / 5, 5)
+    release thm geo::divide_both_sides(t, 9 / 5, 5)
     t = 9 / 5
 
-    by thm geo::subtract_equalities(t, 9 / 5, 1, 1)
+    release thm geo::subtract_equalities(t, 9 / 5, 1, 1)
     t - 1 = 9 / 5 - 1 = 4 / 5
-    by thm geo::multiply_both_sides(t - 1, 4 / 5, t - 1)
+    release thm geo::multiply_both_sides(t - 1, 4 / 5, t - 1)
     (t - 1)^2 = (4 / 5) * (t - 1)
-    by thm geo::multiply_both_sides(t - 1, 4 / 5, 4 / 5)
+    release thm geo::multiply_both_sides(t - 1, 4 / 5, 4 / 5)
     (t - 1) * (4 / 5) = (4 / 5)^2
     (4 / 5) * (t - 1) = (t - 1) * (4 / 5) = (4 / 5)^2
     (t - 1)^2 = (4 / 5)^2 = 16 / 25
-    by thm geo::multiply_both_sides((t - 1)^2, 16 / 25, s)
+    release thm geo::multiply_both_sides((t - 1)^2, 16 / 25, s)
     (t - 1)^2 * s = (16 / 25) * s
     (16 / 25) * s = 16
     25 * ((16 / 25) * s) = 25 * 16
@@ -59,12 +59,12 @@ thm problem_546_scalar_finish:
     25 * 16 = 25 * 16
     s * 16 = 25 * 16
     16 != 0
-    by thm geo::divide_both_sides(s, 25, 16)
+    release thm geo::divide_both_sides(s, 25, 16)
     s = 25
 
-    by thm geo::multiply_both_sides(t, 9 / 5, s)
+    release thm geo::multiply_both_sides(t, 9 / 5, s)
     t * s = (9 / 5) * s
-    by thm geo::multiply_both_sides(s, 25, 9 / 5)
+    release thm geo::multiply_both_sides(s, 25, 9 / 5)
     s * (9 / 5) = 25 * (9 / 5)
     (9 / 5) * s = s * (9 / 5) = 25 * (9 / 5) = 45
     t * s = 45
@@ -73,12 +73,12 @@ thm problem_546_scalar_finish:
     (45 / 4) * 4 = 45
     q * 4 = (45 / 4) * 4
     4 != 0
-    by thm geo::divide_both_sides(q, 45 / 4, 4)
+    release thm geo::divide_both_sides(q, 45 / 4, 4)
     q = 45 / 4
 
-    by thm geo::subtract_equalities(q, 45 / 4, s / 4, s / 4)
+    release thm geo::subtract_equalities(q, 45 / 4, s / 4, s / 4)
     q - s / 4 = 45 / 4 - s / 4
-    by thm geo::divide_both_sides(s, 25, 4)
+    release thm geo::divide_both_sides(s, 25, 4)
     s / 4 = 25 / 4
     45 / 4 - s / 4 = 45 / 4 - 25 / 4 = 5
     q - s / 4 = 5

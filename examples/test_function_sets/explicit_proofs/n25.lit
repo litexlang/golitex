@@ -1,0 +1,10 @@
+# N25: General constructor proof does not admit an invalid tag
+# Explicit proof contract; strict release checked, no trust.
+
+struct Box:
+    op fn(x R) R
+    tag N
+forall f fn(x R) R:
+    (f, 0) $in &Box
+template<a R>:
+    have box &Box = (fn(x R) R {x + a}, -1)

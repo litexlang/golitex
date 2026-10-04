@@ -9,5 +9,5 @@ thm problem_464_angle_core_from_four_terms:
         =>:
             (2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2) + 2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)) = 0
 
-    by thm angle_substitution_probe::problem_464_angle_substitution_scalar(s1, c1, c2, s2, (dx + qx) * qy - (dy + qy) * qx, (dx + qx) * qx + (dy + qy) * qy, qx^2 + qy^2 - qx * cx - qy * cy, qx * cy - qy * cx)
+    release thm angle_substitution_probe::problem_464_angle_substitution_scalar(s1, c1, c2, s2, (dx + qx) * qy - (dy + qy) * qx, (dx + qx) * qx + (dy + qy) * qy, qx^2 + qy^2 - qx * cx - qy * cy, qx * cy - qy * cx)
     (2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2) + 2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)) = 0

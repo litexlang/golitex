@@ -6,7 +6,7 @@ thm same_nonnegative_square:
         =>:
             x = y
     x^2 - y^2 = 0
-    by thm geo::difference_of_squares(x, y)
+    release thm geo::difference_of_squares(x, y)
     (x + y) * (x - y) = 0
     x = y or not x = y
     by cases:
@@ -16,7 +16,7 @@ thm same_nonnegative_square:
         case not x = y:
             x - y != 0
             (x - y) * (x + y) = 0
-            by thm geo::zero_factor_law(x - y, x + y)
+            release thm geo::zero_factor_law(x - y, x + y)
             x + y = 0
             x <= x + y = 0
             x = 0
@@ -37,22 +37,22 @@ thm affine_scalar_core:
     q^2 * (ux^2 + uy^2) - 2 * q * (ux * vx + uy * vy) + (vx^2 + vy^2) = q^2 * (ux^2 + uy^2) + (vx^2 + vy^2)
     (ux^2 + uy^2) + 2 * q * (ux * vx + uy * vy) + q^2 * (vx^2 + vy^2) = (ux^2 + uy^2) + q^2 * (vx^2 + vy^2)
     -q * (ux^2 + uy^2) + (1 - q^2) * (ux * vx + uy * vy) + q * (vx^2 + vy^2) = -q * (ux^2 + uy^2) + q * (vx^2 + vy^2)
-    by thm geo::multiply_both_sides(ux^2 + uy^2, vx^2 + vy^2, q^2)
+    release thm geo::multiply_both_sides(ux^2 + uy^2, vx^2 + vy^2, q^2)
     q^2 * (ux^2 + uy^2) = q^2 * (vx^2 + vy^2)
-    by thm geo::add_equalities(q^2 * (ux^2 + uy^2), q^2 * (vx^2 + vy^2), vx^2 + vy^2, vx^2 + vy^2)
+    release thm geo::add_equalities(q^2 * (ux^2 + uy^2), q^2 * (vx^2 + vy^2), vx^2 + vy^2, vx^2 + vy^2)
     q^2 * (ux^2 + uy^2) + (vx^2 + vy^2) = q^2 * (vx^2 + vy^2) + (vx^2 + vy^2)
-    by thm geo::multiply_both_sides(ux * vx + uy * vy, 0, 2 * q)
+    release thm geo::multiply_both_sides(ux * vx + uy * vy, 0, 2 * q)
     2 * q * (ux * vx + uy * vy) = 2 * q * 0
     2 * q * 0 = 0
     2 * q * (ux * vx + uy * vy) = 0
-    by thm geo::subtract_equalities(q^2 * (ux^2 + uy^2) - 2 * q * (ux * vx + uy * vy) + (vx^2 + vy^2), q^2 * (ux^2 + uy^2) + (vx^2 + vy^2), 0, 0)
+    release thm geo::subtract_equalities(q^2 * (ux^2 + uy^2) - 2 * q * (ux * vx + uy * vy) + (vx^2 + vy^2), q^2 * (ux^2 + uy^2) + (vx^2 + vy^2), 0, 0)
     q^2 * (ux^2 + uy^2) - 2 * q * (ux * vx + uy * vy) + (vx^2 + vy^2) - 0 = q^2 * (ux^2 + uy^2) + (vx^2 + vy^2) - 0
     q^2 * (ux^2 + uy^2) - 2 * q * (ux * vx + uy * vy) + (vx^2 + vy^2) = q^2 * (ux^2 + uy^2) + (vx^2 + vy^2)
-    by thm geo::add_equalities(ux^2 + uy^2, vx^2 + vy^2, q^2 * (vx^2 + vy^2), q^2 * (vx^2 + vy^2))
+    release thm geo::add_equalities(ux^2 + uy^2, vx^2 + vy^2, q^2 * (vx^2 + vy^2), q^2 * (vx^2 + vy^2))
     (ux^2 + uy^2) + q^2 * (vx^2 + vy^2) = (vx^2 + vy^2) + q^2 * (vx^2 + vy^2)
-    by thm geo::multiply_both_sides(ux^2 + uy^2, vx^2 + vy^2, q)
+    release thm geo::multiply_both_sides(ux^2 + uy^2, vx^2 + vy^2, q)
     q * (ux^2 + uy^2) = q * (vx^2 + vy^2)
-    by thm geo::subtract_equalities(-q * (ux^2 + uy^2) + q * (vx^2 + vy^2), -q * (ux^2 + uy^2) + q * (vx^2 + vy^2), (1 - q^2) * (ux * vx + uy * vy), 0)
+    release thm geo::subtract_equalities(-q * (ux^2 + uy^2) + q * (vx^2 + vy^2), -q * (ux^2 + uy^2) + q * (vx^2 + vy^2), (1 - q^2) * (ux * vx + uy * vy), 0)
     -q * (ux^2 + uy^2) + q * (vx^2 + vy^2) = -q * (ux^2 + uy^2) + q * (vx^2 + vy^2) + (1 - q^2) * (ux * vx + uy * vy) - (1 - q^2) * (ux * vx + uy * vy)
     (1 - q^2) * (ux * vx + uy * vy) = (1 - q^2) * 0
     (1 - q^2) * 0 = 0
@@ -63,7 +63,7 @@ thm affine_scalar_core:
     q^2 * (ux^2 + uy^2) + (vx^2 + vy^2) = (ux^2 + uy^2) + q^2 * (vx^2 + vy^2)
     (q * ux - vx)^2 + (q * uy - vy)^2 = (-ux - q * vx)^2 + (-uy - q * vy)^2
     q * (vx^2 + vy^2) = q * (ux^2 + uy^2)
-    by thm geo::subtract_equalities(q * (vx^2 + vy^2), q * (ux^2 + uy^2), q * (ux^2 + uy^2), q * (ux^2 + uy^2))
+    release thm geo::subtract_equalities(q * (vx^2 + vy^2), q * (ux^2 + uy^2), q * (ux^2 + uy^2), q * (ux^2 + uy^2))
     q * (vx^2 + vy^2) - q * (ux^2 + uy^2) = q * (ux^2 + uy^2) - q * (ux^2 + uy^2)
     q * (ux^2 + uy^2) - q * (ux^2 + uy^2) = 0
     q * (vx^2 + vy^2) - q * (ux^2 + uy^2) = 0
@@ -94,7 +94,7 @@ thm affine_right_core:
 
     ux * vx + uy * vy = (pb[1] - pa[1]) * (pc[1] - pa[1]) + (pb[2] - pa[2]) * (pc[2] - pa[2]) = 0
     ux^2 + uy^2 = (pb[1] - pa[1])^2 + (pb[2] - pa[2])^2 = (pc[1] - pa[1])^2 + (pc[2] - pa[2])^2 = vx^2 + vy^2
-    by thm affine_scalar_core(ux, uy, vx, vy, q)
+    release thm affine_scalar_core(ux, uy, vx, vy, q)
     (q * ux - vx)^2 + (q * uy - vy)^2 = (-ux - q * vx)^2 + (-uy - q * vy)^2
     (q * ux - vx) * (-ux - q * vx) + (q * uy - vy) * (-uy - q * vy) = 0
 
@@ -122,9 +122,9 @@ thm affine_right_core:
     (-(pb[2] - pa[2]) - (2 * t - 1) * (pc[2] - pa[2])) / 2 = (-uy - q * vy) / 2
     pf[2] - pd[2] = (-uy - q * vy) / 2
 
-    by thm geo::distance_sq_coordinate_formula(pd, pe)
-    by thm geo::distance_sq_coordinate_formula(pd, pf)
-    by thm geo::perpendicular_dot_expand(pd, pe, pd, pf)
+    release thm geo::distance_sq_coordinate_formula(pd, pe)
+    release thm geo::distance_sq_coordinate_formula(pd, pf)
+    release thm geo::perpendicular_dot_expand(pd, pe, pd, pf)
     geo::distance_sq(pd, pe) = (pe[1] - pd[1])^2 + (pe[2] - pd[2])^2
     geo::distance_sq(pd, pf) = (pf[1] - pd[1])^2 + (pf[2] - pd[2])^2
     geo::dot(geo::vec(pd, pe), geo::vec(pd, pf)) = (pe[1] - pd[1]) * (pf[1] - pd[1]) + (pe[2] - pd[2]) * (pf[2] - pd[2])

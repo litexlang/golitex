@@ -270,10 +270,18 @@ impl Runtime {
                 StandardSet::N,
                 verify_state.clone(),
             )?;
-            if exp_proof.is_failed() {
-                continue;
+            if !exp_proof.is_failed() {
+                proofs.push(exp_proof);
+            } else {
+                let integer = self.verify_in_standard_set(
+                    shared_exp.as_ref(), StandardSet::Z, verify_state,
+                )?;
+                if integer.is_failed() { continue; }
+                let left_nonzero = self.verify_nonzero(b1, verify_state)?;
+                let right_nonzero = self.verify_nonzero(b2, verify_state)?;
+                if left_nonzero.is_failed() || right_nonzero.is_failed() { continue; }
+                proofs.extend([integer, left_nonzero, right_nonzero]);
             }
-            proofs.push(exp_proof);
             return Ok(Some(PowerOfProductBuiltinRuleProof {
                 proof_of_requirement_facts: proofs,
             }));
@@ -383,14 +391,25 @@ impl Runtime {
             return Ok(None);
         };
         proofs.push(base_proof);
-        // Natural powers are defined on C, including exponent zero (0^0 = 1).
+        // Natural powers include zero bases (0^0 = 1). Integer powers also
+        // obey these laws when the base is nonzero, e.g. (x^n)^(-1)=x^(n*(-1)).
+        let mut natural_exponents = Vec::new();
         for exp in exponents {
-            let exp_proof =
-                self.verify_in_standard_set(exp, StandardSet::N, verify_state.clone())?;
-            if exp_proof.is_failed() {
-                return Ok(None);
-            }
-            proofs.push(exp_proof);
+            let proof = self.verify_in_standard_set(exp, StandardSet::N, verify_state)?;
+            if proof.is_failed() { break; }
+            natural_exponents.push(proof);
+        }
+        if natural_exponents.len() == exponents.len() {
+            proofs.extend(natural_exponents);
+            return Ok(Some(proofs));
+        }
+        let nonzero = self.verify_nonzero(base, verify_state)?;
+        if nonzero.is_failed() { return Ok(None); }
+        proofs.push(nonzero);
+        for exp in exponents {
+            let proof = self.verify_in_standard_set(exp, StandardSet::Z, verify_state)?;
+            if proof.is_failed() { return Ok(None); }
+            proofs.push(proof);
         }
         Ok(Some(proofs))
     }

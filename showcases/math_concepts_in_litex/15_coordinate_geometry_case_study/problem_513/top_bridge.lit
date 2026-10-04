@@ -39,9 +39,9 @@ thm problem_513_public_bridge:
     have V2 R = ca * x2 + ab * y2
 
     # Side-length certificates.
-    by thm geo::distance_sq_coordinate_formula(a, b)
-    by thm geo::distance_sq_coordinate_formula(b, c)
-    by thm geo::distance_sq_coordinate_formula(c, a)
+    release thm geo::distance_sq_coordinate_formula(a, b)
+    release thm geo::distance_sq_coordinate_formula(b, c)
+    release thm geo::distance_sq_coordinate_formula(c, a)
     geo::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
     (b[1] - a[1])^2 + (b[2] - a[2])^2 = x1^2 + x2^2
     ab^2 = geo::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2 = x1^2 + x2^2
@@ -57,9 +57,9 @@ thm problem_513_public_bridge:
     ca^2 = geo::distance_sq(c, a) = (a[1] - c[1])^2 + (a[2] - c[2])^2 = y1^2 + y2^2
 
     # Circumcenter certificates in A-relative coordinates.
-    by thm geo::distance_sq_coordinate_formula(o, a)
-    by thm geo::distance_sq_coordinate_formula(o, b)
-    by thm geo::distance_sq_coordinate_formula(o, c)
+    release thm geo::distance_sq_coordinate_formula(o, a)
+    release thm geo::distance_sq_coordinate_formula(o, b)
+    release thm geo::distance_sq_coordinate_formula(o, c)
     a[1] - o[1] = -(o[1] - a[1]) = -q1
     a[2] - o[2] = -(o[2] - a[2]) = -q2
     geo::distance_sq(o, a) = (a[1] - o[1])^2 + (a[2] - o[2])^2 = (-q1)^2 + (-q2)^2 = q1^2 + q2^2
@@ -68,7 +68,7 @@ thm problem_513_public_bridge:
     geo::distance_sq(o, b) = (b[1] - o[1])^2 + (b[2] - o[2])^2 = (x1 - q1)^2 + (x2 - q2)^2
     (x1 - q1)^2 + (x2 - q2)^2 = x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2) + q1^2 + q2^2
     q1^2 + q2^2 = geo::distance_sq(o, a) = geo::distance_sq(o, b) = (x1 - q1)^2 + (x2 - q2)^2 = x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2) + q1^2 + q2^2
-    by thm geo::subtract_equalities(q1^2 + q2^2, x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2) + q1^2 + q2^2, q1^2 + q2^2, q1^2 + q2^2)
+    release thm geo::subtract_equalities(q1^2 + q2^2, x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2) + q1^2 + q2^2, q1^2 + q2^2, q1^2 + q2^2)
     0 = (q1^2 + q2^2) - (q1^2 + q2^2) = (x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2) + q1^2 + q2^2) - (q1^2 + q2^2) = x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2)
     x1^2 + x2^2 = (x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2)) + 2 * (q1 * x1 + q2 * x2) = 0 + 2 * (q1 * x1 + q2 * x2) = 2 * (q1 * x1 + q2 * x2)
     c[1] - o[1] = (c[1] - a[1]) - (o[1] - a[1]) = y1 - q1
@@ -76,7 +76,7 @@ thm problem_513_public_bridge:
     geo::distance_sq(o, c) = (c[1] - o[1])^2 + (c[2] - o[2])^2 = (y1 - q1)^2 + (y2 - q2)^2
     (y1 - q1)^2 + (y2 - q2)^2 = y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2) + q1^2 + q2^2
     q1^2 + q2^2 = geo::distance_sq(o, a) = geo::distance_sq(o, c) = (y1 - q1)^2 + (y2 - q2)^2 = y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2) + q1^2 + q2^2
-    by thm geo::subtract_equalities(q1^2 + q2^2, y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2) + q1^2 + q2^2, q1^2 + q2^2, q1^2 + q2^2)
+    release thm geo::subtract_equalities(q1^2 + q2^2, y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2) + q1^2 + q2^2, q1^2 + q2^2, q1^2 + q2^2)
     0 = (q1^2 + q2^2) - (q1^2 + q2^2) = (y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2) + q1^2 + q2^2) - (q1^2 + q2^2) = y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2)
     y1^2 + y2^2 = (y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2)) + 2 * (q1 * y1 + q2 * y2) = 0 + 2 * (q1 * y1 + q2 * y2) = 2 * (q1 * y1 + q2 * y2)
 
@@ -84,14 +84,14 @@ thm problem_513_public_bridge:
     S * u1 = S * (p[1] - a[1]) = p[1] * S - a[1] * S
     p[1] * S = p[1] * (bc + ca + ab) = p[1] * (ab + bc + ca) = bc * a[1] + ca * b[1] + ab * c[1]
     a[1] * S = a[1] * (bc + ca + ab)
-    by thm geo::subtract_equalities(p[1] * S, bc * a[1] + ca * b[1] + ab * c[1], a[1] * S, a[1] * (bc + ca + ab))
+    release thm geo::subtract_equalities(p[1] * S, bc * a[1] + ca * b[1] + ab * c[1], a[1] * S, a[1] * (bc + ca + ab))
     p[1] * S - a[1] * S = (bc * a[1] + ca * b[1] + ab * c[1]) - a[1] * (bc + ca + ab)
     (bc * a[1] + ca * b[1] + ab * c[1]) - a[1] * (bc + ca + ab) = ca * (b[1] - a[1]) + ab * (c[1] - a[1]) = ca * x1 + ab * y1 = V1
     S * u1 = V1
     S * u2 = S * (p[2] - a[2]) = p[2] * S - a[2] * S
     p[2] * S = p[2] * (bc + ca + ab) = p[2] * (ab + bc + ca) = bc * a[2] + ca * b[2] + ab * c[2]
     a[2] * S = a[2] * (bc + ca + ab)
-    by thm geo::subtract_equalities(p[2] * S, bc * a[2] + ca * b[2] + ab * c[2], a[2] * S, a[2] * (bc + ca + ab))
+    release thm geo::subtract_equalities(p[2] * S, bc * a[2] + ca * b[2] + ab * c[2], a[2] * S, a[2] * (bc + ca + ab))
     p[2] * S - a[2] * S = (bc * a[2] + ca * b[2] + ab * c[2]) - a[2] * (bc + ca + ab)
     (bc * a[2] + ca * b[2] + ab * c[2]) - a[2] * (bc + ca + ab) = ca * (b[2] - a[2]) + ab * (c[2] - a[2]) = ca * x2 + ab * y2 = V2
     S * u2 = V2
@@ -101,27 +101,27 @@ thm problem_513_public_bridge:
     S * z2 = S * (t * u2) = t * (S * u2) = t * V2
 
     # E lies on the circumcircle.
-    by thm geo::distance_sq_coordinate_formula(o, r)
+    release thm geo::distance_sq_coordinate_formula(o, r)
     r[1] - o[1] = (r[1] - a[1]) - (o[1] - a[1]) = z1 - q1
     r[2] - o[2] = (r[2] - a[2]) - (o[2] - a[2]) = z2 - q2
     geo::distance_sq(o, r) = (r[1] - o[1])^2 + (r[2] - o[2])^2 = (z1 - q1)^2 + (z2 - q2)^2
     (z1 - q1)^2 + (z2 - q2)^2 = z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2) + q1^2 + q2^2
     q1^2 + q2^2 = geo::distance_sq(o, a) = geo::distance_sq(o, r) = (z1 - q1)^2 + (z2 - q2)^2 = z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2) + q1^2 + q2^2
-    by thm geo::subtract_equalities(q1^2 + q2^2, z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2) + q1^2 + q2^2, q1^2 + q2^2, q1^2 + q2^2)
+    release thm geo::subtract_equalities(q1^2 + q2^2, z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2) + q1^2 + q2^2, q1^2 + q2^2, q1^2 + q2^2)
     0 = (q1^2 + q2^2) - (q1^2 + q2^2) = (z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2) + q1^2 + q2^2) - (q1^2 + q2^2) = z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2)
     z1^2 + z2^2 = (z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2)) + 2 * (q1 * z1 + q2 * z2) = 0 + 2 * (q1 * z1 + q2 * z2) = 2 * (q1 * z1 + q2 * z2)
 
     # Derive the scalar parameter relation, then recover the target distance.
-    by thm probe::problem_513_parameter_kernel(bc, ca, ab, t, S, x1, x2, y1, y2, q1, q2, z1, z2, V1, V2)
-    by thm norm_kernel::problem_513_vector_norm_kernel(bc, ca, ab, S, x1, x2, y1, y2, V1, V2)
-    by thm projection_kernel::problem_513_vector_projection_kernel(bc, ca, ab, S, x1, x2, y1, y2, V1, V2)
+    release thm probe::problem_513_parameter_kernel(bc, ca, ab, t, S, x1, x2, y1, y2, q1, q2, z1, z2, V1, V2)
+    release thm norm_kernel::problem_513_vector_norm_kernel(bc, ca, ab, S, x1, x2, y1, y2, V1, V2)
+    release thm projection_kernel::problem_513_vector_projection_kernel(bc, ca, ab, S, x1, x2, y1, y2, V1, V2)
     bc + ca > 0
     bc + ca + ab > 0
     S = bc + ca + ab > 0
-    by thm full_bridge::problem_513_distance_recovery_kernel(bc, ca, ab, t, S, x1, x2, u1, u2, z1, z2, V1, V2)
+    release thm full_bridge::problem_513_distance_recovery_kernel(bc, ca, ab, t, S, x1, x2, u1, u2, z1, z2, V1, V2)
 
-    by thm geo::distance_sq_coordinate_formula(r, b)
-    by thm geo::distance_sq_coordinate_formula(r, p)
+    release thm geo::distance_sq_coordinate_formula(r, b)
+    release thm geo::distance_sq_coordinate_formula(r, p)
     b[1] - r[1] = (b[1] - a[1]) - (r[1] - a[1]) = x1 - z1 = -(z1 - x1)
     b[2] - r[2] = (b[2] - a[2]) - (r[2] - a[2]) = x2 - z2 = -(z2 - x2)
     p[1] - r[1] = (p[1] - a[1]) - (r[1] - a[1]) = u1 - z1 = -(z1 - u1)

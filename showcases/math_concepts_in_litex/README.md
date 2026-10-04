@@ -5,15 +5,31 @@ and early undergraduate topics.
 The numeric prefixes are editorial order only: the projects do not import one
 another.
 
-Migration status (2026-10-01): original mathematical content has been restored
-against the pinned upstream snapshot in `scripts/math_concepts_in_litex_upstream`.
-The active `.lit` sources contain no direct `trust`. The complete
-sets/functions/relations, probability/statistics, and real-analysis modules
-now pass both strict release file and module verification. Other modules
-retain verification failures or bounded-time results from the earlier audit.
-Retained failing proofs are migration work, not checked theorems. See
-[`和showcase有关.md`](../../plan/迁移的plan/和showcase有关.md) for attempts,
-actual diagnostics, passing slices, and dependency blockers.
+Migration checkpoint (2026-10-04): the pinned legacy snapshot contains 125
+public Litex files and this collection contains 127. No legacy file or named
+binding is missing in the structural inventory; this inventory does not prove
+mathematical equivalence. All 2894 active theorem citations in the current
+sources now use `release thm`, including former line-end citations.
+
+On the named release snapshot recorded in the migration journal, the complete
+sets/functions/relations, number-theory, real-analysis and category-theory
+entry files pass strict verification, and their registered module gates pass.
+The other 12 subject entry files retain verification failures. The shared
+coordinate-geometry library and one dependent entry reached the 40-second
+observation limit; the rest of its dependent files were not rechecked.
+
+The active Litex sources contain no direct `trust`. Three legacy `axiom`
+target interfaces remain in `problem_207/translation.lit`; they are assumed
+statements rather than completed proofs. Retained failing proofs and these
+axiomatic interfaces are migration work. See
+[`和showcase有关.md`](../../plan/迁移的plan/和showcase有关.md) and the
+[release migration acceptance](../../scripts/math_concepts_in_litex_upstream/experience/problem_notes/showcase_release_migration_acceptance.md)
+for exact gates, proof changes and remaining obligations.
+
+Use `release thm name(args)` for theorem instances in this collection.
+An exact released conclusion needs no repeated fact line. Keep a following
+atomic fact when it provides a verified representation bridge or states a
+derived consequence. The language still accepts the older spelling.
 
 The usual project artifacts are:
 
@@ -59,9 +75,9 @@ contexts are expressed as predicates with explicit theorem premises during
 this migration; structs are for values that must be constructed,
 stored, passed, compared, or returned.
 
-Published files contain no direct `trust`, local axiom, Lean `axiom`,
-`sorry`, or `admit`. Lean analogies state missing mathematics as explicit
-structure fields or theorem hypotheses; analytic comparisons may use the
+Active Litex sources contain no direct `trust`; the three retained legacy
+axioms described above remain proof debt. Lean analogies state missing
+mathematics as explicit structure fields or theorem hypotheses; analytic comparisons may use the
 repository's Mathlib environment for standard objects such as real series.
 The restoration journals are under `plan/迁移的plan/proof_journals/` and the
 passing restoration examples are under

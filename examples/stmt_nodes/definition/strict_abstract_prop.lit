@@ -1,0 +1,14 @@
+# Tracer: abstract predicate interfaces in strict mode
+# Before:
+# abstract_prop strict_mark(x)
+# Former behavior: -strict rejected the declaration as forbidden.
+# Now: an uninterpreted signature supports checked conditional reasoning.
+abstract_prop strict_mark(x)
+forall x R:
+    $strict_mark(x)
+    =>:
+        $strict_mark(x)
+# Boundary: neither $strict_mark(0) nor its negation follows from the declaration.
+# User trust remains forbidden; wrong arity and undefined arguments still fail.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/definition/strict_abstract_prop.lit
+# Contracts: cargo test --release predicate_signature_tests

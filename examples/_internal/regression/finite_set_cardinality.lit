@@ -70,10 +70,17 @@ forall A, B finite_set:
         finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B)) = finite_set_size(A) + finite_set_size(B) - 0
         finite_set_size(A) + finite_set_size(B) - 0 = finite_set_size(A) + finite_set_size(B)
         finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B)
-forall A, B finite_set:
+claim:
+    ? forall A, B finite_set:
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+        finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B)) = finite_set_size(intersect(A, B)) + (finite_set_size(A) - finite_set_size(intersect(A, B)))
+        finite_set_size(intersect(A, B)) + (finite_set_size(A) - finite_set_size(intersect(A, B))) = finite_set_size(A)
+        finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
     finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
-    finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B)) = finite_set_size(intersect(A, B)) + (finite_set_size(A) - finite_set_size(intersect(A, B)))
-    finite_set_size(intersect(A, B)) + (finite_set_size(A) - finite_set_size(intersect(A, B))) = finite_set_size(A)
-    finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
+    have a N = finite_set_size(A)
+    have b N = finite_set_size(intersect(A, B))
+    have c N = finite_set_size(set_minus(A, B))
+    c = a - b
+    finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B)) = b + c = b + (a - b) = finite_set_size(intersect(A, B)) + (finite_set_size(A) - finite_set_size(intersect(A, B))) = a = finite_set_size(A)
 forall A finite_set:
     finite_set_size(power_set(A)) = 2^finite_set_size(A)

@@ -102,7 +102,8 @@ thm add_left_cancel:
         =>:
             y = z
     let neg = \vector_neg<K, field, V, space>
-    by thm vector_neg_spec(K, field, V, space, x) => space.add(x, neg(x)) = space.zero
+    release thm vector_neg_spec(K, field, V, space, x)
+    space.add(x, neg(x)) = space.zero
     space.add(neg(x), x) = space.add(x, neg(x)) = space.zero
     space.add(neg(x), space.add(x, y)) = space.add(space.add(neg(x), x), y)
     space.add(space.add(neg(x), x), y) = space.add(space.zero, y) = y
@@ -145,7 +146,8 @@ thm scalar_times_zero_vector:
     q = space.add(q, q)
     space.add(q, space.zero) = space.add(space.zero, q) = q
     space.add(q, q) = space.add(q, space.zero)
-    by thm add_left_cancel(K, field, V, space, q, q, space.zero) => q = space.zero
+    release thm add_left_cancel(K, field, V, space, q, q, space.zero)
+    q = space.zero
 
 prop is_linear_map(K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W):
     forall u, v V:
@@ -185,7 +187,8 @@ thm linear_map_sends_zero_to_zero:
     target.add(T(source.zero), T(source.zero)) = T(source.add(source.zero, source.zero)) = T(source.zero)
     target.add(T(source.zero), target.zero) = target.add(target.zero, T(source.zero)) = T(source.zero)
     target.add(T(source.zero), T(source.zero)) = target.add(T(source.zero), target.zero)
-    by thm add_left_cancel(K, field, W, target, T(source.zero), T(source.zero), target.zero) => T(source.zero) = target.zero
+    release thm add_left_cancel(K, field, W, target, T(source.zero), T(source.zero), target.zero)
+    T(source.zero) = target.zero
 
 # Apply the map to x + (-x) and use uniqueness of the target inverse.
 
@@ -195,17 +198,20 @@ thm linear_map_sends_neg_to_neg:
         =>:
             T(\vector_neg<K, field, V, source>(x)) = \vector_neg<K, field, W, target>(T(x))
     let source_neg = \vector_neg<K, field, V, source>
-    let target_neg = \vector_neg<K, field, W, target>
-    by thm vector_neg_spec(K, field, V, source, x) => source.add(x, source_neg(x)) = source.zero
-    by thm vector_neg_spec(K, field, W, target, T(x)) => target.add(T(x), target_neg(T(x))) = target.zero
-    by thm linear_map_sends_zero_to_zero(K, field, V, W, source, target, T) => T(source.zero) = target.zero
+    release thm vector_neg_spec(K, field, V, source, x)
+    source.add(x, source_neg(x)) = source.zero
+    release thm vector_neg_spec(K, field, W, target, T(x))
+    target.add(T(x), \vector_neg<K, field, W, target>(T(x))) = target.zero
+    release thm linear_map_sends_zero_to_zero(K, field, V, W, source, target, T)
+    T(source.zero) = target.zero
     T(source.add(x, source_neg(x))) = target.add(T(x), T(source_neg(x)))
     T(source.add(x, source_neg(x))) = T(source.zero) = target.zero
     target.add(T(x), T(source_neg(x))) = target.zero
-    target.add(T(x), target_neg(T(x))) = target.zero
-    target.add(T(x), T(source_neg(x))) = target.add(T(x), target_neg(T(x)))
-    by thm add_left_cancel(K, field, W, target, T(x), T(source_neg(x)), target_neg(T(x))) => T(source_neg(x)) = target_neg(T(x))
-    T(\vector_neg<K, field, V, source>(x)) = T(source_neg(x)) = target_neg(T(x)) = \vector_neg<K, field, W, target>(T(x))
+    target.add(T(x), \vector_neg<K, field, W, target>(T(x))) = target.zero
+    target.add(T(x), T(source_neg(x))) = target.add(T(x), \vector_neg<K, field, W, target>(T(x)))
+    release thm add_left_cancel(K, field, W, target, T(x), T(source_neg(x)), \vector_neg<K, field, W, target>(T(x)))
+    T(source_neg(x)) = \vector_neg<K, field, W, target>(T(x))
+    T(\vector_neg<K, field, V, source>(x)) = T(source_neg(x)) = \vector_neg<K, field, W, target>(T(x)) = \vector_neg<K, field, W, target>(T(x))
 
 # Verify zero membership and closure under addition and scalar multiplication
 # for the native set-builder kernel.
@@ -216,9 +222,11 @@ thm linear_map_kernel_is_subspace:
         =>:
             $is_subspace(K, field, V, source, \linear_kernel<V, W, target.zero, T>)
     let kernel = \linear_kernel<V, W, target.zero, T>
-    by thm linear_map_sends_zero_to_zero(K, field, V, W, source, target, T) => T(source.zero) = target.zero
+    release thm linear_map_sends_zero_to_zero(K, field, V, W, source, target, T)
+    T(source.zero) = target.zero
     kernel = {x V: T(x) = target.zero}
-    by thm set_builder_member(source.zero, {x V: T(x) = target.zero}) => source.zero $in {x V: T(x) = target.zero}
+    release thm set_builder_member(source.zero, {x V: T(x) = target.zero})
+    source.zero $in {x V: T(x) = target.zero}
     source.zero $in kernel
     claim:
         ? forall u, v V:
@@ -231,7 +239,8 @@ thm linear_map_kernel_is_subspace:
         v $in {x V: T(x) = target.zero}
         T(v) = target.zero
         T(source.add(u, v)) = target.add(T(u), T(v)) = target.add(target.zero, target.zero) = target.zero
-        by thm set_builder_member(source.add(u, v), {x V: T(x) = target.zero}) => source.add(u, v) $in {x V: T(x) = target.zero}
+        release thm set_builder_member(source.add(u, v), {x V: T(x) = target.zero})
+        source.add(u, v) $in {x V: T(x) = target.zero}
         source.add(u, v) $in kernel
     claim:
         ? forall a K, v V:
@@ -240,9 +249,11 @@ thm linear_map_kernel_is_subspace:
                 source.smul(a, v) $in kernel
         v $in {x V: T(x) = target.zero}
         T(v) = target.zero
-        by thm scalar_times_zero_vector(K, field, W, target, a) => target.smul(a, target.zero) = target.zero
+        release thm scalar_times_zero_vector(K, field, W, target, a)
+        target.smul(a, target.zero) = target.zero
         T(source.smul(a, v)) = target.smul(a, T(v)) = target.smul(a, target.zero) = target.zero
-        by thm set_builder_member(source.smul(a, v), {x V: T(x) = target.zero}) => source.smul(a, v) $in {x V: T(x) = target.zero}
+        release thm set_builder_member(source.smul(a, v), {x V: T(x) = target.zero})
+        source.smul(a, v) $in {x V: T(x) = target.zero}
         source.smul(a, v) $in kernel
     by def $is_subspace(K, field, V, source, \linear_kernel<V, W, target.zero, T>)
 
@@ -256,7 +267,8 @@ thm injective_linear_map_has_trivial_kernel:
             \linear_kernel<V, W, target.zero, T> = \zero_subspace<V, source.zero>
     let kernel = \linear_kernel<V, W, target.zero, T>
     let zero_space = \zero_subspace<V, source.zero>
-    by thm linear_map_sends_zero_to_zero(K, field, V, W, source, target, T) => T(source.zero) = target.zero
+    release thm linear_map_sends_zero_to_zero(K, field, V, W, source, target, T)
+    T(source.zero) = target.zero
     by def:
         ? $injective(V, W, T)
     kernel = {x V: T(x) = target.zero}
@@ -293,21 +305,26 @@ thm trivial_kernel_implies_injective:
             T(u) = T(v)
             =>:
                 u = v
-        by thm linear_map_sends_neg_to_neg(K, field, V, W, source, target, T, v) => T(source_neg(v)) = target_neg(T(v))
-        by thm vector_neg_spec(K, field, W, target, T(v)) => target.add(T(v), target_neg(T(v))) = target.zero
+        release thm linear_map_sends_neg_to_neg(K, field, V, W, source, target, T, v)
+        T(source_neg(v)) = target_neg(T(v))
+        release thm vector_neg_spec(K, field, W, target, T(v))
+        target.add(T(v), target_neg(T(v))) = target.zero
         sub(u, v) = source.add(u, source_neg(v))
         T(sub(u, v)) = T(source.add(u, source_neg(v))) = target.add(T(u), T(source_neg(v))) = target.add(T(u), target_neg(T(v))) = target.add(T(v), target_neg(T(v))) = target.zero
-        by thm set_builder_member(sub(u, v), {x V: T(x) = target.zero}) => sub(u, v) $in {x V: T(x) = target.zero}
+        release thm set_builder_member(sub(u, v), {x V: T(x) = target.zero})
+        sub(u, v) $in {x V: T(x) = target.zero}
         sub(u, v) $in kernel
         sub(u, v) $in zero_space
         sub(u, v) $in {source.zero}
         sub(u, v) = source.zero
         source.add(u, source_neg(v)) = source.zero
         source.add(source_neg(v), u) = source.add(u, source_neg(v)) = source.zero
-        by thm vector_neg_spec(K, field, V, source, v) => source.add(v, source_neg(v)) = source.zero
+        release thm vector_neg_spec(K, field, V, source, v)
+        source.add(v, source_neg(v)) = source.zero
         source.add(source_neg(v), v) = source.add(v, source_neg(v)) = source.zero
         source.add(source_neg(v), u) = source.add(source_neg(v), v)
-        by thm add_left_cancel(K, field, V, source, source_neg(v), u, v) => u = v
+        release thm add_left_cancel(K, field, V, source, source_neg(v), u, v)
+        u = v
     by def:
         ? $injective(V, W, T)
 
@@ -372,7 +389,8 @@ claim:
     real_add(x, real_neg(x)) = x + real_neg(x) = x + (-x) = 0
     real_mul(1, x) = 1 * x = x
 
-by thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Field<R>) => (0, 1, real_add, real_neg, real_mul, real_inv) $in &Field<R>
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Field<R>)
+(0, 1, real_add, real_neg, real_mul, real_inv) $in &Field<R>
 
 have real_field &Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
 
@@ -523,7 +541,8 @@ release thm linear_map_kernel_is_subspace(R, real_field, cart(R, R), cart(R, R),
 
 projection_x_axis((0, 7)) = (0, 0) = real_plane.zero
 
-by thm set_builder_member((0, 7), {v cart(R, R): projection_x_axis(v) = real_plane.zero}) => (0, 7) $in {v cart(R, R): projection_x_axis(v) = real_plane.zero}
+release thm set_builder_member((0, 7), {v cart(R, R): projection_x_axis(v) = real_plane.zero})
+(0, 7) $in {v cart(R, R): projection_x_axis(v) = real_plane.zero}
 
 (0, 7) $in \linear_kernel<cart(R, R), cart(R, R), real_plane.zero, projection_x_axis>
 

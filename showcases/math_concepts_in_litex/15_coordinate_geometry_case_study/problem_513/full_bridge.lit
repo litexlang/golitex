@@ -35,7 +35,7 @@ thm problem_513_distance_recovery_kernel:
     (t^2 * (b * c * (b + c - a) * (a + b + c)) - t * (a + b + c) * (c * (b + c - a) * (a + b + c)) + (a + b + c)^2 * c^2) - (t - 1)^2 * (b * c * (b + c - a) * (a + b + c)) = c * (a - b + c) * (a + b + c) * (b + c - t * (b + c - a))
     b + c - t * (b + c - a) = 0
     c * (a - b + c) * (a + b + c) * (b + c - t * (b + c - a)) = c * (a - b + c) * (a + b + c) * 0 = 0
-    by thm pure_kernel::problem_513_pure_polynomial_kernel(a, b, c, t)
+    release thm pure_kernel::problem_513_pure_polynomial_kernel(a, b, c, t)
     t^2 * (b * c * (b + c - a) * (a + b + c)) - t * (a + b + c) * (c * (b + c - a) * (a + b + c)) + (a + b + c)^2 * c^2 = (t - 1)^2 * (b * c * (b + c - a) * (a + b + c))
     t^2 * (b * c * (b + c - a) * S) = t^2 * (b * c * (b + c - a) * (a + b + c))
     t * S * (c * (b + c - a) * S) = t * (a + b + c) * (c * (b + c - a) * (a + b + c))
@@ -48,4 +48,4 @@ thm problem_513_distance_recovery_kernel:
     S^2 * ((z1 - u1)^2 + (z2 - u2)^2) = ((z1 - u1)^2 + (z2 - u2)^2) * S^2
     ((z1 - x1)^2 + (z2 - x2)^2) * S^2 = S^2 * ((z1 - x1)^2 + (z2 - x2)^2) = S^2 * ((z1 - u1)^2 + (z2 - u2)^2) = ((z1 - u1)^2 + (z2 - u2)^2) * S^2
     S^2 > 0
-    by thm geo::cancel_positive_right_factor((z1 - x1)^2 + (z2 - x2)^2, (z1 - u1)^2 + (z2 - u2)^2, S^2)
+    release thm geo::cancel_positive_right_factor((z1 - x1)^2 + (z2 - x2)^2, (z1 - u1)^2 + (z2 - u2)^2, S^2)

@@ -271,6 +271,16 @@ JSON. Symbolic `Rational`/`Complex` normalization stays in the builtin stage.
 The pure calculator does not read known numeric representatives or unfold
 functions; WD remains a separate mandatory stage at the caller's ceiling.
 
+Function-definition normalization preserves an exact single-application beta
+step before normalizing symbolic arguments. For example, a square function
+can prove `outer(inner(x)) = inner(x)*inner(x)` without expanding `inner`.
+The exact match only selects where expansion stops: the named call and the
+selected anonymous body's own domain must both pass WD, and the existing
+normalization certificate retains both checks and the body source. Other
+targets continue through the bounded argument/body normalization route.
+See `examples/proof_nodes/equal/by_object_definition/nested_call_one_step.lit`
+and the positive, guarded-body and invalid-argument function-body tests.
+
 The elementary closed producers additionally support fraction rounding/sign,
 integer operations on exactly integral expressions, perfect rational roots,
 bounded square-free radical arithmetic, rational complex projections and rational

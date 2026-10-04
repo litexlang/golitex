@@ -15,10 +15,10 @@ thm problem_464_angle_bridge_probe:
     by def $geo::is_on_circle(b, o, r)
     by def $geo::is_on_circle(c, o, r)
     by def $geo::is_on_circle(d, o, r)
-    by thm geo::distance_sq_symmetric(a, o)
-    by thm geo::distance_sq_symmetric(b, o)
-    by thm geo::distance_sq_symmetric(c, o)
-    by thm geo::distance_sq_symmetric(d, o)
+    release thm geo::distance_sq_symmetric(a, o)
+    release thm geo::distance_sq_symmetric(b, o)
+    release thm geo::distance_sq_symmetric(c, o)
+    release thm geo::distance_sq_symmetric(d, o)
     geo::distance_sq(o, a) = r^2
     geo::distance_sq(o, b) = r^2
     geo::distance_sq(o, c) = r^2
@@ -38,10 +38,10 @@ thm problem_464_angle_bridge_probe:
     c[1] - b[1] = (c[1] - o[1]) - (b[1] - o[1])
     c[2] - b[2] = (c[2] - o[2]) - (b[2] - o[2])
 
-    by thm geo::distance_sq_coordinate_formula(o, a)
-    by thm geo::distance_sq_coordinate_formula(o, b)
-    by thm geo::distance_sq_coordinate_formula(o, c)
-    by thm geo::distance_sq_coordinate_formula(o, d)
+    release thm geo::distance_sq_coordinate_formula(o, a)
+    release thm geo::distance_sq_coordinate_formula(o, b)
+    release thm geo::distance_sq_coordinate_formula(o, c)
+    release thm geo::distance_sq_coordinate_formula(o, d)
     (a[1] - o[1])^2 + (a[2] - o[2])^2 = (b[1] - o[1])^2 + (b[2] - o[2])^2
     (b[1] - o[1])^2 + (b[2] - o[2])^2 = (c[1] - o[1])^2 + (c[2] - o[2])^2
     (b[1] - o[1])^2 + (b[2] - o[2])^2 = (d[1] - o[1])^2 + (d[2] - o[2])^2
@@ -50,32 +50,32 @@ thm problem_464_angle_bridge_probe:
     0 < r^2
     0 < (b[1] - o[1])^2 + (b[2] - o[2])^2
     (b[1] - o[1])^2 + (b[2] - o[2])^2 != 0
-    by thm bridge1_probe::problem_464_circle_side_nonzero_bridge_probe(a, b, c, d, o)
+    release thm bridge1_probe::problem_464_circle_side_nonzero_bridge_probe(a, b, c, d, o)
     (b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]) != 0
 
     by def $translation::angle_plus_twice_angle_is_straight(d, a, b, a, b, c)
-    by thm geo::vec_coordinate_formula(a, d)
-    by thm geo::vec_coordinate_formula(b, a)
-    by thm geo::vec_coordinate_formula(b, c)
-    by thm geo::det_coordinate_formula(geo::vec(a, d), geo::vec(a, b))
-    by thm geo::dot_coordinate_formula(geo::vec(a, d), geo::vec(a, b))
-    by thm geo::dot_coordinate_formula(geo::vec(b, a), geo::vec(b, c))
-    by thm geo::det_coordinate_formula(geo::vec(b, a), geo::vec(b, c))
+    release thm geo::vec_coordinate_formula(a, d)
+    release thm geo::vec_coordinate_formula(b, a)
+    release thm geo::vec_coordinate_formula(b, c)
+    release thm geo::det_coordinate_formula(geo::vec(a, d), geo::vec(a, b))
+    release thm geo::dot_coordinate_formula(geo::vec(a, d), geo::vec(a, b))
+    release thm geo::dot_coordinate_formula(geo::vec(b, a), geo::vec(b, c))
+    release thm geo::det_coordinate_formula(geo::vec(b, a), geo::vec(b, c))
 
     geo::det(geo::vec(a, d), geo::vec(a, b)) = (d[1] - a[1]) * (b[2] - a[2]) - (d[2] - a[2]) * (b[1] - a[1])
     (d[1] - a[1]) * (b[2] - a[2]) - (d[2] - a[2]) * (b[1] - a[1]) = (((d[1] - o[1]) + (b[1] - o[1])) * (2 * (b[2] - o[2]))) - (((d[2] - o[2]) + (b[2] - o[2])) * (2 * (b[1] - o[1])))
     (((d[1] - o[1]) + (b[1] - o[1])) * (2 * (b[2] - o[2]))) - (((d[2] - o[2]) + (b[2] - o[2])) * (2 * (b[1] - o[1]))) = 2 * (((d[1] - o[1]) + (b[1] - o[1])) * (b[2] - o[2]) - ((d[2] - o[2]) + (b[2] - o[2])) * (b[1] - o[1]))
     geo::det(geo::vec(a, d), geo::vec(a, b)) = 2 * (((d[1] - o[1]) + (b[1] - o[1])) * (b[2] - o[2]) - ((d[2] - o[2]) + (b[2] - o[2])) * (b[1] - o[1]))
     geo::dot(geo::vec(a, d), geo::vec(a, b)) = (d[1] - a[1]) * (b[1] - a[1]) + (d[2] - a[2]) * (b[2] - a[2])
-    by thm dot_split_probe::problem_464_dot_rewrite_probe(d[1] - a[1], d[2] - a[2], b[1] - a[1], b[2] - a[2], d[1] - o[1], d[2] - o[2], b[1] - o[1], b[2] - o[2])
+    release thm dot_split_probe::problem_464_dot_rewrite_probe(d[1] - a[1], d[2] - a[2], b[1] - a[1], b[2] - a[2], d[1] - o[1], d[2] - o[2], b[1] - o[1], b[2] - o[2])
     (d[1] - a[1]) * (b[1] - a[1]) + (d[2] - a[2]) * (b[2] - a[2]) = 2 * (((d[1] - o[1]) + (b[1] - o[1])) * (b[1] - o[1]) + ((d[2] - o[2]) + (b[2] - o[2])) * (b[2] - o[2]))
     geo::dot(geo::vec(a, d), geo::vec(a, b)) = 2 * (((d[1] - o[1]) + (b[1] - o[1])) * (b[1] - o[1]) + ((d[2] - o[2]) + (b[2] - o[2])) * (b[2] - o[2]))
-    by thm bc_terms_probe::problem_464_bc_dot_call_probe(a, b, c, d, o)
+    release thm bc_terms_probe::problem_464_bc_dot_call_probe(a, b, c, d, o)
     geo::dot(geo::vec(b, a), geo::vec(b, c)) = 2 * ((b[1] - o[1])^2 + (b[2] - o[2])^2 - (b[1] - o[1]) * (c[1] - o[1]) - (b[2] - o[2]) * (c[2] - o[2]))
-    by thm bc_terms_probe::problem_464_bc_det_call_probe(a, b, c, d, o)
+    release thm bc_terms_probe::problem_464_bc_det_call_probe(a, b, c, d, o)
     geo::det(geo::vec(b, a), geo::vec(b, c)) = -2 * ((b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]))
 
     # 封闭代数核只导出目标叉积，避免在几何层生成并消费巨大展开式。
-    by thm closed_core_probe::problem_464_closed_angle_algebra_core(geo::det(geo::vec(a, d), geo::vec(a, b)), geo::dot(geo::vec(a, d), geo::vec(a, b)), geo::dot(geo::vec(b, a), geo::vec(b, c)), geo::det(geo::vec(b, a), geo::vec(b, c)), b[1] - o[1], b[2] - o[2], c[1] - o[1], c[2] - o[2], d[1] - o[1], d[2] - o[2])
+    release thm closed_core_probe::problem_464_closed_angle_algebra_core(geo::det(geo::vec(a, d), geo::vec(a, b)), geo::dot(geo::vec(a, d), geo::vec(a, b)), geo::dot(geo::vec(b, a), geo::vec(b, c)), geo::det(geo::vec(b, a), geo::vec(b, c)), b[1] - o[1], b[2] - o[2], c[1] - o[1], c[2] - o[2], d[1] - o[1], d[2] - o[2])
     ((d[1] - o[1]) + (b[1] - o[1])) * (c[2] - o[2]) - ((d[2] - o[2]) + (b[2] - o[2])) * (c[1] - o[1]) = 0
 

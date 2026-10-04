@@ -43,13 +43,13 @@ thm problem_551_distance_from_aliases:
         =>:
             dd = aa^2 + bb^2
 
-    by thm problem_551_multiply_equalities(xx, aa, xx, aa)
+    release thm problem_551_multiply_equalities(xx, aa, xx, aa)
     xx * xx = aa * aa
     xx^2 = aa^2
-    by thm problem_551_multiply_equalities(yy, bb, yy, bb)
+    release thm problem_551_multiply_equalities(yy, bb, yy, bb)
     yy * yy = bb * bb
     yy^2 = bb^2
-    by thm problem_551_add_equalities(xx^2, aa^2, yy^2, bb^2)
+    release thm problem_551_add_equalities(xx^2, aa^2, yy^2, bb^2)
     xx^2 + yy^2 = aa^2 + bb^2
     dd = xx^2 + yy^2 = aa^2 + bb^2
 
@@ -63,11 +63,11 @@ thm problem_551_affine_endpoint_difference:
             ee - dd = (tt - 1) * (qq - pp)
 
     dd - cc = (dd - aa) - (cc - aa)
-    by thm problem_551_subtract_equalities(dd - aa, qq, cc - aa, pp)
+    release thm problem_551_subtract_equalities(dd - aa, qq, cc - aa, pp)
     (dd - aa) - (cc - aa) = qq - pp
     dd - cc = qq - pp
     ee - dd = (tt - 1) * (dd - cc)
-    by thm problem_551_scale_left(dd - cc, qq - pp, tt - 1)
+    release thm problem_551_scale_left(dd - cc, qq - pp, tt - 1)
     (tt - 1) * (dd - cc) = (tt - 1) * (qq - pp)
     ee - dd = (tt - 1) * (qq - pp)
 
@@ -83,14 +83,14 @@ thm problem_551_affine_ray_endpoint_coordinate:
             ff - bb = 2 * uu + vv * qq
 
     aa - bb = (aa - oo) - (bb - oo)
-    by thm problem_551_subtract_equalities(aa - oo, uu, bb - oo, -uu)
+    release thm problem_551_subtract_equalities(aa - oo, uu, bb - oo, -uu)
     (aa - oo) - (bb - oo) = uu - (-uu)
     uu - (-uu) = 2 * uu
     aa - bb = 2 * uu
     ff - bb = (aa - bb) + vv * (dd - aa)
-    by thm problem_551_scale_left(dd - aa, qq, vv)
+    release thm problem_551_scale_left(dd - aa, qq, vv)
     vv * (dd - aa) = vv * qq
-    by thm problem_551_add_equalities(aa - bb, 2 * uu, vv * (dd - aa), vv * qq)
+    release thm problem_551_add_equalities(aa - bb, 2 * uu, vv * (dd - aa), vv * qq)
     (aa - bb) + vv * (dd - aa) = 2 * uu + vv * qq
     ff - bb = 2 * uu + vv * qq
 
@@ -105,22 +105,22 @@ thm problem_551_affine_endpoint_coordinate:
             ee - bb = 2 * uu + tt * qq + (1 - tt) * pp
 
     aa - bb = (aa - oo) - (bb - oo)
-    by thm problem_551_subtract_equalities(aa - oo, uu, bb - oo, -uu)
+    release thm problem_551_subtract_equalities(aa - oo, uu, bb - oo, -uu)
     (aa - oo) - (bb - oo) = uu - (-uu)
     uu - (-uu) = 2 * uu
     aa - bb = 2 * uu
     cc - bb = (cc - aa) + (aa - bb)
-    by thm problem_551_add_equalities(cc - aa, pp, aa - bb, 2 * uu)
+    release thm problem_551_add_equalities(cc - aa, pp, aa - bb, 2 * uu)
     (cc - aa) + (aa - bb) = pp + 2 * uu
     cc - bb = pp + 2 * uu
     dd - cc = (dd - aa) - (cc - aa)
-    by thm problem_551_subtract_equalities(dd - aa, qq, cc - aa, pp)
+    release thm problem_551_subtract_equalities(dd - aa, qq, cc - aa, pp)
     (dd - aa) - (cc - aa) = qq - pp
     dd - cc = qq - pp
     ee - bb = (cc - bb) + tt * (dd - cc)
-    by thm problem_551_scale_left(dd - cc, qq - pp, tt)
+    release thm problem_551_scale_left(dd - cc, qq - pp, tt)
     tt * (dd - cc) = tt * (qq - pp)
-    by thm problem_551_add_equalities(cc - bb, pp + 2 * uu, tt * (dd - cc), tt * (qq - pp))
+    release thm problem_551_add_equalities(cc - bb, pp + 2 * uu, tt * (dd - cc), tt * (qq - pp))
     (cc - bb) + tt * (dd - cc) = (pp + 2 * uu) + tt * (qq - pp)
     ee - bb = (pp + 2 * uu) + tt * (qq - pp)
     (pp + 2 * uu) + tt * (qq - pp) = 2 * uu + tt * qq + (1 - tt) * pp
@@ -135,7 +135,7 @@ thm problem_551_affine_endpoint_gap:
             ff - ee = (vv - tt) * qq + (tt - 1) * pp
 
     ff - ee = (ff - bb) - (ee - bb)
-    by thm problem_551_subtract_equalities(ff - bb, 2 * uu + vv * qq, ee - bb, 2 * uu + tt * qq + (1 - tt) * pp)
+    release thm problem_551_subtract_equalities(ff - bb, 2 * uu + vv * qq, ee - bb, 2 * uu + tt * qq + (1 - tt) * pp)
     (ff - bb) - (ee - bb) = (2 * uu + vv * qq) - (2 * uu + tt * qq + (1 - tt) * pp)
     (2 * uu + vv * qq) - (2 * uu + tt * qq + (1 - tt) * pp) = (vv - tt) * qq + (tt - 1) * pp
     ff - ee = (vv - tt) * qq + (tt - 1) * pp
@@ -182,11 +182,11 @@ thm problem_551_dot_from_coordinate_aliases:
         =>:
             ux * ex + uy * ey = ux * rx + uy * ry
 
-    by thm problem_551_scale_left(ex, rx, ux)
+    release thm problem_551_scale_left(ex, rx, ux)
     ux * ex = ux * rx
-    by thm problem_551_scale_left(ey, ry, uy)
+    release thm problem_551_scale_left(ey, ry, uy)
     uy * ey = uy * ry
-    by thm problem_551_add_equalities(ux * ex, ux * rx, uy * ey, uy * ry)
+    release thm problem_551_add_equalities(ux * ex, ux * rx, uy * ey, uy * ry)
     ux * ex + uy * ey = ux * rx + uy * ry
 
 # Expand the dot product of OA with an affine point on CD.
@@ -197,7 +197,7 @@ thm problem_551_affine_dot_expansion:
         =>:
             ux * ex + uy * ey = 2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) + (1 - t) * (ux * px + uy * py)
 
-    by thm problem_551_dot_from_coordinate_aliases(ux, uy, ex, ey, 2 * ux + t * qx + (1 - t) * px, 2 * uy + t * qy + (1 - t) * py)
+    release thm problem_551_dot_from_coordinate_aliases(ux, uy, ex, ey, 2 * ux + t * qx + (1 - t) * px, 2 * uy + t * qy + (1 - t) * py)
     ux * ex + uy * ey = ux * (2 * ux + t * qx + (1 - t) * px) + uy * (2 * uy + t * qy + (1 - t) * py)
     ux * (2 * ux + t * qx + (1 - t) * px) + uy * (2 * uy + t * qy + (1 - t) * py) = 2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) + (1 - t) * (ux * px + uy * py)
     ux * ex + uy * ey = 2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) + (1 - t) * (ux * px + uy * py)
@@ -210,7 +210,7 @@ thm problem_551_ray_dot_expansion:
         =>:
             ux * fx + uy * fy = 2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy)
 
-    by thm problem_551_dot_from_coordinate_aliases(ux, uy, fx, fy, 2 * ux + v * qx, 2 * uy + v * qy)
+    release thm problem_551_dot_from_coordinate_aliases(ux, uy, fx, fy, 2 * ux + v * qx, 2 * uy + v * qy)
     ux * fx + uy * fy = ux * (2 * ux + v * qx) + uy * (2 * uy + v * qy)
     ux * (2 * ux + v * qx) + uy * (2 * uy + v * qy) = 2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy)
     ux * fx + uy * fy = 2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy)
@@ -272,15 +272,15 @@ thm problem_551_geometry_bridge:
 
     # The radius OA is nonzero.
     o != a
-    by thm geo::distance_sq_positive_of_ne(o, a)
+    release thm geo::distance_sq_positive_of_ne(o, a)
     geo::distance_sq(o, a) > 0
-    by thm geo::distance_sq_coordinate_formula(o, a)
+    release thm geo::distance_sq_coordinate_formula(o, a)
     geo::distance_sq(o, a) = (a[1] - o[1])^2 + (a[2] - o[2])^2
     (a[1] - o[1])^2 + (a[2] - o[2])^2 = ux^2 + uy^2
     ux^2 + uy^2 > 0
 
     # C lies on tangent AM, hence OA is orthogonal to AC.
-    by thm geo::dot_coordinate_formula(geo::vec(o, a), geo::vec(a, m))
+    release thm geo::dot_coordinate_formula(geo::vec(o, a), geo::vec(a, m))
     geo::dot(geo::vec(o, a), geo::vec(a, m)) = (a[1] - o[1]) * (m[1] - a[1]) + (a[2] - o[2]) * (m[2] - a[2])
     (a[1] - o[1]) * (m[1] - a[1]) + (a[2] - o[2]) * (m[2] - a[2]) = 0
     c[1] - a[1] = s * (m[1] - a[1])
@@ -294,11 +294,11 @@ thm problem_551_geometry_bridge:
     ux * px + uy * py = 0
 
     # D and A lie on the same circle: |OD|^2 = |OA|^2.
-    by thm geo::distance_sq_symmetric(a, o)
-    by thm geo::distance_sq_symmetric(d, o)
+    release thm geo::distance_sq_symmetric(a, o)
+    release thm geo::distance_sq_symmetric(d, o)
     geo::distance_sq(o, a) = r^2
     geo::distance_sq(o, d) = r^2
-    by thm geo::distance_sq_coordinate_formula(o, d)
+    release thm geo::distance_sq_coordinate_formula(o, d)
     geo::distance_sq(o, d) = (d[1] - o[1])^2 + (d[2] - o[2])^2
     d[1] - o[1] = (a[1] - o[1]) + (d[1] - a[1]) = ux + qx
     d[2] - o[2] = (a[2] - o[2]) + (d[2] - a[2]) = uy + qy
@@ -314,8 +314,8 @@ thm problem_551_geometry_bridge:
     2 * (ux * qx + uy * qy) + (qx^2 + qy^2) = (ux^2 + 2 * ux * qx + qx^2 + uy^2 + 2 * uy * qy + qy^2) - (ux^2 + uy^2) = 0
 
     # CD = CA.
-    by thm geo::distance_sq_coordinate_formula(c, d)
-    by thm geo::distance_sq_coordinate_formula(c, a)
+    release thm geo::distance_sq_coordinate_formula(c, d)
+    release thm geo::distance_sq_coordinate_formula(c, a)
     geo::distance_sq(c, d) = (d[1] - c[1])^2 + (d[2] - c[2])^2
     geo::distance_sq(c, a) = (a[1] - c[1])^2 + (a[2] - c[2])^2
     d[1] - c[1] = (d[1] - a[1]) - (c[1] - a[1]) = qx - px
@@ -336,7 +336,7 @@ thm problem_551_geometry_bridge:
     (qx^2 + qy^2) - 2 * (qx * px + qy * py) = (qx^2 - 2 * qx * px + px^2 + qy^2 - 2 * qy * py + py^2) - (px^2 + py^2) = 0
 
     # E and F lie on tangent BN, so OB is orthogonal to BE and BF.
-    by thm geo::dot_coordinate_formula(geo::vec(o, b), geo::vec(b, n))
+    release thm geo::dot_coordinate_formula(geo::vec(o, b), geo::vec(b, n))
     geo::dot(geo::vec(o, b), geo::vec(b, n)) = (b[1] - o[1]) * (n[1] - b[1]) + (b[2] - o[2]) * (n[2] - b[2])
     (b[1] - o[1]) * (n[1] - b[1]) + (b[2] - o[2]) * (n[2] - b[2]) = 0
     ep[1] - b[1] = k * (n[1] - b[1])
@@ -351,67 +351,67 @@ thm problem_551_geometry_bridge:
     (b[1] - o[1]) * (w * (n[1] - b[1])) + (b[2] - o[2]) * (w * (n[2] - b[2])) = w * ((b[1] - o[1]) * (n[1] - b[1]) + (b[2] - o[2]) * (n[2] - b[2]))
     w * ((b[1] - o[1]) * (n[1] - b[1]) + (b[2] - o[2]) * (n[2] - b[2])) = 0
     (b[1] - o[1]) * (f[1] - b[1]) + (b[2] - o[2]) * (f[2] - b[2]) = 0
-    by thm problem_551_negated_dot_from_aliases(ux, uy, b[1] - o[1], b[2] - o[2], ep[1] - b[1], ep[2] - b[2])
+    release thm problem_551_negated_dot_from_aliases(ux, uy, b[1] - o[1], b[2] - o[2], ep[1] - b[1], ep[2] - b[2])
     ux * (ep[1] - b[1]) + uy * (ep[2] - b[2]) = 0
-    by thm problem_551_negated_dot_from_aliases(ux, uy, b[1] - o[1], b[2] - o[2], f[1] - b[1], f[2] - b[2])
+    release thm problem_551_negated_dot_from_aliases(ux, uy, b[1] - o[1], b[2] - o[2], f[1] - b[1], f[2] - b[2])
     ux * (f[1] - b[1]) + uy * (f[2] - b[2]) = 0
 
     # Express BE and BF in the OA, AC, AD basis through verified alias transport.
-    by thm problem_551_affine_endpoint_coordinate(a[1], b[1], c[1], d[1], ep[1], o[1], ux, px, qx, t)
+    release thm problem_551_affine_endpoint_coordinate(a[1], b[1], c[1], d[1], ep[1], o[1], ux, px, qx, t)
     ep[1] - b[1] = 2 * ux + t * qx + (1 - t) * px
-    by thm problem_551_affine_endpoint_coordinate(a[2], b[2], c[2], d[2], ep[2], o[2], uy, py, qy, t)
+    release thm problem_551_affine_endpoint_coordinate(a[2], b[2], c[2], d[2], ep[2], o[2], uy, py, qy, t)
     ep[2] - b[2] = 2 * uy + t * qy + (1 - t) * py
-    by thm problem_551_affine_ray_endpoint_coordinate(a[1], b[1], d[1], f[1], o[1], ux, qx, v)
+    release thm problem_551_affine_ray_endpoint_coordinate(a[1], b[1], d[1], f[1], o[1], ux, qx, v)
     f[1] - b[1] = 2 * ux + v * qx
-    by thm problem_551_affine_ray_endpoint_coordinate(a[2], b[2], d[2], f[2], o[2], uy, qy, v)
+    release thm problem_551_affine_ray_endpoint_coordinate(a[2], b[2], d[2], f[2], o[2], uy, qy, v)
     f[2] - b[2] = 2 * uy + v * qy
-    by thm problem_551_affine_dot_expansion(ux, uy, px, py, qx, qy, ep[1] - b[1], ep[2] - b[2], t)
+    release thm problem_551_affine_dot_expansion(ux, uy, px, py, qx, qy, ep[1] - b[1], ep[2] - b[2], t)
     ux * (ep[1] - b[1]) + uy * (ep[2] - b[2]) = 2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) + (1 - t) * (ux * px + uy * py)
-    by thm problem_551_ray_dot_expansion(ux, uy, qx, qy, f[1] - b[1], f[2] - b[2], v)
+    release thm problem_551_ray_dot_expansion(ux, uy, qx, qy, f[1] - b[1], f[2] - b[2], v)
     ux * (f[1] - b[1]) + uy * (f[2] - b[2]) = 2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy)
-    by thm problem_551_scale_left(ux * px + uy * py, 0, 1 - t)
+    release thm problem_551_scale_left(ux * px + uy * py, 0, 1 - t)
     (1 - t) * (ux * px + uy * py) = (1 - t) * 0 = 0
-    by thm problem_551_zero_from_equal(ux * (ep[1] - b[1]) + uy * (ep[2] - b[2]), 2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) + (1 - t) * (ux * px + uy * py))
+    release thm problem_551_zero_from_equal(ux * (ep[1] - b[1]) + uy * (ep[2] - b[2]), 2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) + (1 - t) * (ux * px + uy * py))
     2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) + (1 - t) * (ux * px + uy * py) = 0
-    by thm problem_551_sum_zero_left(2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy), (1 - t) * (ux * px + uy * py))
+    release thm problem_551_sum_zero_left(2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy), (1 - t) * (ux * px + uy * py))
     2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) = 0
-    by thm problem_551_zero_from_equal(ux * (f[1] - b[1]) + uy * (f[2] - b[2]), 2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy))
+    release thm problem_551_zero_from_equal(ux * (f[1] - b[1]) + uy * (f[2] - b[2]), 2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy))
     2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy) = 0
 
-    by thm scalar_core::problem_551_scalar_core(ux, uy, px, py, qx, qy, t, v)
+    release thm scalar_core::problem_551_scalar_core(ux, uy, px, py, qx, qy, t, v)
     (ux + qx) * (qx - px) + (uy + qy) * (qy - py) = 0
     (2 * ux + t * qx + (1 - t) * px)^2 + (2 * uy + t * qy + (1 - t) * py)^2 = ((v - t) * qx + (t - 1) * px)^2 + ((v - t) * qy + (t - 1) * py)^2
 
     # Convert the first scalar conclusion to OD perpendicular DE.
-    by thm geo::dot_coordinate_formula(geo::vec(o, d), geo::vec(d, ep))
+    release thm geo::dot_coordinate_formula(geo::vec(o, d), geo::vec(d, ep))
     geo::dot(geo::vec(o, d), geo::vec(d, ep)) = (d[1] - o[1]) * (ep[1] - d[1]) + (d[2] - o[2]) * (ep[2] - d[2])
-    by thm problem_551_affine_endpoint_difference(a[1], c[1], d[1], ep[1], px, qx, t)
+    release thm problem_551_affine_endpoint_difference(a[1], c[1], d[1], ep[1], px, qx, t)
     ep[1] - d[1] = (t - 1) * (qx - px)
-    by thm problem_551_affine_endpoint_difference(a[2], c[2], d[2], ep[2], py, qy, t)
+    release thm problem_551_affine_endpoint_difference(a[2], c[2], d[2], ep[2], py, qy, t)
     ep[2] - d[2] = (t - 1) * (qy - py)
-    by thm problem_551_multiply_equalities(d[1] - o[1], ux + qx, ep[1] - d[1], (t - 1) * (qx - px))
+    release thm problem_551_multiply_equalities(d[1] - o[1], ux + qx, ep[1] - d[1], (t - 1) * (qx - px))
     (d[1] - o[1]) * (ep[1] - d[1]) = (ux + qx) * ((t - 1) * (qx - px))
-    by thm problem_551_multiply_equalities(d[2] - o[2], uy + qy, ep[2] - d[2], (t - 1) * (qy - py))
+    release thm problem_551_multiply_equalities(d[2] - o[2], uy + qy, ep[2] - d[2], (t - 1) * (qy - py))
     (d[2] - o[2]) * (ep[2] - d[2]) = (uy + qy) * ((t - 1) * (qy - py))
-    by thm problem_551_add_equalities((d[1] - o[1]) * (ep[1] - d[1]), (ux + qx) * ((t - 1) * (qx - px)), (d[2] - o[2]) * (ep[2] - d[2]), (uy + qy) * ((t - 1) * (qy - py)))
+    release thm problem_551_add_equalities((d[1] - o[1]) * (ep[1] - d[1]), (ux + qx) * ((t - 1) * (qx - px)), (d[2] - o[2]) * (ep[2] - d[2]), (uy + qy) * ((t - 1) * (qy - py)))
     (d[1] - o[1]) * (ep[1] - d[1]) + (d[2] - o[2]) * (ep[2] - d[2]) = (ux + qx) * ((t - 1) * (qx - px)) + (uy + qy) * ((t - 1) * (qy - py))
     (ux + qx) * ((t - 1) * (qx - px)) + (uy + qy) * ((t - 1) * (qy - py)) = (t - 1) * ((ux + qx) * (qx - px) + (uy + qy) * (qy - py))
-    by thm problem_551_scale_left((ux + qx) * (qx - px) + (uy + qy) * (qy - py), 0, t - 1)
+    release thm problem_551_scale_left((ux + qx) * (qx - px) + (uy + qy) * (qy - py), 0, t - 1)
     (t - 1) * ((ux + qx) * (qx - px) + (uy + qy) * (qy - py)) = (t - 1) * 0 = 0
     (d[1] - o[1]) * (ep[1] - d[1]) + (d[2] - o[2]) * (ep[2] - d[2]) = 0
     geo::dot(geo::vec(o, d), geo::vec(d, ep)) = 0
 
     # Convert the second scalar conclusion to BE = EF in squared distance.
-    by thm geo::distance_sq_coordinate_formula(b, ep)
-    by thm geo::distance_sq_coordinate_formula(ep, f)
+    release thm geo::distance_sq_coordinate_formula(b, ep)
+    release thm geo::distance_sq_coordinate_formula(ep, f)
     geo::distance_sq(b, ep) = (ep[1] - b[1])^2 + (ep[2] - b[2])^2
-    by thm problem_551_affine_endpoint_gap(b[1], ep[1], f[1], ux, px, qx, t, v)
+    release thm problem_551_affine_endpoint_gap(b[1], ep[1], f[1], ux, px, qx, t, v)
     f[1] - ep[1] = (v - t) * qx + (t - 1) * px
-    by thm problem_551_affine_endpoint_gap(b[2], ep[2], f[2], uy, py, qy, t, v)
+    release thm problem_551_affine_endpoint_gap(b[2], ep[2], f[2], uy, py, qy, t, v)
     f[2] - ep[2] = (v - t) * qy + (t - 1) * py
     geo::distance_sq(ep, f) = (f[1] - ep[1])^2 + (f[2] - ep[2])^2
-    by thm problem_551_distance_from_aliases(geo::distance_sq(b, ep), ep[1] - b[1], ep[2] - b[2], 2 * ux + t * qx + (1 - t) * px, 2 * uy + t * qy + (1 - t) * py)
+    release thm problem_551_distance_from_aliases(geo::distance_sq(b, ep), ep[1] - b[1], ep[2] - b[2], 2 * ux + t * qx + (1 - t) * px, 2 * uy + t * qy + (1 - t) * py)
     geo::distance_sq(b, ep) = (2 * ux + t * qx + (1 - t) * px)^2 + (2 * uy + t * qy + (1 - t) * py)^2
-    by thm problem_551_distance_from_aliases(geo::distance_sq(ep, f), f[1] - ep[1], f[2] - ep[2], (v - t) * qx + (t - 1) * px, (v - t) * qy + (t - 1) * py)
+    release thm problem_551_distance_from_aliases(geo::distance_sq(ep, f), f[1] - ep[1], f[2] - ep[2], (v - t) * qx + (t - 1) * px, (v - t) * qy + (t - 1) * py)
     geo::distance_sq(ep, f) = ((v - t) * qx + (t - 1) * px)^2 + ((v - t) * qy + (t - 1) * py)^2
     geo::distance_sq(b, ep) = geo::distance_sq(ep, f)

@@ -8,7 +8,10 @@ sketch:
 
 # P02: finite_set_reduce({2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 2
 sketch:
-    finite_set_reduce({2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 2
+    release thm finite_set_reduce_singleton(finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0), 2)
+    fn(x Z) Z{x}(2) = 2
+    fn(a,b Z) Z{a+b}(0,fn(x Z) Z{x}(2)) = 2
+    finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0) = fn(a,b Z) Z{a+b}(0,fn(x Z) Z{x}(2)) = 2
 
 # P03: finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3
 sketch:

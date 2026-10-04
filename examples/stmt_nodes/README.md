@@ -41,6 +41,7 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | Folder / file | What | How (surface) |
 |---|---|---|
 | `fact/` | Assert a fact | bare `1 + 1 = 2` |
+| [fact/negative_leading_code.lit](fact/negative_leading_code.lit) | Source starts with a negative number | `-e '-2 < 0'` preserves the complete source operand; `-2 > 0` rejects |
 | `definition/let_obj.lit` | Equality binding | `let a = expr` |
 | `definition/have_obj_*.lit` | Introduce typed objs | `have x R` / `= expr` / `:` body |
 | `definition/parse_scope_transaction.lit` | Correct a previously failed declaration in the same Runtime | failed `have k N = -1`, then active `have k N = 1`; negative boundary in `tests/unit/run/binding_lifecycle/tests.rs` |
@@ -50,6 +51,7 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `definition/def_algo.lit` | Algo fn + executable cases | `algo f(x R) R by cases:` … |
 | `definition/def_prop.lit` | Concrete predicate | `prop P(x A):` body |
 | `definition/def_abstract_prop.lit` | Abstract predicate | `abstract_prop P(x, y)` |
+| [definition/strict_abstract_prop.lit](definition/strict_abstract_prop.lit) | Abstract signature in strict mode | declaration and `P(x) => P(x)` pass; unproved instances and user trust do not |
 | `definition/def_struct*.lit` | Struct carrier | `struct Point:` fields |
 | `definition/def_template*.lit` | Parameterized def | `template<A set>:` one body |
 | [definition/template_definition_facts.lit](definition/template_definition_facts.lit) | Publish template definition facts | `forall` over template arguments, with body and header premises retained |
@@ -140,7 +142,7 @@ instance. Its explicit smaller-call equality is a proof step; the existing
 proof search may still need that step for recursive arithmetic evaluation.
 
 Native builtin release tracers: `release_and_expand/builtin_thm/` contains one
-strict runnable example for each of the 28 reserved theorem names. The
+strict runnable example for each of the 29 reserved theorem names. The
 examples verify the actual required premises before release and then reuse
 the conclusion. Parser migration tracers include
 `fact/inline_forall_premise.lit` and

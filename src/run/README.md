@@ -21,8 +21,12 @@ finishes. Companion packages:
 | `Repository` | `-r <dir>` | `run_repo` → `run_project` | **`<dir>`** (missing → hard error) |
 
 Shared flags (where allowed): `-session` (keep last env → REPL), `-strict`
-(forbid `trust` / `trust have` / `abstract_prop`), `-lang en|zh` (JSON /
+(forbid `trust` / `trust have`; allow `abstract_prop` signatures), `-lang en|zh` (JSON /
 status output language; default `en`).
+
+The argv item immediately after `-e` is source data. Its leading minus or exact
+spelling of a shared flag does not make it a CLI option; shared flags before
+or after that complete source operand retain their usual meaning.
 
 ## Source-string transaction order
 

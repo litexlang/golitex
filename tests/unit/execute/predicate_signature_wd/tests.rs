@@ -31,14 +31,42 @@ fn nullary_concrete_propositions_keep_definition_wd_and_exact_arity() {
 
 #[test]
 fn nullary_abstract_propositions_preserve_strict_and_signature_checks() {
+    for strict in [false, true] {
+        let mut rt = runtime(strict);
+        assert!(rt.run_litex_code("abstract_prop opaque()\n").unwrap().success);
+        for code in ["$opaque()\n", "not $opaque()\n", "$opaque(0)\n", "not $opaque(0)\n", "by def $opaque()\n", "0 = 1\n"] {
+            assert!(!rt.run_litex_code(code).unwrap().success, "{code}");
+        }
+        assert!(rt.run_litex_code("forall x R:\n    $opaque()\n    =>:\n        $opaque()\n").unwrap().success);
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+    }
     let mut rt = runtime(false);
     assert!(rt.run_litex_code("abstract_prop opaque()\n").unwrap().success);
-    assert!(!rt.run_litex_code("$opaque()\n").unwrap().success);
     assert!(rt.run_litex_code("trust $opaque()\n$opaque()\n").unwrap().success);
     for code in ["$opaque(0)\n", "not $opaque(0)\n", "by def $opaque()\n", "0 = 1\n"] {
         assert!(!rt.run_litex_code(code).unwrap().success, "{code}");
     }
-    assert!(!runtime(true).run_litex_code("abstract_prop opaque()\n").unwrap().success);
+}
+
+#[test]
+fn run_examples_strict_abstract_and_negative_source_tracers() {
+    let mut rt = runtime(true);
+    for code in [
+        include_str!("../../../../examples/stmt_nodes/definition/strict_abstract_prop.lit"),
+        include_str!("../../../../examples/stmt_nodes/fact/negative_leading_code.lit"),
+    ] {
+        assert!(rt.run_litex_code(code).unwrap().success, "{code}");
+    }
+    for code in ["$strict_mark(0)", "not $strict_mark(0)", "$strict_mark(0, 0)", "$strict_mark(1 / 0)", "by def $strict_mark(0)", "0 = 1"] {
+        let run = rt.run_litex_code(code).unwrap();
+        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(!run.success, "{code}");
+    }
+    let run = rt.run_litex_code("trust $strict_mark(0)").unwrap();
+    assert!(!run.success);
+    assert!(format!("{:?}", run.session_error).contains("forbidden"));
+    assert!(!rt.run_litex_code("$strict_mark(0)").unwrap().success);
+    assert_eq!(rt.execution_environments_stack.len(), 1);
 }
 
 #[test]

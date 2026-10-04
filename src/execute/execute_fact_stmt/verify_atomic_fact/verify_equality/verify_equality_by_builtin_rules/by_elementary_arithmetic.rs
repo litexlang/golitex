@@ -1,5 +1,5 @@
 //! Narrow arithmetic identities; all semantic premises use the builtin entry.
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, GreaterEqualFact, InFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, GreaterEqualFact, InFact, NotEqualFact};
 use crate::ast::obj::{ArithmeticOperator as A, ExpLogOperator, IntegerOperator, Literal, Number, Obj, Pow, StandardSet};
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProof;
@@ -164,14 +164,18 @@ impl Runtime {
                     if !same(x, &fact.left)
                         || !same(y, &fact.right)
                         || !same(n, k)
-                        || !literal_integer(n).is_some_and(|v| v != 0)
                     {
                         continue;
                     }
-                    let requirements = self.elementary_members(
-                        &[(x, StandardSet::RPos), (y, StandardSet::RPos)],
-                        state.clone(),
+                    let mut requirements = self.elementary_members(
+                        &[(x, StandardSet::RPos), (y, StandardSet::RPos), (n, StandardSet::Z)],
+                        state,
                     )?;
+                    let nonzero: Fact = NotEqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: n.clone(), right: number("0"), line_file: None,
+                    }.into();
+                    requirements.push(self.verify_builtin_rule_premise(&nonzero, state)?);
                     if requirements.iter().any(VerifyFactResult::is_failed) {
                         continue;
                     }

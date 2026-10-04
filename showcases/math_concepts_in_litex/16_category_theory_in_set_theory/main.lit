@@ -154,7 +154,10 @@ thm identity_functor_exists:
             ? forall chosen_object Obj:
                 identity_on_arrows(chosen_object, chosen_object, category.identity(chosen_object)) = category.identity(identity_on_objects(chosen_object))
             identity_on_objects(chosen_object) = chosen_object
-            identity_on_arrows(chosen_object, chosen_object, category.identity(chosen_object)) = category.identity(chosen_object) = category.identity(identity_on_objects(chosen_object))
+            have identity_arrow_at_object Mor = category.identity(chosen_object)
+            identity_arrow_at_object $in category.Hom(chosen_object, chosen_object)
+            identity_on_arrows(chosen_object, chosen_object, identity_arrow_at_object) = identity_arrow_at_object
+            identity_on_arrows(chosen_object, chosen_object, category.identity(chosen_object)) = identity_on_arrows(chosen_object, chosen_object, identity_arrow_at_object) = identity_arrow_at_object = category.identity(chosen_object) = category.identity(identity_on_objects(chosen_object))
         claim:
             ? forall chosen_source, chosen_middle, chosen_target Obj, first_arrow Mor, second_arrow Mor:
                 first_arrow $in category.Hom(chosen_source, chosen_middle)
@@ -166,11 +169,15 @@ thm identity_functor_exists:
             identity_on_objects(chosen_target) = chosen_target
             identity_on_arrows(chosen_source, chosen_middle, first_arrow) = first_arrow
             identity_on_arrows(chosen_middle, chosen_target, second_arrow) = second_arrow
-            identity_on_arrows(chosen_source, chosen_target, category.compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)) = category.compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)
+            have composite_arrow Mor = category.compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)
+            composite_arrow $in category.Hom(chosen_source, chosen_target)
+            identity_on_arrows(chosen_source, chosen_target, composite_arrow) = composite_arrow
+            identity_on_arrows(chosen_source, chosen_target, category.compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)) = identity_on_arrows(chosen_source, chosen_target, composite_arrow) = composite_arrow = category.compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)
             category.compose(identity_on_objects(chosen_source), identity_on_objects(chosen_middle), identity_on_objects(chosen_target), identity_on_arrows(chosen_source, chosen_middle, first_arrow), identity_on_arrows(chosen_middle, chosen_target, second_arrow)) = category.compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)
         release thm functor_from_preservation_laws(Obj, Mor, category, Obj, Mor, category, identity_on_objects, identity_on_arrows)
 
 # Exact Hom closure is proved before using nested guarded arrow maps.
+
 thm functor_identity_has_correct_hom:
     ? forall CObj set, CMor set, source_category &Category<CObj, CMor>, DObj set, DMor set, target_category &Category<DObj, DMor>, F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CMor: functor_arrow $in source_category.Hom(functor_source, functor_target)) DMor, chosen_object CObj:
         $is_functor(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow)
@@ -238,14 +245,14 @@ thm composition_of_functors_exists:
             F_arrow(typed_source, typed_target, typed_arrow) $in target_category.Hom(F_object(typed_source), F_object(typed_target))
             composite_on_arrows(typed_source, typed_target, typed_arrow) = G_arrow(F_object(typed_source), F_object(typed_target), F_arrow(typed_source, typed_target, typed_arrow))
             third_category.Hom(composite_on_objects(typed_source), composite_on_objects(typed_target)) = third_category.Hom(G_object(F_object(typed_source)), G_object(F_object(typed_target)))
-            by thm composite_arrow_has_correct_hom(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, EObj, EMor, third_category, G_object, G_arrow, typed_source, typed_target, typed_arrow) => G_arrow(F_object(typed_source), F_object(typed_target), F_arrow(typed_source, typed_target, typed_arrow)) $in third_category.Hom(G_object(F_object(typed_source)), G_object(F_object(typed_target)))
+            release thm composite_arrow_has_correct_hom(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, EObj, EMor, third_category, G_object, G_arrow, typed_source, typed_target, typed_arrow)
         claim:
             ? forall chosen_object CObj:
                 composite_on_arrows(chosen_object, chosen_object, source_category.identity(chosen_object)) = third_category.identity(composite_on_objects(chosen_object))
             source_category.identity(chosen_object) $in source_category.Hom(chosen_object, chosen_object)
             F_arrow(chosen_object, chosen_object, source_category.identity(chosen_object)) $in target_category.Hom(F_object(chosen_object), F_object(chosen_object))
             composite_on_objects(chosen_object) = G_object(F_object(chosen_object))
-            by thm composite_functor_preserves_identity(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, EObj, EMor, third_category, G_object, G_arrow, chosen_object) => G_arrow(F_object(chosen_object), F_object(chosen_object), F_arrow(chosen_object, chosen_object, source_category.identity(chosen_object))) = third_category.identity(G_object(F_object(chosen_object)))
+            release thm composite_functor_preserves_identity(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, EObj, EMor, third_category, G_object, G_arrow, chosen_object)
             composite_on_arrows(chosen_object, chosen_object, source_category.identity(chosen_object)) = G_arrow(F_object(chosen_object), F_object(chosen_object), F_arrow(chosen_object, chosen_object, source_category.identity(chosen_object))) = third_category.identity(G_object(F_object(chosen_object))) = third_category.identity(composite_on_objects(chosen_object))
         claim:
             ? forall chosen_source, chosen_middle, chosen_target CObj, source_arrow CMor, target_arrow CMor:
@@ -262,7 +269,7 @@ thm composition_of_functors_exists:
             F_arrow(chosen_source, chosen_target, source_category.compose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow)) $in target_category.Hom(F_object(chosen_source), F_object(chosen_target))
             composite_on_arrows(chosen_source, chosen_middle, source_arrow) = G_arrow(F_object(chosen_source), F_object(chosen_middle), F_arrow(chosen_source, chosen_middle, source_arrow))
             composite_on_arrows(chosen_middle, chosen_target, target_arrow) = G_arrow(F_object(chosen_middle), F_object(chosen_target), F_arrow(chosen_middle, chosen_target, target_arrow))
-            by thm composite_functor_preserves_composition(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, EObj, EMor, third_category, G_object, G_arrow, chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow) => G_arrow(F_object(chosen_source), F_object(chosen_target), F_arrow(chosen_source, chosen_target, source_category.compose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow))) = third_category.compose(G_object(F_object(chosen_source)), G_object(F_object(chosen_middle)), G_object(F_object(chosen_target)), G_arrow(F_object(chosen_source), F_object(chosen_middle), F_arrow(chosen_source, chosen_middle, source_arrow)), G_arrow(F_object(chosen_middle), F_object(chosen_target), F_arrow(chosen_middle, chosen_target, target_arrow)))
+            release thm composite_functor_preserves_composition(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, EObj, EMor, third_category, G_object, G_arrow, chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow)
             composite_on_arrows(chosen_source, chosen_target, source_category.compose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow)) = G_arrow(F_object(chosen_source), F_object(chosen_target), F_arrow(chosen_source, chosen_target, source_category.compose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow))) = third_category.compose(G_object(F_object(chosen_source)), G_object(F_object(chosen_middle)), G_object(F_object(chosen_target)), G_arrow(F_object(chosen_source), F_object(chosen_middle), F_arrow(chosen_source, chosen_middle, source_arrow)), G_arrow(F_object(chosen_middle), F_object(chosen_target), F_arrow(chosen_middle, chosen_target, target_arrow))) = third_category.compose(composite_on_objects(chosen_source), composite_on_objects(chosen_middle), composite_on_objects(chosen_target), composite_on_arrows(chosen_source, chosen_middle, source_arrow), composite_on_arrows(chosen_middle, chosen_target, target_arrow))
         release thm functor_from_preservation_laws(CObj, CMor, source_category, EObj, EMor, third_category, composite_on_objects, composite_on_arrows)
 
@@ -352,11 +359,11 @@ thm vertical_composite_component_is_natural:
     by def $naturality_square_commutes(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, G_object, G_arrow, alpha, chosen_source, chosen_target, chosen_arrow)
     $naturality_square_commutes(CObj, CMor, source_category, DObj, DMor, target_category, G_object, G_arrow, H_object, H_arrow, beta, chosen_source, chosen_target, chosen_arrow)
     by def $naturality_square_commutes(CObj, CMor, source_category, DObj, DMor, target_category, G_object, G_arrow, H_object, H_arrow, beta, chosen_source, chosen_target, chosen_arrow)
-    by thm category_composition_is_associative(DObj, DMor, target_category, F_object(chosen_source), F_object(chosen_target), G_object(chosen_target), H_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), alpha(chosen_target), beta(chosen_target)) => $composition_is_associative_at(DObj, DMor, target_category.Hom, target_category.compose, F_object(chosen_source), F_object(chosen_target), G_object(chosen_target), H_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), alpha(chosen_target), beta(chosen_target))
+    release thm category_composition_is_associative(DObj, DMor, target_category, F_object(chosen_source), F_object(chosen_target), G_object(chosen_target), H_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), alpha(chosen_target), beta(chosen_target))
     by def $composition_is_associative_at(DObj, DMor, target_category.Hom, target_category.compose, F_object(chosen_source), F_object(chosen_target), G_object(chosen_target), H_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), alpha(chosen_target), beta(chosen_target))
-    by thm category_composition_is_associative(DObj, DMor, target_category, F_object(chosen_source), G_object(chosen_source), G_object(chosen_target), H_object(chosen_target), alpha(chosen_source), G_arrow(chosen_source, chosen_target, chosen_arrow), beta(chosen_target)) => $composition_is_associative_at(DObj, DMor, target_category.Hom, target_category.compose, F_object(chosen_source), G_object(chosen_source), G_object(chosen_target), H_object(chosen_target), alpha(chosen_source), G_arrow(chosen_source, chosen_target, chosen_arrow), beta(chosen_target))
+    release thm category_composition_is_associative(DObj, DMor, target_category, F_object(chosen_source), G_object(chosen_source), G_object(chosen_target), H_object(chosen_target), alpha(chosen_source), G_arrow(chosen_source, chosen_target, chosen_arrow), beta(chosen_target))
     by def $composition_is_associative_at(DObj, DMor, target_category.Hom, target_category.compose, F_object(chosen_source), G_object(chosen_source), G_object(chosen_target), H_object(chosen_target), alpha(chosen_source), G_arrow(chosen_source, chosen_target, chosen_arrow), beta(chosen_target))
-    by thm category_composition_is_associative(DObj, DMor, target_category, F_object(chosen_source), G_object(chosen_source), H_object(chosen_source), H_object(chosen_target), alpha(chosen_source), beta(chosen_source), H_arrow(chosen_source, chosen_target, chosen_arrow)) => $composition_is_associative_at(DObj, DMor, target_category.Hom, target_category.compose, F_object(chosen_source), G_object(chosen_source), H_object(chosen_source), H_object(chosen_target), alpha(chosen_source), beta(chosen_source), H_arrow(chosen_source, chosen_target, chosen_arrow))
+    release thm category_composition_is_associative(DObj, DMor, target_category, F_object(chosen_source), G_object(chosen_source), H_object(chosen_source), H_object(chosen_target), alpha(chosen_source), beta(chosen_source), H_arrow(chosen_source, chosen_target, chosen_arrow))
     by def $composition_is_associative_at(DObj, DMor, target_category.Hom, target_category.compose, F_object(chosen_source), G_object(chosen_source), H_object(chosen_source), H_object(chosen_target), alpha(chosen_source), beta(chosen_source), H_arrow(chosen_source, chosen_target, chosen_arrow))
     target_category.compose(F_object(chosen_source), F_object(chosen_target), G_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), alpha(chosen_target)) = target_category.compose(F_object(chosen_source), G_object(chosen_source), G_object(chosen_target), alpha(chosen_source), G_arrow(chosen_source, chosen_target, chosen_arrow))
     target_category.compose(G_object(chosen_source), G_object(chosen_target), H_object(chosen_target), G_arrow(chosen_source, chosen_target, chosen_arrow), beta(chosen_target)) = target_category.compose(G_object(chosen_source), H_object(chosen_source), H_object(chosen_target), beta(chosen_source), H_arrow(chosen_source, chosen_target, chosen_arrow))
@@ -380,7 +387,7 @@ thm vertical_composition_of_natural_transformations_exists:
             alpha(typed_object) $in target_category.Hom(F_object(typed_object), G_object(typed_object))
             beta(typed_object) $in target_category.Hom(G_object(typed_object), H_object(typed_object))
             vertical_components(typed_object) = target_category.compose(F_object(typed_object), G_object(typed_object), H_object(typed_object), alpha(typed_object), beta(typed_object))
-            by thm vertical_component_has_correct_hom(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, G_object, G_arrow, alpha, H_object, H_arrow, beta, typed_object) => target_category.compose(F_object(typed_object), G_object(typed_object), H_object(typed_object), alpha(typed_object), beta(typed_object)) $in target_category.Hom(F_object(typed_object), H_object(typed_object))
+            release thm vertical_component_has_correct_hom(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, G_object, G_arrow, alpha, H_object, H_arrow, beta, typed_object)
         claim:
             ? forall chosen_source, chosen_target CObj, chosen_arrow CMor:
                 chosen_arrow $in source_category.Hom(chosen_source, chosen_target)
@@ -392,7 +399,7 @@ thm vertical_composition_of_natural_transformations_exists:
             beta(chosen_target) $in target_category.Hom(G_object(chosen_target), H_object(chosen_target))
             vertical_components(chosen_target) = target_category.compose(F_object(chosen_target), G_object(chosen_target), H_object(chosen_target), alpha(chosen_target), beta(chosen_target))
             vertical_components(chosen_source) = target_category.compose(F_object(chosen_source), G_object(chosen_source), H_object(chosen_source), alpha(chosen_source), beta(chosen_source))
-            by thm vertical_composite_component_is_natural(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, G_object, G_arrow, alpha, H_object, H_arrow, beta, chosen_source, chosen_target, chosen_arrow) => target_category.compose(F_object(chosen_source), F_object(chosen_target), H_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), target_category.compose(F_object(chosen_target), G_object(chosen_target), H_object(chosen_target), alpha(chosen_target), beta(chosen_target))) = target_category.compose(F_object(chosen_source), H_object(chosen_source), H_object(chosen_target), target_category.compose(F_object(chosen_source), G_object(chosen_source), H_object(chosen_source), alpha(chosen_source), beta(chosen_source)), H_arrow(chosen_source, chosen_target, chosen_arrow))
+            release thm vertical_composite_component_is_natural(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, G_object, G_arrow, alpha, H_object, H_arrow, beta, chosen_source, chosen_target, chosen_arrow)
             target_category.compose(F_object(chosen_source), F_object(chosen_target), H_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), vertical_components(chosen_target)) = target_category.compose(F_object(chosen_source), F_object(chosen_target), H_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), target_category.compose(F_object(chosen_target), G_object(chosen_target), H_object(chosen_target), alpha(chosen_target), beta(chosen_target)))
             target_category.compose(F_object(chosen_source), H_object(chosen_source), H_object(chosen_target), target_category.compose(F_object(chosen_source), G_object(chosen_source), H_object(chosen_source), alpha(chosen_source), beta(chosen_source)), H_arrow(chosen_source, chosen_target, chosen_arrow)) = target_category.compose(F_object(chosen_source), H_object(chosen_source), H_object(chosen_target), vertical_components(chosen_source), H_arrow(chosen_source, chosen_target, chosen_arrow))
             target_category.compose(F_object(chosen_source), F_object(chosen_target), H_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), vertical_components(chosen_target)) = target_category.compose(F_object(chosen_source), H_object(chosen_source), H_object(chosen_target), vertical_components(chosen_source), H_arrow(chosen_source, chosen_target, chosen_arrow))
@@ -471,14 +478,14 @@ thm terminal_data_forms_a_category:
         by def $composition_is_associative_at(terminal_objects, terminal_morphisms, terminal_hom, terminal_compose, source, middle, target, far_target, f, g, h)
     by def $is_category(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
 
-by thm terminal_data_forms_a_category() => $is_category(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
+release thm terminal_data_forms_a_category()
 by def $is_category(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
 have terminal_category &Category<terminal_objects, terminal_morphisms> = (terminal_hom, terminal_identity, terminal_compose)
 
 thm terminal_identity_functor_exists:
     ? forall:
         exist identity_object_map fn(chosen_object terminal_objects) terminal_objects, identity_arrow_map fn(chosen_source, chosen_target terminal_objects, chosen_arrow terminal_morphisms: chosen_arrow $in terminal_category.Hom(chosen_source, chosen_target)) terminal_morphisms st {$is_functor(terminal_objects, terminal_morphisms, terminal_category, terminal_objects, terminal_morphisms, terminal_category, identity_object_map, identity_arrow_map)}
-    by thm terminal_data_forms_a_category() => $is_category(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
+    release thm terminal_data_forms_a_category()
     by def $is_category(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
     release thm identity_functor_exists(terminal_objects, terminal_morphisms, terminal_category)
 

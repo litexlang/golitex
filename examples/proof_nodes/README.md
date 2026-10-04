@@ -81,6 +81,11 @@ shows explicit coordinate bridges when composing tuple-valued functions with
 dot products and determinants. It preserves the original mathematical goals
 and uses no trust or additional assumptions.
 
+[One-step nested function expansion](equal/by_object_definition/nested_call_one_step.lit)
+keeps symbolic arguments when the outer body already equals the requested
+target. Both the call and the selected body's domain remain checked; the
+function-body tests retain wrong-value and missing-guard rejection controls.
+
 | What the example demonstrates | Runnable file |
 | --- | --- |
 | Known `a = b`; prove `a = c` by calculating `b = c` (`b` is `1 + 1`, `c` is `2`) | [Left peer, builtin bridge](equal/by_equivalence_class/via_left_peer_builtin.lit) |

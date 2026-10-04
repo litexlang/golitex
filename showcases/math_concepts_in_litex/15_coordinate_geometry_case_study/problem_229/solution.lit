@@ -11,7 +11,7 @@ thm problem_229_linear_bridge:
             -4 * r * t = 2 - 4 * r
     2 * r * (1 - t) = 2 * r - 2 * r * t
     2 * r - 2 * r * t = 1
-    by thm geo::multiply_both_sides(2 * r - 2 * r * t, 1, 2)
+    release thm geo::multiply_both_sides(2 * r - 2 * r * t, 1, 2)
     (2 * r - 2 * r * t) * 2 = 1 * 2
     (2 * r - 2 * r * t) * 2 = 4 * r - 4 * r * t
     1 * 2 = 2
@@ -24,10 +24,10 @@ thm problem_229_half_angle_algebra:
         =>:
             2 * (r - t)^2 = (r - t - 1)^2 + (1 - t - r)^2
             2 * (r - t)^2 = 2 * t^2 + 2 * (1 - r)^2
-    by thm problem_229_linear_bridge(t, r)
-    by thm geo::add_equalities(2 * r^2, 2 * r^2, -4 * r * t, 2 - 4 * r)
+    release thm problem_229_linear_bridge(t, r)
+    release thm geo::add_equalities(2 * r^2, 2 * r^2, -4 * r * t, 2 - 4 * r)
     2 * r^2 + (-4 * r * t) = 2 * r^2 + (2 - 4 * r)
-    by thm geo::add_equalities(2 * r^2 + (-4 * r * t), 2 * r^2 + (2 - 4 * r), 2 * t^2, 2 * t^2)
+    release thm geo::add_equalities(2 * r^2 + (-4 * r * t), 2 * r^2 + (2 - 4 * r), 2 * t^2, 2 * t^2)
     (2 * r^2 + (-4 * r * t)) + 2 * t^2 = (2 * r^2 + (2 - 4 * r)) + 2 * t^2
     2 * (r - t)^2 = 2 * r^2 - 4 * r * t + 2 * t^2
     2 * r^2 - 4 * r * t + 2 * t^2 = (2 * r^2 + (-4 * r * t)) + 2 * t^2
@@ -51,25 +51,25 @@ thm problem_229_det_coordinate_bridge:
         ny = (1 - r) * uy + r * ux
         =>:
             mx * ny - my * nx = (ux^2 + uy^2) * (r - t)
-    by thm geo::multiply_both_sides(mx, (1 - t) * ux - t * uy, ny)
+    release thm geo::multiply_both_sides(mx, (1 - t) * ux - t * uy, ny)
     mx * ny = ((1 - t) * ux - t * uy) * ny
-    by thm geo::multiply_both_sides(ny, (1 - r) * uy + r * ux, (1 - t) * ux - t * uy)
+    release thm geo::multiply_both_sides(ny, (1 - r) * uy + r * ux, (1 - t) * ux - t * uy)
     ny * ((1 - t) * ux - t * uy) = ((1 - r) * uy + r * ux) * ((1 - t) * ux - t * uy)
     ((1 - t) * ux - t * uy) * ny = ny * ((1 - t) * ux - t * uy)
     ((1 - r) * uy + r * ux) * ((1 - t) * ux - t * uy) = ((1 - t) * ux - t * uy) * ((1 - r) * uy + r * ux)
     mx * ny = ((1 - t) * ux - t * uy) * ((1 - r) * uy + r * ux)
 
-    by thm geo::multiply_both_sides(my, (1 - t) * uy + t * ux, nx)
+    release thm geo::multiply_both_sides(my, (1 - t) * uy + t * ux, nx)
     my * nx = ((1 - t) * uy + t * ux) * nx
-    by thm geo::multiply_both_sides(nx, (1 - r) * ux - r * uy, (1 - t) * uy + t * ux)
+    release thm geo::multiply_both_sides(nx, (1 - r) * ux - r * uy, (1 - t) * uy + t * ux)
     nx * ((1 - t) * uy + t * ux) = ((1 - r) * ux - r * uy) * ((1 - t) * uy + t * ux)
     ((1 - t) * uy + t * ux) * nx = nx * ((1 - t) * uy + t * ux)
     ((1 - r) * ux - r * uy) * ((1 - t) * uy + t * ux) = ((1 - t) * uy + t * ux) * ((1 - r) * ux - r * uy)
     my * nx = ((1 - t) * uy + t * ux) * ((1 - r) * ux - r * uy)
 
-    by thm geo::subtract_equalities(mx * ny, ((1 - t) * ux - t * uy) * ((1 - r) * uy + r * ux), my * nx, ((1 - t) * uy + t * ux) * ((1 - r) * ux - r * uy))
+    release thm geo::subtract_equalities(mx * ny, ((1 - t) * ux - t * uy) * ((1 - r) * uy + r * ux), my * nx, ((1 - t) * uy + t * ux) * ((1 - r) * ux - r * uy))
     mx * ny - my * nx = ((1 - t) * ux - t * uy) * ((1 - r) * uy + r * ux) - ((1 - t) * uy + t * ux) * ((1 - r) * ux - r * uy)
-    by thm problem_229_det_algebra(ux, uy, t, r)
+    release thm problem_229_det_algebra(ux, uy, t, r)
     mx * ny - my * nx = (ux^2 + uy^2) * (r - t)
 
 thm problem_229_dot_algebra:
@@ -85,25 +85,25 @@ thm problem_229_dot_coordinate_bridge:
         ny = (1 - r) * uy + r * ux
         =>:
             mx * nx + my * ny = (ux^2 + uy^2) * ((1 - t) * (1 - r) + t * r)
-    by thm geo::multiply_both_sides(mx, (1 - t) * ux - t * uy, nx)
+    release thm geo::multiply_both_sides(mx, (1 - t) * ux - t * uy, nx)
     mx * nx = ((1 - t) * ux - t * uy) * nx
-    by thm geo::multiply_both_sides(nx, (1 - r) * ux - r * uy, (1 - t) * ux - t * uy)
+    release thm geo::multiply_both_sides(nx, (1 - r) * ux - r * uy, (1 - t) * ux - t * uy)
     nx * ((1 - t) * ux - t * uy) = ((1 - r) * ux - r * uy) * ((1 - t) * ux - t * uy)
     ((1 - t) * ux - t * uy) * nx = nx * ((1 - t) * ux - t * uy)
     ((1 - r) * ux - r * uy) * ((1 - t) * ux - t * uy) = ((1 - t) * ux - t * uy) * ((1 - r) * ux - r * uy)
     mx * nx = ((1 - t) * ux - t * uy) * ((1 - r) * ux - r * uy)
 
-    by thm geo::multiply_both_sides(my, (1 - t) * uy + t * ux, ny)
+    release thm geo::multiply_both_sides(my, (1 - t) * uy + t * ux, ny)
     my * ny = ((1 - t) * uy + t * ux) * ny
-    by thm geo::multiply_both_sides(ny, (1 - r) * uy + r * ux, (1 - t) * uy + t * ux)
+    release thm geo::multiply_both_sides(ny, (1 - r) * uy + r * ux, (1 - t) * uy + t * ux)
     ny * ((1 - t) * uy + t * ux) = ((1 - r) * uy + r * ux) * ((1 - t) * uy + t * ux)
     ((1 - t) * uy + t * ux) * ny = ny * ((1 - t) * uy + t * ux)
     ((1 - r) * uy + r * ux) * ((1 - t) * uy + t * ux) = ((1 - t) * uy + t * ux) * ((1 - r) * uy + r * ux)
     my * ny = ((1 - t) * uy + t * ux) * ((1 - r) * uy + r * ux)
 
-    by thm geo::add_equalities(mx * nx, ((1 - t) * ux - t * uy) * ((1 - r) * ux - r * uy), my * ny, ((1 - t) * uy + t * ux) * ((1 - r) * uy + r * ux))
+    release thm geo::add_equalities(mx * nx, ((1 - t) * ux - t * uy) * ((1 - r) * ux - r * uy), my * ny, ((1 - t) * uy + t * ux) * ((1 - r) * uy + r * ux))
     mx * nx + my * ny = ((1 - t) * ux - t * uy) * ((1 - r) * ux - r * uy) + ((1 - t) * uy + t * ux) * ((1 - r) * uy + r * ux)
-    by thm problem_229_dot_algebra(ux, uy, t, r)
+    release thm problem_229_dot_algebra(ux, uy, t, r)
     mx * nx + my * ny = (ux^2 + uy^2) * ((1 - t) * (1 - r) + t * r)
 
 thm problem_229_angle_factor_bridge:
@@ -117,7 +117,7 @@ thm problem_229_angle_factor_bridge:
     detv = dotv
     dotv = s * ((1 - t) * (1 - r) + t * r)
     s * (r - t) = s * ((1 - t) * (1 - r) + t * r)
-    by thm geo::subtract_equalities(s * (r - t), s * ((1 - t) * (1 - r) + t * r), s * ((1 - t) * (1 - r) + t * r), s * ((1 - t) * (1 - r) + t * r))
+    release thm geo::subtract_equalities(s * (r - t), s * ((1 - t) * (1 - r) + t * r), s * ((1 - t) * (1 - r) + t * r), s * ((1 - t) * (1 - r) + t * r))
     s * (r - t) - s * ((1 - t) * (1 - r) + t * r) = s * ((1 - t) * (1 - r) + t * r) - s * ((1 - t) * (1 - r) + t * r)
     s * ((1 - t) * (1 - r) + t * r) - s * ((1 - t) * (1 - r) + t * r) = 0
     s * (r - t) - s * ((1 - t) * (1 - r) + t * r) = s * (2 * r * (1 - t) - 1)
@@ -129,7 +129,7 @@ thm problem_229_mn_x_bridge:
         nx = (1 - r) * ux - r * uy
         =>:
             mx - nx = (r - t) * ux + (r - t) * uy
-    by thm geo::subtract_equalities(mx, (1 - t) * ux - t * uy, nx, (1 - r) * ux - r * uy)
+    release thm geo::subtract_equalities(mx, (1 - t) * ux - t * uy, nx, (1 - r) * ux - r * uy)
     mx - nx = ((1 - t) * ux - t * uy) - ((1 - r) * ux - r * uy)
     ((1 - t) * ux - t * uy) - ((1 - r) * ux - r * uy) = (r - t) * ux + (r - t) * uy
     mx - nx = (r - t) * ux + (r - t) * uy
@@ -140,7 +140,7 @@ thm problem_229_mn_y_bridge:
         ny = (1 - r) * uy + r * ux
         =>:
             my - ny = (r - t) * uy - (r - t) * ux
-    by thm geo::subtract_equalities(my, (1 - t) * uy + t * ux, ny, (1 - r) * uy + r * ux)
+    release thm geo::subtract_equalities(my, (1 - t) * uy + t * ux, ny, (1 - r) * uy + r * ux)
     my - ny = ((1 - t) * uy + t * ux) - ((1 - r) * uy + r * ux)
     ((1 - t) * uy + t * ux) - ((1 - r) * uy + r * ux) = (r - t) * uy - (r - t) * ux
     my - ny = (r - t) * uy - (r - t) * ux
@@ -151,7 +151,7 @@ thm problem_229_qn_x_bridge:
         nx = (1 - r) * ux - r * uy
         =>:
             qx - nx = (r - t - 1) * ux - (1 - t - r) * uy
-    by thm geo::subtract_equalities(qx, -((1 - t) * uy + t * ux), nx, (1 - r) * ux - r * uy)
+    release thm geo::subtract_equalities(qx, -((1 - t) * uy + t * ux), nx, (1 - r) * ux - r * uy)
     qx - nx = -((1 - t) * uy + t * ux) - ((1 - r) * ux - r * uy)
     -((1 - t) * uy + t * ux) - ((1 - r) * ux - r * uy) = (r - t - 1) * ux - (1 - t - r) * uy
     qx - nx = (r - t - 1) * ux - (1 - t - r) * uy
@@ -162,7 +162,7 @@ thm problem_229_negated_coordinate_bridge:
         my = expr
         =>:
             qx = -expr
-    by thm geo::multiply_both_sides(my, expr, -1)
+    release thm geo::multiply_both_sides(my, expr, -1)
     my * (-1) = expr * (-1)
     -my = my * (-1)
     -expr = expr * (-1)
@@ -175,7 +175,7 @@ thm problem_229_qn_y_bridge:
         ny = (1 - r) * uy + r * ux
         =>:
             qy - ny = (1 - t - r) * ux + (r - t - 1) * uy
-    by thm geo::subtract_equalities(qy, (1 - t) * ux - t * uy, ny, (1 - r) * uy + r * ux)
+    release thm geo::subtract_equalities(qy, (1 - t) * ux - t * uy, ny, (1 - r) * uy + r * ux)
     qy - ny = ((1 - t) * ux - t * uy) - ((1 - r) * uy + r * ux)
     ((1 - t) * ux - t * uy) - ((1 - r) * uy + r * ux) = (1 - t - r) * ux + (r - t - 1) * uy
     qy - ny = (1 - t - r) * ux + (r - t - 1) * uy
@@ -186,7 +186,7 @@ thm problem_229_affine_start_offset:
         d = delta
         =>:
             p - b = t * delta
-    by thm geo::multiply_both_sides(d, delta, t)
+    release thm geo::multiply_both_sides(d, delta, t)
     d * t = delta * t
     t * d = t * delta
     b + t * d = b + t * delta
@@ -200,10 +200,10 @@ thm problem_229_affine_end_offset:
         d = delta
         =>:
             z - p = (1 - t) * delta
-    by thm problem_229_affine_start_offset(p, b, d, delta, t)
+    release thm problem_229_affine_start_offset(p, b, d, delta, t)
     p - b = t * delta
     z - b = delta
-    by thm geo::subtract_equalities(z - b, delta, p - b, t * delta)
+    release thm geo::subtract_equalities(z - b, delta, p - b, t * delta)
     (z - b) - (p - b) = delta - t * delta
     z - p = (z - b) - (p - b)
     delta - t * delta = (1 - t) * delta
@@ -215,23 +215,23 @@ thm problem_229_mn_distance_bridge:
         p[2] - z[2] = k * uy - k * ux
         =>:
             geo::distance_sq(p, z) = 2 * k^2 * (ux^2 + uy^2)
-    by thm geo::distance_sq_symmetric(p, z)
+    release thm geo::distance_sq_symmetric(p, z)
     geo::distance_sq(p, z) = geo::distance_sq(z, p)
-    by thm geo::distance_sq_coordinate_formula(z, p)
+    release thm geo::distance_sq_coordinate_formula(z, p)
     geo::distance_sq(z, p) = (p[1] - z[1])^2 + (p[2] - z[2])^2
-    by thm geo::multiply_both_sides(p[1] - z[1], k * ux + k * uy, p[1] - z[1])
+    release thm geo::multiply_both_sides(p[1] - z[1], k * ux + k * uy, p[1] - z[1])
     (p[1] - z[1]) * (p[1] - z[1]) = (k * ux + k * uy) * (p[1] - z[1])
-    by thm geo::multiply_both_sides(p[1] - z[1], k * ux + k * uy, k * ux + k * uy)
+    release thm geo::multiply_both_sides(p[1] - z[1], k * ux + k * uy, k * ux + k * uy)
     (p[1] - z[1]) * (k * ux + k * uy) = (k * ux + k * uy) * (k * ux + k * uy)
     (k * ux + k * uy) * (p[1] - z[1]) = (p[1] - z[1]) * (k * ux + k * uy)
     (p[1] - z[1])^2 = (k * ux + k * uy)^2
-    by thm geo::multiply_both_sides(p[2] - z[2], k * uy - k * ux, p[2] - z[2])
+    release thm geo::multiply_both_sides(p[2] - z[2], k * uy - k * ux, p[2] - z[2])
     (p[2] - z[2]) * (p[2] - z[2]) = (k * uy - k * ux) * (p[2] - z[2])
-    by thm geo::multiply_both_sides(p[2] - z[2], k * uy - k * ux, k * uy - k * ux)
+    release thm geo::multiply_both_sides(p[2] - z[2], k * uy - k * ux, k * uy - k * ux)
     (p[2] - z[2]) * (k * uy - k * ux) = (k * uy - k * ux) * (k * uy - k * ux)
     (k * uy - k * ux) * (p[2] - z[2]) = (p[2] - z[2]) * (k * uy - k * ux)
     (p[2] - z[2])^2 = (k * uy - k * ux)^2
-    by thm geo::add_equalities((p[1] - z[1])^2, (k * ux + k * uy)^2, (p[2] - z[2])^2, (k * uy - k * ux)^2)
+    release thm geo::add_equalities((p[1] - z[1])^2, (k * ux + k * uy)^2, (p[2] - z[2])^2, (k * uy - k * ux)^2)
     (p[1] - z[1])^2 + (p[2] - z[2])^2 = (k * ux + k * uy)^2 + (k * uy - k * ux)^2
     (k * ux + k * uy)^2 + (k * uy - k * ux)^2 = 2 * k^2 * (ux^2 + uy^2)
     geo::distance_sq(p, z) = 2 * k^2 * (ux^2 + uy^2)
@@ -242,19 +242,19 @@ thm problem_229_rotated_distance_bridge:
         z[2] - p[2] = beta * ux + alpha * uy
         =>:
             geo::distance_sq(p, z) = (alpha^2 + beta^2) * (ux^2 + uy^2)
-    by thm geo::distance_sq_coordinate_formula(p, z)
+    release thm geo::distance_sq_coordinate_formula(p, z)
     geo::distance_sq(p, z) = (z[1] - p[1])^2 + (z[2] - p[2])^2
-    by thm geo::multiply_both_sides(z[1] - p[1], alpha * ux - beta * uy, z[1] - p[1])
+    release thm geo::multiply_both_sides(z[1] - p[1], alpha * ux - beta * uy, z[1] - p[1])
     (z[1] - p[1]) * (z[1] - p[1]) = (z[1] - p[1]) * (alpha * ux - beta * uy)
-    by thm geo::multiply_both_sides(z[1] - p[1], alpha * ux - beta * uy, alpha * ux - beta * uy)
+    release thm geo::multiply_both_sides(z[1] - p[1], alpha * ux - beta * uy, alpha * ux - beta * uy)
     (z[1] - p[1]) * (alpha * ux - beta * uy) = (alpha * ux - beta * uy) * (alpha * ux - beta * uy)
     (z[1] - p[1])^2 = (alpha * ux - beta * uy)^2
-    by thm geo::multiply_both_sides(z[2] - p[2], beta * ux + alpha * uy, z[2] - p[2])
+    release thm geo::multiply_both_sides(z[2] - p[2], beta * ux + alpha * uy, z[2] - p[2])
     (z[2] - p[2]) * (z[2] - p[2]) = (z[2] - p[2]) * (beta * ux + alpha * uy)
-    by thm geo::multiply_both_sides(z[2] - p[2], beta * ux + alpha * uy, beta * ux + alpha * uy)
+    release thm geo::multiply_both_sides(z[2] - p[2], beta * ux + alpha * uy, beta * ux + alpha * uy)
     (z[2] - p[2]) * (beta * ux + alpha * uy) = (beta * ux + alpha * uy) * (beta * ux + alpha * uy)
     (z[2] - p[2])^2 = (beta * ux + alpha * uy)^2
-    by thm geo::add_equalities((z[1] - p[1])^2, (alpha * ux - beta * uy)^2, (z[2] - p[2])^2, (beta * ux + alpha * uy)^2)
+    release thm geo::add_equalities((z[1] - p[1])^2, (alpha * ux - beta * uy)^2, (z[2] - p[2])^2, (beta * ux + alpha * uy)^2)
     (z[1] - p[1])^2 + (z[2] - p[2])^2 = (alpha * ux - beta * uy)^2 + (beta * ux + alpha * uy)^2
     (alpha * ux - beta * uy)^2 + (beta * ux + alpha * uy)^2 = (alpha^2 + beta^2) * (ux^2 + uy^2)
     geo::distance_sq(p, z) = (alpha^2 + beta^2) * (ux^2 + uy^2)
@@ -291,10 +291,10 @@ thm problem_229_distance_core:
 
     by def $geo::rotated_90_cw(c, a, b)
     by def $geo::rotated_90_cw(q, a, m)
-    by thm geo::vec_coordinate_formula(a, m)
-    by thm geo::vec_coordinate_formula(a, n)
-    by thm geo::det_coordinate_formula(geo::vec(a, m), geo::vec(a, n))
-    by thm geo::dot_coordinate_formula(geo::vec(a, m), geo::vec(a, n))
+    release thm geo::vec_coordinate_formula(a, m)
+    release thm geo::vec_coordinate_formula(a, n)
+    release thm geo::det_coordinate_formula(geo::vec(a, m), geo::vec(a, n))
+    release thm geo::dot_coordinate_formula(geo::vec(a, m), geo::vec(a, n))
 
     have ux R = b[1] - a[1]
     have uy R = b[2] - a[2]
@@ -307,12 +307,12 @@ thm problem_229_distance_core:
     c[2] - a[2] = ux
     m[1] - a[1] = b[1] - a[1] + t * (c[1] - b[1])
     c[1] - b[1] = (c[1] - a[1]) - (b[1] - a[1])
-    by thm geo::subtract_equalities(c[1] - a[1], -uy, b[1] - a[1], ux)
+    release thm geo::subtract_equalities(c[1] - a[1], -uy, b[1] - a[1], ux)
     (c[1] - a[1]) - (b[1] - a[1]) = -uy - ux
     c[1] - b[1] = -uy - ux
-    by thm geo::multiply_both_sides(c[1] - b[1], -uy - ux, t)
+    release thm geo::multiply_both_sides(c[1] - b[1], -uy - ux, t)
     (c[1] - b[1]) * t = (-uy - ux) * t
-    by thm geo::add_equalities(b[1] - a[1], ux, (c[1] - b[1]) * t, (-uy - ux) * t)
+    release thm geo::add_equalities(b[1] - a[1], ux, (c[1] - b[1]) * t, (-uy - ux) * t)
     (b[1] - a[1]) + (c[1] - b[1]) * t = ux + (-uy - ux) * t
     m[1] - a[1] = (b[1] - a[1]) + (c[1] - b[1]) * t
     ux + (-uy - ux) * t = ux + t * (-uy - ux)
@@ -321,12 +321,12 @@ thm problem_229_distance_core:
     m[1] - a[1] = (1 - t) * ux - t * uy
     m[2] - a[2] = b[2] - a[2] + t * (c[2] - b[2])
     c[2] - b[2] = (c[2] - a[2]) - (b[2] - a[2])
-    by thm geo::subtract_equalities(c[2] - a[2], ux, b[2] - a[2], uy)
+    release thm geo::subtract_equalities(c[2] - a[2], ux, b[2] - a[2], uy)
     (c[2] - a[2]) - (b[2] - a[2]) = ux - uy
     c[2] - b[2] = ux - uy
-    by thm geo::multiply_both_sides(c[2] - b[2], ux - uy, t)
+    release thm geo::multiply_both_sides(c[2] - b[2], ux - uy, t)
     (c[2] - b[2]) * t = (ux - uy) * t
-    by thm geo::add_equalities(b[2] - a[2], uy, (c[2] - b[2]) * t, (ux - uy) * t)
+    release thm geo::add_equalities(b[2] - a[2], uy, (c[2] - b[2]) * t, (ux - uy) * t)
     (b[2] - a[2]) + (c[2] - b[2]) * t = uy + (ux - uy) * t
     m[2] - a[2] = (b[2] - a[2]) + (c[2] - b[2]) * t
     uy + (ux - uy) * t = uy + t * (ux - uy)
@@ -334,9 +334,9 @@ thm problem_229_distance_core:
     uy + t * (ux - uy) = (1 - t) * uy + t * ux
     m[2] - a[2] = (1 - t) * uy + t * ux
     n[1] - a[1] = b[1] - a[1] + r * (c[1] - b[1])
-    by thm geo::multiply_both_sides(c[1] - b[1], -uy - ux, r)
+    release thm geo::multiply_both_sides(c[1] - b[1], -uy - ux, r)
     (c[1] - b[1]) * r = (-uy - ux) * r
-    by thm geo::add_equalities(b[1] - a[1], ux, (c[1] - b[1]) * r, (-uy - ux) * r)
+    release thm geo::add_equalities(b[1] - a[1], ux, (c[1] - b[1]) * r, (-uy - ux) * r)
     (b[1] - a[1]) + (c[1] - b[1]) * r = ux + (-uy - ux) * r
     n[1] - a[1] = (b[1] - a[1]) + (c[1] - b[1]) * r
     ux + (-uy - ux) * r = ux + r * (-uy - ux)
@@ -344,9 +344,9 @@ thm problem_229_distance_core:
     ux + r * (-uy - ux) = (1 - r) * ux - r * uy
     n[1] - a[1] = (1 - r) * ux - r * uy
     n[2] - a[2] = b[2] - a[2] + r * (c[2] - b[2])
-    by thm geo::multiply_both_sides(c[2] - b[2], ux - uy, r)
+    release thm geo::multiply_both_sides(c[2] - b[2], ux - uy, r)
     (c[2] - b[2]) * r = (ux - uy) * r
-    by thm geo::add_equalities(b[2] - a[2], uy, (c[2] - b[2]) * r, (ux - uy) * r)
+    release thm geo::add_equalities(b[2] - a[2], uy, (c[2] - b[2]) * r, (ux - uy) * r)
     (b[2] - a[2]) + (c[2] - b[2]) * r = uy + (ux - uy) * r
     n[2] - a[2] = (b[2] - a[2]) + (c[2] - b[2]) * r
     uy + (ux - uy) * r = uy + r * (ux - uy)
@@ -354,72 +354,72 @@ thm problem_229_distance_core:
     uy + r * (ux - uy) = (1 - r) * uy + r * ux
     n[2] - a[2] = (1 - r) * uy + r * ux
     geo::det(geo::vec(a, m), geo::vec(a, n)) = (m[1] - a[1]) * (n[2] - a[2]) - (m[2] - a[2]) * (n[1] - a[1])
-    by thm problem_229_det_coordinate_bridge(m[1] - a[1], m[2] - a[2], n[1] - a[1], n[2] - a[2], ux, uy, t, r)
+    release thm problem_229_det_coordinate_bridge(m[1] - a[1], m[2] - a[2], n[1] - a[1], n[2] - a[2], ux, uy, t, r)
     (m[1] - a[1]) * (n[2] - a[2]) - (m[2] - a[2]) * (n[1] - a[1]) = (ux^2 + uy^2) * (r - t)
     geo::det(geo::vec(a, m), geo::vec(a, n)) = (ux^2 + uy^2) * (r - t)
     geo::dot(geo::vec(a, m), geo::vec(a, n)) = (m[1] - a[1]) * (n[1] - a[1]) + (m[2] - a[2]) * (n[2] - a[2])
-    by thm problem_229_dot_coordinate_bridge(m[1] - a[1], m[2] - a[2], n[1] - a[1], n[2] - a[2], ux, uy, t, r)
+    release thm problem_229_dot_coordinate_bridge(m[1] - a[1], m[2] - a[2], n[1] - a[1], n[2] - a[2], ux, uy, t, r)
     (m[1] - a[1]) * (n[1] - a[1]) + (m[2] - a[2]) * (n[2] - a[2]) = (ux^2 + uy^2) * ((1 - t) * (1 - r) + t * r)
     geo::dot(geo::vec(a, m), geo::vec(a, n)) = (ux^2 + uy^2) * ((1 - t) * (1 - r) + t * r)
-    by thm problem_229_angle_factor_bridge(geo::det(geo::vec(a, m), geo::vec(a, n)), geo::dot(geo::vec(a, m), geo::vec(a, n)), ux^2 + uy^2, t, r)
+    release thm problem_229_angle_factor_bridge(geo::det(geo::vec(a, m), geo::vec(a, n)), geo::dot(geo::vec(a, m), geo::vec(a, n)), ux^2 + uy^2, t, r)
     (ux^2 + uy^2) * (2 * r * (1 - t) - 1) = 0
 
     by def $geo::is_right_angle(b, a, c)
     ux^2 + uy^2 > 0
     ux^2 + uy^2 != 0
-    by thm geo::zero_factor_law(ux^2 + uy^2, 2 * r * (1 - t) - 1)
+    release thm geo::zero_factor_law(ux^2 + uy^2, 2 * r * (1 - t) - 1)
     2 * r * (1 - t) - 1 = 0
     2 * r * (1 - t) = 1
-    by thm problem_229_half_angle_algebra(t, r)
+    release thm problem_229_half_angle_algebra(t, r)
 
-    by thm problem_229_mn_x_bridge(m[1] - a[1], n[1] - a[1], ux, uy, t, r)
+    release thm problem_229_mn_x_bridge(m[1] - a[1], n[1] - a[1], ux, uy, t, r)
     (m[1] - a[1]) - (n[1] - a[1]) = (r - t) * ux + (r - t) * uy
     m[1] - n[1] = (m[1] - a[1]) - (n[1] - a[1])
     m[1] - n[1] = (r - t) * ux + (r - t) * uy
-    by thm problem_229_mn_y_bridge(m[2] - a[2], n[2] - a[2], ux, uy, t, r)
+    release thm problem_229_mn_y_bridge(m[2] - a[2], n[2] - a[2], ux, uy, t, r)
     (m[2] - a[2]) - (n[2] - a[2]) = (r - t) * uy - (r - t) * ux
     m[2] - n[2] = (m[2] - a[2]) - (n[2] - a[2])
     m[2] - n[2] = (r - t) * uy - (r - t) * ux
     a[2] - m[2] = -(m[2] - a[2])
     q[1] - a[1] = -(m[2] - a[2])
-    by thm problem_229_negated_coordinate_bridge(q[1] - a[1], m[2] - a[2], (1 - t) * uy + t * ux)
+    release thm problem_229_negated_coordinate_bridge(q[1] - a[1], m[2] - a[2], (1 - t) * uy + t * ux)
     q[1] - a[1] = -((1 - t) * uy + t * ux)
-    by thm problem_229_qn_x_bridge(q[1] - a[1], n[1] - a[1], ux, uy, t, r)
+    release thm problem_229_qn_x_bridge(q[1] - a[1], n[1] - a[1], ux, uy, t, r)
     (q[1] - a[1]) - (n[1] - a[1]) = (r - t - 1) * ux - (1 - t - r) * uy
     q[1] - n[1] = (q[1] - a[1]) - (n[1] - a[1])
     q[1] - n[1] = (r - t - 1) * ux - (1 - t - r) * uy
     q[2] - a[2] = (1 - t) * ux - t * uy
-    by thm problem_229_qn_y_bridge(q[2] - a[2], n[2] - a[2], ux, uy, t, r)
+    release thm problem_229_qn_y_bridge(q[2] - a[2], n[2] - a[2], ux, uy, t, r)
     (q[2] - a[2]) - (n[2] - a[2]) = (1 - t - r) * ux + (r - t - 1) * uy
     q[2] - n[2] = (q[2] - a[2]) - (n[2] - a[2])
     q[2] - n[2] = (1 - t - r) * ux + (r - t - 1) * uy
-    by thm problem_229_affine_start_offset(m[1], b[1], c[1] - b[1], -uy - ux, t)
+    release thm problem_229_affine_start_offset(m[1], b[1], c[1] - b[1], -uy - ux, t)
     m[1] - b[1] = t * (-uy - ux)
-    by thm problem_229_affine_start_offset(m[2], b[2], c[2] - b[2], ux - uy, t)
+    release thm problem_229_affine_start_offset(m[2], b[2], c[2] - b[2], ux - uy, t)
     m[2] - b[2] = t * (ux - uy)
-    by thm problem_229_affine_end_offset(n[1], b[1], c[1], c[1] - b[1], -uy - ux, r)
+    release thm problem_229_affine_end_offset(n[1], b[1], c[1], c[1] - b[1], -uy - ux, r)
     c[1] - n[1] = (1 - r) * (-uy - ux)
-    by thm problem_229_affine_end_offset(n[2], b[2], c[2], c[2] - b[2], ux - uy, r)
+    release thm problem_229_affine_end_offset(n[2], b[2], c[2], c[2] - b[2], ux - uy, r)
     c[2] - n[2] = (1 - r) * (ux - uy)
 
-    by thm geo::distance_sq_coordinate_formula(m, n)
-    by thm geo::distance_sq_coordinate_formula(n, q)
-    by thm geo::distance_sq_coordinate_formula(b, m)
-    by thm geo::distance_sq_coordinate_formula(n, c)
-    by thm problem_229_mn_distance_bridge(m, n, r - t, ux, uy)
+    release thm geo::distance_sq_coordinate_formula(m, n)
+    release thm geo::distance_sq_coordinate_formula(n, q)
+    release thm geo::distance_sq_coordinate_formula(b, m)
+    release thm geo::distance_sq_coordinate_formula(n, c)
+    release thm problem_229_mn_distance_bridge(m, n, r - t, ux, uy)
     geo::distance_sq(m, n) = 2 * (r - t)^2 * (ux^2 + uy^2)
-    by thm problem_229_rotated_distance_bridge(n, q, r - t - 1, 1 - t - r, ux, uy)
+    release thm problem_229_rotated_distance_bridge(n, q, r - t - 1, 1 - t - r, ux, uy)
     geo::distance_sq(n, q) = ((r - t - 1)^2 + (1 - t - r)^2) * (ux^2 + uy^2)
-    by thm problem_229_rotated_distance_bridge(b, m, -t, t, ux, uy)
+    release thm problem_229_rotated_distance_bridge(b, m, -t, t, ux, uy)
     geo::distance_sq(b, m) = 2 * t^2 * (ux^2 + uy^2)
-    by thm problem_229_rotated_distance_bridge(n, c, r - 1, 1 - r, ux, uy)
+    release thm problem_229_rotated_distance_bridge(n, c, r - 1, 1 - r, ux, uy)
     geo::distance_sq(n, c) = 2 * (1 - r)^2 * (ux^2 + uy^2)
-    by thm geo::multiply_both_sides(2 * (r - t)^2, (r - t - 1)^2 + (1 - t - r)^2, ux^2 + uy^2)
+    release thm geo::multiply_both_sides(2 * (r - t)^2, (r - t - 1)^2 + (1 - t - r)^2, ux^2 + uy^2)
     2 * (r - t)^2 * (ux^2 + uy^2) = ((r - t - 1)^2 + (1 - t - r)^2) * (ux^2 + uy^2)
     geo::distance_sq(m, n) = geo::distance_sq(n, q)
-    by thm geo::multiply_both_sides(2 * t^2 + 2 * (1 - r)^2, 2 * (r - t)^2, ux^2 + uy^2)
+    release thm geo::multiply_both_sides(2 * t^2 + 2 * (1 - r)^2, 2 * (r - t)^2, ux^2 + uy^2)
     (2 * t^2 + 2 * (1 - r)^2) * (ux^2 + uy^2) = 2 * (r - t)^2 * (ux^2 + uy^2)
-    by thm geo::add_equalities(geo::distance_sq(b, m), 2 * t^2 * (ux^2 + uy^2), geo::distance_sq(n, c), 2 * (1 - r)^2 * (ux^2 + uy^2))
+    release thm geo::add_equalities(geo::distance_sq(b, m), 2 * t^2 * (ux^2 + uy^2), geo::distance_sq(n, c), 2 * (1 - r)^2 * (ux^2 + uy^2))
     geo::distance_sq(b, m) + geo::distance_sq(n, c) = 2 * t^2 * (ux^2 + uy^2) + 2 * (1 - r)^2 * (ux^2 + uy^2)
     2 * t^2 * (ux^2 + uy^2) + 2 * (1 - r)^2 * (ux^2 + uy^2) = (2 * t^2 + 2 * (1 - r)^2) * (ux^2 + uy^2)
     geo::distance_sq(b, m) + geo::distance_sq(n, c) = (2 * t^2 + 2 * (1 - r)^2) * (ux^2 + uy^2)
@@ -445,7 +445,7 @@ thm problem_229_part2:
         =>:
             # 原题第（2）问：“连接NQ，求证：MN=NQ。”
             $geo::are_segments_congruent(m, n, n, q)
-    by thm problem_229_distance_core(a, b, c, m, n, q)
+    release thm problem_229_distance_core(a, b, c, m, n, q)
     by def $geo::are_segments_congruent(m, n, n, q)
 
 # 第（3）问对应另一个独立的 forall 前提+结论。
@@ -468,4 +468,4 @@ thm problem_229_part3:
             # 原题第（3）问：“写出线段BM、MN和NC之间满足的数量关系，并说明理由。”
             # 数量关系为 MN²=BM²+NC²。
             geo::distance_sq(m, n) = geo::distance_sq(b, m) + geo::distance_sq(n, c)
-    by thm problem_229_distance_core(a, b, c, m, n, q)
+    release thm problem_229_distance_core(a, b, c, m, n, q)

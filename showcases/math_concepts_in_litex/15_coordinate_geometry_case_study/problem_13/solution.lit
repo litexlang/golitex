@@ -148,8 +148,8 @@ thm triangle_covered_by_three_unit_disks:
         u + v <= 1
         =>:
             dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
-    by thm triangle_weight_identity(a, c, s, u, v)
-    by thm triangle_weight_upper_bound(a, c, s, u, v)
+    release thm triangle_weight_identity(a, c, s, u, v)
+    release thm triangle_weight_upper_bound(a, c, s, u, v)
     1 - (u + v) >= 0
     1 - (u + v) = 1 - u - v
     1 - u - v >= 0
@@ -169,7 +169,7 @@ thm triangle_covered_by_three_unit_disks:
                             dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
                         case dist_D(a, c, s, u, v) > 1:
                             (1 - u - v) + u + v = 1
-                            by thm weighted_three_strict(1 - u - v, u, v, dist_A(a, c, s, u, v), dist_B(a, c, s, u, v), dist_D(a, c, s, u, v))
+                            release thm weighted_three_strict(1 - u - v, u, v, dist_A(a, c, s, u, v), dist_B(a, c, s, u, v), dist_D(a, c, s, u, v))
                             tri_weight(a, c, s, u, v) > 1
                             impossible tri_weight(a, c, s, u, v) <= 1
 
@@ -247,8 +247,8 @@ thm parallelogram_covered_by_four_unit_disks:
     by cases:
         ? dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
         case u + v <= 1:
-            by thm triangle_weight_identity(a, c, s, u, v)
-            by thm triangle_weight_upper_bound(a, c, s, u, v)
+            release thm triangle_weight_identity(a, c, s, u, v)
+            release thm triangle_weight_upper_bound(a, c, s, u, v)
             1 - (u + v) >= 0
             1 - (u + v) = 1 - u - v
             1 - u - v >= 0
@@ -268,7 +268,7 @@ thm parallelogram_covered_by_four_unit_disks:
                                     dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
                                 case dist_D(a, c, s, u, v) > 1:
                                     (1 - u - v) + u + v = 1
-                                    by thm weighted_three_strict(1 - u - v, u, v, dist_A(a, c, s, u, v), dist_B(a, c, s, u, v), dist_D(a, c, s, u, v))
+                                    release thm weighted_three_strict(1 - u - v, u, v, dist_A(a, c, s, u, v), dist_B(a, c, s, u, v), dist_D(a, c, s, u, v))
                                     tri_weight(a, c, s, u, v) > 1
                                     impossible tri_weight(a, c, s, u, v) <= 1
         case u + v > 1:
@@ -279,35 +279,35 @@ thm parallelogram_covered_by_four_unit_disks:
             1 - (u + v - 1) <= 1
             1 - (u + v - 1) = 1 - u + (1 - v)
             1 - u + (1 - v) <= 1
-            by thm triangle_covered_by_three_unit_disks(a, c, s, 1 - u, 1 - v)
+            release thm triangle_covered_by_three_unit_disks(a, c, s, 1 - u, 1 - v)
             by cases:
                 ? dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
                 case dist_A(a, c, s, 1 - u, 1 - v) <= 1:
-                    by thm map_reflected_A_to_C(a, c, s, u, v)
+                    release thm map_reflected_A_to_C(a, c, s, u, v)
                     dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
                 case dist_A(a, c, s, 1 - u, 1 - v) > 1:
                     by cases:
                         ? dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
                         case dist_B(a, c, s, 1 - u, 1 - v) <= 1:
-                            by thm map_reflected_B_to_D(a, c, s, u, v)
+                            release thm map_reflected_B_to_D(a, c, s, u, v)
                             dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
                         case dist_B(a, c, s, 1 - u, 1 - v) > 1:
                             by cases:
                                 ? dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
                                 case dist_D(a, c, s, 1 - u, 1 - v) <= 1:
-                                    by thm map_reflected_D_to_B(a, c, s, u, v)
+                                    release thm map_reflected_D_to_B(a, c, s, u, v)
                                     dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
                                 case dist_D(a, c, s, 1 - u, 1 - v) > 1:
                                     (1 - (1 - u) - (1 - v)) + (1 - u) + (1 - v) = 1
-                                    by thm triangle_weight_identity(a, c, s, 1 - u, 1 - v)
-                                    by thm triangle_weight_upper_bound(a, c, s, 1 - u, 1 - v)
+                                    release thm triangle_weight_identity(a, c, s, 1 - u, 1 - v)
+                                    release thm triangle_weight_upper_bound(a, c, s, 1 - u, 1 - v)
                                     u + v - 1 > 0
                                     1 - (1 - u) - (1 - v) = u + v - 1
                                     1 - (1 - u) - (1 - v) > 0
                                     1 - (1 - u) - (1 - v) >= 0
                                     1 - u >= 0
                                     1 - v >= 0
-                                    by thm weighted_three_strict(1 - (1 - u) - (1 - v), 1 - u, 1 - v, dist_A(a, c, s, 1 - u, 1 - v), dist_B(a, c, s, 1 - u, 1 - v), dist_D(a, c, s, 1 - u, 1 - v))
+                                    release thm weighted_three_strict(1 - (1 - u) - (1 - v), 1 - u, 1 - v, dist_A(a, c, s, 1 - u, 1 - v), dist_B(a, c, s, 1 - u, 1 - v), dist_D(a, c, s, 1 - u, 1 - v))
                                     tri_weight(a, c, s, 1 - u, 1 - v) > 1
                                     impossible tri_weight(a, c, s, 1 - u, 1 - v) <= 1
 
@@ -558,7 +558,7 @@ thm condition_failure_gives_uncovered_point:
     witness exist u, v R st {u >= 0, u <= 1, v >= 0, v <= 1, dist_A(a, c, s, u, v) > 1, dist_B(a, c, s, u, v) > 1, dist_C(a, c, s, u, v) > 1, dist_D(a, c, s, u, v) > 1} from (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2):
         2 * a * s^2 * ((a - c) / (2 * a * s^2)) = a - c
         2 * s^2 * ((1 - a * c) / (2 * s^2)) = 1 - a * c
-        by thm circumcenter_equations_give_outside_point(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2))
+        release thm circumcenter_equations_give_outside_point(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2))
         dist_A(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2)) = dist_A(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2))
         dist_B(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2)) = dist_B(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2))
         dist_C(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2)) = dist_C(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2))
@@ -587,7 +587,7 @@ thm radius_condition_implies_cover:
         a <= c + sqrt(3) * s
         =>:
             $four_vertex_unit_disks_cover(a, c, s)
-    by thm condition_implies_radius_bound(a, c, s)
+    release thm condition_implies_radius_bound(a, c, s)
     by def:
         ? $four_vertex_unit_disks_cover(a, c, s)
     claim:
@@ -598,7 +598,7 @@ thm radius_condition_implies_cover:
             v <= 1
             =>:
                 dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
-        by thm parallelogram_covered_by_four_unit_disks(a, c, s, u, v)
+        release thm parallelogram_covered_by_four_unit_disks(a, c, s, u, v)
 
 thm four_way_cover_with_all_outside_forces_first_inside:
     ? forall dA, dB, dC, dD R:
@@ -633,11 +633,11 @@ thm cover_implies_radius_condition:
     by contra:
         ? a <= c + sqrt(3) * s
         a > c + sqrt(3) * s
-        by thm condition_failure_gives_uncovered_point(a, c, s)
+        release thm condition_failure_gives_uncovered_point(a, c, s)
         obtain u, v from exist u, v R st {u >= 0, u <= 1, v >= 0, v <= 1, dist_A(a, c, s, u, v) > 1, dist_B(a, c, s, u, v) > 1, dist_C(a, c, s, u, v) > 1, dist_D(a, c, s, u, v) > 1}
         by def:
             ? $four_vertex_unit_disks_cover(a, c, s)
-        by thm four_way_cover_with_all_outside_forces_first_inside(dist_A(a, c, s, u, v), dist_B(a, c, s, u, v), dist_C(a, c, s, u, v), dist_D(a, c, s, u, v))
+        release thm four_way_cover_with_all_outside_forces_first_inside(dist_A(a, c, s, u, v), dist_B(a, c, s, u, v), dist_C(a, c, s, u, v), dist_D(a, c, s, u, v))
         impossible dist_A(a, c, s, u, v) > 1
 
 prop imo_1967_problem_1_criterion(a, c, s R):
@@ -664,12 +664,12 @@ thm imo_1967_problem_1:
             $four_vertex_unit_disks_cover(a, c, s)
             =>:
                 a <= c + sqrt(3) * s
-        by thm cover_implies_radius_condition(a, c, s)
+        release thm cover_implies_radius_condition(a, c, s)
     claim:
         ? forall:
             a <= c + sqrt(3) * s
             =>:
                 $four_vertex_unit_disks_cover(a, c, s)
-        by thm radius_condition_implies_cover(a, c, s)
+        release thm radius_condition_implies_cover(a, c, s)
     by def:
         ? $imo_1967_problem_1_criterion(a, c, s)
