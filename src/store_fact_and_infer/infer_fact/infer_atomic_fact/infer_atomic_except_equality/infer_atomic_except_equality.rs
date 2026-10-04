@@ -104,9 +104,12 @@ impl Runtime {
                     rules.push(InferAtomicExceptEqualityResult::StrictLowerBoundPositive(r));
                 }
             }
-            AtomicFact::LessEqualFact(_)
-            | AtomicFact::GreaterEqualFact(_)
-            | AtomicFact::IsSetFact(_)
+            AtomicFact::LessEqualFact(_) | AtomicFact::GreaterEqualFact(_) => {
+                if let Some(r) = self.infer_weak_integer_lower_bound_in_n(atomic_fact, verify_state)? {
+                    rules.push(InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(r));
+                }
+            }
+            AtomicFact::IsSetFact(_)
             | AtomicFact::IsNonemptySetFact(_)
             | AtomicFact::IsFiniteSetFact(_)
             | AtomicFact::IsTupleFact(_)

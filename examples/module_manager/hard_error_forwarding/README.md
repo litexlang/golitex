@@ -1,6 +1,5 @@
 # Mounted hard-error forwarding
 
-On a fresh fixture without a dependency cache,
 `litex -strict -r examples/module_manager/hard_error_forwarding` exits 1 and
 preserves the dependency's `Runtime(InvalidArguments(...))` forbidden-trust
 message. It must not replace that hard error with `FailToImport`, and the root
@@ -11,11 +10,11 @@ mounting. A soft failed fact (`1 = 2`) still becomes `FailToImport`; the focused
 Rust regression covers that adjacent boundary. InternalBug uses the same
 unchanged Runtime-error forwarding path and keeps its explicit Litex-bug text.
 
-This tracer does not repair the underlying cross-file geometry WD issue.
+After a non-strict run creates a dependency cache, strict now rechecks the
+source and preserves the same forbidden-trust error. The separate cache
+bypass is closed in [strict_cache_policy](../strict_cache_policy/README.md).
+The geometry authoring issue is also closed by explicit `release obj def` in
+its original module; it required no module-owner lookup change.
 
-After a non-strict run creates a dependency cache, the strict run currently
-bypasses this source check. That separate confirmed defect is recorded in
-[strict_cache_policy](../strict_cache_policy/README.md); the proposed cold
-strict verification guard awaits concrete cache authorization. Do not use a
-warmed version of this fixture as evidence that error forwarding is broken.
-[This turn's evidence](../../../tests/tooling/acceptance/conversation-closeout-retest-2026-10-04.md).
+[Current evidence](../../../tests/tooling/acceptance/conversation-clarifications-2026-10-04.md).
+[Historical error-forwarding evidence](../../../tests/tooling/acceptance/conversation-closeout-retest-2026-10-04.md).

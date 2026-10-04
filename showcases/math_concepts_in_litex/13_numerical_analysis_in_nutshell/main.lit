@@ -194,14 +194,27 @@ thm sqrt_two_newton_gap_contracts_quadratically:
         sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2 / 4
     release thm sqrt_two_newton_iterate_at_least_one(n)
     sqrt_two_newton_iterate(n) >= 1
+    sqrt_two_newton_iterate(n) - 1 $in R
+    sqrt_two_newton_iterate(n) + 1 $in R
     sqrt_two_newton_iterate(n) - 1 >= 0
     sqrt_two_newton_iterate(n) + 1 > 0
+    sqrt_two_newton_iterate(n) + 1 >= 0
     (sqrt_two_newton_iterate(n) - 1) * (sqrt_two_newton_iterate(n) + 1) >= 0
     sqrt_two_newton_iterate(n)^2 - 1 = (sqrt_two_newton_iterate(n) - 1) * (sqrt_two_newton_iterate(n) + 1) >= 0
+    0 <= sqrt_two_newton_iterate(n)^2 - 1
+    1 <= sqrt_two_newton_iterate(n)^2
     sqrt_two_newton_iterate(n)^2 >= 1
     sqrt_two_newton_gap(n + 1) = abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1)))
     abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1))) >= 0
     sqrt_two_newton_gap(n + 1) >= 0
+    sqrt_two_newton_gap(n + 1) $in R
+    sqrt_two_newton_iterate(n)^2 $in R
+    0 <= sqrt_two_newton_gap(n + 1)
+    1 * sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1)
+    0 <= 4
+    4 * (1 * sqrt_two_newton_gap(n + 1)) <= 4 * (sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1))
+    4 * (1 * sqrt_two_newton_gap(n + 1)) = 4 * sqrt_two_newton_gap(n + 1)
+    4 * (sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1)) = 4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1)
     4 * sqrt_two_newton_gap(n + 1) <= 4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1)
     release thm sqrt_two_newton_gap_step_identity(n)
     4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1) = sqrt_two_newton_gap(n)^2
@@ -214,6 +227,8 @@ thm sqrt_two_newton_gap_bound_step:
         sqrt_two_newton_gap_bound(n + 1) = sqrt_two_newton_gap_bound(n)^2 / 4
     have t R+ = (1 / 4)^(2^n)
     sqrt_two_newton_gap_bound(n) = 4 * (1 / 4)^(2^n) = 4 * t
+    2^(n + 1) = 2^n * 2^1
+    2^1 = 2
     2^(n + 1) = 2^n * 2
     (1 / 4)^(2^(n + 1)) = (1 / 4)^(2^n * 2) = ((1 / 4)^(2^n))^2 = t^2
     sqrt_two_newton_gap_bound(n + 1) = 4 * (1 / 4)^(2^(n + 1)) = 4 * t^2
@@ -228,6 +243,11 @@ thm sqrt_two_newton_gap_is_bounded:
         ? sqrt_two_newton_gap(k) <= sqrt_two_newton_gap_bound(k)
         ? from k = 0:
             sqrt_two_newton_iterate(0) = 1
+            square_root_two_residual(sqrt_two_newton_iterate(0)) = square_root_two_residual(1)
+            square_root_two_residual(1) = -1
+            square_root_two_residual(sqrt_two_newton_iterate(0)) = -1
+            abs(square_root_two_residual(sqrt_two_newton_iterate(0))) = abs(-1)
+            abs(-1) = 1
             sqrt_two_newton_gap(0) = abs(square_root_two_residual(sqrt_two_newton_iterate(0))) = abs(-1) = 1
             sqrt_two_newton_gap_bound(0) = 4 * (1 / 4)^(2^0) = 4 * (1 / 4) = 1
         ? induc:
@@ -235,11 +255,21 @@ thm sqrt_two_newton_gap_is_bounded:
             abs(square_root_two_residual(sqrt_two_newton_iterate(k))) >= 0
             sqrt_two_newton_gap(k) >= 0
             sqrt_two_newton_gap_bound(k) > 0
+            0 <= sqrt_two_newton_gap_bound(k)
+            0 <= sqrt_two_newton_gap(k)
+            sqrt_two_newton_gap_bound(k) - sqrt_two_newton_gap(k) $in R
+            sqrt_two_newton_gap_bound(k) + sqrt_two_newton_gap(k) $in R
             sqrt_two_newton_gap_bound(k) - sqrt_two_newton_gap(k) >= 0
             sqrt_two_newton_gap_bound(k) + sqrt_two_newton_gap(k) >= 0
+            0 <= sqrt_two_newton_gap_bound(k) - sqrt_two_newton_gap(k)
+            0 <= sqrt_two_newton_gap_bound(k) + sqrt_two_newton_gap(k)
             (sqrt_two_newton_gap_bound(k) - sqrt_two_newton_gap(k)) * (sqrt_two_newton_gap_bound(k) + sqrt_two_newton_gap(k)) >= 0
             sqrt_two_newton_gap_bound(k)^2 - sqrt_two_newton_gap(k)^2 = (sqrt_two_newton_gap_bound(k) - sqrt_two_newton_gap(k)) * (sqrt_two_newton_gap_bound(k) + sqrt_two_newton_gap(k)) >= 0
+            0 <= sqrt_two_newton_gap_bound(k)^2 - sqrt_two_newton_gap(k)^2
             sqrt_two_newton_gap(k)^2 <= sqrt_two_newton_gap_bound(k)^2
+            sqrt_two_newton_gap(k)^2 $in R
+            sqrt_two_newton_gap_bound(k)^2 $in R
+            4 > 0
             sqrt_two_newton_gap(k)^2 / 4 <= sqrt_two_newton_gap_bound(k)^2 / 4
             release thm sqrt_two_newton_gap_contracts_quadratically(k)
             sqrt_two_newton_gap(k + 1) <= sqrt_two_newton_gap(k)^2 / 4

@@ -1423,6 +1423,11 @@ pub(super) fn project_atomic_builtin_rule(
             ("rule", string("RealOperandArithmeticClosure")),
             ("operand_proofs", project_verify_facts(&p.operand_proofs, runtime)),
         ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")),
+            ("rule", string("RealArithmeticConstructorClosure")),
+            ("constructor_tree", project_real_arithmetic_constructor_tree(&p.constructor_tree, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealIntegerPower(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("InFact")),
             ("rule", string("RealIntegerPower")),
@@ -2406,4 +2411,36 @@ fn project_closed_subtraction_bound(family: &str, p: &br::closed_subtraction_bou
             ("target_bound", string(p.target_bound.readable_string())),
         ])),
     ])
+}
+
+
+fn project_real_arithmetic_constructor_tree(
+    tree: &br::in_fact::RealArithmeticConstructorTree,
+    runtime: &Runtime,
+) -> JsonValue {
+    use br::in_fact::RealArithmeticConstructorTree::*;
+    let binary = |kind, left, right| object_for(runtime, vec![
+        ("constructor", string(kind)),
+        ("left", project_real_arithmetic_constructor_tree(left, runtime)),
+        ("right", project_real_arithmetic_constructor_tree(right, runtime)),
+    ]);
+    match tree {
+        Leaf(proof) => object_for(runtime, vec![
+            ("constructor", string("leaf")),
+            ("proof", project_verify_fact(proof, runtime)),
+        ]),
+        Add { left, right } => binary("add", left, right),
+        Sub { left, right } => binary("sub", left, right),
+        Neg { argument } => object_for(runtime, vec![
+            ("constructor", string("neg")),
+            ("argument", project_real_arithmetic_constructor_tree(argument, runtime)),
+        ]),
+        Mul { left, right } => binary("mul", left, right),
+        Div { left, right } => binary("div", left, right),
+        IntegerPow { base, exponent_in_integer_proof } => object_for(runtime, vec![
+            ("constructor", string("integer_pow")),
+            ("base", project_real_arithmetic_constructor_tree(base, runtime)),
+            ("exponent_in_integer_proof", project_verify_fact(exponent_in_integer_proof, runtime)),
+        ]),
+    }
 }

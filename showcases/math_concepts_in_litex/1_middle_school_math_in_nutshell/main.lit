@@ -429,6 +429,20 @@ bayes_posterior(1 / 3, 3 / 4, 1 / 2) = 1 / 2
 
 have fn mean3(a, b, c R) R = (a + b + c) / 3
 
+claim:
+    ? forall a, b, c R:
+        ((a - mean3(a, b, c))^2 + (b - mean3(a, b, c))^2 + (c - mean3(a, b, c))^2) / 3 $in R
+    mean3(a, b, c) $in R
+    a - mean3(a, b, c) $in R
+    b - mean3(a, b, c) $in R
+    c - mean3(a, b, c) $in R
+    (a - mean3(a, b, c))^2 $in R
+    (b - mean3(a, b, c))^2 $in R
+    (c - mean3(a, b, c))^2 $in R
+    (a - mean3(a, b, c))^2 + (b - mean3(a, b, c))^2 $in R
+    (a - mean3(a, b, c))^2 + (b - mean3(a, b, c))^2 + (c - mean3(a, b, c))^2 $in R
+    ((a - mean3(a, b, c))^2 + (b - mean3(a, b, c))^2 + (c - mean3(a, b, c))^2) / 3 $in R
+
 have fn variance3(a, b, c R) R = ((a - mean3(a, b, c))^2 + (b - mean3(a, b, c))^2 + (c - mean3(a, b, c))^2) / 3
 
 have fn range3(minimum, maximum R) R = maximum - minimum

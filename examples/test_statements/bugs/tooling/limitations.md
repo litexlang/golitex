@@ -6,7 +6,8 @@
 - Scope: tooling restriction and tooling observations.
 - Related workspace: golitex.
 
-These are explicit implementation restrictions, documented policy, or tooling drift. They are not counted among the ten open issue groups. If support is intended, make that decision before changing the existing rejection contract.
+These tooling observations are separate from the original K-number inventory;
+each dated item retains its actual status and execution boundary.
 
 ### Input: `litex -compact -runner -f file.lit` / `-before` / `-isolated`
 
@@ -29,5 +30,32 @@ cargo test --release run_examples
 No matching harness was found in the inspected current source/test tree. A filtered command returning success with zero tests is not examples coverage. Use the explicit `cargo test --release --test test_statements` target and the local manifest runner. Legacy documentation elsewhere remains outside this organization task.
 
 Malformed initial attempts and unsupported shorthand remain in the chronological journal; they are not silently promoted to confirmed bugs.
+
+## Conversation retest — 2026-10-04
+
+Task: fresh audit requested by the maintainer. File-output consumption and
+mounted hard-error forwarding are now closed local category-2 repairs; see
+the [finished experience](../../experience/problem_notes/conversation_retest_local_repairs_2026-10-04.md).
+Eighteen tooling tests pass. A removed graph CLI is no longer used by the
+textbook file consumer, and actual InternalBug errors survive `-f`/`-r` mounting.
+
+Current status, after the maintainer's clarification:
+
+- `kernel_problem`, closed: strict now rechecks dependency sources, so ordinary
+  caches cannot replay trusted false theorems. Direct/transitive rejection,
+  valid strict imports and ordinary cache hits pass their unchanged controls.
+  [Exact module and fixed regression](../../../module_manager/strict_cache_policy/README.md).
+- `trust`, testing work: full collector inventory and correct fence expectations
+  still need maintenance. The earlier frozen scan has 871 matched phase examples and
+  225/225 formal fences; all 111 failing fences in the repeat are historical
+  audits. Two shortcut squared-i fences changed outcome from the preceding
+  109-failure capture, whose evidence is preserved. They already have an
+  accepted explicit-chain solution. No mass skips or negative relabeling.
+  Owner: Codex checks actual selection counts, preserves original contexts and
+  positive/negative expectations, restores real collectors and runs the full
+  gate. The maintainer need not choose a manifest framework. REL02/REL04.
+
+[Acceptance and exact commands](../../../../tests/tooling/acceptance/conversation-closeout-retest-2026-10-04.md).
+[Current clarification and fixed strict controls](../../../../tests/tooling/acceptance/conversation-clarifications-2026-10-04.md).
 
 Back to [issue index](../README.md).

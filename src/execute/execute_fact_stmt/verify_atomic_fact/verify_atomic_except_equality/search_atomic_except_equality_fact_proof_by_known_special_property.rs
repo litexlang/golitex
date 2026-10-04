@@ -1,5 +1,5 @@
 use super::known_fn_standard_return::FnApplicationInStandardSupersetProof;
-use crate::ast::fact::{AtomicFact, InFact};
+use crate::ast::fact::{AtomicFact, InFact, LessEqualFact};
 use crate::ast::obj::{FnObjHead, FnSet, FunctionSpace, InstantiatedTemplateObj, IteratedOperator, Obj, StandardSet, StructAndFieldAccessObj};
 use super::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::proper_subsets_in_membership_proof_order;
 use super::result::AtomicExceptEqualityFactKnownProof;
@@ -8,13 +8,14 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equi
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::runtime::{FactId, Runtime};
-use crate::ast::obj::ProductShape;
+use crate::ast::obj::{ProductShape, Literal, Number};
 use crate::execute::execute_fact_stmt::known_tuple::{literal_positive_usize, KnownTupleShapeProof};
 
 pub enum AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
     InFact(InFactSearchProofByKnownSpecialProperty),
     IsTuple(TupleIsTupleKnownProof),
     TupleIndexBound(TupleIndexBoundKnownProof),
+    TupleIndexUpperBound(TupleIndexUpperBoundKnownProof),
 }
 
 impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
@@ -39,8 +40,10 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
                 Some(p.cite_property_fact_id)
             }
             Self::InFact(InFactSearchProofByKnownSpecialProperty::TupleCoordinate(p)) => p.shape.cite_fact_id(),
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::HomogeneousTupleCoordinate(p)) => p.shape.cite_fact_id(),
             Self::IsTuple(p) => p.shape.cite_fact_id(),
             Self::TupleIndexBound(p) => p.shape.cite_fact_id(),
+            Self::TupleIndexUpperBound(p) => p.shape.cite_fact_id(),
         }
     }
 }
@@ -56,6 +59,7 @@ pub enum InFactSearchProofByKnownSpecialProperty {
     FnApplicationInStandardSuperset(FnApplicationInStandardSupersetProof),
     FnApplicationInFnRange(FnApplicationInFnRangeKnownSpecialPropertyProof),
     TupleCoordinate(TupleCoordinateKnownProof),
+    HomogeneousTupleCoordinate(HomogeneousTupleCoordinateKnownProof),
 }
 
 pub struct StandardNumericSupersetKnownProof {
@@ -118,10 +122,22 @@ pub struct TupleIndexBoundKnownProof {
     pub shape: KnownTupleShapeProof,
 }
 
+pub struct TupleIndexUpperBoundKnownProof {
+    pub shape: KnownTupleShapeProof,
+    pub source_bound: AtomicExceptEqualityFactKnownProof,
+}
+
 pub struct TupleCoordinateKnownProof {
     pub index: usize,
     pub shape: KnownTupleShapeProof,
     pub carrier_equal: Box<EqualFactSearchedProof>,
+}
+
+// ObjAtIndex WD supplies the index positivity and upper bound. Every factor
+// must match the target using only stored equality; no new premise search.
+pub struct HomogeneousTupleCoordinateKnownProof {
+    pub shape: KnownTupleShapeProof,
+    pub carrier_equals: Vec<EqualFactSearchedProof>,
 }
 
 pub struct FnApplicationInCodomainKnownSpecialPropertyProof {
@@ -162,11 +178,25 @@ impl Runtime {
                     TupleIsTupleKnownProof { shape })),
             AtomicFact::LessEqualFact(fact) => {
                 let Obj::ProductShape(ProductShape::TupleDim(dim)) = &fact.right else { return None };
-                let index = literal_positive_usize(&fact.left)?;
                 let shape = self.lookup_known_tuple_shape(dim.arg.as_ref())?;
-                (index <= shape.dimension()).then_some(
-                    AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::TupleIndexBound(
-                        TupleIndexBoundKnownProof { index, shape }))
+                if let Some(index) = literal_positive_usize(&fact.left) {
+                    return (index <= shape.dimension()).then_some(
+                        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::TupleIndexBound(
+                            TupleIndexBoundKnownProof { index, shape }));
+                }
+                // A stored upper bound transports through the known tuple dimension.
+                // No forall instantiation or new order search is permitted here.
+                let bound = AtomicFact::LessEqualFact(LessEqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: fact.left.clone(),
+                    right: Obj::Literal(Literal::Number(Number {
+                        normalized_value: shape.dimension().to_string(),
+                    })),
+                    line_file: fact.line_file.clone(),
+                });
+                let source_bound = self.lookup_known_atomic_premise(bound)?;
+                Some(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::TupleIndexUpperBound(
+                    TupleIndexUpperBoundKnownProof { shape, source_bound }))
             }
             AtomicFact::NormalAtomicFact(_)
             | AtomicFact::NotNormalAtomicFact(_)
@@ -269,12 +299,21 @@ impl Runtime {
             return Some(InFactSearchProofByKnownSpecialProperty::FoldInCarrier(FoldInCarrierProof {operation_signature,carrier,carrier_match:Box::new(carrier_match)}));
         }
         if let Obj::ProductShape(ProductShape::ObjAtIndex(at)) = &fact.element {
-            let index = literal_positive_usize(at.index.as_ref())?;
             let shape = self.lookup_known_tuple_shape(at.obj.as_ref())?;
-            let carrier = shape.cart()?.args.get(index - 1)?.as_ref().clone();
-            let carrier_equal = self.lookup_known_obj_equality(&carrier, &fact.set)?;
-            return Some(InFactSearchProofByKnownSpecialProperty::TupleCoordinate(
-                TupleCoordinateKnownProof { index, shape, carrier_equal: Box::new(carrier_equal) }));
+            if let Some(index) = literal_positive_usize(at.index.as_ref()) {
+                let carrier = shape.cart()?.args.get(index - 1)?.as_ref().clone();
+                let carrier_equal = self.lookup_known_obj_equality(&carrier, &fact.set)?;
+                return Some(InFactSearchProofByKnownSpecialProperty::TupleCoordinate(
+                    TupleCoordinateKnownProof { index, shape, carrier_equal: Box::new(carrier_equal) }));
+            }
+            let cart = shape.cart()?;
+            if cart.args.is_empty() { return None; }
+            let mut carrier_equals = Vec::with_capacity(cart.args.len());
+            for carrier in &cart.args {
+                carrier_equals.push(self.lookup_known_obj_equality(carrier, &fact.set)?);
+            }
+            return Some(InFactSearchProofByKnownSpecialProperty::HomogeneousTupleCoordinate(
+                HomogeneousTupleCoordinateKnownProof { shape, carrier_equals }));
         }
         if let Some(proof) = self.known_fn_application_standard_superset(fact) {
             return Some(InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(proof));

@@ -1,13 +1,8 @@
-# ByInducStmt: automatic carrier evidence decision
+# ByInducStmt: automatic carrier regression closed
 
-## Task context
-
-- Task: conversation closeout retest requested 2026-10-04.
-- Scope: ordinary/strong induction goal WD and explicit checked type facts.
-- Related workspace: golitex; canonical route OBJ10.
-
-Label: `kernel_problem`; classification: category 1 authoring route is verified,
-automatic category 2 behavior remains a shared WD/evidence decision.
+Task: conversation clarification and retest, 2026-10-04. Scope: ordinary and
+strong induction goal WD. Current-source behavior closes the earlier automatic
+carrier question; no additional maintainer choice is needed.
 
 ```litex
 have fn f(x N) N = x
@@ -15,29 +10,17 @@ by induc n from 0:
     ? f(n) = f(n)
 ```
 
-The unchanged positive Rust expectation currently fails at step goal WD:
-`f(n + 1)` requires `n + 1 $in N`. The induction domain provides integer and
-lower-bound evidence, but the Direct structural Add route does not obtain a
-stored natural-number fact from that combination. This is not a false goal.
+This unchanged input now passes, as does the strong-induction variant. `n` is
+a bound placeholder over integers at least the starting value. With start 0,
+checked integer and nonnegative-bound facts supply natural-number membership.
+The current `infer_weak_integer_lower_bound_in_n` rule was implemented by a
+concurrent workspace task; this clarification task tested it, not authored it.
 
-The authoring route keeps the same goal and adds a checked fact:
+Explicit `n $in N` also passes. Starting at -1 with the same N-valued function
+and claiming `n / n = 1` from 0 still reject. No trust, global search reset or
+weakened domain was introduced here. The original positive Rust assertion is
+preserved and passes in the full Rust run.
 
-```litex
-have fn f(x N) N = x
-by induc n from 0:
-    ? f(n) = f(n)
-    n $in N
-```
-
-Ordinary and strong variants pass. `from -1` and `n / n = 1` starting at zero
-remain rejected. No trust or global search-level reset was added. The original
-bare Rust test remains red rather than silently changing its expectation.
-
-Decision: accept this explicit type-fact boundary, or require induction to
-derive and expose checked domain/carrier evidence automatically. The latter
-needs an agreed proof-evidence/WD contract before implementation. Owner:
-maintainer decides; Codex implements the selected bounded path and verifies
-bare/explicit, ordinary/strong, wrong-start and zero-division controls.
-
-[Acceptance and raw controls](../../../../tests/tooling/acceptance/conversation-closeout-retest-2026-10-04.md#induction).
+[Current acceptance and original inputs](../../../../tests/tooling/acceptance/conversation-clarifications-2026-10-04.md).
+[Historical failure snapshot](../../../../tests/tooling/acceptance/conversation-closeout-retest-2026-10-04.md#induction).
 [Canonical OBJ10](../../../../plan/src收尾总清单.md#obj10).

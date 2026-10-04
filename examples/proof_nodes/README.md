@@ -42,6 +42,12 @@ the inherited search ceiling, stored citations and all requirement certificates.
 
 The [field-expression strategy](atomic/by_builtin_strategy/field_arithmetic_carrier_closure.lit)
 retains its constructor tree and terminal proof requirements over Q/R.
+The [real constructor builtin](atomic/by_builtin_rule/real_arithmetic_constructor_closure.lit)
+composes real function-return leaves through field expressions and integer
+powers during comparison goal WD. Its typed tree preserves terminal citations,
+integer exponents and the enclosing domain evidence; Direct remains restricted.
+`real_arithmetic_constructor_closure` tests retain wrong carriers/refinements,
+zero divisors, bad exponents, partial-function domains, ceilings and rollback.
 The [stored numeric superset](atomic/by_known_special_property/standard_numeric_superset.lit)
 route cites an existing membership under the intrinsic inclusion table without
 fresh premise search. `known_numeric_carrier` tests retain direction, sign,
@@ -557,3 +563,7 @@ body and existential-kind boundaries and prove the citation route at Direct.
 The [stored function return superset](atomic/by_known_special_property/function_return_standard_superset.lit) tracer checks R-to-C and N+-to-Z/R return lifting, followed by fresh-element finite-product insertion with an explicit member and restricted callback signature. The leaf compares all stored candidate carriers, preserves signature and alias provenance, and declines nonstandard carriers or native template/field alternatives. Tests retain narrowing, invalid domains, mixed signatures, aliases and wrong arity.
 
 [Explicit function argument congruence](equal/by_known_forall/function_argument_congruence_explicit.lit) proves a general X/Y-carrier equality lemma and instantiates it with a function-valued argument. It needs no trust. This documents an explicit authoring route; it does not claim automatic discovery of every anonymous-function argument equality.
+
+[Homogeneous Cartesian coordinates](atomic/by_known_special_property/homogeneous_cart_coordinate.lit) derives variable-index coordinate membership when every factor is known equal to the target carrier. It preserves the existing indexed-object WD (positive integer index within the tuple dimension), shape provenance and all factor equality proofs. It does not infer a common superset for heterogeneous factors or manufacture symbolic tuple constructors.
+
+[Known Cartesian index upper bounds](atomic/by_known_special_property/known_cart_index_upper_bound.lit) transports a stored upper bound through a known tuple shape. It handles Cartesian aliases and guarded function codomains without opening forall search; index positivity and integrality remain separate WD obligations.

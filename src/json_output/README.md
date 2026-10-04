@@ -245,17 +245,17 @@ Rules:
 
 - `success` is a bool (not `outcome` string).
 - Builtin why: print `rule_name` + `message` only (no `rule` / `rule_id` /
-  `variant` in Normal JSON). Stable ids live inside `explain/` for tests.
-- Builtin why path: call `rule.rule_id_and_message(lang)` only.
+  `variant` in Normal JSON). The owning proof type or enum identifies the rule.
+- Builtin why path: call `rule.rule_name_and_message(lang)` only.
   - Atomic: `explain/atomic_builtin_rule/` — every family enum and every leaf
-    proof has dedicated EN+ZH copy (no family-level stubs).
+    proof has dedicated copy in all ten languages (no family-level stubs).
   - Equality: `explain/equality_builtin_rule/` (top enum dispatches to each
-    leaf; every leaf + Calculation has EN+ZH).
+    leaf; every leaf + Calculation covers all ten languages).
   Projection never matches on rule variants for copy text.
 - Non-builtin searched-proof routes (`builtin_strategy`, `by_definition`,
   `equivalence_class`, …) use `explain/searched_proof_why.rs` so they also
   emit `rule_name` + `message` (not a bare `type` tag).
-- All Chinese/English copy lives under `json_output/explain/` — verify/exec IR
+- All localized copy lives under `json_output/explain/` — verify/exec IR
   stays language-free. `OutputLanguage` comes from `LaunchCommand` (`-lang`).
 - Priority of explain coverage:
   1. Every Normal surface has English + Chinese `rule_name` / `message`
@@ -348,9 +348,9 @@ Locked by `cargo test --lib json_output::` (`acceptance_tests` +
    `rule_id` / `variant`)
 6. **Cite (Normal)**: readable string, no `#id#` wrappers; optional `line`
 7. **Chinese (`-lang zh`)**: field keys remapped; type/phase/rule text Chinese
-8. **Stmt kinds**: every catalog kind has bilingual `explain_stmt_kind`
-9. **Equality builtins**: all variants bilingual via `rule.rule_id_and_message(lang)`
-10. **Searched-proof routes / compound facts**: bilingual `rule_name` + `message`
+8. **Stmt kinds**: every catalog kind has localized `explain_stmt_kind`
+9. **Equality builtins**: all variants localized via `rule.rule_name_and_message(lang)`
+10. **Searched-proof routes / compound facts**: localized `rule_name` + `message`
 11. **Run envelope**: `kind` / `success` / `detail` (`normal`|`compact`|`detailed`) /
     `language` / `statement_results`
 12. **Detailed**: fact success has `verify` + `store_and_infer`; no `local_env`;
@@ -558,18 +558,17 @@ Non-English locales translate known JSON field names, Normal proof types,
 Normal/Compact failure phases, rule names, and explanation messages. Unknown
 field names keep their English spelling, as before. Detailed IR variant/stage
 tags retain their existing machine-oriented spelling. Source statements,
-formulas, names, paths, citations, numeric values, booleans and internal rule
-IDs remain independent of locale. Arabic output does not insert bidirectional
-control characters into source or JSON. Human-facing English/Chinese copy may
-be corrected alongside the other locales; source text and internal IDs remain
-stable. Legacy fallback copy remains available for unknown rule IDs.
+formulas, names, paths, citations, numeric values, booleans and Detailed machine
+rule tags remain independent of locale. Arabic output does not insert
+bidirectional control characters into source or JSON. Human-facing English/Chinese copy may
+be corrected alongside the other locales; source text and Detailed machine
+tags remain stable.
 
 Locale selection changes presentation only; it does not change verification,
 proof search or Runtime ownership. Help documents the supported tokens; raw
 terminal errors and the complete help prose are not localized by this change.
-The unused `bilingual_stmt_pair` compatibility helper accepts only supplied
-English/Chinese copy and falls back to English for other locales; maintained
-output uses the exhaustive statement and rule explainers instead.
+Maintained output uses exhaustive statement and rule explainers for all ten
+languages.
 
 Example command:
 
@@ -603,20 +602,37 @@ behavioral compatibility, not independent native-speaker linguistic review.
 ### Rule language method contract
 
 Every builtin rule and rule-family explanation impl owns these public methods:
-`rule_id_and_message_en`, `_zh`, `_zh_hant`, `_fr`, `_ru`, `_es`, `_ar`, `_ja`,
+`rule_name_and_message_en`, `_zh`, `_zh_hant`, `_fr`, `_ru`, `_es`, `_ar`, `_ja`,
 `_ko`, and `_vi`. Each method owns its locale's rule name and message. The
-existing `rule_id_and_message(language)` API contains only an exhaustive
+`rule_name_and_message(language)` API contains only an exhaustive
 language selector calling those methods. Rule-family methods then dispatch to
 the corresponding named methods on their payloads. Equality aggregate and
 scalar copy also belongs to the payload's impl; the equality enum only routes
 variants. No locale calls another locale's method.
 
+`BuiltinRuleText` contains exactly `rule_name: String` and `message: String`.
+The existing proof type or enum variant identifies the rule; localized copy
+does not duplicate that identity in a string field. Atomic and equality
+`text(...)` calls share the constructor in `explain/text.rs`, for example:
+
+```rust
+text(
+    "arcsin与sin的逆运算复合",
+    "在 [-π/2, π/2] 上，arcsin与sin复合后得到原参数，即 arcsin(sin(x)) = x",
+)
+```
+
+The old ID-bearing methods and unused fallback/bilingual compatibility helpers
+have been removed. Normal JSON still renders the same name and message.
+Detailed proof serialization retains its independently consumed machine rule
+tags and `rule_id()` methods.
+
 For example, `PowerProductSameBaseBuiltinRuleProof` retains the equation
 `a^m · a^n = a^(m+n)` in every locale, but also names and explains the rule in
 that locale: Chinese says `同底数幂相乘` and explains that the exponents are
 added; Japanese says `同じ底の累乗の積` and gives the same mathematical meaning.
-Its internal ID remains `PowerProductSameBase`. Formula notation alone is
-insufficient for either the human-facing name or message.
+The proof type identifies this rule. Formula notation alone is insufficient
+for either the human-facing name or message.
 
 `ArcsinExactZero` similarly names the value of the inverse sine at zero and
 explains that the value is zero before giving `arcsin(0) = 0`. Keep identities,
@@ -629,9 +645,10 @@ square root, `(sqrt(x))^2 = x` for nonnegative real `x`;
 `rule_language_methods_tests` audits every impl in the atomic/equality rule
 explanation directories for this method contract and selector shape, and
 checks the power-product method API directly. It also scans all maintained
-literal builtin names/messages for human prose in the selected language. This
-guards against formula-only copy and whole English sentences in locales with
-different scripts; it is not a grammar checker. Semantic regression tests
+literal builtin names/messages for human prose in the selected language,
+matching each impl's locale branches with its English branches without string
+rule IDs. This guards against formula-only copy and whole English sentences
+in locales with different scripts; it is not a grammar checker. Semantic regression tests
 cover the inverse-sine tracer, principal inverse interval, square-root and
 set-difference identities, and natural-number nonzero conclusion.
 The equality acceptance inventory
@@ -639,4 +656,15 @@ also compares each named method with the generic dispatcher across every
 inventoried variant and all ten locales. Locale keys and non-builtin statement
 explanations retain their existing interfaces.
 
+The ID-removal acceptance on 2026-10-04 passed the release build, all 65 JSON
+tests, and the existing `legacy_final_capabilities` explanation consumer test.
+All 80 real CLI cases across ten languages (70 successes and 10 expected
+failures) retained identical exits, stdout, and stderr. A source comparison
+also preserved all 9,755 non-ID rule literals and rule dispatch logic while
+removing 4,380 constructor ID arguments and 230 direct ID fields.
+
 Detailed `FnApplicationInStandardSuperset` evidence records `target_set` and `signature_returns`. Each return entry carries `source_set`, `cite_signature_fact_id`, and the actual `function_equal` path. This certifies numeric set inclusion; it does not manufacture a return-set equality proof. The enclosing fact result owns the application WD and domain evidence.
+
+Detailed `HomogeneousTupleCoordinate` evidence records `shape` and one `carrier_equals` proof per Cartesian factor. The shape includes its stored membership/signature and carrier/subject equality provenance. The enclosing fact WD owns index positivity and the upper bound; the leaf only reads stored shape/equality facts.
+
+Detailed `TupleIndexUpperBound` records `shape` and `source_bound`; the latter includes the stored inequality and its argument equality evidence. The read-only leaf transports a stored bound to the certified tuple dimension and retains both sources.

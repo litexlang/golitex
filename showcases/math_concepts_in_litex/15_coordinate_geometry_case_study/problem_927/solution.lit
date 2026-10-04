@@ -20,6 +20,12 @@
 # AB=AC、BD=CD，且AD是两三角形的公共边，所以由SSS全等。
 # 库中的 are_triangles_congruent 正是三组对应边全等的合取定义。
 
+# Imported function signatures/definitions are explicitly released before use.
+release obj def geo::vec
+release obj def geo::dot
+release obj def geo::det
+release obj def geo::distance_sq
+
 thm problem_927_sss_congruence:
     ? forall a, b, c, d cart(R, R):
         $geo::is_triangle(a, b, c)

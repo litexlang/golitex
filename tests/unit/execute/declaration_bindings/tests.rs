@@ -132,8 +132,15 @@ fn missing_range_membership_does_not_create_a_preimage() {
 
 #[test]
 fn registered_and_imported_functions_preserve_distinct_owners() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("examples/module_manager/declaration_bindings");
+    let unique = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+    let root = std::env::temp_dir().join(format!("litex-binding-cache-{}-{unique}", std::process::id()));
+    for relative in ["litex.config", "local.lit", "main.lit", "library/litex.config", "library/functions.lit"] {
+        let target = root.join(relative);
+        std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+        std::fs::copy(source.join(relative), target).unwrap();
+    }
     let result = crate::run_module::run_project(LaunchCommand::Repository {
         path: root.clone(),
         session: false,
@@ -160,13 +167,14 @@ fn registered_and_imported_functions_preserve_distinct_owners() {
         &std::collections::HashMap::from([(library.to_string_lossy().to_string(), 0)]),
     ).unwrap_or_else(|error| panic!("fixture cache mount: {error:?}"));
     let warm = crate::run_module::run_project(LaunchCommand::Repository {
-        path: root,
+        path: root.clone(),
         session: false,
-        strict: true,
+        strict: false,
         language: OutputLanguage::English,
     }).expect("run cached fixture");
     assert!(warm.run.success, "{:?}", warm.run.session_error);
     assert_eq!(warm.files.len(), 2, "cached import must skip the library export");
+    std::fs::remove_dir_all(root).unwrap();
 }
 
 fn sources() -> [CodeSource; 3] {

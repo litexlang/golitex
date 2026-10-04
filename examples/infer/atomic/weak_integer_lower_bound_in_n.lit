@@ -1,0 +1,47 @@
+# A verified integer lower bound publishes the N carrier in the same scope.
+# Before on release f3cbf7bb: 2/3, rejected at induction goal_wd (k in N).
+# have fn showcase_induction_identity(n N) N = n
+#
+# claim:
+#     ? forall k Z:
+#         k >= 0
+#         =>:
+#             k $in N
+#     k $in N
+#
+# by induc k from 0:
+#     ? showcase_induction_identity(k) >= 0
+#     ? from k = 0:
+#         showcase_induction_identity(0) = 0
+#     ? induc:
+#         k $in N
+#         k + 1 $in N
+#         showcase_induction_identity(k + 1) = k + 1
+#         showcase_induction_identity(k + 1) >= 0
+# Now: the unchanged comparison target receives the stored N certificate.
+# No carrier helper, trust, induction-executor or search-ceiling change.
+# Acceptance: target/release/litex -strict -f examples/infer/atomic/weak_integer_lower_bound_in_n.lit
+# A negative lower bound or missing integer certificate supplies no N membership.
+
+have fn showcase_induction_identity(n N) N = n
+
+by induc k from 0:
+    ? showcase_induction_identity(k) >= 0
+    ? from k = 0:
+        showcase_induction_identity(0) = 0
+    ? induc:
+        k $in N
+        k + 1 $in N
+        showcase_induction_identity(k + 1) = k + 1
+        showcase_induction_identity(k + 1) >= 0
+
+forall b R, n Z:
+    b >= 0
+    n >= b
+    =>:
+        showcase_induction_identity(n) = n
+
+forall n Z:
+    1 / 2 <= n
+    =>:
+        showcase_induction_identity(n) = n

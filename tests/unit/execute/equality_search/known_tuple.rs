@@ -367,3 +367,108 @@ fn template_tuple_output_keeps_alias_and_subject_citations() {
         assert!(output.contains(if language == OutputLanguage::English { "Equivalence class" } else { "等价类" }) || output.contains(if language == OutputLanguage::English { "known_special_property" } else { "已知特殊属性" }), "{output}");
     }
 }
+
+#[test]
+fn homogeneous_cart_coordinate_variable_index_and_binder_wd() {
+    for source in [
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/atomic/by_known_special_property/homogeneous_cart_coordinate.lit")),
+        "have A set = R\nforall p cart(R,A), j closed_range(1,2):\n    p[j] $in A",
+        "have fn vec(x R) cart(R,R) = (x,x)\nclaim:\n    ? forall x R:\n        x = x\n    tuple_dim(vec(x)) = 2\n    forall j closed_range(1,2):\n        vec(x)[j] $in R",
+    ] {
+        assert!(runtime().run_litex_code(source).unwrap().success, "{source}");
+    }
+}
+
+#[test]
+fn homogeneous_cart_coordinate_rejects_wrong_carrier_and_invalid_index() {
+    for source in [
+        "forall p cart(R,Z), j closed_range(1,2):\n    p[j] $in Z",
+        "forall p cart(R,R), j closed_range(1,2):\n    p[j] $in N",
+        "forall p cart(R,R), j closed_range(0,2):\n    p[j] $in R",
+        "forall p cart(R,R), j closed_range(1,3):\n    p[j] $in R",
+        "forall p cart(R,R), j R:\n    1 <= j\n    j <= 2\n    =>:\n        p[j] $in R",
+        "forall p set, j closed_range(1,2):\n    p[j] $in R",
+    ] {
+        assert!(!runtime().run_litex_code(source).unwrap().success, "{source}");
+    }
+}
+
+#[test]
+fn homogeneous_cart_coordinate_keeps_all_factor_and_shape_evidence_read_only() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::
+        search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty;
+    let mut rt = runtime();
+    exec_ok(&mut rt, "have A nonempty_set = R");
+    exec_ok(&mut rt, "have p cart(R,A)");
+    exec_ok(&mut rt, "have j closed_range(1,2)");
+    let Stmt::Fact(Fact::AtomicFact(AtomicFact::InFact(fact))) = parse(&mut rt, "p[j] $in A") else {
+        panic!("membership")
+    };
+    assert!(!rt.verify_fact_well_definedness(
+        &Fact::AtomicFact(AtomicFact::InFact(fact.clone())), VerifyState::top_level(),
+    ).unwrap().is_failed());
+    let before = store_sizes(&rt);
+    let Some(InFactSearchProofByKnownSpecialProperty::HomogeneousTupleCoordinate(proof)) =
+        rt.search_in_fact_proof_by_known_special_property(&fact) else {
+            panic!("homogeneous coordinate leaf")
+        };
+    assert_eq!(before, store_sizes(&rt));
+    assert_eq!(proof.carrier_equals.len(), 2);
+    assert_eq!(proof.shape.dimension(), 2);
+    assert!(rt.fact_by_id_in_stack(proof.shape.cite_fact_id().unwrap()).is_some());
+    let result = exec_ok(&mut rt, "p[j] $in A");
+    let json = project_stmt_detailed(&result, &rt).stringify();
+    assert!(json.contains("HomogeneousTupleCoordinate"), "{json}");
+    assert!(json.contains("carrier_equals"), "{json}");
+    assert!(json.contains("cite_fact_id"), "{json}");
+}
+
+#[test]
+fn known_cart_index_upper_bound_handles_alias_and_function_shape() {
+    for source in [
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/atomic/by_known_special_property/known_cart_index_upper_bound.lit")),
+        "have X set = Z\nhave c set = cart(X,X,X,X)\nforall p c, j closed_range(1,4):\n    p[j] $in X",
+        "have n N+ = 3\nhave c set = cart(R,R,R)\nhave fn encode(p c) fn(k closed_range(1,n)) R = fn(j closed_range(1,n)) R {p[j]}",
+    ] {
+        assert!(runtime().run_litex_code(source).unwrap().success, "{source}");
+    }
+    for source in [
+        "have n N+ = 4\nhave c set = cart(R,R,R)\nforall p c, j closed_range(1,n):\n    p[j] $in R",
+        "have c set = cart(R,R,R)\nforall p c, j closed_range(0,3):\n    p[j] $in R",
+        "have c set = cart(R,R,R)\nforall p c, j R:\n    1 <= j\n    j <= 3\n    =>:\n        p[j] $in R",
+        "have c set = cart(R,R,R)\nforall p c, j N+:\n    p[j] $in R",
+    ] {
+        assert!(!runtime().run_litex_code(source).unwrap().success, "{source}");
+    }
+}
+
+#[test]
+fn known_cart_index_upper_bound_preserves_read_only_source_evidence() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::
+        search_atomic_except_equality_fact_proof_by_known_special_property::AtomicExceptEqualityFactSearchProofByKnownSpecialProperty;
+    let mut rt = runtime();
+    exec_ok(&mut rt, "have c nonempty_set = cart(R,R,R)");
+    exec_ok(&mut rt, "have p c");
+    exec_ok(&mut rt, "have j closed_range(1,3)");
+    let Stmt::Fact(Fact::AtomicFact(fact)) = parse(&mut rt, "j <= tuple_dim(p)") else {
+        panic!("bound")
+    };
+    assert!(!rt.verify_fact_well_definedness(
+        &Fact::AtomicFact(fact.clone()), VerifyState::top_level(),
+    ).unwrap().is_failed());
+    let before = store_sizes(&rt);
+    let Some(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::TupleIndexUpperBound(proof)) =
+        rt.search_atomic_except_equality_fact_proof_by_known_special_property(&fact) else {
+            panic!("known upper bound leaf")
+        };
+    assert_eq!(before, store_sizes(&rt));
+    assert_eq!(proof.shape.dimension(), 3);
+    assert!(rt.fact_by_id_in_stack(proof.shape.cite_fact_id().unwrap()).is_some());
+    assert!(rt.fact_by_id_in_stack(proof.source_bound.cite_fact_id().unwrap()).is_some());
+    let result = exec_ok(&mut rt, "j <= tuple_dim(p)");
+    let json = project_stmt_detailed(&result, &rt).stringify();
+    assert!(json.contains("TupleIndexUpperBound"), "{json}");
+    assert!(json.contains("source_bound"), "{json}");
+}

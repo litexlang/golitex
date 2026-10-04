@@ -21,8 +21,8 @@
         "next_identifier_id": 1
       },
       "global_ids_at_leave": {
-        "next_fact_id": 30,
-        "next_well_definedness_id": 9,
+        "next_fact_id": 67,
+        "next_well_definedness_id": 6,
         "next_prop_rewrite_property_id": 1,
         "next_identifier_id": 5
       }
@@ -32,14 +32,14 @@
       "name": "check",
       "relative_path": "check.lit",
       "global_ids_at_enter": {
-        "next_fact_id": 30,
-        "next_well_definedness_id": 9,
+        "next_fact_id": 67,
+        "next_well_definedness_id": 6,
         "next_prop_rewrite_property_id": 1,
         "next_identifier_id": 5
       },
       "global_ids_at_leave": {
-        "next_fact_id": 223,
-        "next_well_definedness_id": 13,
+        "next_fact_id": 110,
+        "next_well_definedness_id": 11,
         "next_prop_rewrite_property_id": 1,
         "next_identifier_id": 5
       }

@@ -26,7 +26,7 @@ fn every_rule_impl_owns_ten_methods_and_a_selection_only_dispatcher() {
         LANGUAGES
             .iter()
             .map(|(language, suffix)| {
-                format!("OutputLanguage::{language} => self.rule_id_and_message_{suffix}(),")
+                format!("OutputLanguage::{language} => self.rule_name_and_message_{suffix}(),")
             })
             .collect::<Vec<_>>()
             .join(" ")
@@ -40,13 +40,13 @@ fn every_rule_impl_owns_ten_methods_and_a_selection_only_dispatcher() {
             }
             let source = std::fs::read_to_string(&path).unwrap();
             for implementation in source.split("\nimpl ").skip(1) {
-                let Some(dispatch) = implementation.find("pub fn rule_id_and_message(") else {
+                let Some(dispatch) = implementation.find("pub fn rule_name_and_message(") else {
                     continue;
                 };
                 let owner = implementation.split('{').next().unwrap().trim();
                 for (_, suffix) in LANGUAGES {
                     assert!(
-                        implementation.contains(&format!("pub fn rule_id_and_message_{suffix}(")),
+                        implementation.contains(&format!("pub fn rule_name_and_message_{suffix}(")),
                         "{}: {owner} missing method for {suffix}",
                         path.display()
                     );
@@ -92,31 +92,24 @@ fn power_product_exposes_every_named_language_method() {
         proof_of_requirement_facts: Vec::new(),
     };
     let methods: [fn(&PowerProductSameBaseBuiltinRuleProof) -> BuiltinRuleText; 10] = [
-        PowerProductSameBaseBuiltinRuleProof::rule_id_and_message_en,
-        PowerProductSameBaseBuiltinRuleProof::rule_id_and_message_zh,
-        PowerProductSameBaseBuiltinRuleProof::rule_id_and_message_zh_hant,
-        PowerProductSameBaseBuiltinRuleProof::rule_id_and_message_fr,
-        PowerProductSameBaseBuiltinRuleProof::rule_id_and_message_ru,
-        PowerProductSameBaseBuiltinRuleProof::rule_id_and_message_es,
-        PowerProductSameBaseBuiltinRuleProof::rule_id_and_message_ar,
-        PowerProductSameBaseBuiltinRuleProof::rule_id_and_message_ja,
-        PowerProductSameBaseBuiltinRuleProof::rule_id_and_message_ko,
-        PowerProductSameBaseBuiltinRuleProof::rule_id_and_message_vi,
+        PowerProductSameBaseBuiltinRuleProof::rule_name_and_message_en,
+        PowerProductSameBaseBuiltinRuleProof::rule_name_and_message_zh,
+        PowerProductSameBaseBuiltinRuleProof::rule_name_and_message_zh_hant,
+        PowerProductSameBaseBuiltinRuleProof::rule_name_and_message_fr,
+        PowerProductSameBaseBuiltinRuleProof::rule_name_and_message_ru,
+        PowerProductSameBaseBuiltinRuleProof::rule_name_and_message_es,
+        PowerProductSameBaseBuiltinRuleProof::rule_name_and_message_ar,
+        PowerProductSameBaseBuiltinRuleProof::rule_name_and_message_ja,
+        PowerProductSameBaseBuiltinRuleProof::rule_name_and_message_ko,
+        PowerProductSameBaseBuiltinRuleProof::rule_name_and_message_vi,
     ];
     for (language, method) in OutputLanguage::ALL.into_iter().zip(methods) {
-        let text = method(&rule);
-        assert_eq!(text.rule_id, "PowerProductSameBase");
-        assert!(
-            has_localized_prose(&text.rule_name, language),
-            "{language:?}"
-        );
-        assert!(has_localized_prose(&text.message, language), "{language:?}");
-        assert!(text.message.contains("a^m · a^n = a^(m+n)"));
-        let selected = rule.rule_id_and_message(language);
-        assert_eq!(
-            (selected.rule_id, selected.rule_name, selected.message),
-            (text.rule_id, text.rule_name, text.message)
-        );
+        let BuiltinRuleText { rule_name, message } = method(&rule);
+        assert!(has_localized_prose(&rule_name, language), "{language:?}");
+        assert!(has_localized_prose(&message, language), "{language:?}");
+        assert!(message.contains("a^m · a^n = a^(m+n)"));
+        let selected = rule.rule_name_and_message(language);
+        assert_eq!((selected.rule_name, selected.message), (rule_name, message));
     }
 }
 
@@ -132,8 +125,9 @@ fn every_literal_builtin_explanation_has_localized_names_and_prose() {
             }
             let source = std::fs::read_to_string(&path).unwrap();
             for implementation in source.split("\nimpl ").skip(1) {
+                let owner = implementation.split('{').next().unwrap().trim();
                 let english_messages: Vec<_> = implementation
-                    .split("pub fn rule_id_and_message_en(")
+                    .split("pub fn rule_name_and_message_en(")
                     .nth(1)
                     .unwrap_or("")
                     .split("pub fn ")
@@ -141,12 +135,10 @@ fn every_literal_builtin_explanation_has_localized_names_and_prose() {
                     .unwrap()
                     .split("text(")
                     .skip(1)
-                    .map(|call| first_string_literals(call, 3))
-                    .filter(|strings| strings.len() == 3)
-                    .map(|strings| (strings[0].clone(), strings[2].clone()))
+                    .map(|call| first_string_literals(call, 2))
                     .collect();
                 for (language, (_, suffix)) in OutputLanguage::ALL.into_iter().zip(LANGUAGES) {
-                    let needle = format!("pub fn rule_id_and_message_{suffix}(");
+                    let needle = format!("pub fn rule_name_and_message_{suffix}(");
                     let Some(start) = implementation.find(&needle) else {
                         continue;
                     };
@@ -154,26 +146,29 @@ fn every_literal_builtin_explanation_has_localized_names_and_prose() {
                         .split("pub fn ")
                         .next()
                         .unwrap();
-                    for call in body.split("text(").skip(1) {
-                        let strings = first_string_literals(call, 3);
-                        assert_eq!(strings.len(), 3, "{}: incomplete text()", path.display());
-                        let id = &strings[0];
+                    let calls: Vec<_> = body.split("text(").skip(1).collect();
+                    assert_eq!(
+                        calls.len(),
+                        english_messages.len(),
+                        "{}: {owner} {language:?} must cover the same branches as English",
+                        path.display()
+                    );
+                    // Existing impl ownership and match-arm order locate the copy;
+                    // presentation text does not need a second rule identifier.
+                    for (branch, call) in calls.into_iter().enumerate() {
+                        let strings = first_string_literals(call, 2);
+                        assert_eq!(strings.len(), 2, "{}: incomplete text()", path.display());
                         if language != OutputLanguage::English {
-                            for (_, english) in
-                                english_messages.iter().filter(|(rule, _)| rule == id)
-                            {
-                                assert_ne!(
-                                    &strings[2],
-                                    english,
-                                    "{}: {id} {language:?} copied the whole English message",
-                                    path.display()
-                                );
-                            }
+                            assert_ne!(
+                                strings[1], english_messages[branch][1],
+                                "{}: {owner} branch {branch} {language:?} copied the whole English message",
+                                path.display()
+                            );
                         }
-                        for (field, value) in [("name", &strings[1]), ("message", &strings[2])] {
+                        for (field, value) in [("name", &strings[0]), ("message", &strings[1])] {
                             assert!(
                                 has_localized_prose(value, language),
-                                "{}: {id} {language:?} {field} lacks localized prose: {value}",
+                                "{}: {owner} branch {branch} {language:?} {field} lacks localized prose: {value}",
                                 path.display()
                             );
                         }

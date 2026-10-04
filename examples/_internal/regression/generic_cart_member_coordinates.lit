@@ -1,66 +1,64 @@
-# DISABLED (2026-9-21): uses removed `have tuple`/`have cart` stmts.
-# Rewrite with `have fn` before re-enabling.
-# A member of a symbolic Cartesian product inherits its tuple dimension and
-# coordinate-factor membership from the product metadata.
-
+# Fixed n=3 tuple/cart migration uses current declarations and explicit proof bridges.
+# The two symbolic-dimension tuple construction blocks below remain unresolved.
+# No trust; see plan/迁移的plan/experience/problem_notes/example_authoring_round36_2026-10-04.md.
 have n N+ = 3
-# TODO: removed have-indexed stmt; use have fn
-# have cart c for i1 <= n, proj(c, i1) = R
-
+have c set = cart(R,R,R)
+proj(c,1) = proj(cart(R,R,R),1) = R
+proj(c,2) = proj(cart(R,R,R),2) = R
+proj(c,3) = proj(cart(R,R,R),3) = R
+closed_range(1,n) = closed_range(1,3)
+by for:
+    ? forall j closed_range(1,3):
+        proj(c,j) = R
+forall j closed_range(1,n):
+    proj(c,j) = R
 forall p c:
     tuple_dim(p) = n
-
-forall p c, i1 closed_range(1, n):
-    p[i1] $in proj(c, i1)
-
 claim:
-    ? forall p c:
-        p[1] $in proj(c, 1)
-        proj(c, 1) = R
-        p[1] $in R
-        p[2] $in proj(c, 2)
-        proj(c, 2) = R
-        p[2] $in R
-        p[3] $in proj(c, 3)
-        proj(c, 3) = R
-        p[3] $in R
-    1 $in closed_range(1, n)
-    p[1] $in proj(c, 1)
-    proj(c, 1) = R
+    ? forall p c, j closed_range(1,n):
+        p[j] $in proj(c,j)
+    proj(c,j) = R
+    p[j] $in R
+    p[j] $in proj(c,j)
+forall p c:
+    p[1] $in proj(c,1)
+    proj(c,1) = R
     p[1] $in R
-    2 $in closed_range(1, n)
-    p[2] $in proj(c, 2)
-    proj(c, 2) = R
+    p[2] $in proj(c,2)
+    proj(c,2) = R
     p[2] $in R
-    3 $in closed_range(1, n)
-    p[3] $in proj(c, 3)
-    proj(c, 3) = R
+    p[3] $in proj(c,3)
+    proj(c,3) = R
     p[3] $in R
-
-# TODO: removed have-indexed stmt; use have fn
-# have tuple q for i1 <= n, q[i1] = 0
+have q cart(R,R,R) = (0,0,0)
+have r cart(R,R,R) = (0,0,0)
 tuple_dim(q) = n
-
-forall i1 closed_range(1, n):
-    q[i1] = 0
+by for:
+    ? forall j closed_range(1,3):
+        q[j] = 0
+        r[j] = 0
+        q[j] = r[j]
+forall j closed_range(1,n):
+    q[j] = 0
     0 $in R
-    proj(c, i1) = R
-    q[i1] $in proj(c, i1)
-
-release thm cart_member_from_coordinates(q, c)
+    proj(c,j) = R
+    q[j] $in proj(c,j)
+closed_range(1,cart_dim(c)) = closed_range(1,n)
+claim:
+    ? forall j closed_range(1,cart_dim(c)):
+        q[j] $in proj(c,j)
+    proj(c,j) = R
+    q[j] $in R
+    q[j] $in proj(c,j)
+release thm cart_member_from_coordinates(q,c)
 q $in c
-
-# TODO: removed have-indexed stmt; use have fn
-# have tuple r for i1 <= n, r[i1] = 0
-
-forall i1 closed_range(1, n):
-    q[i1] = 0
-    r[i1] = 0
-    q[i1] = r[i1]
-
-release thm tuple_equal_from_coordinates(q, r)
+forall j closed_range(1,n):
+    q[j] = 0
+    r[j] = 0
+    q[j] = r[j]
+release thm tuple_equal_from_coordinates(q,r)
 q = r
-
+have fn raw_choice_tuple_encode(p c) fn(j closed_range(1,n)) R = fn(k closed_range(1,n)) R {p[k]}
 have fn X(i1 closed_range(1, n)) power_set(R) = R
 prop has_X_values(f fn(i1 closed_range(1, n)) R):
     forall j closed_range(1, n):
@@ -69,25 +67,29 @@ prop has_values_in_family(m N+, V set, Y fn(i1 closed_range(1, m)) power_set(V),
     forall i1 closed_range(1, m):
         g(i1) $in Y(i1)
 have P set = {f fn(i1 closed_range(1, n)) R: $has_X_values(f)}
-have fn raw_choice_tuple_encode(p c) fn(i1 closed_range(1, n)) R = fn(j closed_range(1, n)) R {p[j]}
 
 claim:
     ? forall p c:
         raw_choice_tuple_encode(p) $in P
+    raw_choice_tuple_encode(p) = fn(k closed_range(1,n)) R {p[k]}
+    have h fn(j closed_range(1,n)) R = raw_choice_tuple_encode(p)
+    h = raw_choice_tuple_encode(p) = fn(k closed_range(1,n)) R {p[k]}
     claim:
         ? forall i1 closed_range(1, n):
-            raw_choice_tuple_encode(p)(i1) $in X(i1)
-        fn(j closed_range(1, n)) R {p[j]}(i1) = p[i1]
-        raw_choice_tuple_encode(p)(i1) = p[i1]
-        p[i1] $in proj(c, i1)
-        proj(c, i1) = R = X(i1)
+            h(i1) $in X(i1)
+        h(i1) = p[i1]
+        p[i1] $in R
+        R = R = X(i1)
         p[i1] $in X(i1)
-    by def $has_X_values(raw_choice_tuple_encode(p))
-    $has_X_values(raw_choice_tuple_encode(p))
-    release thm set_builder_member(raw_choice_tuple_encode(p), {f fn(i1 closed_range(1, n)) R: $has_X_values(f)})
-    raw_choice_tuple_encode(p) $in {f fn(i1 closed_range(1, n)) R: $has_X_values(f)}
+    forall i1 closed_range(1,n):
+        raw_choice_tuple_encode(p)(i1) = p[i1]
+    $has_X_values(h)
+    release thm set_builder_member(h, {f fn(i1 closed_range(1, n)) R: $has_X_values(f)})
+    h $in {f fn(i1 closed_range(1, n)) R: $has_X_values(f)}
+    raw_choice_tuple_encode(p) $in P
 
 have fn choice_tuple_encode(p c) P = raw_choice_tuple_encode(p)
+
 
 # Symbolic dimensions remain available for a tuple defined inside a forall proof.
 claim:

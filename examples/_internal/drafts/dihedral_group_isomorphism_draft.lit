@@ -1,4 +1,5 @@
-# Migration blocker B08: see plan/迁移的plan/和example有关.md.
+# Migration B08: ordinary mode runs; eight background trust obligations remain.
+# See plan/迁移的plan/experience/problem_notes/example_authoring_round37_2026-10-04.md.
 # Temporary proof skeleton for:
 # <r, f | r^8 = f^2 = r f r f = 1> is isomorphic to D8.
 # Here D8 means the symmetry group of the regular octagon, so it has 16 elements.
@@ -153,41 +154,47 @@ prop finite_surjective_map_bijective(G, D set, r, f G, rho, sigma D, phi fn(x G)
 
 # Presentation universal property: if the target elements satisfy the relators,
 # there is a homomorphism sending r to rho and f to sigma.
-trust forall G, D set, r, f G, rho, sigma D:
-    $presentation_r8_f2_rfrf(G, r, f)
-    $regular_octagon_dihedral_group(D, rho, sigma)
-    =>:
-        exist phi fn(x G) D st {$group_homomorphism(G, D, phi), phi(r) = rho, phi(f) = sigma, $generator_map(G, D, r, f, rho, sigma, phi)}
+thm presentation_universal_property_background:
+    ? forall G, D set, r, f G, rho, sigma D:
+        $presentation_r8_f2_rfrf(G, r, f)
+        $regular_octagon_dihedral_group(D, rho, sigma)
+        =>:
+            exist phi fn(x G) D st {$group_homomorphism(G, D, phi), phi(r) = rho, phi(f) = sigma, $generator_map(G, D, r, f, rho, sigma, phi)}
+    trust exist phi fn(x G) D st {$group_homomorphism(G, D, phi), phi(r) = rho, phi(f) = sigma, $generator_map(G, D, r, f, rho, sigma, phi)}
 
 # From r f r f = 1 one gets f r = r^(-1) f. This is the rewrite rule
 # used to move every reflection letter to the right.
-trust forall G set, r, f G:
-    $presentation_r8_f2_rfrf(G, r, f)
-    =>:
-        $presentation_reflection_swap_rule(G, r, f)
+trust:
+    forall G set, r, f G:
+        $presentation_r8_f2_rfrf(G, r, f)
+        =>:
+            $presentation_reflection_swap_rule(G, r, f)
 
 # Repeatedly applying the swap rule and then f^2 = 1 reduces every word to
 # either r^i1 or r^i1 f.
-trust forall G set, r, f G:
-    $presentation_r8_f2_rfrf(G, r, f)
-    $presentation_reflection_swap_rule(G, r, f)
-    =>:
-        $presentation_normal_form_cover(G, r, f)
+trust:
+    forall G set, r, f G:
+        $presentation_r8_f2_rfrf(G, r, f)
+        $presentation_reflection_swap_rule(G, r, f)
+        =>:
+            $presentation_normal_form_cover(G, r, f)
 
 # Since r^8 = 1, the exponent i1 may be chosen from {0,...,7}. There are eight
 # rotation forms r^i1 and eight reflection forms r^i1 f.
-trust forall G set, r, f G:
-    $presentation_r8_f2_rfrf(G, r, f)
-    =>:
-        $presentation_normal_form_slot_bound(G, r, f)
+trust:
+    forall G set, r, f G:
+        $presentation_r8_f2_rfrf(G, r, f)
+        =>:
+            $presentation_normal_form_slot_bound(G, r, f)
 
 # If every element has one of those normal forms, and those normal forms occupy
 # at most sixteen slots, then the presented group has at most sixteen elements.
-trust forall G set, r, f G:
-    $presentation_normal_form_cover(G, r, f)
-    $presentation_normal_form_slot_bound(G, r, f)
-    =>:
-        $presentation_normal_form_bound(G, r, f)
+trust:
+    forall G set, r, f G:
+        $presentation_normal_form_cover(G, r, f)
+        $presentation_normal_form_slot_bound(G, r, f)
+        =>:
+            $presentation_normal_form_bound(G, r, f)
 
 claim:
     ? forall G set, r, f G:
@@ -199,26 +206,29 @@ claim:
     $presentation_normal_form_slot_bound(G, r, f)
 
 # The regular-octagon dihedral group has exactly eight rotations and eight reflections.
-trust forall D set, rho, sigma D:
-    $regular_octagon_dihedral_group(D, rho, sigma)
-    =>:
-        $regular_octagon_d8_cardinality(D, rho, sigma)
+trust:
+    forall D set, rho, sigma D:
+        $regular_octagon_dihedral_group(D, rho, sigma)
+        =>:
+            $regular_octagon_d8_cardinality(D, rho, sigma)
 
 # Since rho and sigma generate D8, the homomorphism produced by the presentation
 # is surjective.
-trust forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
-    $regular_octagon_dihedral_group(D, rho, sigma)
-    $generator_map(G, D, r, f, rho, sigma, phi)
-    =>:
-        $presentation_map_surjective(G, D, r, f, rho, sigma, phi)
+trust:
+    forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
+        $regular_octagon_dihedral_group(D, rho, sigma)
+        $generator_map(G, D, r, f, rho, sigma, phi)
+        =>:
+            $presentation_map_surjective(G, D, r, f, rho, sigma, phi)
 
 # A surjection from a set with at most 16 elements onto a 16-element set is bijective.
-trust forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
-    $presentation_map_surjective(G, D, r, f, rho, sigma, phi)
-    $presentation_normal_form_bound(G, r, f)
-    $regular_octagon_d8_cardinality(D, rho, sigma)
-    =>:
-        $finite_surjective_map_bijective(G, D, r, f, rho, sigma, phi)
+trust:
+    forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
+        $presentation_map_surjective(G, D, r, f, rho, sigma, phi)
+        $presentation_normal_form_bound(G, r, f)
+        $regular_octagon_d8_cardinality(D, rho, sigma)
+        =>:
+            $finite_surjective_map_bijective(G, D, r, f, rho, sigma, phi)
 
 claim:
     ? forall G, D set, r, f G, rho, sigma D:
@@ -227,6 +237,7 @@ claim:
         =>:
             $isomorphic_group(G, D)
 
+    release thm presentation_universal_property_background(G,D,r,f,rho,sigma)
     obtain phi from exist phi fn(x G) D st {$group_homomorphism(G, D, phi), phi(r) = rho, phi(f) = sigma, $generator_map(G, D, r, f, rho, sigma, phi)}
 
     $group_homomorphism(G, D, phi)
