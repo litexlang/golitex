@@ -32,11 +32,12 @@ book guides the domain selection. The module has its own registration; its
 complete migration acceptance remains open. The set layer also exposes and immediately applies
 `symmetric_difference` as a real-valued set construction.
 
-Migration checkpoint (2026-10-04): a clean162/162 prefix passes on release
-f499e394, through solid geometry. The current full source then fails parsing
-the dependent `A power_set(S)` parameter of `uniform_probability`. Its flat
-carrier/domain-condition migration has a native positive9/9 control and a
-rejected outside-event control; full registered acceptance is still pending.
+Migration checkpoint (2026-10-04): a clean179/179 prefix passes on release
+f499e394, through probability and the `mean3` definition. The probability
+signature now uses independent carriers and retains `A $subset S` inside its
+domain. A positive9/9 control passes and an outside-event call is rejected.
+The next `variance3` definition still has an unresolved return-carrier proof
+and a long-running real-context check; full file/module acceptance is open.
 
 Run the current verification from the repository root with:
 

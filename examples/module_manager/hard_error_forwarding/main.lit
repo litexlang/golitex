@@ -1,0 +1,5 @@
+# Entry tracer: dependency hard errors must stop before this file executes.
+# Gate: litex -strict -r examples/module_manager/hard_error_forwarding
+# Expected: exit 1, session_error contains the original forbidden-trust Runtime error.
+# Ordinary non-strict run is a positive control and succeeds.
+1 = 1

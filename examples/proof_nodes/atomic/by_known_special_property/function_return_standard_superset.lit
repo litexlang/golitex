@@ -1,0 +1,23 @@
+# Tracer: standard supersets of stored function return signatures.
+# Before: restricted WD could not obtain f(a) in C from an R-return signature.
+# claim:
+#     ? forall S finite_set, a R, f fn(x union(S,{a})) R:
+#         not a $in S
+#         =>:
+#             finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R{f(x)})*f(a)
+# Now: all applicable stored return signatures must be contained in the target.
+forall f fn(x R) R, x R:
+    f(x) $in C
+forall f fn(x R) N+, x R:
+    f(x) $in R
+    f(x) $in Z
+claim:
+    ? forall S finite_set, a R, f fn(x union(S,{a})) R:
+        not a $in S
+        =>:
+            finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R{f(x)})*f(a)
+    a $in union(S,{a})
+    release thm fn_set_member(f,fn(x S)R)
+# Boundary: narrowing, missing/invalid call domains, nonstandard return carriers
+# and conflicting candidate return signatures are not accepted by this leaf.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/atomic/by_known_special_property/function_return_standard_superset.lit

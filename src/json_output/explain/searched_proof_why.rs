@@ -1,6 +1,6 @@
 //! Why-text for non-builtin searched-proof routes (Normal JSON).
-//! Call sites pass a stable English kind; this module owns EN/ZH copy including
-//! the emitted `type` value (no English tokens under Chinese).
+//! Call sites pass a stable English kind; this module owns all localized copy,
+//! including the emitted `type` value.
 
 use crate::launch_command::OutputLanguage;
 

@@ -1153,8 +1153,8 @@ original member and records every exact comparison against that member.
 Detailed output exposes `FiniteSetMaxSelection` or `FiniteSetMinSelection`,
 `selected_index` (zero-based), `selected_member`, and `comparisons` with
 normalized operands and `less` / `equal` / `greater` outcomes. These certificates
-follow the whole-object WD checks, including pairwise distinctness; display
-`eval` output alone supplies no proof. See
+follow the whole-object WD checks, including pairwise distinctness. Successful
+`eval` now publishes the checked source-to-result equality. See
 [the rational extrema tracer](../examples/proof_nodes/equal/by_builtin_rule/finite_set_rational_extrema.lit).
 
 
@@ -1539,6 +1539,8 @@ template<S set>:
 
 trust $marked(1)
 1 $in R
+\marked_elements<R> = {x R: $marked(x)}
+release thm set_builder_member(1, {x R: $marked(x)})
 1 $in \marked_elements<R>
 ```
 
@@ -1908,14 +1910,15 @@ forall:
     1 + 1 = 2
 ```
 
-A universal over the literal empty display verifies vacuously:
+A universal over the literal empty display can be checked by finite enumeration:
 
 ```litex
-forall x {}:
-    x != x
+by enumerate finite_set:
+    ? forall x {}:
+        x != x
 ```
 
-This fast path currently recognizes the literal `{}`. It does not discharge
+This enumeration uses the literal `{}`. It does not discharge
 the corresponding goal over `range(3, 3)`, even after proving that range equal
 to `{}`. The following is a known soft failure:
 
@@ -2229,7 +2232,7 @@ runtime. This section gives each statement family one canonical home.
 > | `Register` | Register rewrite/infer properties of a user prop (no proof body). | `register reflexive:` / `symmetric:` / `transitive:` + one `? forall …` |
 > | `Witness` | Prove an exist / atomic-exist / nonempty goal by exhibiting witnesses. | `witness exist … from …:` / `witness $P(…) from …:` / `witness $is_nonempty_set(S) from e:` |
 > | `ProofBlock` | Nested local proof scope. | `claim: ? fact` … / `sketch:` … |
-> | `Command` | Non-proof session command. | `eval expr` (preview: exact numbers, callable definitions, stored algorithms and bounded nested finite aggregates; displays `evaluated_object` and publishes no proof fact; tracers `examples/stmt_nodes/command/eval.lit` and `aggregate_eval.lit`) |
+> | `Command` | Checked computation command. | `eval expr` (exact numbers, callable definitions, stored algorithms and bounded nested finite aggregates; displays `evaluated_object` and stores `expr = evaluated_object`; tracer `examples/stmt_nodes/command/eval_store_result.lit`) |
 >
 > **`Definition` / `DefineObj` (object names):**
 >
@@ -2796,7 +2799,13 @@ function.
 > `known_closed_numeric_equal` representatives and
 > recursively evaluates: closed-numeric simplify, and plain-Identifier function
 > calls through a stored algo (case match → return expr → evaluate again).
-> It does not store a proof fact. Dedicated recursive-algo tracers are deferred.
+> Each executed algorithm step must also verify its defining function equation
+> at the normalized arguments. The exact computation and these checked equations
+> establish `expr = evaluated_object`; both sides pass WD before the equality is
+> stored and inferred in the current scope. A failure discards the statement's
+> temporary facts. Recursive execution keeps its depth/cycle limits and checks
+> each recorded equation independently. Normal output lists the stored equality;
+> Detailed output retains its FactId, WD, definition evidence and store result.
 >
 > Finite sums/products evaluate through checked function applications. Nested
 > aggregates share a total allowance of 1024 terms; bounds and values use exact
@@ -2805,6 +2814,7 @@ function.
 > `examples/stmt_nodes/command/aggregate_eval.lit`.
 > Tracers: `examples/stmt_nodes/definition/def_algo.lit`,
 > `examples/stmt_nodes/command/eval.lit`.
+> Result-publication tracer: `examples/stmt_nodes/command/eval_store_result.lit`.
 >
 > ```litex
 > algo nonzero_flag(x R) R by cases:
@@ -2812,6 +2822,7 @@ function.
 >     case x != 0: 1
 >
 > eval nonzero_flag(0) + 1
+> nonzero_flag(0) + 1 = 1
 > ```
 
 ### Extracting a proved numerical step to Python or C (experimental)
@@ -3265,7 +3276,7 @@ installation, project-running examples, and the current command set.
 
 | Statement | Purpose |
 |---|---|
-| `eval expr` | Evaluate a supported object expression. |
+| `eval expr` | Evaluate exactly, check the computation, and store `expr = result` in the current scope. |
 | `impossible fact` | Close a contradiction branch by identifying the impossible fact. |
 
 ```litex
@@ -3287,8 +3298,9 @@ sum(1, 3, fn(k Z) Q {1 / 3}) = 1
 eval sum(1, 3, fn(k Z) Z {k})
 ```
 
-`eval` displays the value and stores no mathematical fact. A direct equality
-checks the same computation and publishes its proof. Both reject invalid
+`eval` displays the exact value and stores the checked equality between the
+original expression and that value. Later assertions can cite this fact;
+direct equality search retains its own existing permissions. Both reject invalid
 argument domains, missing function domain conditions and reversed integer
 ranges. Empty finite-set sums/products are 0/1. A finite set without a known
 enumeration supports symbolic laws but does not automatically supply a number.
@@ -3337,7 +3349,7 @@ forms share one row, such as the related object-introduction statements.
 | `release regularity_axiom` | Its displayed set/nonemptiness obligations. Preview: `release regularity_axiom(S)`; parse+exec wired; no proof body. | An explicitly trusted set-theoretic conclusion; the current strict gate does not reject this release. |
 | `release axiom_of_choice` | The family is a set and every member is proved nonempty. Preview: `release axiom_of_choice: set F`; parse+exec wired; proof body accepts ordinary local statements. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
 | `release zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview: `release zorn_lemma: …`; parse+exec wired with green tracer; prop-definition equality uses IR alignment (binder ids taken from the user prop body). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
-| `eval` | The source expression is well-defined, including callable parameter domains, and belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
+| `eval` | The source and result equality are well-defined; exact computation and all executed algorithm defining equations check successfully. | Displays the value and stores `expr = value` with a FactId and computation evidence in the current scope; failure rolls back. |
 
 ---
 
@@ -4075,6 +4087,7 @@ claims, and witnesses. Local definitions remain inside that case.
 have fn f(x N) N = x
 by induc n from 0:
     ? f(n) = f(n)
+    n $in N
     have a N = 0
 ```
 
@@ -4644,6 +4657,14 @@ forall A set, B finite_set:
         finite_set_size(A) < finite_set_size(B)
 ```
 
+A stored inclusion also publishes lower-set finiteness when an upper finite
+certificate is already available through stored or structural evidence. This
+lets the size expression pass WD before a proof body starts. The forward step
+retains both its inclusion source and upper finite proof; it does not extend
+strategy permissions. The [inference tracer](../examples/infer/atomic/subset_finite_upper_bound.lit)
+shows the quantified `A set, B finite_set` case. Arbitrary inclusion chains
+still use the existing bounded strategy when no eager certificate is available.
+
 These rules retain the checked inclusion and cardinality premises. Equal
 cardinalities alone do not identify sets, and ordinary inclusion alone gives
 only the weak bound. Their runnable tracers are
@@ -4830,7 +4851,7 @@ alone never supplies an order. The order layer recognizes these contracts:
 | Group | Recognized premises and consequences |
 |---|---|
 | Totality and complements | For reals, the trichotomy permutations and the complementary pairs `<`/`>=`, `>`/`<=`, `<=`/`>=` are exhaustive. Known equality or strict order weakens to `<=`/`>=`; a known negated comparison can supply its exact complementary comparison. |
-| Transitivity and differences | Strict/weak real comparisons compose through a shared middle term. `a<=b` is equivalent to `0<=b-a`, and similarly for `<`; the corresponding shifted addition/subtraction forms are recognized. |
+| Transitivity and differences | Strict/weak real comparisons compose through a shared middle term. `a<=b` is equivalent to `0<=b-a`, and similarly for `<`; a saved `0<b-a` or `b-a>0` proves `a<b`. A nonnegative difference supplies only weak order. The corresponding shifted addition/subtraction forms are recognized. |
 | Integer discreteness | For integers, `a<b` gives `a+1<=b`, `a<=b-1`, and `b-a>=1`; `a<b+1` gives `a<=b`. Bounds `n<=x<n+1` or `n<x<=n+1` isolate `n` or `n+1`. |
 | Addition and subtraction | Componentwise weak inequalities add; any strict component makes the result strict. Common translation preserves order. Subtraction uses the opposite ordering on the subtrahend. Nonnegative or positive increments give the corresponding one-sided bounds. |
 | Products | Same weak signs give a nonnegative product; same strict signs give a positive product; opposite signs give a negative/nonpositive product. Multiplying an inequality preserves its direction for a positive factor and reverses it for a negative factor; weak zero factors only support weak conclusions. |
@@ -4839,6 +4860,12 @@ alone never supplies an order. The order layer recognizes these contracts:
 | Roots, logarithms, and absolute value | `sqrt(x)` is nonnegative, and positive for positive `x`. A logarithm with base `>1` preserves strict order; a base strictly between `0` and `1` reverses it. Absolute value supplies direct, triangle, and reverse-triangle bounds, including `abs(sum(...,f)) <= sum(...,fn(index Z) R {abs(f(index))})` and the analogous finite-set sum under the matching index/carrier facts. |
 | Finite aggregates and extrema | Pointwise weak/strict order on the relevant index set gives sum order. A nonnegative finite-set summand is at most the total. Finite-set extrema bound every member. Finite subset inclusion bounds cardinality, and union cardinality is at most the sum. |
 | Native ordered objects | Floor and ceiling preserve weak order but not strict order. `min` and `max` expose argument bounds and componentwise monotonicity. Native `exp`/`ln` and trigonometric order use the dedicated sections below; complex modulus uses the [complex scalar contract](#complex-scalars-beta-preview). |
+
+The positive-difference builtin consumes an already verified premise. It checks
+both strict spellings with fixed known-fact lookups and retains the premise's
+citation; it does not search for a new difference bound. The enclosing comparison
+still requires real operands. See the runnable
+[positive-difference tracer](../examples/proof_nodes/atomic/by_builtin_rule/greater_from_positive_difference.lit).
 
 > **Migration example:** This retained block still fails at `search_proof` in the current checker; it is not a verified result.
 
@@ -5642,6 +5669,14 @@ Typical consequences include:
   corresponding structural information;
 - a known concrete `prop` call may expose instantiated definition clauses.
 
+A stored strict lower bound `b < x` (or `x > b`) also publishes `0 < x`
+when `0 <= b` has an available stored/structural or closed numeric proof at
+the restricted inference stage. For example, `1 < x` supplies the positivity
+needed for `log(2, x)` WD before a proof body begins. Negative or unknown
+bounds, and a nonstrict zero bound, do not supply positivity. The inference
+retains its strict source and bound proof without enabling deeper search.
+See the [strict-bound tracer](../examples/infer/atomic/strict_lower_bound_positive.lit).
+
 Inference is directional bookkeeping, not a license to solve any equation:
 
 ```text
@@ -5795,3 +5830,5 @@ reports an `error` presentation of Failed.
 The language implementation is the final source of truth when this manual and
 the runner disagree. Such disagreement is a documentation or diagnostic bug
 to fix, not a reason to reinterpret a failed example silently.
+
+Stored function applications also have a bounded `FnApplicationInStandardSuperset` known-property leaf. After application WD, it compares every applicable stored signature's instantiated numeric return carrier with the target standard set. For example, an R-returning `f(a)` belongs to C. Every candidate must be contained in the target, and at least one inclusion must be strict; an exact-carrier query retains its existing producer. Evidence cites each signature and the known equality path connecting its subject to the applied head. This leaf opens no domain, equality, or general premise search. Nonstandard return carriers and heads with native template/field declarations are left to the existing routes, which own their declaration evidence.

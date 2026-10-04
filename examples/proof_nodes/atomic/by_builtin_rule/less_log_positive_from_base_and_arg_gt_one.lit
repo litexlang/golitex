@@ -1,9 +1,8 @@
 # Node: atomic.ByBuiltinRule.Less.LogPositiveFromBaseAndArgGtOne
-# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_log_positive_from_base_and_arg_gt_one.lit
-
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/less_log_positive_from_base_and_arg_gt_one.lit
+# Strict-bound inference publishes x positivity before log target WD.
 claim:
     ? forall x R:
         1 < x
         =>:
             0 < log(2, x)
-    1 < 2

@@ -44,10 +44,13 @@ A future multiple-assumption certificate or new dedicated classified shape
 changes a shared representation contract and requires discussion. No arbitrary
 input cutoff was silently introduced.
 
-## Separate existing atomic nondeterminism
+## Accepted explicit atomic proof
 
-The original squared-i route varies in frozen and current builds; the
-[separate observation and direct authoring control](atomic_i_nondeterminism_2026-10-03.md)
-remain open. It is not concealed by closing K005 or passing the new constructors.
+The squared-i example is closed under the maintainer's accepted authoring
+contract: provide `i * i = 0 * 0 = 0` before `impossible i * i != 0`.
+The [current solution and 30-process acceptance](../../../test_objs/experience/problem_notes/imaginary_contra_explicit_chain_2026-10-04.md)
+preserve the same goal and contradiction tail. The shorter automatic route
+was not changed; its [dated nondeterminism evidence](atomic_i_nondeterminism_2026-10-03.md)
+is historical capability evidence, not a pending Rust repair request.
 
 [Plan and exact field proposal](../../../../plan/迁移的plan/by-contra-all-facts.md).

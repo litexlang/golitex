@@ -27,6 +27,9 @@ impl Runtime {
                 ));
             }
             AtomicFact::SubsetFact(subset) => {
+                if let Some(r) = self.infer_subset_finite_upper_bound(subset, verify_state)? {
+                    rules.push(InferAtomicExceptEqualityResult::SubsetFiniteUpperBound(r));
+                }
                 if let Some(r) = self.infer_subset_elementwise_membership(subset, verify_state)? {
                     rules.push(InferAtomicExceptEqualityResult::SubsetElementwiseMembership(r));
                 }
@@ -96,9 +99,12 @@ impl Runtime {
                     InferBuiltinDefinitionResult::ChoiceFunction(InferChoiceFunctionDefinitionResult {source_fact_id:f.fact_id,derived}),
                 ));
             }
-            AtomicFact::LessFact(_)
-            | AtomicFact::GreaterFact(_)
-            | AtomicFact::LessEqualFact(_)
+            AtomicFact::LessFact(_) | AtomicFact::GreaterFact(_) => {
+                if let Some(r) = self.infer_strict_lower_bound_positive(atomic_fact, verify_state)? {
+                    rules.push(InferAtomicExceptEqualityResult::StrictLowerBoundPositive(r));
+                }
+            }
+            AtomicFact::LessEqualFact(_)
             | AtomicFact::GreaterEqualFact(_)
             | AtomicFact::IsSetFact(_)
             | AtomicFact::IsNonemptySetFact(_)

@@ -33,3 +33,4 @@ pub use search_atomic_except_equality_fact_proof_by_known_special_property::Atom
 #[cfg(test)]
 #[path = "../../../../../tests/unit/execute/known_search/tests.rs"]
 mod known_search_tests;
+pub mod known_fn_standard_return;

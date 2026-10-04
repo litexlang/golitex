@@ -57,6 +57,10 @@ pub enum InferAtomicExceptEqualityResult {
     IsCartDimensionLowerBound(InferIsCartDimensionLowerBoundResult),
     // `A $subset B` → `forall x A: x $in B`.
     SubsetElementwiseMembership(InferSubsetElementwiseMembershipResult),
+    // Stored A subset B + available finite B => finite A.
+    SubsetFiniteUpperBound(InferSubsetFiniteUpperBoundResult),
+    // b < x and an available 0 <= b certificate => 0 < x.
+    StrictLowerBoundPositive(InferStrictLowerBoundPositiveResult),
     // `A $superset B` → `forall x B: x $in A`.
     SupersetElementwiseMembership(InferSupersetElementwiseMembershipResult),
 }
@@ -221,6 +225,18 @@ pub struct InferIsCartDimensionLowerBoundResult {
     pub derived: Box<StoreFactAndInferResult>,
 }
 
+pub struct InferStrictLowerBoundPositiveResult {
+    pub source_fact_id: FactId,
+    pub bound_nonnegative_proof: crate::execute::execute_fact_stmt::VerifyFactResult,
+    pub derived: Box<StoreFactAndInferResult>,
+}
+
+pub struct InferSubsetFiniteUpperBoundResult {
+    pub source_fact_id: FactId,
+    pub upper_finite_proof: crate::execute::execute_fact_stmt::VerifyFactResult,
+    pub derived: Box<StoreFactAndInferResult>,
+}
+
 pub struct InferSubsetElementwiseMembershipResult {
     pub derived: Box<StoreFactAndInferResult>,
 }
@@ -354,6 +370,8 @@ impl InferAtomicExceptEqualityResult {
             }
             Self::IsCartDimensionLowerBound(r) => r.derived.stored_fact_ids(),
             Self::SubsetElementwiseMembership(r) => r.derived.stored_fact_ids(),
+            Self::SubsetFiniteUpperBound(r) => r.derived.stored_fact_ids(),
+            Self::StrictLowerBoundPositive(r) => r.derived.stored_fact_ids(),
             Self::SupersetElementwiseMembership(r) => r.derived.stored_fact_ids(),
         }
     }

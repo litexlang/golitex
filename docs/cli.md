@@ -59,7 +59,7 @@ litex -version
 ## Basic Shape
 
 ```text
-litex [-strict] [-session] [-lang <en|zh>] <command>
+litex [-strict] [-session] [-lang <en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi>] <command>
 ```
 
 With no command, `litex` starts the interactive REPL described above.
@@ -70,7 +70,7 @@ Shared flags outside command operands may appear before or after the command:
 |------|---------|
 | `-strict` | Forbid user `trust` and `trust have`; allow abstract predicate declarations. |
 | `-session` | After a successful `-e` / `-f` / `-r` run, keep the Runtime open and continue as REPL. |
-| `-lang <tok>` | Output language for JSON / status text. `en` \| `english` (default) or `zh` \| `chinese`. Does not change Litex source. |
+| `-lang <tok>` | Output language for JSON verification feedback: `en` (default), `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, or `vi`. Does not change Litex source or verification. |
 
 Examples:
 
@@ -79,6 +79,7 @@ litex -strict -e "1 = 1"
 litex -strict -e '-2 < 0'
 litex -session -f chapter.lit
 litex -lang zh -f examples/tmp.lit
+litex -lang fr -e '1 + 1 = 2'
 litex -f examples/tmp.lit
 ```
 
@@ -185,7 +186,7 @@ the Rust Detailed projection and other tooling.
 | `target` | `"eval"`, `"file"`, or `"repo"` |
 | `path` | `null` for `-e`; requested path for `-f` / `-r` |
 | `detail` | `"normal"` for the default CLI projection |
-| `language` | `"en"` or `"zh"` from `-lang` (default `"en"`); Chinese output localizes the keys too |
+| `language` | Selected locale from `-lang`: `"en"`, `"zh"`, `"zh-hant"`, `"fr"`, `"ru"`, `"es"`, `"ar"`, `"ja"`, `"ko"`, or `"vi"` (default `"en"`); non-English output localizes known keys too |
 | `statement_results` | `-e` / target `-f` statements in order; the current `-r` summary leaves this array empty |
 | `session_error` | Hard stop payload, or `null` |
 

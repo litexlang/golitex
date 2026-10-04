@@ -3,8 +3,8 @@
 #
 # Pipeline: known_closed_numeric_equal rewrite → recursive evaluate
 #   (closed-numeric simplify; Identifier FnObj → stored algo).
-# No proof fact stored. Recursive algo examples are deferred.
-# Boundary: `eval sqrt(2)` / `eval N` / unbound symbols soft-fail.
+# Publishes source=result; checked recursive algo coverage is in eval_store_result.lit.
+# Boundary: `eval sqrt(-1)` / `eval N` / unbound symbols soft-fail.
 # Now also: integer closed ops and foldable `sqrt` / `log`.
 
 eval (1 + 2)^2

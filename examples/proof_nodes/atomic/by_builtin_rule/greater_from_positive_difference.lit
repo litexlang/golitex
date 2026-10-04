@@ -1,0 +1,24 @@
+# Positive differences imply strict real order.
+# Formerly rejected on release f499e394:
+# forall a, b R:
+#     a - b > 0
+#     =>:
+#         a > b
+# Acceptance: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/greater_from_positive_difference.lit
+# Nonnegative difference alone, a missing premise and nonreal operands stay rejected
+# in the positive_difference_order Rust regressions.
+
+forall a, b R:
+    a - b > 0
+    =>:
+        a > b
+
+forall a, b R:
+    0 < a - b
+    =>:
+        a > b
+
+forall a, b R:
+    b - a > 0
+    =>:
+        a < b

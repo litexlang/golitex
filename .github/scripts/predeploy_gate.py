@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Callable
 
 
-RESULT_GRAPH_VERSION = "3"
 DEFAULT_GLOBAL_TIMEOUT_SECONDS = 240.0
 DEFAULT_FILE_TIMEOUT_SECONDS = 600.0
 DEFAULT_TEXTBOOK_JOBS = min(4, os.cpu_count() or 1)
@@ -66,6 +65,8 @@ class GateResult:
     returncode: int | None
     output: str
     wall_seconds: float
+    tests_selected: int | None = None
+    tests_executed: int | None = None
 
 
 @dataclass(frozen=True)
@@ -614,91 +615,59 @@ def file_result_from_completed(
             source_path=source_path,
             line=line,
             statement=statement,
-            message=f"invalid result-graph artifact JSON ({exit_description}): {error}",
+            message=f"invalid run JSON ({exit_description}): {error}",
             output=diagnostic_tail(stdout, stderr),
         )
 
-    contract_error = result_graph_contract_error(envelope, completed.returncode)
+    contract_error = run_file_contract_error(envelope, completed.returncode)
     if contract_error:
         return FileResult(
-            textbook_file=textbook_file,
-            status="contract_error",
-            returncode=completed.returncode,
-            wall_seconds=wall_seconds,
-            message=contract_error,
-            output=diagnostic_tail(stdout, stderr),
+            textbook_file=textbook_file, status="contract_error",
+            returncode=completed.returncode, wall_seconds=wall_seconds,
+            message=contract_error, output=diagnostic_tail(stdout, stderr),
         )
-    if envelope["ok"] is True:
+    if envelope["success"] is True:
         return FileResult(
-            textbook_file=textbook_file,
-            status="success",
-            returncode=completed.returncode,
-            wall_seconds=wall_seconds,
+            textbook_file=textbook_file, status="success",
+            returncode=completed.returncode, wall_seconds=wall_seconds,
         )
 
-    graph_error = envelope["error"]
-    diagnostic = graph_error.get("error", "")
+    failed = next((row for row in envelope["statement_results"]
+                   if row["success"] is False), None)
+    session_error = envelope.get("session_error")
+    diagnostic = session_error or json.dumps(failed, ensure_ascii=False)
     source_path, line, statement, message = trace_diagnostic(diagnostic)
     return FileResult(
-        textbook_file=textbook_file,
-        status="failed",
-        returncode=completed.returncode,
-        wall_seconds=wall_seconds,
-        source_path=(
-            relative_display(repository_root, Path(source_path))
-            if source_path
-            else None
-        ),
-        line=line,
-        statement=statement,
+        textbook_file=textbook_file, status="failed",
+        returncode=completed.returncode, wall_seconds=wall_seconds,
+        source_path=relative_display(repository_root, Path(source_path or envelope["path"])),
+        line=line, statement=statement,
         message=message or "Litex verification failed",
         output=diagnostic_tail(diagnostic, stderr),
     )
 
 
-def result_graph_contract_error(envelope: object, returncode: int) -> str | None:
-    if not isinstance(envelope, dict):
-        return "result-graph artifact output is not an object"
-    if envelope.get("kind") != "artifact":
-        return "result-graph output kind is not artifact"
-    if envelope.get("artifact") != "result_graph":
-        return "artifact is not result_graph"
-    if envelope.get("format") != "json":
-        return "result-graph artifact format is not json"
-    if envelope.get("target") != "file":
-        return "result-graph artifact target is not file"
-    if not isinstance(envelope.get("path"), str):
-        return "result-graph artifact path is not a string"
-    if envelope.get("output_path") is not None:
-        return "result-graph artifact unexpectedly has an output_path"
-    ok = envelope.get("ok")
-    if not isinstance(ok, bool):
-        return "result-graph artifact ok is not boolean"
-    expected_returncode = 0 if ok else 1
-    if returncode != expected_returncode:
-        return f"exit={returncode} disagrees with ok={ok!r}"
-    graph = envelope.get("content") if ok else envelope.get("error")
-    empty_side = envelope.get("error") if ok else envelope.get("content")
-    if empty_side is not None:
-        field = "error" if ok else "content"
-        return f"successful/failed result-graph artifact has non-null {field}"
-    if not isinstance(graph, dict):
-        field = "content" if ok else "error"
-        return f"result-graph artifact {field} is not an object"
-    if graph.get("graph") != "litex-result-graph":
-        return "graph is not litex-result-graph"
-    if graph.get("graph_version") != RESULT_GRAPH_VERSION:
-        return f"unexpected graph_version={graph.get('graph_version')!r}"
-    if graph.get("ok") is not ok:
-        return "result-graph payload ok disagrees with artifact ok"
-    expected_result = "success" if ok else "error"
-    if graph.get("result") != expected_result:
-        return f"result-graph result disagrees with ok={ok!r}"
-    target = graph.get("target")
-    if not isinstance(target, dict) or target.get("kind") != "file":
-        return "result-graph target kind is not file"
-    if graph.get("error") is not None and not isinstance(graph.get("error"), str):
-        return "result-graph error is neither null nor a string"
+def run_file_contract_error(envelope: object, returncode: int) -> str | None:
+    if not isinstance(envelope, dict) or envelope.get("kind") != "run":
+        return "file output is not a run object"
+    if envelope.get("target") != "file" or not isinstance(envelope.get("path"), str):
+        return "run target/path is not a file"
+    success = envelope.get("success")
+    if not isinstance(success, bool):
+        return "run success is not boolean"
+    if returncode != (0 if success else 1):
+        return f"exit={returncode} disagrees with success={success!r}"
+    rows = envelope.get("statement_results")
+    if not isinstance(rows, list) or any(
+        not isinstance(row, dict) or not isinstance(row.get("success"), bool)
+        for row in rows
+    ):
+        return "run statement_results lack boolean outcomes"
+    error = envelope.get("session_error")
+    if error is not None and not isinstance(error, str):
+        return "run session_error is neither null nor a string"
+    if success != (error is None and all(row["success"] for row in rows)):
+        return "run success disagrees with statement outcomes/session_error"
     return None
 
 
@@ -739,7 +708,8 @@ def trace_diagnostic(
         ),
         None,
     )
-    message = payload.get("message")
+    message = next((item["message"] for item in nested
+                    if isinstance(item.get("message"), str)), None)
     if not isinstance(message, str):
         message = failed_goal
     elif failed_goal and failed_goal != statement:
@@ -788,7 +758,10 @@ def timeout_location(
 
 def print_cargo_result(result: GateResult, verbose: bool) -> None:
     status = result.status.upper()
-    print(f"CARGO {status:<7} [{result.label}] {result.wall_seconds:.2f}s", flush=True)
+    counts = ""
+    if result.tests_selected is not None:
+        counts = f" | selected={result.tests_selected} executed={result.tests_executed}"
+    print(f"CARGO {status:<7} [{result.label}] {result.wall_seconds:.2f}s{counts}", flush=True)
     if verbose or result.status != "success":
         print(result.output, end="" if result.output.endswith("\n") else "\n")
 
@@ -856,6 +829,7 @@ def run_cargo_test(
 ) -> GateResult:
     command = cargo_test_command(test_name)
     start = time.perf_counter()
+    selected = executed = None
     if controller is not None:
         outcome = controller.run(command, cwd=repository_root, merge_stderr=True)
         status = {
@@ -867,6 +841,11 @@ def run_cargo_test(
         output = outcome.stdout
         if outcome.stderr:
             output = diagnostic_tail(output, outcome.stderr)
+        if status == "success":
+            selected, executed, problem = cargo_test_counts(output)
+            if problem:
+                status = "failed"
+                output = diagnostic_tail(output, f"gate error [{test_name}]: {problem}")
         if status == "cancelled":
             output = diagnostic_tail(
                 output,
@@ -885,6 +864,8 @@ def run_cargo_test(
             returncode=outcome.returncode,
             output=output,
             wall_seconds=outcome.wall_seconds,
+            tests_selected=selected,
+            tests_executed=executed,
         )
     try:
         completed = runner(
@@ -904,14 +885,72 @@ def run_cargo_test(
             wall_seconds=time.perf_counter() - start,
         )
 
+    output = completed.stdout or ""
+    status = "failed"
+    if completed.returncode == 0:
+        selected, executed, problem = cargo_test_counts(output)
+        if problem:
+            output = diagnostic_tail(output, f"gate error [{test_name}]: {problem}")
+        else:
+            status = "success"
     return GateResult(
         label=label,
         command=tuple(command),
-        status="success" if completed.returncode == 0 else "failed",
+        status=status,
         returncode=completed.returncode,
-        output=completed.stdout or "",
+        output=output,
         wall_seconds=time.perf_counter() - start,
+        tests_selected=selected,
+        tests_executed=executed,
     )
+
+
+def cargo_test_counts(output: str) -> tuple[int, int, str | None]:
+    """Require complete, consistent libtest summaries and actual execution.
+
+    Cargo may report several empty targets around one nonempty target. An
+    exit-zero process with no tests, only ignored tests, or missing summaries
+    is not evidence that the registered gate ran.
+    """
+    pending = None
+    selected = executed = 0
+    summaries = 0
+    for line in output.splitlines():
+        start = re.fullmatch(r"running (\d+) tests?", line)
+        if start:
+            if pending is not None:
+                return selected, executed, "test target has no completion summary"
+            pending = int(start.group(1))
+            continue
+        result = re.fullmatch(
+            r"test result: (ok|FAILED)\. (\d+) passed; (\d+) failed; "
+            r"(\d+) ignored; (\d+) measured; (\d+) filtered out; finished in .+",
+            line,
+        )
+        if not result:
+            if line.startswith("test result:"):
+                return selected, executed, "unrecognized test completion summary"
+            continue
+        if pending is None:
+            return selected, executed, "test summary has no matching running count"
+        passed, failed, ignored, measured = map(int, result.group(2, 3, 4, 5))
+        if pending != passed + failed + ignored + measured:
+            return selected, executed, "running count disagrees with test summary"
+        selected += pending
+        executed += passed + failed
+        summaries += 1
+        pending = None
+        if result.group(1) != "ok" or failed:
+            return selected, executed, "test summary reports failed tests"
+        if ignored or measured:
+            return selected, executed, "selected tests were ignored or only measured"
+    if pending is not None:
+        return selected, executed, "test target has no completion summary"
+    if not summaries:
+        return selected, executed, "no complete Cargo test summaries found"
+    if executed == 0:
+        return selected, executed, "zero tests executed; check the registered Cargo filter"
+    return selected, executed, None
 
 
 def cargo_test_command(test_name: str) -> list[str]:
@@ -919,7 +958,7 @@ def cargo_test_command(test_name: str) -> list[str]:
 
 
 def textbook_file_command(binary: Path, file_path: Path) -> list[str]:
-    return [str(binary), "-graph", "-f", str(file_path)]
+    return [str(binary), "-f", str(file_path)]
 
 
 def positive_int(value: str) -> int:

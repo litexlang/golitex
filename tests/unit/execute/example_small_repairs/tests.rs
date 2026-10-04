@@ -39,6 +39,42 @@ fn example_small_positive_integer_requires_both_certificates() {
         false,
     );
 }
+
+#[test]
+fn positive_difference_order_consumes_both_known_strict_spellings() {
+    for code in [
+        "forall a, b R:\n    b - a > 0\n    =>:\n        a < b",
+        "forall a, b R:\n    0 < b - a\n    =>:\n        a < b",
+    ] {
+        let (_, detailed) = check(code, true);
+        let conclusion = detailed.split("\"proved_then_facts\"").nth(1).unwrap();
+        assert!(conclusion.contains("LessFromPosDifference"), "{conclusion}");
+        assert!(conclusion.contains("premise_proof"), "{conclusion}");
+        assert!(conclusion.contains("cite_fact_id"), "{conclusion}");
+    }
+    // Greater goals use the existing order-dual rewrite; check their result
+    // without requiring the direct Less node in the rewrite's JSON projection.
+    for code in [
+        "forall a, b R:\n    a - b > 0\n    =>:\n        a > b",
+        "forall a, b R:\n    0 < a - b\n    =>:\n        a > b",
+    ] {
+        check(code, true);
+    }
+}
+
+#[test]
+fn positive_difference_order_keeps_strict_domain_and_scope_boundaries() {
+    for code in [
+        "forall a, b R:\n    b - a >= 0\n    =>:\n        a < b",
+        "forall a, b R:\n    b - a = 0\n    =>:\n        a < b",
+        "forall a, b R:\n    a < b",
+        "forall a, b R:\n    b - a > 0\n    =>:\n        a > b",
+        "forall a, b C:\n    b - a > 0\n    =>:\n        a < b",
+        "forall a, b R:\n    b - a > 0\n    =>:\n        a < b\nhave a, b R\na < b",
+    ] {
+        check(code, false);
+    }
+}
 #[test]
 fn example_small_scalar_rules_keep_domains_and_nonzero_premises() {
     for code in [
@@ -95,7 +131,7 @@ fn example_small_ranges_and_finite_surjections_keep_exact_boundaries() {
         "forall A set, B set, f fn(x A) B:\n    $surjective(A, B, f)\n    =>:\n        $is_finite_set(B)"] {check(code,false);}
 }
 #[test]
-fn example_small_finite_eval_keeps_exact_values_and_stores_no_equality() {
+fn example_small_finite_eval_keeps_exact_values_and_stores_the_equality() {
     for (code, value) in [
         ("eval finite_set_size({1, 2, 3})", "3"),
         ("eval tuple_dim((1, 2, 3))", "3"),
@@ -106,7 +142,8 @@ fn example_small_finite_eval_keeps_exact_values_and_stores_no_equality() {
     ] {
         let (normal, _) = check(code, true);
         assert!(normal.contains(&format!("\"evaluated_object\": \"{value}\"")));
-        assert!(normal.contains("\"stores\": []"));
+        let equality = format!("\"{}={}\"", code.trim_start_matches("eval ").replace(' ', ""), value.replace(' ', ""));
+        assert!(normal.replace(' ', "").contains(&equality), "{normal}");
     }
     for code in [
         "eval finite_set_max({})",

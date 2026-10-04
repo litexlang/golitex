@@ -12,6 +12,16 @@ pub(super) fn project_known_special_property(
     runtime: &Runtime,
 ) -> JsonValue {
     let (rule, id, matches) = match proof {
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(p)) => return object_for(runtime, vec![
+            ("type", string("by_known_special_property")),
+            ("rule", string("FnApplicationInStandardSuperset")),
+            ("target_set", string(crate::ast::obj::Obj::StandardSet(p.target_set.clone()).readable_string())),
+            ("signature_returns", JsonValue::Array(p.signature_returns.iter().map(|s| object_for(runtime, vec![
+                ("cite_signature_fact_id", string(s.cite_signature_fact_id.to_string())),
+                ("source_set", string(crate::ast::obj::Obj::StandardSet(s.source_set.clone()).readable_string())),
+                ("function_equal", super::searched::project_known_equality_path(&s.function_equal, runtime)),
+            ])).collect())),
+        ]),
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::StandardNumericSuperset(p)) => return object_for(runtime, vec![
             ("type", string("by_known_special_property")),
             ("rule", string("StandardNumericSuperset")),

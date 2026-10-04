@@ -1,10 +1,18 @@
-# 尚存问题完整审计 — 2026-10-04
+# Obj 活动纠错记录 — 原审计 2026-10-04
 
 > **统一收尾入口：** [src收尾总清单.md](../../plan/src收尾总清单.md)（2026-10-04）。活动事项及跨来源去重在总清单维护；本页保留专项代码、决定和历史验收。新增进展应同步对应总清单ID，不能用旧快照覆盖新证据。
 
-## 任务与版本
+## 活动项维护
 
-- 用户任务：全部列出当前已观察到的问题，给出实际代码；本轮不修实现。
+解决一项并完成验收后，删除它的具体纠错段落；总计划只留原编号的关闭状态及解法链接，原始代码/输出归档不改。R01 的[显式反证链](experience/problem_notes/imaginary_contra_explicit_chain_2026-10-04.md)和 R03 的[eval 结果发布](experience/problem_notes/eval_store_result_2026-10-04.md)已移除；R02 的误诊撤回见下方纠正。其余原编号不重排。
+
+R04/R05/R06 的[本次复核](experience/problem_notes/symbolic_aggregate_status_2026-10-04.md)确认显式作者目标已全部通过，原短输入已有 7/10 直接通过；三项旧失败段落也已移出活动记录。三个短搜索限制保留在经验中。
+
+以下版本和统计属于原冻结审计，不是当前源码的门禁成绩。当前 `eval` 成功时核验并存储 `source = result`；旧 display-only 观察只作历史。
+
+## 原审计任务与版本
+
+- 用户任务：全部列出当前已观察到的问题，给出实际代码；原审计只记录，不修实现。
 - 范围：全部 Obj 文件与负例、普通 Obj 独立正例、Stmt、基础合同、Rust 库与语句集成测试、67个旧原始输入、43个旧命名探针、44个现存公开文件、4个 showcase 前缀。
 - 固定源码 SHA-256：`8cd780d5598c250eac50bb668bda31a1a68f23c63a4bb11f2dc484cc8f0039ba`。
 - 新构建 release SHA-256：`d47a2b0ca55a0f8235810fdd57fde3a1fe74968cfa979172efdad7270a7a02ab`。
@@ -37,251 +45,6 @@
 失败数量互相重叠，不能相加当独立bug数。manifest的0个登记gap也不代表所有正例通过。
 
 ## 逐项问题
-
-### R01：已按用户选择改为显式等式链（仅Litex作者修复）
-
-**最新处理决定**：用户明确选择保留现有替换，不改Rust。当前可运行例子已补上下面等式链，保留原目标和收尾，30/30独立新进程通过，Stmt与Obj拥有者文件通过：
-
-```lit
-by contra:
-    ? i != 0
-    i * i = -1
-    i * i = 0 * 0 = 0
-    impossible i * i != 0
-```
-
-[解决记录](experience/problem_notes/imaginary_contra_explicit_chain_2026-10-04.md) · [当前Stmt例子](../stmt_nodes/by/by_contra_imaginary_unit.lit) · [Obj P103](imaginary_unit.lit)。本项作为例子任务已解决；下文是未补桥的旧简写行为与历史诊断，Rust自动替换并未改变，不再为本项安排Rust修复。
-
-
-- 分类：重叠等式替换的顺序依赖已确认；主标签：`kernel_problem`；最早边界：explicit proof / by_contra / builtin rewrite。
-- 观察：串行20次：12通过、8拒绝；同时直接 i!=0 通过。
-- 本项处理：用户选择补显式乘法替换链；当前例子已验收。旧自动简写保留为已知边界，不安排Rust修复。
-- 诊断：只确认以下输入的结果；未据此认定缺少整个数学能力或确定共用根因。
-
-**实际输入：contra-serial**
-
-```lit
-by contra:
-    ? i != 0
-    i * i = -1
-    impossible i * i != 0
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "by contradiction", "why_failed": {"type": "by", "rule_name": "By contradiction", "message": "Prove by contradiction", "phase": "by_contra", "failure": {"phase": "closing", "failure": {"phase": "negated_impossible", "result": {"type": "equality", "success": false, "phase": "search_proof", "fact": "i * i = 0", "well_defined": {"left": {"type": "by_known", "obj": "i * i", "wd_id": "wd3"}, "right": {"type": "by_known", "obj": "0", "wd_id": "wd2"}}}}}}, "stores": [], "infers": []}`。
-
-对照：old-i-nonzero: 通过。
-
-执行类别：已验收Litex作者修复，保持原数学目标，无trust，负例仍拒绝；历史Rust机制未改。
-
-**同日澄清**：源码已有`ImaginaryUnitNonzero`与`ClosedComplex` BT rule。以下直接输入在归档和新release各20/20通过，实际先命中精确`by_closed_calculation`：
-
-```lit
-i != 0
-3 + 4*i != 4 + 3*i
-```
-
-原反证在新release仍不稳定（20次6通过、14拒绝），失败是收尾`negated_impossible`对`i*i=0`的搜索，不是缺`i!=0`规则。详细成功证明将`i*i`重写为`0*0`。源码显示`HashMap`遍历中的父/子重叠替换存在顺序依赖；具体证据与已通过的对照证明见[纠正说明](nonzero_union_correction_2026-10-04.md)。本次未修实现。
-
-**后续因果确认**：[重写顺序诊断](contra_rewrite_order_2026-10-04.md)已保存失败时的实际遍历及残余目标。70次带日志运行全部吻合，40次固定顺序干预确定改变结果。原归档与新诊断版本分别记录；没有实现修复。
-
-### R02：撤回——两份不同证明被误作同一输入
-
-分类：审计错误；不是已确认的上下文内核问题。原短写法：
-
-```lit
-sketch:
-    by extension union({1}, {2}) = {1, 2}
-```
-
-实际固定文件的P01已展开两方向成员证明与分情况，独立执行通过，整文件通过。旧短写法没有这些证明步骤，它的拒绝不能证明完整代码依赖外部上下文。完整前后代码和八项对照见[纠正说明](nonzero_union_correction_2026-10-04.md)。旧输入/结果仍保存为历史直接自动化边界证据。
-
-### R03：algo 聚合能 eval，等式证明失败
-
-- 分类：行为问题，根因暂定；主标签：`kernel_problem`；最早边界：proof search。
-- 观察：sum 和 finite_set_sum 的等式拒绝；相同表达式 eval 分别返回3和2；flag(1)=1通过。
-- 下一步：检查 checked algo 调用方程如何进入 aggregate 的等式验证，核对计算证据和 WD 证据。
-- 诊断：只确认以下输入的结果；未据此认定缺少整个数学能力或确定共用根因。
-
-**实际输入：flag-sum**
-
-```lit
-algo flag(x R) R by cases:
-    case x=0:0
-    case x!=0:1
-sum(0,3,flag)=3
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sum(0, 3, flag) = 3", "why_failed": {"phase": "search_proof", "goal": "sum(0, 3, flag) = 3"}, "stores": [], "infers": []}`。
-
-**实际输入：flag-finite-sum**
-
-```lit
-algo flag(x R) R by cases:
-    case x=0:0
-    case x!=0:1
-finite_set_sum({1/3,2/3},flag)=2
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "finite_set_sum({1 / 3, 2 / 3}, flag) = 2", "why_failed": {"phase": "search_proof", "goal": "finite_set_sum({1 / 3, 2 / 3}, flag) = 2"}, "stores": [], "infers": []}`。
-
-对照：flag-call: 通过；flag-sum-eval: 通过，eval=3；flag-finite-sum-eval: 通过，eval=2。
-
-执行类别：诊断中，未修复。本项验收须保持原数学目标，并检查相关负例；共享表示/状态/搜索或尚未确定语义的修改须进入既有讨论边界。
-
-### R04：符号 sum 的常量、线性、同点值替换不通过
-
-- 分类：行为问题，根因暂定；主标签：`kernel_problem`；最早边界：proof search。
-- 观察：五条独立输入全部拒绝；分段求和通过，不能将整个 sum 能力判为缺失。
-- 下一步：分别检查常量项数、函数载体、点态证据和 sum 规则入口。
-- 诊断：只确认以下输入的结果；未据此认定缺少整个数学能力或确定共用根因。
-
-**实际输入：sum-constant**
-
-```lit
-have n N+
-have c R
-have f,g fn(k Z)R
-sum(1,n,fn(k Z)R{c})=n*c
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sum(1, n, fn (k Z) R{c}) = n * c", "why_failed": {"phase": "search_proof", "goal": "sum(1, n, fn (k Z) R{c}) = n * c"}, "stores": [], "infers": []}`。
-
-**实际输入：sum-add**
-
-```lit
-have n N+
-have c R
-have f,g fn(k Z)R
-sum(1,n,fn(k Z)R{f(k)+g(k)})=sum(1,n,f)+sum(1,n,g)
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sum(1, n, fn (k Z) R{f(k) + g(k)}) = sum(1, n, f) + sum(1, n, g)", "why_failed": {"phase": "search_proof", "goal": "sum(1, n, fn (k Z) R{f(k) + g(k)}) = sum(1, n, f) + sum(1, n, g)"}, "stores": [], "infers": []}`。
-
-**实际输入：sum-sub**
-
-```lit
-have n N+
-have c R
-have f,g fn(k Z)R
-sum(1,n,fn(k Z)R{f(k)-g(k)})=sum(1,n,f)-sum(1,n,g)
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sum(1, n, fn (k Z) R{f(k) - g(k)}) = sum(1, n, f) - sum(1, n, g)", "why_failed": {"phase": "search_proof", "goal": "sum(1, n, fn (k Z) R{f(k) - g(k)}) = sum(1, n, f) - sum(1, n, g)"}, "stores": [], "infers": []}`。
-
-**实际输入：sum-scale**
-
-```lit
-have n N+
-have c R
-have f,g fn(k Z)R
-sum(1,n,fn(k Z)R{c*f(k)})=c*sum(1,n,f)
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sum(1, n, fn (k Z) R{c * f(k)}) = c * sum(1, n, f)", "why_failed": {"phase": "search_proof", "goal": "sum(1, n, fn (k Z) R{c * f(k)}) = c * sum(1, n, f)"}, "stores": [], "infers": []}`。
-
-**实际输入：sum-pointwise**
-
-```lit
-have n N+
-have c R
-have f,g fn(k Z)R
-sum(1,n,fn(k Z)Z{k+k})=sum(1,n,fn(j Z)Z{2*j})
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "sum(1, n, fn (k Z) Z{k + k}) = sum(1, n, fn (j Z) Z{2 * j})", "why_failed": {"phase": "search_proof", "goal": "sum(1, n, fn (k Z) Z{k + k}) = sum(1, n, fn (j Z) Z{2 * j})"}, "stores": [], "infers": []}`。
-
-对照：sum-split: 通过。
-
-执行类别：诊断中，未修复。本项验收须保持原数学目标，并检查相关负例；共享表示/状态/搜索或尚未确定语义的修改须进入既有讨论边界。
-
-### R05：符号 product 常量幂不通过
-
-- 分类：行为问题，根因暂定；主标签：`kernel_problem`；最早边界：proof search。
-- 观察：product(1,n,常量c)=c^n拒绝，符号分段乘积通过。
-- 下一步：检查正整数项数与常量函数匹配，不扩大通用搜索。
-- 诊断：只确认以下输入的结果；未据此认定缺少整个数学能力或确定共用根因。
-
-**实际输入：product-constant**
-
-```lit
-have n N+
-have c R*
-product(1,n,fn(k Z)R*{c})=c^n
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "product(1, n, fn (k Z) R*{c}) = c ^ n", "why_failed": {"phase": "search_proof", "goal": "product(1, n, fn (k Z) R*{c}) = c ^ n"}, "stores": [], "infers": []}`。
-
-对照：product-split: 通过。
-
-执行类别：诊断中，未修复。本项验收须保持原数学目标，并检查相关负例；共享表示/状态/搜索或尚未确定语义的修改须进入既有讨论边界。
-
-### R06：有限集求和线性与乘积乘法分配不通过
-
-- 分类：行为问题，根因暂定；主标签：`kernel_problem`；最早边界：proof search。
-- 观察：有限集常量求和和常量乘积通过；加、减、缩放和乘积点态乘法公式分别拒绝。
-- 下一步：检查有限集 carrier、lambda 展开与规则保留的点态证书。
-- 诊断：只确认以下输入的结果；未据此认定缺少整个数学能力或确定共用根因。
-
-**实际输入：finite-sum-add**
-
-```lit
-have S finite_set
-have c R
-have f,g fn(k S)R
-finite_set_sum(S,fn(k S)R{f(k)+g(k)})=finite_set_sum(S,f)+finite_set_sum(S,g)
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "finite_set_sum(S, fn (k S) R{f(k) + g(k)}) = finite_set_sum(S, f) + finite_set_sum(S, g)", "why_failed": {"phase": "search_proof", "goal": "finite_set_sum(S, fn (k S) R{f(k) + g(k)}) = finite_set_sum(S, f) + finite_set_sum(S, g)"}, "stores": [], "infers": []}`。
-
-**实际输入：finite-sum-sub**
-
-```lit
-have S finite_set
-have c R
-have f,g fn(k S)R
-finite_set_sum(S,fn(k S)R{f(k)-g(k)})=finite_set_sum(S,f)-finite_set_sum(S,g)
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "finite_set_sum(S, fn (k S) R{f(k) - g(k)}) = finite_set_sum(S, f) - finite_set_sum(S, g)", "why_failed": {"phase": "search_proof", "goal": "finite_set_sum(S, fn (k S) R{f(k) - g(k)}) = finite_set_sum(S, f) - finite_set_sum(S, g)"}, "stores": [], "infers": []}`。
-
-**实际输入：finite-sum-scale**
-
-```lit
-have S finite_set
-have c R
-have f,g fn(k S)R
-finite_set_sum(S,fn(k S)R{c*f(k)})=c*finite_set_sum(S,f)
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "finite_set_sum(S, fn (k S) R{c * f(k)}) = c * finite_set_sum(S, f)", "why_failed": {"phase": "search_proof", "goal": "finite_set_sum(S, fn (k S) R{c * f(k)}) = c * finite_set_sum(S, f)"}, "stores": [], "infers": []}`。
-
-**实际输入：finite-product-distribute**
-
-```lit
-have S finite_set
-have c R
-have f,g fn(k S)R
-finite_set_product(S,fn(k S)R{f(k)*g(k)})=finite_set_product(S,f)*finite_set_product(S,g)
-```
-
-实际结果：`success=false`，exit `1`。
-最早失败记录（完整见机器记录/receipt）：`{"success": false, "statement": "finite_set_product(S, fn (k S) R{f(k) * g(k)}) = finite_set_product(S, f) * finite_set_product(S, g)", "why_failed": {"phase": "search_proof", "goal": "finite_set_product(S, fn (k S) R{f(k) * g(k)}) = finite_set_product(S, f) * finite_set_product(S, g)"}, "stores": [], "infers": []}`。
-
-对照：finite-sum-constant: 通过；finite-product-constant: 通过。
-
-执行类别：诊断中，未修复。本项验收须保持原数学目标，并检查相关负例；共享表示/状态/搜索或尚未确定语义的修改须进入既有讨论边界。
 
 ### R07：非空 finite_set_reduce 计算与等式验证不一致
 
@@ -2876,7 +2639,7 @@ let bad_predicate = finite_set_reduce({0, 1}, fn(x Z: x > 0) Z {x}, fn(a, b Z) Z
 
 首个结果：`{"success": false, "statement": "let …", "why_failed": {"type": "define_obj", "rule_name": "Let binding", "message": "Bind a name to a well-defined value", "phase": "let", "failure": {"success": false, "obj": "finite_set_reduce({0, 1}, fn (x {2}) Z{x}, fn (a, b Z) Z{a + b}, 0)", "phase": "well_defined", "failure": {"phase": "IteratedOperator", "failure": {"phase": "FiniteSetReduce", "failure": {"phase": "requirement", "obj": "finite_set_reduce({0, 1}, fn (x {2}) Z{x}, fn (a, b Z) Z{a + b}, 0)", "result": {"type": "atomic_except_equality", "success": false, "phase": "search_proof", "fact": "{0, 1} $subset {2}", "well_defined": {"well_defined_of_each_parameter": [{"type": "by_def", "family": "SetFormer", "kind": "ListSet", "obj": "{0, 1}", "child_obj_well_defined": [{"type": "by_def", "famil`。
 
-## Rust 失败全集
+## 原冻结审计 Rust 失败记录（历史）
 
 完整Cargo输出/断言行号/源代码均在receipt。下面保持精确测试名。6项旧输出/表示断言不应当作数学目标失败；Point幻影参数那项需先确定carrier合同。
 
@@ -2938,7 +2701,7 @@ python3 examples/test_objs/run.py
 python3 examples/test_statements/run.py --binary target/release/litex
 ```
 
-独立输入用`target/release/litex -strict -e <完整代码>`；以负号开头的代码必须保留该参数门禁本身，普通证明可用-f重放。基础runner的manifest、输入、session、module/cold-cache记录在receipt。`eval`展示结果，不等同于将等式存为事实。
+独立输入用`target/release/litex -strict -e <完整代码>`；以负号开头的代码必须保留该参数门禁本身，普通证明可用-f重放。基础runner的manifest、输入、session、module/cold-cache记录在receipt。该冻结版本的 `eval` 只展示结果；现行语义已更新为核验并发布等式，见上方解法记录。
 
 - 构建成功且固定副本源码在各门禁前后稳定。发布前根工作区相对该副本仍有并行变化；不把它冒充本报告已检验版本。
 - 未执行全部公开example/docs/showcase/教材/发布/Lean门禁；这些范围不作全绿承诺。

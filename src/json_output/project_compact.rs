@@ -38,7 +38,7 @@ pub fn project_run_compact(
     };
     let session_error = match &run.session_error {
         None => JsonValue::Null,
-        Some(err) => string(format!("{err:?}")),
+        Some(err) => string(err.to_string()),
     };
     object(
         lang,

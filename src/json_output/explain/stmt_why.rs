@@ -1,5 +1,5 @@
 //! Localized why-text for statement kinds and compound facts.
-//! All Chinese/English stmt copy lives here (not in execute/).
+//! All localized statement copy lives here (not in execute/).
 
 use crate::launch_command::OutputLanguage;
 
@@ -1905,49 +1905,49 @@ pub fn explain_stmt_kind(kind: &str, lang: OutputLanguage) -> StmtWhyText {
         ("eval", OutputLanguage::English) => (
             "command",
             "Eval",
-            "Evaluate an exact numeric, function or finite aggregate expression",
+            "Evaluate an exact expression and store its result equality",
         ),
         ("eval", OutputLanguage::ChineseTraditional) => {
-            ("命令", "求值", "對精確數值、函數或有限聚合運算式求值")
+            ("命令", "求值", "精確求值並儲存原運算式與結果的等式")
         }
         ("eval", OutputLanguage::French) => (
             "Commande",
             "Évaluation",
-            "Évaluer exactement une expression numérique, de fonction ou d'agrégat fini",
+            "Évaluer exactement une expression et enregistrer son égalité au résultat",
         ),
         ("eval", OutputLanguage::Russian) => (
             "Команда",
             "Вычисление",
-            "Точно вычислить числовое выражение, функцию или конечный агрегат",
+            "Точно вычислить выражение и сохранить равенство с результатом",
         ),
         ("eval", OutputLanguage::Spanish) => (
             "Comando",
             "Evaluación",
-            "Evaluar exactamente una expresión numérica, de función o de agregado finito",
+            "Evaluar exactamente una expresión y guardar su igualdad con el resultado",
         ),
         ("eval", OutputLanguage::Arabic) => (
             "أمر",
             "تقييم",
-            "تقييم دقيق لتعبير عددي أو دالة أو تجميع منتهٍ",
+            "تقييم التعبير بدقة وحفظ مساواته بالنتيجة",
         ),
         ("eval", OutputLanguage::Japanese) => (
             "コマンド",
             "評価",
-            "数値、関数または有限集約の式を正確に評価します",
+            "式を正確に評価し、結果との等式を保存します",
         ),
         ("eval", OutputLanguage::Korean) => (
             "명령",
             "평가",
-            "수치, 함수 또는 유한 집계 식을 정확히 평가합니다",
+            "식을 정확히 평가하고 결과와의 등식을 저장합니다",
         ),
         ("eval", OutputLanguage::Vietnamese) => (
             "Lệnh",
             "Tính giá trị",
-            "Tính chính xác biểu thức số, hàm hoặc tổng hợp hữu hạn",
+            "Tính chính xác biểu thức và lưu đẳng thức với kết quả",
         ),
 
         ("eval", OutputLanguage::Chinese) => {
-            ("命令", "求值", "对精确数值、函数或有限求和求积表达式求值")
+            ("命令", "求值", "精确求值并存储原表达式与结果的等式")
         }
 
         (_, OutputLanguage::English) => ("stmt", kind, "Statement completed"),

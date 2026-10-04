@@ -9,4 +9,4 @@
 (2 / 3)^(-2) = 9 / 4
 2^(-3) * 2^3 = 1
 eval 3^(-1)
-# eval displays 1 / 3 and stores no equality. Zero to a negative power rejects.
+# eval displays 1 / 3 and stores the result equality. Zero to a negative power rejects.

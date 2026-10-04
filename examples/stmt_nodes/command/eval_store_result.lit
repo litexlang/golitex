@@ -1,0 +1,39 @@
+# Before: eval displayed 3 but stored no sum(0,3,flag)=3 fact;
+# the following equality was rejected.
+# algo flag(x R) R by cases:
+#     case x=0:0
+#     case x!=0:1
+# eval sum(0,3,flag)
+# sum(0,3,flag)=3
+# Now: exact evaluation checks its defining equations and publishes source=value.
+# Gate: target/release/litex -strict -lang en -f examples/stmt_nodes/command/eval_store_result.lit
+# Boundary: wrong values, invalid domains, budget failures and failed proof
+# blocks publish no result; eval facts stay in their proof scope.
+
+algo flag(x R) R by cases:
+    case x=0:0
+    case x!=0:1
+eval sum(0,3,flag)
+sum(0,3,flag)=3
+eval product(1,3,flag)
+product(1,3,flag)=1
+eval finite_set_sum({1/3,2/3},flag)
+finite_set_sum({1/3,2/3},flag)=2
+eval finite_set_product({1/3,2/3},flag)
+finite_set_product({1/3,2/3},flag)=1
+
+have a R = 10
+eval a+1
+a+1=11
+eval (1+2,4+5)
+(1+2,4+5)=(3,9)
+eval (1,2,3)[2]
+(1,2,3)[2]=2
+eval C_abs(1+i)
+C_abs(1+i)=sqrt(2)
+
+algo countdown(n N) N by induc n from 0:
+    case n=0:0
+    case n>=1:countdown(n-1)
+eval countdown(4)
+countdown(4)=0

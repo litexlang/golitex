@@ -1,3 +1,5 @@
+> 2026-10-04用户更新：成功的 `eval` 现在核验并发布 `source = result`。下文关于 display-only／不存事实的旧决定属于历史，现行合同见[Manual](../../docs/Manual.md)与[验收经验](experience/problem_notes/eval_store_result_2026-10-04.md)。
+
 # 数值、虚数单位与 sum/product 能力恢复计划
 
 ## 任务与证据边界

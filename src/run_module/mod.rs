@@ -13,6 +13,14 @@ mod run_project;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+#[path = "../../tests/unit/run_module/error_forwarding/tests.rs"]
+mod error_forwarding_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/run_module/strict_cache/tests.rs"]
+mod strict_cache_tests;
+
 pub use load_config::{
     litex_config_path, load_config, load_config_or_empty, normalize_module_dir, resolve_std_root,
     LITEX_CONFIG_FILE_NAME,

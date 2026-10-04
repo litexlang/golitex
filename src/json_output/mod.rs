@@ -29,6 +29,8 @@ mod project_detailed_tests;
 #[cfg(test)]
 mod project_normal_tests;
 #[cfg(test)]
+mod rule_language_methods_tests;
+#[cfg(test)]
 mod template_failure_tests;
 
 pub use emit::{emit_run_compact, emit_run_detailed, emit_run_normal};

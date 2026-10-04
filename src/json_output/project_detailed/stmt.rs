@@ -1514,6 +1514,7 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                         ),
                     ),
                     ("source_object", string(s.source_object.readable_string())),
+                    ("cite", super::aggregate_evaluation::cites(&s.cited_equal_fact_ids)),
                     (
                         "source_well_defined",
                         project_obj_wd_proof(&s.source_well_defined, runtime),
@@ -1526,6 +1527,13 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                         "evaluated_object",
                         string(s.evaluated_object.readable_string()),
                     ),
+                    ("fact", string(crate::ast::fact::Fact::from(s.evaluated_equal_fact.clone()).readable_string())),
+                    ("fact_id", string(s.evaluated_equal_fact.fact_id.to_string())),
+                    ("well_defined", object_for(runtime, vec![
+                        ("left", project_obj_wd_proof(&s.evaluated_equal_well_defined.left, runtime)),
+                        ("right", project_obj_wd_proof(&s.evaluated_equal_well_defined.right, runtime)),
+                    ])),
+                    ("store_and_infer", project_store_and_infer(&s.store_and_infer_result, runtime)),
                 ],
             ),
             ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::WellDefined(failed)) => {
@@ -1541,6 +1549,14 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                     ],
                 )
             }
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::AlgorithmEquation(proof)) => object_for(
+                runtime, vec![("success", bool_value(false)), ("kind", string("eval")),
+                    ("verify", super::verify::project_verify_fact(proof, runtime))],
+            ),
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::EvaluatedEqualityWellDefined(wd)) => object_for(
+                runtime, vec![("success", bool_value(false)), ("kind", string("eval")),
+                    ("well_defined", super::wd::project_verify_equal_wd(wd, runtime))],
+            ),
             ExecEvalStmtResult::Failed(
                 crate::execute::ExecEvalStmtFailed::AggregateBudgetExceeded,
             ) => object_for(

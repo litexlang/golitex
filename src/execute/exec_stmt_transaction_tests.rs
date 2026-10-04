@@ -40,9 +40,10 @@ fn rational_sum_of_two_fractions_with_product_denominator() {
     assert!(!exec_one(&mut runtime, "have a R, b R, c R, d R").is_failed());
     assert!(!exec_one(&mut runtime, "trust b != 0").is_failed());
     assert!(!exec_one(&mut runtime, "trust d != 0").is_failed());
+    assert!(!exec_one(&mut runtime, "b * d != 0").is_failed());
     assert!(
         !exec_one(&mut runtime, code).is_failed(),
-        "expected Success from b != 0 and d != 0 alone"
+        "checked product denominator permits the same fraction identity"
     );
 }
 
@@ -2424,7 +2425,7 @@ fn template_have_fn_by_induc_object_definition_unfold() {
         "template induc unfold 0"
     );
     assert!(
-        !exec_one(&mut runtime, "\\countdown_t<{0}>(1) = 0").is_failed(),
+        !exec_one(&mut runtime, "\\countdown_t<{0}>(1) = \\countdown_t<{0}>(1 - 1) = \\countdown_t<{0}>(0) = 0").is_failed(),
         "template induc unfold 1"
     );
 }
@@ -2754,6 +2755,14 @@ fn not_in_and_set_algebra_builtin_rules() {
         "set_minus membership"
     );
     assert!(
+        !exec_one(&mut runtime, "not 0 $in {1}").is_failed(),
+        "checked left non-membership"
+    );
+    assert!(
+        !exec_one(&mut runtime, "not 0 $in {2}").is_failed(),
+        "checked right non-membership"
+    );
+    assert!(
         !exec_one(&mut runtime, "not 0 $in union({1}, {2})").is_failed(),
         "union non-membership"
     );
@@ -2920,6 +2929,7 @@ fn not_in_and_set_algebra_builtin_rules() {
         "diff nonzero from inequality"
     );
     assert!(!exec_one(&mut runtime, "trust not $is_finite_set(N)").is_failed());
+    assert!(!exec_one(&mut runtime, "$is_finite_set({0})").is_failed());
     assert!(
         !exec_one(&mut runtime, "not $is_finite_set(set_minus(N, {0}))").is_failed(),
         "set_minus infinite of infinite finite"

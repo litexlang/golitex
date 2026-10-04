@@ -1,0 +1,45 @@
+{
+  "scope": "Patterns and remaining-tail summary; no verifier or interface changes",
+  "current_build": {
+    "command": [
+      "cargo",
+      "build",
+      "--release"
+    ],
+    "exit_code": 101,
+    "execution_skipped": true,
+    "errors": [
+      "error[E0425]: cannot find function `project_verify_equal_wd` in module `super::wd`",
+      "error[E0425]: cannot find function `project_verify_equal_wd` in module `super::project_detailed`",
+      "error[E0277]: the trait bound `ast::obj::Obj: From<ast::obj::FnObj>` is not satisfied",
+      "error[E0599]: no method named `readable_string` found for struct `ast::fact::atomic::EqualFact` in the current scope"
+    ],
+    "cause_scope": "Concurrent eval/JSON changes; failed build cannot supply a current CLI.",
+    "log_sha256": "e405d9fa2bfc7c366020063397d84858c39b253a6e8b1d2ebc6143a298912fb8",
+    "error_contexts": [
+      "error[E0425]: cannot find function `project_verify_equal_wd` in module `super::wd`\n    --> src/json_output/project_detailed/stmt.rs:1557:49\n     |\n1557 |                       (\"well_defined\", super::wd::project_verify_equal_wd(wd, runtime))],\n     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^\n     |\n    ::: src/json_output/project_detailed/wd.rs:30:1\n     |\n  30 | / pub(in crate::json_output) fn project_verify_obj_wd(\n  31 | |     result: &VerifyObjWellDefinedResult,\n  32 | |     runtime: &Runtime,\n  33 | | ) -> JsonValue {\n...    |\n  46 | | }\n     | |_- similarly named function `project_verify_obj_wd` defined here\n     |\nhelp: a function with a similar name exists\n     |\n1557 -                     (\"well_defined\", super::wd::project_verify_equal_wd(wd, runtime))],\n1557 +                     (\"well_defined\", super::wd::project_verify_obj_wd(wd, runtime))],\n     |\n",
+      "error[E0425]: cannot find function `project_verify_equal_wd` in module `super::project_detailed`\n   --> src/json_output/project_stmt_catalog.rs:680:42\n    |\n680 |                   super::project_detailed::project_verify_equal_wd(wd, runtime),\n    |                                            ^^^^^^^^^^^^^^^^^^^^^^^\n    |\n   ::: src/json_output/project_detailed/wd.rs:30:1\n    |\n 30 | / pub(in crate::json_output) fn project_verify_obj_wd(\n 31 | |     result: &VerifyObjWellDefinedResult,\n 32 | |     runtime: &Runtime,\n 33 | | ) -> JsonValue {\n...   |\n 46 | | }\n    | |_- similarly named function `project_verify_obj_wd` defined here\n    |\nhelp: a function with a similar name exists\n    |\n680 -                 super::project_detailed::project_verify_equal_wd(wd, runtime),\n680 +                 super::project_detailed::project_verify_obj_wd(wd, runtime),\n    |\n",
+      "error[E0277]: the trait bound `ast::obj::Obj: From<ast::obj::FnObj>` is not satisfied\n  --> src/execute/execute_eval_stmt/verify_evaluated_algo_calls.rs:38:35\n   |\n38 |             left: normalized_call.into(),\n   |                                   ^^^^ unsatisfied trait bound\n   |\nhelp: the trait `From<ast::obj::FnObj>` is not implemented for `ast::obj::Obj`\n  --> src/ast/obj.rs:24:1\n   |\n24 | pub enum Obj {\n   | ^^^^^^^^^^^^\n   = note: required for `ast::obj::FnObj` to implement `Into<ast::obj::Obj>`\n\nerror[E0599]: no method named `readable_string` found for struct `ast::fact::atomic::EqualFact` in the current scope\n    --> src/json_output/project_detailed/stmt.rs:1529:60\n     |\n1529 |                     (\"fact\", string(s.evaluated_equal_fact.readable_string())),\n     |                                                            ^^^^^^^^^^^^^^^ method not found in `ast::fact::atomic::EqualFact`\n     |\n    ::: src/ast/fact/atomic.rs:58:1\n     |\n  58 | pub struct EqualFact {",
+      "error[E0599]: no method named `readable_string` found for struct `ast::fact::atomic::EqualFact` in the current scope\n    --> src/json_output/project_detailed/stmt.rs:1529:60\n     |\n1529 |                     (\"fact\", string(s.evaluated_equal_fact.readable_string())),\n     |                                                            ^^^^^^^^^^^^^^^ method not found in `ast::fact::atomic::EqualFact`\n     |\n    ::: src/ast/fact/atomic.rs:58:1\n     |\n  58 | pub struct EqualFact {\n     | -------------------- method `readable_string` not found for this struct\n     |\nhelp: some of the expressions' fields have a method of the same name\n     |\n1529 |                     (\"fact\", string(s.evaluated_equal_fact.left.readable_string())),\n     |                                                            +++++\n1529 |                     (\"fact\", string(s.evaluated_equal_fact.right.readable_string())),\n     |                                                            ++++++\n\nwarning: unused variable: `arg`\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_abs_algebra.rs:143:68\n    |\n143 |             (Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })), _) => {"
+    ]
+  },
+  "public_name_retry": {
+    "classification": "Withdraw low-level helper result as a public CLI limitation.",
+    "low_level_path": "Runtime.parse followed by Runtime.exec_stmt bypasses Runtime.run_litex_code parse-name rollback.",
+    "production_owner": "src/run/run_litex_code.rs::parse_and_exec_token_block",
+    "fresh_cli_recheck": "Not executed: current-source build failed."
+  },
+  "powerset_input": {
+    "classification": "Observed input-domain question; no soundness bug established.",
+    "prior_source": "template<a power_set(1)>:\n    have item R = 0\n",
+    "prior_observed": "accept, recorded in cleanup_tests_2026-10-04.json test_development_corrections",
+    "current_static_owner": "src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs::verify_power_set_obj_well_definedness_by_def",
+    "current_static_observation": "Checks child object WD through the unary helper; no explicit is_set requirement at this owner.",
+    "next_step": "Establish intended powerset input contract, then inspect a true public-input negative and nearby valid carriers; do not add a rule merely to make the diagnostic test fail."
+  },
+  "dependent_codomain": {
+    "latest_status": "Independently migrated and accepted by Round14; no longer open.",
+    "source": "examples/proof_nodes/atomic/by_known_special_property/dependent_codomain.lit",
+    "evidence": "plan/迁移的plan/proof_journals/example-authoring-round14-2026-10-04.json"
+  }
+}

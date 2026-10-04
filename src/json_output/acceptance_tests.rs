@@ -752,6 +752,67 @@ fn acceptance_equality_builtin_all_variants_bilingual() {
     }
 }
 
+#[test]
+fn acceptance_equality_named_language_methods_match_dispatch_for_every_variant() {
+    use crate::json_output::explain::BuiltinRuleText;
+    let methods: [fn(&EqualitySearchProofByBuiltinRule) -> BuiltinRuleText; 10] = [
+        EqualitySearchProofByBuiltinRule::rule_id_and_message_en,
+        EqualitySearchProofByBuiltinRule::rule_id_and_message_zh,
+        EqualitySearchProofByBuiltinRule::rule_id_and_message_zh_hant,
+        EqualitySearchProofByBuiltinRule::rule_id_and_message_fr,
+        EqualitySearchProofByBuiltinRule::rule_id_and_message_ru,
+        EqualitySearchProofByBuiltinRule::rule_id_and_message_es,
+        EqualitySearchProofByBuiltinRule::rule_id_and_message_ar,
+        EqualitySearchProofByBuiltinRule::rule_id_and_message_ja,
+        EqualitySearchProofByBuiltinRule::rule_id_and_message_ko,
+        EqualitySearchProofByBuiltinRule::rule_id_and_message_vi,
+    ];
+    for rule in all_equality_rules() {
+        for (language, method) in OutputLanguage::ALL.into_iter().zip(methods) {
+            let direct = method(&rule);
+            let selected = rule.rule_id_and_message(language);
+            assert_eq!(
+                (direct.rule_id, direct.rule_name, direct.message),
+                (selected.rule_id, selected.rule_name, selected.message),
+                "{language:?}",
+            );
+        }
+    }
+}
+
+#[test]
+fn localized_copy_states_the_actual_rule_instead_of_an_unrelated_formula() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::ZeroFromNatAndOneLeBuiltinRuleProof;
+    let sqrt = SqrtSquareBuiltinRuleProof { proof_of_requirement_facts: vec![] };
+    let difference = IntersectSetMinusSelfEmptyBuiltinRuleProof {};
+    let arcsin = ArcsinExactZeroBuiltinRuleProof {};
+    let inverse = ArcsinSinRightInverseBuiltinRuleProof { proof_of_requirement_facts: vec![] };
+    let nonzero = ZeroFromNatAndOneLeBuiltinRuleProof { proof_of_requirement_facts: vec![] };
+    for lang in OutputLanguage::ALL {
+        let text = sqrt.rule_id_and_message(lang);
+        assert_eq!(text.rule_id, "SqrtSquare");
+        assert!(text.message.contains("(sqrt(x))^2 = x (x ≥ 0)"), "{lang:?}");
+        assert!(!text.message.contains("sqrt(a²)"));
+        let text = difference.rule_id_and_message(lang);
+        assert_eq!(text.rule_id, "IntersectSetMinusSelfEmpty");
+        assert!(text.message.contains("A ∩ (B \\ A) = ∅"), "{lang:?}");
+        assert!(!text.message.contains("A ∩ (A \\ B)"));
+        let text = inverse.rule_id_and_message(lang);
+        assert!(text.message.contains("[-π/2, π/2]"), "{lang:?}");
+        assert!(text.message.contains("arcsin(sin(x)) = x"));
+        let text = arcsin.rule_id_and_message(lang);
+        assert!(text.message.contains("arcsin(0) = 0"));
+        assert_ne!(text.rule_name, "arcsin 0");
+        assert_ne!(text.message, "arcsin(0) = 0");
+        let text = nonzero.rule_id_and_message(lang);
+        assert_eq!(text.rule_id, "ZeroFromNatAndOneLe");
+        assert!(text.message.contains("n ∈ N ∧ 1 ≤ n ⇒ n ≠ 0"), "{lang:?}");
+    }
+    let zh = arcsin.rule_id_and_message_zh();
+    assert_eq!(zh.rule_name, "反正弦函数在零处的值");
+    assert_eq!(zh.message, "反正弦函数在零处的值为零，即 arcsin(0) = 0");
+}
+
 const STMT_KINDS: &[&str] = &[
     "let",
     "have_in_nonempty",

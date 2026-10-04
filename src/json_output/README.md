@@ -13,6 +13,13 @@ pub enum OutputDetail {
 }
 ```
 
+A successful `eval` publishes the checked `source = result` equality through
+`store_fact_and_infer`. Normal output includes `evaluated_object`, `stores`
+and `infers`; Detailed output retains the original/re-written source, rewrite
+citations, checked algorithm equations, result-equality WD, real `fact_id`
+and `store_and_infer`. The calculation trace is its proof certificate. A failed
+computation or result check publishes no equality.
+
 Default CLI / test emit uses **Normal**. **Compact** and **Detailed** are
 implemented under `project_compact` / `project_detailed`
 (`project_stmt_*` / `project_run_*` / `emit_run_*`).
@@ -316,6 +323,12 @@ variant tags such as `kind` values may stay English.
 }
 ```
 
+For a hard internal conflict, `session_error` contains
+`internal_bug: Litex internal bug: <specific reason>` and the run has
+`success: false`. Normal, Compact and Detailed retain the same reason. Other
+session-error strings keep their existing representation; ordinary proof
+failure remains a statement result rather than an internal-bug session error.
+
 `language` is the canonical locale from `-lang`: `en`, `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, or `vi` (default `en`). Builtin `rule_name` /
 `message` follow this language via `json_output/explain/`.
 
@@ -547,8 +560,9 @@ field names keep their English spelling, as before. Detailed IR variant/stage
 tags retain their existing machine-oriented spelling. Source statements,
 formulas, names, paths, citations, numeric values, booleans and internal rule
 IDs remain independent of locale. Arabic output does not insert bidirectional
-control characters into source or JSON. Existing English/Chinese output is
-retained, including their legacy fallback copy.
+control characters into source or JSON. Human-facing English/Chinese copy may
+be corrected alongside the other locales; source text and internal IDs remain
+stable. Legacy fallback copy remains available for unknown rule IDs.
 
 Locale selection changes presentation only; it does not change verification,
 proof search or Runtime ownership. Help documents the supported tokens; raw
@@ -585,3 +599,44 @@ field order and key collisions, positive/negative membership wording, all
 statement/proof-route copy, and the existing equality-rule acceptance inventory.
 Translations are authored technical copy; these checks establish coverage and
 behavioral compatibility, not independent native-speaker linguistic review.
+
+### Rule language method contract
+
+Every builtin rule and rule-family explanation impl owns these public methods:
+`rule_id_and_message_en`, `_zh`, `_zh_hant`, `_fr`, `_ru`, `_es`, `_ar`, `_ja`,
+`_ko`, and `_vi`. Each method owns its locale's rule name and message. The
+existing `rule_id_and_message(language)` API contains only an exhaustive
+language selector calling those methods. Rule-family methods then dispatch to
+the corresponding named methods on their payloads. Equality aggregate and
+scalar copy also belongs to the payload's impl; the equality enum only routes
+variants. No locale calls another locale's method.
+
+For example, `PowerProductSameBaseBuiltinRuleProof` retains the equation
+`a^m · a^n = a^(m+n)` in every locale, but also names and explains the rule in
+that locale: Chinese says `同底数幂相乘` and explains that the exponents are
+added; Japanese says `同じ底の累乗の積` and gives the same mathematical meaning.
+Its internal ID remains `PowerProductSameBase`. Formula notation alone is
+insufficient for either the human-facing name or message.
+
+`ArcsinExactZero` similarly names the value of the inverse sine at zero and
+explains that the value is zero before giving `arcsin(0) = 0`. Keep identities,
+domain restrictions, operand order, and positive/negative conclusions accurate
+to the owning verifier rule. In particular, `SqrtSquare` describes squaring a
+square root, `(sqrt(x))^2 = x` for nonnegative real `x`;
+`IntersectSetMinusSelfEmpty` describes `A ∩ (B \ A) = ∅`; and
+`ZeroFromNatAndOneLe` derives `n != 0` from `n $in N` and `1 <= n`.
+
+`rule_language_methods_tests` audits every impl in the atomic/equality rule
+explanation directories for this method contract and selector shape, and
+checks the power-product method API directly. It also scans all maintained
+literal builtin names/messages for human prose in the selected language. This
+guards against formula-only copy and whole English sentences in locales with
+different scripts; it is not a grammar checker. Semantic regression tests
+cover the inverse-sine tracer, principal inverse interval, square-root and
+set-difference identities, and natural-number nonzero conclusion.
+The equality acceptance inventory
+also compares each named method with the generic dispatcher across every
+inventoried variant and all ten locales. Locale keys and non-builtin statement
+explanations retain their existing interfaces.
+
+Detailed `FnApplicationInStandardSuperset` evidence records `target_set` and `signature_returns`. Each return entry carries `source_set`, `cite_signature_fact_id`, and the actual `function_equal` path. This certifies numeric set inclusion; it does not manufacture a return-set equality proof. The enclosing fact result owns the application WD and domain evidence.

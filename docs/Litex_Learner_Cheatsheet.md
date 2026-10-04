@@ -310,6 +310,19 @@ verify in the local scope.
 Conditional enumeration uses its premises in each local assignment. Nested
 proof methods and binder names are allowed in proof bodies; helpers stay local.
 `eval expr` checks the expression's mathematical domains before computing.
+A successful exact evaluation stores `expr = result` in the current scope;
+Normal JSON lists this equality in `stores`. For example:
+
+```litex
+algo flag(x R) N by cases:
+    case x = 0: 0
+    case x != 0: 1
+eval sum(0, 3, flag)
+sum(0, 3, flag) = 3
+```
+
+Each executed algorithm equation is checked before publication. An invalid
+expression or exhausted computation budget stores no result equality.
 Strict mode rejects `trust have` inside templates as well as ordinary trust.
 
 Templates publish their body definition facts under their parameters and
@@ -386,6 +399,7 @@ The target's WD may use the integer lower bound. Local proof actions such as
 have fn f(x N) N = x
 by induc n from 0:
     ? f(n) = f(n)
+    n $in N
     have a N = 0
 ```
 

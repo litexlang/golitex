@@ -96,6 +96,24 @@ pub(super) fn project_equal_wd_proof(
     ])
 }
 
+pub(in crate::json_output) fn project_verify_equal_wd(
+    result: &crate::execute::execute_fact_stmt::VerifyEqualFactWellDefinedResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::VerifyEqualFactWellDefinedResult;
+    match result {
+        VerifyEqualFactWellDefinedResult::Success(proof) => object_for(runtime, vec![
+            ("success", JsonValue::Bool(true)),
+            ("proof", project_equal_wd_proof(proof, runtime)),
+        ]),
+        VerifyEqualFactWellDefinedResult::Failed(failed) => object_for(runtime, vec![
+            ("success", JsonValue::Bool(false)),
+            ("phase", string("well_defined")),
+            ("failure", super::wd_failure::project_obj_wd_failure(&failed.reason, runtime)),
+        ]),
+    }
+}
+
 pub(super) fn project_param_type_wd(
     proof: &ParamTypeWellDefinedProof,
     runtime: &Runtime,

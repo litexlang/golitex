@@ -1,0 +1,2 @@
+# This intentional strict-policy violation tests hard-error forwarding.
+trust 1 = 1

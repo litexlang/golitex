@@ -82,13 +82,14 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
                     Some(file_result.path.as_path()),
                 );
                 let failed = !file_result.run.success;
+                let session_error = file_result.run.session_error.clone().unwrap_or(RunSessionError::FailToImport);
                 file_results.push(file_result);
                 if failed {
                     return Ok(finish_repo(
                         &runtime,
                         root,
                         file_results,
-                        Some(RunSessionError::FailToImport),
+                        Some(session_error),
                     ));
                 }
                 if keep_env_open {

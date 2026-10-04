@@ -17,6 +17,12 @@ allows pure abstract predicates in strict mode and fixes negative-leading `-e`
 source. Its scoped tests preserve unproved-instance, WD, arity and trust rejection.
 The dated 377-check scan above predates the added boundary.
 
+The [eval publication acceptance](../test_objs/experience/problem_notes/eval_store_result_2026-10-04.md)
+updates successful eval to store the checked source/result equality. The
+[boundary fixture](boundaries/evaluation-stores-result.lit) and recursive/named
+EvalStmt scenarios consume that fact. The three focused statement groups pass
+25 checks; this does not replace the dated full-suite scan above.
+
 ## Run
 
 From the repository root:

@@ -43,7 +43,7 @@ pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
         };
 
         if let Some(session_error) = code_result.session_error {
-            eprintln!("session_error: {:?}", session_error);
+            eprintln!("session_error: {}", session_error);
             runtime.abort_file();
             return match session_error {
                 super::run_command_outcome::RunSessionError::Runtime(error) => Err(error),
@@ -85,8 +85,24 @@ fn format_runtime_error(error: &RuntimeError) -> String {
         RuntimeError::ParseError(error) => {
             format!("{} at line {} in {}", error.message, error.line, error.path)
         }
-        RuntimeError::Unsupported(message) | RuntimeError::InternalBug(message) => message.clone(),
+        RuntimeError::Unsupported(message) => message.clone(),
+        RuntimeError::InternalBug(_) => error.to_string(),
     }
+}
+
+#[cfg(test)]
+#[test]
+fn internal_error_repl_names_litex_and_preserves_the_conflict_reason() {
+    let error = RuntimeError::InternalBug("merge identifier conflict".into());
+    assert_eq!(
+        format_runtime_error(&error),
+        "internal_bug: Litex internal bug: merge identifier conflict",
+    );
+    assert_eq!(
+        super::run_command_outcome::RunSessionError::Runtime(error).to_string(),
+        "internal_bug: Litex internal bug: merge identifier conflict",
+    );
+    assert_eq!(format_runtime_error(&RuntimeError::Unsupported("unsupported input".into())), "unsupported input");
 }
 
 fn read_repl_block() -> RuntimeResult<Option<String>> {

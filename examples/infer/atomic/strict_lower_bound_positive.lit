@@ -1,0 +1,27 @@
+# Tracer: strict lower bound above a nonnegative bound publishes positivity.
+# Before: log target WD could not obtain x > 0 from 1 < x.
+# claim:
+#     ? forall x R:
+#         1 < x
+#         =>:
+#             0 < log(2, x)
+#     1 < 2
+# Now: the original premise publishes positivity before target WD.
+claim:
+    ? forall x R:
+        1 < x
+        =>:
+            0 < log(2, x)
+forall b, x R:
+    0 <= b
+    b < x
+    =>:
+        0 < x
+forall x R:
+    x > 2
+    =>:
+        0 < x
+# Boundary: negative/unknown bounds, a nonstrict zero bound, and missing lower
+# bounds do not supply positivity. Existing 0 < x seeds do not re-infer themselves.
+# Evidence: target/release/litex -strict -f examples/infer/atomic/strict_lower_bound_positive.lit
+# Tests: tests/unit/execute/native_scalar_codomain/mod.rs

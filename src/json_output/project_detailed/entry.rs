@@ -38,7 +38,7 @@ pub fn project_run_detailed(
     };
     let session_error = match &run.session_error {
         None => JsonValue::Null,
-        Some(err) => string(format!("{err:?}")),
+        Some(err) => string(err.to_string()),
     };
     object_for(runtime, vec![
         ("kind", string("run")),

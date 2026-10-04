@@ -95,7 +95,7 @@ fn ordered_reduce_partition() {
     for key in ["ReducePartition", "bounds", "matches"] {
         assert!(json.contains(key));
     }
-    check("forall a,b,c Z, s R, f fn(k Z)R, op fn(x,y R)R:\n    a <= b\n    b < c\n    =>:\n        reduce(a,c,f,op,s) = reduce(b+1,c,f,op,reduce(a,b,f,op,s))", true);
+    check("claim:\n    ? forall a,b,c Z, s R, f fn(k Z)R, op fn(x,y R)R:\n        a <= b\n        b < c\n        =>:\n            reduce(a,c,f,op,s) = reduce(b+1,c,f,op,reduce(a,b,f,op,s))\n    b <= c\n    b+1 $in Z\n    reduce(a,b,f,op,s) $in R", true);
     check(
         &format!("{declarations}reduce(1,4,f,op,0) = reduce(5,4,f,op,reduce(1,4,f,op,0))"),
         true,
@@ -116,7 +116,7 @@ fn ordered_reduce_partition() {
 
 #[test]
 fn finite_product_fresh_insertion() {
-    let json = check("forall S finite_set,a R,f fn(x union(S,{a}))R:\n    not a $in S\n    =>:\n        finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R {f(x)})*f(a)", true);
+    let json = check("claim:\n    ? forall S finite_set,a R,f fn(x union(S,{a}))R:\n        not a $in S\n        =>:\n            finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R {f(x)})*f(a)\n    a $in union(S,{a})\n    forall x S:\n        x $in union(S,{a})\n    release thm fn_set_member(f,fn(x S)R)", true);
     for key in [
         "FiniteSetProductFreshInsertion",
         "premises",
@@ -127,7 +127,7 @@ fn finite_product_fresh_insertion() {
     ] {
         assert!(json.contains(key), "missing {key}");
     }
-    check("forall S finite_set,a R,f fn(x union({a},S))R:\n    not a $in S\n    =>:\n        f(a)*finite_set_product(S,fn(y S)R {f(y)}) = finite_set_product(union({a},S),f)", true);
+    check("claim:\n    ? forall S finite_set,a R,f fn(x union({a},S))R:\n        not a $in S\n        =>:\n            f(a)*finite_set_product(S,fn(y S)R {f(y)}) = finite_set_product(union({a},S),f)\n    a $in union({a},S)\n    forall x S:\n        x $in union({a},S)\n    release thm fn_set_member(f,fn(x S)R)", true);
     check("forall S finite_set,a R,f fn(x union(S,{a}))R:\n    finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R {f(x)})*f(a)", false);
     check("forall S finite_set,a R,f fn(x union(S,{a}))R:\n    not a $in S\n    =>:\n        finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R {f(x)+1})*f(a)", false);
     check("forall S finite_set,a R,f fn(x union(S,{a}))R:\n    not a $in S\n    =>:\n        finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R {f(x)})*(f(a)+1)", false);
@@ -142,7 +142,7 @@ fn normal_bilingual_contract() {
         ("have x,y R\nsin(x-y) = sin(x)*cos(y)-cos(x)*sin(y)", "Sine difference formula", "正弦差角公式"),
         ("have x,y R\ncos(x-y) = cos(x)*cos(y)+sin(x)*sin(y)", "Cosine difference formula", "余弦差角公式"),
         ("have op fn(a,b R)R\nhave f fn(k Z)R\nreduce(1,4,f,op,0) = reduce(3,4,f,op,reduce(1,2,f,op,0))", "Adjacent left-fold partition", "左折叠的相邻分段"),
-        ("have f fn(x union({1,2},{3}))R\nnot 3 $in {1,2}\nfinite_set_product(union({1,2},{3}),f) = finite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3)", "Fresh insertion into a finite product", "有限乘积插入新元素"),
+        ("have f fn(x union({1,2},{3}))R\nnot 3 $in {1,2}\n3 $in union({1,2},{3})\nforall x {1,2}:\n    x $in union({1,2},{3})\nrelease thm fn_set_member(f,fn(x {1,2})R)\nfinite_set_product(union({1,2},{3}),f) = finite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3)", "Fresh insertion into a finite product", "有限乘积插入新元素"),
     ] {
       for (language, expected_text) in [(OutputLanguage::English, en), (OutputLanguage::Chinese, zh)] {
         let mut rt = Runtime::new(LaunchCommand::Eval {
@@ -168,7 +168,7 @@ fn builtin_permission_and_depth_are_inherited() {
         ("have z,w C\nC_abs(z*w) = C_abs(z*w)\nC_abs(z)*C_abs(w) = C_abs(z)*C_abs(w)", "C_abs(z*w) = C_abs(z)*C_abs(w)"),
         ("have x,y R\nsin(x-y) = sin(x-y)\nsin(x)*cos(y)-cos(x)*sin(y) = sin(x)*cos(y)-cos(x)*sin(y)", "sin(x-y) = sin(x)*cos(y)-cos(x)*sin(y)"),
         ("have op fn(a,b R)R\nhave f fn(k Z)R\nreduce(1,4,f,op,0) = reduce(1,4,f,op,0)\nreduce(3,4,f,op,reduce(1,2,f,op,0)) = reduce(3,4,f,op,reduce(1,2,f,op,0))", "reduce(1,4,f,op,0) = reduce(3,4,f,op,reduce(1,2,f,op,0))"),
-        ("have f fn(x union({1,2},{3}))R\nnot 3 $in {1,2}\nfinite_set_product(union({1,2},{3}),f) = finite_set_product(union({1,2},{3}),f)\nfinite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3) = finite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3)", "finite_set_product(union({1,2},{3}),f) = finite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3)"),
+        ("have f fn(x union({1,2},{3}))R\nnot 3 $in {1,2}\n3 $in union({1,2},{3})\nforall x {1,2}:\n    x $in union({1,2},{3})\nrelease thm fn_set_member(f,fn(x {1,2})R)\nfinite_set_product(union({1,2},{3}),f) = finite_set_product(union({1,2},{3}),f)\nfinite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3) = finite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3)", "finite_set_product(union({1,2},{3}),f) = finite_set_product({1,2},fn(x {1,2})R {f(x)})*f(3)"),
     ] {
         let mut rt = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::English });
         assert!(rt.run_litex_code(setup).unwrap().success, "{setup}");

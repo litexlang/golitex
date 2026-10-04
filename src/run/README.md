@@ -56,6 +56,14 @@ remain committed. For example, `let a = 1` followed by `let b =` commits a
 and restores the failed b binding. A tokenizer error anywhere still prevents
 all execution because tokenization happens before the block loop.
 
+An internal invariant conflict returns `RuntimeError::InternalBug`, a hard
+session error. Its user-facing text is
+`internal_bug: Litex internal bug: <specific conflict reason>` in CLI, REPL,
+extraction errors, and all three JSON detail levels. It identifies a Litex
+implementation bug rather than blaming the proof. The REPL aborts the session
+on this error. This diagnostic contract does not promise recovery from a
+partially committed internal merge error or change merge/rollback behavior.
+
 Acceptance: `cargo test --release binding_lifecycle_tests -- --nocapture` and
 `target/release/litex -strict -f examples/stmt_nodes/definition/parse_scope_transaction.lit`.
 

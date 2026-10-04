@@ -10,10 +10,88 @@ use crate::runtime::FactId;
 use super::text::text;
 
 impl NotLessEqualFactSearchProofByBuiltinRule {
-    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
         match self {
-            Self::FromKnownOrderComplement(p) => p.rule_id_and_message(lang),
-            Self::ClosedNumericComparison(p) => p.rule_id_and_message(lang),
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_en(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_en(),
+        }
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_zh(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_zh(),
+        }
+    }
+
+    pub fn rule_id_and_message_zh_hant(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_zh_hant(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_zh_hant(),
+        }
+    }
+
+    pub fn rule_id_and_message_fr(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_fr(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_fr(),
+        }
+    }
+
+    pub fn rule_id_and_message_ru(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_ru(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_ru(),
+        }
+    }
+
+    pub fn rule_id_and_message_es(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_es(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_es(),
+        }
+    }
+
+    pub fn rule_id_and_message_ar(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_ar(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_ar(),
+        }
+    }
+
+    pub fn rule_id_and_message_ja(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_ja(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_ja(),
+        }
+    }
+
+    pub fn rule_id_and_message_ko(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_ko(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_ko(),
+        }
+    }
+
+    pub fn rule_id_and_message_vi(&self) -> BuiltinRuleText {
+        match self {
+            Self::FromKnownOrderComplement(p) => p.rule_id_and_message_vi(),
+            Self::ClosedNumericComparison(p) => p.rule_id_and_message_vi(),
+        }
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_id_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_id_and_message_fr(),
+            OutputLanguage::Russian => self.rule_id_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_id_and_message_es(),
+            OutputLanguage::Arabic => self.rule_id_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_id_and_message_ja(),
+            OutputLanguage::Korean => self.rule_id_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_id_and_message_vi(),
         }
     }
 
@@ -30,7 +108,7 @@ impl ClosedNumericComparisonBuiltinRuleProof {
         text(
             "ClosedNumericComparison",
             "Closed Numeric Comparison",
-            "if L > R as decimals, then `not (left <= right)`",
+            "Exact closed values show the left side is strictly greater, excluding less-than-or-equal",
         )
     }
 
@@ -42,50 +120,82 @@ impl ClosedNumericComparisonBuiltinRuleProof {
         )
     }
 
+    pub fn rule_id_and_message_zh_hant(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "封閉數值比較",
+            "十進位值 L > R 時，`not (left <= right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_fr(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "Comparaison numérique fermée",
+            "Si les valeurs décimales vérifient L > R, alors `not (left <= right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ru(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "Сравнение замкнутых числовых выражений",
+            "Если десятичные значения удовлетворяют L > R, то `not (left <= right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_es(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "Comparación numérica cerrada",
+            "Si los valores decimales cumplen L > R, entonces `not (left <= right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ar(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "مقارنة عددية مغلقة",
+            "إذا كانت القيم العشرية تحقق L > R فإن `not (left <= right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ja(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "閉じた数値式の比較",
+            "小数値で L > R なら `not (left <= right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_ko(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "닫힌 수치 식 비교",
+            "소수 값이 L > R이면 `not (left <= right)`",
+        )
+    }
+
+    pub fn rule_id_and_message_vi(&self) -> BuiltinRuleText {
+        text(
+            "ClosedNumericComparison",
+            "So sánh số đóng",
+            "Nếu giá trị thập phân thỏa L > R thì `not (left <= right)`",
+        )
+    }
+
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh(),
-            OutputLanguage::ChineseTraditional => text(
-                "ClosedNumericComparison",
-                "封閉數值比較",
-                "十進位值 L > R 時，`not (left <= right)`",
-            ),
-            OutputLanguage::French => text(
-                "ClosedNumericComparison",
-                "Comparaison numérique fermée",
-                "Si les valeurs décimales vérifient L > R, alors `not (left <= right)`",
-            ),
-            OutputLanguage::Russian => text(
-                "ClosedNumericComparison",
-                "Сравнение замкнутых числовых выражений",
-                "Если десятичные значения удовлетворяют L > R, то `not (left <= right)`",
-            ),
-            OutputLanguage::Spanish => text(
-                "ClosedNumericComparison",
-                "Comparación numérica cerrada",
-                "Si los valores decimales cumplen L > R, entonces `not (left <= right)`",
-            ),
-            OutputLanguage::Arabic => text(
-                "ClosedNumericComparison",
-                "مقارنة عددية مغلقة",
-                "إذا كانت القيم العشرية تحقق L > R فإن `not (left <= right)`",
-            ),
-            OutputLanguage::Japanese => text(
-                "ClosedNumericComparison",
-                "閉じた数値式の比較",
-                "小数値で L > R なら `not (left <= right)`",
-            ),
-            OutputLanguage::Korean => text(
-                "ClosedNumericComparison",
-                "닫힌 수치 식 비교",
-                "소수 값이 L > R이면 `not (left <= right)`",
-            ),
-            OutputLanguage::Vietnamese => text(
-                "ClosedNumericComparison",
-                "So sánh số đóng",
-                "Nếu giá trị thập phân thỏa L > R thì `not (left <= right)`",
-            ),
+            OutputLanguage::ChineseTraditional => self.rule_id_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_id_and_message_fr(),
+            OutputLanguage::Russian => self.rule_id_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_id_and_message_es(),
+            OutputLanguage::Arabic => self.rule_id_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_id_and_message_ja(),
+            OutputLanguage::Korean => self.rule_id_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_id_and_message_vi(),
         }
     }
 }

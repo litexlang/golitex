@@ -1,3 +1,4 @@
+use super::known_fn_standard_return::FnApplicationInStandardSupersetProof;
 use crate::ast::fact::{AtomicFact, InFact};
 use crate::ast::obj::{FnObjHead, FnSet, FunctionSpace, InstantiatedTemplateObj, IteratedOperator, Obj, StandardSet, StructAndFieldAccessObj};
 use super::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::proper_subsets_in_membership_proof_order;
@@ -28,6 +29,9 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
                 FoldOperationSignatureProof::Literal(_) => None,
                 FoldOperationSignatureProof::Known(p)=>p.cite_fact_id(),
             },
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(p)) => {
+                p.signature_returns.first().map(|p| p.cite_signature_fact_id)
+            }
             Self::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(p)) => {
                 Some(p.cite_property_fact_id)
             }
@@ -49,6 +53,7 @@ pub enum InFactSearchProofByKnownSpecialProperty {
     TemplateApplicationInDeclaredCodomain(TemplateApplicationInDeclaredCodomainProof),
     FieldInDeclaredSet(FieldInDeclaredSetProof),
     FnApplicationInCodomain(FnApplicationInCodomainKnownSpecialPropertyProof),
+    FnApplicationInStandardSuperset(FnApplicationInStandardSupersetProof),
     FnApplicationInFnRange(FnApplicationInFnRangeKnownSpecialPropertyProof),
     TupleCoordinate(TupleCoordinateKnownProof),
 }
@@ -270,6 +275,9 @@ impl Runtime {
             let carrier_equal = self.lookup_known_obj_equality(&carrier, &fact.set)?;
             return Some(InFactSearchProofByKnownSpecialProperty::TupleCoordinate(
                 TupleCoordinateKnownProof { index, shape, carrier_equal: Box::new(carrier_equal) }));
+        }
+        if let Some(proof) = self.known_fn_application_standard_superset(fact) {
+            return Some(InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(proof));
         }
         let Obj::FnObj(application) = &fact.element else {
             return None;

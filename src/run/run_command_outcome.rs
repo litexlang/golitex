@@ -1,6 +1,7 @@
 use crate::execute::ExecStmtResult;
 use crate::runtime::RuntimeError;
 use std::path::PathBuf;
+use std::fmt;
 
 /// CLI command outcome. Run* carry payloads for later JSON; Help/Version/Repl are meta.
 pub enum RunCommandOutcome {
@@ -23,6 +24,15 @@ pub enum RunCommandOutcome {
 pub enum RunSessionError {
     Runtime(RuntimeError),
     FailToImport,
+}
+
+impl fmt::Display for RunSessionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Runtime(error @ RuntimeError::InternalBug(_)) => write!(f, "{error}"),
+            other => write!(f, "{other:?}"),
+        }
+    }
 }
 
 /// Shared body of one source-string run (`-e` / `-f` / repo aggregate).

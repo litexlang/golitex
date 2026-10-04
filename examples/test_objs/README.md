@@ -2,7 +2,9 @@
 
 > **统一收尾入口：** [src收尾总清单.md](../../plan/src收尾总清单.md)（2026-10-04）。活动事项及跨来源去重在总清单维护；本页保留专项代码、决定和历史验收。新增进展应同步对应总清单ID，不能用旧快照覆盖新证据。
 
-原审计的32个问题主题按原编号列在[逐项清理计划](../../plan/src收尾总清单.md#obj-original-32)：第1项已按用户选择补显式Litex证明完成，第2项已撤回，其余与总清单对应卡和后续证据链接。
+原审计的32个问题主题按原编号列在[逐项清理计划](../../plan/src收尾总清单.md#obj-original-32)：第1项的显式Litex证明与第3项的 eval 结果存储已完成，第2项已撤回。关闭项从[活动纠错记录](remaining_issues_2026-10-04.md)删除；[eval 解法及验收](experience/problem_notes/eval_store_result_2026-10-04.md)保留经验与回执，其余按原编号对应总清单。
+
+[符号聚合三项的最新复核](experience/problem_notes/symbolic_aggregate_status_2026-10-04.md)：原十个短式现有 7 个直接通过，3 个已有显式作者证明；五个相关完整文件通过。第4–6项已从活动纠错段落移除，短搜索边界和原始回执保留。
 
 This directory tests the terminal variants reachable from `Obj` in
 `src/ast/obj.rs`. Each variant has a dedicated, nonempty positive `.lit` file.

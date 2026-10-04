@@ -1,4 +1,0 @@
-# Boundary: evaluation-exports-no-facts
-# Owner: EvalStmt
-
-eval 1 + 1

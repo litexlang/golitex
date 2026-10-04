@@ -196,7 +196,7 @@ fn rational_logs_use_exact_prime_valuation_ratios() {
 }
 
 #[test]
-fn eval_returns_exact_values_and_publishes_no_fact() {
+fn eval_returns_exact_values_and_publishes_the_checked_equality() {
     for (source, expected) in [
         ("eval floor(-7/3)", "-3"),
         ("eval ceil(-7/3)", "-2"),
@@ -219,7 +219,14 @@ fn eval_returns_exact_values_and_publishes_no_fact() {
             normal.contains(&format!("\"evaluated_object\": \"{expected}\"")),
             "{normal}"
         );
-        assert!(normal.contains("\"stores\": []"), "{normal}");
+        let crate::execute::ExecStmtResult::Command(
+            crate::execute::execute_eval_stmt::ExecCommandStmtResult::Eval(
+                crate::execute::execute_eval_stmt::ExecEvalStmtResult::Success(evaluated),
+            ),
+        ) = &result.statement_results[0] else { panic!("eval success"); };
+        assert!(rt.top_exec_env().facts.facts_by_id.contains_key(&evaluated.evaluated_equal_fact.fact_id));
+        let stored: Fact = evaluated.evaluated_equal_fact.clone().into();
+        assert!(normal.contains(&stored.readable_string()), "{normal}");
     }
     for source in [
         "eval floor(1/0)",
