@@ -37,20 +37,20 @@ fn direct_result_distinguishes_calculation_citation_and_miss() {
     let AtomicFact::EqualFact(equal) = &goal else { panic!("equal") };
     assert!(rt.lookup_known_obj_equality(&equal.left, &equal.right).is_none());
     let before = memory_sizes(&rt);
-    let D::ByClosedCalculation(C::Equality(proof)) = rt.search_atomic_fact_proof_by_known_fact_or_closed_calculation(&goal) else { panic!("calculation") };
+    let D::ByClosedCalculation(C::Equality(proof)) = rt.search_atomic_fact_proof_directly(&goal) else { panic!("calculation") };
     assert!(matches!(proof.values, ClosedValuePair::Rational { .. }));
     assert_eq!(memory_sizes(&rt), before);
     exec_ok(&mut rt, "1/3 + 1/3 = 2/3");
-    assert!(matches!(rt.search_atomic_fact_proof_by_known_fact_or_closed_calculation(&goal), D::ByKnownFact(_)));
+    assert!(matches!(rt.search_atomic_fact_proof_directly(&goal), D::ByKnownFact(_)));
     let Fact::AtomicFact(wrong) = fact(&mut rt, "1/3 = 1/2") else { panic!("atomic") };
-    assert!(matches!(rt.search_atomic_fact_proof_by_known_fact_or_closed_calculation(&wrong), D::NotFound));
+    assert!(matches!(rt.search_atomic_fact_proof_directly(&wrong), D::NotFound));
     assert!(calculate_closed_atomic_fact(&wrong).is_none());
 
     let Fact::AtomicFact(member) = fact(&mut rt, "7/11 $in Q") else { panic!("atomic") };
     assert!(rt.lookup_known_atomic_fact(&member).is_none());
-    assert!(matches!(rt.search_atomic_fact_proof_by_known_fact_or_closed_calculation(&member), D::ByClosedCalculation(C::AtomicExceptEquality(_))));
+    assert!(matches!(rt.search_atomic_fact_proof_directly(&member), D::ByClosedCalculation(C::AtomicExceptEquality(_))));
     exec_ok(&mut rt, "7/11 $in Q");
-    assert!(matches!(rt.search_atomic_fact_proof_by_known_fact_or_closed_calculation(&member), D::ByKnownFact(_)));
+    assert!(matches!(rt.search_atomic_fact_proof_directly(&member), D::ByKnownFact(_)));
 }
 
 #[test]
@@ -93,7 +93,7 @@ fn direct_never_uses_symbolic_normalization_definitions_or_known_value_substitut
     exec_ok(&mut rt, "have fn f(x R) R = x+1");
     for code in ["a+1=3", "a+0=a", "f(1)=2", "tuple_dim((a,a))=2", "finite_set_size({a})=1"] {
         let Fact::AtomicFact(goal) = fact(&mut rt, code) else { panic!("atomic") };
-        assert!(matches!(rt.search_atomic_fact_proof_by_known_fact_or_closed_calculation(&goal), D::NotFound), "{code}");
+        assert!(matches!(rt.search_atomic_fact_proof_directly(&goal), D::NotFound), "{code}");
     }
     // SP constructor matching can now discharge its numeric equality at level 0.
     assert!(!verify(&mut rt, "f(1+1)=f(2)", VerifyState::new(VerifyStateLevel::KnownSpecialProperty)).is_failed());

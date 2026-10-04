@@ -1,0 +1,43 @@
+# Tracer: template function aliases retain a callable contract and tuple value.
+#
+# Before (rejected with the same Triple/template declarations):
+# let triple_R = \triple<R>
+# let chosen = \triple<R>(1, 2, 3)
+# triple_R(4, 5, 6) = (4, 5, 6)
+# chosen = (1, 2, 3)
+# have chosen_struct &Triple<R> = chosen
+# chosen_struct.first = 1
+# Former behavior: alias application had no matching function signature;
+# the chosen-value and final field equalities failed during proof search.
+#
+# Now: both the original prefix and projection without an intermediate value
+# assertion verify through checked template declarations and stored equalities.
+# Boundary: wrong coordinates, invalid arguments and missing template guards
+# remain rejected; nested function bodies are not recursively unfolded here.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/definition/template_alias_struct_tuple.lit
+# Rust: tests/unit/execute/equality_search/known_tuple.rs
+
+struct Triple<X set>:
+    first X
+    second X
+    third X
+
+template<X set>:
+    have fn triple(a, b, c X) &Triple<X> = (a, b, c)
+
+let triple_R = \triple<R>
+let chosen = \triple<R>(1, 2, 3)
+triple_R(4, 5, 6) = (4, 5, 6)
+chosen = (1, 2, 3)
+have chosen_struct &Triple<R> = chosen
+chosen_struct.first = 1
+chosen_struct.second = 2
+chosen_struct.third = 3
+
+# This path also works without first asserting the full tuple equality.
+let another_triple_R = triple_R
+let raw_chosen = another_triple_R(7, 8, 9)
+have raw_struct &Triple<R> = raw_chosen
+raw_struct.first = 7
+raw_struct.second = 8
+raw_struct.third = 9

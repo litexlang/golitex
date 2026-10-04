@@ -1,0 +1,5 @@
+# N12: Returned-function argument arity is checked
+# Intended: reject; run via examples/test_function_sets/run.py
+
+have fn add(x R) fn(y R) R = fn(y R) R {x + y}
+add(2)(3, 4) = add(2)(3, 4)

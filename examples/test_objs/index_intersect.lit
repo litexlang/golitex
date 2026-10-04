@@ -23,3 +23,32 @@ sketch:
 sketch:
     forall A fn(k {1, 2}) power_set(N):
         index_intersect({1, 2}, N, A) = index_intersect({1, 2}, N, A)
+
+# P02: checked extension proof; restored from index_intersect-P02
+sketch:
+    claim:
+        ? forall k {1}:
+            {k} $in power_set(N)
+        k = 1
+        k $in N
+        forall x {k}:
+            x = k
+            x $in N
+        {k} $subset N
+    have fn A(k {1}) power_set(N) = {k}
+    A(1) = {1}
+    claim:
+        ? forall x index_intersect({1}, N, A):
+            x $in {1}
+        x $in A(1)
+        x $in {1}
+    claim:
+        ? forall x {1}:
+            x $in index_intersect({1}, N, A)
+        x = 1
+        x $in N
+        by enumerate finite_set:
+            ? forall idx {1}:
+                x $in A(idx)
+        release thm index_intersect_member(x, index_intersect({1}, N, A))
+    by extension index_intersect({1}, N, A) = {1}

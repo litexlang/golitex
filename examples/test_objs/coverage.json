@@ -385,7 +385,23 @@
         "P04",
         "P91",
         "P92",
-        "P121"
+        "P121",
+        "P141",
+        "P142",
+        "P143",
+        "P144",
+        "P145",
+        "P146",
+        "P147",
+        "P148",
+        "P149",
+        "P150",
+        "P151",
+        "P152",
+        "P153",
+        "P154",
+        "P155",
+        "P156"
       ],
       "negative_cases": [
         {
@@ -399,6 +415,42 @@
         {
           "id": "N03",
           "file": "negative/pow__n03.lit"
+        },
+        {
+          "id": "N141",
+          "file": "negative/pow__n141.lit"
+        },
+        {
+          "id": "N142",
+          "file": "negative/pow__n142.lit"
+        },
+        {
+          "id": "N143",
+          "file": "negative/pow__n143.lit"
+        },
+        {
+          "id": "N144",
+          "file": "negative/pow__n144.lit"
+        },
+        {
+          "id": "N145",
+          "file": "negative/pow__n145.lit"
+        },
+        {
+          "id": "N146",
+          "file": "negative/pow__n146.lit"
+        },
+        {
+          "id": "N147",
+          "file": "negative/pow__n147.lit"
+        },
+        {
+          "id": "N148",
+          "file": "negative/pow__n148.lit"
+        },
+        {
+          "id": "N149",
+          "file": "negative/pow__n149.lit"
         }
       ],
       "gaps": []
@@ -1347,7 +1399,10 @@
       "helper_paths": [],
       "positive_cases": [
         "P01",
-        "P02"
+        "P02",
+        "P03",
+        "P04",
+        "P05"
       ],
       "negative_cases": [
         {
@@ -1359,41 +1414,7 @@
           "file": "negative/family_union__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/family_union__p03.lit",
-          "intended": "accept",
-          "issue": "family_union-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/family_union__p04.lit",
-          "intended": "accept",
-          "issue": "family_union-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P05",
-          "file": "gaps/family_union__p05.lit",
-          "intended": "accept",
-          "issue": "family_union-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"U = {1, 2}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"U = {1, 2}\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "family_intersect",
@@ -1405,7 +1426,11 @@
       "positive_cases": [
         "P05",
         "P06",
-        "P07"
+        "P07",
+        "P04",
+        "P01",
+        "P02",
+        "P03"
       ],
       "negative_cases": [
         {
@@ -1415,54 +1440,17 @@
         {
           "id": "N02",
           "file": "negative/family_intersect__n02.lit"
+        },
+        {
+          "id": "N03",
+          "file": "negative/family_intersect__n03.lit"
+        },
+        {
+          "id": "N04",
+          "file": "negative/family_intersect__n04.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P01",
-          "file": "gaps/family_intersect__p01.lit",
-          "intended": "accept",
-          "issue": "family_intersect-P01",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"family_intersect({{1}}) = {1}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"family_intersect({{1}}) = {1}\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P02",
-          "file": "gaps/family_intersect__p02.lit",
-          "intended": "accept",
-          "issue": "family_intersect-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P03",
-          "file": "gaps/family_intersect__p03.lit",
-          "intended": "accept",
-          "issue": "family_intersect-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"family_intersect({{1}, {}}) = {}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"family_intersect({{1}, {}}) = {}\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/family_intersect__p04.lit",
-          "intended": "accept",
-          "issue": "family_intersect-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "let",
-            "diagnostic": "{\"success\": false, \"statement\": \"let …\", \"why_failed\": {\"type\": \"define_obj\", \"rule_name\": \"Let binding\", \"message\": \"Bind a name to a well-defined value\", \"phase\": \"let\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `I`\", line: 3, path: Real(\"examples/test_objs/gaps/family_intersect__p04.lit\") }))"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "power_set",
@@ -1476,7 +1464,8 @@
         "P02",
         "P03",
         "P04",
-        "P05"
+        "P05",
+        "P06"
       ],
       "negative_cases": [
         {
@@ -1488,19 +1477,7 @@
           "file": "negative/power_set__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P06",
-          "file": "gaps/power_set__p06.lit",
-          "intended": "accept",
-          "issue": "power_set-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"power_set(power_set({})) = {{}, {{}}}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"power_set(power_set({})) = {{}, {{}}}\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "index_union",
@@ -1513,7 +1490,8 @@
         "P01",
         "P04",
         "P05",
-        "P06"
+        "P06",
+        "P02"
       ],
       "negative_cases": [
         {
@@ -1533,19 +1511,7 @@
           "file": "negative/index_union__empty_index.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P02",
-          "file": "gaps/index_union__p02.lit",
-          "intended": "accept",
-          "issue": "index_union-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_union__p02.lit\") }))"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "index_intersect",
@@ -1558,7 +1524,8 @@
         "P01",
         "P04",
         "P05",
-        "P06"
+        "P06",
+        "P02"
       ],
       "negative_cases": [
         {
@@ -1576,21 +1543,13 @@
         {
           "id": "N_EMPTY",
           "file": "negative/index_intersect__empty_index.lit"
+        },
+        {
+          "id": "N04",
+          "file": "negative/index_intersect__n04.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P02",
-          "file": "gaps/index_intersect__p02.lit",
-          "intended": "accept",
-          "issue": "index_intersect-P02",
-          "baseline": {
-            "observed": "reject",
-            "phase": "have_fn_equal",
-            "diagnostic": "{\"success\": false, \"statement\": \"have fn …\", \"why_failed\": {\"type\": \"define_fn\", \"rule_name\": \"Have function equal\", \"message\": \"Define a named function equal to an anonymous function\", \"phase\": \"have_fn_equal\"}, \"stores\": [], \"infers\": []}; subsequent error: Runtime(ParseError(RuntimeParseError { message: \"undefined name `A`\", line: 3, path: Real(\"examples/test_objs/gaps/index_intersect__p02.lit\") }))"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "index_cart",
@@ -1697,7 +1656,9 @@
         "P02",
         "P03",
         "P05",
-        "P07"
+        "P07",
+        "P04",
+        "P06"
       ],
       "negative_cases": [
         {
@@ -1709,30 +1670,7 @@
           "file": "negative/range__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/range__p04.lit",
-          "intended": "accept",
-          "issue": "range-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"range(-2, 1) = {-2, -1, 0}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"range(-2, 1) = {-2, -1, 0}\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P06",
-          "file": "gaps/range__p06.lit",
-          "intended": "accept",
-          "issue": "range-P06",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"not 3 $in range(1, 3)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"not 3 $in range(1, 3)\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "closed_range",
@@ -1747,7 +1685,8 @@
         "P03",
         "P05",
         "P06",
-        "P07"
+        "P07",
+        "P04"
       ],
       "negative_cases": [
         {
@@ -1759,19 +1698,7 @@
           "file": "negative/closed_range__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/closed_range__p04.lit",
-          "intended": "accept",
-          "issue": "closed_range-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"closed_range(-1, 1) = {-1, 0, 1}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"closed_range(-1, 1) = {-1, 0, 1}\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "finite_seq_set",
@@ -1784,7 +1711,8 @@
         "P01",
         "P02",
         "P03",
-        "P04"
+        "P04",
+        "P05"
       ],
       "negative_cases": [
         {
@@ -1800,29 +1728,7 @@
           "file": "negative/finite_seq_set__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P05",
-          "file": "gaps/finite_seq_set__p05.lit",
-          "intended": "accept",
-          "issue": "finite_seq_set-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"fn (x closed_range(0, 1)) R{x} $in finite_seq(R, 2)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x closed_range(0, 1)) R{x} $in finite_seq(R, 2)\"}, \"stores\": [], \"infers\": []}"
-          },
-          "current_verification": {
-            "date": "2026-10-02",
-            "source": "# Intended valid regression: finite_seq_set P05\nfn(x closed_range(1, 2)) R {x} $in finite_seq(R, 2)\n",
-            "observed": "reject",
-            "phase": "search_proof",
-            "exit": 1,
-            "success": false,
-            "binary_sha256": "d941e06ee9e695c341667258750b130539de6a13296ffb8a25abb5634e1a9be6",
-            "journal": "../../plan/迁移的plan/proof_journals/showcase-sequence-struct-contracts-2026-10-02.json"
-          }
-        }
-      ],
+      "gaps": [],
       "indexing_contract": "2026-10-02: seq uses N+; finite_seq of length n uses indices 1..n; historical baselines below predate that decision."
     },
     {
@@ -1835,7 +1741,9 @@
       "positive_cases": [
         "P01",
         "P02",
-        "P05"
+        "P05",
+        "P03",
+        "P04"
       ],
       "negative_cases": [
         {
@@ -1847,50 +1755,7 @@
           "file": "negative/seq_set__n02.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P03",
-          "file": "gaps/seq_set__p03.lit",
-          "intended": "accept",
-          "issue": "seq_set-P03",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"fn (x N) N{x} $in seq(N)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x N) N{x} $in seq(N)\"}, \"stores\": [], \"infers\": []}"
-          },
-          "current_verification": {
-            "date": "2026-10-02",
-            "source": "# Intended valid regression: seq_set P03\nfn(x N+) N {x} $in seq(N)\n",
-            "observed": "reject",
-            "phase": "search_proof",
-            "exit": 1,
-            "success": false,
-            "binary_sha256": "d941e06ee9e695c341667258750b130539de6a13296ffb8a25abb5634e1a9be6",
-            "journal": "../../plan/迁移的plan/proof_journals/showcase-sequence-struct-contracts-2026-10-02.json"
-          }
-        },
-        {
-          "id": "P04",
-          "file": "gaps/seq_set__p04.lit",
-          "intended": "accept",
-          "issue": "seq_set-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"fn (x N) R{0} $in seq(R)\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"fn (x N) R{0} $in seq(R)\"}, \"stores\": [], \"infers\": []}"
-          },
-          "current_verification": {
-            "date": "2026-10-02",
-            "source": "# Intended valid regression: seq_set P04\nfn(x N+) R {0} $in seq(R)\n",
-            "observed": "reject",
-            "phase": "search_proof",
-            "exit": 1,
-            "success": false,
-            "binary_sha256": "d941e06ee9e695c341667258750b130539de6a13296ffb8a25abb5634e1a9be6",
-            "journal": "../../plan/迁移的plan/proof_journals/showcase-sequence-struct-contracts-2026-10-02.json"
-          }
-        }
-      ],
+      "gaps": [],
       "indexing_contract": "2026-10-02: seq uses N+; finite_seq of length n uses indices 1..n; historical baselines below predate that decision."
     },
     {
@@ -1905,7 +1770,8 @@
         "P02",
         "P03",
         "P05",
-        "P06"
+        "P06",
+        "P04"
       ],
       "negative_cases": [
         {
@@ -1919,21 +1785,17 @@
         {
           "id": "N03",
           "file": "negative/cart__n03.lit"
+        },
+        {
+          "id": "N04",
+          "file": "negative/cart__n04.lit"
+        },
+        {
+          "id": "N05",
+          "file": "negative/cart__n05.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/cart__p04.lit",
-          "intended": "accept",
-          "issue": "cart-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "search_proof",
-            "diagnostic": "{\"success\": false, \"statement\": \"cart({1}, {2}) = {(1, 2)}\", \"why_failed\": {\"phase\": \"search_proof\", \"goal\": \"cart({1}, {2}) = {(1, 2)}\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "tuple",
@@ -2494,7 +2356,8 @@
         "P03",
         "P04",
         "P06",
-        "P07"
+        "P07",
+        "P05"
       ],
       "negative_cases": [
         {
@@ -2510,19 +2373,7 @@
           "file": "negative/finite_set_size__n03.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P05",
-          "file": "gaps/finite_set_size__p05.lit",
-          "intended": "accept",
-          "issue": "finite_set_size-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "finite_set_max",
@@ -3304,7 +3155,9 @@
         "P02",
         "P03",
         "P06",
-        "P07"
+        "P07",
+        "P04",
+        "P05"
       ],
       "negative_cases": [
         {
@@ -3320,30 +3173,7 @@
           "file": "negative/identifier_with_export_file_id__n03/main.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/identifier_with_export_file_id__p04/main.lit",
-          "intended": "accept",
-          "issue": "identifier_with_export_file_id-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P05",
-          "file": "gaps/identifier_with_export_file_id__p05/main.lit",
-          "intended": "accept",
-          "issue": "identifier_with_export_file_id-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     },
     {
       "name": "identifier_with_mod_and_export_file_id",
@@ -3357,7 +3187,9 @@
         "P02",
         "P03",
         "P06",
-        "P07"
+        "P07",
+        "P04",
+        "P05"
       ],
       "negative_cases": [
         {
@@ -3373,30 +3205,7 @@
           "file": "negative/identifier_with_mod_and_export_file_id__n03/main.lit"
         }
       ],
-      "gaps": [
-        {
-          "id": "P04",
-          "file": "gaps/identifier_with_mod_and_export_file_id__p04/main.lit",
-          "intended": "accept",
-          "issue": "identifier_with_mod_and_export_file_id-P04",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        },
-        {
-          "id": "P05",
-          "file": "gaps/identifier_with_mod_and_export_file_id__p05/main.lit",
-          "intended": "accept",
-          "issue": "identifier_with_mod_and_export_file_id-P05",
-          "baseline": {
-            "observed": "reject",
-            "phase": "well_defined",
-            "diagnostic": "{\"success\": false, \"statement\": \"<wd_failed>\", \"why_failed\": {\"phase\": \"well_defined\"}, \"stores\": [], \"infers\": []}"
-          }
-        }
-      ]
+      "gaps": []
     }
   ],
   "workflow_gaps": [],

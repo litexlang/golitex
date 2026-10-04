@@ -298,3 +298,72 @@ fn stored_equality_cycle_terminates_and_function_proof_serializes_its_domain_evi
         assert!(json.contains(evidence), "missing {evidence}: {json}");
     }
 }
+
+#[test]
+fn run_examples_template_aliases_and_named_results_retain_tuple_value_paths() {
+    use crate::execute::execute_fact_stmt::known_tuple::KnownFunctionTupleApplicability;
+    let mut rt = runtime();
+    exec_ok(&mut rt, "struct Triple<X set>:\n    first X\n    second X\n    third X");
+    exec_ok(&mut rt, "template<X set>:\n    have fn triple(a,b,c X) &Triple<X> = (a,b,c)");
+    exec_ok(&mut rt, "let alias = \\triple<R>");
+    exec_ok(&mut rt, "let second_alias = alias");
+    let Known::FnTupleValue(value) = known(&mut rt, "second_alias(4,5,6) = (4,5,6)") else { panic!("tuple value") };
+    assert_eq!(value.function.function_equal.path.len(), 2);
+    for (_, _, id) in &value.function.function_equal.path {
+        assert!(rt.fact_by_id_in_stack(*id).is_some());
+    }
+    assert!(matches!(value.function.applicability, KnownFunctionTupleApplicability::TemplateDefinition { .. }));
+    exec_ok(&mut rt, "let chosen = second_alias(1,2,3)");
+    exec_ok(&mut rt, "have chosen_struct &Triple<R> = chosen");
+    // Truth lookup must not publish an intermediate chosen=(1,2,3) fact.
+    let Known::FnTupleProjection(projection) = known(&mut rt, "chosen_struct[1] = 1") else { panic!("projection") };
+    assert_eq!(projection.subject_equal.path.len(), 2);
+    for (_, _, id) in &projection.subject_equal.path {
+        assert!(rt.fact_by_id_in_stack(*id).is_some());
+    }
+    for code in ["chosen_struct.first = 1", "chosen_struct.second = 2", "chosen_struct.third = 3"] {
+        exec_ok(&mut rt, code);
+    }
+    assert!(matches!(known(&mut rt, "chosen = (1,2,3)"), Known::FnTupleValue(_)));
+    for wrong in ["chosen_struct.first = 2", "chosen_struct.second = 1", "chosen = (3,2,1)", "chosen = (1,2)"] {
+        assert!(verify(&mut rt, wrong, VerifyState::top_level()).is_failed(), "{wrong}");
+    }
+    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/stmt_nodes/definition/template_alias_struct_tuple.lit"));
+    assert!(runtime().run_litex_code(source).unwrap().success);
+}
+
+#[test]
+fn template_tuple_aliases_keep_function_domains_and_header_guards() {
+    let mut rt = runtime();
+    exec_ok(&mut rt, "template<S set: $is_nonempty_set(S)>:\n    have fn positive_pair(x N: x > 0) cart(N,N) = (x,x)");
+    exec_ok(&mut rt, "let alias = \\positive_pair<R>");
+    exec_ok(&mut rt, "let second_alias = alias");
+    known(&mut rt, "second_alias(2) = (2,2)");
+    for wrong in ["second_alias(-1) = (-1,-1)", "second_alias(0) = (0,0)", "second_alias(2,3) = (2,3)", "\\positive_pair<{}>(2) = (2,2)", "\\positive_pair<R,1>(2) = (2,2)"] {
+        assert!(verify(&mut rt, wrong, VerifyState::top_level()).is_failed(), "{wrong}");
+    }
+    let before = store_sizes(&rt);
+    let failed = rt.run_litex_code("let invalid = \\positive_pair<{}>\n").unwrap();
+    assert!(!failed.success && failed.session_error.is_none());
+    assert_eq!(before, store_sizes(&rt));
+    assert!(!rt.run_litex_code("invalid(2) = (2,2)\n").unwrap().success);
+}
+
+#[test]
+fn template_tuple_output_keeps_alias_and_subject_citations() {
+    for language in [OutputLanguage::English, OutputLanguage::Chinese] {
+        let mut rt = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language });
+        for source in ["template<S set>:\n    have fn pair(x S) cart(S,S) = (x,x)", "let alias = \\pair<R>", "let value = alias(2)", "have typed cart(R,R) = value"] {
+            exec_ok(&mut rt, source);
+        }
+        let result = exec_ok(&mut rt, "typed[1] = 2");
+        let json = project_stmt_detailed(&result, &rt).stringify();
+        for field in ["FnTupleProjection", "subject_equal", "function_equal", "template_definition", "instance", "signature_match", "expanded_body"] {
+            assert!(json.contains(field), "{field}: {json}");
+        }
+        let result = exec_ok(&mut rt, "value = (2,2)");
+        assert!(project_stmt_detailed(&result, &rt).stringify().contains("FnTupleValue"));
+        let output = project_stmt_normal(&result, &rt).stringify();
+        assert!(output.contains(if language == OutputLanguage::English { "Equivalence class" } else { "等价类" }) || output.contains(if language == OutputLanguage::English { "known_special_property" } else { "已知特殊属性" }), "{output}");
+    }
+}

@@ -11,7 +11,8 @@ impl Runtime {
     pub(super) fn infer_in_fact_rules(
         &mut self,
         in_fact: &InFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
         if let Some(builder) = self.resolve_set_builder_for_membership_projection(&in_fact.set) {
             let mut derived = Vec::new();
@@ -22,7 +23,11 @@ impl Runtime {
                 set: builder.param_set.as_ref().clone(),
                 line_file: in_fact.line_file.clone(),
             });
-            derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(base_in), verify_state)?);
+            self.store_new_set_builder_projection(
+                &Fact::AtomicFact(base_in),
+                verify_state,
+                &mut derived,
+            )?;
             let mut subst = std::collections::HashMap::new();
             subst.insert(builder.param_binding.id, in_fact.element.clone());
             for defining in &builder.facts {
@@ -30,7 +35,7 @@ impl Runtime {
                     continue;
                 };
                 let projected = crate::instantiate::quantifier_free_fact_to_fact(qf);
-                derived.push(self.store_inferred_fact_and_infer(&projected, verify_state)?);
+                self.store_new_set_builder_projection(&projected, verify_state, &mut derived)?;
             }
             rules.push(InferAtomicExceptEqualityResult::InFactSetBuilder(
                 InferSetBuilderMembershipProjectionResult { derived },
@@ -44,7 +49,9 @@ impl Runtime {
                 right: base,
                 line_file: in_fact.line_file.clone(),
             });
-            let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::AtomicFact(subset), verify_state)?);
+            let derived = Box::new(
+                self.store_inferred_fact_and_infer(&Fact::AtomicFact(subset), verify_state)?,
+            );
             rules.push(InferAtomicExceptEqualityResult::InFactPowerSet(
                 InferPowerSetMembershipProjectionResult { derived },
             ));
@@ -59,6 +66,29 @@ impl Runtime {
 }
 
 impl Runtime {
+    // The source membership is stored before inference. A builder reached
+    // through equality can project that same membership (or cycle through a
+    // second carrier). Re-inferencing a visible fact adds no consequence.
+    // This guard belongs to this projection rule, not to truth search/store.
+    fn store_new_set_builder_projection(
+        &mut self,
+        projected: &Fact,
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        derived: &mut Vec<crate::store_fact_and_infer::StoreFactAndInferResult>,
+    ) -> RuntimeResult<()> {
+        let key = projected.ir();
+        let already_stored = self.execution_environments_stack.iter().rev().any(|env| {
+            env.facts.facts_by_id.values().any(|known| {
+                std::mem::discriminant(known) == std::mem::discriminant(projected)
+                    && known.ir() == key
+            })
+        });
+        if !already_stored {
+            derived.push(self.store_inferred_fact_and_infer(projected, verify_state)?);
+        }
+        Ok(())
+    }
+
     fn resolve_set_builder_for_membership_projection(
         &self,
         set: &Obj,
@@ -100,3 +130,7 @@ impl Runtime {
         None
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/set_builder_projection_cycle/tests.rs"]
+mod set_builder_projection_cycle_tests;

@@ -1,0 +1,6 @@
+# H07: Composition returns a closure capturing function arguments
+# Intended: accept; run via examples/test_function_sets/run.py
+
+have fn compose(f, g fn(x R) R) fn(t R) R = fn(t R) R {f(g(t))}
+have fn step(x R) R = x + 1
+compose(step, step)(2) = 4

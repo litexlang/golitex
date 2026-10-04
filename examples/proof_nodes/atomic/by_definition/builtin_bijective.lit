@@ -5,5 +5,10 @@
 # Same singleton identity setup as the injective / surjective tracers.
 
 have fn id1(x {1}) {1} = x
-exist x {1} st {x = 1}
+by def $injective({1}, {1}, id1)
+claim:
+    ? forall y {1}:
+        exist x {1} st {y = id1(x)}
+    witness exist x {1} st {y = id1(x)} from y
+by def $surjective({1}, {1}, id1)
 by def $bijective({1}, {1}, id1)

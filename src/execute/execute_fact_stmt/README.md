@@ -210,7 +210,7 @@ the target's WD is already established.
 
 | Target stage | Premise ceiling |
 |---|---|
-| Direct (0): identity/alpha, stored facts/paths, then closed calculation | No new search |
+| Direct (0): identity/alpha, stored facts/paths, closed calculation and structural membership | No new search |
 | KnownSpecialProperty (1) | Direct (0) |
 | BuiltinRule (2) | KnownSpecialProperty (1) |
 | Strategy (3), including new peer bridges | BuiltinRule (2) |
@@ -228,13 +228,17 @@ transaction, excluding named identifiers and quantified binder internals.
 A stored atomic fact can supply its predicate-domain evidence by an explicit
 citation, after argument WD and visible predicate signature checks.
 
-Direct is implemented by `search_atomic_fact_proof_by_known_fact_or_closed_calculation`,
-returning `DirectAtomicFactSearchResult::{ByKnownFact, ByClosedCalculation, NotFound}`.
+Direct is implemented by `search_atomic_fact_proof_directly`,
+returning `DirectAtomicFactSearchResult::{ByKnownFact, ByClosedCalculation, ByStructuralMembership, NotFound}`.
 The closed calculator is a pure free function with no Runtime or state parameter.
 It supports classified closed decimals, exact rational/complex values, real order
 and standard-set membership/non-membership; symbolic normalization, constructor
 shape calculations and user definitions retain their existing higher routes.
 The existing `lookup_known_*` interfaces remain citation/identity only.
+One atomic lookup lazily constructs its visible equality graph once and reuses
+it across candidate arguments. This is a local read-only value: each later
+lookup sees the current environment again, with no persistent cache or new
+proof-search route.
 Detailed output retains `by_closed_calculation` and exact values, rather than
 labelling computed proofs as citations or builtin rules.
 See the [verification receipt](builtin_entry_verification.md) and
@@ -358,3 +362,17 @@ declared signature and prove domain/codomain equalities. The legacy
 `fn(k N+: k <= n) B` prefix is admitted only on `closed_range(1,n)` with both
 endpoint equalities proved. Other restricted domains retain their rejection
 boundaries.
+
+
+Structural membership is a Direct truth-search route with its own success tree.
+`search_structural_membership` recurses only into smaller AST children, reading
+raw known memberships/paths, exact closed leaves and fixed builtin codomains.
+N/Z/Q/R/C arithmetic uses explicit closure conditions; division and integer
+powers rely on the enclosing checked object WD for their partial domains.
+Known leaves carry their original citations, and standard-superset nodes retain
+the narrower proof. There is no call to verify, atomic search, SP, definitions,
+rewrite, or store/infer. In particular, function-result/projection types that
+are only available through SP do not become available at Direct.
+The tuple-shape reader tries carrier-bearing function evidence before returning
+an explicit-tuple-only shape, so adding a tuple equality cannot shadow the
+function's Cartesian return carrier.

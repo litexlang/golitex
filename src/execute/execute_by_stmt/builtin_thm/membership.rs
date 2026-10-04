@@ -89,9 +89,19 @@ fn tuple_requirements(rt: &mut Runtime, a: Obj, b: Obj) -> Vec<Fact> {
     let right: AtomicFact = IsTupleFact { fact_id: rt.global_ids.allocate_fact_id(), set: b.clone(), line_file: None }.into();
     let dimension = tuple_dim(a.clone());
     let mut requirements = vec![left.into(), right.into(), equal(rt, dimension.clone(), tuple_dim(b.clone())).into(), le(rt, number("1"), dimension.clone()).into()];
+    // A literal tuple fixes the finite coordinate obligations. Dimension
+    // equality above still checks the other tuple's complete shape.
     if let (Obj::ProductShape(ProductShape::Tuple(left)), Obj::ProductShape(ProductShape::Tuple(right))) = (&a, &b) {
         for (left, right) in left.args.iter().zip(&right.args) {
             requirements.push(equal(rt, left.as_ref().clone(), right.as_ref().clone()).into());
+        }
+    } else if let Obj::ProductShape(ProductShape::Tuple(left)) = &a {
+        for (index, component) in left.args.iter().enumerate() {
+            requirements.push(equal(rt, component.as_ref().clone(), at(b.clone(), number(&(index + 1).to_string()))).into());
+        }
+    } else if let Obj::ProductShape(ProductShape::Tuple(right)) = &b {
+        for (index, component) in right.args.iter().enumerate() {
+            requirements.push(equal(rt, at(a.clone(), number(&(index + 1).to_string())), component.as_ref().clone()).into());
         }
     } else {
         let i = rt.fresh_internal_param();

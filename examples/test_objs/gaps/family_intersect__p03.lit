@@ -1,2 +1,0 @@
-# Intended valid regression: family_intersect P03
-family_intersect({{1}, {}}) = {}

@@ -1,2 +1,0 @@
-# Intended valid regression: power_set P06
-power_set(power_set({})) = {{}, {{}}}

@@ -2,11 +2,44 @@
 
 Task: one detailed Litex regression file per Obj variant.
 
-Latest focused status: the [remaining elementary follow-up](experience/problem_notes/remaining_elementary_gaps_2026-10-03.md)
+## Exact rational powers
+
+The [rational-power acceptance](experience/problem_notes/exact_rational_powers_2026-10-03.md)
+records 23 selected release Rust tests and 38 strict CLI checks passing under
+one stable source/test fingerprint. Pow gains 16 positive cases and nine
+negative fixtures. Exact calculate and eval share the same producer; input
+domain certificates are retained. Three previously recorded old mixed-module
+test expectations remain failures, with baseline/final receipts preserved.
+This focused result does not certify the complete corpus. The
+[report](exact_rational_powers_results_2026-10-03.json) and
+[journal](proof_journals/exact_rational_powers_2026-10-03.json) retain details.
+
+## Latest: final five set gaps
+
+[Acceptance note](experience/problem_notes/five_set_gap_followup_2026-10-03.md): the last five recorded Obj gaps are closed. Strict gates cover 3 owning files (18 cases), 14 adjacent negatives and 4 native tracers; 12 focused Rust tests pass. No new trust and no framework/AST/state contract change. Previous focused snapshots below retain their own historical counts and limitations.
+
+## Latest: explicit set and sequence proofs
+
+The [set-proof acceptance note](experience/problem_notes/remaining_set_proof_repairs_2026-10-03.md) closes 17 existing gaps, with 11 strict owning files (65 cases) and 28 adjacent rejection fixtures. No Rust change or new trust. Current inventory: 644 positives, 295 negatives, 5 gaps. The elementary follow-up below is an earlier snapshot.
+
+## Latest follow-up: closed exact elementary calculation
+
+The [new acceptance note](experience/problem_notes/closed_exact_elementary_calculation_2026-10-03.md)
+records the approved 1–4 calculation extensions and their limits. A stable
+release passes 29 selected Rust tests and 75 strict CLI checks, including four
+complete tracers, 17 paired negatives, all 39 new Obj cases, 13 complete owning
+files (119 positives), and two touched docs blocks. The corpus adds 33 positive
+and six negative cases, leaving 627 positives, 295 negatives and 22 existing
+gaps. Full-corpus historical observations below are not replaced by this scope.
+The [JSON report](closed_exact_elementary_calculation_results_2026-10-03.json)
+and [journal](proof_journals/closed_exact_elementary_calculation_2026-10-03.json)
+retain exact commands, snapshots and intermediate failures.
+
+Previous focused status: the [remaining elementary follow-up](experience/problem_notes/remaining_elementary_gaps_2026-10-03.md)
 closes all 22 requested numerical, trig, inverse, log and modulus goals. Its
 [current-source report](remaining_elementary_gaps_results_2026-10-03.json)
 checks 95 positive cases across 13 owning files and 42 rejection fixtures.
-The live manifest still includes 22 unrelated gaps. Older complete-suite
+That historical manifest still included 22 unrelated gaps. Older complete-suite
 snapshots below remain historical; this focused gate is not a whole-corpus pass.
 
 ## Tracer: exact division and its WD boundary

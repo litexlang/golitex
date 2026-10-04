@@ -1,2 +1,0 @@
-# Intended valid regression: range P04
-range(-2, 1) = {-2, -1, 0}

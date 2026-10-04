@@ -1,0 +1,8 @@
+by enumerate finite_set:
+    ? forall x {0}:
+        x != 1
+by contra:
+    ? not exist x {0} st {x = 1}
+    obtain a from exist x {0} st {x = 1}
+    a != 1
+    impossible a = 1

@@ -1,6 +1,10 @@
 use crate::ast::fact::{AtomicFact, InFact};
-use crate::ast::obj::{FnObjHead, FnSet, FunctionSpace, IteratedOperator, Obj, StructAndFieldAccessObj};
+use crate::ast::obj::{FnObjHead, FnSet, FunctionSpace, InstantiatedTemplateObj, IteratedOperator, Obj, StandardSet, StructAndFieldAccessObj};
+use super::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::proper_subsets_in_membership_proof_order;
+use super::result::AtomicExceptEqualityFactKnownProof;
 use crate::exec_env::SpecialProperty;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::runtime::{FactId, Runtime};
 use crate::ast::obj::ProductShape;
@@ -15,6 +19,7 @@ pub enum AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
     pub fn cite_property_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::StandardNumericSuperset(p)) => p.source_membership_proof.cite_fact_id(),
             Self::InFact(InFactSearchProofByKnownSpecialProperty::AnonymousFnApplicationInCodomain(_)) => None,
             Self::InFact(InFactSearchProofByKnownSpecialProperty::FieldApplicationInDeclaredCodomain(_)) => None,
             Self::InFact(InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(_)) => None,
@@ -37,6 +42,7 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 }
 
 pub enum InFactSearchProofByKnownSpecialProperty {
+    StandardNumericSuperset(StandardNumericSupersetKnownProof),
     FoldInCarrier(FoldInCarrierProof),
     AnonymousFnApplicationInCodomain(AnonymousFnApplicationInCodomainProof),
     FieldApplicationInDeclaredCodomain(FieldApplicationInDeclaredCodomainProof),
@@ -45,6 +51,12 @@ pub enum InFactSearchProofByKnownSpecialProperty {
     FnApplicationInCodomain(FnApplicationInCodomainKnownSpecialPropertyProof),
     FnApplicationInFnRange(FnApplicationInFnRangeKnownSpecialPropertyProof),
     TupleCoordinate(TupleCoordinateKnownProof),
+}
+
+pub struct StandardNumericSupersetKnownProof {
+    pub source_set: StandardSet,
+    pub target_set: StandardSet,
+    pub source_membership_proof: AtomicExceptEqualityFactKnownProof,
 }
 pub struct FoldInCarrierProof {
     pub operation_signature:FoldOperationSignatureProof,
@@ -72,10 +84,19 @@ pub struct FieldApplicationInDeclaredCodomainProof {
 }
 
 pub struct TemplateApplicationInDeclaredCodomainProof {
+    pub instance: InstantiatedTemplateObj,
+    pub function_equal: KnownEqualityPathProof,
     pub declared_signature: FnSet,
     pub applied_return_set: Obj,
     pub return_set_match: EqualFactSearchedProof,
     pub alternative_signature_matches: Vec<SignatureReturnMatchProof>,
+    pub alternative_template_signature_matches: Vec<TemplateSignatureReturnMatchProof>,
+}
+
+pub struct TemplateSignatureReturnMatchProof {
+    pub instance: InstantiatedTemplateObj,
+    pub function_equal: KnownEqualityPathProof,
+    pub return_set_match: EqualFactSearchedProof,
 }
 
 pub struct FieldInDeclaredSetProof {
@@ -120,7 +141,8 @@ pub struct SignatureMatchProof {
 
 impl Runtime {
     // The caller established WD. This leaf only matches registered rows in the
-    // special-property index and cites stored equalities; it never verifies a new premise.
+    // special-property index or a stored standard-carrier membership, and cites
+    // stored equalities; it never verifies a new premise.
     pub(in crate::execute) fn search_atomic_except_equality_fact_proof_by_known_special_property(
         &mut self,
         fact: &AtomicFact,
@@ -190,6 +212,27 @@ impl Runtime {
         &mut self,
         fact: &InFact,
     ) -> Option<InFactSearchProofByKnownSpecialProperty> {
+        // A stored numeric carrier supplies its intrinsic standard supersets.
+        // Example: known x in Z establishes x in R without a new child search.
+        if let Obj::StandardSet(target) = &fact.set {
+            for source_set in proper_subsets_in_membership_proof_order(target) {
+                let source = AtomicFact::InFact(InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: fact.element.clone(),
+                    set: Obj::StandardSet(source_set.clone()),
+                    line_file: fact.line_file.clone(),
+                });
+                if let Some(source_membership_proof) = self.lookup_known_atomic_premise(source) {
+                    return Some(InFactSearchProofByKnownSpecialProperty::StandardNumericSuperset(
+                        StandardNumericSupersetKnownProof {
+                            source_set,
+                            target_set: target.clone(),
+                            source_membership_proof,
+                        },
+                    ));
+                }
+            }
+        }
         // Field WD selected a definition-owned struct carrier. Its instantiated
         // field type also applies in read-only nested WD, before explicit release.
         if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) = &fact.element {
@@ -234,21 +277,33 @@ impl Runtime {
         if application.body.is_empty() {
             return None;
         }
-        if let FnObjHead::InstantiatedTemplateObj(instance) = application.head.as_ref() {
-            if let Some(signature) = self.instantiated_template_function_signature(instance) {
-                if let Some(applied_return_set) = self.applied_fn_set_return_set(application, &signature) {
-                    if let Some(return_set_match) = self.lookup_known_obj_equality(&applied_return_set, &fact.set) {
-                        let head = Obj::InstantiatedTemplateObj(instance.clone());
-                        let alternative_signature_matches = self.known_alternative_signature_returns(application, &head, &fact.set)?;
-                        return Some(InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(
-                            TemplateApplicationInDeclaredCodomainProof {
-                                declared_signature: signature, applied_return_set,
-                                return_set_match, alternative_signature_matches,
-                            },
-                        ));
-                    }
-                }
+        let template_head = crate::execute::execute_fact_stmt::known_tuple::tuple_function_head(application);
+        let template_peers = equivalence_class_members_with_paths_in_adjacency(
+            &self.visible_equivalence_class_adjacency(), &template_head,
+        );
+        for (peer, path) in &template_peers {
+            let Obj::InstantiatedTemplateObj(instance) = peer else { continue; };
+            let Some(signature) = self.instantiated_template_function_signature(instance) else { continue; };
+            let Some(applied_return_set) = self.applied_fn_set_return_set(application, &signature) else { continue; };
+            let Some(return_set_match) = self.lookup_known_obj_equality(&applied_return_set, &fact.set) else { continue; };
+            let alternative_signature_matches = self.known_alternative_signature_returns(application, &template_head, &fact.set)?;
+            let mut alternative_template_signature_matches = Vec::new();
+            for (alternative, alternative_path) in &template_peers {
+                let Obj::InstantiatedTemplateObj(alternative) = alternative else { continue; };
+                let Some(signature) = self.instantiated_template_function_signature(alternative) else { continue; };
+                let Some(ret) = self.applied_fn_set_return_set(application, &signature) else { continue; };
+                let return_set_match = self.lookup_known_obj_equality(&ret, &fact.set)?;
+                alternative_template_signature_matches.push(TemplateSignatureReturnMatchProof {
+                    instance: alternative.clone(), function_equal: KnownEqualityPathProof::new(alternative_path.clone()), return_set_match,
+                });
             }
+            return Some(InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(
+                TemplateApplicationInDeclaredCodomainProof {
+                    instance: instance.clone(), function_equal: KnownEqualityPathProof::new(path.clone()),
+                    declared_signature: signature, applied_return_set, return_set_match,
+                    alternative_signature_matches, alternative_template_signature_matches,
+                },
+            ));
         }
         if let FnObjHead::FieldAccess(access) = application.head.as_ref() {
             if let Some(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) =
@@ -399,3 +454,7 @@ impl Runtime {
         properties
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/known_numeric_carrier/tests.rs"]
+mod known_numeric_carrier_tests;

@@ -276,7 +276,35 @@ fn radical_provenance_projects_in_both_languages() {
         );
         assert!(detailed.matches("5 * sqrt (3)").count() >= 2, "{detailed}");
         let normal = emit_run_normal(&result, &rt, "eval", None);
-        assert!(normal.contains("by_closed_calculation"), "{normal}");
+        let explanation = match language {
+            OutputLanguage::English => "by_closed_calculation",
+            OutputLanguage::Chinese => "封闭计算",
+        };
+        assert!(normal.contains(explanation), "{normal}");
+    }
+}
+
+#[test]
+fn run_examples_closed_exact_elementary_tracers() {
+    for source in [
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/closed_fraction_rounding_calculation.lit"
+        )),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/closed_radical_calculation.lit"
+        )),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/closed_complex_parts_calculation.lit"
+        )),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/closed_rational_log_calculation.lit"
+        )),
+    ] {
+        check(source, true);
     }
 }
 

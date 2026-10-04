@@ -94,7 +94,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave13::{
     CartWithEmptyFactorBuiltinRuleProof, ClosedRangeLiteralExpansionBuiltinRuleProof,
     ComplexAbsOfImagScaledBuiltinRuleProof, ComplexAbsOfNonnegRealBuiltinRuleProof,
-    EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof,
+    EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof, FamilyUnionOfSingletonBuiltinRuleProof, FamilyUnionOfPowerSetBuiltinRuleProof,
     FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,
     ImgOfRealBuiltinRuleProof, ImgOfRealPlusImagScaledBuiltinRuleProof,
     LnOfEulerBuiltinRuleProof, PowerSetOfEmptyBuiltinRuleProof,
@@ -3310,6 +3310,24 @@ impl PythagoreanIdentityBuiltinRuleProof {
         match lang {
             OutputLanguage::English => self.rule_id_and_message_en(),
             OutputLanguage::Chinese => self.rule_id_and_message_zh()
+        }
+    }
+}
+
+impl FamilyUnionOfSingletonBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text("FamilyUnionOfSingleton", "Union of a singleton family", "The union of a singleton family of sets is its member."),
+            OutputLanguage::Chinese => text("FamilyUnionOfSingleton", "单元素集合族的并", "只包含集合 A 的集合族，其并集等于 A。"),
+        }
+    }
+}
+
+impl FamilyUnionOfPowerSetBuiltinRuleProof {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => text("FamilyUnionOfPowerSet", "Union of a power set", "The union of the power set of a set is that set."),
+            OutputLanguage::Chinese => text("FamilyUnionOfPowerSet", "幂集的并", "集合 A 的幂集中所有集合的并等于 A。"),
         }
     }
 }

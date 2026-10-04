@@ -1,2 +1,0 @@
-# Intended valid regression: seq_set P04
-fn(x N+) R {0} $in seq(R)

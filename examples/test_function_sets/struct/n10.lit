@@ -1,0 +1,9 @@
+# N10: Scalar field is not callable
+# Intended: reject; run via examples/test_function_sets/run.py
+
+struct Box:
+    op fn(x R) R
+    tag N
+thm invalid:
+    ? forall s &Box:
+        s.tag(0) = s.tag(0)

@@ -163,6 +163,7 @@ pub enum FnObjDomainFnSetEvidence {
     },
     TemplateDefinition {
         fn_set: FnSet,
+        function_equal: KnownEqualityPathProof,
     },
 }
 

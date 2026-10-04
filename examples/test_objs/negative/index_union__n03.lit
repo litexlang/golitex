@@ -1,3 +1,12 @@
 # Must reject: index_union N03
+claim:
+    ? forall k {1}:
+        {k} $in power_set(N)
+    k = 1
+    k $in N
+    forall x {k}:
+        x = k
+        x $in N
+    {k} $subset N
 let A = fn(k {1}) power_set(N) {{k}}
 let X = index_union({2}, N, A)

@@ -1,0 +1,3 @@
+template<S set>:
+    have fn template_id(x S) S = x
+\template_id<R>(4) = 4

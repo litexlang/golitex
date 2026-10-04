@@ -1,0 +1,45 @@
+# Tracer: exact rational powers through direct closed calculation.
+# Before (fresh baseline release rejected both lines at Pow well-definedness):
+# 8^(1/3)=2
+# eval 8^(1/3)
+# Former requirement: 1/3 $in Z; exit 1 and JSON success=false.
+# Now: closed positive-rational bases admit rational exponents; exact roots
+# followed by checked integer powers supply calculate and eval values.
+# Boundary: irrational results are not approximated, checked overflow declines,
+# and nonpositive bases with noninteger exponents remain outside this domain.
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/closed_rational_power_calculation.lit
+# Regression/collector: tests/unit/execute/exact_rational_powers/tests.rs
+# Each discarded sketch starts without facts from the preceding case.
+
+sketch:
+    8^(1/3)=2
+sketch:
+    16^(3/4)=8
+sketch:
+    (1/27)^(-1/3)=3
+sketch:
+    (8/27)^(2/3)=4/9
+sketch:
+    (4/9)^(1/2)=2/3
+sketch:
+    8^(2/6)=2
+sketch:
+    16^(0.75)=8
+sketch:
+    0.125^(1/3)=1/2
+sketch:
+    (81/16)^(3/4)=27/8
+sketch:
+    8^(-2/3)=1/4
+sketch:
+    8^(1/3)+1/3=7/3
+sketch:
+    (4/9)^(1/2)<3/4
+sketch:
+    8^(1/3) $in N+
+sketch:
+    eval 8^(1/3)
+sketch:
+    eval (4/9)^(1/2)
+sketch:
+    eval (1/27)^(-1/3)

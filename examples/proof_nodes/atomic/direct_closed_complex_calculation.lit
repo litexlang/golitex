@@ -1,0 +1,10 @@
+# Tracer: closed complex comparisons use exact coordinate calculation.
+# Discussed goal:
+# i != 0
+# The current baseline already supplied direct calculation for this goal.
+# Keep the direct route as acceptance; this does not certify explicit BT proofs.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/direct_closed_complex_calculation.lit
+i != 0
+i*i != 0
+1+i != 0
+# Executable false/undefined controls are retained in the migration journal.

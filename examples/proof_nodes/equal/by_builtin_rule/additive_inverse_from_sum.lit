@@ -1,0 +1,24 @@
+forall a R:
+    a + 1 = 0
+    =>:
+        a = -1
+
+forall a, b C:
+    a + b = 0
+    =>:
+        a = -b
+
+forall a, b C:
+    b + a = 0
+    =>:
+        -b = a
+
+forall a, b C:
+    a + b = 0
+    =>:
+        a = (-1) * b
+
+forall a, b, c C:
+    a + b = c
+    =>:
+        a = c - b

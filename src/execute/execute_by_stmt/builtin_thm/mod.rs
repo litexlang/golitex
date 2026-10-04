@@ -1,6 +1,7 @@
 mod builtin_thm;
 mod helper;
 mod membership;
+mod intersection;
 mod sums;
 mod real_analysis;
 

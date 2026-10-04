@@ -58,7 +58,7 @@ impl EvalRational {
             Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow)) => {
                 let base = Self::from_obj(&pow.base)?;
                 let exponent = Self::from_obj(&pow.exponent)?;
-                base.pow_integer(exponent.to_i128_if_integer()?)
+                base.pow_rational(&exponent)
             }
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(abs)) => {
                 let value = Self::from_obj(&abs.arg)?;
@@ -246,6 +246,23 @@ impl EvalRational {
         }
     }
 
+    // For reduced p/q and positive reduced a/b, a rational result requires
+    // exact q-th roots of both a and b. Example: (8/27)^(2/3) = 4/9.
+    // Root first, then checked integer power: an overflowing a^p is unnecessary.
+    fn pow_rational(&self, exponent: &Self) -> Option<Self> {
+        if exponent.denominator == 1 {
+            return self.pow_integer(exponent.numerator);
+        }
+        if self.numerator <= 0 {
+            return None;
+        }
+        let root = Self::new(
+            integer_nth_root(self.numerator, exponent.denominator)?,
+            integer_nth_root(self.denominator, exponent.denominator)?,
+        )?;
+        root.pow_integer(exponent.numerator)
+    }
+
     pub(crate) fn compare(&self, other: &Self) -> Option<NumberCompareResult> {
         let common = gcd_i128(self.denominator, other.denominator)?;
         let left = self.numerator.checked_mul(other.denominator / common)?;
@@ -309,6 +326,37 @@ pub(crate) fn integer_square_root(value: i128) -> Option<i128> {
             high = middle - 1;
         } else {
             low = middle + 1;
+        }
+    }
+    None
+}
+
+// Exact positive integer roots, without factoring or floating approximation.
+// A checked-power overflow is above every positive i128 input, so binary
+// search can safely lower its upper bound. The search takes at most 127 steps.
+fn integer_nth_root(value: i128, degree: i128) -> Option<i128> {
+    if value < 0 || degree < 1 {
+        return None;
+    }
+    if value < 2 || degree == 1 {
+        return Some(value);
+    }
+    if degree == 2 {
+        return integer_square_root(value);
+    }
+    // For value >= 2, a root would be >= 2; 2^127 exceeds i128::MAX.
+    if degree >= 127 {
+        return None;
+    }
+    let degree = u32::try_from(degree).ok()?;
+    let mut low = 1;
+    let mut high = value;
+    while low <= high {
+        let middle = low + (high - low) / 2;
+        match middle.checked_pow(degree) {
+            Some(power) if power == value => return Some(middle),
+            Some(power) if power < value => low = middle + 1,
+            _ => high = middle - 1,
         }
     }
     None

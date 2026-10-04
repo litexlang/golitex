@@ -16,6 +16,9 @@ pub enum BuiltinTheoremId {
     FiniteSetSumLessEqualFromPointwise,
     FiniteSetSummandLessEqualSum,
     TupleEqualFromCoordinates,
+    FamilyIntersectionMember,
+    FamilyIntersectionMemberFacts,
+    IndexedIntersectionMember,
     FiniteSetSumSubstitution,
     SumOverBijectiveFiniteSetEnumerations,
     RationalHasUniqueReducedFraction,
@@ -35,6 +38,9 @@ impl BuiltinTheoremId {
     pub fn from_name(name: &str) -> Option<Self> {
         Some(match name {
             "fn_set_member" => Self::FunctionSetMember,
+            "family_intersect_member" => Self::FamilyIntersectionMember,
+            "family_intersect_member_facts" => Self::FamilyIntersectionMemberFacts,
+            "index_intersect_member" => Self::IndexedIntersectionMember,
             "set_builder_member" => Self::SetBuilderMember,
             "defined_set_member" => Self::DefinedSetMember,
             "struct_member" => Self::StructMember,
@@ -72,6 +78,9 @@ impl BuiltinTheoremId {
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::FunctionSetMember => "fn_set_member",
+            Self::FamilyIntersectionMember => "family_intersect_member",
+            Self::FamilyIntersectionMemberFacts => "family_intersect_member_facts",
+            Self::IndexedIntersectionMember => "index_intersect_member",
             Self::SetBuilderMember => "set_builder_member",
             Self::DefinedSetMember => "defined_set_member",
             Self::StructMember => "struct_member",

@@ -23,3 +23,14 @@ sketch:
 # P07: main::k = 1
 sketch:
     main::k = 1
+
+# P04: explicit checked proof; restored from identifier_with_mod_and_export_file_id-P04
+sketch:
+    release obj def Values::base::pair
+    tuple_dim(Values::base::pair) = 2
+
+
+# P05: explicit checked proof; restored from identifier_with_mod_and_export_file_id-P05
+sketch:
+    release obj def Values::other::pair
+    tuple_dim(Values::other::pair) = 3

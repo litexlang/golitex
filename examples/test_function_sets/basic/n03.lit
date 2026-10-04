@@ -1,0 +1,5 @@
+# N03: Wrong application arity
+# Intended: reject; run via examples/test_function_sets/run.py
+
+have fn step(x R) R = x + 1
+step(1, 2) = step(1, 2)

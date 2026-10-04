@@ -3806,6 +3806,10 @@
           true,
           true,
           true,
+          true,
+          true,
+          true,
+          true,
           true
         ]
       }
@@ -3955,5 +3959,6 @@
       }
     }
   ],
-  "known_gaps": []
+  "known_gaps": [],
+  "basic_contract_manifest": "release_basics/cases.json"
 }

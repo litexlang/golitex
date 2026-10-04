@@ -1,0 +1,9 @@
+# Before: equivalent choice codomains lacked this direct identity leaf.
+# have A set
+# family_union(power_set(A)) = A
+# Now: every element occurs in its singleton subset; the union is exactly A.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/family_union_of_power_set.lit
+have A set
+family_union(power_set(A)) = A
+A = family_union(power_set(A))
+family_union(power_set({})) = {}

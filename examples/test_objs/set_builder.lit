@@ -30,5 +30,7 @@ sketch:
 # P06: $is_set(A)
 sketch:
     let y = 1
+    y = 1
+    y $in R
     let A = {x R: x > y}
     $is_set(A)

@@ -1,0 +1,4 @@
+# H03: Anonymous curried closure numeric equality
+# Intended: accept; run via examples/test_function_sets/run.py
+
+fn(x R) (fn(u R) R) {fn(y R) R {x + y}}(2)(3) = 5

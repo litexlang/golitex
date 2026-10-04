@@ -1,8 +1,17 @@
 # Small Categories in Set Theory: Generic Data and Examples
 
-This standalone showcase gives a checked first vertical slice of category
-theory, then consumes it with the terminal category and the chaotic category
-on two objects. Its main line is:
+This showcase develops small categories, functors, natural transformations,
+and two finite examples. The complete Litex chapter passes strict release
+verification: **49/49 top-level statements**, including all 17 original
+named theorems and four derived Hom-closure lemmas. The selected interface
+is `Category<Obj, Mor>` with ordered dependent fields, fixed function return
+carriers, and guarded composition. All original named declarations remain
+active, with no trust or extra axioms. The proof-completion round changed
+Litex source and records only; see the [acceptance record](../../../scripts/math_concepts_in_litex_upstream/experience/problem_notes/category_proof_completion_acceptance.md).
+
+The standalone [Category regression](../../../examples/wd/category_dependent_fields.lit)
+checks the two-parameter struct, unit/associativity laws, and an actual guarded
+identity-composition call. The intended chapter sequence is:
 
 ```text
 Obj set
@@ -17,17 +26,18 @@ Obj set
   -> identity and vertical composition of natural transformations
 ```
 
-Run the checked Litex module from the repository root:
+Run the chapter from the repository root:
 
 ```bash
-target/release/litex -graph -r showcases/math_concepts_in_litex/15_category_theory_in_set_theory
+target/release/litex -strict -f showcases/math_concepts_in_litex/16_category_theory_in_set_theory/main.lit
+target/release/litex -strict -r showcases/math_concepts_in_litex/16_category_theory_in_set_theory
 ```
 
 Run the handwritten Lean analogy with the repository's Lean toolchain:
 
 ```bash
 cd lean
-lake env lean ../showcases/math_concepts_in_litex/15_category_theory_in_set_theory/same_math_in_lean.lean
+lake env lean ../showcases/math_concepts_in_litex/16_category_theory_in_set_theory/same_math_in_lean.lean
 ```
 
 ## What `Obj` means
@@ -50,7 +60,8 @@ Concrete mathematics enters by choosing data satisfying this generic
 interface. For example, a category of groups would choose group values as the
 members of `Obj` and group homomorphisms as the corresponding hom-sets. The
 generic definitions do not assume that choice; the final part of this file
-instead checks two deliberately tiny finite categories.
+contains two deliberately tiny finite category constructions with checked
+unit and associativity laws.
 
 ## Why both `Mor` and `Hom` appear
 
@@ -78,18 +89,18 @@ two Hom indices already record the endpoints.
   `Hom(A, D)`.
 - `is_category(...)` requires the two unit laws and associativity.
 
-The return carriers are dependent: the result set of `identity` depends on
-its object argument, and the result set of `compose` depends on its three
-object arguments. Consequently identity typing and composition closure are
-part of the function signatures rather than extra axioms.
+Function return carriers are fixed. `identity` and `compose` return `Mor`;
+the exact Hom output memberships are explicit category laws. `compose` retains
+one call with domain conditions on its two input arrows.
 
-`CategorySetting` is the theorem-facing bundle for these data and laws;
-`is_category` is its definition-facing projection. `FunctorSetting` adds a
-typed object map and dependent arrow map with the two preservation laws.
-`NaturalTransformationSetting` adds components in the exact hom-sets and a
-named naturality-square property. These are settings rather than structs
-because current theorems quantify over supplied structures and maps; no
-consumer stores or returns a first-class category record.
+`Category<Obj, Mor>` stores `Hom`, `identity`, and `compose` in that order.
+The `compose` field type may refer to the earlier `Hom` field. This does not
+allow a function's own parameters in its parameter carriers or return object.
+The category theorem contexts bind an actual Category value, which supplies
+closure, both unit laws, and associativity. `is_functor` and
+`is_natural_transformation` retain precise arrow/component typing as explicit
+laws. Composition theorems also require the actual functor or naturality
+premises; function signatures alone never establish them.
 
 The identity and composite functor theorems and the identity and vertical
 natural-transformation theorems are genuine constructions. Their callable
@@ -113,9 +124,11 @@ candidate starts only as an element of the ambient `Mor` set, and it makes the
 concept mapping explicit for readers.
 
 The three tracer theorems verify that the selected identity has the identity
-property, dependent composition produces a morphism with the expected
+property, composition produces a morphism with the expected
 endpoints, and the selected composition value satisfies `is_composite`.
-Named `composition_is_associative_at` and `naturality_square_commutes`
+Derived Hom-closure lemmas establish the exact carriers of mapped identities,
+mapped compositions, composite arrows, and vertical components before guarded
+nested calls. Named `composition_is_associative_at` and `naturality_square_commutes`
 properties let larger diagram proofs select an exact instance before
 unfolding it to an equality.
 
@@ -150,12 +163,12 @@ compose(A, B, C, (A, B), (B, C)) = (A, C)
 Thus every ordered pair of objects has exactly one arrow. This is the chaotic
 (also called indiscrete) category, not the discrete category: in particular,
 there is an arrow from `0` to `1` and an arrow from `1` to `0`. The theorem
-`two_object_chaotic_data_forms_a_category` checks its unit and associativity
+`two_object_chaotic_data_forms_a_category` states its unit and associativity
 laws through the same generic interface.
 
 ## Exact scope boundary
 
-This module is complete at the following boundary: small categories, functors,
+The intended scope boundary is: small categories, functors,
 identity/composite functors, natural transformations, identity/vertical
 composition, and a concrete terminal-category consumer. It does not define:
 
@@ -163,9 +176,8 @@ composition, and a concrete terminal-category consumer. It does not define:
 - proper classes or universe-level stratification;
 - limits, colimits, adjunctions, Yoneda, comma categories, monads, or a
   general functor category;
-- a first-class stored `Category` value; or
 - automatic category instances for existing Litex structures.
 
 The public Litex file contains no direct `trust`, global `axiom`, or
-`abstract_prop`. The Lean file is handwritten comparison material and
-contains no `axiom`, `sorry`, or `admit`.
+`abstract_prop`. The Lean file is handwritten comparison material; it was not revalidated
+in this migration.

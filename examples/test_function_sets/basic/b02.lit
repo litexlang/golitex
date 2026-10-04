@@ -1,0 +1,4 @@
+# B02: Anonymous function numeric call
+# Intended: accept; run via examples/test_function_sets/run.py
+
+fn(x R) R {x + 1}(2) = 3

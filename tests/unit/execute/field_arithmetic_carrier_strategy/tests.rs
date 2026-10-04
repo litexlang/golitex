@@ -207,9 +207,9 @@ fn detailed_even_power_and_complex_inequality_record_checked_evidence() {
 #[test]
 fn constructor_descent_keeps_the_central_leaf_ceiling() {
     for (level, expected) in [
-        (VerifyStateLevel::Direct, false),
-        (VerifyStateLevel::KnownSpecialProperty, false),
-        (VerifyStateLevel::BuiltinRule, false),
+        (VerifyStateLevel::Direct, true),
+        (VerifyStateLevel::KnownSpecialProperty, true),
+        (VerifyStateLevel::BuiltinRule, true),
         (VerifyStateLevel::Strategy, true),
     ] {
         let mut rt = runtime();
@@ -254,41 +254,26 @@ fn detailed_field_tree_and_exact_coordinates_are_real_proof_evidence() {
     let run = rt.run_litex_code("have a Q\n(3*a+2)/5 $in Q\n").unwrap();
     assert!(run.success);
     let detail = crate::json_output::project_stmt_detailed(&run.statement_results[1], &rt);
-    let proof = find(&detail, "strategy", "FieldArithmeticCarrierClosure")
+    let proof = find(&detail, "kind", "div")
         .unwrap_or_else(|| panic!("{}", detail.stringify()));
-    assert_eq!(proof.get("carrier"), Some(&JsonValue::String("Q".into())));
-    let Some(JsonValue::Array(facts)) = proof.get("requirement_facts") else {
-        panic!("facts")
-    };
+    assert_eq!(proof.get("set"), Some(&JsonValue::String("Q".into())));
+    assert_eq!(proof.get("domain_evidence"), Some(&JsonValue::String("enclosing_object_wd".into())));
+    let left = proof.get("left").unwrap();
+    assert!(find(left, "kind", "add").is_some());
+    assert!(find(left, "kind", "mul").is_some());
+    assert!(find(left, "kind", "known").is_some());
+    assert!(find(&detail, "fact", "5 != 0").is_some());
+
+    // Keep direct coverage of the higher strategy and its nonzero obligation,
+    // even though the ordinary dispatcher now selects Direct first.
+    let Fact::AtomicFact(goal) = fact(&mut rt, "(3*a+2)/5 $in Q") else { panic!() };
+    let strategy = rt.search_field_arithmetic_carrier_strategy(
+        &goal, VerifyState::new(VerifyStateLevel::BuiltinRule),
+    ).unwrap().unwrap();
     let expected = ["3 $in Q", "a $in Q", "2 $in Q", "5 $in Q", "5 != 0"];
-    assert_eq!(
-        facts,
-        &expected
-            .iter()
-            .map(|s| JsonValue::String(s.to_string()))
-            .collect::<Vec<_>>()
-    );
-    let Some(JsonValue::Array(children)) = proof.get("proof_of_requirement_facts") else {
-        panic!("children")
-    };
-    assert_eq!(children.len(), expected.len());
-    let Some(JsonValue::Object(tree)) = proof.get("constructor_tree") else {
-        panic!("tree")
-    };
-    assert_eq!(
-        tree.get("constructor"),
-        Some(&JsonValue::String("div".into()))
-    );
-    assert_eq!(
-        tree.get("nonzero_requirement_index"),
-        Some(&JsonValue::Number(4.0))
-    );
-    let tree = tree.get("left").unwrap();
-    assert!(find(tree, "constructor", "add").is_some());
-    assert!(find(tree, "constructor", "mul").is_some());
-    for child in children {
-        assert!(child.stringify().contains("\"success\""));
-    }
+    assert_eq!(strategy.requirement_facts.iter().map(|f| f.readable_string()).collect::<Vec<_>>(), expected);
+    assert_eq!(strategy.proof_of_requirement_facts.len(), expected.len());
+    assert!(strategy.proof_of_requirement_facts.iter().all(|p| !p.is_failed()));
 
     let run = rt.run_litex_code("i^2 $in Z").unwrap();
     assert!(run.success);

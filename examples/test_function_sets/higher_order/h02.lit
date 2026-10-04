@@ -1,0 +1,6 @@
+# H02: Function-valued result and second-call codomain
+# Intended: accept; run via examples/test_function_sets/run.py
+
+have fn add(x R) fn(y R) R = fn(y R) R {x + y}
+add(2) $in fn(y R) R
+add(2)(3) $in R

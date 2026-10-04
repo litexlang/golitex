@@ -1,0 +1,12 @@
+# S05: Nested struct callable-field path
+# Intended: accept; run via examples/test_function_sets/run.py
+
+struct Inner<A nonempty_set>:
+    op fn(x A) A
+    tag N
+struct Outer<A nonempty_set>:
+    inner &Inner<A>
+    tag N
+thm nested_call:
+    ? forall B nonempty_set, s &Outer<B>, x B:
+        s.inner.op(x) $in B

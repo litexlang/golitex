@@ -1,0 +1,3 @@
+# Must reject: ambient membership alone does not prove fiber membership.
+2 $in N
+release thm index_intersect_member(2, index_intersect({1}, N, fn(k {1}) power_set(N) {{1}}))

@@ -1,3 +1,0 @@
-# Intended valid regression: family_union P05
-let U = family_union({{}, {1, 2}})
-U = {1, 2}

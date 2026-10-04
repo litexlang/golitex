@@ -1,0 +1,8 @@
+# T01: Generic identity with independent specializations
+# Intended: accept; run via examples/test_function_sets/run.py
+
+template<A set>:
+    have fn identity(x A) A = x
+\identity<R>(2) = 2
+\identity<Z>(-1) = -1
+\identity<R> $in fn(t R) R

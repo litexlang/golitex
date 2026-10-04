@@ -19,3 +19,100 @@ sketch:
             x $in {1}
         forall x {1}:
             x $in family_union({{1}})
+
+# P03: explicit checked proof; restored from family_union-P03
+sketch:
+    by contra:
+        ? {1} != {2}
+        1 $in {1}
+        1 $in {2}
+        impossible 1 $in {2}
+    by extension:
+        ? family_union({{1}, {2}}) = {1, 2}
+        claim:
+            ? forall x family_union({{1}, {2}}):
+                x $in {1, 2}
+            obtain A from exist A {{1}, {2}} st {x $in A}
+            A = {1} or A = {2}
+            by cases:
+                ? x $in {1, 2}
+                case A = {1}:
+                    x $in {1}
+                    x = 1
+                case A = {2}:
+                    x $in {2}
+                    x = 2
+        claim:
+            ? forall x {1, 2}:
+                x $in family_union({{1}, {2}})
+            x = 1 or x = 2
+            by cases:
+                ? x $in family_union({{1}, {2}})
+                case x = 1:
+                    {1} $in {{1}, {2}}
+                    x $in {1}
+                case x = 2:
+                    {2} $in {{1}, {2}}
+                    x $in {2}
+
+
+# P04: explicit checked proof; restored from family_union-P04
+sketch:
+    by contra:
+        ? {1} != {2}
+        1 $in {1}
+        1 $in {2}
+        impossible 1 $in {2}
+    by extension:
+        ? family_union({{1}, {2}}) = {1, 2}
+        claim:
+            ? forall x family_union({{1}, {2}}):
+                x $in {1, 2}
+            obtain A from exist A {{1}, {2}} st {x $in A}
+            A = {1} or A = {2}
+            by cases:
+                ? x $in {1, 2}
+                case A = {1}:
+                    x $in {1}
+                    x = 1
+                case A = {2}:
+                    x $in {2}
+                    x = 2
+        claim:
+            ? forall x {1, 2}:
+                x $in family_union({{1}, {2}})
+            x = 1 or x = 2
+            by cases:
+                ? x $in family_union({{1}, {2}})
+                case x = 1:
+                    {1} $in {{1}, {2}}
+                    x $in {1}
+                case x = 2:
+                    {2} $in {{1}, {2}}
+                    x $in {2}
+    1 $in {1, 2}
+    1 $in family_union({{1}, {2}})
+
+
+# P05: explicit checked proof; restored from family_union-P05
+sketch:
+    let U = family_union({{}, {1, 2}})
+    by extension:
+        ? U = {1, 2}
+        {1, 2} $in {{}, {1, 2}}
+        claim:
+            ? forall x U:
+                x $in {1, 2}
+            x $in family_union({{}, {1, 2}})
+            obtain A from exist A {{}, {1, 2}} st {x $in A}
+            A = {} or A = {1, 2}
+            by cases:
+                ? x $in {1, 2}
+                case A = {}:
+                    x $in {}
+                    impossible x $in {}
+                case A = {1, 2}:
+                    x $in {1, 2}
+        forall x {1, 2}:
+            x $in family_union({{}, {1, 2}})
+            x $in U

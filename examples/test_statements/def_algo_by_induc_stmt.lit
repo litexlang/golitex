@@ -7,6 +7,10 @@ algo algo_count(n N) N by induc n from 0:
     case n = 0: 0
     case n >= 1: algo_count(n - 1)
 algo_count(0) = 0
+1 - 1 = 0
+algo_count(1) = algo_count(1 - 1)
+algo_count(1 - 1) = algo_count(0)
+algo_count(1) = algo_count(0)
 algo_count(1) = 0
 algo_count(2) = algo_count(2 - 1) = algo_count(1) = 0
 

@@ -1,0 +1,13 @@
+# Before: a checked injective property did not publish its quantified body.
+# forall f fn(t R) R, a, b R:
+#     $injective(R, R, f)
+#     f(a) = f(b)
+#     =>:
+#         a = b
+# Now: store the positive property, publish its definition, match at a,b.
+# Gate: target/release/litex -strict -f examples/infer/atomic/injective_definition.lit
+forall f fn(t R) R, a, b R:
+    $injective(R, R, f)
+    f(a) = f(b)
+    =>:
+        a = b

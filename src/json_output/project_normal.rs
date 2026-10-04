@@ -322,6 +322,7 @@ fn why_from_atomic_except_searched(
     runtime: &Runtime,
 ) -> JsonValue {
     match searched {
+        AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(_) => searched_proof_why_json(runtime, "structural_membership"),
         AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(_) => searched_proof_why_json(runtime, "closed_calculation"),
         AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
             cite_from_fact_id(runtime, p.cite_fact_id)

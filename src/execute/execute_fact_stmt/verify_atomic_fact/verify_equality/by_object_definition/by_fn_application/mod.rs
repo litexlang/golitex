@@ -4,3 +4,9 @@ pub mod by_have_fn_by_induc;
 pub mod result;
 
 pub use result::EqualitySearchProofByFnApplicationObjectDefinition;
+
+pub mod normalize_function_body;
+
+#[cfg(test)]
+#[path = "../../../../../../../tests/unit/execute/function_body_evaluation/tests.rs"]
+mod function_body_evaluation_tests;

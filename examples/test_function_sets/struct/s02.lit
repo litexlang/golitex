@@ -1,0 +1,9 @@
+# S02: Concrete function field evaluates after typed construction
+# Intended: accept; run via examples/test_function_sets/run.py
+
+struct Box:
+    op fn(x R) R
+    tag N
+fn(x R) R {x + 1} $in fn(t R) R
+have box &Box = (fn(x R) R {x + 1}, 0)
+box.op(2) = 3

@@ -1,0 +1,2 @@
+# Must reject: the explicit set-valued contract does not admit empty families.
+release thm family_intersect_member(1, family_intersect({}))

@@ -14,6 +14,7 @@ use crate::ast::obj::{
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::exec_env::SpecialProperty;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::runtime::runtime_ids::FactId;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -99,41 +100,48 @@ impl Runtime {
             }
         };
         let root = Obj::FnObj(value.clone());
-        // Instance WD validates template arguments and guards. Read its checked
-        // declaration directly: a nested read-only WD cannot depend on having
-        // registered InFunctionSet as a side effect in the current scope.
-        if let FnObjHead::InstantiatedTemplateObj(instance) = value.head.as_ref() {
-            let head_wd = self.verify_obj_well_definedness(&head_obj, verify_state.clone())?;
+        // An equality alias retains the checked template's callable contract.
+        // Instance WD still checks template parameters and guards before use.
+        for (candidate, path) in equivalence_class_members_with_paths_in_adjacency(
+            &self.visible_equivalence_class_adjacency(), &head_obj,
+        ) {
+            let Obj::InstantiatedTemplateObj(instance) = &candidate else { continue; };
+            let head_wd = self.verify_obj_well_definedness(&candidate, verify_state)?;
             if head_wd.is_failed() {
-                return Ok(VerifyObjWellDefinedResult::Failed {
-                    obj: root,
-                    reason: FailToVerifyObjWellDefinedResult::FnObj(
-                        FailToVerifyFnObjObjWellDefined::Domain(
-                            ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
-                                .into_common_fail(&Obj::FnObj(value.clone())),
+                if path.is_empty() {
+                    return Ok(VerifyObjWellDefinedResult::Failed {
+                        obj: root,
+                        reason: FailToVerifyObjWellDefinedResult::FnObj(
+                            FailToVerifyFnObjObjWellDefined::Domain(
+                                ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
+                                    .into_common_fail(&Obj::FnObj(value.clone())),
+                            ),
                         ),
-                    ),
-                });
+                    });
+                }
+                continue;
             }
             if let Some(fn_set) = self.instantiated_template_function_signature(instance) {
-                match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
+                match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state)? {
                     Ok(mut stages) => {
                         stages.child_obj_well_defined.insert(0, head_wd);
                         let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
-
                         return Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
                             obj: root,
                             proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
-                                domain_fn_set: Some(FnObjDomainFnSetEvidence::TemplateDefinition { fn_set }),
+                                domain_fn_set: Some(FnObjDomainFnSetEvidence::TemplateDefinition {
+                                    fn_set, function_equal: KnownEqualityPathProof::new(path),
+                                }),
                                 child_obj_well_defined,
                                 requirement_fact_verified,
                             }),
                         }));
                     }
-                    Err(stages) => return Ok(VerifyObjWellDefinedResult::Failed {
+                    Err(stages) if path.is_empty() => return Ok(VerifyObjWellDefinedResult::Failed {
                         obj: root.clone(),
                         reason: FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(stages.into_common_fail(&root))),
                     }),
+                    Err(_) => continue,
                 }
             }
         }

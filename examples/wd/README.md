@@ -150,3 +150,5 @@ atomic negation. Every atom still undergoes signature/domain WD. Negated
 comparison chains and `not exist!` keep their existing syntax restrictions.
 
 - `struct_dependent_fields.lit`: field types may use earlier fields; checks guarded calls, nested receiver substitution, concrete tuple construction, and struct laws in forall WD. Self/forward references and missing guards are covered by `struct_dependent_fields` Rust regressions.
+
+- `category_dependent_fields.lit`: the selected two-parameter Category interface, explicit Hom closure, unit/associativity laws, and an actual guarded identity-composition call. This isolates the accepted interface from the chapter's remaining migration proofs.

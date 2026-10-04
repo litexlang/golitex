@@ -1,0 +1,13 @@
+# Focused gate: target/release/litex -strict -f examples/wd/witness_same_named_binder.lit
+# Before: the local existential g was selected by its surface name; its ID did
+# not match the outer witness, so the unchanged witness was reported undefined.
+# witness $has_copy(g) from g
+# After: identifier lookup skips a name-identical candidate with another ID.
+# Negative/rollback and function witness controls:
+# cargo test --release --offline witness_binding_tests -- --nocapture
+
+prop has_copy(a R):
+    exist g R st {g = a}
+have g R = 2
+witness $has_copy(g) from g
+g = 2

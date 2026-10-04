@@ -1,0 +1,100 @@
+# Regression: Category keeps exactly Obj and Mor as header parameters.
+# Before: the compose field could not refer to the preceding Hom field.
+# Now: the struct, its laws, and a guarded identity-composition consumer verify.
+# Function parameter carriers and returns remain independent of own parameters.
+# Run: target/release/litex -strict -f examples/wd/category_dependent_fields.lit
+
+prop is_morphism(Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), source, target Obj, f Mor):
+    f $in Hom(source, target)
+
+# compose(source, middle, target, f, g) means g after f. An endomorphism is an
+# identity morphism when composing it with every arrow on either side changes
+# nothing.
+prop is_identity_morphism(Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), compose fn(comp_source, comp_middle, comp_target Obj, comp_first, comp_second Mor: comp_first $in Hom(comp_source, comp_middle), comp_second $in Hom(comp_middle, comp_target)) Mor, object Obj, identity_arrow Mor):
+    identity_arrow $in Hom(object, object)
+    forall target Obj, f Mor:
+        f $in Hom(object, target)
+        =>:
+            compose(object, object, target, identity_arrow, f) = f
+    forall source Obj, g Mor:
+        g $in Hom(source, object)
+        =>:
+            compose(source, object, object, g, identity_arrow) = g
+
+# A candidate h is the composite of f and g when it equals the selected
+# composition value.
+prop is_composite(Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), compose fn(comp_source, comp_middle, comp_target Obj, comp_first, comp_second Mor: comp_first $in Hom(comp_source, comp_middle), comp_second $in Hom(comp_middle, comp_target)) Mor, source, middle, target Obj, f, g, h Mor):
+    f $in Hom(source, middle)
+    g $in Hom(middle, target)
+    h $in Hom(source, target)
+    h = compose(source, middle, target, f, g)
+
+# Naming an associativity instance gives later diagram proofs an exact fact
+# shape instead of asking the verifier to search through a large raw equality.
+prop composition_is_associative_at(Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), compose fn(comp_source, comp_middle, comp_target Obj, comp_first, comp_second Mor: comp_first $in Hom(comp_source, comp_middle), comp_second $in Hom(comp_middle, comp_target)) Mor, source, first_middle, second_middle, target Obj, first_arrow, middle_arrow, last_arrow Mor):
+    first_arrow $in Hom(source, first_middle)
+    middle_arrow $in Hom(first_middle, second_middle)
+    last_arrow $in Hom(second_middle, target)
+    compose(source, first_middle, second_middle, first_arrow, middle_arrow) $in Hom(source, second_middle)
+    compose(first_middle, second_middle, target, middle_arrow, last_arrow) $in Hom(first_middle, target)
+    compose(source, second_middle, target, compose(source, first_middle, second_middle, first_arrow, middle_arrow), last_arrow) = compose(source, first_middle, target, first_arrow, compose(first_middle, second_middle, target, middle_arrow, last_arrow))
+
+# Category keeps Hom as a field; compose refers to that earlier field.
+# Precise identity and composition output carriers are explicit laws.
+struct Category<Obj set, Mor set>:
+    Hom fn(hom_source, hom_target Obj) power_set(Mor)
+    identity fn(identity_object Obj) Mor
+    compose fn(comp_source, comp_middle, comp_target Obj, comp_first, comp_second Mor: comp_first $in Hom(comp_source, comp_middle), comp_second $in Hom(comp_middle, comp_target)) Mor
+    <=>:
+        forall object Obj:
+            identity(object) $in Hom(object, object)
+        forall source, middle, target Obj, f, g Mor:
+            f $in Hom(source, middle)
+            g $in Hom(middle, target)
+            =>:
+                compose(source, middle, target, f, g) $in Hom(source, target)
+        forall object Obj:
+            $is_identity_morphism(Obj, Mor, Hom, compose, object, identity(object))
+        forall source, middle, target, far_target Obj, f, g, h Mor:
+            f $in Hom(source, middle)
+            g $in Hom(middle, target)
+            h $in Hom(target, far_target)
+            =>:
+                $composition_is_associative_at(Obj, Mor, Hom, compose, source, middle, target, far_target, f, g, h)
+
+prop is_category(Obj set, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), identity fn(identity_object Obj) Mor, compose fn(comp_source, comp_middle, comp_target Obj, comp_first, comp_second Mor: comp_first $in Hom(comp_source, comp_middle), comp_second $in Hom(comp_middle, comp_target)) Mor):
+    forall object Obj:
+        identity(object) $in Hom(object, object)
+    forall source, middle, target Obj, f, g Mor:
+        f $in Hom(source, middle)
+        g $in Hom(middle, target)
+        =>:
+            compose(source, middle, target, f, g) $in Hom(source, target)
+    forall object Obj:
+        $is_identity_morphism(Obj, Mor, Hom, compose, object, identity(object))
+    forall source, middle, target, far_target Obj, f, g, h Mor:
+        f $in Hom(source, middle)
+        g $in Hom(middle, target)
+        h $in Hom(target, far_target)
+        =>:
+            $composition_is_associative_at(Obj, Mor, Hom, compose, source, middle, target, far_target, f, g, h)
+
+
+thm category_identity_is_identity_morphism:
+    ? forall Obj, Mor set, category &Category<Obj, Mor>, chosen_object Obj:
+        $is_identity_morphism(Obj, Mor, category.Hom, category.compose, chosen_object, category.identity(chosen_object))
+
+thm category_composition_is_associative:
+    ? forall Obj, Mor set, category &Category<Obj, Mor>, source_object, first_middle_object, second_middle_object, target_object Obj, first_arrow, middle_arrow, last_arrow Mor:
+        first_arrow $in category.Hom(source_object, first_middle_object)
+        middle_arrow $in category.Hom(first_middle_object, second_middle_object)
+        last_arrow $in category.Hom(second_middle_object, target_object)
+        =>:
+            $composition_is_associative_at(Obj, Mor, category.Hom, category.compose, source_object, first_middle_object, second_middle_object, target_object, first_arrow, middle_arrow, last_arrow)
+
+
+thm category_identity_call_example:
+    ? forall Obj, Mor set, category &Category<Obj, Mor>, x Obj:
+        category.compose(x, x, x, category.identity(x), category.identity(x)) = category.identity(x)
+    category.identity(x) $in category.Hom(x, x)
+    release thm category_identity_is_identity_morphism(Obj, Mor, category, x)

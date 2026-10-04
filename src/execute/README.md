@@ -1,5 +1,23 @@
 # Statement execution
 
+## Identifier identity and witness diagnostics
+
+`env_stack_lookup::stored_identifier_definition_visible` applies its existing
+ID/file-owner check to each candidate in the existing lookup walk. A local
+existential binder with the same surface name but another ID is skipped rather
+than reported as the definition of an ambient witness. Qualified references
+still select their exact export/module owner. Storage, allocation and scope
+lifetimes are unchanged. `examples/wd/witness_same_named_binder.lit` and the
+`witness_binding` tests cover scalar/function witnesses, false IDs and rollback;
+the registered/imported identifier and declaration suites cover file ownership.
+
+Detailed witness failures mirror the existing atomic/exist result stages,
+including argument/type WD, binder introduction, body step/check and uniqueness.
+Their projections retain nested failed results without changing execution.
+The subtraction-bound rule also has separate greater-equal and less-equal root
+payloads sharing a numeric certificate, preserving the one-rule/one-payload
+contract and the actual source citation in each directional JSON node.
+
 ## Template definition facts
 
 A successful template retains its local body evidence and publishes only the
@@ -203,3 +221,11 @@ integer ranges are enumerable; Cartesian-product domains are unsupported.
 `eval` checks the source object's WD before rewriting or executing it. Its
 success carries the source WD proof; a domain failure retains the typed WD
 result. Evaluation output is not stored as a mathematical fact.
+
+
+Atomic Direct search reads stored proofs, then tries pure closed evaluation and
+structural membership. The latter builds a typed carrier tree over smaller AST
+children with fixed raw-known/closed/intrinsic leaves; it cannot enter higher
+search stages or mutate facts/WD memory. The enclosing verify pipeline continues
+to own all WD evidence. See `execute_fact_stmt/README.md` and the maintained
+`examples/proof_nodes/atomic/direct_structural_membership.lit` tracer.

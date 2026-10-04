@@ -2,7 +2,7 @@
 use crate::ast::fact::AtomicFact;
 use crate::ast::obj::{Obj, ProductShape};
 use crate::execute::execute_fact_stmt::known_tuple::{
-    KnownFunctionTupleApplicability, KnownTupleShapeProof, KnownTupleValueProof,
+    KnownFunctionTupleApplicability, KnownFunctionTupleValueProof, KnownTemplateSignatureMatchProof, KnownTupleShapeProof, KnownTupleValueProof,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_proof_by_known_special_property::EqualFactSearchProofByKnownSpecialProperty;
 use crate::json_output::helper::{object_for, string};
@@ -45,47 +45,12 @@ pub(super) fn project_equal_known_tuple(
             ]);
         }
         EqualFactSearchProofByKnownSpecialProperty::FnTupleProjection(p) => {
-            let applicability = match &p.function.applicability {
-                KnownFunctionTupleApplicability::AnonymousLiteral => {
-                    object_for(runtime, vec![("kind", string("anonymous_literal"))])
-                }
-                KnownFunctionTupleApplicability::AllSignaturesMatch(matches) => object_for(
-                    runtime,
-                    vec![
-                        ("kind", string("all_signatures_match")),
-                        (
-                            "matches",
-                            JsonValue::Array(
-                                matches
-                                    .iter()
-                                    .map(|p| {
-                                        object_for(
-                                            runtime,
-                                            vec![
-                                                (
-                                                    "cite_signature_fact_id",
-                                                    string(p.cite_signature_fact_id.to_string()),
-                                                ),
-                                                (
-                                                    "signature_match",
-                                                    project_equal_searched(
-                                                        &p.signature_match,
-                                                        runtime,
-                                                    ),
-                                                ),
-                                            ],
-                                        )
-                                    })
-                                    .collect(),
-                            ),
-                        ),
-                    ],
-                ),
-            };
+            let applicability = project_function_applicability(&p.function, runtime);
             fields.extend([
                 ("rule", string("FnTupleProjection")),
                 ("reversed", JsonValue::Bool(p.reversed)),
                 ("index", string(p.index.to_string())),
+                ("subject_equal", project_known_equality_path(&p.subject_equal, runtime)),
                 (
                     "function_equal",
                     project_known_equality_path(&p.function.function_equal, runtime),
@@ -102,6 +67,17 @@ pub(super) fn project_equal_known_tuple(
                     "component_equal",
                     project_equal_searched(&p.component_equal, runtime),
                 ),
+            ]);
+        }
+        EqualFactSearchProofByKnownSpecialProperty::FnTupleValue(p) => {
+            fields.extend([
+                ("rule", string("FnTupleValue")),
+                ("reversed", JsonValue::Bool(p.reversed)),
+                ("subject_equal", project_known_equality_path(&p.subject_equal, runtime)),
+                ("function_equal", project_known_equality_path(&p.function.function_equal, runtime)),
+                ("applicability", project_function_applicability(&p.function, runtime)),
+                ("expanded_body", string(Obj::ProductShape(ProductShape::Tuple(p.function.value.clone())).readable_string())),
+                ("value_equal", project_equal_searched(&p.value_equal, runtime)),
             ]);
         }
         EqualFactSearchProofByKnownSpecialProperty::TupleDimension(p) => {
@@ -228,4 +204,37 @@ fn project_value(value: &KnownTupleValueProof, runtime: &Runtime) -> JsonValue {
             ),
         ],
     )
+}
+
+fn project_function_applicability(proof: &KnownFunctionTupleValueProof, runtime: &Runtime) -> JsonValue {
+    match &proof.applicability {
+        KnownFunctionTupleApplicability::AnonymousLiteral => object_for(runtime, vec![("kind", string("anonymous_literal"))]),
+        KnownFunctionTupleApplicability::AllSignaturesMatch { signatures, template_signatures } => object_for(runtime, vec![
+            ("kind", string("all_signatures_match")),
+            ("matches", project_signature_matches(signatures, runtime)),
+            ("template_matches", project_template_signature_matches(template_signatures, runtime)),
+        ]),
+        KnownFunctionTupleApplicability::TemplateDefinition { instance, signature, alternative_signatures, alternative_template_signatures } => object_for(runtime, vec![
+            ("kind", string("template_definition")),
+            ("instance", string(Obj::InstantiatedTemplateObj(instance.clone()).readable_string())),
+            ("signature", string(Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(signature.clone())).readable_string())),
+            ("matches", project_signature_matches(alternative_signatures, runtime)),
+            ("template_matches", project_template_signature_matches(alternative_template_signatures, runtime)),
+        ]),
+    }
+}
+
+fn project_signature_matches(matches: &[crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::SignatureMatchProof], runtime: &Runtime) -> JsonValue {
+    JsonValue::Array(matches.iter().map(|p| object_for(runtime, vec![
+        ("cite_signature_fact_id", string(p.cite_signature_fact_id.to_string())),
+        ("signature_match", project_equal_searched(&p.signature_match, runtime)),
+    ])).collect())
+}
+
+fn project_template_signature_matches(matches: &[KnownTemplateSignatureMatchProof], runtime: &Runtime) -> JsonValue {
+    JsonValue::Array(matches.iter().map(|p| object_for(runtime, vec![
+        ("function_equal", project_known_equality_path(&p.function_equal, runtime)),
+        ("instance", string(Obj::InstantiatedTemplateObj(p.instance.clone()).readable_string())),
+        ("signature_match", project_equal_searched(&p.signature_match, runtime)),
+    ])).collect())
 }

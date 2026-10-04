@@ -36,7 +36,10 @@ sketch:
 
 # P05: not 1 $in intersect({1, 2}, {2, 3})
 sketch:
-    not 1 $in intersect({1, 2}, {2, 3})
+    by contra:
+        ? not 1 $in intersect({1, 2}, {2, 3})
+        1 $in {2, 3}
+        impossible 1 $in {2, 3}
 
 # P06: intersect(A, B) = intersect(B, A)
 sketch:

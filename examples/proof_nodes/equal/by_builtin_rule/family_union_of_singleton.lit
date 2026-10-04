@@ -1,0 +1,9 @@
+# Before: family_union({A}) = A had no direct identity leaf.
+# have A set
+# family_union({A}) = A
+# Now: the singleton-family identity; outer equality WD still checks all objects.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/family_union_of_singleton.lit
+have A set
+family_union({A}) = A
+A = family_union({A})
+family_union({{}}) = {}

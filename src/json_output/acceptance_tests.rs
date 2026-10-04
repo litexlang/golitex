@@ -96,7 +96,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave13::{
     CartWithEmptyFactorBuiltinRuleProof, ClosedRangeLiteralExpansionBuiltinRuleProof,
     ComplexAbsOfImagScaledBuiltinRuleProof, ComplexAbsOfNonnegRealBuiltinRuleProof,
-    EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof,
+    EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof, FamilyUnionOfSingletonBuiltinRuleProof, FamilyUnionOfPowerSetBuiltinRuleProof,
     FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,
     ImgOfRealBuiltinRuleProof, ImgOfRealPlusImagScaledBuiltinRuleProof,
     LnOfEulerBuiltinRuleProof, PowerSetOfEmptyBuiltinRuleProof,
@@ -336,6 +336,8 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         EqualitySearchProofByBuiltinRule::PowerSetOfEmpty(PowerSetOfEmptyBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::PowerSetOfSingleton(PowerSetOfSingletonBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::FamilyUnionOfEmpty(FamilyUnionOfEmptyBuiltinRuleProof {}),
+        EqualitySearchProofByBuiltinRule::FamilyUnionOfSingleton(FamilyUnionOfSingletonBuiltinRuleProof {}),
+        EqualitySearchProofByBuiltinRule::FamilyUnionOfPowerSet(FamilyUnionOfPowerSetBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::CartWithEmptyFactor(CartWithEmptyFactorBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::UnionOverIntersectDistributive(UnionOverIntersectDistributiveBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::SetMinusChainToUnion(SetMinusChainToUnionBuiltinRuleProof {}),
@@ -373,7 +375,7 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
 fn acceptance_equality_builtin_all_variants_bilingual() {
     let rules = all_equality_rules();
     // Four identity leaves moved to TheyAreTheSame; indexed lookup is now a class proof.
-    assert_eq!(rules.len(), 188);
+    assert_eq!(rules.len(), 190);
     for rule in &rules {
         let en = rule.rule_id_and_message(OutputLanguage::English);
         let zh = rule.rule_id_and_message(OutputLanguage::Chinese);

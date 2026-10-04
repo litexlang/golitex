@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::mem::discriminant;
 
 use crate::ast::fact::{
-    atomic_fact_args_ref, AndChainAtomicFact, AndFact, AtomicFact, ChainFact, OrFact,
+    atomic_fact_args_ref, AndChainAtomicFact, AndFact, AtomicFact, ChainFact, Fact, OrFact,
     PlainExistFact, QuantifierFreeFact,
 };
 use crate::ast::names::BoundName;
@@ -24,6 +24,21 @@ pub fn set_builders_alpha_equal(left: &SetBuilder, right: &SetBuilder) -> bool {
 
 pub fn anonymous_fns_alpha_equal(left: &AnonymousFn, right: &AnonymousFn) -> bool {
     anonymous_fns_alpha_equal_under(left, right, &HashMap::new())
+}
+
+// Whole-forall replay has already renamed its outer parameters. Compare
+// nested object binders using the same identity contract as Direct equality.
+pub(crate) fn quantifier_free_source_facts_alpha_equal(left: &Fact, right: &Fact) -> bool {
+    let map = HashMap::new();
+    match (left, right) {
+        (Fact::AtomicFact(left), Fact::AtomicFact(right)) => {
+            atomic_facts_alpha_equal(left, right, &map)
+        }
+        (Fact::AndFact(left), Fact::AndFact(right)) => and_facts_alpha_equal(left, right, &map),
+        (Fact::ChainFact(left), Fact::ChainFact(right)) => chain_facts_alpha_equal(left, right, &map),
+        (Fact::OrFact(left), Fact::OrFact(right)) => or_facts_alpha_equal(left, right, &map),
+        _ => false,
+    }
 }
 
 // Known existential reuse must compare nested binders as well as its own

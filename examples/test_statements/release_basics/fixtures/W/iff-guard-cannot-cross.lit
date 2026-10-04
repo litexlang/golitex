@@ -1,0 +1,7 @@
+prop bad(x R):
+    forall y R:
+        y = y
+        =>:
+            1 / y = 1 / y
+        <=>:
+            y != 0

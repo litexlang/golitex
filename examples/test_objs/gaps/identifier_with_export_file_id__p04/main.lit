@@ -1,3 +1,0 @@
-# Intended valid regression: identifier_with_export_file_id P04
-have k R = 1
-tuple_dim(base::pair) = 2

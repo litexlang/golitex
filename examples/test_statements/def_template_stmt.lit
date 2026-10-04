@@ -28,6 +28,11 @@ template<T set>:
     have fn template_count(n N) N by induc n from 0:
         case n = 0: 0
         case n >= 1: template_count(n - 1)
+1 - 1 = 0
+\template_count<R>(0) = 0
+\template_count<R>(1) = \template_count<R>(1 - 1)
+\template_count<R>(1 - 1) = \template_count<R>(0)
+\template_count<R>(1) = \template_count<R>(0)
 \template_count<R>(1) = 0
 
 # case: existence-body-template

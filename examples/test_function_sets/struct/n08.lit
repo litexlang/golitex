@@ -1,0 +1,9 @@
+# N08: Function field retains its guard
+# Intended: reject; run via examples/test_function_sets/run.py
+
+struct Guarded:
+    op fn(x R: x != 0) R
+    tag N
+thm invalid:
+    ? forall s &Guarded:
+        s.op(0) = s.op(0)

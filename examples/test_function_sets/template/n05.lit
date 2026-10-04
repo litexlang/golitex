@@ -1,0 +1,6 @@
+# N05: Specializations do not share defining values
+# Intended: reject; run via examples/test_function_sets/run.py
+
+template<a R>:
+    have fn shift(x R) R = x + a
+\shift<2>(3) = \shift<7>(3)

@@ -18,12 +18,9 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 use super::super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
-use super::super::EqualitySearchProofByObjectDefinition;
-use super::EqualitySearchProofByFnApplicationObjectDefinition;
 
 pub struct ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof {
-    pub function_equal: KnownEqualityPathProof,
-    pub expanded_body: Obj,
+    pub normalization: super::normalize_function_body::FunctionBodyNormalizationProof,
     pub residual_equal: VerifyFactResult,
 }
 
@@ -37,7 +34,6 @@ impl Runtime {
     // substitution. Its residual is known/calculation-only, so this does not
     // reopen definition or ordinary builtin search.
 
-
     pub(crate) fn try_unfold_named_have_fn_equal_application(
         &mut self,
         app_side: &Obj,
@@ -45,18 +41,15 @@ impl Runtime {
         parent_fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof>> {
-        let Obj::FnObj(fn_obj) = app_side else {
-            return Ok(None);
-        };
-        let Some(expansion) =
-            self.expanded_named_or_literal_anon_fn_application_body(fn_obj)?
+        let Some(normalization) =
+            self.normalize_function_body(app_side, other_side, verify_state)?
         else {
             return Ok(None);
         };
 
         let residual = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            left: expansion.expanded_body.clone(),
+            left: normalization.expanded_body.clone(),
             right: other_side.clone(),
             line_file: parent_fact.line_file.clone(),
         };
@@ -67,8 +60,7 @@ impl Runtime {
         }
         Ok(Some(
             ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof {
-                function_equal: expansion.function_equal,
-                expanded_body: expansion.expanded_body,
+                normalization,
                 residual_equal,
             },
         ))
@@ -84,7 +76,9 @@ impl Runtime {
         let fn_args: Vec<Obj> = fn_obj.body[0].iter().map(|a| a.as_ref().clone()).collect();
 
         let head_obj = match fn_obj.head.as_ref() {
-            FnObjHead::AnonymousFnLiteral(anon) => Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.as_ref().clone())),
+            FnObjHead::AnonymousFnLiteral(anon) => {
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.as_ref().clone()))
+            }
             FnObjHead::Identifier(head) => Obj::Identifier(head.clone()),
             _ => return Ok(None),
         };
@@ -106,7 +100,10 @@ impl Runtime {
                 continue;
             };
             let function_equal = KnownEqualityPathProof::new(path);
-            return Ok(Some(AnonFnApplicationBodyProof { function_equal, expanded_body }));
+            return Ok(Some(AnonFnApplicationBodyProof {
+                function_equal,
+                expanded_body,
+            }));
         }
         Ok(None)
     }

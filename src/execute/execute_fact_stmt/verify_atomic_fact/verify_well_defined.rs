@@ -185,85 +185,97 @@ impl Runtime {
 }
 
 impl Runtime {
-    // Legacy function-property WD accepts equal carrier spellings and the
-    // exact N+ prefix signature `fn(k N+: k <= n) B` on closed_range(1, n).
-    // Each alternative proves the actual signature and every carrier equality;
-    // a spelling match or the property assumption is never type evidence.
+    // Each callable contract retains its actual signature and checked carrier
+    // equalities. Choice has two independent callable obligations; neither may
+    // be discarded when trying an equivalent spelling for the other.
     fn atomic_predicate_domain_requirement_routes(
         &mut self,
         fact: &AtomicFact,
     ) -> Vec<Vec<crate::ast::fact::Fact>> {
-        use crate::ast::fact::{EqualFact, Fact, InFact, QuantifierFreeFact};
-        use crate::ast::obj::{
-            FunctionSpace, IdentifierObj, Literal, Number, SetFormer, StandardSet,
-        };
+        use crate::ast::obj::{FamilyUnion, SetOperator};
         let primary = self.atomic_predicate_domain_requirements(fact);
-        let mut routes = vec![primary.clone()];
-        let Some((domain, codomain, function)) = function_property_signature_args(fact) else {
-            return routes;
+        if let Some((domain, codomain, function)) = function_property_signature_args(fact) {
+            return self.callable_signature_requirement_routes(domain, codomain, function)
+                .into_iter()
+                .map(|route| primary[..2].iter().cloned().chain(route).collect())
+                .collect();
+        }
+        let choice = match fact {
+            AtomicFact::IsChoiceFunctionForFact(f) => Some((&f.index, &f.set, &f.family, &f.choice)),
+            AtomicFact::NotIsChoiceFunctionForFact(f) => Some((&f.index, &f.set, &f.family, &f.choice)),
+            _ => None,
         };
-        let mut signatures: Vec<_> = self
-            .collect_in_function_set_candidates(function)
-            .into_iter()
-            .map(|(signature, _)| signature)
-            .collect();
+        if let Some((index, set, family, choice)) = choice {
+            let union = Obj::SetOperator(SetOperator::FamilyUnion(FamilyUnion {
+                left: Box::new(set.clone()),
+            }));
+            let families = self.callable_signature_requirement_routes(index, set, family);
+            let choices = self.callable_signature_requirement_routes(index, &union, choice);
+            let mut routes = Vec::new();
+            for family_route in families {
+                for choice_route in &choices {
+                    routes.push(primary[..2].iter().cloned()
+                        .chain(family_route.iter().cloned())
+                        .chain(choice_route.iter().cloned()).collect());
+                }
+            }
+            return routes;
+        }
+        vec![primary]
+    }
+
+    // Legacy accepts equal carriers and the exact N+ prefix `k <= n` on
+    // closed_range(1,n). Every alternative checks the actual callable type and
+    // all equalities; a property assumption is never its own type evidence.
+    fn callable_signature_requirement_routes(
+        &mut self,
+        domain: &Obj,
+        codomain: &Obj,
+        function: &Obj,
+    ) -> Vec<Vec<crate::ast::fact::Fact>> {
+        use crate::ast::fact::{EqualFact, Fact, InFact, QuantifierFreeFact};
+        use crate::ast::obj::{FunctionSpace, IdentifierObj, Literal, Number, SetFormer, StandardSet};
+        let signature = self.predicate_unary_fn_set(domain, codomain);
+        let mut routes = vec![vec![Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: function.clone(),
+            set: signature,
+            line_file: None,
+        }))]];
+        let mut signatures: Vec<_> = self.collect_in_function_set_candidates(function)
+            .into_iter().map(|(signature, _)| signature).collect();
         if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(value)) = function {
             signatures.push(value.body.clone());
         }
         for signature in signatures {
-            let [group] = signature.set_bound_parameters.groups.as_slice() else {
-                continue;
-            };
-            let [param] = group.params.as_slice() else {
-                continue;
-            };
+            let [group] = signature.set_bound_parameters.groups.as_slice() else { continue; };
+            let [param] = group.params.as_slice() else { continue; };
             let carrier_pairs = if signature.dom_facts.is_empty() {
                 vec![(group.param_type.as_ref().clone(), domain.clone())]
             } else {
-                let Obj::SetFormer(SetFormer::ClosedRange(range)) = domain else {
-                    continue;
-                };
-                if !matches!(
-                    group.param_type.as_ref(),
-                    Obj::StandardSet(StandardSet::NPos)
-                ) {
+                let Obj::SetFormer(SetFormer::ClosedRange(range)) = domain else { continue; };
+                if !matches!(group.param_type.as_ref(), Obj::StandardSet(StandardSet::NPos)) {
                     continue;
                 }
                 let [QuantifierFreeFact::AtomicFact(AtomicFact::LessEqualFact(bound))] =
-                    signature.dom_facts.as_slice()
-                else {
-                    continue;
-                };
+                    signature.dom_facts.as_slice() else { continue; };
                 if bound.left != Obj::Identifier(IdentifierObj::from_bound_name(param)) {
                     continue;
                 }
-                vec![
-                    (
-                        range.start.as_ref().clone(),
-                        Obj::Literal(Literal::Number(Number {
-                            normalized_value: "1".to_string(),
-                        })),
-                    ),
-                    (range.end.as_ref().clone(), bound.right.clone()),
-                ]
+                vec![(range.start.as_ref().clone(), Obj::Literal(Literal::Number(Number {
+                    normalized_value: "1".to_string(),
+                }))), (range.end.as_ref().clone(), bound.right.clone())]
             };
-            let mut requirements = primary[..2].to_vec();
             let return_set = signature.ret_set.as_ref().clone();
-            requirements.push(Fact::AtomicFact(AtomicFact::InFact(InFact {
+            let mut requirements = vec![Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: self.global_ids.allocate_fact_id(),
                 element: function.clone(),
                 set: Obj::FunctionSpace(FunctionSpace::FnSet(signature)),
                 line_file: None,
-            })));
-            for (left, right) in carrier_pairs
-                .into_iter()
-                .chain([(return_set, codomain.clone())])
-            {
+            }))];
+            for (left, right) in carrier_pairs.into_iter().chain([(return_set, codomain.clone())]) {
                 requirements.push(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    left,
-                    right,
-                    line_file: None,
+                    fact_id: self.global_ids.allocate_fact_id(), left, right, line_file: None,
                 })));
             }
             routes.push(requirements);

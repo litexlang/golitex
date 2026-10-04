@@ -16,6 +16,8 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(p)) => project_closed_subtraction_bound("GreaterEqualFact", &p.bound, runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(p)) => project_closed_subtraction_bound("LessEqualFact", &p.bound, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative)
         | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("ComplexModulusNonnegative")),
@@ -2372,4 +2374,19 @@ pub(super) fn project_atomic_builtin_rule(
             ("type", string("builtin_rule")), ("family", string("NotIsChoiceFunctionForFact")),
         ]),
         }
+}
+
+fn project_closed_subtraction_bound(family: &str, p: &br::closed_subtraction_bound::ClosedSubtractionBoundCertificate, runtime: &Runtime) -> JsonValue {
+    object_for(runtime, vec![
+        ("type", string("builtin_rule")), ("family", string(family)),
+        ("rule", string("ClosedSubtractionBound")),
+        ("bound", object_for(runtime, vec![
+            ("cite_fact_id", string(p.cite_fact_id.to_string())),
+            ("cite", string(p.source_fact.readable_string())),
+            ("direction", string(match p.direction { br::closed_subtraction_bound::BoundDirection::Lower => "lower", br::closed_subtraction_bound::BoundDirection::Upper => "upper" })),
+            ("normalized_subtrahend", string(p.normalized_subtrahend.readable_string())),
+            ("translated_bound", string(p.translated_bound.readable_string())),
+            ("target_bound", string(p.target_bound.readable_string())),
+        ])),
+    ])
 }

@@ -1,0 +1,11 @@
+# Before: family intersection membership could not expose its factor facts.
+# release thm family_intersect_member_facts(x, family_intersect({S}))
+# Run: target/release/litex -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/family_intersect_member_facts.lit
+# Now: known intersection membership yields membership in each set-valued factor.
+thm singleton_member_facts:
+    ? forall S set, x family_intersect({S}):
+        x $in S
+    release thm family_intersect_member_facts(x, family_intersect({S}))
+    S $in {S}
+    x $in S
+# Boundary: no membership is supplied for an empty absolute intersection.

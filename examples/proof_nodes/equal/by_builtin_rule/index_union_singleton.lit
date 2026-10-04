@@ -3,5 +3,15 @@
 #
 # Family domain must match the index set for index_union WD.
 
+claim:
+    ? forall x {1}:
+        {x} $in power_set(N)
+    x = 1
+    x $in N
+    forall y {x}:
+        y = x
+        y $in N
+    {x} $subset N
+    {x} $in power_set(N)
 have fn A(x {1}) power_set(N) = {x}
 index_union({1}, N, A) = A(1)

@@ -217,3 +217,7 @@ mod exact_numeric_periodic_modulus;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/closed_exact_elementary_calculation/tests.rs"]
 mod closed_exact_elementary_calculation;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/exact_rational_powers/tests.rs"]
+mod exact_rational_powers;

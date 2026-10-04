@@ -1,0 +1,164 @@
+{
+  "kind": "definition_memory",
+  "identifiers": [],
+  "predicate_definitions": [
+    {
+      "kind": "def_prop",
+      "name": "above_zero",
+      "typed_parameters": {
+        "groups": [
+          {
+            "params": [
+              {
+                "id": 1,
+                "name": "x"
+              }
+            ],
+            "param_type": {
+              "tag": "Obj",
+              "obj": {
+                "tag": "StandardSet",
+                "set": "R"
+              }
+            }
+          }
+        ]
+      },
+      "iff_facts": [
+        {
+          "tag": "AtomicFact",
+          "atomic": {
+            "tag": "GreaterFact",
+            "fact_id": 1,
+            "left": {
+              "tag": "Identifier",
+              "identifier": {
+                "tag": "Plain",
+                "id": 1,
+                "name": "x"
+              }
+            },
+            "right": {
+              "tag": "Literal",
+              "literal": {
+                "tag": "Number",
+                "text": "0"
+              }
+            },
+            "line_file": {
+              "line": 4,
+              "origin": {
+                "tag": "ImportedExport",
+                "global_mod_id": 0,
+                "export_file_id": 0
+              }
+            }
+          }
+        }
+      ],
+      "line_file": {
+        "line": 3,
+        "origin": {
+          "tag": "ImportedExport",
+          "global_mod_id": 0,
+          "export_file_id": 0
+        }
+      }
+    }
+  ],
+  "abstract_predicate_definitions": [],
+  "structure_definitions": [],
+  "theorem_definitions": [
+    {
+      "kind": "def_thm",
+      "name": "add_zero_right",
+      "fact": {
+        "tag": "ForallFact",
+        "forall": {
+          "fact_id": 12,
+          "typed_parameters": {
+            "groups": [
+              {
+                "params": [
+                  {
+                    "id": 3,
+                    "name": "x"
+                  }
+                ],
+                "param_type": {
+                  "tag": "Obj",
+                  "obj": {
+                    "tag": "StandardSet",
+                    "set": "R"
+                  }
+                }
+              }
+            ]
+          },
+          "dom_facts": [],
+          "then_facts": [
+            {
+              "tag": "AtomicFact",
+              "atomic": {
+                "tag": "EqualFact",
+                "fact_id": 11,
+                "left": {
+                  "tag": "Add",
+                  "left": {
+                    "tag": "Identifier",
+                    "identifier": {
+                      "tag": "Plain",
+                      "id": 3,
+                      "name": "x"
+                    }
+                  },
+                  "right": {
+                    "tag": "Literal",
+                    "literal": {
+                      "tag": "Number",
+                      "text": "0"
+                    }
+                  }
+                },
+                "right": {
+                  "tag": "Identifier",
+                  "identifier": {
+                    "tag": "Plain",
+                    "id": 3,
+                    "name": "x"
+                  }
+                },
+                "line_file": {
+                  "line": 8,
+                  "origin": {
+                    "tag": "ImportedExport",
+                    "global_mod_id": 0,
+                    "export_file_id": 0
+                  }
+                }
+              }
+            }
+          ],
+          "line_file": {
+            "line": 7,
+            "origin": {
+              "tag": "ImportedExport",
+              "global_mod_id": 0,
+              "export_file_id": 0
+            }
+          }
+        }
+      },
+      "prove_process": [],
+      "line_file": {
+        "line": 6,
+        "origin": {
+          "tag": "ImportedExport",
+          "global_mod_id": 0,
+          "export_file_id": 0
+        }
+      }
+    }
+  ],
+  "axiom_definitions": []
+}

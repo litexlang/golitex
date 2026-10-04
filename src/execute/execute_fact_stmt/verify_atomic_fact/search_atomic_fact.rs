@@ -24,13 +24,16 @@ impl Runtime {
         use EqualFactSearchedProof as EP;
         use VerifyStateLevel::*;
 
-        match self.search_atomic_fact_proof_by_known_fact_or_closed_calculation(fact) {
+        match self.search_atomic_fact_proof_directly(fact) {
             DirectAtomicFactSearchResult::ByKnownFact(proof) => return Ok(Some(proof)),
             DirectAtomicFactSearchResult::ByClosedCalculation(proof) => {
                 return Ok(Some(match proof {
                     ClosedCalculationProof::Equality(p) => E(EP::ByClosedCalculation(p)),
                     ClosedCalculationProof::AtomicExceptEquality(p) => A(AP::ByClosedCalculation(p)),
                 }));
+            }
+            DirectAtomicFactSearchResult::ByStructuralMembership(proof) => {
+                return Ok(Some(A(AP::ByStructuralMembership(proof))));
             }
             DirectAtomicFactSearchResult::NotFound => {}
         }

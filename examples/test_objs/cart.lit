@@ -21,3 +21,26 @@ sketch:
 # P06: cart_dim(cart(R, Z, N)) = 3
 sketch:
     cart_dim(cart(R, Z, N)) = 3
+
+# P04: checked extension proof; restored from cart-P04
+sketch:
+    claim:
+        ? forall a cart({1}, {2}):
+            a = (1, 2)
+        tuple_dim(a) = 2
+        a[1] = 1
+        a[2] = 2
+        release thm tuple_equal_from_coordinates(a, (1, 2))
+    by extension:
+        ? cart({1}, {2}) = {(1, 2)}
+        claim:
+            ? forall a cart({1}, {2}):
+                a $in {(1, 2)}
+            a = (1, 2)
+            a $in {(1, 2)}
+        claim:
+            ? forall a {(1, 2)}:
+                a $in cart({1}, {2})
+            a = (1, 2)
+            release thm cart_member_from_coordinates((1, 2), cart({1}, {2}))
+            a $in cart({1}, {2})

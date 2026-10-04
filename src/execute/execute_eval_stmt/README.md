@@ -79,6 +79,16 @@ and `numeric_complex_modulus.lit`. Boundary tests:
 
 ## Closed elementary calculations
 
+Closed positive rational bases with reduced rational exponent `p/q` use
+`exact_rational`: take exact integer roots of both base components before the
+checked integer power. Thus `eval 8^(1/3)` displays `2`, and
+`eval (4/9)^(1/2)` displays `2 / 3`. Pow source WD separately checks closed
+`Q+`/`Q` inputs; it does not depend on a rational output. Nonperfect roots and
+overflow decline evaluation. Existing integer domains are unchanged, and
+nonpositive bases with noninteger exponents remain unsupported.
+Tracer: `examples/proof_nodes/equal/by_builtin_rule/closed_rational_power_calculation.lit`;
+regression/collector: `tests/unit/execute/exact_rational_powers/tests.rs`.
+
 Fraction rounding and sign, integer-valued rational operands, perfect rational
 square roots and rational logarithms use `exact_rational`. `exact_radical`
 normalizes bounded rational linear combinations of square-free roots, products,

@@ -1,0 +1,5 @@
+# H08: Three levels of function-valued return
+# Intended: accept; run via examples/test_function_sets/run.py
+
+have fn add_three(x R) fn(u R) fn(v R) R = fn(y R) (fn(w R) R) {fn(z R) R {x + y + z}}
+add_three(1)(2)(3) = 6

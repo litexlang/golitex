@@ -1,12 +1,11 @@
+# Migration: removed $fn_eq(f, g) is represented by checked ordinary function equality.
+# Preserve pointwise premise, extensional equality and the nested power_set congruence.
 thm fn_eq_implies_equality_regression:
     ? forall f, g fn(n N) N:
         forall n N:
             f(n) = g(n)
         =>:
-            $fn_eq(f, g)
             f = g
             power_set(f) = power_set(g)
-    by def $fn_eq(f, g)
-    $fn_eq(f, g)
-    f = g
+    by fn_extension f = g
     power_set(f) = power_set(g)

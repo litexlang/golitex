@@ -1,3 +1,30 @@
+## Structural membership increment (2026-10-03)
+
+Direct now has a separate `ByStructuralMembership` success route, after known
+proofs and pure closed calculation. Constructor descent uses no verifier/search
+callbacks; raw known leaves and fixed checked builtin codomains supply types.
+The shared search level table and WD-before-search contract remain in force.
+The entry is `search_atomic_fact_proof_directly`; no compatibility alias is kept.
+New tracers: `examples/proof_nodes/atomic/direct_structural_membership.lit` and
+`examples/proof_nodes/equal/by_known_special_property/fn_tuple_carrier_after_equality.lit`.
+Seven new Rust regression tests pass, covering carrier composition, citations,
+JSON, WD rejection, no SP escalation and no fact publication. The two maintained
+CLI tracers, both vec controls, actual Manual code, nine survey positives and
+three negative boundaries pass. Final fixed checkpoint: 710 library tests pass,
+27 fail; statement integration still fails. Baseline: 685 pass / 34 fail plus
+that integration failure; no new failing names. Concurrent changes prevent
+attributing every global recovery to this increment. Source was stable during
+the checks; later worktree edits are outside that fixed evidence.
+
+After batching repeated carrier scans, the long release/read probe passes in
+about39.9s; whole geo still times out at45s. A frozen on/off comparison of the
+reduced similarity definition runs in about13.4s/12.7s, versus22.7s enabled
+before batching. This is a single-run diagnostic, not a stable benchmark. The current
+persistent-prefix diagnostic reaches a slow `are_triangles_similar` definition;
+this is recorded separately from the repaired squared-difference WD example.
+Acceptance details are recorded in the geo migration journal. Earlier counts
+below are historical checkpoints, not this increment's final gate.
+
 # Direct level 0 — 2026-10-03
 
 Status: Direct increment complete; broader geo migration remains incomplete. Final comparison is recorded in

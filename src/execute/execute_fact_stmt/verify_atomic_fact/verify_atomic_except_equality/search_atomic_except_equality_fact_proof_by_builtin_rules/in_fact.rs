@@ -1959,7 +1959,7 @@ fn complex_coordinate_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBui
     }
 }
 
-fn proper_subsets_in_membership_proof_order(target: &StandardSet) -> Vec<StandardSet> {
+pub(crate) fn proper_subsets_in_membership_proof_order(target: &StandardSet) -> Vec<StandardSet> {
     // Larger / nearer carriers first so verify-based lift hits soon (e.g. R before N for C).
     [
         StandardSet::R,

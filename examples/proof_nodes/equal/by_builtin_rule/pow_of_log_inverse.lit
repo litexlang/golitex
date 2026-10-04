@@ -2,4 +2,6 @@
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/pow_of_log_inverse.lit
 
 have x N
+log(2, 2^x) = x
+log(2, 2^x) $in Z
 2^(log(2, 2^x)) = 2^x

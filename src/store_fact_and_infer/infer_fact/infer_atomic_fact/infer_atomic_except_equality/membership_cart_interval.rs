@@ -210,6 +210,25 @@ impl Runtime {
             ), verify_state)?);
         }
 
+        // A positive integer literal lower bound makes this integer interval
+        // a subset of N+. Inspect the source literal only: this inference must
+        // not silently borrow an alias equality without retaining its citation.
+        let positive_start = matches!(&start,
+            Obj::Literal(Literal::Number(number))
+                if number.normalized_value.parse::<i128>().ok().is_some_and(|value| value > 0)
+        );
+        if positive_start {
+            let positive_carrier_id = self.global_ids.allocate_fact_id();
+            derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
+                AtomicFact::InFact(InFact {
+                    fact_id: positive_carrier_id,
+                    element: element.clone(),
+                    set: Obj::StandardSet(StandardSet::NPos),
+                    line_file: lf.clone(),
+                }),
+            ), verify_state)?);
+        }
+
         if let Some(singleton) =
             self.singleton_value_for_integer_interval(&start, &end, end_inclusive)
         {

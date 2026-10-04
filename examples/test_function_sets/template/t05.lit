@@ -1,0 +1,7 @@
+# T05: Callable alias of a specialized template
+# Intended: accept; run via examples/test_function_sets/run.py
+
+template<a R>:
+    have fn shift(x R) R = x + a
+let shift_two = \shift<2>
+shift_two(3) = 5

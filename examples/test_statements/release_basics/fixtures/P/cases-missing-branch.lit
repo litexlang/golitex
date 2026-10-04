@@ -1,0 +1,8 @@
+claim:
+    ? forall x R:
+        x = 0 or x = 1
+        =>:
+            x >= 0
+    by cases:
+        ? x >= 0
+        case x = 0

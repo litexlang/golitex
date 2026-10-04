@@ -1,5 +1,5 @@
 //! Equality from cited tuple structure. Both goal objects have already passed WD.
-use super::result::EqualFactSearchedProof;
+use super::result::{EqualFactSearchedProof, KnownEqualityPathProof};
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::{Literal, Number, Obj, ProductShape};
 use crate::execute::execute_fact_stmt::known_tuple::{
@@ -57,23 +57,32 @@ impl Runtime {
                         ),
                     ));
                 }
-                if let Obj::FnObj(app) = at.obj.as_ref() {
-                    if let Some(function) = self.lookup_known_function_tuple_value(app) {
-                        if let Some(component) = function.value.args.get(index - 1) {
-                            if let Some(equal) = self.lookup_known_obj_equality(component, right) {
-                                return Ok(Some(
-                                    EqualFactSearchProofByKnownSpecialProperty::FnTupleProjection(
-                                        FnTupleProjectionKnownProof {
-                                            reversed,
-                                            index,
-                                            function,
-                                            component_equal: Box::new(equal),
-                                        },
-                                    ),
-                                ));
-                            }
+                for (subject_equal, function) in self.known_function_tuple_candidates(at.obj.as_ref()) {
+                    if let Some(component) = function.value.args.get(index - 1) {
+                        if let Some(equal) = self.lookup_known_obj_equality(component, right) {
+                            return Ok(Some(
+                                EqualFactSearchProofByKnownSpecialProperty::FnTupleProjection(
+                                    FnTupleProjectionKnownProof {
+                                        reversed, index, subject_equal, function,
+                                        component_equal: Box::new(equal),
+                                    },
+                                ),
+                            ));
                         }
                     }
+                }
+            }
+            // A checked tuple-valued function supplies one beta substitution,
+            // even when a stored object equality names its application.
+            // Example: chosen = pair(1,2) entails chosen = (1,2).
+            for (subject_equal, function) in self.known_function_tuple_candidates(left) {
+                let value = Obj::ProductShape(ProductShape::Tuple(function.value.clone()));
+                if let Some(equal) = self.lookup_known_obj_equality(&value, right) {
+                    return Ok(Some(EqualFactSearchProofByKnownSpecialProperty::FnTupleValue(
+                        FnTupleValueKnownProof {
+                            reversed, subject_equal, function, value_equal: Box::new(equal),
+                        },
+                    )));
                 }
             }
             // Eta: a known n-tuple equals its n ordered projections.
@@ -124,6 +133,7 @@ pub enum EqualFactSearchProofByKnownSpecialProperty {
     TupleReconstruction(TupleReconstructionKnownProof),
     TupleProjection(TupleProjectionKnownProof),
     FnTupleProjection(FnTupleProjectionKnownProof),
+    FnTupleValue(FnTupleValueKnownProof),
     TupleDimension(TupleDimensionKnownProof),
 }
 
@@ -143,6 +153,7 @@ pub struct TupleProjectionKnownProof {
 pub struct FnTupleProjectionKnownProof {
     pub reversed: bool,
     pub index: usize,
+    pub subject_equal: KnownEqualityPathProof,
     pub function: KnownFunctionTupleValueProof,
     pub component_equal: Box<EqualFactSearchedProof>,
 }
@@ -151,4 +162,11 @@ pub struct TupleDimensionKnownProof {
     pub reversed: bool,
     pub shape: KnownTupleShapeProof,
     pub dimension_equal: Box<EqualFactSearchedProof>,
+}
+
+pub struct FnTupleValueKnownProof {
+    pub reversed: bool,
+    pub subject_equal: KnownEqualityPathProof,
+    pub function: KnownFunctionTupleValueProof,
+    pub value_equal: Box<EqualFactSearchedProof>,
 }

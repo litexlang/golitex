@@ -1,0 +1,6 @@
+# N06: Template function guard rejects the excluded point
+# Intended: reject; run via examples/test_function_sets/run.py
+
+template<a R>:
+    have fn reciprocal(x R: x != a) R = 1 / (x - a)
+\reciprocal<2>(2) = \reciprocal<2>(2)

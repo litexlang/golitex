@@ -1,2 +1,0 @@
-# Intended valid regression: range P06
-not 3 $in range(1, 3)

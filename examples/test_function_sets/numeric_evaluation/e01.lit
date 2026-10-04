@@ -1,0 +1,7 @@
+# Primary direct-value regression: formerly rejected at search_proof.
+have fn add(x R) fn(y R) R = fn(y R) R {x + y}
+add(2) $in fn(y R) R
+add(2)(3) $in R
+add(2)(3) = 5
+add(1 / 3)(1 / 6) = 1 / 2
+add(0.1)(0.2) = 0.3

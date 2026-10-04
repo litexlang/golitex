@@ -1,0 +1,6 @@
+# T07: Template returns a function and calls it
+# Intended: accept; run via examples/test_function_sets/run.py
+
+template<A nonempty_set>:
+    have fn constant(x A) fn(y A) A = fn(y A) A {x}
+\constant<R>(2)(3) = 2

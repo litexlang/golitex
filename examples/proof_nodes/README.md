@@ -42,6 +42,10 @@ the inherited search ceiling, stored citations and all requirement certificates.
 
 The [field-expression strategy](atomic/by_builtin_strategy/field_arithmetic_carrier_closure.lit)
 retains its constructor tree and terminal proof requirements over Q/R.
+The [stored numeric superset](atomic/by_known_special_property/standard_numeric_superset.lit)
+route cites an existing membership under the intrinsic inclusion table without
+fresh premise search. `known_numeric_carrier` tests retain direction, sign,
+Direct structural lifting, read-only memory and citation boundaries.
 Scalar soundness has maintained tracers for
 [real operand closure](atomic/by_builtin_rule/real_arithmetic_operand_carriers.lit),
 [real even powers](atomic/by_builtin_rule/even_power_real_carrier.lit),
@@ -71,6 +75,11 @@ and [function projection](equal/by_known_special_property/fn_tuple_projection.li
 They preserve Membership/Equality citations and do not recursively unfold
 functions. Their negative and zero-depth checks live in
 `tests/unit/execute/equality_search/known_tuple.rs`.
+
+[Geo coordinate expansion](equal/by_known_special_property/geo_coordinate_expansion.lit)
+shows explicit coordinate bridges when composing tuple-valued functions with
+dot products and determinants. It preserves the original mathematical goals
+and uses no trust or additional assumptions.
 
 | What the example demonstrates | Runnable file |
 | --- | --- |
@@ -203,12 +212,16 @@ Equality BuiltinRule identities (Stage B wave 7):
 `a=b` from two-sided `<=`; `a-b=0` from `a=b`; zero-product cancel;
 `sign(0-a)=0-sign(a)`; `sign(a)*abs(a)=a`; `abs(a)=sign(a)*a`;
 `sign(a*b)=sign(a)*sign(b)` (native sign codomain `Z` supplies arithmetic WD);
-`a=c-b` from known `a+b=c` — see `gcd_divides_argument.lit`,
+`a=c-b` from known `a+b=c`, including `a=-b` when `c=0` — see `gcd_divides_argument.lit`,
 `product_mod_factor_zero.lit`, `equality_from_two_sided_weak_order.lit`,
 `diff_zero_from_equal_operands.lit`, `zero_product_cancel.lit`,
 `sign_of_negation.lit`, `sign_times_abs_equals_arg.lit`,
 `abs_equals_sign_times_arg.lit`, `sign_of_product.lit`,
-`subtraction_from_known_addition.lit`.
+`subtraction_from_known_addition.lit`, `additive_inverse_from_sum.lit`.
+
+Known Or replay uses the existing structural alpha identity for nested object
+binders while retaining exact free identities, conditions and carriers. See
+[`set_builder_union_membership.lit`](or/by_known_or_fact/set_builder_union_membership.lit).
 Equality BuiltinRule identities (Stage B wave 9):
 set empties / commutative / idempotent; intersect-from-subset;
 empty-from-not-nonempty; power_set cardinality — see `union_empty_*.lit`,
@@ -463,3 +476,54 @@ The level-0 Direct route is exercised by
 It covers finite enumeration without preliminary numeric memberships and exact
 fraction calculations; Rust permission tests also cover failure, WD, evidence,
 and the prohibition on recursive search or symbolic substitution.
+
+## Closed elementary calculation
+
+The [exact rational-power tracer](equal/by_builtin_rule/closed_rational_power_calculation.lit)
+covers closed positive rational bases and rational exponents with exact rational
+results. `exact_rational_powers` tests include the collector
+`run_examples_closed_rational_power_calculation`, Direct calculation, checked
+Q+/Q domain evidence, independent eval results/no stores, irrational/overflow
+controls and unchanged integer-power domains. Its strict CLI gate requires
+exit 0, JSON success true and no session_error.
+
+Four dedicated tracers cover [fraction rounding and integer operands](equal/by_builtin_rule/closed_fraction_rounding_calculation.lit),
+[numeric radicals](equal/by_builtin_rule/closed_radical_calculation.lit),
+[complex projections/arithmetic](equal/by_builtin_rule/closed_complex_parts_calculation.lit)
+and [rational logs](equal/by_builtin_rule/closed_rational_log_calculation.lit).
+Their historical folder name does not change the current winning route:
+closed assertions use Direct `ByClosedCalculation`, without premise search.
+Each tracer also exercises exact `eval`; its source WD is checked and no fact
+is stored by display evaluation. `run_examples_closed_exact_elementary_tracers`
+collects these files. The [paired negatives](../negative/closed_exact_elementary_calculation/)
+retain wrong answers, illegal domains, unsupported values and overflow.
+
+The [closed-subtraction bound tracer](atomic/by_builtin_rule/closed_subtraction_bound.lit)
+consumes stored numeric upper/lower bounds with exact closed offsets under the
+existing builtin ceiling. `closed_subtraction_bound` tests both source/goal
+orientations, rational endpoints, insufficient and invalid bounds, source
+citation and read-only memory. The original Fibonacci recursive-domain tracer
+is `../wd/positive_closed_decrement_recursive.lit`.
+
+
+[Direct structural membership](atomic/direct_structural_membership.lit) covers
+nested numeric carriers and their use in predicate WD without intermediate
+assertions. Its Rust tests reject invalid domains, wrong carriers and attempts
+to call SP or unfold a user function at Direct. The proof retains constructor
+nodes and cited leaf types in Detailed JSON.
+[Function tuple carrier after equality](equal/by_known_special_property/fn_tuple_carrier_after_equality.lit)
+checks that an explicit tuple equation preserves the existing Cartesian
+codomain route. Dimension-only tuple evidence remains a fallback.
+
+## Builtin migration acceptance (2026-10-03)
+
+[Real-bound certificates](../wd/builtin_real_bound_certificates.lit) exercise
+completeness production, opaque signature WD, obtain and theorem consumption.
+[Surjective](atomic/by_definition/builtin_surjective.lit) and
+[choice](atomic/by_definition/builtin_choice_function.lit) definitions keep
+checked universal/witness and callable-carrier evidence. Mapping publication
+has separate [injective](../infer/atomic/injective_definition.lit) and
+[surjective](../infer/atomic/surjective_definition.lit) consumers.
+[Migration record](../../docs/audits/builtin-prop-thm-migration-2026-10-03.md)
+and [journal](proof_journals/builtin-prop-thm-migration-2026-10-03.json)
+retain inventories, false/domain controls and unresolved struct/finite-set cases.

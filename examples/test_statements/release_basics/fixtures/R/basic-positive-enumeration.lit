@@ -1,0 +1,3 @@
+by enumerate finite_set:
+    ? forall x {1, 2}:
+        x > 0

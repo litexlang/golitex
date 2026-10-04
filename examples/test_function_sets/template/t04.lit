@@ -1,0 +1,7 @@
+# T04: Higher-order apply through a template
+# Intended: accept; run via examples/test_function_sets/run.py
+
+template<A, B nonempty_set>:
+    have fn apply(g fn(x A) B, a A) B = g(a)
+have fn step(x R) R = x + 1
+\apply<R, R>(step, 2) = 3

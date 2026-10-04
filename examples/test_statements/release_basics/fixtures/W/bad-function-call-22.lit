@@ -1,0 +1,2 @@
+have fn identity(x N) N = x
+identity(0, 1) = 0

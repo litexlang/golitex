@@ -1,0 +1,11 @@
+# Before: a checked surjective property did not publish its quantified body.
+# forall f fn(t R) R, y R:
+#     $surjective(R, R, f)
+#     =>:
+#         exist x R st {y = f(x)}
+# Now: store the positive property, publish its definition, retain existential.
+# Gate: target/release/litex -strict -f examples/infer/atomic/surjective_definition.lit
+forall f fn(t R) R, y R:
+    $surjective(R, R, f)
+    =>:
+        exist x R st {y = f(x)}

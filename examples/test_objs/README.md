@@ -25,17 +25,30 @@ gates and any concurrent-build limitations are recorded separately in
 
 The [remaining elementary follow-up](experience/problem_notes/remaining_elementary_gaps_2026-10-03.md)
 closes the eight finite-rational-extremum, quarter-angle-inverse and log goals
-left after the fourteen numeric/periodic/modulus closures. The live manifest
-now contains **594 positive cases, 289 negatives and 22 remaining gaps**. Inverse
+left after the fourteen numeric/periodic/modulus closures. At that checkpoint the manifest
+contained **594 positive cases, 289 negatives and 22 remaining gaps**. Inverse
 and log cases retain their checked intermediate proofs and principal ranges.
 
+
+The [closed elementary calculation follow-up](experience/problem_notes/closed_exact_elementary_calculation_2026-10-03.md) adds 33 positive and six negative cases. That round left **627 positive cases, 295 negatives and 22 remaining gaps**. Four dedicated tracers and paired negatives cover calculation and exact display evaluation; a focused result is not a new complete-suite certificate.
 
 The latest full scan also finds [39 owning-file regressions](current_source_regressions_2026-10-03.md)
 after concurrent kernel changes: 37 rejections and two protocol failures.
 They are separate from the direct-gap inventory. Focused feature success does
 not make this complete corpus green; consult the dated source/binary receipts.
 
+The [explicit set-proof follow-up](experience/problem_notes/remaining_set_proof_repairs_2026-10-03.md) closes 17 more gaps with contra, extension, carrier proofs and definition release. That round left **644 positive cases, 295 negatives and 5 remaining gaps**; its strict focused gate covers 11 owning files and 28 rejection fixtures.
+
+The [five-set follow-up](experience/problem_notes/five_set_gap_followup_2026-10-03.md) closes the last five recorded gaps. The current audited inventory has **665 positive cases, 309 negatives and 0 recorded gaps**. Concurrent unrelated additions contribute to these totals; this round closes five cases and adds five negatives. Its focused gates do not certify the full corpus.
+
 ## Run
+
+The [exact rational-power addition](experience/problem_notes/exact_rational_powers_2026-10-03.md)
+adds 16 positive and nine negative Pow cases. Its 23 selected Rust tests and
+38 strict CLI checks pass, including exact eval values and retained integer
+domains. Three previously recorded mixed-module test expectations still fail;
+their before/after calculation receipts are retained separately. Consult
+[coverage.md](coverage.md) for current counts; this is not a full-corpus gate.
 
 From the repository root:
 

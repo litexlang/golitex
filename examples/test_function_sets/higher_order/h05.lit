@@ -1,0 +1,6 @@
+# H05: Typed local binding of a returned closure
+# Intended: accept; run via examples/test_function_sets/run.py
+
+have fn add(x R) fn(y R) R = fn(y R) R {x + y}
+have add_two fn(y R) R = add(2)
+add_two(3) = 5

@@ -1,0 +1,6 @@
+# H11: Explicit returned-function equality before second call
+# Intended: accept; run via examples/test_function_sets/run.py
+
+have fn add(x R) fn(y R) R = fn(y R) R {x + y}
+add(2) = fn(y R) R {2 + y}
+add(2)(3) = 5

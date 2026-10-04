@@ -1,0 +1,9 @@
+# D09: Function returning a struct containing a named function
+# Intended: accept; run via examples/test_function_sets/run.py
+
+struct Box:
+    op fn(x R) R
+    tag N
+have fn step(x R) R = x + 1
+have fn make(a R) &Box = (step, 0)
+make(2).op(3) $in R

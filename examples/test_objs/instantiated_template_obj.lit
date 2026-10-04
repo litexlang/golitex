@@ -25,4 +25,8 @@ sketch:
     template<S set>:
         have fn identity(x S) S = x
     let f = \identity<R>
+    \identity<R> $in fn(x R) R
+    f $in fn(x R) R
+    f(2) = \identity<R>(2)
+    \identity<R>(2) = 2
     f(2) = 2

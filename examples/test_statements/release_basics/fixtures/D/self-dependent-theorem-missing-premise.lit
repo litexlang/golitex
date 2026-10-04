@@ -1,0 +1,8 @@
+thm with_premise:
+    ? forall n Z:
+        n >= 0
+        =>:
+            n >= 0
+release thm with_premise(-1)
+-1 >= 0
+0 = 1

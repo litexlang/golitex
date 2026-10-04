@@ -1,12 +1,28 @@
 # Node: atomic.ByBuiltinRule.LessEqual.FiniteSetSizeSurjectionCodomainLeDomain
-# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_size_surjection_codomain_le_domain.lit
+# Before: the source omitted the explicit universal preimage proof and carrier facts.
 #
-# Premise: known `$surjective(A, B, f)` and `$is_finite_set(A)`.
-
-have A set = {1, 2}
+# have A set = {1, 2}
+# have B set = {1}
+# have fn f(x A) B = 1
+# exist x A st {x = 1}
+# by def $surjective(A, B, f)
+# $is_finite_set(A)
+# finite_set_size(B) <= finite_set_size(A)
+# Now: checked membership, witnesses and numeric carriers; the same conclusion.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_size_surjection_codomain_le_domain.lit
+have A set = {1,2}
 have B set = {1}
 have fn f(x A) B = 1
-exist x A st {x = 1}
+1 $in A
+witness exist x A st {x = 1} from 1
+claim:
+    ? forall y B:
+        exist x A st {y = f(x)}
+    y $in {1}
+    witness exist x A st {y = f(x)} from 1
 by def $surjective(A, B, f)
 $is_finite_set(A)
+$is_finite_set(B)
+finite_set_size(A) $in N
+finite_set_size(B) $in N
 finite_set_size(B) <= finite_set_size(A)

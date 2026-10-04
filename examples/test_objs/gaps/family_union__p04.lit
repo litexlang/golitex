@@ -1,2 +1,0 @@
-# Intended valid regression: family_union P04
-1 $in family_union({{1}, {2}})

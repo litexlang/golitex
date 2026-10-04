@@ -1,0 +1,5 @@
+# H10: Outer guard is checked before returning a function
+# Intended: accept; run via examples/test_function_sets/run.py
+
+have fn choose(k R: k > 0) fn(x R) R = fn(x R) R {x + k}
+choose(2)(3) = 5

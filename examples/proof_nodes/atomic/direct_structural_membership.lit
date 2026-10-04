@@ -1,0 +1,25 @@
+# Tracer: deterministic carrier composition at Direct, after object WD.
+# Before:
+# have n N
+# ((n+1)+1)+1 $in N
+# Former result: search_proof failed as each arithmetic layer consumed a level.
+# have a,b cart(R,R)
+# 0 <= (b[1]-a[1])^2
+# Former result: predicate WD could not establish the squared difference in R.
+# Now: the same goals verify without preliminary carrier facts.
+have n N
+((n+1)+1)+1 $in N
+have a,b cart(R,R)
+0 <= (b[1]-a[1])^2
+have x,y R
+0 <= (floor(x)-floor(y))^2
+have t R
+0 <= (sin(t)+cos(t))^2
+have q Q
+(q+1)*(q-1) $in Q
+have z C
+(z+1)*(z-1) $in C
+# Boundary: no SP/definition/rewrite calls from Direct. Invalid domains,
+# N subtraction, Z division and arbitrary complex-to-real claims still reject.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/atomic/direct_structural_membership.lit
+# Rust: tests/unit/execute/direct_structural_membership/tests.rs

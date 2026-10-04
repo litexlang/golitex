@@ -359,7 +359,8 @@ fn project_by(b: &ExecByStmtResult, runtime: &Runtime) -> JsonValue {
                 let (stores, infers) = flatten_store_nodes(runtime, &s.stored);
                 success_parts(runtime, "by cases".into(), "by_cases", stores, infers)
             }
-            ExecByCasesStmtResult::Failed(_) => failed(runtime, "by cases", "by_cases"),
+            ExecByCasesStmtResult::Failed(f) => failed_with_details(runtime, "by cases", "by_cases",
+                super::project_detailed::project_cases_failure(f, runtime)),
         },
         ExecByStmtResult::Contra(r) => match r {
             ExecByContraStmtResult::Success(s) => success_from_store(
@@ -368,7 +369,8 @@ fn project_by(b: &ExecByStmtResult, runtime: &Runtime) -> JsonValue {
                 "by_contra",
                 &s.stored,
             ),
-            ExecByContraStmtResult::Failed(_) => failed(runtime, "by contradiction", "by_contra"),
+            ExecByContraStmtResult::Failed(f) => failed_with_details(runtime, "by contradiction", "by_contra",
+                super::project_detailed::project_contra_failure(f, runtime)),
         },
         ExecByStmtResult::Def(r) => match r {
             ExecByDefStmtResult::Success(s) => {
@@ -380,9 +382,8 @@ fn project_by(b: &ExecByStmtResult, runtime: &Runtime) -> JsonValue {
             ExecByExtensionStmtResult::Success(s) => {
                 success_from_store(runtime, "by extension".into(), "by_extension", &s.stored)
             }
-            ExecByExtensionStmtResult::Failed(_) => {
-                failed(runtime, "by extension", "by_extension")
-            }
+            ExecByExtensionStmtResult::Failed(f) => failed_with_details(runtime, "by extension", "by_extension",
+                super::project_detailed::project_extension_failure(f, runtime)),
         },
         ExecByStmtResult::FnExtension(r) => match r {
             ExecByFnExtensionStmtResult::Success(s) => success_from_store(
@@ -536,7 +537,8 @@ fn project_proof_block(p: &ExecProofBlockStmtResult, runtime: &Runtime) -> JsonV
                     .unwrap_or_else(|| "claim".to_string());
                 success_parts(runtime, statement, "claim", stores, infers)
             }
-            ExecClaimStmtResult::Failed(_) => failed(runtime, "claim", "claim"),
+            ExecClaimStmtResult::Failed(f) => failed_with_details(runtime, "claim", "claim",
+                super::project_detailed::project_claim_failure(f, runtime)),
         },
         ExecProofBlockStmtResult::Sketch(r) => match r {
             ExecSketchStmtResult::Success(_) => success_plain(runtime, "sketch".into(), "sketch"),

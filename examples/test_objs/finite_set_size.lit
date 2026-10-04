@@ -25,3 +25,12 @@ sketch:
 # P07: finite_set_size(closed_range(1, 4)) = 4
 sketch:
     finite_set_size(closed_range(1, 4)) = 4
+
+# P05: explicit checked proof; restored from finite_set_size-P05
+sketch:
+    by contra:
+        ? {1} != {2}
+        1 $in {1}
+        1 $in {2}
+        impossible 1 $in {2}
+    finite_set_size({{1}, {2}}) = 2

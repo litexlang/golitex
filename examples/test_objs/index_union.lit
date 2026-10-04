@@ -23,3 +23,19 @@ sketch:
 sketch:
     forall A fn(k {1, 2}) power_set(N):
         index_union({1, 2}, N, A) = index_union({1, 2}, N, A)
+
+# P02: explicit checked proof; restored from index_union-P02
+sketch:
+    claim:
+        ? forall k {1}:
+            {k} $in power_set(N)
+        k = 1
+        k $in N
+        forall x {k}:
+            x = k
+            x $in N
+        {k} $subset N
+    have fn A(k {1}) power_set(N) = {k}
+    A(1) = {1}
+    index_union({1}, N, A) = A(1)
+    index_union({1}, N, A) = {1}

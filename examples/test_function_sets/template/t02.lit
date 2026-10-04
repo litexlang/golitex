@@ -1,0 +1,7 @@
+# T02: Value parameter substitution and specialization isolation
+# Intended: accept; run via examples/test_function_sets/run.py
+
+template<a R>:
+    have fn shift(x R) R = x + a
+\shift<2>(3) = 5
+\shift<7>(3) = 10

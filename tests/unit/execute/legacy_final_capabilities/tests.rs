@@ -274,6 +274,31 @@ fn stage_permissions_and_scoped_search_remain_bounded() {
         let statements = rt.parse(&tokens).unwrap();
         let Stmt::Fact(fact) = &statements[0] else { panic!("fact expected"); };
         let before = rt.execution_environments_stack.iter().map(|e| (e.facts.facts_by_id.len(), e.well_defined_objects.object_to_wd_id.len())).collect::<Vec<_>>();
+        if let crate::ast::fact::Fact::ForallFact(conditional) = fact {
+            // Establish the conditional's scope and WD once. The stage test
+            // then exercises truth search directly, whose entry requires WD.
+            // Re-proving all binder/constructor WD at a lower ceiling would
+            // conflate that precondition with builtin-rule permission.
+            let (_, local_env) = rt.run_in_local_env_and_take_env(|rt| {
+                assert!(rt.introduce_typed_parameters(&conditional.typed_parameters, VerifyState::top_level())?.is_ok());
+                for premise in &conditional.dom_facts {
+                    assert!(matches!(rt.verify_fact_well_definedness(premise, VerifyState::top_level())?, crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Success(_)));
+                    rt.store_fact_and_infer(premise, VerifyState::top_level())?;
+                }
+                let crate::ast::fact::ExistOrAndChainAtomicFact::AtomicFact(crate::ast::fact::AtomicFact::EqualFact(equal)) = &conditional.then_facts[0] else { panic!("equality expected"); };
+                assert!(!rt.verify_equal_fact_well_definedness(equal, VerifyState::top_level())?.is_failed());
+                let local_before = rt.execution_environments_stack.iter().map(|e| (e.facts.facts_by_id.len(), e.well_defined_objects.object_to_wd_id.len())).collect::<Vec<_>>();
+                assert!(rt.search_equal_fact_proof(equal, VerifyState::new(VerifyStateLevel::KnownSpecialProperty))?.is_none(), "disabled builtin: {goal}");
+                assert!(matches!(rt.search_equal_fact_proof(equal, VerifyState::new(VerifyStateLevel::BuiltinRule))?, Some(crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof::ByBuiltinRule(_))), "builtin only: {goal}");
+                let local_after = rt.execution_environments_stack.iter().map(|e| (e.facts.facts_by_id.len(), e.well_defined_objects.object_to_wd_id.len())).collect::<Vec<_>>();
+                assert_eq!(local_before, local_after);
+                Ok(())
+            }).unwrap();
+            assert!(!local_env.facts.facts_by_id.is_empty());
+            let after = rt.execution_environments_stack.iter().map(|e| (e.facts.facts_by_id.len(), e.well_defined_objects.object_to_wd_id.len())).collect::<Vec<_>>();
+            assert_eq!(before, after, "conditional scope must not publish: {goal}");
+            continue;
+        }
         assert!(rt.verify_fact(fact, VerifyState::new(VerifyStateLevel::KnownSpecialProperty)).unwrap().is_failed(), "disabled builtin: {goal}");
         assert!(!rt.verify_fact(fact, VerifyState::new(VerifyStateLevel::BuiltinRule)).unwrap().is_failed(), "builtin only: {goal}");
         let after = rt.execution_environments_stack.iter().map(|e| (e.facts.facts_by_id.len(), e.well_defined_objects.object_to_wd_id.len())).collect::<Vec<_>>();

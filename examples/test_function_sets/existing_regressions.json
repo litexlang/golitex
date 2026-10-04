@@ -1,0 +1,251 @@
+{
+  "identity": {
+    "source_sha256": "667c4cfe028256fb06c80dd3161a8518dc7ffb64aff2981010e713905a83af86",
+    "binary_sha256": "d71bffa6763fb62bd96abd3fc3d20702ccca2988947ce6ed3e17df42a0dfe30d"
+  },
+  "rust": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "struct_field_instantiation_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "summaries": [
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 751 filtered out; finished in 0.15s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s"
+      ],
+      "tests": [
+        "test execute::struct_field_instantiation_tests::struct_field_instantiation_rejects_scalar_paths_and_unknown_fields ... ok",
+        "test execute::struct_field_instantiation_tests::struct_field_instantiation_keeps_callable_guards ... ok",
+        "test execute::struct_field_instantiation_tests::struct_field_instantiation_does_not_open_nested_laws ... ok",
+        "test execute::struct_field_instantiation_tests::struct_field_instantiation_preserves_generic_concrete_nested_and_dependent_domains ... ok",
+        "test execute::struct_field_instantiation_tests::struct_field_instantiation_rejects_wrong_argument_carriers_and_false_laws ... ok",
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 751 filtered out; finished in 0.15s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "function_signature_scope_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "summaries": [
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 750 filtered out; finished in 0.02s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s"
+      ],
+      "tests": [
+        "test parse::function_signature_scope_tests::function_signature_scopes_rollback_failed_carriers_and_do_not_leak_binders ... ok",
+        "test parse::function_signature_scope_tests::function_signature_scopes_keep_disjoint_same_spelling_binders_independent ... ok",
+        "test parse::function_signature_scope_tests::function_signature_scopes_wd_rejects_independently_constructed_dependent_asts ... ok",
+        "test parse::function_signature_scope_tests::function_signature_scopes_preserve_conditions_bodies_and_external_carriers ... ok",
+        "test parse::function_signature_scope_tests::function_signature_scopes_reject_parameter_and_return_dependencies_during_parse ... ok",
+        "test parse::function_signature_scope_tests::function_signature_scopes_run_the_durable_positive_tracer ... ok",
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 750 filtered out; finished in 0.02s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "execute_def_template_stmt::tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "summaries": [
+        "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 746 filtered out; finished in 1.14s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s"
+      ],
+      "tests": [
+        "test execute::execute_def_template_stmt::tests::template_definition_stores_are_visible_in_normal_and_detailed_json ... ok",
+        "test execute::execute_def_template_stmt::tests::template_domains_are_retained_and_do_not_become_ambient_assumptions ... ok",
+        "test execute::execute_def_template_stmt::tests::existential_object_and_both_obtain_forms_export_the_selected_properties ... ok",
+        "test execute::execute_def_template_stmt::tests::trust_body_exports_quantified_facts_and_still_requires_nonstrict_mode ... ok",
+        "test execute::execute_def_template_stmt::tests::replacement_exports_membership_and_its_existential_elimination ... ok",
+        "test execute::execute_def_template_stmt::tests::failed_template_and_failed_enclosing_claim_discard_published_facts ... ok",
+        "test execute::execute_def_template_stmt::tests::set_kinds_and_dependent_object_definitions_export_facts ... ok",
+        "test execute::execute_def_template_stmt::tests::unique_function_exports_property_and_uniqueness ... ok",
+        "test execute::execute_def_template_stmt::tests::formula_piecewise_and_recursive_function_definitions_export_guarded_facts ... ok",
+        "test execute::execute_def_template_stmt::tests::run_examples_member_definition_exports_a_known_forall_with_body_evidence ... ok",
+        "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 746 filtered out; finished in 1.14s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "function_application_wd_evidence_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "summaries": [
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 754 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s"
+      ],
+      "tests": [
+        "test execute::function_application_wd_evidence_tests::application_wd_does_not_return_ids_owned_only_by_a_discarded_candidate_scope ... ok",
+        "test execute::function_application_wd_evidence_tests::field_application_wd_citations_stay_in_the_retained_definition_scope ... ok",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 754 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s"
+      ]
+    }
+  ],
+  "tracers": [
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_objs/fn_set.lit"
+      ],
+      "observed": "reject",
+      "phase": "parse",
+      "statement_statuses": [
+        true,
+        true,
+        true
+      ],
+      "exit_code": 1,
+      "session_error": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `x`\", line: 22, path: Real(\"examples/test_objs/fn_set.lit\") }))",
+      "diagnostic": "Runtime(ParseError(RuntimeParseError { message: \"undefined name `x`\", line: 22, path: Real(\"examples/test_objs/fn_set.lit\") }))",
+      "failures": [],
+      "file": "examples/test_objs/fn_set.lit"
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/stmt_nodes/definition/template_definition_facts.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "file": "examples/stmt_nodes/definition/template_definition_facts.lit"
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/wd/struct_field_instantiation.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "file": "examples/wd/struct_field_instantiation.lit"
+    },
+    {
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/wd/fixed_function_signature_scopes.lit"
+      ],
+      "observed": "accept",
+      "phase": "success",
+      "statement_statuses": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "exit_code": 0,
+      "session_error": null,
+      "file": "examples/wd/fixed_function_signature_scopes.lit"
+    }
+  ],
+  "identity_stable": true
+}

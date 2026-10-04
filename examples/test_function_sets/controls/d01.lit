@@ -1,0 +1,6 @@
+# D01: Higher-order apply with one explicit unfolding chain
+# Intended: accept; run via examples/test_function_sets/run.py
+
+have fn apply(g fn(x R) R, a R) R = g(a)
+have fn step(x R) R = x + 1
+apply(step, 2) = step(2) = 3

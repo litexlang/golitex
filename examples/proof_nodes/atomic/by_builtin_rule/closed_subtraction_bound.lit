@@ -1,0 +1,21 @@
+# Tracer: transport a stored numeric bound through a closed subtraction.
+# Before, the recursive-domain obligation failed at the restricted builtin ceiling:
+# x >= 2  =>  x - 1 >= 0
+# Both upper/lower bounds and both weak comparison spellings now cite the source.
+forall x R:
+    x >= 2
+    =>:
+        x - 1 >= 0
+        0 <= x - 1
+        x - (1 / 3) >= 5 / 3
+
+forall x R:
+    2 >= x
+    =>:
+        x - 3 <= 0
+        0 >= x - 3
+
+# Boundary: a stored bound must be sufficient; x>=2 cannot prove x-3>=0.
+# Unknown constants, nonreal domains, undefined offsets and overflow reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/closed_subtraction_bound.lit
+# Tests: closed_subtraction_bound; real caller: wd/positive_closed_decrement_recursive.lit

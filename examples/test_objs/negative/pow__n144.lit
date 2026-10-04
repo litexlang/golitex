@@ -1,0 +1,3 @@
+# Expected rejection: pow N144, exact rational power boundary.
+# Run: target/release/litex -strict -f examples/test_objs/negative/pow__n144.lit
+eval 8^(127/3)

@@ -12,7 +12,21 @@ sketch:
 
 # P03: closed_range(3, 1) = {}
 sketch:
-    closed_range(3, 1) = {}
+    claim:
+        ? forall x closed_range(3, 1):
+            x $in {}
+        by contra:
+            ? x $in {}
+            x >= 3
+            x > 1
+            impossible x <= 1
+    claim:
+        ? forall x {}:
+            x $in closed_range(3, 1)
+        by contra:
+            ? x $in closed_range(3, 1)
+            impossible x $in {}
+    by extension closed_range(3, 1) = {}
 
 # P05: 1...3 = closed_range(1, 3)
 sketch:
@@ -25,3 +39,22 @@ sketch:
 # P07: finite_set_size(closed_range(0, 3)) = 4
 sketch:
     finite_set_size(closed_range(0, 3)) = 4
+
+# P04: explicit checked proof; restored from closed_range-P04
+sketch:
+    claim:
+        ? forall x closed_range(-1, 1):
+            x $in {-1, 0, 1}
+        expand: x $in closed_range(-1, 1)
+        by cases:
+            ? x $in {-1, 0, 1}
+            case x = -1:
+                x $in {-1, 0, 1}
+            case x = 0:
+                x $in {-1, 0, 1}
+            case x = 1:
+                x $in {-1, 0, 1}
+    by enumerate finite_set:
+        ? forall x {-1, 0, 1}:
+            x $in closed_range(-1, 1)
+    by extension closed_range(-1, 1) = {-1, 0, 1}

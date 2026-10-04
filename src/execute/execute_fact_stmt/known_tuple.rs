@@ -2,8 +2,9 @@
 //! Callers establish subject WD before consuming these local certificates.
 
 use crate::ast::fact::InFact;
-use crate::ast::obj::{Cart, FnObj, FnObjHead, FunctionSpace, Literal, Number, Obj, ProductShape, Tuple};
+use crate::ast::obj::{Cart, FnObj, FnObjHead, FnSet, FunctionSpace, InstantiatedTemplateObj, Literal, Number, Obj, ProductShape, Tuple};
 use crate::exec_env::SpecialProperty;
+use crate::ast::stmt::TemplateDefEnum;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::{
     FnApplicationInCodomainKnownSpecialPropertyProof, InFactSearchProofByKnownSpecialProperty,
     SignatureMatchProof,
@@ -51,7 +52,22 @@ pub struct KnownFunctionTupleValueProof {
 // when every possible WD signature agrees with the selected function's domain.
 pub enum KnownFunctionTupleApplicability {
     AnonymousLiteral,
-    AllSignaturesMatch(Vec<SignatureMatchProof>),
+    AllSignaturesMatch {
+        signatures: Vec<SignatureMatchProof>,
+        template_signatures: Vec<KnownTemplateSignatureMatchProof>,
+    },
+    TemplateDefinition {
+        instance: InstantiatedTemplateObj,
+        signature: FnSet,
+        alternative_signatures: Vec<SignatureMatchProof>,
+        alternative_template_signatures: Vec<KnownTemplateSignatureMatchProof>,
+    },
+}
+
+pub struct KnownTemplateSignatureMatchProof {
+    pub function_equal: KnownEqualityPathProof,
+    pub instance: InstantiatedTemplateObj,
+    pub signature_match: crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof,
 }
 
 impl KnownTupleShapeProof {
@@ -104,62 +120,55 @@ impl Runtime {
                 ));
             }
         }
-        if let Some(value) = self
-            .known_literal_tuple_candidates(subject)
-            .into_iter()
-            .next()
-        {
-            return Some(KnownTupleShapeProof::TupleEquality(value));
-        }
-        let Obj::FnObj(app) = subject else {
-            return None;
-        };
-        let head = tuple_function_head(app);
-        for (source_head, path) in self.known_tuple_object_peers(&head) {
-            let mut source_app = app.clone();
-            source_app.head = Box::new(match source_head {
-                Obj::Identifier(id) => FnObjHead::Identifier(id),
-                Obj::InstantiatedTemplateObj(inst) => FnObjHead::InstantiatedTemplateObj(inst),
-                Obj::StructAndFieldAccessObj(
-                    crate::ast::obj::StructAndFieldAccessObj::FieldAccess(access),
-                ) => FnObjHead::FieldAccess(access),
-                _ => continue,
-            });
-            for (signature, _) in
-                self.collect_in_function_set_candidates(&tuple_function_head(&source_app))
-            {
-                let Some(return_set) = self.applied_fn_set_return_set(&source_app, &signature)
-                else {
-                    continue;
-                };
-                let Some((cart, carrier_equal)) = self.known_cart_carrier(&return_set) else {
-                    continue;
-                };
-                let membership = InFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    element: Obj::FnObj(source_app.clone()),
-                    set: return_set,
-                    line_file: None,
-                };
-                // Reuse the codomain reader's all-signatures guard; never claim an
-                // arbitrary signature supplied the enclosing application's WD.
-                let Some(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof)) =
-                    self.search_in_fact_proof_by_known_special_property(&membership)
-                else {
-                    continue;
-                };
-                return Some(KnownTupleShapeProof::FunctionCodomain(
-                    KnownFunctionCartesianTupleProof {
-                        function_equal: KnownEqualityPathProof::new(path.clone()),
-                        membership,
-                        membership_proof: proof,
-                        carrier_equal,
-                        cart,
-                    },
-                ));
+        if let Obj::FnObj(app) = subject {
+            let head = tuple_function_head(app);
+            for (source_head, path) in self.known_tuple_object_peers(&head) {
+                let mut source_app = app.clone();
+                source_app.head = Box::new(match source_head {
+                    Obj::Identifier(id) => FnObjHead::Identifier(id),
+                    Obj::InstantiatedTemplateObj(inst) => FnObjHead::InstantiatedTemplateObj(inst),
+                    Obj::StructAndFieldAccessObj(
+                        crate::ast::obj::StructAndFieldAccessObj::FieldAccess(access),
+                    ) => FnObjHead::FieldAccess(access),
+                    _ => continue,
+                });
+                for (signature, _) in
+                    self.collect_in_function_set_candidates(&tuple_function_head(&source_app))
+                {
+                    let Some(return_set) = self.applied_fn_set_return_set(&source_app, &signature)
+                    else {
+                        continue;
+                    };
+                    let Some((cart, carrier_equal)) = self.known_cart_carrier(&return_set) else {
+                        continue;
+                    };
+                    let membership = InFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        element: Obj::FnObj(source_app.clone()),
+                        set: return_set,
+                        line_file: None,
+                    };
+                    // Reuse the codomain reader's all-signatures guard; never claim an
+                    // arbitrary signature supplied the enclosing application's WD.
+                    let Some(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof)) =
+                        self.search_in_fact_proof_by_known_special_property(&membership)
+                    else {
+                        continue;
+                    };
+                    return Some(KnownTupleShapeProof::FunctionCodomain(
+                        KnownFunctionCartesianTupleProof {
+                            function_equal: KnownEqualityPathProof::new(path.clone()),
+                            membership,
+                            membership_proof: proof,
+                            carrier_equal,
+                            cart,
+                        },
+                    ));
+                }
             }
         }
-        None
+        self.known_literal_tuple_candidates(subject)
+            .into_iter().next().map(KnownTupleShapeProof::TupleEquality)
     }
 
     pub(in crate::execute) fn known_literal_tuple_candidates(
@@ -192,8 +201,20 @@ impl Runtime {
         let head = tuple_function_head(app);
         let args: Vec<Obj> = app.body[0].iter().map(|x| x.as_ref().clone()).collect();
         for (candidate, path) in self.known_tuple_object_peers(&head) {
-            let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = candidate else {
-                continue;
+            let (anon, template_instance) = match candidate {
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => (anon, None),
+                Obj::InstantiatedTemplateObj(instance) => {
+                    let Some(def) = self.def_template_visible(&instance.template_name).cloned() else { continue; };
+                    let TemplateDefEnum::HaveFnEqualStmt(stmt) = &def.template_def_stmt else { continue; };
+                    let ids = def.template_arg_def.ordered_param_ids();
+                    if ids.len() != instance.args.len() { continue; }
+                    let subst = ids.into_iter().zip(instance.args.iter().cloned()).collect();
+                    let Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon))) = self.inst_obj(
+                        &Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone())), &subst,
+                    ) else { continue; };
+                    (anon, Some(instance))
+                }
+                _ => continue,
             };
             if args.len() != set_bound_parameter_count(&anon.body.set_bound_parameters) {
                 continue;
@@ -225,10 +246,34 @@ impl Runtime {
                         signature_match: proof,
                     });
                 }
-                if !compatible || matches.is_empty() {
-                    continue;
+                let mut template_matches = Vec::new();
+                for (peer, peer_path) in self.known_tuple_object_peers(&head) {
+                    let Obj::InstantiatedTemplateObj(instance) = peer else { continue; };
+                    let Some(signature) = self.instantiated_template_function_signature(&instance) else { continue; };
+                    if self.applied_fn_set_return_set(app, &signature).is_none() { continue; }
+                    let candidate_obj = Obj::FunctionSpace(FunctionSpace::FnSet(signature));
+                    let Some(signature_match) = self.lookup_known_obj_equality(&candidate_obj, &signature_obj) else {
+                        compatible = false;
+                        break;
+                    };
+                    template_matches.push(KnownTemplateSignatureMatchProof {
+                        function_equal: KnownEqualityPathProof::new(peer_path), instance, signature_match,
+                    });
                 }
-                KnownFunctionTupleApplicability::AllSignaturesMatch(matches)
+                if !compatible { continue; }
+                if let Some(instance) = template_instance {
+                    // Application WD already checks this declaration's arguments
+                    // and guards. Competing stored signatures must agree too.
+                    KnownFunctionTupleApplicability::TemplateDefinition {
+                        instance, signature: anon.body.clone(), alternative_signatures: matches,
+                        alternative_template_signatures: template_matches,
+                    }
+                } else {
+                    if matches.is_empty() && template_matches.is_empty() { continue; }
+                    KnownFunctionTupleApplicability::AllSignaturesMatch {
+                        signatures: matches, template_signatures: template_matches,
+                    }
+                }
             };
             let subst = set_bound_params_to_arg_map(&anon.body.set_bound_parameters, &args);
             let Ok(Obj::ProductShape(ProductShape::Tuple(value))) =
@@ -243,6 +288,20 @@ impl Runtime {
             });
         }
         None
+    }
+
+    pub(in crate::execute) fn known_function_tuple_candidates(
+        &mut self,
+        subject: &Obj,
+    ) -> Vec<(KnownEqualityPathProof, KnownFunctionTupleValueProof)> {
+        let mut candidates = Vec::new();
+        for (peer, path) in self.known_tuple_object_peers(subject) {
+            let Obj::FnObj(app) = peer else { continue; };
+            if let Some(function) = self.lookup_known_function_tuple_value(&app) {
+                candidates.push((KnownEqualityPathProof::new(path), function));
+            }
+        }
+        candidates
     }
 
     fn known_cart_carrier(&self, carrier: &Obj) -> Option<(Cart, KnownEqualityPathProof)> {
@@ -272,7 +331,7 @@ pub(crate) fn literal_positive_usize(obj: &Obj) -> Option<usize> {
     (n > 0).then_some(n)
 }
 
-fn tuple_function_head(app: &FnObj) -> Obj {
+pub(in crate::execute) fn tuple_function_head(app: &FnObj) -> Obj {
     match app.head.as_ref() {
         FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
         FnObjHead::AnonymousFnLiteral(anon) => {

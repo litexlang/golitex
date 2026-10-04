@@ -224,6 +224,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::PowerSetOfEmpty(p) => p.rule_id_and_message(lang),
             Self::PowerSetOfSingleton(p) => p.rule_id_and_message(lang),
             Self::FamilyUnionOfEmpty(p) => p.rule_id_and_message(lang),
+            Self::FamilyUnionOfSingleton(p) => p.rule_id_and_message(lang),
+            Self::FamilyUnionOfPowerSet(p) => p.rule_id_and_message(lang),
             Self::CartWithEmptyFactor(p) => p.rule_id_and_message(lang),
             Self::UnionOverIntersectDistributive(p) => p.rule_id_and_message(lang),
             Self::SetMinusChainToUnion(p) => p.rule_id_and_message(lang),

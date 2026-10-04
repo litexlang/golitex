@@ -1,0 +1,9 @@
+# N09: Struct does not assume arbitrary function-field laws
+# Intended: reject; run via examples/test_function_sets/run.py
+
+struct Box:
+    op fn(x R) R
+    tag N
+thm invalid:
+    ? forall s &Box:
+        s.op(0) = 1
