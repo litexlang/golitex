@@ -47,3 +47,8 @@ pub mod search_equal_fact_builtin_rule;
 pub mod search_equal_fact_builtin_rule_result;
 
 pub use search_equal_fact_builtin_rule_result::EqualitySearchProofByBuiltinRule;
+
+pub mod by_native_fixed_base;
+pub mod by_elementary_definitions;
+
+pub mod log_algebra_base_proof;

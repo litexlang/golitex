@@ -1,43 +1,93 @@
 # The Mechanics of Litex Proof
 
-A Litex textbook covering calculation, structured proofs, logic, induction,
-number theory, functions, sets and relations. Each chapter contains mathematical
-statements, proof ideas and executable Litex proofs. Shared supporting theorems
-are proved in `citation.lit`.
+This book is a Litex version of Heather Macbeth's
+[The Mechanics of Proof](https://hrmacbeth.github.io/math2001/), a textbook on
+mathematical proof using Lean. Its chapters are designed around the original
+book's mathematical topics and proof patterns, with corresponding arguments
+written in Litex.
 
-## Run
+The aim is to help readers compare how the same mathematical reasoning is
+expressed in Lean and Litex. The Litex examples develop proofs through
+mathematical facts, definitions, calculations, witnesses and previously proved
+results. Reading them alongside the original Lean examples makes differences
+in notation, proof structure and interaction with the checker visible through
+concrete mathematics.
 
-From the repository root:
+The book begins with calculation and structured proofs, then develops logic,
+induction, number theory, functions, sets and relations.
 
-```sh
-cargo build --release
-target/release/litex -r textbooks/The-Mechanics-of-Litex-Proof
+Maintained by Jiachen Shen.
+
+## What this book demonstrates
+
+The examples progress from calculations to definitions and constructions, then
+to proofs about functions, sets and relations. These three excerpts show how
+that progression is expressed in Litex.
+
+### State mathematical facts
+
+In [Chapter 1](chapter01-proofs-by-calculation.lit), an assumption and its
+consequence can be written directly:
+
+```litex
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
 ```
 
-For strict verification:
+This states that every real number `x` satisfying `x = 2` also satisfies
+`x + 1 = 3`. Litex checks the consequence using the assumption and arithmetic.
+Longer examples build arguments through intermediate facts and calculations.
 
-```sh
-target/release/litex -strict -r textbooks/The-Mechanics-of-Litex-Proof
+### Define concepts and give witnesses
+
+[Chapter 3](chapter03-parity-and-divisibility.lit) defines odd integers through
+an existential statement, then proves that 7 is odd by supplying a witness:
+
+```litex
+prop odd(a Z):
+    exist t Z st {a = 2 * t + 1}
+
+witness $odd(7) from 3
 ```
 
-To check the configured book prefix through an individual chapter:
+The definition requires an integer `t` with `a = 2 * t + 1`. The witness `3`
+lets Litex check `7 = 2 * 3 + 1`. Later proofs use `obtain` to extract witnesses
+from established existential facts and reason with their defining properties.
 
-```sh
-target/release/litex -strict -f textbooks/The-Mechanics-of-Litex-Proof/chapter09-sets.lit
+### Construct mathematical objects
+
+[Chapter 8](chapter08-functions.lit) introduces functions with their parameter
+domains and conditions included in the declaration:
+
+```litex
+have fn f_intro(x R: x > 1) R = x + 1
+f_intro(2) = 3
 ```
 
-`litex.config` loads the preface, citation module and Chapters 0–10 in order.
+Here the input is a real number greater than 1, and the output is real. The
+application uses `2`, which satisfies the input condition. The chapter also
+develops functions passed as arguments, definitions by cases, constructions
+from unique existence, composition and inverse functions.
 
-## Mathematical conventions
+### Objects and proof tools across the chapters
 
-When a concept is already provided by Litex, the book introduces its definition
-and simple examples, then uses the builtin object for later proofs. Quotients
-and remainders use `quot(n, d)` and `n % d` with positive divisors. For a negative
-divisor, change the quotient sign and retain the nonnegative remainder. The
-builtin `gcd(a, b)` requires at least one argument to be nonzero.
+Numbers, sets, functions and tuples are mathematical objects. Equalities,
+membership statements and quantified properties are facts about those objects.
+Definitions and proof commands let readers construct objects, establish facts
+and reuse proved results.
 
-Pascal's triangle is defined recursively. Bezout's identity uses the proved
-citation theorem. The natural-set shift examples use `power_set(N)`.
+| Area | Examples in the book | Chapters |
+| --- | --- | --- |
+| Numbers and expressions | `N`, `Z`, `Q`, `R`; arithmetic, powers, absolute values, `quot`, remainders, `gcd` and factorials | 1, 3, 6, 7 |
+| Sets | Finite sets, set builders, intervals, power sets, unions, intersections and set differences | 9 |
+| Functions | Functions as values and arguments, domain conditions, composition and inverse functions | 8 |
+| Tuples and Cartesian products | Pairs, component access and functions taking or returning pairs | 8 |
+| Definitions and logic | `prop`, `forall`, `exist`, `exist!`, equality, membership and logical connectives | 2–5 |
+| Proof structure and reuse | `claim`, `thm`, `release thm`, `witness`, `obtain`, case analysis and contradiction | 2–6 |
+| Induction and construction | Ordinary and strong induction, recursive definitions and function construction from unique existence | 6, 8 |
+| Set and relation proofs | Finite enumeration, extensionality, and proving and registering reflexive, symmetric and transitive laws | 9, 10 |
 
 ## Contents
 

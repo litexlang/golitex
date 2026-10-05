@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.SetMinusChainToUnion
 have A set
 have B set
-have C set
-set_minus(set_minus(A, B), C) = set_minus(A, union(B, C))
+have Target set
+set_minus(set_minus(A, B), Target) = set_minus(A, union(B, Target))

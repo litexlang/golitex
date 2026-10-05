@@ -388,8 +388,8 @@ claim:
 
 # So the witness for `d | b` is `x * z + b * y`.
 
-# In the current Litex file we do not need to rebuild the Euclidean algorithm.
-# The root citation package supplies the stable gcd and Bézout interfaces.
+# Chapter 6 proves the Euclidean recurrence and Bezout identity for builtin gcd.
+# Integer divisibility uses the definition from Chapter 3.
 
 prop gcd_eq_one(a, d Z):
     a != 0 or d != 0
@@ -400,7 +400,7 @@ thm bezout_of_coprime:
         $gcd_eq_one(a, d)
         =>:
             exist x Z, y Z st {1 = x * a + y * d}
-    release thm citation::bezout_identity(a, d)
+    release thm chap6::bezout_identity(a, d)
     obtain x, y from exist x Z, y Z st {gcd(a, d) = x * a + y * d}
     witness exist u Z, v Z st {1 = u * a + v * d} from x, y:
         1 = gcd(a, d) = x * a + y * d
@@ -412,15 +412,15 @@ thm bezout_of_coprime:
 
 claim:
     ? forall d, a, b Z:
-        $citation::divides(d, a * b)
+        $chap3::dvdZ(d, a * b)
         $gcd_eq_one(a, d)
         =>:
-            $citation::divides(d, b)
+            $chap3::dvdZ(d, b)
 
     release thm bezout_of_coprime(a, d)
     obtain u, v from exist x Z, y Z st {1 = x * a + y * d}
     obtain z from exist z Z st {a * b = d * z}
-    witness $citation::divides(d, b) from u * z + b * v:
+    witness $chap3::dvdZ(d, b) from u * z + b * v:
         b = b * 1 = b * (u * a + v * d) = u * (a * b) + b * v * d = u * (d * z) + b * v * d = d * (u * z + b * v)
 
 # 7.3 Gauss's and Euclid's Lemmas
@@ -433,9 +433,8 @@ claim:
 # induction to extend Euclid's lemma from a product of two factors to a power:
 # if `p` divides `a^k`, then `p` divides `a`.
 
-# The `gcd` object is treated abstractly here. Its finite-maximum construction
-# and Euclidean descent live in `citation.lit`, so this section uses only the
-# resulting Bézout and divisibility laws.
+# Litex supplies the builtin `gcd` object and its common-divisor laws.
+# Chapter 6 proves the Euclidean recurrence and Bezout identity used here.
 
 # This is a common proof pattern in Litex and in mathematics. Many times we do
 # not need to know a concept's internal definition or where it came from; it is
@@ -444,13 +443,67 @@ claim:
 # divisibility properties, not because we expand the Euclidean algorithm every
 # time we use it.
 
+thm gcd_of_prime_is_one_or_prime:
+    ? forall a Z, p N+:
+        $prime(p)
+        =>:
+            gcd(a, p) = 1 or gcd(a, p) = p
+    gcd(a, p) $in N+
+    p % gcd(a, p) = 0
+    have k Z = quot(p, gcd(a, p))
+    p = gcd(a, p) * quot(p, gcd(a, p)) + p % gcd(a, p) = gcd(a, p) * quot(p, gcd(a, p)) = gcd(a, p) * k
+    by contra:
+        ? k != 0
+        k = 0
+        p = gcd(a, p) * k = gcd(a, p) * 0 = 0
+        impossible p != 0
+    release thm chap6::integer_abs_positive(k)
+    abs(k) $in N+
+    gcd(a, p) * 1 <= gcd(a, p) * abs(k)
+    abs(gcd(a, p)) = gcd(a, p)
+    abs(p) = abs(gcd(a, p) * k) = abs(gcd(a, p)) * abs(k) = gcd(a, p) * abs(k)
+    abs(p) = p
+    gcd(a, p) = gcd(a, p) * 1 <= gcd(a, p) * abs(k) = p
+    gcd(a, p) = p or gcd(a, p) < p
+    by cases:
+        ? gcd(a, p) = 1 or gcd(a, p) = p
+        case gcd(a, p) = p:
+            gcd(a, p) = 1 or gcd(a, p) = p
+        case gcd(a, p) < p:
+            gcd(a, p) >= 1
+            gcd(a, p) <= 1 or gcd(a, p) >= 1 + 1
+            by cases:
+                ? gcd(a, p) = 1 or gcd(a, p) > 1
+                case gcd(a, p) <= 1:
+                    gcd(a, p) = 1
+                case gcd(a, p) >= 1 + 1:
+                    gcd(a, p) >= 2 > 1
+            gcd(a, p) = 1 or gcd(a, p) > 1
+            by cases:
+                ? gcd(a, p) = 1 or gcd(a, p) = p
+                case gcd(a, p) = 1:
+                    gcd(a, p) = 1 or gcd(a, p) = p
+                case gcd(a, p) > 1:
+                    gcd(a, p) <= 1 or gcd(a, p) >= 1 + 1
+                    by cases:
+                        ? gcd(a, p) >= 2
+                        case gcd(a, p) <= 1:
+                            impossible gcd(a, p) > 1
+                        case gcd(a, p) >= 1 + 1:
+                            gcd(a, p) >= 1 + 1 = 2
+                    gcd(a, p) >= 2
+                    gcd(a, p) $in range(2, p)
+                    $prime(p)
+                    p % gcd(a, p) != 0
+                    impossible p % gcd(a, p) = 0
+
 sketch:
     claim:
         ? forall d, a, b Z:
-            $citation::divides(d, a * b)
+            $chap3::dvdZ(d, a * b)
             $gcd_eq_one(a, d)
             =>:
-                $citation::divides(d, b)
+                $chap3::dvdZ(d, b)
         release thm bezout_of_coprime(a, d)
         obtain u, v from exist u Z, v Z st {1 = u * a + v * d}
         obtain z from exist z Z st {a * b = d * z}
@@ -459,39 +512,41 @@ sketch:
     claim:
         ? forall a, b N, p N+:
             $prime(p)
-            $citation::divides(p, a * b)
+            $chap3::dvdZ(p, a * b)
             =>:
-                $citation::divides(p, a) or $citation::divides(p, b)
+                $chap3::dvdZ(p, a) or $chap3::dvdZ(p, b)
         a $in Z
         b $in Z
         p $in Z
-        release thm citation::gcd_positive(a, p)
+        gcd(a, p) $in N+
         1 <= gcd(a, p)
-        release thm citation::gcd_divides_right(a, p)
-        release thm citation::gcd_of_prime_is_one_or_prime(a, p)
+        p % gcd(a, p) = 0
+        release thm gcd_of_prime_is_one_or_prime(a, p)
         by cases:
-            ? $citation::divides(p, a) or $citation::divides(p, b)
+            ? $chap3::dvdZ(p, a) or $chap3::dvdZ(p, b)
             case gcd(a, p) = 1:
                 by def $gcd_eq_one(a, p)
                 release thm bezout_of_coprime(a, p)
                 obtain u, v from exist u Z, v Z st {1 = u * a + v * p}
                 obtain z from exist z Z st {a * b = p * z}
-                witness $citation::divides(p, b) from u * z + b * v:
+                witness $chap3::dvdZ(p, b) from u * z + b * v:
                     b = b * 1 = b * (u * a + v * p) = u * (a * b) + b * v * p = u * (p * z) + b * v * p = p * (u * z + b * v)
-                $citation::divides(p, a) or $citation::divides(p, b)
+                $chap3::dvdZ(p, a) or $chap3::dvdZ(p, b)
             case gcd(a, p) = p:
-                release thm citation::gcd_divides_left(a, p)
+                a % gcd(a, p) = 0
+                witness exist multiple Z st {a = gcd(a, p) * multiple} from quot(a, gcd(a, p)):
+                    a = gcd(a, p) * quot(a, gcd(a, p)) + a % gcd(a, p) = gcd(a, p) * quot(a, gcd(a, p))
                 obtain q from exist q Z st {a = gcd(a, p) * q}
-                witness $citation::divides(p, a) from q:
+                witness $chap3::dvdZ(p, a) from q:
                     a = gcd(a, p) * q = p * q
-                $citation::divides(p, a) or $citation::divides(p, b)
+                $chap3::dvdZ(p, a) or $chap3::dvdZ(p, b)
     prop euclid_lemma_pow_at(k Z):
         forall a N, p N+:
             k >= 1
             $prime(p)
-            $citation::divides(p, a ^ k)
+            $chap3::dvdZ(p, a ^ k)
             =>:
-                $citation::divides(p, a)
+                $chap3::dvdZ(p, a)
     by induc k from 1:
         ? $euclid_lemma_pow_at(k)
         ? from k = 1:
@@ -499,9 +554,9 @@ sketch:
                 ? forall a N, p N+:
                     k >= 1
                     $prime(p)
-                    $citation::divides(p, a ^ k)
+                    $chap3::dvdZ(p, a ^ k)
                     =>:
-                        $citation::divides(p, a)
+                        $chap3::dvdZ(p, a)
                 a ^ k = a ^ 1 = a
             by def $euclid_lemma_pow_at(k)
         ? induc:
@@ -509,29 +564,29 @@ sketch:
                 ? forall a N, p N+:
                     k + 1 >= 1
                     $prime(p)
-                    $citation::divides(p, a ^ (k + 1))
+                    $chap3::dvdZ(p, a ^ (k + 1))
                     =>:
-                        $citation::divides(p, a)
+                        $chap3::dvdZ(p, a)
                 k > 0
                 k $in N+
                 a ^ k $in N
                 a ^ (k + 1) = a ^ k * a ^ 1 = a ^ k * a
-                $citation::divides(p, a ^ k * a)
-                $citation::divides(p, a ^ k) or $citation::divides(p, a)
+                $chap3::dvdZ(p, a ^ k * a)
+                $chap3::dvdZ(p, a ^ k) or $chap3::dvdZ(p, a)
                 by cases:
-                    ? $citation::divides(p, a)
-                    case $citation::divides(p, a ^ k):
-                        $citation::divides(p, a)
-                    case $citation::divides(p, a):
-                        $citation::divides(p, a)
+                    ? $chap3::dvdZ(p, a)
+                    case $chap3::dvdZ(p, a ^ k):
+                        $chap3::dvdZ(p, a)
+                    case $chap3::dvdZ(p, a):
+                        $chap3::dvdZ(p, a)
             by def $euclid_lemma_pow_at(k + 1)
     claim:
         ? forall a, k N, p N+:
             1 <= k
             $prime(p)
-            $citation::divides(p, a ^ k)
+            $chap3::dvdZ(p, a ^ k)
             =>:
-                $citation::divides(p, a)
+                $chap3::dvdZ(p, a)
         k $in Z
         $euclid_lemma_pow_at(k)
 
@@ -616,7 +671,7 @@ sketch:
             k^2 % a = 0
             =>:
                 k % a = 0
-        release thm citation::gcd_of_prime_is_one_or_prime(k, a)
+        release thm gcd_of_prime_is_one_or_prime(k, a)
         by cases:
             ? k % a = 0
             case gcd(k, a) = 1:
@@ -644,7 +699,9 @@ sketch:
                 by contra:
                     ? k % a = 0
                     k % a != 0
-                    release thm citation::gcd_divides_left(k, a)
+                    k % gcd(k, a) = 0
+                    witness exist multiple Z st {k = gcd(k, a) * multiple} from quot(k, gcd(k, a)):
+                        k = gcd(k, a) * quot(k, gcd(k, a)) + k % gcd(k, a) = gcd(k, a) * quot(k, gcd(k, a))
                     obtain t from exist t Z st {k = gcd(k, a) * t}
                     k = gcd(k, a) * t = a * t
                     k = a * t + 0
@@ -698,15 +755,12 @@ sketch:
         release thm prime_remainder_unique(q^2, 2, 0)
         q^2 % 2 = 0
         q % 2 = 0
-        witness $citation::divides(2, p) from c
         quot(q, 2) $in Z
         (q) = (2) * quot(q, 2) + (q) % (2)
         witness exist t Z st {q = 2 * t + q % 2} from quot(q, 2):
             q = 2 * quot(q, 2) + q % 2
         obtain d from exist t Z st {q = 2 * t + q % 2}
         q = 2 * d + q % 2 = 2 * d
-        witness $citation::divides(2, q) from d
-        release thm citation::common_divisor_le_gcd(p, q, 2)
         2 <= gcd(p, q) = 1
         impossible 2 <= 1
 

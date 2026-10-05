@@ -13,6 +13,7 @@ pub struct StructuralMembershipProof {
 pub enum StructuralMembershipReason {
     Known(AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
     Closed(ClosedMembershipCalculationProof),
+    KnownSubset(KnownSubsetMembershipProof),
     StandardSuperset(Box<StructuralMembershipProof>),
     Add {
         left: Box<StructuralMembershipProof>,
@@ -75,6 +76,8 @@ pub enum IntrinsicCodomain {
     TupleDim,
     CartDim,
     FiniteSetSize,
+    FiniteSetMax,
+    FiniteSetMin,
     EulerNumber,
     Pi,
     ImaginaryUnit,
@@ -87,5 +90,20 @@ impl StructuralMembershipProof {
             set,
             reason,
         }
+    }
+}
+
+// Both complete atomic premise citations are retained for replay and output.
+pub struct KnownSubsetMembershipProof {
+    pub member_proof: super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
+    pub subset_proof: super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
+}
+
+impl KnownSubsetMembershipProof {
+    pub fn new(
+        member_proof: super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
+        subset_proof: super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
+    ) -> Self {
+        Self { member_proof, subset_proof }
     }
 }

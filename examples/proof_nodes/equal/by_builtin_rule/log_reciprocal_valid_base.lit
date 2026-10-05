@@ -1,0 +1,35 @@
+# Tracer: LogReciprocal on every checked positive nonunit real base.
+#
+# Before (same code rejected by current equality search; legacy accepted):
+# forall a,x R+:
+#     a<1
+#     =>:
+#         log(a,1/x)=0-log(a,x)
+# Former behavior: log WD passed, equality BR still required 1<a.
+#
+# Now: the original exact statement verifies under its original domain.
+forall a,x R+:
+    a<1
+    =>:
+        log(a,1/x)=0-log(a,x)
+
+forall a,x R+:
+    a!=1
+    =>:
+        log(a,1/x)=0-log(a,x)
+
+forall a,x R+:
+    1<a
+    =>:
+        log(a,1/x)=0-log(a,x)
+
+forall a,x R+:
+    a<1
+    =>:
+        log(a,1/x)=-log(a,x)
+
+# Boundary: nonpositive/unit bases, nonpositive arguments and wrong identities
+# still reject; power WD and inherited premise permissions are retained.
+# Executable negative boundaries: tests/unit/execute/log_algebra_base/tests.rs
+# Evidence: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/log_reciprocal_valid_base.lit
+# Owner: by_equality_identities_wave2.rs and log_algebra_base_proof.rs

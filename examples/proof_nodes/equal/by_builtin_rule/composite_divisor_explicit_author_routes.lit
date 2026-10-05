@@ -1,0 +1,357 @@
+# Composite-divisor same-target authors. No trust or additional hypotheses.
+# Exact former current failed shortcut (cold legacy passed):
+# forall a,b,c,d R:
+#     b!=0
+#     d!=0
+#     a/(b*d)=c
+#     =>:
+#         a=c*(b*d)
+
+# author-early-nz-R
+claim:
+    ? forall a,b,c,d R:
+        b!=0
+        d!=0
+        a/(b*d)=c
+        =>:
+            a=c*(b*d)
+    b*d!=0
+    a=(a/(b*d))*(b*d)=c*(b*d)
+
+forall a,b,c,d R:
+    b!=0
+    d!=0
+    a/(b*d)=c
+    =>:
+        a=c*(b*d)
+
+# author-early-nz-C
+claim:
+    ? forall a,b,c,d C:
+        b!=0
+        d!=0
+        a/(b*d)=c
+        =>:
+            a=c*(b*d)
+    b*d!=0
+    a=(a/(b*d))*(b*d)=c*(b*d)
+
+forall a,b,c,d C:
+    b!=0
+    d!=0
+    a/(b*d)=c
+    =>:
+        a=c*(b*d)
+
+# author-early-nz-Q
+claim:
+    ? forall a,b,c,d Q:
+        b!=0
+        d!=0
+        a/(b*d)=c
+        =>:
+            a=c*(b*d)
+    b*d!=0
+    a=(a/(b*d))*(b*d)=c*(b*d)
+
+forall a,b,c,d Q:
+    b!=0
+    d!=0
+    a/(b*d)=c
+    =>:
+        a=c*(b*d)
+
+# author-early-nz-Z
+claim:
+    ? forall a,b,c,d Z:
+        b!=0
+        d!=0
+        a/(b*d)=c
+        =>:
+            a=c*(b*d)
+    b*d!=0
+    a=(a/(b*d))*(b*d)=c*(b*d)
+
+forall a,b,c,d Z:
+    b!=0
+    d!=0
+    a/(b*d)=c
+    =>:
+        a=c*(b*d)
+
+# orientation-R-s1-g1-p1
+claim:
+    ? forall a,b,c,d R:
+        b!=0
+        d!=0
+        c=a/(b*d)
+        =>:
+            (b*d)*c=a
+    b*d!=0
+    a=(a/(b*d))*(b*d)=c*(b*d)
+    c*(b*d)=(b*d)*c
+    (b*d)*c=a
+
+forall a,b,c,d R:
+    b!=0
+    d!=0
+    c=a/(b*d)
+    =>:
+        (b*d)*c=a
+
+# helper-original-R
+claim:
+    ? forall b,d,h R:
+        b!=0
+        d!=0
+        h!=0
+        =>:
+            (b*d)*h!=0
+    b*d!=0
+    (b*d)*h!=0
+
+forall b,d,h R:
+    b!=0
+    d!=0
+    h!=0
+    =>:
+        (b*d)*h!=0
+
+claim:
+    ? forall a,b,c,d,h R:
+        b!=0
+        d!=0
+        h!=0
+        a/((b*d)*h)=c
+        =>:
+            a=c*((b*d)*h)
+    b*d!=0
+    (b*d)*h!=0
+    a=(a/((b*d)*h))*((b*d)*h)=c*((b*d)*h)
+
+forall a,b,c,d,h R:
+    b!=0
+    d!=0
+    h!=0
+    a/((b*d)*h)=c
+    =>:
+        a=c*((b*d)*h)
+
+# helper-original-C
+claim:
+    ? forall b,d,h C:
+        b!=0
+        d!=0
+        h!=0
+        =>:
+            (b*d)*h!=0
+    b*d!=0
+    (b*d)*h!=0
+
+forall b,d,h C:
+    b!=0
+    d!=0
+    h!=0
+    =>:
+        (b*d)*h!=0
+
+claim:
+    ? forall a,b,c,d,h C:
+        b!=0
+        d!=0
+        h!=0
+        a/((b*d)*h)=c
+        =>:
+            a=c*((b*d)*h)
+    b*d!=0
+    (b*d)*h!=0
+    a=(a/((b*d)*h))*((b*d)*h)=c*((b*d)*h)
+
+forall a,b,c,d,h C:
+    b!=0
+    d!=0
+    h!=0
+    a/((b*d)*h)=c
+    =>:
+        a=c*((b*d)*h)
+
+# sum-divisor-R
+claim:
+    ? forall a,b,c,d R:
+        b+d!=0
+        a/(b+d)=c
+        =>:
+            a=c*(b+d)
+    a=(a/(b+d))*(b+d)=c*(b+d)
+
+forall a,b,c,d R:
+    b+d!=0
+    a/(b+d)=c
+    =>:
+        a=c*(b+d)
+
+# sum-divisor-C
+claim:
+    ? forall a,b,c,d C:
+        b+d!=0
+        a/(b+d)=c
+        =>:
+            a=c*(b+d)
+    a=(a/(b+d))*(b+d)=c*(b+d)
+
+forall a,b,c,d C:
+    b+d!=0
+    a/(b+d)=c
+    =>:
+        a=c*(b+d)
+
+# named-divisor-R
+claim:
+    ? forall a,b,c,d R:
+        b!=0
+        d!=0
+        a/(b*d)=c
+        =>:
+            a=c*(b*d)
+    b*d!=0
+    let m=b*d
+    m!=0
+    a/m=a/(b*d)=c
+    a=(a/m)*m=c*m=c*(b*d)
+
+forall a,b,c,d R:
+    b!=0
+    d!=0
+    a/(b*d)=c
+    =>:
+        a=c*(b*d)
+
+# named-divisor-C
+claim:
+    ? forall a,b,c,d C:
+        b!=0
+        d!=0
+        a/(b*d)=c
+        =>:
+            a=c*(b*d)
+    b*d!=0
+    let m=b*d
+    m!=0
+    a/m=a/(b*d)=c
+    a=(a/m)*m=c*m=c*(b*d)
+
+forall a,b,c,d C:
+    b!=0
+    d!=0
+    a/(b*d)=c
+    =>:
+        a=c*(b*d)
+
+# identity-author-R
+claim:
+    ? forall a,b,d R:
+        b!=0
+        d!=0
+        =>:
+            a=(a/(b*d))*(b*d)
+    b*d!=0
+    a=(a/(b*d))*(b*d)
+
+forall a,b,d R:
+    b!=0
+    d!=0
+    =>:
+        a=(a/(b*d))*(b*d)
+
+# identity-author-C
+claim:
+    ? forall a,b,d C:
+        b!=0
+        d!=0
+        =>:
+            a=(a/(b*d))*(b*d)
+    b*d!=0
+    a=(a/(b*d))*(b*d)
+
+forall a,b,d C:
+    b!=0
+    d!=0
+    =>:
+        a=(a/(b*d))*(b*d)
+
+# helper-right-associated-original-R
+claim:
+    ? forall b,d,h R:
+        b!=0
+        d!=0
+        h!=0
+        =>:
+            b*(d*h)!=0
+    d*h!=0
+    b*(d*h)!=0
+
+forall b,d,h R:
+    b!=0
+    d!=0
+    h!=0
+    =>:
+        b*(d*h)!=0
+
+claim:
+    ? forall a,b,c,d,h R:
+        b!=0
+        d!=0
+        h!=0
+        a/(b*(d*h))=c
+        =>:
+            a=c*(b*(d*h))
+    d*h!=0
+    b*(d*h)!=0
+    a=(a/(b*(d*h)))*(b*(d*h))=c*(b*(d*h))
+
+forall a,b,c,d,h R:
+    b!=0
+    d!=0
+    h!=0
+    a/(b*(d*h))=c
+    =>:
+        a=c*(b*(d*h))
+
+# helper-right-associated-original-C
+claim:
+    ? forall b,d,h C:
+        b!=0
+        d!=0
+        h!=0
+        =>:
+            b*(d*h)!=0
+    d*h!=0
+    b*(d*h)!=0
+
+forall b,d,h C:
+    b!=0
+    d!=0
+    h!=0
+    =>:
+        b*(d*h)!=0
+
+claim:
+    ? forall a,b,c,d,h C:
+        b!=0
+        d!=0
+        h!=0
+        a/(b*(d*h))=c
+        =>:
+            a=c*(b*(d*h))
+    d*h!=0
+    b*(d*h)!=0
+    a=(a/(b*(d*h)))*(b*(d*h))=c*(b*(d*h))
+
+forall a,b,c,d,h C:
+    b!=0
+    d!=0
+    h!=0
+    a/(b*(d*h))=c
+    =>:
+        a=c*(b*(d*h))
+

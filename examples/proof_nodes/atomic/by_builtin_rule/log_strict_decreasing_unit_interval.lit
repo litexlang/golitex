@@ -1,0 +1,23 @@
+# strict logarithm order for 0<a<1. Parent log WD remains required.
+# Former exact current failure (strict legacy accepted; weak legacy also rejected):
+# forall a R+,x,y R+:
+#     a<1
+#     x<y
+#     =>:
+#         log(a,y)<log(a,x)
+
+# Verify directly: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/log_strict_decreasing_unit_interval.lit
+forall a R+,x,y R+:
+    a<1
+    x<y
+    =>:
+        log(a,y)<log(a,x)
+
+# Opposite source direction is checked with its actual citation:
+forall a R+,x,y R+:
+    a<1
+    y>x
+    =>:
+        log(a,y)<log(a,x)
+
+# Remaining invalid base / wrong direction / weak-to-strict controls execute in focused Rust tests.

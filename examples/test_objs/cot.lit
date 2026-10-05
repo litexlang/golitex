@@ -27,3 +27,10 @@ sketch:
 sketch:
     have k Z
     cot(pi / 6 - k * pi)=sqrt(3)
+
+# P200: Quotient definition with its nonzero denominator
+sketch:
+    forall x R:
+        sin(x)!=0
+        =>:
+            cot(x)=cos(x)/sin(x)

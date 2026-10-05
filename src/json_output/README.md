@@ -520,6 +520,14 @@ in `tests/unit/execute/legacy_next_capabilities/tests.rs`; the dedicated runnabl
 tracers are indexed in `examples/proof_nodes/README.md`.
 
 `SinHalfPiShift` and `CosHalfPiShift` are real-domain identity leaves.
+`CosDoubleAngle`, `SinPiReflection`, `CosPiReflection`,
+`SinHalfPiReflection` and `CosHalfPiReflection` are further fixed real-domain
+leaves under the enclosing equality's complete WD certificate. Detailed
+projects the matched `angle` for each. `CosDoubleAngle` additionally projects
+`form`: `cosine_square_minus_sine_square`, `one_minus_twice_sine_square`, or
+`twice_cosine_square_minus_one`. These identify the checked RHS form rather
+than a recursive expansion trace. Each rule has a distinct Normal explanation
+in all ten output languages. Search order, ceiling and state remain unchanged.
 `ReduceFirstStep` records `nonempty` and five structural `matches`, keeping
 the seed as the first operation argument. `ReduceTranslation` records the
 integer `shift`, endpoint/operation/seed matches, the fresh `parameter`, two
@@ -728,3 +736,31 @@ for either x>0 or 0<x; its payload and projector shape are unchanged.
 The [leaf evidence record](../../examples/proof_nodes/experience/problem_notes/factorial-lcm-leaf-repair-2026-10-05.md)
 links source-ID, permission, negative and selected consumer gates. Independent
 certificate replay and Lean compilation remain outside this verification scope.
+
+
+Exp/Ln strict/weak forward leaves project actual `argument_order` verification;
+their order-reflection leaves project actual `image_order`, including its WD.
+Eight typed owners supply ten localized name/guard-message selectors. Reverse
+written source premises retain their real citations and inherited ceilings.
+The [exp/ln consumer record](../../examples/proof_nodes/experience/problem_notes/exp-ln-order-repair-2026-10-05.md)
+links current-source Detailed/language gates and the still-pending nested-ln
+predicate-domain WD consumer. Warm ln-sign KnownEqualObjSubstitution consumes
+a real earlier ln(1)=0 and the native order leaf; it is not a known-forall proof.
+Independent certificate replay and Lean compilation are outside these gates.
+
+
+LnAsEulerLog and ExpAsEulerIntegerPower each own ten guarded language texts and a separate Detailed identity leaf. They consume no searched premise and fabricate no child; enclosing equality retains actual exp/ln/log/power WD. The [fixed-base record](../../examples/proof_nodes/experience/problem_notes/fixed-base-bridge-repair-2026-10-05.md) links actual typed owner gates and valid prior-forall citations. Full release/Lean/replay remains outside this local contract gate.
+
+
+The four rounding bounds and TanQuotientDefinition, CotQuotientDefinition and
+GcdEuclideanStep each retain a distinct Detailed builtin leaf and ten localized
+Normal explanations. Their enclosing verification retains the original object
+WD guards. Structural finite-extremum membership uses intrinsic
+`finite_set_max` / `finite_set_min` real codomains; `known_subset` retains both
+actual `member_proof` and `subset_proof` citations. The
+[source-owned acceptance record](../../examples/proof_nodes/experience/problem_notes/obj-definition-builtin-rules-2026-10-05.md)
+checks the actual executed leaves through Detailed and Normal consumers. Normal
+continues to summarize a whole forall with its compound proof label.
+
+
+Detailed LogStrictDecreasing and LogWeakDecreasing each retain nested `guards` with four mandatory actual producer fields: `base_positive_proof`, `base_lt_one_proof`, `left_arg_positive_proof`, `right_arg_positive_proof`, followed by actual `argument_order`. Reverse written guards/comparisons cite the actual known facts. Two typed leaves own ten guarded localized outputs; existing increasing log paths remain first. [Source evidence](../../examples/proof_nodes/experience/problem_notes/log-unit-interval-order-repair-2026-10-05.md) records actual English/Chinese citations and selected language/Detailed gates; shared search ceilings and independent replay are not broadened.

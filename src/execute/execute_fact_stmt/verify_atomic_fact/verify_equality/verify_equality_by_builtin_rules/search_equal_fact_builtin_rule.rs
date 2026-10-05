@@ -11,6 +11,9 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinRule>> {
+        if let Some(proof) = super::by_elementary_definitions::elementary_definition(fact) {
+            return Ok(Some(proof));
+        }
         if let Some(proof) = super::by_integer_range_builder::integer_range_builder(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::IntegerRangeBuilder(proof)));
         }
@@ -205,6 +208,9 @@ impl Runtime {
         }
         if let Some(proof) = self.search_equal_fact_builtin_rule_finite_subset_size(fact, verify_state)? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteSetEqualFromSubsetSize(proof)));
+        }
+        if let Some(proof) = super::by_native_fixed_base::native_fixed_base(fact) {
+            return Ok(Some(proof));
         }
         Ok(None)
     }

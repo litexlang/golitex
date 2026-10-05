@@ -1423,22 +1423,209 @@ sketch:
         a != 0
         =>:
             gcd(a, 0) = abs(a)
+
+
+# A nonzero integer has positive absolute value.
+thm integer_abs_positive:
+    ? forall z Z:
+        z != 0
+        =>:
+            abs(z) > 0
+    by cases:
+        ? abs(z) > 0
+        case z >= 0:
+            abs(z) = z
+            by contra:
+                ? z > 0
+                z <= 0
+                z = 0
+                impossible z != 0
+            abs(z) = z > 0
+        case z < 0:
+            z <= 0
+            abs(z) = -z
+            0 = z - z < 0 - z = -z
+            abs(z) = -z > 0
+
+# Euclidean descent preserves the builtin greatest common divisor.
+thm gcd_euclidean_step:
+    ? forall a, b Z:
+        b != 0
+        =>:
+            gcd(a, b) = gcd(b, a % abs(b))
+    claim:
+        ? forall d N+, z Z:
+            $chap3::dvdZ(d, z)
+            =>:
+                $chap3::dvdZ(d, abs(z))
+        obtain k from exist k Z st {z = d * k}
+        by cases:
+            ? $chap3::dvdZ(d, abs(z))
+            case z >= 0:
+                abs(z) = z = d * k
+                witness exist t Z st {abs(z) = d * t} from k
+            case z < 0:
+                z <= 0
+                abs(z) = (-z) = -(d * k) = d * (-k)
+                witness exist t Z st {abs(z) = d * t} from (-k)
+    gcd(b, a % abs(b)) $in N+
+    b % gcd(b, a % abs(b)) = 0
+    witness $chap3::dvdZ(gcd(b, a % abs(b)), b) from quot(b, gcd(b, a % abs(b))):
+        b = gcd(b, a % abs(b)) * quot(b, gcd(b, a % abs(b))) + b % gcd(b, a % abs(b)) = gcd(b, a % abs(b)) * quot(b, gcd(b, a % abs(b)))
+    a % abs(b) % gcd(b, a % abs(b)) = 0
+    witness $chap3::dvdZ(gcd(b, a % abs(b)), a % abs(b)) from quot(a % abs(b), gcd(b, a % abs(b))):
+        a % abs(b) = gcd(b, a % abs(b)) * quot(a % abs(b), gcd(b, a % abs(b))) + a % abs(b) % gcd(b, a % abs(b)) = gcd(b, a % abs(b)) * quot(a % abs(b), gcd(b, a % abs(b)))
+    $chap3::dvdZ(gcd(b, a % abs(b)), abs(b))
+    obtain x from exist k Z st {abs(b) = gcd(b, a % abs(b)) * k}
+    obtain y from exist k Z st {a % abs(b) = gcd(b, a % abs(b)) * k}
+    release thm integer_abs_positive(b)
+    abs(b) > 0
+    abs(b) $in N+
+    quot(a, abs(b)) $in Z
+    let q = quot(a, abs(b))
+    a = abs(b) * quot(a, abs(b)) + a % abs(b)
+    witness exist t Z st {a = gcd(b, a % abs(b)) * t} from x * q + y:
+        a = abs(b) * quot(a, abs(b)) + a % abs(b) = abs(b) * q + a % abs(b) = (gcd(b, a % abs(b)) * x) * q + gcd(b, a % abs(b)) * y = gcd(b, a % abs(b)) * (x * q + y)
+    $chap3::dvdZ(gcd(b, a % abs(b)), a)
+    obtain multiple_a from exist k Z st {a = gcd(b, a % abs(b)) * k}
+    obtain multiple_b from exist k Z st {b = gcd(b, a % abs(b)) * k}
+    a % gcd(b, a % abs(b)) = (gcd(b, a % abs(b)) * multiple_a) % gcd(b, a % abs(b)) = 0
+    b % gcd(b, a % abs(b)) = (gcd(b, a % abs(b)) * multiple_b) % gcd(b, a % abs(b)) = 0
+    gcd(b, a % abs(b)) <= gcd(a, b)
+    gcd(a, b) $in N+
+    a % gcd(a, b) = 0
+    witness $chap3::dvdZ(gcd(a, b), a) from quot(a, gcd(a, b)):
+        a = gcd(a, b) * quot(a, gcd(a, b)) + a % gcd(a, b) = gcd(a, b) * quot(a, gcd(a, b))
+    b % gcd(a, b) = 0
+    witness $chap3::dvdZ(gcd(a, b), b) from quot(b, gcd(a, b)):
+        b = gcd(a, b) * quot(b, gcd(a, b)) + b % gcd(a, b) = gcd(a, b) * quot(b, gcd(a, b))
+    $chap3::dvdZ(gcd(a, b), abs(b))
+    obtain u from exist k Z st {a = gcd(a, b) * k}
+    obtain v from exist k Z st {abs(b) = gcd(a, b) * k}
+    release thm integer_abs_positive(b)
+    abs(b) > 0
+    abs(b) $in N+
+    quot(a, abs(b)) $in Z
+    let r = quot(a, abs(b))
+    a = abs(b) * quot(a, abs(b)) + a % abs(b)
+    witness exist t Z st {a % abs(b) = gcd(a, b) * t} from u - v * r:
+        a = abs(b) * quot(a, abs(b)) + a % abs(b) = abs(b) * r + a % abs(b)
+        a % abs(b) = a - abs(b) * r = gcd(a, b) * u - (gcd(a, b) * v) * r = gcd(a, b) * (u - v * r)
+    $chap3::dvdZ(gcd(a, b), a % abs(b))
+    obtain current_multiple_b from exist k Z st {b = gcd(a, b) * k}
+    obtain multiple_remainder from exist k Z st {a % abs(b) = gcd(a, b) * k}
+    b % gcd(a, b) = (gcd(a, b) * current_multiple_b) % gcd(a, b) = 0
+    a % abs(b) % gcd(a, b) = (gcd(a, b) * multiple_remainder) % gcd(a, b) = 0
+    gcd(a, b) <= gcd(b, a % abs(b))
+
+# Strong induction on abs(b) constructs Bezout coefficients for integers.
+thm bezout_identity:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            exist x Z, y Z st {gcd(a, b) = x * a + y * b}
+    prop bezout_at_measure(measure Z):
+        forall u, v Z:
+            u != 0 or v != 0
+            abs(v) = measure
+            =>:
+                exist x Z, y Z st {gcd(u, v) = x * u + y * v}
+    by strong_induc measure from 0:
+        ? $bezout_at_measure(measure)
+        ? from measure = 0:
+            claim:
+                ? forall u, v Z:
+                    u != 0 or v != 0
+                    abs(v) = 0
+                    =>:
+                        exist x Z, y Z st {gcd(u, v) = x * u + y * v}
+                v = 0
+                by cases:
+                    ? u != 0
+                    case u != 0
+                    case v != 0:
+                        impossible v = 0
+                gcd(u, 0) = abs(u)
+                by cases:
+                    ? exist x Z, y Z st {gcd(u, v) = x * u + y * v}
+                    case u >= 0:
+                        abs(u) = u
+                        witness exist x Z, y Z st {gcd(u, v) = x * u + y * v} from 1, 0:
+                            gcd(u, v) = gcd(u, 0) = abs(u) = u = 1 * u + 0 * v
+                    case u < 0:
+                        u <= 0
+                        abs(u) = -u
+                        witness exist x Z, y Z st {gcd(u, v) = x * u + y * v} from -1, 0:
+                            gcd(u, v) = gcd(u, 0) = abs(u) = -u = (-1) * u + 0 * v
+            by def $bezout_at_measure(0)
+        ? strong_induc:
+            claim:
+                ? forall u, v Z:
+                    u != 0 or v != 0
+                    abs(v) = measure + 1
+                    =>:
+                        exist x Z, y Z st {gcd(u, v) = x * u + y * v}
+                measure + 1 >= 0 + 1 = 1 > 0
+                by contra:
+                    ? v != 0
+                    v = 0
+                    abs(v) = abs(0) = 0
+                    impossible abs(v) > 0
+                release thm integer_abs_positive(v)
+                abs(v) $in N+
+                have r N = u % abs(v)
+                have q Z = quot(u, abs(v))
+                r >= 0
+                abs(r) = r
+                r < abs(v) = measure + 1
+                r <= measure or r >= measure + 1
+                by cases:
+                    ? r <= measure
+                    case r <= measure
+                    case r >= measure + 1:
+                        impossible r < measure + 1
+                $bezout_at_measure(r)
+                v != 0 or r != 0
+                obtain coefficient_u, coefficient_v from exist x Z, y Z st {gcd(v, r) = x * v + y * r}
+                release thm gcd_euclidean_step(u, v)
+                gcd(u, v) = gcd(v, u % abs(v)) = gcd(v, r) = coefficient_u * v + coefficient_v * r
+                u = abs(v) * quot(u, abs(v)) + u % abs(v) = abs(v) * q + r
+                r = u - abs(v) * q
+                by cases:
+                    ? exist x Z, y Z st {gcd(u, v) = x * u + y * v}
+                    case v >= 0:
+                        abs(v) = v
+                        r = u - abs(v) * q = u - v * q
+                        witness exist left_coef Z, right_coef Z st {gcd(u, v) = left_coef * u + right_coef * v} from coefficient_v, coefficient_u - coefficient_v * q:
+                            gcd(u, v) = coefficient_u * v + coefficient_v * r = coefficient_u * v + coefficient_v * (u - v * q) = coefficient_v * u + (coefficient_u - coefficient_v * q) * v
+                    case v < 0:
+                        v <= 0
+                        abs(v) = -v
+                        r = u - abs(v) * q = u - (-v) * q = u + v * q
+                        witness exist left_coef Z, right_coef Z st {gcd(u, v) = left_coef * u + right_coef * v} from coefficient_v, coefficient_u + coefficient_v * q:
+                            gcd(u, v) = coefficient_u * v + coefficient_v * r = coefficient_u * v + coefficient_v * (u + v * q) = coefficient_v * u + (coefficient_u + coefficient_v * q) * v
+            by def $bezout_at_measure(measure + 1)
+    abs(b) >= 0
+    $bezout_at_measure(abs(b))
+    abs(b) = abs(b)
+    exist x Z, y Z st {gcd(a, b) = x * a + y * b}
+
+sketch:
     claim:
         ? forall a Z, b N+:
             gcd(a, b) = gcd(b, a % b)
         b >= 0
         abs(b) = b
-        release thm citation::gcd_euclidean_step(a, b)
+        release thm gcd_euclidean_step(a, b)
         gcd(a, b) = gcd(b, a % b)
 
-    # Litex has builtin gcd. Bezout is an ordinary proved theorem in citation,
-    # which constructs integer coefficients; there is no builtin egcd_pair.
+    # The theorem above constructs integer coefficients for the builtin gcd.
     claim:
         ? forall a, b Z:
             a != 0 or b != 0
             =>:
                 exist u, v Z st {a * u + b * v = gcd(a, b)}
-        release thm citation::bezout_identity(a, b)
+        release thm bezout_identity(a, b)
         obtain u, v from exist x Z, y Z st {gcd(a, b) = x * a + y * b}
         a * u + b * v = u * a + v * b = gcd(a, b)
         witness exist bezout_u, bezout_v Z st {a * bezout_u + b * bezout_v = gcd(a, b)} from u, v

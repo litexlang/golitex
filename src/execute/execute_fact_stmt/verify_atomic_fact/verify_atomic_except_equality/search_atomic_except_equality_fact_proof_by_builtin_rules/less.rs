@@ -20,6 +20,8 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    FloorStrictUpperBound(super::rounding_definition_bounds::FloorStrictUpperBoundProof),
+    CeilStrictLowerBound(super::rounding_definition_bounds::CeilStrictLowerBoundProof),
     ExpStrictMonotone(super::exp_ln_order::ExpStrictMonotoneProof),
     LnStrictMonotone(super::exp_ln_order::LnStrictMonotoneProof),
     ExpStrictOrderReflection(super::exp_ln_order::ExpStrictOrderReflectionProof),
@@ -80,6 +82,8 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Log with base > 1 preserves strict order on positive args.
     // Example: known `1 < 2`, `0 < x`, `0 < y`, `x < y` prove `log(2, x) < log(2, y)`.
     LogOrderPreservingStrict(LogOrderPreservingStrictBuiltinRuleProof),
+    // 0<a<1 and positive arguments: x<y implies log(a,y)<log(a,x).
+    LogStrictDecreasing(super::log_unit_interval_order::LogStrictDecreasingProof),
     // Log sign: `1 < a` and `1 < x` ⇒ `0 < log(a, x)`.
     LogPositiveFromBaseAndArgGtOne(LogPositiveFromBaseAndArgGtOneBuiltinRuleProof),
     // Log sign: `1 < a`, `0 < x`, `x < 1` ⇒ `log(a, x) < 0`.
@@ -327,6 +331,9 @@ impl Runtime {
         fact: &LessFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = super::rounding_definition_bounds::rounding_strict_bound(fact) {
+            return Ok(Some(proof));
+        }
         if let Some(premise_proof) = self.known_greater_proof(&fact.right, &fact.left) {
             return Ok(Some(LessFactSearchProofByBuiltinRule::FromKnownGreater(FromKnownGreaterBuiltinRuleProof { premise_proof })));
         }

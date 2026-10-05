@@ -38,3 +38,9 @@ sketch:
 # P123: closed exact elementary calculation
 sketch:
     floor(-6/3)=-2
+
+# P200: Real defining bounds
+sketch:
+    forall x R:
+        floor(x)<=x
+        x<floor(x)+1

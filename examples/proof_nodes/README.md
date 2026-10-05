@@ -24,6 +24,24 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
+## Fixed real trigonometric reflections and double angle
+
+[Cosine double angle](equal/by_builtin_rule/cos_double_angle.lit) supports
+the three standard square forms for `cos(2*x)`, including `cos(x+x)` and
+reversed equality. Four separate tracers cover
+[sin(pi-x)](equal/by_builtin_rule/sin_pi_reflection.lit),
+[cos(pi-x)](equal/by_builtin_rule/cos_pi_reflection.lit),
+[sin(pi/2-x)](equal/by_builtin_rule/sin_half_pi_reflection.lit), and
+[cos(pi/2-x)](equal/by_builtin_rule/cos_half_pi_reflection.lit).
+Exact numeric pi coefficients and addition of a negated argument use the same
+structural leaves. The enclosing equality must establish real-argument WD;
+the leaves generate no search obligations or recursive trig expansions.
+Focused `trig_reflections_double_angle_tests` retain cold acceptance,
+false sign/angle/coefficient controls, partial-call and complex-domain WD,
+actual stored-fact reuse, Detailed evidence and ten-language Normal output.
+The [acceptance record](experience/problem_notes/trig-reflections-double-angle-2026-10-05.md)
+links fixed source/binary receipts and the before/after journal.
+
 ## Sequence and struct contracts
 
 [One-based sequences](equal/by_builtin_rule/sequence_one_based.lit) cover
@@ -735,3 +753,58 @@ All three whole strict files pass current and legacy. The
 [source-owned record](experience/problem_notes/factorial-lcm-leaf-repair-2026-10-05.md)
 separates missing leaves, optional authors, first failure phases and cold versus
 valid prior-forall reuse; no recursive search or domain contract is broadened.
+
+
+## Exp/ln order leaves and authored consumers
+
+[Aggregate](atomic/by_builtin_rule/exp_ln_order.lit) retains the former exact
+failures as comments and eight current strict/weak forward/reflection statements.
+Independent tracers exercise ExpStrictMonotone, ExpWeakMonotone,
+LnStrictMonotone, LnWeakMonotone and the four order-reflection leaves:
+- [exp_strict_monotone](atomic/by_builtin_rule/exp_strict_monotone.lit)
+- [exp_strict_order_reflection](atomic/by_builtin_rule/exp_strict_order_reflection.lit)
+- [exp_weak_monotone](atomic/by_builtin_rule/exp_weak_monotone.lit)
+- [exp_weak_order_reflection](atomic/by_builtin_rule/exp_weak_order_reflection.lit)
+- [ln_strict_monotone](atomic/by_builtin_rule/ln_strict_monotone.lit)
+- [ln_strict_order_reflection](atomic/by_builtin_rule/ln_strict_order_reflection.lit)
+- [ln_weak_monotone](atomic/by_builtin_rule/ln_weak_monotone.lit)
+- [ln_weak_order_reflection](atomic/by_builtin_rule/ln_weak_order_reflection.lit)
+
+The [author file](atomic/by_builtin_rule/exp_ln_order_author_routes.lit) keeps
+fourteen unchanged full targets and exact reuse, including strong-to-weak,
+ln sign and nested exp. The [positive image carrier](../wd/ln_positive_image_carrier.lit)
+passes, while the same helper's nested-ln comparison domain consumer stays
+pending. [Source-owned record](experience/problem_notes/exp-ln-order-repair-2026-10-05.md)
+distinguishes this WD boundary and optional shortcuts. Exp R / Ln R+ and
+inherited source-premise permissions are unchanged; no full replay claim.
+
+
+## Legal fixed-base bridges
+
+[LnAsEulerLog](equal/by_builtin_rule/ln_as_euler_log.lit) and [ExpAsEulerIntegerPower](equal/by_builtin_rule/exp_as_euler_integer_power.lit) retain exact former failures as comments. Two pure typed identities keep all native/log/power guards in parent equality WD. The [author file](equal/by_builtin_rule/native_fixed_base_author_routes.lit) verifies five unchanged original targets and exact reuse: two aliases, two composite inverses and ln order through base-e log. Cold shortcuts, legal integer powers and unsettled real powers remain separate. [Source record](experience/problem_notes/fixed-base-bridge-repair-2026-10-05.md) links owner, language/Detailed and negative gates; no global search or domain expansion.
+
+
+## Elementary object definitions
+
+[Floor/ceiling bounds](atomic/by_builtin_rule/rounding_definition_bounds.lit),
+[tangent](equal/by_builtin_rule/tan_quotient_definition.lit),
+[cotangent](equal/by_builtin_rule/cot_quotient_definition.lit) and
+[Euclidean gcd recursion](equal/by_builtin_rule/gcd_euclidean_step.lit) preserve
+former direct failures as comments and now verify under their original domains.
+Each mathematical rule has a separate typed leaf. The
+[finite-extremum member bounds](atomic/by_builtin_rule/finite_extremum_member_bounds.lit)
+reuse the existing order leaves after adding checked real codomains and a
+one-edge stored-subset carrier citation. The
+[source record](experience/problem_notes/obj-definition-builtin-rules-2026-10-05.md)
+links strict CLI, exact negative boundaries, ten-language output and bounded
+carrier/publication gates.
+
+
+## Composite-divisor explicit authors
+
+[15 same-target authors](equal/by_builtin_rule/composite_divisor_explicit_author_routes.lit) retain the exact former failed shortcut as comments and check original domains/premises/targets. An explicit whole-denominator nonzero proof makes existing rational cancellation checkable; three-factor divisors use an independently proved matching whole-product helper before source WD. Cold automatic conversion remains optional AU64. [Source record](experience/problem_notes/composite-divisor-author-routes-2026-10-05.md) keeps pending conditional nested-ln WD, mathematical false controls and expected parser rejection separate; no kernel/search/domain expansion.
+
+
+## Log unit-interval order
+
+[Strict](atomic/by_builtin_rule/log_strict_decreasing_unit_interval.lit) and [weak](atomic/by_builtin_rule/log_weak_decreasing_unit_interval.lit) tracers preserve original former cold failures as comments and now check same-base order reversal under 0<a<1 and positive real arguments. Strict is old-positive convenience; weak nearby originals also failed legacy. Each typed leaf retains four actual guards and the reversed argument comparison, including real opposite-written source citations. [Source record](experience/problem_notes/log-unit-interval-order-repair-2026-10-05.md) links L3 gates, shared exp/ln regression, explicit strong-to-weak author and still-pending nested-ln WD. Existing increasing routes and inherited ceilings are retained.

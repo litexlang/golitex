@@ -1,0 +1,12 @@
+# SinHalfPiReflection: real complementary-angle formula.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/sin_half_pi_reflection.lit
+# Before: failed in search_proof.
+# forall x R:
+#     sin(pi/2-x)=cos(x)
+forall x R:
+    sin(pi/2-x)=cos(x)
+forall x R:
+    cos(x)=sin((-x)+0.5*pi)
+forall x R:
+    sin(pi/2-(x+1))=cos(x+1)
+# Boundary: negative cosine, pi/3 in place of pi/2 and complex inputs reject.

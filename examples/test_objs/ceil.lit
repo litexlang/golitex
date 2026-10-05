@@ -38,3 +38,9 @@ sketch:
 # P123: closed exact elementary calculation
 sketch:
     ceil(-6/3)=-2
+
+# P200: Real defining bounds
+sketch:
+    forall x R:
+        ceil(x)-1<x
+        x<=ceil(x)

@@ -29,6 +29,10 @@ have fn countdown(n N) N by induc n from 0:
     case n >= 1: countdown(n - 1)
 
 countdown(0) = 0
+1 - 1 = 0
+countdown(1) = countdown(1 - 1)
+countdown(1 - 1) = countdown(0)
+countdown(1) = countdown(0)
 countdown(1) = 0
 
 # --- Template: have … = … ---
@@ -61,4 +65,7 @@ template<_S set>:
         case n >= 1: countdown_t(n - 1)
 
 \countdown_t<{0}>(0) = 0
+\countdown_t<{0}>(1) = \countdown_t<{0}>(1 - 1)
+\countdown_t<{0}>(1 - 1) = \countdown_t<{0}>(0)
+\countdown_t<{0}>(1) = \countdown_t<{0}>(0)
 \countdown_t<{0}>(1) = 0

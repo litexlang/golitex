@@ -2,7 +2,7 @@
 # Rule struct: SubsetSetMinusCommonRightMonotoneBuiltinRuleProof
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/subset_set_minus_common_right_monotone.lit
 
-forall A set, B set, C set:
+forall A set, B set, Target set:
     A $subset B
     =>:
-        set_minus(A, C) $subset set_minus(B, C)
+        set_minus(A, Target) $subset set_minus(B, Target)

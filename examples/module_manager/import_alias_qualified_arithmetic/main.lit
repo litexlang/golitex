@@ -7,6 +7,13 @@
 # Now: the adjacent litex.config owns the gf dependency, so this source contains only Litex
 # statements and qualified mathematical references.
 
+# Publish the imported definitions before using their scalar and tuple types.
+release obj def gf::main::a
+release obj def gf::main2::b
+release obj def gf::main::pair
+release obj def gf::main2::pair
+release obj def gf::main::ProductSet
+
 gf::main::a + gf::main::a = gf::main2::b
 gf::main::pair[1] = 3
 gf::main2::pair[1] = 8

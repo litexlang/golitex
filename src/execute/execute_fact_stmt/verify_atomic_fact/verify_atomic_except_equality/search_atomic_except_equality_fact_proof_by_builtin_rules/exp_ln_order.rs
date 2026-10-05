@@ -92,7 +92,7 @@ impl Runtime {
         ) = (&fact.left, &fact.right)
         {
             if let Some(argument_order) =
-                self.exp_ln_strict_source_order(&a.arg, &b.arg, fact, state)?
+                self.strict_order_premise(&a.arg, &b.arg, fact.line_file.clone(), state)?
             {
                 return Ok(Some(LessFactSearchProofByBuiltinRule::ExpStrictMonotone(
                     ExpStrictMonotoneProof::new(argument_order),
@@ -105,7 +105,7 @@ impl Runtime {
         ) = (&fact.left, &fact.right)
         {
             if let Some(argument_order) =
-                self.exp_ln_strict_source_order(&a.arg, &b.arg, fact, state)?
+                self.strict_order_premise(&a.arg, &b.arg, fact.line_file.clone(), state)?
             {
                 return Ok(Some(LessFactSearchProofByBuiltinRule::LnStrictMonotone(
                     LnStrictMonotoneProof::new(argument_order),
@@ -122,7 +122,7 @@ impl Runtime {
             arg: Box::new(fact.right.clone()),
         }));
         if let Some(image_order) =
-            self.exp_ln_strict_source_order(&exp_left, &exp_right, fact, state)?
+            self.strict_order_premise(&exp_left, &exp_right, fact.line_file.clone(), state)?
         {
             return Ok(Some(
                 LessFactSearchProofByBuiltinRule::ExpStrictOrderReflection(
@@ -137,7 +137,7 @@ impl Runtime {
             arg: Box::new(fact.right.clone()),
         }));
         if let Some(image_order) =
-            self.exp_ln_strict_source_order(&ln_left, &ln_right, fact, state)?
+            self.strict_order_premise(&ln_left, &ln_right, fact.line_file.clone(), state)?
         {
             return Ok(Some(
                 LessFactSearchProofByBuiltinRule::LnStrictOrderReflection(
@@ -161,7 +161,7 @@ impl Runtime {
         ) = (&fact.left, &fact.right)
         {
             if let Some(argument_order) =
-                self.exp_ln_weak_source_order(&a.arg, &b.arg, fact, state)?
+                self.weak_order_premise(&a.arg, &b.arg, fact.line_file.clone(), state)?
             {
                 return Ok(Some(
                     LessEqualFactSearchProofByBuiltinRule::ExpWeakMonotone(
@@ -176,7 +176,7 @@ impl Runtime {
         ) = (&fact.left, &fact.right)
         {
             if let Some(argument_order) =
-                self.exp_ln_weak_source_order(&a.arg, &b.arg, fact, state)?
+                self.weak_order_premise(&a.arg, &b.arg, fact.line_file.clone(), state)?
             {
                 return Ok(Some(LessEqualFactSearchProofByBuiltinRule::LnWeakMonotone(
                     LnWeakMonotoneProof::new(argument_order),
@@ -193,7 +193,7 @@ impl Runtime {
             arg: Box::new(fact.right.clone()),
         }));
         if let Some(image_order) =
-            self.exp_ln_weak_source_order(&exp_left, &exp_right, fact, state)?
+            self.weak_order_premise(&exp_left, &exp_right, fact.line_file.clone(), state)?
         {
             return Ok(Some(
                 LessEqualFactSearchProofByBuiltinRule::ExpWeakOrderReflection(
@@ -208,7 +208,7 @@ impl Runtime {
             arg: Box::new(fact.right.clone()),
         }));
         if let Some(image_order) =
-            self.exp_ln_weak_source_order(&ln_left, &ln_right, fact, state)?
+            self.weak_order_premise(&ln_left, &ln_right, fact.line_file.clone(), state)?
         {
             return Ok(Some(
                 LessEqualFactSearchProofByBuiltinRule::LnWeakOrderReflection(

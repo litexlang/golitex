@@ -1,3 +1,4 @@
+use super::by_native_fixed_base::{LnAsEulerLogProof, ExpAsEulerIntegerPowerProof};
 use super::by_inverse_trig::{
     ArccosCosRightInverseBuiltinRuleProof, ArccosExactNegOneBuiltinRuleProof,
     ArccosExactOneBuiltinRuleProof, ArccosExactZeroBuiltinRuleProof,
@@ -129,6 +130,11 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    TanQuotientDefinition(super::by_elementary_definitions::TanQuotientDefinitionProof),
+    CotQuotientDefinition(super::by_elementary_definitions::CotQuotientDefinitionProof),
+    GcdEuclideanStep(super::by_elementary_definitions::GcdEuclideanStepProof),
+    LnAsEulerLog(LnAsEulerLogProof),
+    ExpAsEulerIntegerPower(ExpAsEulerIntegerPowerProof),
     RangeSize(super::by_range_size::RangeSizeProof),
     ClosedRangeSize(super::by_range_size::ClosedRangeSizeProof),
     EuclideanRemainder(super::by_euclidean_remainder::EuclideanRemainderProof),

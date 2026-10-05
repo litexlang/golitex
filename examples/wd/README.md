@@ -15,6 +15,10 @@ Showcase migration tracers (strict, no trust):
 - [Unique function templates](template_unique_from_typed_carrier.lit): recover
   hidden parameters from a matched receiver's type, then use the constructed
   function inside another call with read-only WD.
+- [Struct parameter carriers](struct_parameter_carriers.lit): an unused
+  parameter preserves the field set in both directions. Actual field carriers
+  retain integer/natural/real boundaries; their Rust negatives use incompatible
+  values and directions rather than treating N-to-Z inclusion as an error.
 - [Forall set-builder matching](forall_set_builder_matching.lit): infer free
   parameters under alpha-renamed local binders, including nested builders.
 - [Anonymous application range](anonymous_application_range_alpha.lit): alpha
@@ -162,3 +166,12 @@ and object constructors distinct from nearby user names. The original Euler
 parameter bug is commented in the tracer; executable parser regressions reject
 reserved declaration/binder/field/witness names and verify same-runtime reuse
 after failure in eval, REPL and root-export contexts.
+
+
+[Positive ln image carrier](ln_positive_image_carrier.lit) publishes the checked
+1<x implies ln(x) inR+ author and verifies ln(ln(x)) inR. A nested comparison
+consumer of that same helper remains rejected in predicate-domain WD; the
+[record](../proof_nodes/experience/problem_notes/exp-ln-order-repair-2026-10-05.md)
+retains complete old-accepted authors, actual failure and acceptance boundary.
+Carrier success alone does not close the comparison issue or justify increasing
+shared search permissions.

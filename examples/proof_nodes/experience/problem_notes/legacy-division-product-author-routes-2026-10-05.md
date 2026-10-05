@@ -1,5 +1,7 @@
 # 乘除互转作者路线与复合分母边界 — 2026-10-05
 
+> Latest correction: LEG45 complete original mathematical checkability now closes through an earlier explicitly checked whole denominator NZ; three-factor source WD uses a proved matching wholehelper. Cold short discovery remains AU64 convenience, not a required missing capability. [Exact before/after](composite-divisor-author-routes-2026-10-05.md) and [15-author tracer](../../equal/by_builtin_rule/composite_divisor_explicit_author_routes.lit). Below is the preserved historical failed-author checkpoint.
+
 原两方向旧过／current WD后search miss：
 
 ```litex

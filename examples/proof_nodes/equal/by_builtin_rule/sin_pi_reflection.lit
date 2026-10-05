@@ -1,0 +1,12 @@
+# SinPiReflection: real reflection about pi/2.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/sin_pi_reflection.lit
+# Before: failed in search_proof.
+# forall x R:
+#     sin(pi-x)=sin(x)
+forall x R:
+    sin(pi-x)=sin(x)
+forall x R:
+    sin(x)=sin((-x)+pi)
+forall x R:
+    sin(pi-(x+1))=sin(x+1)
+# Boundary: wrong sign, pi/3 in place of pi and complex inputs reject.

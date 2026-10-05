@@ -52,3 +52,5 @@ pub(in crate::json_output) use proof_block_failure::{
 mod function_body;
 mod template_failure;
 pub(in crate::json_output) use template_failure::project_template_failure;
+
+mod log_algebra_base;

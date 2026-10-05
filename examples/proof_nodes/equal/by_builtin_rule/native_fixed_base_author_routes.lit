@@ -1,0 +1,180 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/native_fixed_base_author_routes.lit
+# Full unchanged original goals and exact reuse, no broader automatic search.
+
+# Former exact complete author failed before the fixed-base leaf:
+# 1<e
+# e!=1
+# let E=e
+# E $in R+
+# 0<E
+# E!=1
+# claim:
+#     ? forall x R+:
+#         ln(x)=log(E,x)
+#     ln(x)=log(e,x)
+#     ln(x)=log(E,x)
+# 
+# forall x R+:
+#     ln(x)=log(E,x)
+
+1<e
+e!=1
+let E=e
+E $in R+
+0<E
+E!=1
+claim:
+    ? forall x R+:
+        ln(x)=log(E,x)
+    ln(x)=log(e,x)
+    ln(x)=log(E,x)
+
+forall x R+:
+    ln(x)=log(E,x)
+
+
+# Former exact complete author failed before the fixed-base leaf:
+# e $in R+
+# 0<e
+# e!=0
+# 1<e
+# e!=1
+# let F=e
+# F $in R+
+# 0<F
+# F!=0
+# claim:
+#     ? forall n Z:
+#         exp(n)=F^n
+#     exp(n)=e^n
+#     exp(n)=F^n
+# 
+# forall n Z:
+#     exp(n)=F^n
+
+e $in R+
+0<e
+e!=0
+1<e
+e!=1
+let F=e
+F $in R+
+0<F
+F!=0
+claim:
+    ? forall n Z:
+        exp(n)=F^n
+    exp(n)=e^n
+    exp(n)=F^n
+
+forall n Z:
+    exp(n)=F^n
+
+
+# Former exact complete author failed before the fixed-base leaf:
+# e $in R+
+# 0<e
+# e!=0
+# 1<e
+# e!=1
+# forall n Z:
+#     exp(n)=e^n
+#     exp(n) $in R+
+#     e^n $in R+
+# 
+# claim:
+#     ? forall n Z:
+#         ln(e^n)=n
+#     exp(n)=e^n
+#     ln(e^n)=ln(exp(n))
+#     ln(exp(n))=n
+#     ln(e^n)=n
+# 
+# forall n Z:
+#     ln(e^n)=n
+
+e $in R+
+0<e
+e!=0
+1<e
+e!=1
+forall n Z:
+    exp(n)=e^n
+    exp(n) $in R+
+    e^n $in R+
+
+claim:
+    ? forall n Z:
+        ln(e^n)=n
+    exp(n)=e^n
+    ln(e^n)=ln(exp(n))
+    ln(exp(n))=n
+    ln(e^n)=n
+
+forall n Z:
+    ln(e^n)=n
+
+
+# Former exact complete author failed before the fixed-base leaf:
+# 1<e
+# e!=1
+# claim:
+#     ? forall x R+:
+#         exp(log(e,x))=x
+#     ln(x)=log(e,x)
+#     exp(log(e,x))=exp(ln(x))
+#     exp(ln(x))=x
+#     exp(log(e,x))=x
+# 
+# forall x R+:
+#     exp(log(e,x))=x
+
+1<e
+e!=1
+claim:
+    ? forall x R+:
+        exp(log(e,x))=x
+    ln(x)=log(e,x)
+    exp(log(e,x))=exp(ln(x))
+    exp(ln(x))=x
+    exp(log(e,x))=x
+
+forall x R+:
+    exp(log(e,x))=x
+
+
+# Former exact complete author failed before the fixed-base leaf:
+# 1<e
+# e!=1
+# claim:
+#     ? forall a,b R+:
+#         a<b
+#         =>:
+#             ln(a)<ln(b)
+#     ln(a)=log(e,a)
+#     ln(b)=log(e,b)
+#     log(e,a)<log(e,b)
+#     ln(a)<ln(b)
+# 
+# forall a,b R+:
+#     a<b
+#     =>:
+#         ln(a)<ln(b)
+
+1<e
+e!=1
+claim:
+    ? forall a,b R+:
+        a<b
+        =>:
+            ln(a)<ln(b)
+    ln(a)=log(e,a)
+    ln(b)=log(e,b)
+    log(e,a)<log(e,b)
+    ln(a)<ln(b)
+
+forall a,b R+:
+    a<b
+    =>:
+        ln(a)<ln(b)
+

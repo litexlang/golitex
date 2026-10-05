@@ -1,5 +1,7 @@
 //! Verification stages for atomic facts.
 
+mod known_subset_membership;
+
 pub mod verify_equality;
 pub mod match_forall_conclusion_args;
 pub mod prove_forall_instantiation_requirements;

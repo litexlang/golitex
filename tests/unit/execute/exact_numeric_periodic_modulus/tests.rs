@@ -398,6 +398,25 @@ fn logarithm_algebra_for_positive_nonunit_bases() {
 }
 
 #[test]
+fn arccos_principal_lower_bound_precedes_generic_zero_dispatch() {
+    for lower in ["0", "0 + 0", "0 - 0"] {
+        let source = format!(
+            "forall x R:\n    -1 <= x\n    x <= 1\n    =>:\n        {lower} <= arccos(x)"
+        );
+        let json = check(&source, true);
+        assert!(json.contains("ArccosPrincipalLowerBound"), "{json}");
+    }
+    for source in [
+        "forall x R:\n    0 <= arccos(x)",
+        "0 <= arccos(2)",
+        "0 <= arccos(i)",
+        "forall x R:\n    -1 <= x\n    x <= 1\n    =>:\n        1 <= arccos(x)",
+    ] {
+        check(source, false);
+    }
+}
+
+#[test]
 fn exact_rational_comparison_overflow_is_a_miss() {
     use crate::rational_expression::exact_rational::EvalRational;
     let left = EvalRational::new(100000000000000000001, 100000000000000000000).unwrap();

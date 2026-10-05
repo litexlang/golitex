@@ -6,7 +6,7 @@
 #
 # Each lesson states its mathematical assumptions, gives a proof idea and shows
 # the Litex facts and proof commands that establish the result. Supporting
-# results shared across chapters are proved in citation.lit.
+# results are proved in the chapters where they are introduced.
 #
 # When Litex already supplies a familiar concept, the book first introduces its
 # mathematical definition and simple examples, then uses the builtin object in

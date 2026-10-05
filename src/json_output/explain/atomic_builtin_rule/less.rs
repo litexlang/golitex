@@ -30,6 +30,8 @@ use crate::json_output::explain::text::text;
 impl LessFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorStrictUpperBound(p) => p.rule_name_and_message_en(),
+            Self::CeilStrictLowerBound(p) => p.rule_name_and_message_en(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_en(),
             Self::LnStrictMonotone(p) => p.rule_name_and_message_en(),
             Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_en(),
@@ -57,6 +59,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::SqrtPositive(p) => p.rule_name_and_message_en(),
             Self::SqrtMonotoneIncreasing(p) => p.rule_name_and_message_en(),
             Self::LogOrderPreservingStrict(p) => p.rule_name_and_message_en(),
+            Self::LogStrictDecreasing(p) => p.rule_name_and_message_en(),
             Self::LogPositiveFromBaseAndArgGtOne(p) => p.rule_name_and_message_en(),
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_en(),
             Self::LessTransitivity(p) => p.rule_name_and_message_en(),
@@ -81,6 +84,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorStrictUpperBound(p) => p.rule_name_and_message_zh(),
+            Self::CeilStrictLowerBound(p) => p.rule_name_and_message_zh(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_zh(),
             Self::LnStrictMonotone(p) => p.rule_name_and_message_zh(),
             Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_zh(),
@@ -108,6 +113,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::SqrtPositive(p) => p.rule_name_and_message_zh(),
             Self::SqrtMonotoneIncreasing(p) => p.rule_name_and_message_zh(),
             Self::LogOrderPreservingStrict(p) => p.rule_name_and_message_zh(),
+            Self::LogStrictDecreasing(p) => p.rule_name_and_message_zh(),
             Self::LogPositiveFromBaseAndArgGtOne(p) => p.rule_name_and_message_zh(),
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_zh(),
             Self::LessTransitivity(p) => p.rule_name_and_message_zh(),
@@ -132,6 +138,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorStrictUpperBound(p) => p.rule_name_and_message_zh_hant(),
+            Self::CeilStrictLowerBound(p) => p.rule_name_and_message_zh_hant(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_zh_hant(),
             Self::LnStrictMonotone(p) => p.rule_name_and_message_zh_hant(),
             Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_zh_hant(),
@@ -159,6 +167,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::SqrtPositive(p) => p.rule_name_and_message_zh_hant(),
             Self::SqrtMonotoneIncreasing(p) => p.rule_name_and_message_zh_hant(),
             Self::LogOrderPreservingStrict(p) => p.rule_name_and_message_zh_hant(),
+            Self::LogStrictDecreasing(p) => p.rule_name_and_message_zh_hant(),
             Self::LogPositiveFromBaseAndArgGtOne(p) => p.rule_name_and_message_zh_hant(),
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_zh_hant(),
             Self::LessTransitivity(p) => p.rule_name_and_message_zh_hant(),
@@ -183,6 +192,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorStrictUpperBound(p) => p.rule_name_and_message_fr(),
+            Self::CeilStrictLowerBound(p) => p.rule_name_and_message_fr(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_fr(),
             Self::LnStrictMonotone(p) => p.rule_name_and_message_fr(),
             Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_fr(),
@@ -210,6 +221,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::SqrtPositive(p) => p.rule_name_and_message_fr(),
             Self::SqrtMonotoneIncreasing(p) => p.rule_name_and_message_fr(),
             Self::LogOrderPreservingStrict(p) => p.rule_name_and_message_fr(),
+            Self::LogStrictDecreasing(p) => p.rule_name_and_message_fr(),
             Self::LogPositiveFromBaseAndArgGtOne(p) => p.rule_name_and_message_fr(),
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_fr(),
             Self::LessTransitivity(p) => p.rule_name_and_message_fr(),
@@ -234,6 +246,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorStrictUpperBound(p) => p.rule_name_and_message_ru(),
+            Self::CeilStrictLowerBound(p) => p.rule_name_and_message_ru(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_ru(),
             Self::LnStrictMonotone(p) => p.rule_name_and_message_ru(),
             Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_ru(),
@@ -261,6 +275,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::SqrtPositive(p) => p.rule_name_and_message_ru(),
             Self::SqrtMonotoneIncreasing(p) => p.rule_name_and_message_ru(),
             Self::LogOrderPreservingStrict(p) => p.rule_name_and_message_ru(),
+            Self::LogStrictDecreasing(p) => p.rule_name_and_message_ru(),
             Self::LogPositiveFromBaseAndArgGtOne(p) => p.rule_name_and_message_ru(),
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_ru(),
             Self::LessTransitivity(p) => p.rule_name_and_message_ru(),
@@ -285,6 +300,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorStrictUpperBound(p) => p.rule_name_and_message_es(),
+            Self::CeilStrictLowerBound(p) => p.rule_name_and_message_es(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_es(),
             Self::LnStrictMonotone(p) => p.rule_name_and_message_es(),
             Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_es(),
@@ -312,6 +329,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::SqrtPositive(p) => p.rule_name_and_message_es(),
             Self::SqrtMonotoneIncreasing(p) => p.rule_name_and_message_es(),
             Self::LogOrderPreservingStrict(p) => p.rule_name_and_message_es(),
+            Self::LogStrictDecreasing(p) => p.rule_name_and_message_es(),
             Self::LogPositiveFromBaseAndArgGtOne(p) => p.rule_name_and_message_es(),
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_es(),
             Self::LessTransitivity(p) => p.rule_name_and_message_es(),
@@ -336,6 +354,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorStrictUpperBound(p) => p.rule_name_and_message_ar(),
+            Self::CeilStrictLowerBound(p) => p.rule_name_and_message_ar(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_ar(),
             Self::LnStrictMonotone(p) => p.rule_name_and_message_ar(),
             Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_ar(),
@@ -363,6 +383,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::SqrtPositive(p) => p.rule_name_and_message_ar(),
             Self::SqrtMonotoneIncreasing(p) => p.rule_name_and_message_ar(),
             Self::LogOrderPreservingStrict(p) => p.rule_name_and_message_ar(),
+            Self::LogStrictDecreasing(p) => p.rule_name_and_message_ar(),
             Self::LogPositiveFromBaseAndArgGtOne(p) => p.rule_name_and_message_ar(),
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_ar(),
             Self::LessTransitivity(p) => p.rule_name_and_message_ar(),
@@ -387,6 +408,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorStrictUpperBound(p) => p.rule_name_and_message_ja(),
+            Self::CeilStrictLowerBound(p) => p.rule_name_and_message_ja(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_ja(),
             Self::LnStrictMonotone(p) => p.rule_name_and_message_ja(),
             Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_ja(),
@@ -414,6 +437,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::SqrtPositive(p) => p.rule_name_and_message_ja(),
             Self::SqrtMonotoneIncreasing(p) => p.rule_name_and_message_ja(),
             Self::LogOrderPreservingStrict(p) => p.rule_name_and_message_ja(),
+            Self::LogStrictDecreasing(p) => p.rule_name_and_message_ja(),
             Self::LogPositiveFromBaseAndArgGtOne(p) => p.rule_name_and_message_ja(),
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_ja(),
             Self::LessTransitivity(p) => p.rule_name_and_message_ja(),
@@ -438,6 +462,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorStrictUpperBound(p) => p.rule_name_and_message_ko(),
+            Self::CeilStrictLowerBound(p) => p.rule_name_and_message_ko(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_ko(),
             Self::LnStrictMonotone(p) => p.rule_name_and_message_ko(),
             Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_ko(),
@@ -465,6 +491,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::SqrtPositive(p) => p.rule_name_and_message_ko(),
             Self::SqrtMonotoneIncreasing(p) => p.rule_name_and_message_ko(),
             Self::LogOrderPreservingStrict(p) => p.rule_name_and_message_ko(),
+            Self::LogStrictDecreasing(p) => p.rule_name_and_message_ko(),
             Self::LogPositiveFromBaseAndArgGtOne(p) => p.rule_name_and_message_ko(),
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_ko(),
             Self::LessTransitivity(p) => p.rule_name_and_message_ko(),
@@ -489,6 +516,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorStrictUpperBound(p) => p.rule_name_and_message_vi(),
+            Self::CeilStrictLowerBound(p) => p.rule_name_and_message_vi(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_vi(),
             Self::LnStrictMonotone(p) => p.rule_name_and_message_vi(),
             Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_vi(),
@@ -516,6 +545,7 @@ impl LessFactSearchProofByBuiltinRule {
             Self::SqrtPositive(p) => p.rule_name_and_message_vi(),
             Self::SqrtMonotoneIncreasing(p) => p.rule_name_and_message_vi(),
             Self::LogOrderPreservingStrict(p) => p.rule_name_and_message_vi(),
+            Self::LogStrictDecreasing(p) => p.rule_name_and_message_vi(),
             Self::LogPositiveFromBaseAndArgGtOne(p) => p.rule_name_and_message_vi(),
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_vi(),
             Self::LessTransitivity(p) => p.rule_name_and_message_vi(),
@@ -555,6 +585,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::FloorStrictUpperBound(_) => None,
+            Self::CeilStrictLowerBound(_) => None,
             Self::FromKnownGreater(p) => p.premise_proof.cite_fact_id(),
             Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),
             Self::LessTransitivity(_) => None,

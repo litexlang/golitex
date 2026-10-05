@@ -54,6 +54,11 @@ impl Runtime {
                 P::StandardSuperset(Box::new(source_proof)),
             ));
         }
+        if let Some(proof) = self.lookup_structural_known_subset_membership(&goal) {
+            return Some(StructuralMembershipProof::new(
+                element.clone(), target.clone(), P::KnownSubset(proof),
+            ));
+        }
         if let Some((source, rule)) = intrinsic_codomain(element) {
             if standard_set_is_subset_eq(&source, target) {
                 let source_proof = StructuralMembershipProof::new(
@@ -232,6 +237,9 @@ fn intrinsic_codomain(element: &Obj) -> Option<(StandardSet, IntrinsicCodomain)>
         Obj::ProductShape(ProductShape::TupleDim(_)) => (N, K::TupleDim),
         Obj::ProductShape(ProductShape::CartDim(_)) => (N, K::CartDim),
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(_)) => (N, K::FiniteSetSize),
+        // Object WD already proves finite, nonempty and contained in R.
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(_)) => (R, K::FiniteSetMax),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(_)) => (R, K::FiniteSetMin),
         Obj::Literal(Literal::EulerNumber(_)) => (RPos, K::EulerNumber),
         Obj::Literal(Literal::Pi(_)) => (RPos, K::Pi),
         Obj::Literal(Literal::ImaginaryUnit(_)) => (CStar, K::ImaginaryUnit),

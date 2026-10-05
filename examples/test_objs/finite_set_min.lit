@@ -25,3 +25,11 @@ sketch:
 # P90: Nearest valid-domain control
 sketch:
     let n = finite_set_min({1})
+
+# P200: Every member lies above the minimum
+sketch:
+    forall S finite_set,x S:
+        $is_nonempty_set(S)
+        S $subset R
+        =>:
+            finite_set_min(S)<=x

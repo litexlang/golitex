@@ -1,4 +1,5 @@
 //! Generated equality builtin-rule detailed projection.
+use super::log_algebra_base::project_log_algebra_base;
 use super::store::project_verify_facts;
 use super::verify::project_verify_fact;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
@@ -8,6 +9,9 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::TanQuotientDefinition(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("TanQuotientDefinition"))]),
+        EqualitySearchProofByBuiltinRule::CotQuotientDefinition(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("CotQuotientDefinition"))]),
+        EqualitySearchProofByBuiltinRule::GcdEuclideanStep(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("GcdEuclideanStep"))]),
         EqualitySearchProofByBuiltinRule::LcmLeftAbsDivisibility(_) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("LcmLeftAbsDivisibility")),
         ]),
@@ -76,6 +80,19 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof as P;
             let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
             match p {
+                P::CosDoubleAngle(p) => {
+                    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::CosDoubleAngleForm as F;
+                    entries.push(("angle", string(p.angle.readable_string())));
+                    entries.push(("form", string(match p.form {
+                        F::CosineSquareMinusSineSquare => "cosine_square_minus_sine_square",
+                        F::OneMinusTwiceSineSquare => "one_minus_twice_sine_square",
+                        F::TwiceCosineSquareMinusOne => "twice_cosine_square_minus_one",
+                    })));
+                },
+                P::SinPiReflection(p) => entries.push(("angle", string(p.angle.readable_string()))),
+                P::CosPiReflection(p) => entries.push(("angle", string(p.angle.readable_string()))),
+                P::SinHalfPiReflection(p) => entries.push(("angle", string(p.angle.readable_string()))),
+                P::CosHalfPiReflection(p) => entries.push(("angle", string(p.angle.readable_string()))),
                 P::PeriodicTrig(p) => {
                     entries.push(("coefficient", string(p.coefficient.readable_string())));
                     entries.push(("integer_requirements", project_verify_facts(&p.integer_requirements, runtime)));
@@ -95,7 +112,11 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
                     entries.push(("real",super::searched::project_equal_searched(real,runtime)));
                     entries.push(("imaginary",super::searched::project_equal_searched(imaginary,runtime)));
                     entries.push(("domains",project_verify_facts(domains,runtime)));
-                }, _ => {},
+                },
+                P::SinHalfPiShift(_) | P::CosHalfPiShift(_) | P::SinNegation | P::CosNegation
+                | P::SinPiShift | P::CosPiShift | P::SinDoubleAngle | P::SinDifference | P::CosDifference
+                | P::ComplexModulusProduct | P::ComplexReconstruction | P::RealPartAddition
+                | P::ImaginaryPartAddition | P::RealPartSubtraction | P::ImaginaryPartSubtraction => {},
             }
             object_for(runtime,entries)
         },
@@ -327,24 +348,34 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             object_for(runtime, entries)
         },
         EqualitySearchProofByBuiltinRule::LogArgPower(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("LogArgPower"))];
-            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
-            object_for(runtime, entries)
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")), ("rule", string("LogArgPower")),
+                ("base_proof", project_log_algebra_base(&p.base_proof, runtime)),
+                ("argument_positive_proof", project_verify_fact(&p.argument_positive_proof, runtime)),
+            ])
         },
         EqualitySearchProofByBuiltinRule::LogProduct(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("LogProduct"))];
-            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
-            object_for(runtime, entries)
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")), ("rule", string("LogProduct")),
+                ("base_proof", project_log_algebra_base(&p.base_proof, runtime)),
+                ("left_argument_positive_proof", project_verify_fact(&p.left_argument_positive_proof, runtime)),
+                ("right_argument_positive_proof", project_verify_fact(&p.right_argument_positive_proof, runtime)),
+            ])
         },
         EqualitySearchProofByBuiltinRule::LogQuotient(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("LogQuotient"))];
-            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
-            object_for(runtime, entries)
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")), ("rule", string("LogQuotient")),
+                ("base_proof", project_log_algebra_base(&p.base_proof, runtime)),
+                ("numerator_positive_proof", project_verify_fact(&p.numerator_positive_proof, runtime)),
+                ("denominator_positive_proof", project_verify_fact(&p.denominator_positive_proof, runtime)),
+            ])
         },
         EqualitySearchProofByBuiltinRule::LogReciprocal(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("LogReciprocal"))];
-            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
-            object_for(runtime, entries)
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")), ("rule", string("LogReciprocal")),
+                ("base_proof", project_log_algebra_base(&p.base_proof, runtime)),
+                ("argument_positive_proof", project_verify_fact(&p.argument_positive_proof, runtime)),
+            ])
         },
         EqualitySearchProofByBuiltinRule::LogChangeOfBase(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("LogChangeOfBase"))];
@@ -879,6 +910,8 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
             object_for(runtime, entries)
         },
+        EqualitySearchProofByBuiltinRule::LnAsEulerLog(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("LnAsEulerLog"))]),
+        EqualitySearchProofByBuiltinRule::ExpAsEulerIntegerPower(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("ExpAsEulerIntegerPower"))]),
         EqualitySearchProofByBuiltinRule::EulerEqualsExpOne(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("EulerEqualsExpOne"))];
             let _ = p;

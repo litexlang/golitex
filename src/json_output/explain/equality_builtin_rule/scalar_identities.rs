@@ -183,6 +183,11 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::CosDoubleAngle(_) => ("Cosine double angle", "For checked real x: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
+            Self::SinPiReflection(_) => ("Sine reflection about pi/2", "For checked real x: sin(pi-x)=sin(x)"),
+            Self::CosPiReflection(_) => ("Cosine reflection about pi/2", "For checked real x: cos(pi-x)=-cos(x)"),
+            Self::SinHalfPiReflection(_) => ("Sine complementary angle", "For checked real x: sin(pi/2-x)=cos(x)"),
+            Self::CosHalfPiReflection(_) => ("Cosine complementary angle", "For checked real x: cos(pi/2-x)=sin(x)"),
 Self::SinHalfPiShift(_) => ("Sine quarter-turn shift", "sin(x+pi/2)=cos(x) for checked real x"),
 Self::CosHalfPiShift(_) => ("Cosine quarter-turn shift", "cos(x+pi/2)=-sin(x) for checked real x"),
 Self::PeriodicTrig(_) => ("Exact periodic trigonometric value", "Reduce the exact pi coefficient using checked integer periods"),
@@ -190,13 +195,18 @@ Self::NumericComplexModulus(_) => ("Exact numeric complex modulus", "Compute exa
 Self::SinDifference => ("Sine difference formula", "sin(x-y)=sin(x)cos(y)-cos(x)sin(y) for checked real arguments"),
 Self::CosDifference => ("Cosine difference formula", "cos(x-y)=cos(x)cos(y)+sin(x)sin(y) for checked real arguments"),
 Self::ComplexModulusProduct => ("Multiplicativity of complex modulus", "C_abs(z*w)=C_abs(z)*C_abs(w) for checked complex arguments"),
-_ => ("Trigonometric or complex coordinate identity", "Apply the trigonometric or complex coordinate identity with checked premises"),
+Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Self::SinDoubleAngle | Self::ComplexReconstruction | Self::RealPartAddition | Self::ImaginaryPartAddition | Self::RealPartSubtraction | Self::ImaginaryPartSubtraction | Self::ComplexPowerCoordinates { .. } | Self::ComplexModulusZero { .. } | Self::ComplexCoordinatesEqual { .. } => ("Trigonometric or complex coordinate identity", "Apply the trigonometric or complex coordinate identity with checked premises"),
 };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::CosDoubleAngle(_) => ("余弦倍角公式", "经验证的实数 x 满足：cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
+            Self::SinPiReflection(_) => ("正弦的 pi 反射", "经验证的实数 x 满足：sin(pi-x)=sin(x)"),
+            Self::CosPiReflection(_) => ("余弦的 pi 反射", "经验证的实数 x 满足：cos(pi-x)=-cos(x)"),
+            Self::SinHalfPiReflection(_) => ("正弦余角公式", "经验证的实数 x 满足：sin(pi/2-x)=cos(x)"),
+            Self::CosHalfPiReflection(_) => ("余弦余角公式", "经验证的实数 x 满足：cos(pi/2-x)=sin(x)"),
 Self::SinHalfPiShift(_) => ("正弦的半 pi 平移", "经验证的实数 x 满足 sin(x+pi/2)=cos(x)"),
 Self::CosHalfPiShift(_) => ("余弦的半 pi 平移", "经验证的实数 x 满足 cos(x+pi/2)=-sin(x)"),
 Self::PeriodicTrig(_) => ("精确周期三角值", "依据已验证的整数周期归约精确 pi 系数"),
@@ -204,13 +214,18 @@ Self::NumericComplexModulus(_) => ("数字复数模长精确计算", "精确计�
 Self::SinDifference => ("正弦差角公式", "经验证的实数参数满足 sin(x-y)=sin(x)cos(y)-cos(x)sin(y)"),
 Self::CosDifference => ("余弦差角公式", "经验证的实数参数满足 cos(x-y)=cos(x)cos(y)+sin(x)sin(y)"),
 Self::ComplexModulusProduct => ("复数模的乘法公式", "经验证的复数参数满足 C_abs(z*w)=C_abs(z)*C_abs(w)"),
-_ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复坐标恒等式"),
+Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Self::SinDoubleAngle | Self::ComplexReconstruction | Self::RealPartAddition | Self::ImaginaryPartAddition | Self::RealPartSubtraction | Self::ImaginaryPartSubtraction | Self::ComplexPowerCoordinates { .. } | Self::ComplexModulusZero { .. } | Self::ComplexCoordinatesEqual { .. } => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复坐标恒等式"),
 };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::CosDoubleAngle(_) => ("餘弦倍角公式", "經驗證的實數 x 滿足：cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
+            Self::SinPiReflection(_) => ("正弦的 pi 反射", "經驗證的實數 x 滿足：sin(pi-x)=sin(x)"),
+            Self::CosPiReflection(_) => ("餘弦的 pi 反射", "經驗證的實數 x 滿足：cos(pi-x)=-cos(x)"),
+            Self::SinHalfPiReflection(_) => ("正弦餘角公式", "經驗證的實數 x 滿足：sin(pi/2-x)=cos(x)"),
+            Self::CosHalfPiReflection(_) => ("餘弦餘角公式", "經驗證的實數 x 滿足：cos(pi/2-x)=sin(x)"),
             Self::SinHalfPiShift(_) => ("正弦的半 pi 平移", "經驗證的實數 x 滿足 sin(x+pi/2)=cos(x)"),
             Self::CosHalfPiShift(_) => ("餘弦的半 pi 平移", "經驗證的實數 x 滿足 cos(x+pi/2)=-sin(x)"),
             Self::PeriodicTrig(_) => ("精確週期三角值", "以已驗證的整數週期歸約精確 pi 係數"),
@@ -218,13 +233,18 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::SinDifference => ("正弦差角公式", "經驗證的實數引數滿足 sin(x-y)=sin(x)cos(y)-cos(x)sin(y)"),
             Self::CosDifference => ("餘弦差角公式", "經驗證的實數引數滿足 cos(x-y)=cos(x)cos(y)+sin(x)sin(y)"),
             Self::ComplexModulusProduct => ("複數模的乘法公式", "經驗證的複數引數滿足 C_abs(z*w)=C_abs(z)*C_abs(w)"),
-            _ => ("三角或複數座標恆等式", "依已驗證的前提套用三角或複數座標恆等式"),
+            Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Self::SinDoubleAngle | Self::ComplexReconstruction | Self::RealPartAddition | Self::ImaginaryPartAddition | Self::RealPartSubtraction | Self::ImaginaryPartSubtraction | Self::ComplexPowerCoordinates { .. } | Self::ComplexModulusZero { .. } | Self::ComplexCoordinatesEqual { .. } => ("三角或複數座標恆等式", "依已驗證的前提套用三角或複數座標恆等式"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::CosDoubleAngle(_) => ("Angle double du cosinus", "Pour x réel vérifié : cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
+            Self::SinPiReflection(_) => ("Réflexion du sinus en pi/2", "Pour x réel vérifié : sin(pi-x)=sin(x)"),
+            Self::CosPiReflection(_) => ("Réflexion du cosinus en pi/2", "Pour x réel vérifié : cos(pi-x)=-cos(x)"),
+            Self::SinHalfPiReflection(_) => ("Angle complémentaire du sinus", "Pour x réel vérifié : sin(pi/2-x)=cos(x)"),
+            Self::CosHalfPiReflection(_) => ("Angle complémentaire du cosinus", "Pour x réel vérifié : cos(pi/2-x)=sin(x)"),
             Self::SinHalfPiShift(_) => ("Translation d'un quart de tour du sinus", "sin(x+pi/2)=cos(x) pour x réel vérifié"),
             Self::CosHalfPiShift(_) => ("Translation d'un quart de tour du cosinus", "cos(x+pi/2)=-sin(x) pour x réel vérifié"),
             Self::PeriodicTrig(_) => ("Valeur trigonométrique périodique exacte", "Réduire le coefficient exact de pi avec des périodes entières vérifiées"),
@@ -232,13 +252,18 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::SinDifference => ("Formule du sinus d'une différence", "sin(x-y)=sin(x)cos(y)-cos(x)sin(y) pour des arguments réels vérifiés"),
             Self::CosDifference => ("Formule du cosinus d'une différence", "cos(x-y)=cos(x)cos(y)+sin(x)sin(y) pour des arguments réels vérifiés"),
             Self::ComplexModulusProduct => ("Multiplicativité du module complexe", "C_abs(z*w)=C_abs(z)*C_abs(w) pour des arguments complexes vérifiés"),
-            _ => ("Identité trigonométrique ou de coordonnées complexes", "Appliquer l'identité trigonométrique ou de coordonnées complexes avec les prémisses vérifiées"),
+            Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Self::SinDoubleAngle | Self::ComplexReconstruction | Self::RealPartAddition | Self::ImaginaryPartAddition | Self::RealPartSubtraction | Self::ImaginaryPartSubtraction | Self::ComplexPowerCoordinates { .. } | Self::ComplexModulusZero { .. } | Self::ComplexCoordinatesEqual { .. } => ("Identité trigonométrique ou de coordonnées complexes", "Appliquer l'identité trigonométrique ou de coordonnées complexes avec les prémisses vérifiées"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::CosDoubleAngle(_) => ("Двойной угол косинуса", "Для проверенного вещественного x: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
+            Self::SinPiReflection(_) => ("Отражение синуса относительно pi/2", "Для проверенного вещественного x: sin(pi-x)=sin(x)"),
+            Self::CosPiReflection(_) => ("Отражение косинуса относительно pi/2", "Для проверенного вещественного x: cos(pi-x)=-cos(x)"),
+            Self::SinHalfPiReflection(_) => ("Дополнительный угол синуса", "Для проверенного вещественного x: sin(pi/2-x)=cos(x)"),
+            Self::CosHalfPiReflection(_) => ("Дополнительный угол косинуса", "Для проверенного вещественного x: cos(pi/2-x)=sin(x)"),
             Self::SinHalfPiShift(_) => ("Сдвиг синуса на четверть оборота", "sin(x+pi/2)=cos(x) для проверенного вещественного x"),
             Self::CosHalfPiShift(_) => ("Сдвиг косинуса на четверть оборота", "cos(x+pi/2)=-sin(x) для проверенного вещественного x"),
             Self::PeriodicTrig(_) => ("Точное периодическое тригонометрическое значение", "Сократить точный коэффициент pi по проверенным целочисленным периодам"),
@@ -246,13 +271,18 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::SinDifference => ("Формула синуса разности", "sin(x-y)=sin(x)cos(y)-cos(x)sin(y) для проверенных вещественных аргументов"),
             Self::CosDifference => ("Формула косинуса разности", "cos(x-y)=cos(x)cos(y)+sin(x)sin(y) для проверенных вещественных аргументов"),
             Self::ComplexModulusProduct => ("Мультипликативность комплексного модуля", "C_abs(z*w)=C_abs(z)*C_abs(w) для проверенных комплексных аргументов"),
-            _ => ("Тригонометрическое или комплексное координатное тождество", "Применить тригонометрическое или комплексное координатное тождество с проверенными предпосылками"),
+            Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Self::SinDoubleAngle | Self::ComplexReconstruction | Self::RealPartAddition | Self::ImaginaryPartAddition | Self::RealPartSubtraction | Self::ImaginaryPartSubtraction | Self::ComplexPowerCoordinates { .. } | Self::ComplexModulusZero { .. } | Self::ComplexCoordinatesEqual { .. } => ("Тригонометрическое или комплексное координатное тождество", "Применить тригонометрическое или комплексное координатное тождество с проверенными предпосылками"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::CosDoubleAngle(_) => ("Ángulo doble del coseno", "Para x real comprobado: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
+            Self::SinPiReflection(_) => ("Reflexión del seno respecto a pi/2", "Para x real comprobado: sin(pi-x)=sin(x)"),
+            Self::CosPiReflection(_) => ("Reflexión del coseno respecto a pi/2", "Para x real comprobado: cos(pi-x)=-cos(x)"),
+            Self::SinHalfPiReflection(_) => ("Ángulo complementario del seno", "Para x real comprobado: sin(pi/2-x)=cos(x)"),
+            Self::CosHalfPiReflection(_) => ("Ángulo complementario del coseno", "Para x real comprobado: cos(pi/2-x)=sin(x)"),
             Self::SinHalfPiShift(_) => ("Desplazamiento de un cuarto de vuelta del seno", "sin(x+pi/2)=cos(x) para x real comprobado"),
             Self::CosHalfPiShift(_) => ("Desplazamiento de un cuarto de vuelta del coseno", "cos(x+pi/2)=-sin(x) para x real comprobado"),
             Self::PeriodicTrig(_) => ("Valor trigonométrico periódico exacto", "Reducir el coeficiente exacto de pi usando períodos enteros comprobados"),
@@ -260,13 +290,18 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::SinDifference => ("Fórmula del seno de una diferencia", "sin(x-y)=sin(x)cos(y)-cos(x)sin(y) para argumentos reales comprobados"),
             Self::CosDifference => ("Fórmula del coseno de una diferencia", "cos(x-y)=cos(x)cos(y)+sin(x)sin(y) para argumentos reales comprobados"),
             Self::ComplexModulusProduct => ("Multiplicatividad del módulo complejo", "C_abs(z*w)=C_abs(z)*C_abs(w) para argumentos complejos comprobados"),
-            _ => ("Identidad trigonométrica o de coordenadas complejas", "Aplicar la identidad trigonométrica o de coordenadas complejas con premisas comprobadas"),
+            Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Self::SinDoubleAngle | Self::ComplexReconstruction | Self::RealPartAddition | Self::ImaginaryPartAddition | Self::RealPartSubtraction | Self::ImaginaryPartSubtraction | Self::ComplexPowerCoordinates { .. } | Self::ComplexModulusZero { .. } | Self::ComplexCoordinatesEqual { .. } => ("Identidad trigonométrica o de coordenadas complejas", "Aplicar la identidad trigonométrica o de coordenadas complejas con premisas comprobadas"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::CosDoubleAngle(_) => ("الزاوية المضاعفة لجيب التمام", "للعدد الحقيقي x المتحقق منه: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
+            Self::SinPiReflection(_) => ("انعكاس الجيب حول pi/2", "للعدد الحقيقي x المتحقق منه: sin(pi-x)=sin(x)"),
+            Self::CosPiReflection(_) => ("انعكاس جيب التمام حول pi/2", "للعدد الحقيقي x المتحقق منه: cos(pi-x)=-cos(x)"),
+            Self::SinHalfPiReflection(_) => ("الزاوية المتممة للجيب", "للعدد الحقيقي x المتحقق منه: sin(pi/2-x)=cos(x)"),
+            Self::CosHalfPiReflection(_) => ("الزاوية المتممة لجيب التمام", "للعدد الحقيقي x المتحقق منه: cos(pi/2-x)=sin(x)"),
             Self::SinHalfPiShift(_) => ("إزاحة الجيب بربع دورة", "sin(x+pi/2)=cos(x) للعدد الحقيقي x المتحقق منه"),
             Self::CosHalfPiShift(_) => ("إزاحة جيب التمام بربع دورة", "cos(x+pi/2)=-sin(x) للعدد الحقيقي x المتحقق منه"),
             Self::PeriodicTrig(_) => ("قيمة مثلثية دورية دقيقة", "اختزال معامل pi الدقيق باستخدام دورات صحيحة متحقق منها"),
@@ -274,13 +309,18 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::SinDifference => ("صيغة جيب الفرق", "sin(x-y)=sin(x)cos(y)-cos(x)sin(y) للوسائط الحقيقية المتحقق منها"),
             Self::CosDifference => ("صيغة جيب تمام الفرق", "cos(x-y)=cos(x)cos(y)+sin(x)sin(y) للوسائط الحقيقية المتحقق منها"),
             Self::ComplexModulusProduct => ("ضربية المقياس المركب", "C_abs(z*w)=C_abs(z)*C_abs(w) للوسائط المركبة المتحقق منها"),
-            _ => ("هوية مثلثية أو إحداثيات مركبة", "تطبيق الهوية المثلثية أو هوية الإحداثيات المركبة بالمقدمات المتحقق منها"),
+            Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Self::SinDoubleAngle | Self::ComplexReconstruction | Self::RealPartAddition | Self::ImaginaryPartAddition | Self::RealPartSubtraction | Self::ImaginaryPartSubtraction | Self::ComplexPowerCoordinates { .. } | Self::ComplexModulusZero { .. } | Self::ComplexCoordinatesEqual { .. } => ("هوية مثلثية أو إحداثيات مركبة", "تطبيق الهوية المثلثية أو هوية الإحداثيات المركبة بالمقدمات المتحقق منها"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::CosDoubleAngle(_) => ("余弦の倍角公式", "検証済みの実数 x について: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
+            Self::SinPiReflection(_) => ("pi/2 に関する正弦の反転", "検証済みの実数 x について: sin(pi-x)=sin(x)"),
+            Self::CosPiReflection(_) => ("pi/2 に関する余弦の反転", "検証済みの実数 x について: cos(pi-x)=-cos(x)"),
+            Self::SinHalfPiReflection(_) => ("正弦の余角公式", "検証済みの実数 x について: sin(pi/2-x)=cos(x)"),
+            Self::CosHalfPiReflection(_) => ("余弦の余角公式", "検証済みの実数 x について: cos(pi/2-x)=sin(x)"),
             Self::SinHalfPiShift(_) => ("正弦の四分の一回転の平行移動", "検証済みの実数 x について sin(x+pi/2)=cos(x)"),
             Self::CosHalfPiShift(_) => ("余弦の四分の一回転の平行移動", "検証済みの実数 x について cos(x+pi/2)=-sin(x)"),
             Self::PeriodicTrig(_) => ("正確な周期的三角関数値", "検証済みの整数周期を用いて正確な pi の係数を簡約します"),
@@ -288,13 +328,18 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::SinDifference => ("正弦の差角公式", "検証済みの実数引数について sin(x-y)=sin(x)cos(y)-cos(x)sin(y)"),
             Self::CosDifference => ("余弦の差角公式", "検証済みの実数引数について cos(x-y)=cos(x)cos(y)+sin(x)sin(y)"),
             Self::ComplexModulusProduct => ("複素数の絶対値の乗法性", "検証済みの複素数引数について C_abs(z*w)=C_abs(z)*C_abs(w)"),
-            _ => ("三角関数または複素座標の恒等式", "検証済みの前提で三角関数または複素座標の恒等式を適用します"),
+            Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Self::SinDoubleAngle | Self::ComplexReconstruction | Self::RealPartAddition | Self::ImaginaryPartAddition | Self::RealPartSubtraction | Self::ImaginaryPartSubtraction | Self::ComplexPowerCoordinates { .. } | Self::ComplexModulusZero { .. } | Self::ComplexCoordinatesEqual { .. } => ("三角関数または複素座標の恒等式", "検証済みの前提で三角関数または複素座標の恒等式を適用します"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::CosDoubleAngle(_) => ("코사인 배각 공식", "검증된 실수 x에 대해: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
+            Self::SinPiReflection(_) => ("pi/2에 대한 사인 반사", "검증된 실수 x에 대해: sin(pi-x)=sin(x)"),
+            Self::CosPiReflection(_) => ("pi/2에 대한 코사인 반사", "검증된 실수 x에 대해: cos(pi-x)=-cos(x)"),
+            Self::SinHalfPiReflection(_) => ("사인의 여각 공식", "검증된 실수 x에 대해: sin(pi/2-x)=cos(x)"),
+            Self::CosHalfPiReflection(_) => ("코사인의 여각 공식", "검증된 실수 x에 대해: cos(pi/2-x)=sin(x)"),
             Self::SinHalfPiShift(_) => ("사인의 4분의 1회전 이동", "검증된 실수 x에 대해 sin(x+pi/2)=cos(x)"),
             Self::CosHalfPiShift(_) => ("코사인의 4분의 1회전 이동", "검증된 실수 x에 대해 cos(x+pi/2)=-sin(x)"),
             Self::PeriodicTrig(_) => ("정확한 주기 삼각함숫값", "검증된 정수 주기로 정확한 pi 계수를 축약합니다"),
@@ -302,13 +347,18 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::SinDifference => ("사인 차각 공식", "검증된 실수 인수에 대해 sin(x-y)=sin(x)cos(y)-cos(x)sin(y)"),
             Self::CosDifference => ("코사인 차각 공식", "검증된 실수 인수에 대해 cos(x-y)=cos(x)cos(y)+sin(x)sin(y)"),
             Self::ComplexModulusProduct => ("복소수 절댓값의 곱셈성", "검증된 복소수 인수에 대해 C_abs(z*w)=C_abs(z)*C_abs(w)"),
-            _ => ("삼각함수 또는 복소수 좌표 항등식", "검증된 전제로 삼각함수 또는 복소수 좌표 항등식을 적용합니다"),
+            Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Self::SinDoubleAngle | Self::ComplexReconstruction | Self::RealPartAddition | Self::ImaginaryPartAddition | Self::RealPartSubtraction | Self::ImaginaryPartSubtraction | Self::ComplexPowerCoordinates { .. } | Self::ComplexModulusZero { .. } | Self::ComplexCoordinatesEqual { .. } => ("삼각함수 또는 복소수 좌표 항등식", "검증된 전제로 삼각함수 또는 복소수 좌표 항등식을 적용합니다"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::CosDoubleAngle(_) => ("Góc kép của cos", "Với x thực đã kiểm tra: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
+            Self::SinPiReflection(_) => ("Phản xạ sin qua pi/2", "Với x thực đã kiểm tra: sin(pi-x)=sin(x)"),
+            Self::CosPiReflection(_) => ("Phản xạ cos qua pi/2", "Với x thực đã kiểm tra: cos(pi-x)=-cos(x)"),
+            Self::SinHalfPiReflection(_) => ("Góc phụ của sin", "Với x thực đã kiểm tra: sin(pi/2-x)=cos(x)"),
+            Self::CosHalfPiReflection(_) => ("Góc phụ của cos", "Với x thực đã kiểm tra: cos(pi/2-x)=sin(x)"),
             Self::SinHalfPiShift(_) => ("Dịch sin một phần tư vòng", "sin(x+pi/2)=cos(x) với x thực đã kiểm tra"),
             Self::CosHalfPiShift(_) => ("Dịch cos một phần tư vòng", "cos(x+pi/2)=-sin(x) với x thực đã kiểm tra"),
             Self::PeriodicTrig(_) => ("Giá trị lượng giác tuần hoàn chính xác", "Rút gọn hệ số pi chính xác bằng các chu kỳ nguyên đã kiểm tra"),
@@ -316,7 +366,7 @@ _ => ("三角或复坐标恒等式", "依据已验证的前提应用三角或复
             Self::SinDifference => ("Công thức sin hiệu", "sin(x-y)=sin(x)cos(y)-cos(x)sin(y) với các đối số thực đã kiểm tra"),
             Self::CosDifference => ("Công thức cos hiệu", "cos(x-y)=cos(x)cos(y)+sin(x)sin(y) với các đối số thực đã kiểm tra"),
             Self::ComplexModulusProduct => ("Tính nhân của môđun phức", "C_abs(z*w)=C_abs(z)*C_abs(w) với các đối số phức đã kiểm tra"),
-            _ => ("Đồng nhất thức lượng giác hoặc tọa độ phức", "Áp dụng đồng nhất thức lượng giác hoặc tọa độ phức với các tiền đề đã kiểm tra"),
+            Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Self::SinDoubleAngle | Self::ComplexReconstruction | Self::RealPartAddition | Self::ImaginaryPartAddition | Self::RealPartSubtraction | Self::ImaginaryPartSubtraction | Self::ComplexPowerCoordinates { .. } | Self::ComplexModulusZero { .. } | Self::ComplexCoordinatesEqual { .. } => ("Đồng nhất thức lượng giác hoặc tọa độ phức", "Áp dụng đồng nhất thức lượng giác hoặc tọa độ phức với các tiền đề đã kiểm tra"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
     }

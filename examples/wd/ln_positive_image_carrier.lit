@@ -1,0 +1,16 @@
+# Focused gate: target/release/litex -strict -f examples/wd/ln_positive_image_carrier.lit
+# Before: positive-image theorem failed at ln order. Now checked; carrier passes.
+# A comparison of two nested ln values remains a separate predicate-WD boundary.
+
+forall x R+:
+    1<x
+    =>:
+        ln(1)=0
+        ln(1)<ln(x)
+        0<ln(x)
+        ln(x) $in R+
+
+forall x R+:
+    1<x
+    =>:
+        ln(ln(x)) $in R

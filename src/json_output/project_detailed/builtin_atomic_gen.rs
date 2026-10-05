@@ -16,6 +16,30 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::LogStrictDecreasing(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("LogStrictDecreasing")),
+            ("guards", object_for(runtime, vec![
+                ("base_positive_proof", project_verify_fact(&p.guards.base_positive_proof, runtime)),
+                ("base_lt_one_proof", project_verify_fact(&p.guards.base_lt_one_proof, runtime)),
+                ("left_arg_positive_proof", project_verify_fact(&p.guards.left_arg_positive_proof, runtime)),
+                ("right_arg_positive_proof", project_verify_fact(&p.guards.right_arg_positive_proof, runtime)),
+            ])),
+            ("argument_order", project_verify_fact(&p.argument_order, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LogWeakDecreasing(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessEqualFact")), ("rule", string("LogWeakDecreasing")),
+            ("guards", object_for(runtime, vec![
+                ("base_positive_proof", project_verify_fact(&p.guards.base_positive_proof, runtime)),
+                ("base_lt_one_proof", project_verify_fact(&p.guards.base_lt_one_proof, runtime)),
+                ("left_arg_positive_proof", project_verify_fact(&p.guards.left_arg_positive_proof, runtime)),
+                ("right_arg_positive_proof", project_verify_fact(&p.guards.right_arg_positive_proof, runtime)),
+            ])),
+            ("argument_order", project_verify_fact(&p.argument_order, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FloorLowerBound(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("FloorLowerBound"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::CeilUpperBound(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("CeilUpperBound"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::FloorStrictUpperBound(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("FloorStrictUpperBound"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::CeilStrictLowerBound(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("CeilStrictLowerBound"))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ExpStrictMonotone(p)) => object_for(runtime,vec![
             ("type",string("builtin_rule")),("rule",string("ExpStrictMonotone")),
             ("argument_order",project_verify_fact(&p.argument_order,runtime)),

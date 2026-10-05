@@ -1,0 +1,17 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/finite_extremum_member_bounds.lit
+# Before: the following direct defining facts were rejected (see task journal).
+# forall S finite_set,x S:
+#     $is_nonempty_set(S)
+#     S $subset R
+#     =>:
+#         x<=finite_set_max(S)
+#         finite_set_min(S)<=x
+# Boundary: An empty source, a missing real-subset guard or an unrelated member is rejected.
+# Now: the same direct facts pass without trust or a user theorem.
+
+forall S finite_set,x S:
+    $is_nonempty_set(S)
+    S $subset R
+    =>:
+        x<=finite_set_max(S)
+        finite_set_min(S)<=x

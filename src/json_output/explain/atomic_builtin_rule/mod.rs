@@ -5,6 +5,7 @@
 //! leaf proof owns its copy here (not in `project_normal`).
 
 mod exp_ln_order;
+mod log_unit_interval_order;
 mod factorial_order;
 mod constructor_order;
 mod finite_aggregate;
@@ -18,6 +19,7 @@ mod is_nonempty_set;
 mod is_set;
 mod is_tuple;
 mod less;
+mod rounding_definition_bounds;
 mod less_equal;
 mod misc_result;
 mod not_equal;

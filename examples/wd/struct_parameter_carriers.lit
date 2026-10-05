@@ -1,0 +1,30 @@
+# Struct parameter carriers: unused parameters preserve the same field set.
+# Gate: target/release/litex -strict -f examples/wd/struct_parameter_carriers.lit
+# The old Rust negative expected a Point<N,R> -> Point<Z,R> template call
+# to fail, even though K did not appear in either field. Its exact expression
+# is now retained as a positive in showcase_local_repairs/tests.rs.
+
+struct Point<K nonempty_set,S nonempty_set>:
+    value S
+    tag N
+
+forall t &Point<N,R>:
+    t $in &Point<Z,R>
+forall t &Point<Z,R>:
+    t $in &Point<N,R>
+by extension:
+    ? &Point<N,R> = &Point<Z,R>
+
+# A parameter that occurs in a field keeps that field's actual carrier.
+struct FieldParameterPoint<K nonempty_set,S nonempty_set>:
+    value S
+    tag K
+
+(0,0) $in &FieldParameterPoint<N,R>
+(0,0) $in &FieldParameterPoint<Z,R>
+(0,-1) $in &FieldParameterPoint<Z,R>
+(1/2,0) $in &FieldParameterPoint<N,R>
+
+# Executable Rust negatives retain: a negative natural tag, noninteger Z tag,
+# imaginary R value, and universal Z-tag -> N-tag membership.
+# N -> Z is valid inclusion; it must not be mislabeled as an invalid carrier.
