@@ -1,0 +1,12 @@
+# PositiveRealPower: reuse checked positivity of a real nonzero square.
+# Run: litex -strict -f examples/infer/equal/nonzero_real_square.lit
+# Before: this declaration first searched for 0 < x, although x may be negative:
+# have square R = x^2
+# Now: the existing nonzero-real even-power builtin checks 0 < x^2 first.
+# The ordinary positive-base route remains available for other supported powers.
+# Zero, an unknown real's square and i^2 do not acquire R+ without evidence.
+
+have x R*
+have square R = x^2
+square $in R+
+1 / square $in R

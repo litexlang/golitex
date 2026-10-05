@@ -1,7 +1,7 @@
-use crate::ast::fact::{AtomicFact, Fact, InFact};
+use crate::ast::fact::{AtomicFact, InFact};
 use crate::ast::line_file::SourceLine;
 use crate::ast::obj::{ArithmeticOperator, Obj, StandardSet};
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::AtomicExceptEqualityFactSearchedProof;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -12,8 +12,14 @@ pub struct RealArithmeticConstructorClosureBuiltinRuleProof {
     pub constructor_tree: RealArithmeticConstructorTree,
 }
 
+// Carrier truth only; the enclosing expression's WD owns the terminal's domain.
+pub struct RealArithmeticConstructorTerminalProof {
+    pub fact: InFact,
+    pub searched_proof: Box<AtomicExceptEqualityFactSearchedProof>,
+}
+
 pub enum RealArithmeticConstructorTree {
-    Leaf(VerifyFactResult),
+    Leaf(RealArithmeticConstructorTerminalProof),
     Add {
         left: Box<Self>,
         right: Box<Self>,
@@ -35,7 +41,7 @@ pub enum RealArithmeticConstructorTree {
     },
     IntegerPow {
         base: Box<Self>,
-        exponent_in_integer_proof: VerifyFactResult,
+        exponent_in_integer_proof: RealArithmeticConstructorTerminalProof,
     },
 }
 
@@ -91,13 +97,12 @@ impl Runtime {
         }
         // An opaque or already checked composite is also a legal real leaf.
         // For example, i^2 is real by closed calculation although i is not.
-        let proof = self.real_constructor_terminal_proof(
+        Ok(self.real_constructor_terminal_proof(
             expression,
             StandardSet::R,
             line_file,
             premise_state,
-        )?;
-        Ok((!proof.is_failed()).then_some(RealArithmeticConstructorTree::Leaf(proof)))
+        )?.map(RealArithmeticConstructorTree::Leaf))
     }
 
     fn real_arithmetic_constructor_tree_from_children(
@@ -154,15 +159,14 @@ impl Runtime {
                 else {
                     return Ok(None);
                 };
-                let exponent = self.real_constructor_terminal_proof(
+                let Some(exponent) = self.real_constructor_terminal_proof(
                     &value.exponent,
                     StandardSet::Z,
                     line_file,
                     premise_state,
-                )?;
-                if exponent.is_failed() {
+                )? else {
                     return Ok(None);
-                }
+                };
                 Ok(Some(Tree::IntegerPow {
                     base: Box::new(base),
                     exponent_in_integer_proof: exponent,
@@ -178,14 +182,22 @@ impl Runtime {
         set: StandardSet,
         line_file: &Option<SourceLine>,
         premise_state: VerifyState,
-    ) -> RuntimeResult<VerifyFactResult> {
-        let requirement = Fact::AtomicFact(AtomicFact::InFact(InFact {
+    ) -> RuntimeResult<Option<RealArithmeticConstructorTerminalProof>> {
+        let fact = InFact {
             fact_id: self.global_ids.allocate_fact_id(),
             element: expression.clone(),
             set: Obj::StandardSet(set),
             line_file: line_file.clone(),
-        }));
-        self.verify_builtin_rule_premise(&requirement, premise_state)
+        };
+        // A real function call with a Cartesian argument is a typical leaf.
+        // Its argument WD has already run at the parent's ceiling; replaying
+        // it here would incorrectly demand its carrier rule below that ceiling.
+        Ok(self.search_atomic_except_equality_fact_proof(
+            &AtomicFact::InFact(fact.clone()), premise_state,
+        )?.map(|searched_proof| RealArithmeticConstructorTerminalProof {
+            fact,
+            searched_proof: Box::new(searched_proof),
+        }))
     }
 }
 

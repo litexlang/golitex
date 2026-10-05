@@ -2,6 +2,7 @@
 
 mod aggregate_evaluation;
 mod aggregate_identity;
+mod atomic_builtin_rewrite;
 mod builtin_atomic_gen;
 mod entry;
 mod equality_builtin_gen;
@@ -11,6 +12,7 @@ mod known_special_property;
 mod known_tuple;
 mod or_builtin_gen;
 mod reduce_rules;
+mod register;
 mod searched;
 mod stmt;
 mod store;

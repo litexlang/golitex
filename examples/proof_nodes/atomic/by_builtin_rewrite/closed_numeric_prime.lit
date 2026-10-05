@@ -1,0 +1,8 @@
+# Node: atomic.ByBuiltinRewrite.ClosedNumericEqualSubstitution
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_prime.lit
+# Before: this proof passed, but Detailed returned only type=by_builtin_rewrite.
+# Now: Detailed retains n=16's FactId, $prime(16+1), and its checked child proof.
+forall n N:
+    n=16
+    =>:
+        $prime(n+1)

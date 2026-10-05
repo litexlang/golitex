@@ -1,0 +1,11 @@
+claim:
+    ? forall n N+:
+        factorial(n)=n*factorial(n-1)
+    n-1 $in N
+    (n-1)+1=n
+    factorial(n)=factorial((n-1)+1)
+    factorial((n-1)+1)=((n-1)+1)*factorial(n-1)
+    ((n-1)+1)*factorial(n-1)=n*factorial(n-1)
+    factorial(n)=factorial((n-1)+1)=((n-1)+1)*factorial(n-1)=n*factorial(n-1)
+forall n N+:
+    factorial(n)=n*factorial(n-1)

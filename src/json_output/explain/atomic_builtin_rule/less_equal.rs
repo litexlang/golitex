@@ -71,6 +71,13 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorMonotone(p)=>p.rule_name_and_message_en(),
+            Self::CeilMonotone(p)=>p.rule_name_and_message_en(),
+            Self::ComplexTriangle(p)=>p.rule_name_and_message_en(),
+            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_en(),
+            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_en(),
+            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_en(),
+
             Self::ClosedSubtractionBound(_) => text("Subtract from a stored numeric bound", "The stored upper or lower bound remains sufficient after subtracting the closed constant"),
             Self::ComplexModulusNonnegative => text("Nonnegative complex modulus", "The principal complex modulus is nonnegative"),
             Self::FromKnownGreaterEqual(p) => p.rule_name_and_message_en(),
@@ -139,6 +146,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorMonotone(p)=>p.rule_name_and_message_zh(),
+            Self::CeilMonotone(p)=>p.rule_name_and_message_zh(),
+            Self::ComplexTriangle(p)=>p.rule_name_and_message_zh(),
+            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_zh(),
+            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_zh(),
+            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_zh(),
+
             Self::ClosedSubtractionBound(_) => text(
                 "从已有数值界减去常数",
                 "已有上界或下界减去闭式常数后满足目标弱序界",
@@ -213,6 +227,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorMonotone(p)=>p.rule_name_and_message_zh_hant(),
+            Self::CeilMonotone(p)=>p.rule_name_and_message_zh_hant(),
+            Self::ComplexTriangle(p)=>p.rule_name_and_message_zh_hant(),
+            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_zh_hant(),
+            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_zh_hant(),
+            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_zh_hant(),
+
             Self::ClosedSubtractionBound(_) => text(
                 "從已有數值界減去常數",
                 "已有上界或下界減去封閉常數後仍足以滿足目標",
@@ -287,6 +308,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorMonotone(p)=>p.rule_name_and_message_fr(),
+            Self::CeilMonotone(p)=>p.rule_name_and_message_fr(),
+            Self::ComplexTriangle(p)=>p.rule_name_and_message_fr(),
+            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_fr(),
+            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_fr(),
+            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_fr(),
+
             Self::ClosedSubtractionBound(_) => text("Soustraction d'une borne numérique stockée", "La borne supérieure ou inférieure stockée reste suffisante après soustraction de la constante fermée"),
             Self::ComplexModulusNonnegative => text("Module complexe non négatif", "Le module complexe principal est non négatif"),
             Self::FromKnownGreaterEqual(p) => p.rule_name_and_message_fr(),
@@ -355,6 +383,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorMonotone(p)=>p.rule_name_and_message_ru(),
+            Self::CeilMonotone(p)=>p.rule_name_and_message_ru(),
+            Self::ComplexTriangle(p)=>p.rule_name_and_message_ru(),
+            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_ru(),
+            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_ru(),
+            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_ru(),
+
             Self::ClosedSubtractionBound(_) => text("Вычитание из сохранённой числовой границы", "Сохранённая верхняя или нижняя граница остаётся достаточной после вычитания замкнутой константы"),
             Self::ComplexModulusNonnegative => text("Неотрицательный комплексный модуль", "Главный комплексный модуль неотрицателен"),
             Self::FromKnownGreaterEqual(p) => p.rule_name_and_message_ru(),
@@ -423,6 +458,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorMonotone(p)=>p.rule_name_and_message_es(),
+            Self::CeilMonotone(p)=>p.rule_name_and_message_es(),
+            Self::ComplexTriangle(p)=>p.rule_name_and_message_es(),
+            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_es(),
+            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_es(),
+            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_es(),
+
             Self::ClosedSubtractionBound(_) => text("Resta de una cota numérica almacenada", "La cota superior o inferior almacenada sigue siendo suficiente al restar la constante cerrada"),
             Self::ComplexModulusNonnegative => text("Módulo complejo no negativo", "El módulo complejo principal es no negativo"),
             Self::FromKnownGreaterEqual(p) => p.rule_name_and_message_es(),
@@ -491,6 +533,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorMonotone(p)=>p.rule_name_and_message_ar(),
+            Self::CeilMonotone(p)=>p.rule_name_and_message_ar(),
+            Self::ComplexTriangle(p)=>p.rule_name_and_message_ar(),
+            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_ar(),
+            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_ar(),
+            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_ar(),
+
             Self::ClosedSubtractionBound(_) => text(
                 "طرح من حد عددي مخزن",
                 "يبقى الحد الأعلى أو الأدنى المخزن كافيًا بعد طرح الثابت المغلق",
@@ -565,6 +614,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorMonotone(p)=>p.rule_name_and_message_ja(),
+            Self::CeilMonotone(p)=>p.rule_name_and_message_ja(),
+            Self::ComplexTriangle(p)=>p.rule_name_and_message_ja(),
+            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_ja(),
+            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_ja(),
+            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_ja(),
+
             Self::ClosedSubtractionBound(_) => text(
                 "保存済みの数値の境界からの減算",
                 "保存済みの上界または下界は閉じた定数を引いた後も十分です",
@@ -639,6 +695,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorMonotone(p)=>p.rule_name_and_message_ko(),
+            Self::CeilMonotone(p)=>p.rule_name_and_message_ko(),
+            Self::ComplexTriangle(p)=>p.rule_name_and_message_ko(),
+            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_ko(),
+            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_ko(),
+            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_ko(),
+
             Self::ClosedSubtractionBound(_) => text(
                 "저장된 수치 경계에서 빼기",
                 "저장된 상한 또는 하한은 닫힌 상수를 뺀 후에도 충분합니다",
@@ -713,6 +776,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorMonotone(p)=>p.rule_name_and_message_vi(),
+            Self::CeilMonotone(p)=>p.rule_name_and_message_vi(),
+            Self::ComplexTriangle(p)=>p.rule_name_and_message_vi(),
+            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_vi(),
+            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_vi(),
+            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_vi(),
+
             Self::ClosedSubtractionBound(_) => text(
                 "Trừ từ cận số đã lưu",
                 "Cận trên hoặc dưới đã lưu vẫn đủ sau khi trừ hằng đóng",

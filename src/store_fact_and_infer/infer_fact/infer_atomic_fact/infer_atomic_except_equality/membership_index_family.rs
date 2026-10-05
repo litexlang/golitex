@@ -4,6 +4,7 @@ use crate::ast::fact::{
 };
 use crate::ast::obj::{
     FamilyUnion, FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, SetOperator,
+    StructAndFieldAccessObj,
 };
 use crate::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
@@ -268,6 +269,9 @@ fn indexed_family_application(family_fn: &Obj, index: Obj) -> Option<Obj> {
             FnObjHead::AnonymousFnLiteral(Box::new(anon.clone()))
         }
         Obj::InstantiatedTemplateObj(inst) => FnObjHead::InstantiatedTemplateObj(inst.clone()),
+        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field)) => {
+            FnObjHead::FieldAccess(field.clone())
+        }
         _ => return None,
     };
     Some(Obj::FnObj(FnObj {

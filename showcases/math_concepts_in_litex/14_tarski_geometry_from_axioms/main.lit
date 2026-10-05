@@ -134,6 +134,7 @@ thm between_trivial:
             $is_between(Point, Bet, a, b, b)
     obtain x from exist x Point st {(a, b, x) $in Bet, (b, x, b, b) $in Cong}
     b = x
+    (a, b, x) = (a, b, b)
     (a, b, b) $in Bet
     by def $is_between(Point, Bet, a, b, b)
 
@@ -149,6 +150,7 @@ thm between_symmetric:
     (b, c, c) $in Bet
     obtain x from $inner_pasch_witness_exists(Point, Bet, b, b, c, a)
     b = x
+    (c, x, a) = (c, b, a)
     (c, b, a) $in Bet
     by def $is_between(Point, Bet, c, b, a)
 
@@ -167,6 +169,7 @@ thm between_exchange:
     $is_between(Point, Bet, c, b, a)
     obtain x from $inner_pasch_witness_exists(Point, Bet, c, c, b, d)
     c = x
+    (b, x, d) = (b, c, d)
     (b, c, d) $in Bet
     by def $is_between(Point, Bet, b, c, d)
 
@@ -184,6 +187,7 @@ thm point_has_strict_extension:
             lower_a = lower_b
             release thm between_trivial(Point, Bet, Cong, lower_a, lower_b, lower_c, lower_c, lower_a)
             $is_between(Point, Bet, lower_c, lower_a, lower_a)
+            (lower_c, lower_a, lower_a) = (lower_c, lower_a, lower_b)
             (lower_c, lower_a, lower_b) $in Bet
             impossible not (lower_c, lower_a, lower_b) $in Bet
     obtain x from exist x Point st {(a, b, x) $in Bet, (b, x, lower_a, lower_b) $in Cong}
@@ -195,6 +199,7 @@ thm point_has_strict_extension:
             b = x
             release thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, b, x, lower_a, lower_b)
             $are_segments_congruent(Point, Cong, lower_a, lower_b, b, x)
+            (lower_a, lower_b, b, x) = (lower_a, lower_b, b, b)
             (lower_a, lower_b, b, b) $in Cong
             lower_a = lower_b
             impossible lower_a != lower_b
@@ -474,6 +479,7 @@ thm noncollinear_points_are_pairwise_distinct:
             a = b
             release thm between_trivial(Point, Bet, Cong, lower_a, lower_b, lower_c, c, a)
             $is_between(Point, Bet, c, a, a)
+            (c, a, a) = (c, a, b)
             (c, a, b) $in Bet
             by def $are_collinear(Point, Bet, a, b, c)
             impossible not $are_collinear(Point, Bet, a, b, c)
@@ -484,6 +490,7 @@ thm noncollinear_points_are_pairwise_distinct:
             b = c
             release thm between_trivial(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b)
             $is_between(Point, Bet, a, b, b)
+            (a, b, b) = (a, b, c)
             (a, b, c) $in Bet
             by def $are_collinear(Point, Bet, a, b, c)
             impossible not $are_collinear(Point, Bet, a, b, c)
@@ -494,6 +501,7 @@ thm noncollinear_points_are_pairwise_distinct:
             a = c
             release thm between_trivial(Point, Bet, Cong, lower_a, lower_b, lower_c, b, a)
             $is_between(Point, Bet, b, a, a)
+            (b, a, a) = (b, c, a)
             (b, c, a) $in Bet
             by def $are_collinear(Point, Bet, a, b, c)
             impossible not $are_collinear(Point, Bet, a, b, c)
@@ -507,6 +515,7 @@ thm degenerate_segments_congruent:
             $are_segments_congruent(Point, Cong, a, a, b, b)
     obtain x from exist x Point st {(a, a, x) $in Bet, (a, x, b, b) $in Cong}
     a = x
+    (a, x, b, b) = (a, a, b, b)
     (a, a, b, b) $in Cong
     by def $are_segments_congruent(Point, Cong, a, a, b, b)
 
@@ -631,8 +640,10 @@ thm segment_congruence_addition:
         case a = b:
             release thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, a2, b2)
             $are_segments_congruent(Point, Cong, a2, b2, a, b)
+            (a2, b2, a, b) = (a2, b2, a, a)
             (a2, b2, a, a) $in Cong
             a2 = b2
+            (b, c, b2, c2) = (a, c, a2, c2)
             by def $are_segments_congruent(Point, Cong, a, c, a2, c2)
         case a != b:
             release thm degenerate_segments_congruent(Point, Bet, Cong, lower_a, lower_b, lower_c, a, a2)
@@ -659,12 +670,16 @@ thm inner_five_segment:
         case a = c:
             release thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c, a2, c2)
             $are_segments_congruent(Point, Cong, a2, c2, a, c)
+            (a2, c2, a, c) = (a2, c2, a, a)
             (a2, c2, a, a) $in Cong
             a2 = c2
+            (a, b, c) = (a, b, a)
             (a, b, a) $in Bet
             a = b
+            (a2, b2, c2) = (a2, b2, a2)
             (a2, b2, a2) $in Bet
             a2 = b2
+            (a, d, a2, d2) = (b, d, b2, d2)
             by def $are_segments_congruent(Point, Cong, b, d, b2, d2)
         case a != c:
             release thm point_has_strict_extension(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c)
@@ -768,6 +783,7 @@ thm triangle_congruence_sss_gives_angles:
         by contra:
             ? a2 != b2
             a2 = b2
+            (a, b, a2, b2) = (a, b, a2, a2)
             (a, b, a2, a2) $in Cong
             a = b
             impossible a != b
@@ -776,6 +792,7 @@ thm triangle_congruence_sss_gives_angles:
         by contra:
             ? c2 != b2
             c2 = b2
+            (b, c, b2, c2) = (b, c, b2, b2)
             (b, c, b2, b2) $in Cong
             b = c
             impossible c != b

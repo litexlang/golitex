@@ -1,0 +1,81 @@
+claim:
+    ? forall x,y R:
+        0<=x
+        0<=y
+        x=y^2
+        =>:
+            sqrt(x)=y
+    y>=0
+    sqrt(x)=y
+forall x,y R:
+    0<=x
+    0<=y
+    x=y^2
+    =>:
+        sqrt(x)=y
+claim:
+    ? forall x,y,z R:
+        0<=x
+        0<=y
+        x=z
+        z=y^2
+        =>:
+            sqrt(x)=y
+    y>=0
+    x=y^2
+    sqrt(x)=y
+forall x,y,z R:
+    0<=x
+    0<=y
+    x=z
+    z=y^2
+    =>:
+        sqrt(x)=y
+claim:
+    ? forall x R:
+        x<=0
+        =>:
+            sqrt(x^2)=-x
+    sqrt(x^2)=abs(x)
+    abs(x)=-x
+    sqrt(x^2)=abs(x)=-x
+forall x R:
+    x<=0
+    =>:
+        sqrt(x^2)=-x
+claim:
+    ? forall a,b,x R:
+        0<=a
+        0<=b
+        0<=x
+        x=a*b
+        =>:
+            sqrt(x)=sqrt(a)*sqrt(b)
+    sqrt(x)=sqrt(a*b)
+    sqrt(a*b)=sqrt(a)*sqrt(b)
+    sqrt(x)=sqrt(a*b)=sqrt(a)*sqrt(b)
+forall a,b,x R:
+    0<=a
+    0<=b
+    0<=x
+    x=a*b
+    =>:
+        sqrt(x)=sqrt(a)*sqrt(b)
+claim:
+    ? forall a,b,x R:
+        0<=a
+        0<b
+        0<=x
+        x=a/b
+        =>:
+            sqrt(x)=sqrt(a)/sqrt(b)
+    sqrt(x)=sqrt(a/b)
+    sqrt(a/b)=sqrt(a)/sqrt(b)
+    sqrt(x)=sqrt(a/b)=sqrt(a)/sqrt(b)
+forall a,b,x R:
+    0<=a
+    0<b
+    0<=x
+    x=a/b
+    =>:
+        sqrt(x)=sqrt(a)/sqrt(b)

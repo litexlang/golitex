@@ -1,0 +1,28 @@
+# Witness Detailed evidence: existing checked stages, no new mathematical route.
+# Before: atomic success showed only statement/store; nonempty failure lost its stage.
+# The negative sources are executed separately by focused public-Runtime tests.
+# Old missing failure detail:
+# witness $is_nonempty_set({1}) from 2
+# Old invalid FnSet witness shortcut (deliberately not restored):
+# witness $is_nonempty_set(fn(x R)R) from 0
+
+prop evidence_copy(a R):
+    exist x R st {x=a}
+witness $evidence_copy(2) from 2:
+    2=2
+$evidence_copy(2)
+
+prop evidence_pair(a R):
+    exist x R,y {x} st {y=a}
+witness $evidence_pair(2) from 2,2
+$evidence_pair(2)
+
+witness $is_nonempty_set({3,4}) from 3:
+    3 $in {3,4}
+$is_nonempty_set({3,4})
+
+witness exist! x R st {x=0} from 0
+exist! x R st {x=0}
+
+# A genuine function member uses the current membership contract.
+witness $is_nonempty_set(fn(x R)R) from fn(y R)R{y}

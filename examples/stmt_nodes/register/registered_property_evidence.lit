@@ -1,0 +1,29 @@
+# Tracer: Detailed registered-law evidence (no change to registration behavior).
+# Before: each registration passed, but Detailed showed only success and kind.
+# Now: each retains property, prop, and the original checked forall_proof.
+# Boundary: false laws and wrong registration shapes still fail; no local_env in JSON.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/register/registered_property_evidence.lit
+# JSON child/stage evidence: json_output::project_detailed_tests::detailed_register_*
+
+prop same(x,y set):
+    x=y
+register reflexive:
+    ? forall x set:
+        $same(x,x)
+register symmetric:
+    ? forall x,y set:
+        $same(x,y)
+        =>:
+            $same(y,x)
+register transitive:
+    ? forall x,y,z set:
+        $same(x,y)
+        $same(y,z)
+        =>:
+            $same(x,z)
+
+forall x,y,z set:
+    $same(x,y)
+    $same(y,z)
+    =>:
+        $same(x,z)

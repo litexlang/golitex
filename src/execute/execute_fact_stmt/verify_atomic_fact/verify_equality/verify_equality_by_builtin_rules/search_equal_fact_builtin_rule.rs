@@ -23,6 +23,10 @@ impl Runtime {
         if let Some(proof)=self.search_finite_map_size(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteMapSize(proof)));
         }
+        if let Some(proof)=self.search_range_size(fact,verify_state)? { return Ok(Some(proof)); }
+        if let Some(proof)=self.search_euclidean_remainder(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::EuclideanRemainder(proof))); }
+        if let Some(proof)=self.search_factorial_divisibility(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::FactorialDivisibility(proof))); }
+        if let Some(proof)=self.search_cart_reconstruction(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::CartReconstruction(proof))); }
         if let Some(proof) = self.search_cartesian_size(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::CartesianSize(proof)));
         }
@@ -55,6 +59,12 @@ impl Runtime {
         }
         if let Some(proof) = self.search_equal_fact_by_aggregate_identities(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::AggregateIdentity(proof)));
+        }
+        if let Some(proof) = self.search_finite_set_product_reindex(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteSetProductReindex(proof)));
+        }
+        if let Some(proof) = self.search_finite_set_reduce_reindex(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteSetReduceReindex(proof)));
         }
         if let Some(proof) = self
             .search_equal_fact_builtin_rule_equal_from_known_difference_zero(

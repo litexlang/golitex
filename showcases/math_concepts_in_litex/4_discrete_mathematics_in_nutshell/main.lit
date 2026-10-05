@@ -18,12 +18,22 @@ strategy predecessor_sum_bounds:
         =>:
             a - 1 + b >= 0
             b + (a - 1) >= 0
+    a $in N+
     a - 1 >= 0
 
 strategy natural_predecessor:
     ? forall n N+:
         n - 1 $in N
     n - 1 >= 0
+
+# The recursive table parameters are integers. Prove the predecessor bound
+# directly on that domain so recursive-call WD can use the positive branch.
+strategy integer_predecessor_nonnegative:
+    ? forall n Z:
+        n > 0
+        =>:
+            n - 1 >= 0
+    n $in N+
 
 # The Pascal table is defined recursively from its two boundary rows.
 have fn pascal_entry(a Z, b Z: a >= 0, b >= 0) N by induc a + b from 0:

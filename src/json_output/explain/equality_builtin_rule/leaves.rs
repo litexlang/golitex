@@ -13617,6 +13617,8 @@ BuiltinRuleText { rule_name: "Tương hợp từng điểm của phép gấp".in
 impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
 match self {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(p) => p.rule_name_and_message_en(),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(p) => p.rule_name_and_message_en(),
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_) => BuiltinRuleText {
                 rule_name: "Remove a member from a finite product".into(),
                 message: "Check membership, the restricted callback and the removed factor; no division or nonzero premise is needed".into(),
@@ -13634,6 +13636,8 @@ _ => {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
 match self {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(p) => p.rule_name_and_message_zh(),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(p) => p.rule_name_and_message_zh(),
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_) => BuiltinRuleText {
                 rule_name: "有限乘积删除已有元素" .into(),
                 message: "检查成员关系、限制回调和被删除因子；乘法拆分无需除法或非零前提" .into(),
@@ -13651,6 +13655,8 @@ _ => {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
 match self {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(p) => p.rule_name_and_message_zh_hant(),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(p) => p.rule_name_and_message_zh_hant(),
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_) => BuiltinRuleText {
                 rule_name: "有限乘積刪除已有元素".into(),
                 message: "檢查成員關係、限制回呼和被刪除因子；無需除法或非零前提".into(),
@@ -13668,6 +13674,8 @@ _ => {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
 match self {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(p) => p.rule_name_and_message_fr(),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(p) => p.rule_name_and_message_fr(),
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_) => BuiltinRuleText {
                 rule_name: "Retrait d'un membre d'un produit fini".into(),
                 message: "Vérifier l'appartenance, la fonction restreinte et le facteur retiré ; aucune division ni prémisse de non-nullité n'est nécessaire".into(),
@@ -13685,6 +13693,8 @@ _ => {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
 match self {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(p) => p.rule_name_and_message_ru(),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(p) => p.rule_name_and_message_ru(),
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_) => BuiltinRuleText {
                 rule_name: "Удаление элемента из конечного произведения".into(),
                 message: "Проверить принадлежность, ограниченную функцию и удалённый множитель; деление и предпосылка ненулевого значения не нужны".into(),
@@ -13702,6 +13712,8 @@ _ => {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
 match self {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(p) => p.rule_name_and_message_es(),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(p) => p.rule_name_and_message_es(),
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_) => BuiltinRuleText {
                 rule_name: "Retirada de un miembro de producto finito".into(),
                 message: "Comprobar pertenencia, función restringida y factor retirado; no se necesita división ni premisa de no nulidad".into(),
@@ -13719,6 +13731,8 @@ _ => {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
 match self {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(p) => p.rule_name_and_message_ar(),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(p) => p.rule_name_and_message_ar(),
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_) => BuiltinRuleText {
                 rule_name: "حذف عنصر من حاصل ضرب منتهٍ".into(),
                 message: "فحص الانتماء والدالة المقيدة والعامل المحذوف؛ لا تلزم قسمة أو مقدمة عدم الصفر".into(),
@@ -13736,6 +13750,8 @@ _ => {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
 match self {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(p) => p.rule_name_and_message_ja(),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(p) => p.rule_name_and_message_ja(),
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_) => BuiltinRuleText {
                 rule_name: "有限積からの要素の削除".into(),
                 message: "所属、制限した関数、削除する因子を検査します。除算や非ゼロの前提は不要です".into(),
@@ -13753,6 +13769,8 @@ _ => {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
 match self {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(p) => p.rule_name_and_message_ko(),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(p) => p.rule_name_and_message_ko(),
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_) => BuiltinRuleText {
                 rule_name: "유한 곱에서 원소 제거".into(),
                 message: "소속, 제한된 함수, 제거된 인자를 검사하며 나눗셈이나 0이 아님 전제는 필요하지 않습니다".into(),
@@ -13770,6 +13788,8 @@ _ => {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
 match self {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(p) => p.rule_name_and_message_vi(),
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(p) => p.rule_name_and_message_vi(),
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(_) => BuiltinRuleText {
                 rule_name: "Loại phần tử khỏi tích hữu hạn".into(),
                 message: "Kiểm tra sự thuộc về, hàm hạn chế và thừa số bị loại; không cần chia hay tiền đề khác không".into(),

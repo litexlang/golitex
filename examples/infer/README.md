@@ -20,6 +20,11 @@
 
 ## Acceptance
 
+Callable-field range and indexed-family consequences are covered by
+`atomic/field_fn_range.lit` and `atomic/field_indexed_family.lit`.
+`equal/nonzero_real_square.lit` checks positive membership transported from
+a nonzero real square while retaining the negative/zero/complex boundaries.
+
 `atomic/set_builder_projection_replay.lit` proves a self-carrier builder equality
 by extension, rechecks the stored equality, and checks a different builder's
 carrier and defining condition. Exact already-visible builder consequences are

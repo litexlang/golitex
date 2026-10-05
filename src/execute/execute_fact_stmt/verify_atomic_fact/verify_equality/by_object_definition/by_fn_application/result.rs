@@ -7,4 +7,5 @@ pub enum EqualitySearchProofByFnApplicationObjectDefinition {
     HaveFnEqual(ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof),
     HaveFnEqualCaseByCase(ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof),
     HaveFnByInduc(ByUnfoldHaveFnByInducApplicationObjectDefinitionProof),
+    LiteralBeta(super::by_literal_beta::ByLiteralBetaObjectDefinitionProof),
 }

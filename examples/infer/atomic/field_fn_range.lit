@@ -1,0 +1,17 @@
+# FnRange membership with an existing callable field.
+# Run: litex -strict -f examples/infer/atomic/field_fn_range.lit
+# Before: opaque y membership retained its codomain, but skipped this existence:
+# exist x R st {y = ops.op(x)}
+# Now: the ordinary inferred preimage uses the same checked FieldAccess head.
+
+struct Ops:
+    op fn(x R) R
+    tag N
+have fn shift(x R) R = x + 1
+have ops &Ops = (shift, 0)
+ops.op(2) $in fn_range(ops.op)
+witness $is_nonempty_set(fn_range(ops.op)) from ops.op(2)
+have y fn_range(ops.op)
+exist x R st {y = ops.op(x)}
+obtain a from exist x R st {y = ops.op(x)}
+y = ops.op(a)

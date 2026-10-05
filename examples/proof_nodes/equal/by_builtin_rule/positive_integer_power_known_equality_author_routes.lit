@@ -1,0 +1,33 @@
+claim:
+    ? forall a,b R,n Z:
+        0<a
+        0<b
+        n!=0
+        a^n=b^n
+        =>:
+            a=b
+    a $in R+
+    b $in R+
+    a=b
+forall a,b R,n Z:
+    0<a
+    0<b
+    n!=0
+    a^n=b^n
+    =>:
+        a=b
+claim:
+    ? forall a,b,z R+,n Z:
+        n!=0
+        a^n=z
+        z=b^n
+        =>:
+            a=b
+    a^n=b^n
+    a=b
+forall a,b,z R+,n Z:
+    n!=0
+    a^n=z
+    z=b^n
+    =>:
+        a=b

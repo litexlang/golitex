@@ -7,6 +7,7 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 // These constructors carry finiteness intrinsically.
 // Example: prove `$is_finite_set({1, 2})`, `$is_finite_set(closed_range(1, n))`.
 pub enum IsFiniteSetFactSearchProofByBuiltinRule {
+    FiniteIndexUnion(super::finite_index_union::FiniteIndexUnionProof),
     SurjectiveImageOfFiniteSet(SurjectiveImageOfFiniteSetBuiltinRuleProof),
     FunctionRangeOfFiniteDomain(FunctionRangeOfFiniteDomainProof),
     ListSet(ListSetFiniteBuiltinRuleProof),
@@ -49,6 +50,7 @@ impl Runtime {
         fact: &IsFiniteSetFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<IsFiniteSetFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_finite_index_union(fact, verify_state)? { return Ok(Some(proof)); }
         let mut candidates = Vec::new();
         let key=(crate::ast::names::AtomicName::Plain {name:crate::parse::keywords::SURJECTIVE.into()},true);
         for env in self.execution_environments_stack.iter().rev() {

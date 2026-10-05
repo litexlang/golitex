@@ -177,6 +177,7 @@ pub(super) fn project_aggregate_identity(
             vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetSumDisjointUnion")),
+                ("callbacks", JsonValue::Array(p.callbacks.iter().map(|p| project_partition_callback(p, runtime)).collect())),
                 (
                     "premises",
                     super::store::project_verify_facts(&p.premises, runtime),
@@ -188,6 +189,7 @@ pub(super) fn project_aggregate_identity(
             vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetProductDisjointUnion")),
+                ("callbacks", JsonValue::Array(p.callbacks.iter().map(|p| project_partition_callback(p, runtime)).collect())),
                 (
                     "premises",
                     super::store::project_verify_facts(&p.premises, runtime),
@@ -405,4 +407,13 @@ pub(super) fn project_expansions(
         ("function_equal", super::searched::project_known_equality_path(&e.function_equal, runtime)),
         ("expanded_body", string(e.expanded_body.readable_string())),
     ])).collect())
+}
+
+fn project_partition_callback(p: &FinitePartitionCallbackAgreementProof, runtime: &Runtime) -> JsonValue {
+    match p {
+        FinitePartitionCallbackAgreementProof::SameFunction(_) => object_for(runtime, vec![("type", string("same_function"))]),
+        FinitePartitionCallbackAgreementProof::LiteralRestriction(_) => object_for(runtime, vec![("type", string("literal_restriction"))]),
+        FinitePartitionCallbackAgreementProof::EqualFunctions(p) => object_for(runtime, vec![("type", string("equal_functions")), ("equality", super::verify::project_verify_fact(&p.equality, runtime))]),
+        FinitePartitionCallbackAgreementProof::Pointwise(p) => project_pointwise(p, runtime),
+    }
 }

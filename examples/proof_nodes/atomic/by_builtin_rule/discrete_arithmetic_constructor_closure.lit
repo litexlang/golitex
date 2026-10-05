@@ -1,0 +1,51 @@
+# Before: this integer constructor goal failed.
+# forall f fn(t Z) Z, n Z:
+#     -(f(n) - 1) * (f(n) + 2) $in Z
+# The Pascal branch below also failed at its N return-carrier check:
+#     case b > 0: pascal(a - 1, b) + pascal(a, b - 1)
+# The ordinary nonrecursive N example is an existing-behavior control.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/discrete_arithmetic_constructor_closure.lit
+# Boundary (Rust regression): subtraction is not closed in N; invalid domains
+# and real-valued leaves must still fail. Function WD is checked by the parent.
+forall f fn(t N) N, n N:
+    f(n) + f(n) * 2 $in N
+forall f fn(t Z) Z, n Z:
+    -(f(n) - 1) * (f(n) + 2) $in Z
+sketch:
+    claim:
+        ? forall x Z:
+            x > 0
+            =>:
+                x - 1 >= 0
+        x <= 0 or x >= 0 + 1
+        by cases:
+            ? x - 1 >= 0
+            case x <= 0:
+                impossible x > 0
+            case x >= 0 + 1:
+                x - 1 >= (0 + 1) - 1 = 0
+    claim:
+        ? forall x, y Z:
+            x > 0
+            y >= 0
+            =>:
+                (x - 1) + y >= 0
+        x - 1 >= 0
+        (x - 1) + y >= 0 + y = y >= 0
+    claim:
+        ? forall x, y Z:
+            x >= 0
+            y > 0
+            =>:
+                x + (y - 1) >= 0
+        y - 1 >= 0
+        x + (y - 1) >= x + 0 = x >= 0
+    have fn pascal(a Z, b Z: a >= 0, b >= 0) N by induc a + b from 0:
+        case a = 0: 1
+        case a > 0:
+            case b = 0: 1
+            case b > 0: pascal(a - 1, b) + pascal(a, b - 1)
+    pascal(1, 1) = pascal(0, 1) + pascal(1, 0)
+    pascal(0, 1) = 1
+    pascal(1, 0) = 1
+    pascal(1, 1) = 1 + 1 = 2

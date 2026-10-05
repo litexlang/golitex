@@ -1,0 +1,29 @@
+# Native negation and subtraction denote the same additive inverse.
+# Known nonzero product reflection retains the actual source citation.
+forall a,b R:
+    a!=(-b)
+    =>:
+        a+b!=0
+forall a,b C:
+    a!=(-b)
+    =>:
+        a+b!=0
+forall a,b C:
+    a!=0-b
+    =>:
+        a+b!=0
+forall a,b C:
+    a*b!=0
+    =>:
+        a!=0
+        b!=0
+forall a,b C:
+    0!=b*a
+    =>:
+        0!=a
+        0!=b
+forall a,b C:
+    a*b=0
+    a!=0
+    =>:
+        b=0

@@ -250,6 +250,122 @@ fn exact_beta_body_still_requires_domains_and_does_not_accept_wrong_values() {
     }
 }
 
+#[test]
+fn restriction_beta_consumes_exact_parent_wd_without_raising_premise_permissions() {
+    use crate::ast::fact::{AtomicFact, Fact};
+    use crate::ast::obj::Obj;
+    use crate::ast::stmt::Stmt;
+    use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
+
+    let source = "forall X, Y set, K power_set(X), f fn(x X) Y, point K:\n    point $in X\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = f(point)\n";
+    let mut rt = runtime();
+    let tokens = crate::tokenize::Tokenizer::new()
+        .tokenize(source, rt.current_file.clone()).unwrap();
+    let mut stmts = rt.parse(&tokens).unwrap();
+    let Stmt::Fact(Fact::ForallFact(forall)) = stmts.remove(0) else {
+        panic!("one quantified diagnostic context")
+    };
+    // Inspect primitives within the same legitimate universal parameter
+    // context. These unchanged scope/intro APIs do not execute a stmt branch.
+    rt.run_in_local_env_and_take_env(|rt| {
+        assert!(rt.introduce_typed_parameters(
+            &forall.typed_parameters, VerifyState::top_level()
+        )?.is_ok());
+        for then in &forall.then_facts[..2] {
+            let fact: Fact = then.clone().into();
+            assert!(!rt.verify_fact(&fact, VerifyState::top_level())?.is_failed());
+            rt.store_fact_and_infer(&fact, VerifyState::top_level())?;
+        }
+        let Fact::AtomicFact(AtomicFact::EqualFact(goal)) =
+            Fact::from(forall.then_facts[2].clone()) else {
+            panic!("beta equality")
+        };
+        let parent_wd = match rt.verify_equal_fact_well_definedness(
+            &goal, VerifyState::top_level()
+        )? {
+            crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::VerifyEqualFactWellDefinedResult::Success(p) => p,
+            _ => panic!("parent equality WD must pass"),
+        };
+        let Obj::FnObj(app) = &goal.left else { panic!("literal application") };
+        let expanded = rt.expanded_named_or_literal_anon_fn_application_body(app)?
+            .expect("literal beta body exists");
+        assert!(expanded.expanded_body == goal.right, "beta substitution must be exact");
+        assert!(expanded.function_equal.path.is_empty(), "literal needs no invented equality");
+        let child = VerifyState::new(VerifyStateLevel::BuiltinRule);
+        let app_top = !rt.verify_obj_well_definedness(&goal.left, VerifyState::top_level())?.is_failed();
+        let app_child = !rt.verify_obj_well_definedness(&goal.left, child)?.is_failed();
+        let residual_child = !rt.verify_obj_well_definedness(&goal.right, child)?.is_failed();
+        let top = rt.normalize_function_body(&goal.left, &goal.right, VerifyState::top_level())?;
+        let restricted = rt.normalize_function_body(&goal.left, &goal.right, child)?;
+        eprintln!("restriction beta stages: app_top={app_top}, app_builtin={app_child}, residual_builtin={residual_child}, normalize_top={}, normalize_builtin={}", top.is_some(), restricted.is_some());
+        assert!(app_top && residual_child && top.is_some());
+        assert!(!app_child && restricted.is_none(), "do not raise the ordinary normalizer ceiling");
+        for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty,
+            VerifyStateLevel::BuiltinRule, VerifyStateLevel::Strategy] {
+            assert!(rt.try_literal_beta_with_parent_well_definedness(
+                &goal, &parent_wd, VerifyState::new(level)
+            )?.is_none(), "definition stage unavailable at {level:?}");
+        }
+        assert!(rt.try_literal_beta_with_parent_well_definedness(
+            &goal, &parent_wd, VerifyState::top_level()
+        )?.is_some());
+        let mut mismatched = goal.clone();
+        std::mem::swap(&mut mismatched.left, &mut mismatched.right);
+        assert!(rt.try_literal_beta_with_parent_well_definedness(
+            &mismatched, &parent_wd, VerifyState::top_level()
+        )?.is_none(), "parent certificate must match both exact AST sides");
+        Ok(())
+    }).unwrap();
+
+    // Public root entry remains run_litex_code -> exec_stmt. This is the
+    // formerly rejected user-visible contract, not a direct exec branch call.
+    let mut root = runtime();
+    let run = root.run_litex_code(
+        "claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:\n        fn(x K) Y {f(x)}(point) = f(point)\n    point $in X\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = f(point)\n"
+    ).unwrap();
+    assert!(run.success && run.session_error.is_none(), "restriction beta root must verify");
+    let detailed = crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &root);
+    assert_eq!(field_rec(&detailed, "parent_well_defined_side"), Some(JsonValue::String("left".into())));
+    assert!(field_rec(&detailed, "residual_proof").is_some());
+}
+
+#[test]
+fn restricted_literal_beta_right_side_and_cited_residual_keep_evidence() {
+    let mut rt = runtime();
+    let run = rt.run_litex_code("claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:\n        f(point) = fn(x K) Y {f(x)}(point)\n    point $in X\n    f(point) $in Y\n    f(point) = fn(x K) Y {f(x)}(point)\n").unwrap();
+    assert!(run.success && run.session_error.is_none());
+    let detailed = crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt);
+    assert_eq!(field_rec(&detailed, "parent_well_defined_side"), Some(JsonValue::String("right".into())));
+
+    let mut rt = runtime();
+    let run = rt.run_litex_code("claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K, other Y:\n        f(point) = other\n        =>:\n            fn(x K) Y {f(x)}(point) = other\n    point $in X\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = other\n").unwrap();
+    assert!(run.success && run.session_error.is_none());
+    let detailed = crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt);
+    assert!(field_rec(&detailed, "parent_well_defined_side").is_some());
+    let residual = field_rec(&detailed, "residual_proof").unwrap();
+    assert!(field_rec(&residual, "cite_fact_id").is_some(), "residual must retain the actual equality citation ID after the local scope closes");
+    let path = field_rec(&residual, "path").unwrap();
+    assert_eq!(path.as_array().unwrap().len(), 1);
+    assert_eq!(field_rec(&path, "from"), Some(JsonValue::String("f(point)".into())));
+    assert_eq!(field_rec(&path, "to"), Some(JsonValue::String("other".into())));
+}
+
+#[test]
+fn restricted_literal_beta_rejects_missing_guards_carriers_arity_and_wrong_body() {
+    for source in [
+        "claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point X:\n        fn(x K) Y {f(x)}(point) = f(point)\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = f(point)\n",
+        "claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:\n        fn(x K: x != point) Y {f(x)}(point) = f(point)\n    point $in X\n    f(point) $in Y\n    fn(x K: x != point) Y {f(x)}(point) = f(point)\n",
+        "claim:\n    ? forall X, Y, Z set, K power_set(X), f fn(x X) Y, point K:\n        fn(x K) Z {f(x)}(point) = f(point)\n    point $in X\n    f(point) $in Y\n    fn(x K) Z {f(x)}(point) = f(point)\n",
+        "claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:\n        fn(x, y K) Y {f(x)}(point) = f(point)\n    point $in X\n    f(point) $in Y\n    fn(x, y K) Y {f(x)}(point) = f(point)\n",
+        "claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K, other Y:\n        fn(x K) Y {f(x)}(point) = other\n    point $in X\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = other\n",
+    ] {
+        let mut rt = runtime();
+        let rejected = rt.run_litex_code(source).unwrap();
+        assert!(!rejected.success && rejected.session_error.is_none(), "must reject through proof/WD: {source}");
+        assert!(rt.run_litex_code("1=1\n").unwrap().success, "failed claim must leave the session usable");
+    }
+}
+
 fn field_rec(value: &JsonValue, name: &str) -> Option<JsonValue> {
     match value {
         JsonValue::Object(fields) => fields

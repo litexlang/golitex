@@ -1,0 +1,52 @@
+claim:
+    ? forall a,b R:
+        exp(a)=exp(b)
+        =>:
+            a=b
+    ln(exp(a))=a
+    ln(exp(b))=b
+    ln(exp(a))=ln(exp(b))
+    a=ln(exp(a))=ln(exp(b))=b
+forall a,b R:
+    exp(a)=exp(b)
+    =>:
+        a=b
+claim:
+    ? forall x R:
+        exp(x)!=0
+    0<exp(x)
+    exp(x)!=0
+forall x R:
+    exp(x)!=0
+claim:
+    ? forall a,b R:
+        exp(a-b)=exp(a)/exp(b)
+    exp(b)!=0
+    (a-b)+b=a
+    exp((a-b)+b)=exp(a-b)*exp(b)
+    exp(a)=exp((a-b)+b)
+    exp(a)=exp(a-b)*exp(b)
+    exp(a-b)=(exp(a-b)*exp(b))/exp(b)=exp(a)/exp(b)
+forall a,b R:
+    exp(a-b)=exp(a)/exp(b)
+forall a,b R+:
+    0<a
+    0<b
+    0/b<a/b
+    0/b=0
+    0<a/b
+    a/b $in R+
+claim:
+    ? forall a,b R+:
+        ln(a/b)=ln(a)-ln(b)
+    exp(ln(a))=a
+    exp(ln(b))=b
+    a/b $in R+
+    0<a/b
+    exp(ln(a/b))=a/b
+    exp(ln(a)-ln(b))=exp(ln(a))/exp(ln(b))
+    exp(ln(a))/exp(ln(b))=a/b
+    exp(ln(a/b))=exp(ln(a)-ln(b))
+    ln(a/b)=ln(a)-ln(b)
+forall a,b R+:
+    ln(a/b)=ln(a)-ln(b)

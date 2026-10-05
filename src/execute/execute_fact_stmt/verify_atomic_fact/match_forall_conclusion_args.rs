@@ -18,7 +18,7 @@ use crate::ast::fact::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity, quantifier_free_fact_args_ref,
     AtomicFact, EqualFact, Fact, ForallFact,
 };
-use crate::ast::obj::{IdentifierObj, Obj, SetBuilder, SetFormer};
+use crate::ast::obj::{AnonymousFn, FunctionSpace, IdentifierObj, Obj, SetBuilder, SetFormer};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::corresponding_arg_pairs;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     strict_equal_arg_proof_from_searched, ForallConclusionArgMatchProof,
@@ -270,6 +270,25 @@ impl Runtime {
             }));
         }
 
+        if let (Obj::FunctionSpace(FunctionSpace::AnonymousFn(left)), Obj::FunctionSpace(FunctionSpace::AnonymousFn(right))) = (pattern, goal) {
+            let mut trial = subst.clone();
+            if !self.match_anonymous_fn_free_parameters(left, right, param_set, &mut trial, equality_state)? {
+                return Ok(None);
+            }
+            let Ok(pattern_after_subst) = self.inst_obj(pattern, &trial) else {
+                return Ok(None);
+            };
+            // Child pairing proposes free arguments only. The full signature,
+            // guard syntax and body must still pass the existing strict equality.
+            let Some(equal) = self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state)? else {
+                return Ok(None);
+            };
+            *subst = trial;
+            return Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
+                pattern: pattern.clone(), pattern_after_subst, goal_arg: goal.clone(), equal,
+            }));
+        }
+
         // Same constructor: recurse. No fallback to NonParamEqual (legacy-aligned).
         // A template occurrence is a constructor with definition-owned identity
         // and ordinary object arguments. Bind its parameters without unfolding.
@@ -362,6 +381,61 @@ impl Runtime {
             let mut free = HashSet::new();
             crate::instantiate::collect_free_plain_ids(value, &HashSet::new(), &mut free);
             if free.contains(&goal.param_binding.id) { return Ok(false); }
+        }
+        Ok(true)
+    }
+
+    fn match_anonymous_fn_free_parameters(
+        &mut self,
+        pattern: &AnonymousFn,
+        goal: &AnonymousFn,
+        param_set: &HashSet<IdentifierId>,
+        subst: &mut HashMap<IdentifierId, Obj>,
+        equality_state: VerifyState,
+    ) -> RuntimeResult<bool> {
+        let left_groups = &pattern.body.set_bound_parameters.groups;
+        let right_groups = &goal.body.set_bound_parameters.groups;
+        if left_groups.len() != right_groups.len()
+            || pattern.body.dom_facts.len() != goal.body.dom_facts.len() {
+            return Ok(false);
+        }
+        let mut rename = HashMap::new();
+        let mut local_ids = HashSet::new();
+        for (left, right) in left_groups.iter().zip(right_groups) {
+            if left.params.len() != right.params.len() { return Ok(false); }
+            let Ok(domain) = self.inst_obj(left.param_type.as_ref(), &rename) else { return Ok(false) };
+            if self.match_forall_one_arg(&domain, &right.param_type, param_set, subst, equality_state)?.is_none() {
+                return Ok(false);
+            }
+            for (left, right) in left.params.iter().zip(&right.params) {
+                rename.insert(left.id, Obj::Identifier(IdentifierObj::from_bound_name(right)));
+                local_ids.insert(right.id);
+            }
+        }
+        for (left, right) in pattern.body.dom_facts.iter().zip(&goal.body.dom_facts) {
+            let Ok(left) = self.inst_quantifier_free_fact(left, &rename) else { return Ok(false) };
+            let left_args = quantifier_free_fact_args_ref(&left);
+            let right_args = quantifier_free_fact_args_ref(right);
+            if left_args.len() != right_args.len() { return Ok(false); }
+            for (left, right) in left_args.into_iter().zip(right_args) {
+                if self.match_forall_one_arg(left, right, param_set, subst, equality_state)?.is_none() {
+                    return Ok(false);
+                }
+            }
+        }
+        for (left, right) in [
+            (pattern.body.ret_set.as_ref(), goal.body.ret_set.as_ref()),
+            (pattern.equal_to.as_ref(), goal.equal_to.as_ref()),
+        ] {
+            let Ok(left) = self.inst_obj(left, &rename) else { return Ok(false) };
+            if self.match_forall_one_arg(&left, right, param_set, subst, equality_state)?.is_none() {
+                return Ok(false);
+            }
+        }
+        for value in subst.values() {
+            let mut free = HashSet::new();
+            crate::instantiate::collect_free_plain_ids(value, &HashSet::new(), &mut free);
+            if !free.is_disjoint(&local_ids) { return Ok(false); }
         }
         Ok(true)
     }

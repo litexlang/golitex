@@ -16,6 +16,30 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FloorMonotone(p))=> object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("FloorMonotone")),("argument_order",project_verify_fact(&p.argument_order,runtime))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::CeilMonotone(p))=> object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("CeilMonotone")),("argument_order",project_verify_fact(&p.argument_order,runtime))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetSumTriangle(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("FiniteSetSumTriangle"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(br::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::FiniteIndexUnion(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("FiniteIndexUnion")),
+            ("index_finite", project_verify_fact(&p.index_finite, runtime)),
+            ("fibres", object_for(runtime, vec![
+                ("type", string("by_known_forall_fact")),
+                ("fact", string(crate::ast::fact::Fact::ForallFact(p.fibres.fact.clone()).readable_string())),
+                ("cite_fact_id", string(p.fibres.cite_fact_id.to_string())),
+                ("parameter_renamings", JsonValue::Array(p.fibres.parameter_renamings.iter().map(|r| object_for(runtime, vec![
+                    ("source", string(r.source.to_string())), ("target", string(r.target.to_string())),
+                ])).collect())),
+            ])),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ComplexTriangle(_))=> object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ComplexTriangle"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ComplexReverseTriangle(_))=> object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ComplexReverseTriangle"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LcmCommonMultipleBound(p))=> object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("LcmCommonMultipleBound")),("domains",project_verify_facts(&p.domains,runtime)),("first_multiple",project_verify_fact(&p.first_multiple,runtime)),("second_multiple",project_verify_fact(&p.second_multiple,runtime))]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterEqualFact")),
+            ("rule", string("SumOfNonnegatives")),
+            ("constructor_tree", project_nonnegative_sum_tree(&p.constructor_tree, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(p)) => project_closed_subtraction_bound("GreaterEqualFact", &p.bound, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(p)) => project_closed_subtraction_bound("LessEqualFact", &p.bound, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative)
@@ -1423,6 +1447,11 @@ pub(super) fn project_atomic_builtin_rule(
             ("rule", string("RealOperandArithmeticClosure")),
             ("operand_proofs", project_verify_facts(&p.operand_proofs, runtime)),
         ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::DiscreteArithmeticConstructorClosure(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("InFact")),
+            ("rule", string("DiscreteArithmeticConstructorClosure")),
+            ("constructor_tree", project_discrete_arithmetic_constructor_tree(&p.constructor_tree, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("InFact")),
             ("rule", string("RealArithmeticConstructorClosure")),
@@ -1554,7 +1583,17 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("InFact")),
                 ("rule", string("PowerSetMembership")),
             ];
-            entries.push(("subset_proof", project_verify_fact(&p.subset_proof, runtime)));
+            let subset = match &p.subset_proof {
+                br::in_fact::PowerSetMembershipSubsetProof::KnownSubset(known) => object_for(runtime, vec![
+                    ("type", string("by_known_subset")),
+                    ("fact", string(known.fact.readable_string())),
+                    ("parent_wd_arguments", string("membership_element_and_power_set_base")),
+                    ("searched_proof", super::searched::project_atomic_except_searched(&known.searched_proof, runtime)),
+                ]),
+                br::in_fact::PowerSetMembershipSubsetProof::VerifiedSubset(proof) =>
+                    super::verify::project_atomic_except_success(proof, runtime),
+            };
+            entries.push(("subset_proof", subset));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::StructObjMembership(p)) => {
@@ -2112,7 +2151,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("NotEqualFact")),
                 ("rule", string("ProductComponentNonzero")),
             ];
-            let _ = p;
+            entries.push(("product_nonzero_proof", super::searched::project_known_premise(&p.product_nonzero_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SqrtNonzeroFromPositiveArg(p)) => {
@@ -2130,6 +2169,7 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("NotEqualFact")),
                 ("rule", string("SquareSumNonzeroFromComponent")),
             ];
+            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
             entries.push(("component_nonzero_proof", project_verify_fact(&p.component_nonzero_proof, runtime)));
             object_for(runtime, entries)
         },
@@ -2419,6 +2459,12 @@ fn project_real_arithmetic_constructor_tree(
     runtime: &Runtime,
 ) -> JsonValue {
     use br::in_fact::RealArithmeticConstructorTree::*;
+    let terminal = |proof: &br::in_fact::RealArithmeticConstructorTerminalProof| {
+        object_for(runtime, vec![
+            ("fact", string(format!("{} $in {}", proof.fact.element.readable_string(), proof.fact.set.readable_string()))),
+            ("searched_proof", super::searched::project_atomic_except_searched(&proof.searched_proof, runtime)),
+        ])
+    };
     let binary = |kind, left, right| object_for(runtime, vec![
         ("constructor", string(kind)),
         ("left", project_real_arithmetic_constructor_tree(left, runtime)),
@@ -2427,7 +2473,7 @@ fn project_real_arithmetic_constructor_tree(
     match tree {
         Leaf(proof) => object_for(runtime, vec![
             ("constructor", string("leaf")),
-            ("proof", project_verify_fact(proof, runtime)),
+            ("proof", terminal(proof)),
         ]),
         Add { left, right } => binary("add", left, right),
         Sub { left, right } => binary("sub", left, right),
@@ -2440,7 +2486,41 @@ fn project_real_arithmetic_constructor_tree(
         IntegerPow { base, exponent_in_integer_proof } => object_for(runtime, vec![
             ("constructor", string("integer_pow")),
             ("base", project_real_arithmetic_constructor_tree(base, runtime)),
-            ("exponent_in_integer_proof", project_verify_fact(exponent_in_integer_proof, runtime)),
+            ("exponent_in_integer_proof", terminal(exponent_in_integer_proof)),
+        ]),
+    }
+}
+
+fn project_discrete_arithmetic_constructor_tree(
+    tree: &br::in_fact::DiscreteArithmeticConstructorTree, runtime: &Runtime,
+) -> JsonValue {
+    use br::in_fact::DiscreteArithmeticConstructorTree::*;
+    let binary = |kind, left, right| object_for(runtime, vec![
+        ("constructor", string(kind)),
+        ("left", project_discrete_arithmetic_constructor_tree(left, runtime)),
+        ("right", project_discrete_arithmetic_constructor_tree(right, runtime)),
+    ]);
+    match tree {
+        Leaf { fact, searched_proof } => object_for(runtime, vec![
+            ("constructor", string("leaf")), ("fact", string(format!("{} $in {}", fact.element.readable_string(), fact.set.readable_string()))),
+            ("searched_proof", super::searched::project_atomic_except_searched(searched_proof, runtime)),
+        ]),
+        Add { left, right } => binary("add", left, right),
+        Sub { left, right } => binary("sub", left, right),
+        Mul { left, right } => binary("mul", left, right),
+        Neg { argument } => object_for(runtime, vec![
+            ("constructor", string("neg")), ("argument", project_discrete_arithmetic_constructor_tree(argument, runtime)),
+        ]),
+    }
+}
+
+fn project_nonnegative_sum_tree(tree: &br::greater_equal::NonnegativeSumTree, runtime: &Runtime) -> JsonValue {
+    use br::greater_equal::NonnegativeSumTree::*;
+    match tree {
+        Leaf(proof) => object_for(runtime, vec![("constructor", string("leaf")), ("proof", project_verify_fact(proof, runtime))]),
+        Add { left, right } => object_for(runtime, vec![
+            ("constructor", string("add")), ("left", project_nonnegative_sum_tree(left, runtime)),
+            ("right", project_nonnegative_sum_tree(right, runtime)),
         ]),
     }
 }

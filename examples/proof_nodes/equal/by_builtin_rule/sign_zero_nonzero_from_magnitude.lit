@@ -1,0 +1,38 @@
+claim:
+    ? forall x R:
+        sign(x)=0
+        =>:
+            x=0
+    sign(x)*abs(x)=x
+    sign(x)*abs(x)=0*abs(x)
+    0*abs(x)=0
+    x=sign(x)*abs(x)=0*abs(x)=0
+forall x R:
+    sign(x)=0
+    =>:
+        x=0
+claim:
+    ? forall x R:
+        x!=0
+        =>:
+            sign(x)!=0
+    sign(x)*abs(x)=x
+    sign(x)*abs(x)!=0
+    sign(x)!=0
+forall x R:
+    x!=0
+    =>:
+        sign(x)!=0
+claim:
+    ? forall x R:
+        sign(x)!=0
+        =>:
+            x!=0
+    by contra:
+        ? x!=0
+        sign(x)=0
+        impossible sign(x)=0
+forall x R:
+    sign(x)!=0
+    =>:
+        x!=0

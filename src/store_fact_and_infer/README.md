@@ -57,6 +57,15 @@ store_fact_and_infer/
 - Positive-real power membership transport  
   (set-builder / closed-numeric indexes and actual membership/equality special-property facts live on **store indexes**)
 
+Positive-real power transport first checks `0 < a^n` using existing builtin
+rules, with a child ceiling capped at BuiltinRule and inherited from the caller.
+For a real nonzero square this reuses `EvenPowPositiveFromNonzero`; it avoids
+searching for the unnecessary stronger premise `0 < a`. If that bounded check
+fails, the existing positive-base/real-exponent route retains the original
+caller ceiling. The exponent membership and ordinary inferred-store WD remain
+checked. No global permission, state, result shape or user-goal search changes.
+Tracer: `examples/infer/equal/nonzero_real_square.lit`.
+
 **Other atomics**
 
 - NormalAtomic: param-type projection + one-layer def expand
@@ -82,6 +91,15 @@ store_fact_and_infer/
   Detailed output retains its FactId through the existing flat infer projection.
   The tracer is `examples/infer/atomic/weak_integer_lower_bound_in_n.lit`.
 - `$is_cart` → dim ≥ 2; Subset / Superset → elementwise forall
+
+The FnRange and indexed-family application builders preserve existing callable
+FieldAccess heads as well as identifiers, anonymous functions and templates.
+Their checked FnSet/domain/source contracts stay the same. An already displayed
+field application is recognized as its own preimage; opaque range members still
+publish the ordinary existential, and indexed union/intersection members publish
+their fiber existential/universal. Canonical receivers are never stripped or
+replaced by another same-named field. Tracers: `atomic/field_fn_range.lit` and
+`atomic/field_indexed_family.lit` under `examples/infer/`.
 
 ## Intentionally not migrated
 

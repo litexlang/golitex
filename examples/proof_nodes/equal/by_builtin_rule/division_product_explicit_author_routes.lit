@@ -1,0 +1,219 @@
+# Explicit multiplication/division proofs using current arithmetic identities.
+# Audit baseline e9f4f30a: the original cold short goals below miss equality search.
+# Each active claim keeps the original premises and conclusion, then checks reuse.
+# Old short forward input:
+# forall a,b,c R:
+#     b!=0
+#     a/b=c
+#     =>:
+#         a=c*b
+# Old short reverse input:
+# forall a,b,c R:
+#     b!=0
+#     a=b*c
+#     =>:
+#         a/b=c
+# Composite divisor a/(b*d)=c -> a=c*(b*d) remains a migration candidate.
+
+# div-to-product-R-c_b-author
+claim:
+    ? forall a,b,c R:
+        b!=0
+        a/b=c
+        =>:
+            a=c*b
+    a=(a/b)*b=c*b
+
+forall a,b,c R:
+    b!=0
+    a/b=c
+    =>:
+        a=c*b
+
+# product-to-div-R-b_c-author
+claim:
+    ? forall a,b,c R:
+        b!=0
+        a=b*c
+        =>:
+            a/b=c
+    a/b=(b*c)/b=c
+
+forall a,b,c R:
+    b!=0
+    a=b*c
+    =>:
+        a/b=c
+
+# div-to-product-C-c_b-author
+claim:
+    ? forall a,b,c C:
+        b!=0
+        a/b=c
+        =>:
+            a=c*b
+    a=(a/b)*b=c*b
+
+forall a,b,c C:
+    b!=0
+    a/b=c
+    =>:
+        a=c*b
+
+# product-to-div-C-b_c-author
+claim:
+    ? forall a,b,c C:
+        b!=0
+        a=b*c
+        =>:
+            a/b=c
+    a/b=(b*c)/b=c
+
+forall a,b,c C:
+    b!=0
+    a=b*c
+    =>:
+        a/b=c
+
+# div-to-product-Q-source0-c_b-goal0-author
+claim:
+    ? forall a,b,c Q:
+        b!=0
+        a/b=c
+        =>:
+            a=c*b
+    a=(a/b)*b=c*b
+
+forall a,b,c Q:
+    b!=0
+    a/b=c
+    =>:
+        a=c*b
+
+# product-to-div-Q-b_c-source0-goal0-author
+claim:
+    ? forall a,b,c Q:
+        b!=0
+        a=b*c
+        =>:
+            a/b=c
+    a/b=(b*c)/b=c
+
+forall a,b,c Q:
+    b!=0
+    a=b*c
+    =>:
+        a/b=c
+
+# div-to-product-Z-source0-c_b-goal0-author
+claim:
+    ? forall a,b,c Z:
+        b!=0
+        a/b=c
+        =>:
+            a=c*b
+    a=(a/b)*b=c*b
+
+forall a,b,c Z:
+    b!=0
+    a/b=c
+    =>:
+        a=c*b
+
+# product-to-div-Z-b_c-source0-goal0-author
+claim:
+    ? forall a,b,c Z:
+        b!=0
+        a=b*c
+        =>:
+            a/b=c
+    a/b=(b*c)/b=c
+
+forall a,b,c Z:
+    b!=0
+    a=b*c
+    =>:
+        a/b=c
+
+# quotient-alias-R-author
+claim:
+    ? forall a,b,c,z R:
+        b!=0
+        a/b=z
+        z=c
+        =>:
+            a=c*b
+    a/b=c
+    a=(a/b)*b=c*b
+
+forall a,b,c,z R:
+    b!=0
+    a/b=z
+    z=c
+    =>:
+        a=c*b
+
+# product-alias-C-author
+claim:
+    ? forall a,b,c,z C:
+        b!=0
+        a=z
+        z=b*c
+        =>:
+            a/b=c
+    a=b*c
+    a/b=(b*c)/b=c
+
+forall a,b,c,z C:
+    b!=0
+    a=z
+    z=b*c
+    =>:
+        a/b=c
+
+# left-cancel-R-author
+claim:
+    ? forall a,b,c R:
+        a!=0
+        a*b=a*c
+        =>:
+            b=c
+    b=(a*b)/a=(a*c)/a=c
+
+forall a,b,c R:
+    a!=0
+    a*b=a*c
+    =>:
+        b=c
+
+# mul-right-cancel-C-author
+claim:
+    ? forall a,b,c C:
+        a!=0
+        b*a=c*a
+        =>:
+            b=c
+    b=(b*a)/a=(c*a)/a=c
+
+forall a,b,c C:
+    a!=0
+    b*a=c*a
+    =>:
+        b=c
+
+# cross-multiply-R-author
+claim:
+    ? forall a,b,c,d R:
+        b!=0
+        d!=0
+        a/b=c/d
+        =>:
+            a*d=b*c
+    a*d=(a/b)*(b*d)=(c/d)*(b*d)=b*c
+
+forall a,b,c,d R:
+    b!=0
+    d!=0
+    a/b=c/d
+    =>:
+        a*d=b*c

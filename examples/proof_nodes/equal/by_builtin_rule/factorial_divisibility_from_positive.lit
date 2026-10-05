@@ -1,0 +1,11 @@
+claim:
+    ? forall n N:
+        factorial(n)!=0
+    0<factorial(n)
+    factorial(n)!=0
+forall n N:
+    factorial(n)!=0
+forall m,n N:
+    m<=n
+    =>:
+        factorial(n)%factorial(m)=0

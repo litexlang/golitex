@@ -57,27 +57,34 @@ pub(in crate::json_output) fn project_verify_fact(
     }
 }
 
+pub(super) fn project_atomic_except_success(
+    s: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::VerifyAtomicExceptEqualityFactSuccess,
+    runtime: &Runtime,
+) -> JsonValue {
+    object_for(
+        runtime,
+        vec![
+            ("type", string("atomic_except_equality")),
+            ("success", bool_value(true)),
+            ("fact", string(s.fact.readable_string())),
+            (
+                "well_defined",
+                project_atomic_wd_proof(&s.well_defined_proof, runtime),
+            ),
+            (
+                "searched_proof",
+                project_atomic_except_searched(&s.searched_proof, runtime),
+            ),
+        ],
+        )
+}
+
 fn project_atomic_except(
     result: &VerifyAtomicExceptEqualityFactResult,
     runtime: &Runtime,
 ) -> JsonValue {
     match result {
-        VerifyAtomicExceptEqualityFactResult::Success(s) => object_for(
-            runtime,
-            vec![
-                ("type", string("atomic_except_equality")),
-                ("success", bool_value(true)),
-                ("fact", string(s.fact.readable_string())),
-                (
-                    "well_defined",
-                    project_atomic_wd_proof(&s.well_defined_proof, runtime),
-                ),
-                (
-                    "searched_proof",
-                    project_atomic_except_searched(&s.searched_proof, runtime),
-                ),
-            ],
-        ),
+        VerifyAtomicExceptEqualityFactResult::Success(s) => project_atomic_except_success(s, runtime),
         VerifyAtomicExceptEqualityFactResult::Failed(
             VerifyAtomicExceptEqualityFactFailed::FailToVerifyWellDefined(f),
         ) => object_for(

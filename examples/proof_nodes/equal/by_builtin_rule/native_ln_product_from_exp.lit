@@ -1,0 +1,27 @@
+claim:
+    ? forall a,b R:
+        exp(a)=exp(b)
+        =>:
+            a=b
+    ln(exp(a))=a
+    ln(exp(b))=b
+    ln(exp(a))=ln(exp(b))
+    a=ln(exp(a))=ln(exp(b))=b
+forall a,b R:
+    exp(a)=exp(b)
+    =>:
+        a=b
+claim:
+    ? forall a,b R+:
+        ln(a*b)=ln(a)+ln(b)
+    a*b $in R+
+    0<a*b
+    exp(ln(a))=a
+    exp(ln(b))=b
+    exp(ln(a)+ln(b))=exp(ln(a))*exp(ln(b))
+    exp(ln(a))*exp(ln(b))=a*b
+    exp(ln(a*b))=a*b
+    exp(ln(a*b))=exp(ln(a)+ln(b))
+    ln(a*b)=ln(a)+ln(b)
+forall a,b R+:
+    ln(a*b)=ln(a)+ln(b)

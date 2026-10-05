@@ -23,6 +23,11 @@ updates successful eval to store the checked source/result equality. The
 EvalStmt scenarios consume that fact. The three focused statement groups pass
 25 checks; this does not replace the dated full-suite scan above.
 
+The [field-function and square-inference repair](experience/problem_notes/field-preimage-and-power-2026-10-04.md)
+passes a fresh scoped CLI gate of 378 Stmt checks and 175 basics, plus 46
+relevant Rust tests. Its new tracers live with their Stmt/infer owners; this
+is not a full release or independent-replay claim.
+
 ## Run
 
 From the repository root:

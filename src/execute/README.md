@@ -15,6 +15,14 @@ Tracer: [eval_store_result.lit](../../examples/stmt_nodes/command/eval_store_res
 
 ## Identifier identity and witness diagnostics
 
+Checked function fields also retain their existing `FnObjHead::FieldAccess`
+when `have by fn_preimage` builds the witness application. For
+`ops &Ops = (shift, 0)`, the statement names a valid source and stores
+`ops.op(a) = ops.op(2)` after checking its function set, range membership,
+arity and parameter conditions. It need not replace the field by `shift` to
+construct the application. The receiver's canonical identity is retained.
+See [field_function_preimage.lit](../../examples/stmt_nodes/definition/field_function_preimage.lit).
+
 `env_stack_lookup::stored_identifier_definition_visible` applies its existing
 ID/file-owner check to each candidate in the existing lookup walk. A local
 existential binder with the same surface name but another ID is skipped rather
@@ -277,3 +285,24 @@ rewrite. The tracer is
 `examples/proof_nodes/atomic/by_builtin_rule/greater_from_positive_difference.lit`;
 the focused `positive_difference_order` tests cover both spellings, strictness,
 direction, domain and local-scope rejection.
+
+## Local finite aggregation and constructor proofs (2026-10-05)
+
+Finite product/unordered-fold bijective reindexing, finite-sum triangle and
+finite indexed union have dedicated leaf proof structs and exhaustive output
+arms. The finite partition owner accepts literal restrictions on each part
+instead of requiring global equality of differently typed function domains.
+Its callback certificate mirrors same-function, literal-restriction, checked
+whole-function equality and retained scoped-pointwise routes; disjointness and
+part/domain equalities remain verified requirements.
+
+The index-union leaf matches a whole checked forall source, retaining its
+FactId and alpha renamings rather than broadening forall instantiation search.
+All leaves inherit the caller's bounded premise state. Whole-fact WD precedes
+truth search and owns numeric domains, actual callable signatures and fold
+laws. These changes add no AST or runtime-state representation.
+
+See [the source-owned acceptance record](../../examples/test_objs/experience/problem_notes/thirteen_builtin_rules_2026-10-05.md)
+and fifteen dedicated [proof-node tracers](../../examples/proof_nodes/README.md).
+The scoped consumer gates cover typed/Normal/Detailed and ten languages;
+repository-wide publication and independent Lean replay remain separate gates.

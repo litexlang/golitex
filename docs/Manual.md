@@ -5123,6 +5123,11 @@ carrier before entering the proof body. Already checked composites can also
 be leaves, including an exactly calculated real value such as `i^2`.
 Detailed output keeps the constructor tree, terminal proofs and citations;
 the enclosing WD proof retains division and negative-power domain guards.
+Terminal proofs contain the membership fact and its successful search route;
+function argument WD stays in the enclosing verification stage. Thus a
+Cartesian-argument call does not have to reprove its argument carrier at the
+lower terminal ceiling. The [Cartesian function WD tracer](../examples/wd/real_cart_function_arithmetic.lit)
+checks a difference under `abs` and the guarded coordinate quotient.
 The rule does not publish new memberships, unfold definitions, raise search
 permissions or infer signed/integer refinements. See the
 [real constructor tracer](../examples/proof_nodes/atomic/by_builtin_rule/real_arithmetic_constructor_closure.lit).
@@ -5691,6 +5696,20 @@ needed for `log(2, x)` WD before a proof body begins. Negative or unknown
 bounds, and a nonstrict zero bound, do not supply positivity. The inference
 retains its strict source and bound proof without enabling deeper search.
 See the [strict-bound tracer](../examples/infer/atomic/strict_lower_bound_positive.lit).
+
+A checked nonzero real square also transports positive membership to its
+named result:
+
+```litex
+have base R*
+have square R = base^2
+square $in R+
+```
+
+The base may be negative. The declaration reuses the existing nonzero-real
+even-power rule before trying the positive-base route. Zero and complex bases
+do not satisfy that rule. Source WD and explicit proof checking retain their
+ordinary permissions. See the [square tracer](../examples/infer/equal/nonzero_real_square.lit).
 
 Inference is directional bookkeeping, not a license to solve any equation:
 

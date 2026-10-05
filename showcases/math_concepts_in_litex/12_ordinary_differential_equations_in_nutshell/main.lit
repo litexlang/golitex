@@ -50,8 +50,8 @@ thm ode_solution_has_derivative:
                 ode_solution(x) = x^2 + 1
                 ode_solution(x0) = x0^2 + 1
                 ode_solution(x) - ode_solution(x0) = (x^2 + 1) - (x0^2 + 1) = x^2 - x0^2 = (x - x0) * (x + x0)
-                (ode_solution(x) - ode_solution(x0)) / (x - x0) = x + x0
-                (ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0 = x - x0
+                (ode_solution(x) - ode_solution(x0)) / (x - x0) = ((x - x0) * (x + x0)) / (x - x0) = x + x0
+                (ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0 = (x + x0) - 2 * x0 = x - x0
                 abs((ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0) = abs(x - x0) < epsilon
             by def $derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)
     by def $has_derivative_at(ode_solution, x0, 2 * x0)
@@ -85,17 +85,37 @@ thm derivative_value_unique:
         ? slope1 = slope2
         slope1 != slope2
         slope1 - slope2 != 0
-        abs(slope1 - slope2) > 0
+        claim:
+            ? abs(slope1 - slope2) > 0
+            by contra:
+                ? abs(slope1 - slope2) > 0
+                abs(slope1 - slope2) <= 0
+                0 <= abs(slope1 - slope2)
+                abs(slope1 - slope2) = 0
+                abs(slope1 - slope2) != 0
+                impossible abs(slope1 - slope2) = 0
+        abs(slope1 - slope2) / 3 $in R
+        0 < abs(slope1 - slope2) / 3
         have epsilon R+ = abs(slope1 - slope2) / 3
         obtain delta1 from exist delta1 R+ st {$derivative_delta_controlled(f, x0, slope1, epsilon, delta1)}
         obtain delta2 from exist delta2 R+ st {$derivative_delta_controlled(f, x0, slope2, epsilon, delta2)}
+        union({delta1}, {delta2}) $subset R+
+        finite_set_min(union({delta1}, {delta2})) $in union({delta1}, {delta2})
+        finite_set_min(union({delta1}, {delta2})) $in R
         have radius R+ = finite_set_min(union({delta1}, {delta2}))
+        0 < radius / 2
         have sample R = x0 + radius / 2
         sample = x0 + radius / 2 > x0
         sample != x0
         sample - x0 = radius / 2
         sample - x0 > 0
+        0 <= sample - x0
         abs(sample - x0) = sample - x0 = radius / 2
+        radius / 2 < radius
+        delta1 $in union({delta1}, {delta2})
+        delta2 $in union({delta1}, {delta2})
+        radius = finite_set_min(union({delta1}, {delta2})) <= delta1
+        radius = finite_set_min(union({delta1}, {delta2})) <= delta2
         abs(sample - x0) = radius / 2 < radius <= delta1
         abs(sample - x0) = radius / 2 < radius <= delta2
         have difference_quotient R = (f(sample) - f(x0)) / (sample - x0)
@@ -103,7 +123,8 @@ thm derivative_value_unique:
         abs(difference_quotient - slope1) = abs((f(sample) - f(x0)) / (sample - x0) - slope1) < epsilon
         abs((f(sample) - f(x0)) / (sample - x0) - slope2) < epsilon
         abs(difference_quotient - slope2) = abs((f(sample) - f(x0)) / (sample - x0) - slope2) < epsilon
-        abs(slope1 - difference_quotient) = abs(difference_quotient - slope1)
+        slope1 - difference_quotient = -(difference_quotient - slope1)
+        abs(slope1 - difference_quotient) = abs(-(difference_quotient - slope1)) = abs(difference_quotient - slope1)
         slope1 - slope2 = (slope1 - difference_quotient) + (difference_quotient - slope2)
         abs(slope1 - slope2) = abs((slope1 - difference_quotient) + (difference_quotient - slope2)) <= abs(slope1 - difference_quotient) + abs(difference_quotient - slope2)
         abs(slope1 - difference_quotient) + abs(difference_quotient - slope2) < epsilon + epsilon = 2 * epsilon
@@ -131,13 +152,20 @@ claim:
             =>:
                 slope1 = slope2
         release thm derivative_value_unique(f, x0, slope1, slope2)
-    exist! slope R st {$has_derivative_at(f, x0, slope)}
+    witness exist! slope R st {$has_derivative_at(f, x0, slope)} from chosen_slope
 
 have fn derivative_at by exist!:
     ? forall f fn(t R) R, x0 R:
         $is_differentiable_at(f, x0)
         =>:
             exist! slope R st {$has_derivative_at(f, x0, slope)}
+
+claim:
+    ? forall f fn(t R) R, x0, slope R:
+        $has_derivative_at(f, x0, slope)
+        =>:
+            $is_differentiable_at(f, x0)
+    witness $is_differentiable_at(f, x0) from slope
 
 # Bridge the relational derivative predicate to the uniquely selected value.
 thm has_derivative_at_to_derivative_value:
@@ -149,11 +177,16 @@ thm has_derivative_at_to_derivative_value:
     witness $is_differentiable_at(f, x0) from slope:
         $has_derivative_at(f, x0, slope)
     slope = derivative_at(f, x0)
-    derivative_at(f, x0) = slope
 
 prop solves_ode_at_by_derivative(f fn(t R) R, rhs fn(t, y R) R, x R):
     $is_differentiable_at(f, x)
     derivative_at(f, x) = rhs(x, f(x))
+
+claim:
+    ? forall x R:
+        $is_differentiable_at(ode_solution, x)
+    release thm ode_solution_has_derivative(x)
+    witness $is_differentiable_at(ode_solution, x) from 2 * x
 
 thm ode_solution_derivative_value:
     ? forall x R:

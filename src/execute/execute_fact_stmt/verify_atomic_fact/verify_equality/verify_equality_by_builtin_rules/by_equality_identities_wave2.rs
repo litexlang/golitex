@@ -43,12 +43,12 @@ pub struct SqrtOfSquareBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-// Builtin SqrtProduct: sqrt(a*b) = sqrt(a)*sqrt(b) for a,b > 0.
+// Builtin SqrtProduct: sqrt(a*b) = sqrt(a)*sqrt(b) for a,b >= 0.
 pub struct SqrtProductBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-// Builtin SqrtQuotient: sqrt(a/b) = sqrt(a)/sqrt(b) for a,b > 0.
+// Builtin SqrtQuotient: sqrt(a/b) = sqrt(a)/sqrt(b) for a >= 0, b > 0.
 pub struct SqrtQuotientBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
@@ -404,11 +404,11 @@ impl Runtime {
             if sx.ir() != x.ir() || sy.ir() != y.ir() {
                 continue;
             }
-            let px = self.verify_order_positive(x, verify_state.clone())?;
+            let px = self.verify_sqrt_nonnegative_argument(x, verify_state.clone())?;
             if px.is_failed() {
                 continue;
             }
-            let py = self.verify_order_positive(y, verify_state.clone())?;
+            let py = self.verify_sqrt_nonnegative_argument(y, verify_state.clone())?;
             if py.is_failed() {
                 continue;
             }
@@ -451,7 +451,7 @@ impl Runtime {
         if sx.ir() != a.as_ref().ir() || sy.ir() != b.as_ref().ir() {
             return Ok(None);
         }
-        let px = self.verify_order_positive(a.as_ref(), verify_state.clone())?;
+        let px = self.verify_sqrt_nonnegative_argument(a.as_ref(), verify_state.clone())?;
         if px.is_failed() {
             return Ok(None);
         }
@@ -462,6 +462,21 @@ impl Runtime {
         Ok(Some(SqrtQuotientBuiltinRuleProof {
             proof_of_requirement_facts: vec![px, py],
         }))
+    }
+
+    fn verify_sqrt_nonnegative_argument(
+        &mut self,
+        obj: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactResult> {
+        let nonnegative = self.verify_order_nonnegative(obj, verify_state.clone())?;
+        if nonnegative.is_failed() {
+            // A checked strict bound is sufficient too. Preserve the original
+            // positive-input route without asking a lower ceiling to weaken it.
+            self.verify_order_positive(obj, verify_state)
+        } else {
+            Ok(nonnegative)
+        }
     }
 
     fn try_abs_of_negation(
@@ -1143,4 +1158,130 @@ fn two_obj() -> Obj {
     Obj::Literal(Literal::Number(Number {
         normalized_value: "2".to_string(),
     }))
+}
+
+#[cfg(test)]
+mod principal_root_nonnegative_algebra_tests {
+    use crate::ast::stmt::Stmt;
+    use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
+    use crate::json_output::project_run_detailed;
+    use crate::knowledge_base::JsonValue;
+    use crate::launch_command::{LaunchCommand, OutputLanguage};
+    use crate::runtime::Runtime;
+    use crate::tokenize::Tokenizer;
+
+    fn runtime() -> Runtime {
+        Runtime::new(LaunchCommand::Eval {
+            code: String::new(), session: false, strict: true, language: OutputLanguage::English,
+        })
+    }
+
+    fn check(rt: &mut Runtime, code: &str, expected: bool) -> JsonValue {
+        let run = rt.run_litex_code(code).expect("public Runtime");
+        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert_eq!(run.success, expected, "{code}");
+        project_run_detailed(&run, rt, "eval", None)
+    }
+
+    fn find_rule<'a>(value: &'a JsonValue, rule: &str) -> Option<&'a JsonValue> {
+        match value {
+            JsonValue::Object(fields) => {
+                if fields.get("rule").and_then(|v| v.as_str().ok()) == Some(rule) {
+                    return Some(value);
+                }
+                fields.keys_in_order().into_iter().find_map(|key| find_rule(fields.get(&key).unwrap(), rule))
+            }
+            JsonValue::Array(items) => items.iter().find_map(|v| find_rule(v, rule)),
+            _ => None,
+        }
+    }
+
+    fn requirements(json: &JsonValue, rule: &str) -> Vec<String> {
+        let leaf = find_rule(json, rule).expect("actual winning native root rule").as_object().unwrap();
+        let values = leaf.get("proof_of_requirement_facts").unwrap().as_array().unwrap();
+        assert_eq!(values.len(), 2);
+        values.iter().map(|v| {
+            let proof = v.as_object().unwrap();
+            assert_eq!(proof.get("success"), Some(&JsonValue::Bool(true)));
+            assert!(proof.get("searched_proof").is_some());
+            proof.get("fact").unwrap().as_str().unwrap().to_owned()
+        }).collect()
+    }
+
+    #[test]
+    fn principal_root_nonnegative_algebra_tracer_retains_checked_requirements() {
+        let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/proof_nodes/equal/by_builtin_rule/principal_root_nonnegative_algebra.lit"));
+        let json = check(&mut runtime(), source, true);
+        assert_eq!(requirements(&json, "SqrtProduct"), vec!["0 <= a", "0 <= b"]);
+        assert_eq!(requirements(&json, "SqrtQuotient"), vec!["0 <= a", "0 < b"]);
+    }
+
+    #[test]
+    fn principal_root_nonnegative_algebra_preserves_positive_and_reversed_shapes() {
+        for code in [
+            "forall a,b R:\n    0<a\n    0<b\n    =>:\n        sqrt(a*b)=sqrt(a)*sqrt(b)\n",
+            "forall a,b R:\n    0<a\n    0<b\n    =>:\n        sqrt(a/b)=sqrt(a)/sqrt(b)\n",
+            "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(b)*sqrt(a)=sqrt(a*b)\n",
+            "forall a,b R:\n    0<=a\n    0<b\n    =>:\n        sqrt(a)/sqrt(b)=sqrt(a/b)\n",
+            "forall b R:\n    0<b\n    =>:\n        sqrt(0/b)=sqrt(0)/sqrt(b)\n",
+        ] {
+            check(&mut runtime(), code, true);
+        }
+    }
+
+    #[test]
+    fn principal_root_nonnegative_algebra_rejects_wrong_formulas_and_illegal_domains() {
+        for code in [
+            "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a*b)=sqrt(a)+sqrt(b)\n",
+            "forall a,b R:\n    0<a\n    0<b\n    =>:\n        sqrt(a/b)=sqrt(b)/sqrt(a)\n",
+            "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a/b)=sqrt(a)/sqrt(b)\n",
+            "sqrt((-1)*(-1))=sqrt(-1)*sqrt(-1)\n",
+            "sqrt(0/0)=sqrt(0)/sqrt(0)\n",
+            "sqrt(i*i)=sqrt(i)*sqrt(i)\n",
+        ] {
+            check(&mut runtime(), code, false);
+        }
+    }
+
+    #[test]
+    fn principal_root_nonnegative_algebra_cites_actual_nonnegative_assumptions() {
+        let code = "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a*b)=sqrt(a)*sqrt(b)\n";
+        let json = check(&mut runtime(), code, true);
+        let statement = &json.as_object().unwrap().get("statement_results").unwrap().as_array().unwrap()[0];
+        let verify = statement.as_object().unwrap().get("verify").unwrap().as_object().unwrap();
+        let assumptions = verify.get("assumed_dom_facts").unwrap().as_array().unwrap();
+        let leaf = find_rule(&json, "SqrtProduct").unwrap().as_object().unwrap();
+        let requirements = leaf.get("proof_of_requirement_facts").unwrap().as_array().unwrap();
+        for (assumption, requirement) in assumptions.iter().zip(requirements) {
+            let source = &assumption.as_object().unwrap().get("store_and_infer").unwrap().as_object().unwrap().get("stores").unwrap().as_array().unwrap()[0];
+            let source_id = source.as_object().unwrap().get("fact_id").unwrap().as_str().unwrap();
+            let proof = requirement.as_object().unwrap().get("searched_proof").unwrap().as_object().unwrap();
+            assert_eq!(proof.get("cite_fact_id").unwrap().as_str().unwrap(), source_id);
+        }
+    }
+
+    #[test]
+    fn principal_root_nonnegative_algebra_respects_inherited_search_ceiling() {
+        let mut rt = runtime();
+        check(&mut rt, "have a,b R+\n0<=a\n0<=b\na*b $in R\nsqrt(a*b) $in R\nsqrt(a) $in R\nsqrt(b) $in R\n", true);
+        let tokens = Tokenizer::new().tokenize("sqrt(a*b)=sqrt(a)*sqrt(b)", rt.current_file.clone()).unwrap();
+        let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else { panic!("fact") };
+        for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty] {
+            assert!(rt.verify_fact(&goal, VerifyState::new(level)).unwrap().is_failed());
+        }
+        assert!(!rt.verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule)).unwrap().is_failed());
+    }
+
+    #[test]
+    fn principal_root_nonnegative_algebra_false_goal_does_not_publish_or_poison_reuse() {
+        let mut rt = runtime();
+        let wrong = "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a*b)=sqrt(a)+sqrt(b)\n";
+        let valid = "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a*b)=sqrt(a)*sqrt(b)\n";
+        check(&mut rt, wrong, false);
+        check(&mut rt, "1=2\n", false);
+        check(&mut rt, valid, true);
+        check(&mut rt, wrong, false);
+        check(&mut rt, valid, true);
+        check(&mut rt, "1=2\n", false);
+    }
 }

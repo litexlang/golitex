@@ -24,7 +24,7 @@ definition/    Definition: DefineObj (let/have/obtain/have by…) plus
                also Release* tracers live nearby in this tree
 witness/       WitnessExistFact, WitnessExistUnique (via exist!),
                WitnessAtomicFact, WitnessNonemptySet
-               (no indented body; no FnSet shortcut)
+               (checked optional proof body; no FnSet shortcut)
 unsafe/        TrustBoundary (trust / trust have)
 register/      RegisterReflexive/Symmetric/TransitiveProp
 by/            Extension, EnumerateFiniteSet, For, Contra, Cases, Def, Thm,
@@ -48,6 +48,7 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | `definition/parse_scope_transaction.lit` | Correct a previously failed declaration in the same Runtime | failed `have k N = -1`, then active `have k N = 1`; negative boundary in `tests/unit/run/binding_lifecycle/tests.rs` |
 | `definition/obtain_*.lit` | Name exist witnesses | `obtain a from exist …` / `$P` |
 | `definition/have_by_*.lit` | Preimage / Replacement | `have by fn_preimage:` / `replacement_axiom:` |
+| [definition/field_function_preimage.lit](definition/field_function_preimage.lit) | Preimage of a checked callable field | Retain `ops.op` as the application head and preserve source, arity and guard checks |
 | `definition/have_fn_*.lit` | Define named functions | `have fn … =` / `by cases` / `by induc` / `by exist!` |
 | `definition/def_algo.lit` | Algo fn + executable cases | `algo f(x R) R by cases:` … |
 | [command/eval_store_result.lit](command/eval_store_result.lit) | Compute and publish the result equality | `eval sum(0,3,flag)` stores `sum(0,3,flag)=3` for later proof; failure rolls back |
@@ -153,3 +154,14 @@ shape, missing premises, selected-fact failure and transaction rollback are
 covered by `src/execute/execute_by_stmt/builtin_thm/tests.rs`.
 
 The internal [finite-set induction regression](../_internal/regression/finite_set_induction.lit) proves the mathematical principle through ordinary induction on cardinality. Its original empty-set and fresh-insertion inputs are explicit hypotheses; singleton removal and reconstruction provide the checked successor step, followed by the concrete {1,2} replay. It does not reintroduce the removed finite-set induction syntax.
+
+## Witness Detailed evidence
+
+The [witness evidence tracer](witness/witness_detailed_evidence.lit) checks an
+atomic predicate with a local proof, dependent witness types, nonempty-set
+membership, explicit unique witnesses, and a real function-space member.
+Detailed retains the actual successful argument/WD/type/proof/body checks,
+and the actual nonempty failure stage and child. Normal and execution verdicts
+are unchanged; local_env remains omitted. The [source-owned note](experience/problem_notes/witness-detailed-evidence-2026-10-05.md)
+records the strict file gate, focused tests and deliberate exclusion of the
+legacy wrong-witness function-space shortcut.

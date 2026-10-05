@@ -12,6 +12,13 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    FloorMonotone(super::rounding_order::FloorMonotoneProof),
+    CeilMonotone(super::rounding_order::CeilMonotoneProof),
+    ComplexTriangle(super::complex_triangle::ComplexTriangleProof),
+    FiniteSetSumTriangle(super::finite_sum_triangle::FiniteSetSumTriangleProof),
+    ComplexReverseTriangle(super::complex_triangle::ComplexReverseTriangleProof),
+    LcmCommonMultipleBound(super::lcm_order::LcmCommonMultipleBoundProof),
+
     ClosedSubtractionBound(LessEqualClosedSubtractionBoundBuiltinRuleProof),
     ComplexModulusNonnegative,
     // Converse order, citing an existing opposite-direction comparison.
@@ -516,6 +523,10 @@ impl Runtime {
             }
         }
 
+        if let Some(proof)=self.search_rounding_order(fact,verify_state)? { return Ok(Some(proof)); }
+        if let Some(proof)=super::complex_triangle::search_complex_triangle(fact) { return Ok(Some(proof)); }
+        if let Some(proof)=super::finite_sum_triangle::search_finite_sum_triangle(fact) { return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FiniteSetSumTriangle(proof))); }
+        if let Some(proof)=self.search_lcm_common_multiple_bound(fact,verify_state)? { return Ok(Some(LessEqualFactSearchProofByBuiltinRule::LcmCommonMultipleBound(proof))); }
         // Premise-producing / shape rules consume the builtin-rule budget.
         let child_state = verify_state.clone();
 

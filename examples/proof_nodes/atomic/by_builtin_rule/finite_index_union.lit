@@ -1,0 +1,18 @@
+# Before: this exact input was rejected at proof search.
+# forall I nonempty_set,X set,A fn(idx I)power_set(X):
+#     $is_finite_set(I)
+#     forall k I:
+#         $is_finite_set(A(k))
+#     =>:
+#         $is_finite_set(index_union(I,X,A))
+
+# Now (verified in strict mode): same premises and conclusion.
+forall I nonempty_set,X set,A fn(idx I)power_set(X):
+    $is_finite_set(I)
+    forall k I:
+        $is_finite_set(A(k))
+    =>:
+        $is_finite_set(index_union(I,X,A))
+
+# Boundary controls are executed in tests/unit/execute/thirteen_builtin_rules/tests.rs.
+# Gate: CARGO_TARGET_DIR=tmp/2026-10-04/thirteen-builtin-rules/target cargo run --release --offline --bin litex -- -strict -f examples/proof_nodes/atomic/by_builtin_rule/finite_index_union.lit

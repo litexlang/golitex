@@ -1,0 +1,140 @@
+# Complete integer-bound author routes using existing local rules.
+# Bare singleton goals are legacy-positive/current search misses;
+# the proof publishes the missing weak bound before antisymmetry.
+# Real-domain and missing-bound counterexamples execute separately in the audit.
+
+claim:
+    ? forall x,n Z:
+        n<=x
+        x<n+1
+        =>:
+            x=n
+    x<=n
+    x=n
+
+forall x,n Z:
+    n<=x
+    x<n+1
+    =>:
+        x=n
+
+claim:
+    ? forall x,n Z:
+        n<x
+        x<=n+1
+        =>:
+            x=n+1
+    n+1<=x
+    x=n+1
+
+forall x,n Z:
+    n<x
+    x<=n+1
+    =>:
+        x=n+1
+
+claim:
+    ? forall x,n N+:
+        n<=x
+        x<n+1
+        =>:
+            x=n
+    x<=n
+    x=n
+
+forall x,n N+:
+    n<=x
+    x<n+1
+    =>:
+        x=n
+
+claim:
+    ? forall x,n N+:
+        n<x
+        x<=n+1
+        =>:
+            x=n+1
+    n+1<=x
+    x=n+1
+
+forall x,n N+:
+    n<x
+    x<=n+1
+    =>:
+        x=n+1
+
+claim:
+    ? forall x Z:
+        0<=x
+        x<1
+        =>:
+            x=0
+    x<=0
+    x=0
+
+forall x Z:
+    0<=x
+    x<1
+    =>:
+        x=0
+
+claim:
+    ? forall x Z:
+        -3<=x
+        x<-2
+        =>:
+            x=-3
+    x<=-3
+    x=-3
+
+forall x Z:
+    -3<=x
+    x<-2
+    =>:
+        x=-3
+
+claim:
+    ? forall x,n Z:
+        x>=n
+        n+1>x
+        =>:
+            x=n
+    x<n+1
+    x<=n
+    x=n
+
+forall x,n Z:
+    x>=n
+    n+1>x
+    =>:
+        x=n
+
+claim:
+    ? forall x,n Z:
+        x>n
+        n+1>=x
+        =>:
+            x=n+1
+    n<x
+    n+1<=x
+    x=n+1
+
+forall x,n Z:
+    x>n
+    n+1>=x
+    =>:
+        x=n+1
+
+claim:
+    ? forall a,b Z:
+        a<1+b
+        =>:
+            a<=b
+    1+b=b+1
+    a<b+1
+    a<=b
+
+forall a,b Z:
+    a<1+b
+    =>:
+        a<=b

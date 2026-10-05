@@ -1,0 +1,20 @@
+# Before: the exact mathematical target failed proof search.
+# forall A,B,K set:
+#     $is_cart(K)
+#     cart_dim(K)=2
+#     proj(K,1)=A
+#     proj(K,2)=B
+#     =>:
+#         K=cart(A,B)
+
+# Now (verified in strict mode): same mathematical target and premises.
+forall A,B,K set:
+    $is_cart(K)
+    cart_dim(K)=2
+    proj(K,1)=A
+    proj(K,2)=B
+    =>:
+        K=cart(A,B)
+
+# Executable boundary controls: tests/unit/execute/thirteen_builtin_rules/tests.rs.
+# Gate: CARGO_TARGET_DIR=tmp/2026-10-04/thirteen-builtin-rules/target cargo run --release --offline --bin litex -- -strict -f examples/proof_nodes/equal/by_builtin_rule/cart_reconstruction.lit

@@ -481,10 +481,14 @@ have fn geometric_term(first, ratio R, n N+) R = first * ratio^(n - 1)
 have fn permutation_count(n N) N = factorial(n)
 
 arithmetic_term(2, 3, 1) = 2
-forall first, difference R, n N+:
+claim:
+    ? forall first, difference R, n N+:
+        arithmetic_term(first, difference, n + 1) = first + ((n + 1) - 1) * difference
+        arithmetic_term(first, difference, n) = first + (n - 1) * difference
+        arithmetic_term(first, difference, n + 1) - arithmetic_term(first, difference, n) = (first + ((n + 1) - 1) * difference) - (first + (n - 1) * difference) = difference
+    n + 1 $in N+
     arithmetic_term(first, difference, n + 1) = first + ((n + 1) - 1) * difference
     arithmetic_term(first, difference, n) = first + (n - 1) * difference
-    arithmetic_term(first, difference, n + 1) - arithmetic_term(first, difference, n) = (first + ((n + 1) - 1) * difference) - (first + (n - 1) * difference) = difference
 
 # 5. Coordinate geometry: the 3-4-5 triangle is a distance calculation.
 
@@ -544,7 +548,11 @@ forall a R, h R+:
 # Application: read one concrete average rate and the stationary point of the
 # supplied quadratic derivative formula.
 
-average_change_rate(circumference, 5, 2) = (circumference(5 + 2) - circumference(5)) / 2 = 2 * pi
+claim:
+    ? average_change_rate(circumference, 5, 2) = (circumference(5 + 2) - circumference(5)) / 2 = 2 * pi
+    circumference(5 + 2) = 2 * pi * (5 + 2) = 14 * pi
+    circumference(5) = 2 * pi * 5 = 10 * pi
+    (circumference(5 + 2) - circumference(5)) / 2 = (14 * pi - 10 * pi) / 2 = 2 * pi
 
 quadratic_model(3) = -4
 

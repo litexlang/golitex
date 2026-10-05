@@ -68,9 +68,24 @@ pub struct FiniteSetProductRangeBridgeBuiltinRuleProof {
 }
 pub struct FiniteSetSumDisjointUnionBuiltinRuleProof {
     pub premises: Vec<VerifyFactResult>,
+    pub callbacks: Vec<FinitePartitionCallbackAgreementProof>,
 }
 pub struct FiniteSetProductDisjointUnionBuiltinRuleProof {
     pub premises: Vec<VerifyFactResult>,
+    pub callbacks: Vec<FinitePartitionCallbackAgreementProof>,
+}
+pub enum FinitePartitionCallbackAgreementProof {
+    SameFunction(FinitePartitionSameFunctionProof),
+    LiteralRestriction(FinitePartitionLiteralRestrictionProof),
+    EqualFunctions(FinitePartitionEqualFunctionsProof),
+    Pointwise(AggregatePointwiseProof),
+}
+// Structural cases use no semantic premise: the enclosing equality's WD owns
+// the actual function domains and the anonymous body's application carrier.
+pub struct FinitePartitionSameFunctionProof {}
+pub struct FinitePartitionLiteralRestrictionProof {}
+pub struct FinitePartitionEqualFunctionsProof {
+    pub equality: VerifyFactResult,
 }
 pub struct FiniteSetProductFreshInsertionProof {
     pub premises: Vec<VerifyFactResult>,

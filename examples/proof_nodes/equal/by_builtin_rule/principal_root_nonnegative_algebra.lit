@@ -1,0 +1,15 @@
+# Principal roots: product factors may be zero; quotient denominator stays positive.
+forall a,b R:
+    0<=a
+    0<=b
+    =>:
+        sqrt(a*b)=sqrt(a)*sqrt(b)
+forall a,b R:
+    0<=a
+    0<b
+    =>:
+        sqrt(a/b)=sqrt(a)/sqrt(b)
+forall b R:
+    0<=b
+    =>:
+        sqrt(0*b)=sqrt(0)*sqrt(b)
