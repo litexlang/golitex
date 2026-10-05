@@ -1,29 +1,30 @@
-# B10: explicit named theorem application verifies in ordinary mode.
-# Opaque trust background remains; automatic forall discovery is a separate gap.
-# See plan/迁移的plan/和example有关.md.
-# Anonymous-function binders are alpha-equivalent in known-fact lookup and
-# `forall`/theorem instantiation.
+# Alpha-renaming checks under explicit predicate assumptions.
 abstract_prop alpha_assumption(f)
 abstract_prop alpha_conclusion(f)
 
-trust $alpha_assumption(fn(k R) R {k})
-$alpha_assumption(fn(i1 R) R {i1})
+forall:
+    $alpha_assumption(fn(k R) R {k})
+    =>:
+        $alpha_assumption(fn(i1 R) R {i1})
 
 thm alpha_theorem:
     ? forall a R:
-        $alpha_assumption(fn(k R) R {k + a})
+        $alpha_assumption(fn(k R) R {k+a})
+        $alpha_conclusion(fn(k R) R {k+a})
         =>:
-            $alpha_conclusion(fn(k R) R {k + a})
-    trust $alpha_conclusion(fn(k R) R {k + a})
+            $alpha_conclusion(fn(j R) R {j+a})
 
-# This stored `forall` must instantiate `k` as the differently named `i1`.
 claim:
     ? forall a R:
-        $alpha_assumption(fn(k R) R {k + a})
+        $alpha_assumption(fn(k R) R {k+a})
+        $alpha_conclusion(fn(k R) R {k+a})
         =>:
-            $alpha_conclusion(fn(k R) R {k + a})
-    trust $alpha_conclusion(fn(k R) R {k + a})
+            $alpha_conclusion(fn(j R) R {j+a})
 
-trust $alpha_assumption(fn(i1 R) R {i1 + 1})
-by thm alpha_theorem(1) => $alpha_conclusion(fn(i1 R) R {i1 + 1})
-$alpha_conclusion(fn(j R) R {j + 1})
+claim:
+    ? forall:
+        $alpha_assumption(fn(i1 R) R {i1+1})
+        $alpha_conclusion(fn(k R) R {k+1})
+        =>:
+            $alpha_conclusion(fn(j R) R {j+1})
+    by thm alpha_theorem(1) => $alpha_conclusion(fn(i1 R) R {i1+1})

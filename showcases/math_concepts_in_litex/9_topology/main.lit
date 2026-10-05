@@ -359,10 +359,12 @@ thm continuous_image_of_compact_is_compact:
                     obtain source_open from exist source_source_open fn_range(fn(index J) open_sets_X {pullback_cover(index)}) st {source_point $in source_source_open}
                     have by fn_preimage: selected_index from source_open $in fn_range(fn(index J) open_sets_X {pullback_cover(index)})
                     selected_index $in J
+                    selected_index $in Index
                     source_open = fn(index J) open_sets_X {pullback_cover(index)}(selected_index)
                     fn(index J) open_sets_X {pullback_cover(index)}(selected_index) = pullback_cover(selected_index)
                     source_point $in pullback_cover(selected_index)
                     pullback_cover(selected_index) = {x X: f(x) $in cover(selected_index)}
+                    source_point $in {x X: f(x) $in cover(selected_index)}
                     f(source_point) $in cover(selected_index)
                     fn(index J) open_sets_Y {cover(index)}(selected_index) $in fn_range(fn(index J) open_sets_Y {cover(index)})
                     fn(index J) open_sets_Y {cover(index)}(selected_index) = cover(selected_index)
@@ -374,4 +376,6 @@ thm continuous_image_of_compact_is_compact:
                     image_point $in family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
                 by def:
                     ? fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+    by def:
+        ? fn_range(fn(x K) Y {f(x)}) $subset Y
     by def $is_compact_subset(Y, open_sets_Y, fn_range(fn(x K) Y {f(x)}))

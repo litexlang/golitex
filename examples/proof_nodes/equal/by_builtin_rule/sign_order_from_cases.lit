@@ -1,0 +1,72 @@
+claim:
+    ? forall x R:
+        -1<=sign(x)
+    0 $in R
+    by cases:
+        ? -1<=sign(x)
+        case x<0:
+            sign(x)=-1
+            -1<=sign(x)
+        case x=0:
+            sign(x)=0
+            -1<=sign(x)
+        case x>0:
+            0<x
+            sign(x)=1
+            -1<=sign(x)
+forall x R:
+    -1<=sign(x)
+claim:
+    ? forall x R:
+        sign(x)<=1
+    0 $in R
+    by cases:
+        ? sign(x)<=1
+        case x<0:
+            sign(x)=-1
+            sign(x)<=1
+        case x=0:
+            sign(x)=0
+            sign(x)<=1
+        case x>0:
+            0<x
+            sign(x)=1
+            sign(x)<=1
+forall x R:
+    sign(x)<=1
+claim:
+    ? forall a,b R:
+        a<=b
+        =>:
+            sign(a)<=sign(b)
+    0 $in R
+    by cases:
+        ? sign(a)<=sign(b)
+        case a<0:
+            sign(a)=-1
+            -1<=sign(b)
+            sign(a)<=sign(b)
+        case a=0:
+            sign(a)=0
+            0<=b
+            by cases:
+                ? sign(a)<=sign(b)
+                case b<0:
+                    impossible 0<=b
+                case b=0:
+                    sign(b)=0
+                    sign(a)<=sign(b)
+                case b>0:
+                    0<b
+                    sign(b)=1
+                    sign(a)<=sign(b)
+        case a>0:
+            0<a
+            0<b
+            sign(a)=1
+            sign(b)=1
+            sign(a)<=sign(b)
+forall a,b R:
+    a<=b
+    =>:
+        sign(a)<=sign(b)

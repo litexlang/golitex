@@ -24,6 +24,21 @@ Default CLI / test emit uses **Normal**. **Compact** and **Detailed** are
 implemented under `project_compact` / `project_detailed`
 (`project_stmt_*` / `project_run_*` / `emit_run_*`).
 
+Detailed atomic builtin rewrites retain their variant and checked payload:
+closed-numeric and known-equality substitution include `rewritten_fact`,
+`cited_equal_fact_ids`, and `proof_of_rewritten_fact`; function unfolding
+includes `unfold_equal_proofs`; order duality includes `alternate_fact` and
+`proof_of_alternate_fact`. For `n=16 => $prime(n+1)`, this exposes the actual
+equality citation and residual `$prime(16+1)` calculation. This is a projection
+of existing evidence; see `atomic/by_builtin_rewrite/closed_numeric_prime.lit`.
+
+Detailed predicate registrations identify `property` (`reflexive`, `symmetric`,
+or `transitive`) and retain the existing `prop` and checked `forall_proof`.
+Rejected registrations expose the actual shape, missing-definition, arity,
+or forall-proof stage under `failure`, including its existing child result.
+The retained local environment is omitted as elsewhere in Detailed output.
+See `examples/stmt_nodes/register/registered_property_evidence.lit`.
+
 The native scalar result-type leaf is `InFact.NativeScalarCodomain`.
 Normal output explains the checked native codomain (for example `Z` for
 `sign(a) $in R`); Detailed output records `rule: "NativeScalarCodomain"` and
@@ -387,6 +402,14 @@ Named `have fn` Detailed results expose `anonymous_fn_well_defined` followed
 by `fn_set_well_defined` and `store_and_infer`; failures retain the failed WD
 stage.
 
+Detailed equality `fn_application_literal_beta` references the enclosing
+equality WD using `parent_well_defined_side` (`left` or `right`), then retains
+`expanded_body`, `residual_equal` and the success-only `residual_proof`. It does
+not fabricate a second WD certificate at the residual's restricted permission.
+Residual stored-equality paths preserve `cite_fact_id` and endpoints; readable
+`cite` text remains conditional on the source fact being visible in the live
+runtime when projected.
+
 ## Native theorem and calculation evidence
 
 Reserved builtin calls project `builtin_theorem` identity, arguments, ordered
@@ -668,3 +691,26 @@ Detailed `FnApplicationInStandardSuperset` evidence records `target_set` and `si
 Detailed `HomogeneousTupleCoordinate` evidence records `shape` and one `carrier_equals` proof per Cartesian factor. The shape includes its stored membership/signature and carrier/subject equality provenance. The enclosing fact WD owns index positivity and the upper bound; the leaf only reads stored shape/equality facts.
 
 Detailed `TupleIndexUpperBound` records `shape` and `source_bound`; the latter includes the stored inequality and its argument equality evidence. The read-only leaf transports a stored bound to the certified tuple dimension and retains both sources.
+
+Detailed `ModNestedDivisibleAbsorption` records `proof_of_requirement_facts`,
+including the actual multiplier-in-Z verification and stored citation when
+applicable. Enclosing equality WD still owns integer/nonzero modulus evidence.
+The [local guard regression](../../examples/proof_nodes/equal/by_builtin_rule/nested_mod_integer_multiple.lit)
+checks fractional-multiplier rejection and preserves signed integer multiples.
+
+
+Detailed atomic witness success projects the already checked predicate arguments,
+projected existential, ambient WD/type results, local proof steps and body/unique
+obligations in execution order. Nonempty witness failure projects exactly the
+owned ObjWd, SetWd, ProofBody or Membership result; ProofBody retains its step
+index. Neither exposes local_env. The [witness evidence tracer](../../examples/stmt_nodes/witness/witness_detailed_evidence.lit)
+and [focused evidence note](../../examples/stmt_nodes/experience/problem_notes/witness-detailed-evidence-2026-10-05.md)
+record the local consumer repair; execution and Normal contracts stay unchanged.
+
+
+Detailed ProductComponentNonzero projects `product_nonzero_proof` from the
+verifier-owned AtomicExceptEqualityFactKnownProof: its actual fact and selected
+known-source searched proof. The [dedicated reflection tracer](../../examples/proof_nodes/atomic/by_builtin_rule/zero_nonzero_reflection_evidence.lit)
+and [source evidence note](../../examples/proof_nodes/experience/problem_notes/zero-nonzero-reflection-2026-10-05.md)
+record exact source-ID tests in English and Chinese. Normal projection and
+locale key maps are unchanged; independent certificate replay is unverified.

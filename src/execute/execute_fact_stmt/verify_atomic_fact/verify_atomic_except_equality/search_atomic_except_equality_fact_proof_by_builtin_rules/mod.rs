@@ -1,3 +1,8 @@
+pub mod rounding_order;
+pub mod complex_triangle;
+pub mod finite_sum_triangle;
+pub mod finite_index_union;
+pub mod lcm_order;
 pub mod greater;
 pub mod greater_equal;
 pub mod in_fact;

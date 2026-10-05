@@ -1,7 +1,7 @@
 use super::closed_subtraction_bound::ClosedSubtractionBoundCertificate;
 use super::order_complement::FromKnownOrderComplementBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
-use crate::ast::fact::GreaterEqualFact;
+use crate::ast::fact::{AtomicFact, Fact, GreaterEqualFact};
 use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, Sub};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::is_number_value;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -13,6 +13,7 @@ use crate::execute::execute_fact_stmt::VerifyFactResult;
 
 // Builtin rules for `a >= b`.
 pub enum GreaterEqualFactSearchProofByBuiltinRule {
+    SumOfNonnegatives(GreaterEqualSumOfNonnegativesBuiltinRuleProof),
     ClosedSubtractionBound(GreaterEqualClosedSubtractionBoundBuiltinRuleProof),
     ComplexModulusNonnegative,
     // Converse order, citing an existing opposite-direction comparison.
@@ -49,6 +50,10 @@ pub enum GreaterEqualFactSearchProofByBuiltinRule {
     OrderFlipMulMinusOne(
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_flip_mul_minus_one::OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof,
     ),
+}
+
+pub struct GreaterEqualSumOfNonnegativesBuiltinRuleProof {
+    pub constructor_tree: NonnegativeSumTree,
 }
 
 pub struct GreaterEqualClosedSubtractionBoundBuiltinRuleProof {
@@ -88,6 +93,12 @@ pub struct FiniteSetSizeAtLeastOneBuiltinRuleProof {
 
 pub struct FromKnownLessEqualBuiltinRuleProof {
     pub premise_proof: AtomicExceptEqualityFactKnownProof,
+}
+
+// Syntax descent does not reopen a builtin stage for each nested sum.
+pub enum NonnegativeSumTree {
+    Leaf(VerifyFactResult),
+    Add { left: Box<Self>, right: Box<Self> },
 }
 
 impl Runtime {
@@ -132,6 +143,17 @@ impl Runtime {
             return Ok(Some(
                 GreaterEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(proof),
             ));
+        }
+
+        // The >= orientation must be available at the builtin ceiling too:
+        // fn(t Z: t >= 0) N applied to n+1 may need this during predicate WD.
+        // Premises keep the dispatcher's restricted state; no converse strategy.
+        if is_number_value(&fact.right, "0") && matches!(fact.left, Obj::ArithmeticOperator(ArithmeticOperator::Add(_))) {
+            if let Some(constructor_tree) = self.nonnegative_sum_tree(&fact.left, &fact.right, verify_state)? {
+                return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(
+                    GreaterEqualSumOfNonnegativesBuiltinRuleProof { constructor_tree },
+                )));
+            }
         }
 
         // A — shape: goals ending at 0
@@ -198,6 +220,22 @@ impl Runtime {
         ))
     }
 
+    fn nonnegative_sum_tree(
+        &mut self, expression: &Obj, zero: &Obj, state: VerifyState,
+    ) -> RuntimeResult<Option<NonnegativeSumTree>> {
+        if let Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) = expression {
+            let Some(left) = self.nonnegative_sum_tree(&add.left, zero, state)? else { return Ok(None); };
+            let Some(right) = self.nonnegative_sum_tree(&add.right, zero, state)? else { return Ok(None); };
+            return Ok(Some(NonnegativeSumTree::Add { left: Box::new(left), right: Box::new(right) }));
+        }
+        let goal = Fact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(), left: expression.clone(),
+            right: zero.clone(), line_file: None,
+        }));
+        let proof = self.verify_builtin_rule_premise(&goal, state)?;
+        Ok((!proof.is_failed()).then_some(NonnegativeSumTree::Leaf(proof)))
+    }
+
 
 }
 
@@ -209,3 +247,7 @@ fn is_one_obj(obj: &Obj) -> bool {
         })) if normalized_value == "1"
     )
 }
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/nonnegative_sum_domain/tests.rs"]
+mod tests;

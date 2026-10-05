@@ -1,0 +1,17 @@
+# Indexed-family member consequences through existing function fields.
+# Run: litex -strict -f examples/infer/atomic/field_indexed_family.lit
+# Before (after carrier/source WD): both field applications were skipped:
+# forall holder &FamilyHolder,x index_union(N+,R,holder.fiber):
+#     exist slot N+ st {x $in holder.fiber(slot)}
+# forall holder &FamilyHolder,x index_intersect(N+,R,holder.fiber),k N+:
+#     x $in holder.fiber(k)
+# Now: preserve the receiver and field in the inferred application.
+# Wrong receivers and indices outside the stated intersection remain rejected.
+
+struct FamilyHolder:
+    fiber fn(idx N+) power_set(R)
+    tag N
+forall holder &FamilyHolder,x index_union(N+,R,holder.fiber):
+    exist slot N+ st {x $in holder.fiber(slot)}
+forall holder &FamilyHolder,x index_intersect(N+,R,holder.fiber),k N+:
+    x $in holder.fiber(k)

@@ -1,3 +1,10 @@
+pub mod by_range_size;
+pub mod by_euclidean_remainder;
+pub mod by_factorial_divisibility;
+pub mod by_cart_reconstruction;
+pub mod by_finite_set_product_reindex;
+pub mod by_finite_set_reduce_reindex;
+pub(in crate::execute::execute_fact_stmt::verify_atomic_fact) mod helper;
 pub mod by_integer_range_builder;
 pub mod by_scalar_identities;
 pub mod by_elementary_arithmetic;

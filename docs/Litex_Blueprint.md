@@ -361,6 +361,27 @@ Here, “verification kernel” means the project's verification and execution i
 </details>
 
 <details>
+<summary><strong>How many objects, statements, and builtin verification paths exist today? (2026-10-04 snapshot)</strong></summary>
+
+This inventory counts Rust enum variants at source commit `2ecde77d0`. The rows use different units and cannot be added into one “total number of builtin theorems.”
+
+| Implementation layer | Count | Unit counted |
+| --- | ---: | --- |
+| `Obj` | 17 top-level families; 91 expanded forms | AST categories for objects and expressions |
+| `Stmt` | 9 top-level families; 50 expanded forms | AST categories for facts, definitions, proof commands, and other statements; `ByStmt` has 10 forms and `ReleaseAndExpandStmt` has 7 |
+| `Fact` / `AtomicFact` | 10 / 46 | Fact forms / atomic-relation forms |
+| Builtin rules | **551** | Nonempty terminal proof-result branches: 267 for equality, 259 for other atomic facts, 16 for disjunctions, and 9 for existentials |
+| Builtin strategies | **128** | Strategy-result branches: 8 for equality and 120 for other atomic facts |
+| Builtin rewrites / builtin predicate-definition paths | 5 / 11 | Separately counted result branches, excluded from the rule count above |
+| Reserved named builtin theorems | 29 | Distinct names callable through the general `release thm` interface and related entrypoints |
+
+“Expanded” has a fixed boundary: for `Obj`, it opens the immediate mathematical-expression families while keeping names, function applications, and template instances as three generic forms; for `Stmt`, it opens the first-level statement families and `DefineObjStmt`, but does not expand the contained `Fact`. Thus 91 and 50 are AST-form counts, not 91 builtin mathematical objects or 50 theorems.
+
+These rule branches are organized around concrete mathematical interfaces, rather than an arbitrary collection of proof tricks. Each counted branch has a named proof-result shape aimed at an object operation, the logical structure of a fact or statement, or a familiar mathematical property; it need not directly unfold a source definition. In the `0 <= x + y` example above, addition is an object operation and `<=` is an atomic fact; the `SumOfNonnegatives` result records separate evidence for the two nonnegative premises. `UnionCommutative` represents a familiar property of set union, while `EqualityWitnessFromMembership` uses a known membership fact to supply a witness for an existential statement. Each kind of path has a goal shape and applicability conditions, and strategies combine checks within specified permissions. This is implementation work behind the short source the author writes. The numbers describe the structural scale of these interfaces and evidence branches; they do not establish that every branch is reachable in the current build, correct, or independently rechecked by Lean. Those questions require path-by-path review.
+
+</details>
+
+<details>
 <summary><strong>Why can Litex maintain a fact table? Could Lean be extended to do the same?</strong></summary>
 
 Lean can extend automation; `simp` and `grind` already use known facts. Litex makes a more specific choice: bounded local checking by fact shape is the default behavior of ordinary statements, and its proposition interface stays within a range that is easier to index. For example, it does not support `forall p prop`, which quantifies over arbitrary propositions; its usual goals have named predicates or atomic relations such as membership, equality, and order.

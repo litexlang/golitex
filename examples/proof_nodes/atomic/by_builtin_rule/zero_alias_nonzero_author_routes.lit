@@ -1,0 +1,31 @@
+# Explicit zero-alias transport before existing product-component reflection.
+
+claim:
+    ? forall a,b,z R:
+        z=0
+        a*b!=z
+        =>:
+            a!=0
+    a*b!=0
+    a!=0
+
+forall a,b,z R:
+    z=0
+    a*b!=z
+    =>:
+        a!=0
+
+claim:
+    ? forall a,b,z C:
+        z=0
+        a*b!=z
+        =>:
+            a!=0
+    a*b!=0
+    a!=0
+
+forall a,b,z C:
+    z=0
+    a*b!=z
+    =>:
+        a!=0

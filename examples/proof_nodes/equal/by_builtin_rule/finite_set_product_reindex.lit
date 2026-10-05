@@ -1,0 +1,14 @@
+# Tracer: finite_set_product_reindex
+# Before (rejected at search_proof):
+# forall X,Y finite_set,g fn(y Y)X,f fn(x X)R:
+#     $bijective(Y,X,g)
+#     =>:
+#         finite_set_product(X,f)=finite_set_product(Y,fn(y Y)R {f(g(y))})
+#
+# Now (verified in strict mode):
+forall X,Y finite_set,g fn(y Y)X,f fn(x X)R:
+    $bijective(Y,X,g)
+    =>:
+        finite_set_product(X,f)=finite_set_product(Y,fn(y Y)R {f(g(y))})
+# Boundary: missing/wrong bijection, wrong pullback, wrong carrier must reject.
+# Evidence: $CARGO_TARGET_DIR/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/finite_set_product_reindex.lit

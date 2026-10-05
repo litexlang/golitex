@@ -46,8 +46,21 @@ The [real constructor builtin](atomic/by_builtin_rule/real_arithmetic_constructo
 composes real function-return leaves through field expressions and integer
 powers during comparison goal WD. Its typed tree preserves terminal citations,
 integer exponents and the enclosing domain evidence; Direct remains restricted.
+The [Cartesian function WD tracer](../wd/real_cart_function_arithmetic.lit)
+checks nested absolute-value and quotient definitions. Terminal carrier proofs
+are success-only truth evidence; function argument WD remains on the parent
+verification stage instead of being replayed at the lower terminal ceiling.
 `real_arithmetic_constructor_closure` tests retain wrong carriers/refinements,
 zero divisors, bad exponents, partial-function domains, ceilings and rollback.
+The [N/Z constructor builtin](atomic/by_builtin_rule/discrete_arithmetic_constructor_closure.lit)
+composes natural/integer function returns after the enclosing object WD proof
+has checked every call domain. Carrier terminals retain the restricted search
+ceiling and signature citations; natural subtraction/negation and nondecreasing
+recursive calls remain rejected. The Pascal recurrence is a maintained tracer.
+The [nonnegative-sum domain tracer](atomic/by_builtin_rule/nonnegative_sum_domain.lit)
+keeps the >= orientation available during restricted function-domain checks,
+including nested sums, without reopening a converse strategy.
+
 The [stored numeric superset](atomic/by_known_special_property/standard_numeric_superset.lit)
 route cites an existing membership under the intrinsic inclusion table without
 fresh premise search. `known_numeric_carrier` tests retain direction, sign,
@@ -97,6 +110,20 @@ and uses no trust or additional assumptions.
 keeps symbolic arguments when the outer body already equals the requested
 target. Both the call and the selected body's domain remain checked; the
 function-body tests retain wrong-value and missing-guard rejection controls.
+
+[Restricted literal beta](equal/by_object_definition/by_fn_application/restricted_literal_beta.lit)
+uses the parent equality's checked WD for the actual anonymous-function
+application. Residual truth keeps the definition-premise permissions; named
+aliases still check the selected body separately. Both equality orientations
+and missing guard/carrier, wrong arity/value, and permission boundaries have
+executable function-body regressions.
+
+[Nested-function existential instantiation](exist/by_known_forall/nested_function_alpha.lit)
+starts from a witnessed theorem, infers a free callback beneath a literal's
+local binder, and preserves whole nested alpha equality when reusing or
+releasing its existential conclusion. Local binder capture, changed body,
+guards, arity, carriers, witness kind and missing theorem premises remain
+checked by the focused `forall_exist_instantiation_tests` regressions.
 
 | What the example demonstrates | Runnable file |
 | --- | --- |
@@ -567,3 +594,128 @@ The [stored function return superset](atomic/by_known_special_property/function_
 [Homogeneous Cartesian coordinates](atomic/by_known_special_property/homogeneous_cart_coordinate.lit) derives variable-index coordinate membership when every factor is known equal to the target carrier. It preserves the existing indexed-object WD (positive integer index within the tuple dimension), shape provenance and all factor equality proofs. It does not infer a common superset for heterogeneous factors or manufacture symbolic tuple constructors.
 
 [Known Cartesian index upper bounds](atomic/by_known_special_property/known_cart_index_upper_bound.lit) transports a stored upper bound through a known tuple shape. It handles Cartesian aliases and guarded function codomains without opening forall search; index positivity and integrality remain separate WD obligations.
+
+## Local finite constructors and arithmetic rules (2026-10-05)
+
+The thirteen-rule acceptance suite collects fifteen independent leaves. Each
+tracer retains the formerly rejected input in comments and its active strict
+acceptance, with separately executed rejection controls in
+`tests/unit/execute/thirteen_builtin_rules/tests.rs` and `finite_set_reindex`.
+
+- [FiniteSetProductReindex](equal/by_builtin_rule/finite_set_product_reindex.lit)
+- [FiniteSetReduceReindex](equal/by_builtin_rule/finite_set_reduce_reindex.lit)
+- [FiniteSetSumDisjointUnion](equal/by_builtin_rule/finite_set_sum_disjoint_union.lit)
+- [FiniteSetSumTriangle](atomic/by_builtin_rule/finite_set_sum_triangle.lit)
+- [FiniteIndexUnion](atomic/by_builtin_rule/finite_index_union.lit)
+- [FloorMonotone](atomic/by_builtin_rule/floor_monotone.lit)
+- [CeilMonotone](atomic/by_builtin_rule/ceil_monotone.lit)
+- [EuclideanRemainder](equal/by_builtin_rule/euclidean_remainder.lit)
+- [FactorialDivisibility](equal/by_builtin_rule/factorial_divisibility.lit)
+- [ComplexTriangle](atomic/by_builtin_rule/complex_triangle.lit)
+- [ComplexReverseTriangle](atomic/by_builtin_rule/complex_reverse_triangle.lit)
+- [LcmCommonMultipleBound](atomic/by_builtin_rule/lcm_common_multiple_bound.lit)
+- [CartReconstruction](equal/by_builtin_rule/cart_reconstruction.lit)
+- [RangeSize](equal/by_builtin_rule/range_size.lit)
+- [ClosedRangeSize](equal/by_builtin_rule/closed_range_size.lit)
+
+Finite product and unordered-fold reindexing retain the checked bijection;
+fold WD owns associativity/commutativity and the rule retains operation/seed
+matches. Disjoint finite partitioning certifies each callback restriction,
+with scoped pointwise evidence when needed. Finite indexed union retains both
+index finiteness and the exact stored universal fibre certificate with source
+IDs and alpha renamings. No wider premise search or new runtime state is used.
+The targeted collector requires exit0, root success true and no session error.
+
+Nested modulus integer-multiple reduction has a dedicated
+[tracer](equal/by_builtin_rule/nested_mod_integer_multiple.lit) and
+[solved guard note](experience/problem_notes/nested-mod-integer-guard-2026-10-05.md).
+The rule retains the actual multiplier-in-Z proof; product/modulus WD alone
+does not certify divisibility. Nonzero signed integer moduli remain legal.
+
+The factorial migration audit retains complete checked author routes for
+[predecessor recurrence](equal/by_builtin_rule/factorial_predecessor_from_successor.lit)
+and [divisibility after a proved positive/nonzero theorem](equal/by_builtin_rule/factorial_divisibility_from_positive.lit).
+These use existing rules; the bare predecessor/nonzero short forms and the
+separate monotonicity/lcm findings are classified in the
+[source-owned record](../test_objs/experience/problem_notes/legacy-factorial-gcd-lcm-audit-2026-10-05.md).
+
+
+## Native exp/ln/sign author proofs (2026-10-05)
+
+Complete checked routes using current rules are retained for
+[injectivity](equal/by_builtin_rule/native_exp_ln_injectivity.lit),
+[exponential differences](equal/by_builtin_rule/native_exp_difference_from_sum.lit),
+[logarithm products](equal/by_builtin_rule/native_ln_product_from_exp.lit),
+[logarithm quotients](equal/by_builtin_rule/native_ln_quotient_from_exp.lit),
+[sign zero/nonzero](equal/by_builtin_rule/sign_zero_nonzero_from_magnitude.lit),
+and [sign bounds and weak order](equal/by_builtin_rule/sign_order_from_cases.lit).
+Each complete file passes strict verification. The
+[source-owned audit](../test_objs/experience/problem_notes/legacy-exp-sign-audit-2026-10-05.md)
+classifies automatic shortcuts separately from the two unimplemented native
+order/canonical-base candidates and the unresolved real-power domain.
+
+
+## Principal-root nonnegative algebra and known-equality routes
+
+[Nonnegative products and quotients](equal/by_builtin_rule/principal_root_nonnegative_algebra.lit)
+allow zero factors/numerators while keeping quotient denominators positive.
+The existing leaf family retains checked nonnegative or stronger positive
+premises. Six focused tests cover citations, search ceilings, false targets,
+illegal root inputs, and reuse; the
+[solved record](experience/problem_notes/principal-root-nonnegative-algebra-2026-10-05.md)
+retains the initial failed guard replacement.
+[Root equal-argument author proofs](equal/by_builtin_rule/principal_root_known_equality_author_routes.lit)
+and [positive integer-power author proofs](equal/by_builtin_rule/positive_integer_power_known_equality_author_routes.lit)
+show complete routes using checked scalar equalities and carrier facts.
+All three complete files pass strict verification.
+
+- `atomic/by_builtin_rule/in_family_union_from_member_alpha.lit`: actual member-set and element facts prove family-union membership when nested anonymous-function binders are renamed. Free function owners, complete signatures/bodies, guards and parent WD remain exact.
+
+- `atomic/by_builtin_rule/in_power_set_from_restricted_image.lit`: explicitly prove a restricted function image is a subset, then reuse that exact subset citation for power-set membership. Parent object WD and stored-path/alpha argument evidence remain visible; no new search permission.
+
+
+## Real-domain guards for forward square-sum rules
+
+The [guard tracer](equal/by_builtin_rule/square_sum_zero_real_guard.lit)
+requires checked real membership for both bases before zero-sum elimination
+or forward nonzero-sum reasoning. Complex cancellation counterexamples are
+rejected; the valid complex nonzero-sum-to-component disjunction remains
+available. Dedicated proof payloads and Detailed output retain actual real
+membership and sum/component citations.
+The [explicit nonzero OR proof](atomic/by_builtin_rule/square_sum_nonzero_from_cases.lit)
+checks the original real-domain goal by ordinary cases. Both complete files
+pass strict verification; the [solved record](experience/problem_notes/square-sum-real-domain-guards-2026-10-05.md)
+links the negative controls and frozen verification scope.
+
+
+## Explicit division/product author routes
+
+The [complete author examples](equal/by_builtin_rule/division_product_explicit_author_routes.lit)
+use existing arithmetic identities to prove and reuse both conversion directions
+over R/C/Q/Z, alongside checked alias, cancellation, and cross-product examples.
+The [source-owned audit note](experience/problem_notes/legacy-division-product-author-routes-2026-10-05.md)
+separates optional short-form automation from the still-open composite-divisor
+branch. The strict file passes; false controls reject and the valid open branch
+still fails, so no new builtin capability is claimed.
+
+
+## Integer singleton interval author routes
+
+The [nine complete author proofs](equal/by_builtin_rule/integer_singleton_interval_author_routes.lit)
+first publish the missing integer weak bound, then use existing known-bound
+antisymmetry and reuse the original full goal. The [source-owned note](experience/problem_notes/integer-singleton-interval-author-routes-2026-10-05.md)
+separates optional singleton automation from existing source-direction bridges,
+real-domain false controls, and persistent-context reuse. Both legacy/current
+whole strict files pass; no new builtin or recursive search is implemented.
+
+
+## Zero/nonzero reflection and source evidence
+
+The [six-forall tracer](atomic/by_builtin_rule/zero_nonzero_reflection_evidence.lit)
+checks native Neg and existing Sub inverse premises, product source/factor
+orientations and guarded cancellation. ProductComponentNonzero retains the
+actual known source and citation in Detailed. The [two full alias proofs](atomic/by_builtin_rule/zero_alias_nonzero_author_routes.lit)
+explicitly publish product!=0 before component reflection and exact reuse;
+the bare alias shortcut remains optional and unimplemented. The
+[source-owned note](experience/problem_notes/zero-nonzero-reflection-2026-10-05.md)
+records cold versus valid prior-context reuse and excludes false old accepts.

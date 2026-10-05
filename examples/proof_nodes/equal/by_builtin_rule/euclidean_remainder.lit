@@ -1,0 +1,16 @@
+# Before: the exact mathematical target failed proof search.
+# forall a,q Z,m N+,r N:
+#     a=m*q+r
+#     r<m
+#     =>:
+#         a%m=r
+
+# Now (verified in strict mode): same mathematical target and premises.
+forall a,q Z,m N+,r N:
+    a=m*q+r
+    r<m
+    =>:
+        a%m=r
+
+# Executable boundary controls: tests/unit/execute/thirteen_builtin_rules/tests.rs.
+# Gate: CARGO_TARGET_DIR=tmp/2026-10-04/thirteen-builtin-rules/target cargo run --release --offline --bin litex -- -strict -f examples/proof_nodes/equal/by_builtin_rule/euclidean_remainder.lit

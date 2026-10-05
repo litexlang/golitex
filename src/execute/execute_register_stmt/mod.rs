@@ -6,4 +6,9 @@ mod result;
 pub use exec_register_reflexive_prop_stmt::exec_register_reflexive_prop_stmt;
 pub use exec_register_symmetric_prop_stmt::exec_register_symmetric_prop_stmt;
 pub use exec_register_transitive_prop_stmt::exec_register_transitive_prop_stmt;
-pub use result::ExecRegisterStmtResult;
+pub use result::{
+    ExecRegisterReflexivePropStmtFailed, ExecRegisterReflexivePropStmtResult,
+    ExecRegisterStmtResult, ExecRegisterSymmetricPropStmtFailed,
+    ExecRegisterSymmetricPropStmtResult, ExecRegisterTransitivePropStmtFailed,
+    ExecRegisterTransitivePropStmtResult,
+};

@@ -26,7 +26,22 @@ impl Runtime {
                     return Ok(equal_fact_result_from_wd_fail(reason));
                 }
             };
-        match self.search_equal_fact_proof(fact, verify_state)? {
+        let searched_proof = match self.search_equal_fact_proof(fact, verify_state)? {
+            Some(proof) => Some(proof),
+            None => self.try_literal_beta_with_parent_well_definedness(
+                fact,
+                &well_defined_proof,
+                verify_state,
+            )?.map(|proof| {
+                use super::by_object_definition::by_fn_application::EqualitySearchProofByFnApplicationObjectDefinition;
+                EqualFactSearchedProof::ByObjectDefinition(
+                    super::EqualitySearchProofByObjectDefinition::ByFnApplication(
+                        EqualitySearchProofByFnApplicationObjectDefinition::LiteralBeta(proof),
+                    ),
+                )
+            }),
+        };
+        match searched_proof {
             Some(searched_proof) => Ok(equal_fact_result_from_success(
                 fact,
                 well_defined_proof,

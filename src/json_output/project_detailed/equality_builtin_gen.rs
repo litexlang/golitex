@@ -8,6 +8,22 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::FiniteSetProductReindex(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("FiniteSetProductReindex")),
+            ("bijection", project_verify_fact(&p.bijection, runtime)),
+        ]),
+        EqualitySearchProofByBuiltinRule::FiniteSetReduceReindex(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("FiniteSetReduceReindex")),
+            ("operator_match", super::reduce_rules::project_match(&p.operator_match, runtime)),
+            ("seed_match", super::reduce_rules::project_match(&p.seed_match, runtime)),
+            ("bijection", project_verify_fact(&p.bijection, runtime)),
+        ]),
+        EqualitySearchProofByBuiltinRule::RangeSize(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("RangeSize")),("start_natural",project_verify_fact(&p.start_natural,runtime)),("end_natural",project_verify_fact(&p.end_natural,runtime)),("endpoint_order",project_verify_fact(&p.endpoint_order,runtime))]),
+        EqualitySearchProofByBuiltinRule::ClosedRangeSize(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ClosedRangeSize")),("start_natural",project_verify_fact(&p.start_natural,runtime)),("end_natural",project_verify_fact(&p.end_natural,runtime)),("endpoint_order",project_verify_fact(&p.endpoint_order,runtime))]),
+        EqualitySearchProofByBuiltinRule::FactorialDivisibility(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("FactorialDivisibility")),("earlier_natural",project_verify_fact(&p.earlier_natural,runtime)),("later_natural",project_verify_fact(&p.later_natural,runtime)),("order",project_verify_fact(&p.order,runtime))]),
+        EqualitySearchProofByBuiltinRule::CartReconstruction(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("CartReconstruction")),("cartesian",project_verify_fact(&p.cartesian,runtime)),("dimension",project_verify_fact(&p.dimension,runtime)),("factors",project_verify_facts(&p.factors,runtime))]),
+        EqualitySearchProofByBuiltinRule::EuclideanRemainder(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("EuclideanRemainder")),("domains",project_verify_facts(&p.domains,runtime)),("remainder_bound",project_verify_fact(&p.remainder_bound,runtime)),("decomposition",super::searched::project_equal_searched(&p.decomposition,runtime))]),
+
         EqualitySearchProofByBuiltinRule::ReduceFirstStep(p) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("ReduceFirstStep")),
             ("nonempty", super::reduce_rules::project_nonempty(&p.nonempty, runtime)),
@@ -573,7 +589,7 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
         },
         EqualitySearchProofByBuiltinRule::SquareSumComponentZero(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("SquareSumComponentZero"))];
-            let _ = p;
+            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
             object_for(runtime, entries)
         },
         EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(p) => {
@@ -834,7 +850,7 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
         },
         EqualitySearchProofByBuiltinRule::ModNestedDivisibleAbsorption(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("ModNestedDivisibleAbsorption"))];
-            let _ = p;
+            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
             object_for(runtime, entries)
         },
         EqualitySearchProofByBuiltinRule::SumSplitLastTerm(p) => {

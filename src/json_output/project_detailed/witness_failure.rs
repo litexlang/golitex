@@ -2,10 +2,46 @@ use super::verify::project_verify_fact;
 use super::wd::{project_param_type_wd, project_verify_obj_wd};
 use crate::execute::execute_witness_stmt::{
     ExecWitnessAtomicFactStmtFailed, ExecWitnessExistFactStmtFailed,
+    ExecWitnessNonemptySetStmtFailed,
 };
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
+
+pub(super) fn project_witness_nonempty_failure(
+    failure: &ExecWitnessNonemptySetStmtFailed,
+    rt: &Runtime,
+) -> JsonValue {
+    use ExecWitnessNonemptySetStmtFailed::*;
+    match failure {
+        ObjWd(result) => object_for(
+            rt,
+            vec![
+                ("phase", string("obj_well_defined")),
+                ("result", project_verify_obj_wd(result, rt)),
+            ],
+        ),
+        SetWd(result) => object_for(
+            rt,
+            vec![
+                ("phase", string("set_well_defined")),
+                ("result", project_verify_obj_wd(result, rt)),
+            ],
+        ),
+        ProofBody(failure) => object_for(
+            rt,
+            vec![
+                ("phase", string("proof_body")),
+                ("step_index", JsonValue::Number(failure.step_index as f64)),
+                (
+                    "result",
+                    super::stmt::project_stmt_detailed(&failure.result, rt),
+                ),
+            ],
+        ),
+        Membership(result) => verify_phase("membership", result, rt),
+    }
+}
 
 pub(super) fn project_witness_atomic_failure(
     failure: &ExecWitnessAtomicFactStmtFailed,

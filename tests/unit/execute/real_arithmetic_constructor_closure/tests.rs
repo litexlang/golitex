@@ -1,4 +1,5 @@
 use super::*;
+use crate::ast::fact::Fact;
 use crate::ast::stmt::Stmt;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
     AtomicExceptEqualityFactSearchedProof, VerifyAtomicExceptEqualityFactResult,
@@ -9,7 +10,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::{
     AtomicExceptEqualityFactSearchProofByKnownSpecialProperty, InFactSearchProofByKnownSpecialProperty,
 };
-use crate::execute::execute_fact_stmt::VerifyStateLevel;
+use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyStateLevel};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::tokenize::Tokenizer;
 
@@ -70,6 +71,74 @@ fn real_arithmetic_constructor_closure_preserves_real_statement_tracer() {
 }
 
 #[test]
+fn real_arithmetic_constructor_closure_uses_parent_wd_for_tuple_function_leaves() {
+    use VerifyStateLevel::*;
+    let mut rt = runtime();
+    assert!(rt.run_litex_code(
+        "have f fn(p cart(R, R)) R\nhave point cart(R, R)\nhave x R\n"
+    ).unwrap().success);
+    let leaf = fact(&mut rt, "f((x, point[2])) $in R");
+    let Fact::AtomicFact(atomic_leaf @ AtomicFact::InFact(leaf_fact)) = &leaf else {
+        panic!("function-return membership")
+    };
+    assert!(!rt.verify_obj_well_definedness(
+        &leaf_fact.element, VerifyState::new(BuiltinRule),
+    ).unwrap().is_failed(), "the enclosing WD proves the tuple argument domain");
+    assert!(rt.verify_fact(&leaf, VerifyState::new(KnownSpecialProperty))
+        .unwrap().is_failed(), "WD replay must not gain a higher search ceiling");
+    let terminal = rt.search_atomic_except_equality_fact_proof(
+        atomic_leaf, VerifyState::new(KnownSpecialProperty),
+    ).unwrap().expect("checked function-return truth uses the inherited ceiling");
+    let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(property) = terminal else {
+        panic!("registered function signature evidence")
+    };
+    assert!(property.cite_property_fact_id().is_some());
+    let signature_fact_id = property.cite_property_fact_id();
+    let goal = fact(&mut rt, "f((x, point[2])) - f(point) $in R");
+    let result = rt.verify_fact(&goal, VerifyState::new(BuiltinRule)).unwrap();
+    assert!(!result.is_failed(), "R closure consumes parent WD, without replaying it below its ceiling");
+    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(
+            InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(closure),
+        ),
+    ) = &atomic_success(&result).searched_proof else {
+        panic!("real constructor route")
+    };
+    let RealArithmeticConstructorTree::Sub { left, .. } = &closure.constructor_tree else {
+        panic!("difference tree")
+    };
+    let RealArithmeticConstructorTree::Leaf(terminal) = left.as_ref() else {
+        panic!("function return terminal")
+    };
+    let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(property) =
+        terminal.searched_proof.as_ref() else {
+        panic!("preserved signature route")
+    };
+    assert_eq!(property.cite_property_fact_id(), signature_fact_id);
+    assert!(rt.lookup_known_atomic_fact(atomic_leaf).is_none(), "carrier search publishes no terminal membership");
+    let executed = rt.exec_stmt(&Stmt::Fact(goal)).unwrap();
+    assert!(!executed.is_failed());
+    let detail = crate::json_output::project_stmt_detailed(&executed, &rt);
+    let mut terminal_detail = &detail;
+    for key in ["verify", "searched_proof", "constructor_tree", "left", "proof"] {
+        let crate::knowledge_base::JsonValue::Object(object) = terminal_detail else {
+            panic!("JSON object at {key}")
+        };
+        terminal_detail = object.get(key).expect(key);
+    }
+    let crate::knowledge_base::JsonValue::Object(object) = terminal_detail else {
+        panic!("terminal JSON")
+    };
+    assert!(object.get("well_defined").is_none(), "WD remains on the parent verification stage");
+    assert_eq!(object.get("fact"), Some(&crate::knowledge_base::JsonValue::String("f((x, point[2])) $in R".into())));
+    assert!(object.get("searched_proof").unwrap().stringify().contains("cite_property_fact_id"));
+    assert!(detail.stringify().contains("well_defined"), "parent WD evidence is retained");
+    assert!(rt.run_litex_code(
+        "prop real_difference_wd(g fn(p cart(R, R)) R, q cart(R, R)):\n    forall y R:\n        abs(g((y, q[2])) - g(q)) >= 0\n"
+    ).unwrap().success, "the original reduced prop WD must pass");
+}
+
+#[test]
 fn real_arithmetic_constructor_closure_retains_permissions_tree_and_citations() {
     use VerifyStateLevel::*;
     let mut rt = runtime();
@@ -117,9 +186,7 @@ fn real_arithmetic_constructor_closure_retains_permissions_tree_and_citations() 
         panic!("integer power")
     };
     assert_eq!(
-        atomic_success(exponent_in_integer_proof)
-            .fact
-            .readable_string(),
+        format!("{} $in {}", exponent_in_integer_proof.fact.element.readable_string(), exponent_in_integer_proof.fact.set.readable_string()),
         "2 $in Z"
     );
     assert!(matches!(
@@ -133,7 +200,7 @@ fn real_arithmetic_constructor_closure_retains_permissions_tree_and_citations() 
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
             InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(codomain),
         ),
-    ) = &atomic_success(base_proof).searched_proof
+    ) = base_proof.searched_proof.as_ref()
     else {
         panic!("original function-return route")
     };
@@ -179,6 +246,10 @@ fn real_arithmetic_constructor_closure_rejects_wrong_carriers_and_domains() {
         "have fn f(x R) R = x\nforall x R:\n    f(x)^2 / 4 $in Q\n",
         "have fn f(x R) R = x\nf(0)^(-1) / 4 $in R\n",
         "have fn partial(x R: x > 0) R = x\npartial(0)^2 / 4 $in R\n",
+        "prop bad(f fn(p cart(R, R)) C, point cart(R, R)):\n    forall x R:\n        abs(f((x, point[2])) - f(point)) >= 0\n",
+        "prop bad(f fn(p cart(R, R): p[1] > 0) R, point cart(R, R)):\n    forall x R:\n        abs(f((x, point[2])) - f(point)) >= 0\n",
+        "prop bad(f fn(p cart(R, R)) R, point cart(R, R)):\n    forall x R:\n        abs((f((x, point[2])) - f(point)) / 0) >= 0\n",
+        "forall f fn(p cart(R, R)) R, point cart(R, R), x R:\n    abs(f((x, point[2])) - f(point)) < 0\n",
     ] {
         let run = runtime().run_litex_code(code).unwrap();
         assert!(

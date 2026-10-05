@@ -1,0 +1,30 @@
+# Before: the final beta equality failed in search_proof although parent WD
+# and exact substitution succeeded. Rechecking the literal at a lower
+# definition-premise permission lost the callback's output membership.
+# claim:
+#     ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:
+#         fn(x K) Y {f(x)}(point) = f(point)
+#     point $in X
+#     f(point) $in Y
+#     fn(x K) Y {f(x)}(point) = f(point)
+
+# Now: reuse the exact literal application's parent WD; residual truth keeps
+# the definition-premise permission. No alternate named body is selected.
+claim:
+    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:
+        fn(x K) Y {f(x)}(point) = f(point)
+    point $in X
+    f(point) $in Y
+    fn(x K) Y {f(x)}(point) = f(point)
+
+# The same certificate applies when the literal is the right equality side.
+claim:
+    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:
+        f(point) = fn(x K) Y {f(x)}(point)
+    point $in X
+    f(point) $in Y
+    f(point) = fn(x K) Y {f(x)}(point)
+
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_object_definition/by_fn_application/restricted_literal_beta.lit
+# Executable guard/type/arity/wrong-body and permission controls:
+# cargo test --release --locked --lib function_body_evaluation -- --nocapture

@@ -129,6 +129,14 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    RangeSize(super::by_range_size::RangeSizeProof),
+    ClosedRangeSize(super::by_range_size::ClosedRangeSizeProof),
+    EuclideanRemainder(super::by_euclidean_remainder::EuclideanRemainderProof),
+    FactorialDivisibility(super::by_factorial_divisibility::FactorialDivisibilityProof),
+    CartReconstruction(super::by_cart_reconstruction::CartReconstructionProof),
+    FiniteSetProductReindex(super::by_finite_set_product_reindex::FiniteSetProductReindexProof),
+    FiniteSetReduceReindex(super::by_finite_set_reduce_reindex::FiniteSetReduceReindexProof),
+
     IntegerRangeBuilder(super::by_integer_range_builder::IntegerRangeBuilderBuiltinRuleProof),
     ScalarIdentity(super::by_scalar_identities::ScalarIdentityBuiltinRuleProof),
     ElementaryArithmetic(super::by_elementary_arithmetic::ElementaryArithmeticProof),

@@ -1213,6 +1213,10 @@ existing limited premise permissions. Division still needs a valid nonzero
 denominator; a complex-only return does not gain a real carrier. The
 [real constructor tracer](../examples/proof_nodes/atomic/by_builtin_rule/real_arithmetic_constructor_closure.lit)
 retains this goal-WD example and the focused tests cover rejected boundaries.
+The same separation applies to real-valued Cartesian functions inside `abs`:
+argument domains are checked by the enclosing WD, while arithmetic closure
+consumes the return signatures. The [Cartesian function tracer](../examples/wd/real_cart_function_arithmetic.lit)
+checks a real difference and a quotient with its nonzero guard.
 
 This does not mean Litex proves arbitrary goals by magic. It means Litex places
 ordinary mathematical structure inside the verifier and visible local
@@ -1527,6 +1531,12 @@ released only by a direct `e &Struct` symbol binding or by an explicit,
 membership-checked `release struct def e`.
 
 This is one reason Litex proofs can stay close to ordinary mathematical prose.
+
+For example, `have x R*` followed by `have square R = x^2` records
+`square $in R+`. The relevant fact is that a nonzero real square is positive;
+the checker does not need to establish that x itself is positive. The power
+inference first reuses that existing checked rule. Zero and `i^2` cannot use it.
+
 The user states the meaningful structural fact once, and the checker records
 the small consequences that a human reader would normally keep in mind.
 

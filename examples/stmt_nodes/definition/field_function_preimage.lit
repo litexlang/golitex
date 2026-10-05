@@ -1,0 +1,22 @@
+# Checked callable fields in HaveByPreimageStmt.
+# Run: litex -strict -f examples/stmt_nodes/definition/field_function_preimage.lit
+# Before: the same valid source reached InternalBug while building ops.op(a):
+# struct Ops:
+#     op fn(x R) R
+#     tag N
+# have fn shift(x R) R = x + 1
+# have ops &Ops = (shift, 0)
+# have by fn_preimage: a from ops.op(2) $in fn_range(ops.op)
+# a $in R
+# ops.op(a) = ops.op(2)
+# Now: retain the checked FieldAccess head and ordinary preimage evidence.
+# Wrong source, receiver, arity and unsatisfied guards remain rejected in Rust.
+
+struct Ops:
+    op fn(x R) R
+    tag N
+have fn shift(x R) R = x + 1
+have ops &Ops = (shift, 0)
+have by fn_preimage: a from ops.op(2) $in fn_range(ops.op)
+a $in R
+ops.op(a) = ops.op(2)

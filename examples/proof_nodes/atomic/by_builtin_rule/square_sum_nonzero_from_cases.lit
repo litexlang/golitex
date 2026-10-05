@@ -1,0 +1,17 @@
+# Same real-domain target; explicit OR elimination, no new mathematical premises.
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/square_sum_nonzero_from_cases.lit
+claim:
+    ? forall a,b R:
+        a!=0 or b!=0
+        =>:
+            a^2+b^2!=0
+    by cases:
+        ? a^2+b^2!=0
+        case a!=0:
+            a^2+b^2!=0
+        case b!=0:
+            a^2+b^2!=0
+forall a,b R:
+    a!=0 or b!=0
+    =>:
+        a^2+b^2!=0

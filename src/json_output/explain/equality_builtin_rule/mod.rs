@@ -2,6 +2,9 @@
 //!
 //! Call site: `rule.rule_name_and_message(lang)` on `EqualitySearchProofByBuiltinRule`.
 
+mod constructor_order;
+mod finite_set_reindex;
+mod finite_partition;
 mod calculation;
 mod finite_subset_size;
 mod leaves;
@@ -15,6 +18,14 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::RangeSize(p)=>p.rule_name_and_message_en(),
+            Self::ClosedRangeSize(p)=>p.rule_name_and_message_en(),
+            Self::EuclideanRemainder(p)=>p.rule_name_and_message_en(),
+            Self::FactorialDivisibility(p)=>p.rule_name_and_message_en(),
+            Self::CartReconstruction(p)=>p.rule_name_and_message_en(),
+            Self::FiniteSetProductReindex(p) => p.rule_name_and_message_en(),
+            Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_en(),
+
             Self::ReduceFirstStep(p) => p.rule_name_and_message_en(),
             Self::ReduceTranslation(p) => p.rule_name_and_message_en(),
             Self::ReducePointwise(p) => p.rule_name_and_message_en(),
@@ -225,6 +236,14 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::RangeSize(p)=>p.rule_name_and_message_zh(),
+            Self::ClosedRangeSize(p)=>p.rule_name_and_message_zh(),
+            Self::EuclideanRemainder(p)=>p.rule_name_and_message_zh(),
+            Self::FactorialDivisibility(p)=>p.rule_name_and_message_zh(),
+            Self::CartReconstruction(p)=>p.rule_name_and_message_zh(),
+            Self::FiniteSetProductReindex(p) => p.rule_name_and_message_zh(),
+            Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_zh(),
+
             Self::ReduceFirstStep(p) => p.rule_name_and_message_zh(),
             Self::ReduceTranslation(p) => p.rule_name_and_message_zh(),
             Self::ReducePointwise(p) => p.rule_name_and_message_zh(),
@@ -435,6 +454,14 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::RangeSize(p)=>p.rule_name_and_message_zh_hant(),
+            Self::ClosedRangeSize(p)=>p.rule_name_and_message_zh_hant(),
+            Self::EuclideanRemainder(p)=>p.rule_name_and_message_zh_hant(),
+            Self::FactorialDivisibility(p)=>p.rule_name_and_message_zh_hant(),
+            Self::CartReconstruction(p)=>p.rule_name_and_message_zh_hant(),
+            Self::FiniteSetProductReindex(p) => p.rule_name_and_message_zh_hant(),
+            Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_zh_hant(),
+
             Self::ReduceFirstStep(p) => p.rule_name_and_message_zh_hant(),
             Self::ReduceTranslation(p) => p.rule_name_and_message_zh_hant(),
             Self::ReducePointwise(p) => p.rule_name_and_message_zh_hant(),
@@ -645,6 +672,14 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::RangeSize(p)=>p.rule_name_and_message_fr(),
+            Self::ClosedRangeSize(p)=>p.rule_name_and_message_fr(),
+            Self::EuclideanRemainder(p)=>p.rule_name_and_message_fr(),
+            Self::FactorialDivisibility(p)=>p.rule_name_and_message_fr(),
+            Self::CartReconstruction(p)=>p.rule_name_and_message_fr(),
+            Self::FiniteSetProductReindex(p) => p.rule_name_and_message_fr(),
+            Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_fr(),
+
             Self::ReduceFirstStep(p) => p.rule_name_and_message_fr(),
             Self::ReduceTranslation(p) => p.rule_name_and_message_fr(),
             Self::ReducePointwise(p) => p.rule_name_and_message_fr(),
@@ -855,6 +890,14 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::RangeSize(p)=>p.rule_name_and_message_ru(),
+            Self::ClosedRangeSize(p)=>p.rule_name_and_message_ru(),
+            Self::EuclideanRemainder(p)=>p.rule_name_and_message_ru(),
+            Self::FactorialDivisibility(p)=>p.rule_name_and_message_ru(),
+            Self::CartReconstruction(p)=>p.rule_name_and_message_ru(),
+            Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ru(),
+            Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ru(),
+
             Self::ReduceFirstStep(p) => p.rule_name_and_message_ru(),
             Self::ReduceTranslation(p) => p.rule_name_and_message_ru(),
             Self::ReducePointwise(p) => p.rule_name_and_message_ru(),
@@ -1065,6 +1108,14 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::RangeSize(p)=>p.rule_name_and_message_es(),
+            Self::ClosedRangeSize(p)=>p.rule_name_and_message_es(),
+            Self::EuclideanRemainder(p)=>p.rule_name_and_message_es(),
+            Self::FactorialDivisibility(p)=>p.rule_name_and_message_es(),
+            Self::CartReconstruction(p)=>p.rule_name_and_message_es(),
+            Self::FiniteSetProductReindex(p) => p.rule_name_and_message_es(),
+            Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_es(),
+
             Self::ReduceFirstStep(p) => p.rule_name_and_message_es(),
             Self::ReduceTranslation(p) => p.rule_name_and_message_es(),
             Self::ReducePointwise(p) => p.rule_name_and_message_es(),
@@ -1275,6 +1326,14 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::RangeSize(p)=>p.rule_name_and_message_ar(),
+            Self::ClosedRangeSize(p)=>p.rule_name_and_message_ar(),
+            Self::EuclideanRemainder(p)=>p.rule_name_and_message_ar(),
+            Self::FactorialDivisibility(p)=>p.rule_name_and_message_ar(),
+            Self::CartReconstruction(p)=>p.rule_name_and_message_ar(),
+            Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ar(),
+            Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ar(),
+
             Self::ReduceFirstStep(p) => p.rule_name_and_message_ar(),
             Self::ReduceTranslation(p) => p.rule_name_and_message_ar(),
             Self::ReducePointwise(p) => p.rule_name_and_message_ar(),
@@ -1485,6 +1544,14 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::RangeSize(p)=>p.rule_name_and_message_ja(),
+            Self::ClosedRangeSize(p)=>p.rule_name_and_message_ja(),
+            Self::EuclideanRemainder(p)=>p.rule_name_and_message_ja(),
+            Self::FactorialDivisibility(p)=>p.rule_name_and_message_ja(),
+            Self::CartReconstruction(p)=>p.rule_name_and_message_ja(),
+            Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ja(),
+            Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ja(),
+
             Self::ReduceFirstStep(p) => p.rule_name_and_message_ja(),
             Self::ReduceTranslation(p) => p.rule_name_and_message_ja(),
             Self::ReducePointwise(p) => p.rule_name_and_message_ja(),
@@ -1695,6 +1762,14 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::RangeSize(p)=>p.rule_name_and_message_ko(),
+            Self::ClosedRangeSize(p)=>p.rule_name_and_message_ko(),
+            Self::EuclideanRemainder(p)=>p.rule_name_and_message_ko(),
+            Self::FactorialDivisibility(p)=>p.rule_name_and_message_ko(),
+            Self::CartReconstruction(p)=>p.rule_name_and_message_ko(),
+            Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ko(),
+            Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ko(),
+
             Self::ReduceFirstStep(p) => p.rule_name_and_message_ko(),
             Self::ReduceTranslation(p) => p.rule_name_and_message_ko(),
             Self::ReducePointwise(p) => p.rule_name_and_message_ko(),
@@ -1905,6 +1980,14 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::RangeSize(p)=>p.rule_name_and_message_vi(),
+            Self::ClosedRangeSize(p)=>p.rule_name_and_message_vi(),
+            Self::EuclideanRemainder(p)=>p.rule_name_and_message_vi(),
+            Self::FactorialDivisibility(p)=>p.rule_name_and_message_vi(),
+            Self::CartReconstruction(p)=>p.rule_name_and_message_vi(),
+            Self::FiniteSetProductReindex(p) => p.rule_name_and_message_vi(),
+            Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_vi(),
+
             Self::ReduceFirstStep(p) => p.rule_name_and_message_vi(),
             Self::ReduceTranslation(p) => p.rule_name_and_message_vi(),
             Self::ReducePointwise(p) => p.rule_name_and_message_vi(),

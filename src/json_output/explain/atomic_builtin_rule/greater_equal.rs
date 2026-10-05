@@ -1,7 +1,7 @@
 //! GreaterEqual (`a >= b`) builtin explain + cite.
 
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::{
-    FromKnownLessEqualBuiltinRuleProof,
+    FromKnownLessEqualBuiltinRuleProof, GreaterEqualSumOfNonnegativesBuiltinRuleProof,
 
     ClosedNumericComparisonBuiltinRuleProof, FiniteSetSizeAtLeastOneBuiltinRuleProof,
     FiniteSetSizeNonnegativeBuiltinRuleProof, FromKnownGreaterBuiltinRuleProof,
@@ -22,6 +22,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
             Self::ClosedSubtractionBound(_) => text("Subtract from a stored numeric bound", "The stored upper or lower bound remains sufficient after subtracting the closed constant"),
             Self::ComplexModulusNonnegative => text("Nonnegative complex modulus", "The principal complex modulus is nonnegative"),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_en(),
+            Self::SumOfNonnegatives(p) => p.rule_name_and_message_en(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_en(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_en(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_en(),
@@ -45,6 +46,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
                 "复数模长取非负主根",
             ),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_zh(),
+            Self::SumOfNonnegatives(p) => p.rule_name_and_message_zh(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_zh(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_zh(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_zh(),
@@ -68,6 +70,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
                 "複數模長取非負主根",
             ),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_zh_hant(),
+            Self::SumOfNonnegatives(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_zh_hant(),
@@ -85,6 +88,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
             Self::ClosedSubtractionBound(_) => text("Soustraction d'une borne numérique stockée", "La borne supérieure ou inférieure stockée reste suffisante après soustraction de la constante fermée"),
             Self::ComplexModulusNonnegative => text("Module complexe non négatif", "Le module complexe principal est non négatif"),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_fr(),
+            Self::SumOfNonnegatives(p) => p.rule_name_and_message_fr(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_fr(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_fr(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_fr(),
@@ -102,6 +106,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
             Self::ClosedSubtractionBound(_) => text("Вычитание из сохранённой числовой границы", "Сохранённая верхняя или нижняя граница остаётся достаточной после вычитания замкнутой константы"),
             Self::ComplexModulusNonnegative => text("Неотрицательный комплексный модуль", "Главный комплексный модуль неотрицателен"),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_ru(),
+            Self::SumOfNonnegatives(p) => p.rule_name_and_message_ru(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ru(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ru(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_ru(),
@@ -119,6 +124,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
             Self::ClosedSubtractionBound(_) => text("Resta de una cota numérica almacenada", "La cota superior o inferior almacenada sigue siendo suficiente al restar la constante cerrada"),
             Self::ComplexModulusNonnegative => text("Módulo complejo no negativo", "El módulo complejo principal es no negativo"),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_es(),
+            Self::SumOfNonnegatives(p) => p.rule_name_and_message_es(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_es(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_es(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_es(),
@@ -142,6 +148,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
                 "المقياس المركب الرئيسي غير سالب",
             ),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_ar(),
+            Self::SumOfNonnegatives(p) => p.rule_name_and_message_ar(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ar(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ar(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_ar(),
@@ -165,6 +172,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
                 "複素数の主絶対値は非負です",
             ),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_ja(),
+            Self::SumOfNonnegatives(p) => p.rule_name_and_message_ja(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ja(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ja(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_ja(),
@@ -188,6 +196,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
                 "복소수의 주 절댓값은 음이 아닙니다",
             ),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_ko(),
+            Self::SumOfNonnegatives(p) => p.rule_name_and_message_ko(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ko(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ko(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_ko(),
@@ -211,6 +220,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
                 "Môđun phức chính không âm",
             ),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_vi(),
+            Self::SumOfNonnegatives(p) => p.rule_name_and_message_vi(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_vi(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_vi(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_vi(),
@@ -247,7 +257,8 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
             Self::FromKnownGreater(p) => p.premise_proof.cite_fact_id(),
             Self::OrderFlipMulMinusOne(p) => p.premise_proof.cite_fact_id(),
             Self::PredecessorNonNegFromAtLeastOne(p) => p.at_least_one_proof.cite_fact_id(),
-            Self::ComplexModulusNonnegative
+            Self::SumOfNonnegatives(_)
+            | Self::ComplexModulusNonnegative
             | Self::OrderReflexivity(_)
             | Self::ClosedNumericComparison(_)
             | Self::FiniteSetSizeNonnegative(_)
@@ -1005,6 +1016,87 @@ impl FromKnownLessEqualBuiltinRuleProof {
         text(
             "Thứ tự đảo chiều đã biết",
             "So sánh theo chiều ngược đã biết",
+        )
+    }
+
+    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_name_and_message_en(),
+            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_name_and_message_fr(),
+            OutputLanguage::Russian => self.rule_name_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_name_and_message_es(),
+            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
+            OutputLanguage::Korean => self.rule_name_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
+        }
+    }
+}
+
+impl GreaterEqualSumOfNonnegativesBuiltinRuleProof {
+    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "Sum of nonnegatives ≥ 0",
+            "A sum of nonnegative terms is nonnegative",
+        )
+    }
+
+    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
+        text("非负和 ≥ 0", "非负项之和非负")
+    }
+
+    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
+        text("非負數和 ≥ 0", "非負項的和非負")
+    }
+
+    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
+        text(
+            "Somme de non-négatifs ≥ 0",
+            "Une somme de termes non négatifs est non négative",
+        )
+    }
+
+    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
+        text(
+            "Сумма неотрицательных ≥ 0",
+            "Сумма неотрицательных членов неотрицательна",
+        )
+    }
+
+    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
+        text(
+            "Suma de no negativos ≥ 0",
+            "Una suma de términos no negativos es no negativa",
+        )
+    }
+
+    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
+        text(
+            "مجموع غير السوالب ≥ 0",
+            "مجموع حدود غير سالبة غير سالب",
+        )
+    }
+
+    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
+        text(
+            "非負数の和 ≥ 0",
+            "非負の項の和は非負です",
+        )
+    }
+
+    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
+        text(
+            "비음수의 합 ≥ 0",
+            "음이 아닌 항의 합은 음이 아닙니다",
+        )
+    }
+
+    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
+        text(
+            "Tổng số không âm ≥ 0",
+            "Tổng các hạng không âm không âm",
         )
     }
 

@@ -184,13 +184,28 @@ pub struct DivNonzeroFromFactorsBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-pub struct ProductComponentNonzeroBuiltinRuleProof {}
+pub struct ProductComponentNonzeroBuiltinRuleProof {
+    pub product_nonzero_proof: AtomicExceptEqualityFactKnownProof,
+}
+
+impl ProductComponentNonzeroBuiltinRuleProof {
+    pub fn new(product_nonzero_proof: AtomicExceptEqualityFactKnownProof) -> Self {
+        Self { product_nonzero_proof }
+    }
+}
+
+impl From<ProductComponentNonzeroBuiltinRuleProof> for NotEqualFactSearchProofByBuiltinRule {
+    fn from(proof: ProductComponentNonzeroBuiltinRuleProof) -> Self {
+        Self::ProductComponentNonzero(proof)
+    }
+}
 
 pub struct SqrtNonzeroFromPositiveArgBuiltinRuleProof {
     pub arg_positive_proof: VerifyFactResult,
 }
 
 pub struct SquareSumNonzeroFromComponentBuiltinRuleProof {
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
     pub component_nonzero_proof: VerifyFactResult,
 }
 
@@ -803,7 +818,7 @@ impl Runtime {
     }
 
     fn product_component_nonzero_proof(
-        &self,
+        &mut self,
         fact: &NotEqualFact,
     ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
         let target = if is_zero_obj(&fact.right) {
@@ -819,36 +834,37 @@ impl Runtime {
             },
             false,
         );
+        let mut candidates = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
             let Some(knowns) = env.facts.known_atomic_except_equality_facts.by_prop.get(&key)
             else {
                 continue;
             };
-            for known in knowns {
-                let AtomicFact::NotEqualFact(known_ne) = known else {
+            candidates.extend(knowns.iter().cloned());
+        }
+        for known in candidates {
+            let AtomicFact::NotEqualFact(known_ne) = &known else {
+                continue;
+            };
+            for (prod, other) in [
+                (&known_ne.left, &known_ne.right),
+                (&known_ne.right, &known_ne.left),
+            ] {
+                if !is_zero_obj(other) {
+                    continue;
+                }
+                let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+                    left: f1,
+                    right: f2,
+                })) = prod
+                else {
                     continue;
                 };
-                for (prod, other) in [
-                    (&known_ne.left, &known_ne.right),
-                    (&known_ne.right, &known_ne.left),
-                ] {
-                    if !is_zero_obj(other) {
-                        continue;
-                    }
-                    let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-                        left: f1,
-                        right: f2,
-                    })) = prod
-                    else {
-                        continue;
-                    };
-                    if f1.as_ref().ir() == target.ir() || f2.as_ref().ir() == target.ir() {
-                        return Some(
-                            NotEqualFactSearchProofByBuiltinRule::ProductComponentNonzero(
-                                ProductComponentNonzeroBuiltinRuleProof {},
-                            ),
-                        );
-                    }
+                if f1.as_ref().ir() == target.ir() || f2.as_ref().ir() == target.ir() {
+                    // Cite the checked source without entering WD or another
+                    // truth search. Example: a*b != 0 gives a != 0.
+                    let proof = self.lookup_known_atomic_premise(known.clone())?;
+                    return Some(ProductComponentNonzeroBuiltinRuleProof::new(proof).into());
                 }
             }
         }
@@ -892,6 +908,22 @@ impl Runtime {
         let Some((b1, b2)) = square_sum_bases_for_not_equal(expression) else {
             return Ok(None);
         };
+        // A nonzero real square makes the sum positive. Complex squares can
+        // cancel, even when both bases are nonzero.
+        let mut real_requirements = Vec::new();
+        for base in [b1, b2] {
+            let membership: Fact = InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: base.clone(),
+                set: Obj::StandardSet(StandardSet::R),
+                line_file: None,
+            }.into();
+            let proof = self.verify_builtin_rule_premise(&membership, verify_state.clone())?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            real_requirements.push(proof);
+        }
         for base in [b1, b2] {
             let goal = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),
@@ -904,6 +936,7 @@ impl Runtime {
                 return Ok(Some(
                     NotEqualFactSearchProofByBuiltinRule::SquareSumNonzeroFromComponent(
                         SquareSumNonzeroFromComponentBuiltinRuleProof {
+                            proof_of_requirement_facts: real_requirements,
                             component_nonzero_proof: proof,
                         },
                     ),
@@ -921,7 +954,18 @@ impl Runtime {
     ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
         let neg_right = negate_obj(right);
         let neg_left = negate_obj(left);
-        for (a, neg_b) in [(left, &neg_right), (right, &neg_left)] {
+        let native_neg_right = Obj::ArithmeticOperator(ArithmeticOperator::Neg(
+            crate::ast::obj::Neg { arg: Box::new(right.clone()) },
+        ));
+        let native_neg_left = Obj::ArithmeticOperator(ArithmeticOperator::Neg(
+            crate::ast::obj::Neg { arg: Box::new(left.clone()) },
+        ));
+        // Both existing representations denote the additive inverse.
+        // Example: a != -b, as well as a != 0-b, proves a+b != 0.
+        for (a, neg_b) in [
+            (left, &neg_right), (right, &neg_left),
+            (left, &native_neg_right), (right, &native_neg_left),
+        ] {
             let goal = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),
                 left: a.clone(),
@@ -1050,3 +1094,7 @@ fn is_zero_obj(obj: &Obj) -> bool {
 fn is_half_pi_obj(obj: &Obj) -> bool {
     objs_equal_by_rational_expression_evaluation(obj, &half_pi())
 }
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/zero_nonzero_reflection/tests.rs"]
+mod zero_nonzero_reflection_tests;

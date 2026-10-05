@@ -462,7 +462,9 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
             ModDividendMinusRemainderZeroBuiltinRuleProof {},
         ),
         EqualitySearchProofByBuiltinRule::SquareSumComponentZero(
-            SquareSumComponentZeroBuiltinRuleProof {},
+            SquareSumComponentZeroBuiltinRuleProof {
+                proof_of_requirement_facts: Vec::new(),
+            },
         ),
         EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(
             MinusOneOddNaturalPowerBuiltinRuleProof {},
@@ -589,7 +591,9 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
             ComplexAbsOfImaginaryUnitBuiltinRuleProof {},
         ),
         EqualitySearchProofByBuiltinRule::ModNestedDivisibleAbsorption(
-            ModNestedDivisibleAbsorptionBuiltinRuleProof {},
+            ModNestedDivisibleAbsorptionBuiltinRuleProof {
+                proof_of_requirement_facts: Vec::new(),
+            },
         ),
         EqualitySearchProofByBuiltinRule::SumSplitLastTerm(SumSplitLastTermBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),

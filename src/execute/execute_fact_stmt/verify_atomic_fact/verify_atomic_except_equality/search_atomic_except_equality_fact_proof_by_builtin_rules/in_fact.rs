@@ -1,5 +1,8 @@
 use crate::rational_expression::closed_scalar_membership::{normalized_decimal_inhabits_standard_set, exact_complex_inhabits_standard_set};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
+    AtomicExceptEqualityFactKnownProof, VerifyAtomicExceptEqualityFactResult,
+    VerifyAtomicExceptEqualityFactSuccess,
+};
 use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, GreaterFact, InFact, IsTupleFact, LessEqualFact, LessFact, NotInFact, SubsetFact,
 };
@@ -14,6 +17,7 @@ use crate::ast::param::SetBoundParameterList;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal;
 use crate::parse::keywords::IN;
 use crate::rational_expression::evaluate_obj_to_normalized_decimal_number;
 use crate::runtime::runtime_ids::IdentifierId;
@@ -23,12 +27,18 @@ use std::collections::HashMap;
 use super::subset::standard_set_is_subset_eq;
 
 mod real_arithmetic_constructor;
+mod discrete_arithmetic_constructor;
+pub use discrete_arithmetic_constructor::{
+    DiscreteArithmeticConstructorClosureBuiltinRuleProof, DiscreteArithmeticConstructorTree,
+};
 pub use real_arithmetic_constructor::{
     RealArithmeticConstructorClosureBuiltinRuleProof, RealArithmeticConstructorTree,
+    RealArithmeticConstructorTerminalProof,
 };
 
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
+    DiscreteArithmeticConstructorClosure(DiscreteArithmeticConstructorClosureBuiltinRuleProof),
     FiniteSetMaxMember(FiniteSetMaxMemberBuiltinRuleProof),
     FiniteSetMinMember(FiniteSetMinMemberBuiltinRuleProof),
     // Closed numeric membership by decimal evaluation.
@@ -304,7 +314,14 @@ pub struct CartMembershipShapeProof {
 }
 
 pub struct PowerSetMembershipBuiltinRuleProof {
-    pub subset_proof: VerifyFactResult,
+    pub subset_proof: PowerSetMembershipSubsetProof,
+}
+
+// The known route consumes the parent's exact element and PowerSet base WD.
+// The independent verifier route retains its own complete successful evidence.
+pub enum PowerSetMembershipSubsetProof {
+    KnownSubset(AtomicExceptEqualityFactKnownProof),
+    VerifiedSubset(Box<VerifyAtomicExceptEqualityFactSuccess>),
 }
 
 // Carrier obligations + each instantiated `<=>:` law (order matches search).
@@ -517,6 +534,9 @@ impl Runtime {
                     return Ok(Some(proof));
                 }
                 if matches!(set, StandardSet::Z) {
+                    if let Some(proof) = self.discrete_arithmetic_constructor_closure_proof(fact, verify_state)? {
+                        return Ok(Some(InFactSearchProofByBuiltinRule::DiscreteArithmeticConstructorClosure(proof)));
+                    }
                     // Integer bases to natural powers stay in Z. Negative
                     // exponents are deliberately excluded (2^-1 is not Z).
                     if let Obj::ArithmeticOperator(ArithmeticOperator::Pow(p))=&fact.element {
@@ -569,6 +589,9 @@ impl Runtime {
                 }
                 // `x - 1 $in N` from `x $in N` and `x >= 1`
                 if matches!(set, StandardSet::N) {
+                    if let Some(proof) = self.discrete_arithmetic_constructor_closure_proof(fact, verify_state)? {
+                        return Ok(Some(InFactSearchProofByBuiltinRule::DiscreteArithmeticConstructorClosure(proof)));
+                    }
                     if let Some(proof) = self.predecessor_in_natural_proof(fact)? {
                         return Ok(Some(proof));
                     }
@@ -1242,16 +1265,28 @@ impl Runtime {
         let Obj::SetOperator(SetOperator::PowerSet(power)) = &fact.set else {
             return Ok(None);
         };
-        let subset = Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
+        let subset = AtomicFact::SubsetFact(SubsetFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: fact.element.clone(),
             right: power.set.as_ref().clone(),
             line_file: fact.line_file.clone(),
-        }));
-        let subset_proof = self.verify_builtin_rule_premise(&subset, verify_state)?;
-        if subset_proof.is_failed() {
-            return Ok(None);
-        }
+        });
+        // Both fixed arguments were checked by the parent membership WD. A
+        // stored subset already has its domain evidence; cite it without
+        // repeating a restricted anonymous function's WD at this lower ceiling.
+        let subset_proof = if let Some(known) = self.lookup_known_atomic_premise(subset.clone()) {
+            PowerSetMembershipSubsetProof::KnownSubset(known)
+        } else {
+            // Preserve the existing independent premise route and its ceiling.
+            let result = self.verify_builtin_rule_premise(&Fact::AtomicFact(subset), verify_state)?;
+            let VerifyFactResult::AtomicExceptEquality(result) = result else {
+                unreachable!("an atomic subset has an atomic-except-equality result");
+            };
+            let VerifyAtomicExceptEqualityFactResult::Success(proof) = *result else {
+                return Ok(None);
+            };
+            PowerSetMembershipSubsetProof::VerifiedSubset(Box::new(proof))
+        };
         Ok(Some(InFactSearchProofByBuiltinRule::PowerSetMembership(
             PowerSetMembershipBuiltinRuleProof { subset_proof },
         )))
@@ -1598,7 +1633,6 @@ impl Runtime {
             return Ok(None);
         };
         let family = family_union.left.as_ref();
-        let family_ir = family.ir();
         let key = (AtomicName::Plain { name: IN.into() }, true);
         let mut candidates: Vec<(FactId, Obj)> = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
@@ -1612,7 +1646,10 @@ impl Runtime {
             };
             for known in knowns {
                 if let AtomicFact::InFact(known_in) = known {
-                    if known_in.set.ir() == family_ir {
+                    // A family may contain fresh local binders. Only structural
+                    // alpha identity is allowed here; free owners and the whole
+                    // signature/body stay exact, with no equality search.
+                    if compound_objs_alpha_equal(&known_in.set, family) {
                         candidates.push((known_in.fact_id, known_in.element.clone()));
                     }
                 }
@@ -2041,3 +2078,11 @@ fn native_constant_membership_kind(
         _ => None,
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/family_union_alpha/tests.rs"]
+mod family_union_alpha_tests;
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/power_set_parent_wd/tests.rs"]
+mod power_set_parent_wd_tests;

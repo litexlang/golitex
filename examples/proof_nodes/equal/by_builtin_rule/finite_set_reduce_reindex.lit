@@ -1,0 +1,22 @@
+# Tracer: finite_set_reduce_reindex
+# Before (rejected at search_proof):
+# forall X,Y finite_set,g fn(y Y)X,f fn(x X)R,s R,op fn(a,b R)R:
+#     forall a,b,c R:
+#         op(op(a,b),c)=op(a,op(b,c))
+#     forall a,b R:
+#         op(a,b)=op(b,a)
+#     $bijective(Y,X,g)
+#     =>:
+#         finite_set_reduce(X,f,op,s)=finite_set_reduce(Y,fn(y Y)R {f(g(y))},op,s)
+#
+# Now (verified in strict mode):
+forall X,Y finite_set,g fn(y Y)X,f fn(x X)R,s R,op fn(a,b R)R:
+    forall a,b,c R:
+        op(op(a,b),c)=op(a,op(b,c))
+    forall a,b R:
+        op(a,b)=op(b,a)
+    $bijective(Y,X,g)
+    =>:
+        finite_set_reduce(X,f,op,s)=finite_set_reduce(Y,fn(y Y)R {f(g(y))},op,s)
+# Boundary: missing/wrong bijection, wrong pullback, wrong carrier must reject.
+# Evidence: $CARGO_TARGET_DIR/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/finite_set_reduce_reindex.lit

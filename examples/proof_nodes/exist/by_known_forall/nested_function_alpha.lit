@@ -1,0 +1,30 @@
+# Before: the claim below failed to infer f inside the anonymous function;
+# textual existential keys also treated its renamed local t as a difference.
+# claim:
+#     ? forall f fn(x R) R:
+#         exist w R st {fn(t R) R {f(t)}(0) = f(0), w = 0}
+#     exist w R st {fn(t R) R {f(t)}(0) = f(0), w = 0}
+
+# Establish the universal source with a real witness and checked beta equality.
+thm function_literal_has_zero_witness:
+    ? forall f fn(x R) R:
+        exist value R st {fn(s R) R {f(s)}(0) = f(0), value = 0}
+    witness exist value R st {fn(s R) R {f(s)}(0) = f(0), value = 0} from 0:
+        fn(s R) R {f(s)}(0) = f(0)
+        0 = 0
+
+# Now: recover the free callback while keeping the local binder rigid, then
+# compare the complete instantiated existential structurally modulo alpha.
+claim:
+    ? forall f fn(x R) R:
+        exist w R st {fn(t R) R {f(t)}(0) = f(0), w = 0}
+    exist w R st {fn(t R) R {f(t)}(0) = f(0), w = 0}
+
+# Release remains executable and the released conclusion keeps nested alpha.
+have fn step(x R) R = x + 1
+release thm function_literal_has_zero_witness(step)
+exist output R st {fn(renamed R) R {step(renamed)}(0) = step(0), output = 0}
+
+# Gate: target/release/litex -strict -f examples/proof_nodes/exist/by_known_forall/nested_function_alpha.lit
+# Negative carriers/kinds/bodies/guards/capture and provenance:
+# cargo test --release --locked --lib forall_exist_instantiation_tests -- --nocapture

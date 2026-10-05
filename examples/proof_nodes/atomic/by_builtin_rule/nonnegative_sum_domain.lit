@@ -1,0 +1,16 @@
+# Before: the following goal failed WD on n+1>=0 inside the order predicate.
+# forall f fn(t Z: t >= 0) N, n Z:
+#     n >= 0
+#     =>:
+#         f(n + 1) <= f(n + 1)
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/nonnegative_sum_domain.lit
+# Boundary (Rust regression): a negative argument still fails the function domain.
+forall n Z:
+    n >= 0
+    =>:
+        n + 1 >= 0
+        n + 1 + 1 >= 0
+forall f fn(t Z: t >= 0) N, n Z:
+    n >= 0
+    =>:
+        f(n + 1) <= f(n + 1)

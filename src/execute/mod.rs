@@ -68,6 +68,9 @@ mod obtain_binding_tests;
 #[path = "../../tests/unit/execute/declaration_bindings/tests.rs"]
 mod declaration_binding_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/execute/field_function_application/tests.rs"]
+mod field_function_application_tests;
+#[cfg(test)]
 mod order_stage_a_remainder_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/native_scalar_codomain/mod.rs"]
@@ -209,6 +212,14 @@ mod legacy_next_capabilities;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/legacy_final_capabilities/tests.rs"]
 mod legacy_final_capabilities;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/finite_set_reindex/tests.rs"]
+mod finite_set_reindex_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/thirteen_builtin_rules/tests.rs"]
+mod thirteen_builtin_rules_tests;
 
 #[cfg(test)]
 #[path = "../../tests/unit/execute/exact_numeric_periodic_modulus/tests.rs"]

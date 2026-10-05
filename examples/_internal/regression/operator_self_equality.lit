@@ -1,1 +1,7 @@
-+ = +
+# Arithmetic operators are expressed as explicit functions.
+# Historical bare operator expression: + = +
+have fn add(a,b C) C = a+b
+add = add
+fn(a,b C) C {a+b} = fn(x,y C) C {x+y}
+forall a,b C:
+    add(a,b) = a+b

@@ -2,11 +2,11 @@
 //!
 //! One matcher ↔ one dedicated proof struct.
 
-use crate::ast::fact::{AtomicFact, EqualFact, Fact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::ast::obj::{
     Add, ArithmeticOperator, ComplexAbs, ComplexOperator, FnObj, FnObjHead, FunctionSpace,
     ImaginaryPart, IntegerOperator, Intersect, IteratedOperator, ListSet, Literal, Mod, Mul,
-    Number, Obj, Product, ProductOfFiniteSet, RealPart, SetFormer, SetMinus, SetOperator, Sum,
+    Number, Obj, Product, ProductOfFiniteSet, RealPart, SetFormer, SetMinus, SetOperator, StandardSet, Sum,
     SumOfFiniteSet, Union,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::anonymous_fns_alpha_equal;
@@ -47,10 +47,12 @@ pub struct ImgOfRealPlusIBuiltinRuleProof {}
 // Builtin ComplexAbsOfImaginaryUnit: C_abs(i) = 1.
 pub struct ComplexAbsOfImaginaryUnitBuiltinRuleProof {}
 
-// Builtin ModNestedDivisibleAbsorption: (a % (k * m)) % m = a % m.
-// Example: have a Z; have m N+; have k N+; trust m != 0; trust k != 0;
-//          (a % (k * m)) % m = a % m.
-pub struct ModNestedDivisibleAbsorptionBuiltinRuleProof {}
+// Builtin ModNestedDivisibleAbsorption: (a % (k * m)) % m = a % m for integer k.
+// The enclosing WD proves nonzero integral moduli; it does not prove integer k.
+// Example: forall a Z, k,m N+: (a % (k * m)) % m = a % m.
+pub struct ModNestedDivisibleAbsorptionBuiltinRuleProof {
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
 
 // Builtin SumSplitLastTerm: sum(s, e, f) = sum(s, e-1, f) + f(e).
 // Example: sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + 3.
@@ -158,10 +160,10 @@ impl Runtime {
                     ),
                 ));
             }
-            if mod_nested_divisible_absorption_shape(left, right) {
+            if let Some(p) = self.try_mod_nested_divisible_absorption(left, right, child.clone())? {
                 return Ok(Some(
                     EqualityIdentitiesWave12BuiltinRuleProof::ModNestedDivisibleAbsorption(
-                        ModNestedDivisibleAbsorptionBuiltinRuleProof {},
+                        p,
                     ),
                 ));
             }
@@ -188,6 +190,30 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    fn try_mod_nested_divisible_absorption(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ModNestedDivisibleAbsorptionBuiltinRuleProof>> {
+        let Some(multiplier) = mod_nested_divisible_absorption_multiplier(left, right) else {
+            return Ok(None);
+        };
+        let requirement: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: multiplier.clone(),
+            set: Obj::StandardSet(StandardSet::Z),
+            line_file: None,
+        }.into();
+        let multiplier_in_z = self.verify_builtin_rule_premise(&requirement, verify_state)?;
+        if multiplier_in_z.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ModNestedDivisibleAbsorptionBuiltinRuleProof {
+            proof_of_requirement_facts: vec![multiplier_in_z],
+        }))
     }
 
     fn try_sum_split_last_term(
@@ -621,26 +647,32 @@ fn complex_abs_of_imaginary_unit_shape(left: &Obj, right: &Obj) -> bool {
     ) && is_one_obj(right)
 }
 
-fn mod_nested_divisible_absorption_shape(left: &Obj, right: &Obj) -> bool {
+fn mod_nested_divisible_absorption_multiplier<'a>(left: &'a Obj, right: &Obj) -> Option<&'a Obj> {
     let Some((inner_mod, outer_mod)) = match_mod(left) else {
-        return false;
+        return None;
     };
     let Some((a_right, m_right)) = match_mod(right) else {
-        return false;
+        return None;
     };
     if outer_mod.ir() != m_right.ir() {
-        return false;
+        return None;
     }
     let Some((a_inner, km)) = match_mod(inner_mod) else {
-        return false;
+        return None;
     };
     if a_inner.ir() != a_right.ir() {
-        return false;
+        return None;
     }
     let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: k, right: m })) = km else {
-        return false;
+        return None;
     };
-    m.ir() == outer_mod.ir() || k.ir() == outer_mod.ir()
+    if m.ir() == outer_mod.ir() {
+        Some(k.as_ref())
+    } else if k.ir() == outer_mod.ir() {
+        Some(m.as_ref())
+    } else {
+        None
+    }
 }
 
 fn collect_left_assoc_add_leaves(obj: &Obj) -> Vec<Obj> {
@@ -654,6 +686,7 @@ fn collect_left_assoc_add_leaves(obj: &Obj) -> Vec<Obj> {
     }
 }
 
+
 fn collect_left_assoc_mul_leaves(obj: &Obj) -> Vec<Obj> {
     match obj {
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right })) => {
@@ -662,5 +695,116 @@ fn collect_left_assoc_mul_leaves(obj: &Obj) -> Vec<Obj> {
             leaves
         }
         other => vec![other.clone()],
+    }
+}
+
+#[cfg(test)]
+mod nested_mod_integer_multiple_tests {
+    use crate::ast::stmt::Stmt;
+    use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
+    use crate::json_output::project_run_detailed;
+    use crate::knowledge_base::JsonValue;
+    use crate::launch_command::{LaunchCommand, OutputLanguage};
+    use crate::runtime::Runtime;
+    use crate::tokenize::Tokenizer;
+
+    fn runtime() -> Runtime {
+        Runtime::new(LaunchCommand::Eval {
+            code: String::new(), session: false, strict: true, language: OutputLanguage::English,
+        })
+    }
+
+    fn check(rt: &mut Runtime, code: &str, expected: bool) -> JsonValue {
+        let run = rt.run_litex_code(code).expect("public Runtime");
+        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert_eq!(run.success, expected, "{code}");
+        project_run_detailed(&run, rt, "eval", None)
+    }
+
+    fn find_rule(value: &JsonValue) -> Option<&JsonValue> {
+        match value {
+            JsonValue::Object(fields) => {
+                if fields.get("rule").and_then(|value| value.as_str().ok()) == Some("ModNestedDivisibleAbsorption") {
+                    return Some(value);
+                }
+                fields.keys_in_order().into_iter().find_map(|key| find_rule(fields.get(&key).unwrap()))
+            }
+            JsonValue::Array(items) => items.iter().find_map(find_rule),
+            _ => None,
+        }
+    }
+
+    #[test]
+    fn nested_mod_integer_multiple_tracer_and_integer_domains() {
+        let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/proof_nodes/equal/by_builtin_rule/nested_mod_integer_multiple.lit"));
+        let json = check(&mut runtime(), source, true);
+        let rule = find_rule(&json).expect("actual winning rule");
+        let requirements = rule.as_object().unwrap().get("proof_of_requirement_facts").unwrap();
+        let JsonValue::Array(requirements) = requirements else { panic!("requirements array") };
+        assert_eq!(requirements.len(), 1);
+        assert_eq!(requirements[0].as_object().unwrap().get("success"), Some(&JsonValue::Bool(true)));
+        assert!(requirements[0].stringify().contains("k $in Z"));
+        check(&mut runtime(), "forall a Z,m N+:\n    (a%(2*m))%m=a%m\n", true);
+        check(&mut runtime(), "(3%((-2)*4))%4=3%4\n", true);
+    }
+
+    #[test]
+    fn nested_mod_integer_multiple_rejects_fractional_multiplier_and_wrong_shapes() {
+        for code in [
+            "(3%((1/2)*4))%4=3%4\n",
+            "(3%(4*(1/2)))%4=3%4\n",
+            "forall a Z,k R,m N+:\n    k*m $in N+\n    =>:\n        (a%(k*m))%m=a%m\n",
+            "have a Z=3\nhave k R=1/2\nhave m N+=4\nk*m $in N+\n(a%(k*m))%m=a%m\n",
+            "forall a,k Z,m N+:\n    (a%(k*m))%m=a%m\n",
+            "forall a,b Z,k,m N+:\n    (a%(k*m))%m=b%m\n",
+            "forall a Z,k,m,n N+:\n    (a%(k*m))%n=a%n\n",
+            "(3%(0*4))%4=3%4\n",
+        ] {
+            check(&mut runtime(), code, false);
+        }
+    }
+
+    #[test]
+    fn nested_mod_integer_multiple_retains_actual_integer_premise_citation() {
+        let code = "forall a Z,k R,m N+:\n    k $in Z\n    k*m $in N+\n    =>:\n        (a%(k*m))%m=a%m\n";
+        let json = check(&mut runtime(), code, true);
+        let statement = &json.as_object().unwrap().get("statement_results").unwrap().as_array().unwrap()[0];
+        let verify = statement.as_object().unwrap().get("verify").unwrap().as_object().unwrap();
+        let assumption = &verify.get("assumed_dom_facts").unwrap().as_array().unwrap()[0];
+        let source = &assumption.as_object().unwrap().get("store_and_infer").unwrap().as_object().unwrap().get("stores").unwrap().as_array().unwrap()[0];
+        let source_id = source.as_object().unwrap().get("fact_id").unwrap().as_str().unwrap();
+        let rule = find_rule(&json).expect("actual winning rule").as_object().unwrap();
+        let premise = &rule.get("proof_of_requirement_facts").unwrap().as_array().unwrap()[0];
+        let premise = premise.as_object().unwrap();
+        assert_eq!(premise.get("fact").unwrap().as_str().unwrap(), "k $in Z");
+        let proof = premise.get("searched_proof").unwrap().as_object().unwrap();
+        assert_eq!(proof.get("cite_fact_id").unwrap().as_str().unwrap(), source_id);
+    }
+
+    #[test]
+    fn nested_mod_integer_multiple_respects_search_ceiling() {
+        let mut rt = runtime();
+        check(&mut rt, "have a Z\nhave k,m N+\n", true);
+        // Check the enclosing operator domains first, so this test isolates
+        // truth-search permissions rather than unrelated low-ceiling WD.
+        check(&mut rt, "k*m $in Z\nk*m!=0\na%(k*m) $in Z\nm!=0\n", true);
+        let tokens = Tokenizer::new().tokenize("(a%(k*m))%m=a%m", rt.current_file.clone()).unwrap();
+        let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else { panic!("fact") };
+        for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty] {
+            assert!(rt.verify_fact(&goal, VerifyState::new(level)).unwrap().is_failed());
+        }
+        assert!(!rt.verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule)).unwrap().is_failed());
+    }
+
+    #[test]
+    fn nested_mod_integer_multiple_failed_equality_does_not_publish_or_poison_reuse() {
+        let mut rt = runtime();
+        let wrong = "(3%((1/2)*4))%4=3%4\n";
+        check(&mut rt, wrong, false);
+        check(&mut rt, "1=3\n", false);
+        check(&mut rt, "forall a Z,k,m N+:\n    (a%(k*m))%m=a%m\n", true);
+        check(&mut rt, wrong, false);
+        check(&mut rt, "(3%((1/2)*4))%4=1\n3%4=3\n", true);
+        check(&mut rt, "1=3\n", false);
     }
 }

@@ -7,7 +7,6 @@ use crate::ast::obj::{
     IntegerOperator, Literal, Mod, Number, Obj, StandardSet,
 };
 use crate::exec_env::exist_shaped_fact_index_key::{
-    exist_shaped_fact_alpha_match_key,
     exist_shaped_fact_can_prove_goal,
     exist_shaped_fact_known_lookup_keys,
 };
@@ -562,7 +561,10 @@ impl Runtime {
             },
             Err(_) => return Ok(None),
         };
-        if exist_shaped_fact_alpha_match_key(&instantiated) != exist_shaped_fact_alpha_match_key(goal) {
+        // The old textual key only renamed existential witnesses. Inner
+        // AnonymousFn/SetBuilder binders may have fresh IDs after instantiation.
+        // Use the same complete structural alpha contract as known-exist reuse.
+        if !plain_exist_facts_alpha_equal(instantiated.plain(), goal.plain()) {
             return Ok(None);
         }
 
@@ -581,3 +583,7 @@ impl Runtime {
         }))
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../tests/unit/execute/forall_exist_instantiation/tests.rs"]
+mod forall_exist_instantiation_tests;

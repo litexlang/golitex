@@ -285,17 +285,44 @@ impl Runtime {
                 ));
             }
         }
-        for part in &parts {
-            goals.push(equality(
-                self,
-                aggregate.func.clone(),
-                part.func.clone(),
-                fact,
-            ));
+        if matches!(aggregate.domain, AggregationDomain::Range(..)) {
+            for part in &parts {
+                goals.push(equality(self, aggregate.func.clone(), part.func.clone(), fact));
+            }
         }
         let Some(premises) = self.aggregate_identity_premises(goals, state)? else {
             return Ok(None);
         };
+        // Restrictions have different function domains. What partitioning needs
+        // is agreement on each part, not global equality of the functions.
+        let mut callbacks = Vec::new();
+        if matches!(aggregate.domain, AggregationDomain::FiniteSet(..)) {
+            for part in &parts {
+                if crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(aggregate.func, part.func) {
+                    callbacks.push(FinitePartitionCallbackAgreementProof::SameFunction(FinitePartitionSameFunctionProof {}));
+                    continue;
+                }
+                let AggregationDomain::FiniteSet(domain) = part.domain else { return Ok(None); };
+                if super::helper::finite_restriction_matches(part.func, domain, aggregate.func) {
+                    callbacks.push(FinitePartitionCallbackAgreementProof::LiteralRestriction(FinitePartitionLiteralRestrictionProof {}));
+                    continue;
+                }
+                // Preserve the sufficient whole-function equality route (e.g.
+                // a stored callable alias), without requiring it for restrictions.
+                let same_function = equality(self, aggregate.func.clone(), part.func.clone(), fact);
+                let equality = self.verify_builtin_rule_premise(&same_function, *state)?;
+                if !equality.is_failed() {
+                    callbacks.push(FinitePartitionCallbackAgreementProof::EqualFunctions(FinitePartitionEqualFunctionsProof { equality }));
+                    continue;
+                }
+                let Some(proof) = self.aggregate_pointwise_proof(part.domain, fact, state, |rt, index, expansions| {
+                    let Some(left) = function_at(rt, aggregate.func, index, expansions)? else { return Ok(None); };
+                    let Some(right) = function_at(rt, part.func, index, expansions)? else { return Ok(None); };
+                    Ok(Some((left, right)))
+                })? else { return Ok(None); };
+                callbacks.push(FinitePartitionCallbackAgreementProof::Pointwise(proof));
+            }
+        }
         Ok(Some(match (aggregate.domain, aggregate.product) {
             (AggregationDomain::Range(..), false) => {
                 AggregateIdentityBuiltinRuleProof::RangeSumPartition(
@@ -309,12 +336,12 @@ impl Runtime {
             }
             (AggregationDomain::FiniteSet(..), false) => {
                 AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(
-                    FiniteSetSumDisjointUnionBuiltinRuleProof { premises },
+                    FiniteSetSumDisjointUnionBuiltinRuleProof { premises, callbacks },
                 )
             }
             (AggregationDomain::FiniteSet(..), true) => {
                 AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(
-                    FiniteSetProductDisjointUnionBuiltinRuleProof { premises },
+                    FiniteSetProductDisjointUnionBuiltinRuleProof { premises, callbacks },
                 )
             }
         }))

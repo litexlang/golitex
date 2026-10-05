@@ -19,6 +19,10 @@ Showcase migration tracers (strict, no trust):
   parameters under alpha-renamed local binders, including nested builders.
 - [Anonymous application range](anonymous_application_range_alpha.lit): alpha
   equality between the called literal and the literal whose range is used.
+- [Real Cartesian function arithmetic](real_cart_function_arithmetic.lit): real
+  function values compose under subtraction and a guarded quotient inside
+  absolute-value WD. The enclosing WD checks function arguments and divisors;
+  constructor terminals retain signature citations at their inherited ceiling.
 
 `cargo test --release showcase_local_repair_tests` checks these examples,
 their actual showcase prefixes, and carrier/guard/body/capture counterexamples.

@@ -14,7 +14,7 @@ use std::collections::HashMap;
 
 use crate::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::ast::obj::{
-    FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj,
+    FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, StructAndFieldAccessObj,
 };
 use crate::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
@@ -199,6 +199,9 @@ fn fn_preimage_application_obj(function: &Obj, args: &[Obj]) -> Option<Obj> {
             FnObjHead::AnonymousFnLiteral(Box::new(anon.clone()))
         }
         Obj::InstantiatedTemplateObj(inst) => FnObjHead::InstantiatedTemplateObj(inst.clone()),
+        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field)) => {
+            FnObjHead::FieldAccess(field.clone())
+        }
         _ => return None,
     };
     let group = args.iter().cloned().map(Box::new).collect();

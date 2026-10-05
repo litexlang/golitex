@@ -37,7 +37,30 @@ verify_equal_fact(goal, state)
        3 strategies and searched peer bridges (premises 2)
        4 object definitions and known forall (premises 2)
        rewrite at (4,true) -> residual at (4,false)
+  -> on a search miss, actual literal beta using this equality's checked WD
+       only when stage 4 is allowed; residual truth at premise ceiling 2
 ```
+
+The literal-beta leaf in `by_fn_application/by_literal_beta.rs` references the
+parent equality's WD side for the exact submitted anonymous-function call.
+It requires one argument group, exact arity and capture-safe substitution.
+Parent WD has already checked this literal's body, argument carriers and
+guards; repeating that check at the lower residual-truth ceiling can lose a
+restriction's callback carrier proof. The leaf searches the substituted
+residual equality without raising that ceiling or recording new WD. Named
+aliases and alternative bodies retain their separate selected-body checks.
+Detailed evidence retains the parent-side reference, substituted body and
+residual equality proof. See the maintained restricted-literal-beta tracer.
+
+Forall argument matching may infer free parameters inside a submitted literal
+anonymous function, as it already does inside a set builder. Local binders are
+aligned only for proposing the substitution; inferred arguments cannot capture
+them. The complete instantiated literal still passes strict equality, including
+all signature domains, guard syntax, return carrier and body. Forall-exist
+reuse then compares the whole instantiated conclusion with the existing
+structural alpha checker, which also handles nested binders; its old textual
+key only renamed the existential witnesses. Type and theorem-domain obligations
+retain the existing premise ceiling and are proved before returning evidence.
 
 There is no separate strategy search state or depth budget. A pure stored
 alpha-path citation belongs to level 0; a newly proved peer bridge belongs to
@@ -291,3 +314,5 @@ field inversion are not added. Pure leaf tests separately retain symbolic,
 undefined and exhausted misses; public statement tests check WD and display
 evaluation. See `tests/unit/execute/closed_exact_elementary_calculation/tests.rs`
 and the four `closed_*_calculation.lit` tracers.
+
+Power-set membership now has a local known-subset route: both fixed subset arguments are the already checked membership element and PowerSet base. `PowerSetMembershipSubsetProof::KnownSubset` retains the queried subset and the existing read-only cite/argument-identity proofs. `VerifiedSubset` keeps the former independent successful verifier route and unchanged premise ceiling. This does not change raw known lookup, atomic WD, caching, publication or search permissions. The maintained tracer is `examples/proof_nodes/atomic/by_builtin_rule/in_power_set_from_restricted_image.lit`.

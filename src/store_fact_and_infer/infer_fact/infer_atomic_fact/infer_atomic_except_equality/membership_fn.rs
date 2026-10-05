@@ -3,6 +3,7 @@ use crate::ast::fact::{
 };
 use crate::ast::obj::{
     FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, SetFormer, StandardSet,
+    StructAndFieldAccessObj,
 };
 use crate::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
@@ -307,7 +308,9 @@ fn application_is_displayed_preimage(element: &Obj, function: &Obj) -> bool {
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.as_ref().clone()))
         }
         FnObjHead::InstantiatedTemplateObj(inst) => Obj::InstantiatedTemplateObj(inst.clone()),
-        FnObjHead::FieldAccess(_) => return false,
+        FnObjHead::FieldAccess(field) => {
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field.clone()))
+        }
     };
     head_obj.ir() == function.ir()
 }
@@ -319,6 +322,9 @@ fn preimage_application_obj(function: &Obj, args: &[Obj]) -> Option<Obj> {
             FnObjHead::AnonymousFnLiteral(Box::new(anon.clone()))
         }
         Obj::InstantiatedTemplateObj(inst) => FnObjHead::InstantiatedTemplateObj(inst.clone()),
+        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field)) => {
+            FnObjHead::FieldAccess(field.clone())
+        }
         _ => return None,
     };
     let group = args.iter().cloned().map(Box::new).collect();

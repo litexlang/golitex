@@ -1,0 +1,58 @@
+# SquareSumComponentZero: each base must be verified real.
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/square_sum_zero_real_guard.lit
+# Before: false complex implication accepted (1^2+i^2=0, but 1!=0).
+# forall a,b C:
+#     a^2+b^2=0
+#     =>:
+#         a=0
+# After: complex counterexamples are rejected by executable Rust regressions.
+
+forall a,b R:
+    a^2+b^2=0
+    =>:
+        a=0
+        b=0
+
+forall a,b C:
+    a $in R
+    b $in R
+    a^2+b^2=0
+    =>:
+        a=0
+        b=0
+
+forall a,b R:
+    a*a+b*b=0
+    =>:
+        a=0
+        b=0
+
+forall a,b,z R:
+    a^2+b^2=z
+    z=0
+    =>:
+        a=0
+        b=0
+
+# Before: the adjacent nonzero leaf also accepted this false implication.
+# forall a,b C:
+#     a!=0
+#     =>:
+#         a^2+b^2!=0
+# After: both real memberships and the actual nonzero component are required.
+forall a,b R:
+    a!=0
+    =>:
+        a^2+b^2!=0
+forall a,b C:
+    a $in R
+    b $in R
+    b!=0
+    =>:
+        a*a+b*b!=0
+
+# The reverse implication is valid over C and remains supported.
+forall a,b C:
+    a^2+b^2!=0
+    =>:
+        a!=0 or b!=0

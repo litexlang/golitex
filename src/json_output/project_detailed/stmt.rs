@@ -20,7 +20,6 @@ use crate::execute::execute_fact_stmt::ExecFactStmtResult;
 use crate::execute::execute_proof_block_stmt::{
     ExecClaimStmtResult, ExecProofBlockStmtResult, ExecSketchStmtResult,
 };
-use crate::execute::execute_register_stmt::ExecRegisterStmtResult;
 use crate::execute::execute_witness_stmt::ExecWitnessStmtResult;
 use crate::execute::{
     ExecAxiomStmtResult, ExecCommandStmtResult, ExecDefAbstractPropStmtSuccessResult,
@@ -47,7 +46,7 @@ pub fn project_stmt_detailed(result: &ExecStmtResult, runtime: &Runtime) -> Json
         ExecStmtResult::Witness(w) => project_witness(w, runtime),
         ExecStmtResult::Trust(t) => project_trust(t, runtime),
         ExecStmtResult::By(b) => project_by(b, runtime),
-        ExecStmtResult::Register(r) => project_register(r, runtime),
+        ExecStmtResult::Register(r) => super::register::project_register(r, runtime),
         ExecStmtResult::ReleaseAndExpand(r) => project_release_and_expand(r, runtime),
         ExecStmtResult::ProofBlock(p) => project_proof_block(p, runtime),
         ExecStmtResult::Command(c) => project_command(c, runtime),
@@ -769,6 +768,47 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                         ("kind", string("witness_atomic_fact")),
                         ("statement", string(s.statement.readable_string())),
                         (
+                            "prop_argument_type_checks",
+                            project_verify_facts(&s.prop_argument_type_checks, runtime),
+                        ),
+                        (
+                            "projected_exist",
+                            string(crate::ast::fact::exist_shaped_fact_to_fact(
+                                &s.projected_exist,
+                            ).readable_string()),
+                        ),
+                        (
+                            "exist_fact_well_defined",
+                            project_fact_wd_proof(&s.ambient.exist_fact_well_defined, runtime),
+                        ),
+                        (
+                            "witness_obj_well_defined",
+                            JsonValue::Array(
+                                s.ambient
+                                    .witness_obj_well_defined
+                                    .iter()
+                                    .map(|wd| project_verify_obj_wd(wd, runtime))
+                                    .collect(),
+                            ),
+                        ),
+                        (
+                            "witness_type_checks",
+                            project_verify_facts(&s.ambient.witness_type_checks, runtime),
+                        ),
+                        ("proof_steps", project_stmt_steps(&s.proof_steps, runtime)),
+                        (
+                            "body_checks",
+                            project_verify_facts(&s.obligations.body_checks, runtime),
+                        ),
+                        (
+                            "uniqueness_check",
+                            s.obligations
+                                .uniqueness_check
+                                .as_ref()
+                                .map(|check| project_verify_fact(check, runtime))
+                                .unwrap_or(JsonValue::Null),
+                        ),
+                        (
                             "store_and_infer",
                             project_store_and_infer(&s.store_and_infer_result, runtime),
                         ),
@@ -817,12 +857,16 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                     ],
                 )
             }
-            crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Failed(_) => {
+            crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Failed(f) => {
                 object_for(
                     runtime,
                     vec![
                         ("success", bool_value(false)),
                         ("kind", string("witness_nonempty_set")),
+                        (
+                            "failure",
+                            super::witness_failure::project_witness_nonempty_failure(f, runtime),
+                        ),
                     ],
                 )
             }
@@ -1373,16 +1417,6 @@ fn project_enumeration_assignments(
                 )
             })
             .collect(),
-    )
-}
-
-fn project_register(result: &ExecRegisterStmtResult, runtime: &Runtime) -> JsonValue {
-    object_for(
-        runtime,
-        vec![
-            ("success", bool_value(!result.is_failed())),
-            ("kind", string("register")),
-        ],
     )
 }
 

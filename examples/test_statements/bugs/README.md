@@ -32,6 +32,11 @@ concrete discussion. See the [suite todo](../todo.md).
 | K010 | Finite-set membership supplies numeric carrier evidence before enumeration | [Acceptance and solution](../experience/problem_notes/K010-finite-numeric-carrier.md) |
 | D001 | Printed trust-have keeps its separator and replays successfully | [Display and replay acceptance](../experience/problem_notes/D001-trust-have-display.md) |
 
+The broader FN07 field-function construction and GEO03 square-inference
+performance findings are also [repaired and archived](../experience/problem_notes/field-preimage-and-power-2026-10-04.md).
+Their canonical cards are closed; they are not new K-number groups. Independent
+replay, Detailed projection and complete release/geometry gates remain separate.
+
 ## Reclassified capability limitations
 
 K003 requires an [explicit recursive equality chain](../experience/problem_notes/K003-explicit-recursive-equation-chain.md). K004 now uses the user's [explicit arithmetic chain](../experience/problem_notes/K004-explicit-recursive-increment-chain.md). Both are current automatic-search limitations and are no longer open bugs.
