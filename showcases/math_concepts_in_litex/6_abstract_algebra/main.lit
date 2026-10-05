@@ -251,6 +251,8 @@ prop is_prime_ideal(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul
             x $in I or y $in I
 
 prop is_ring_homomorphism(A nonempty_set, add_A fn(x, y A) A, zero_A A, neg_A fn(x A) A, mul_A fn(x, y A) A, one_A A, B nonempty_set, add_B fn(x, y B) B, zero_B B, neg_B fn(x B) B, mul_B fn(x, y B) B, one_B B, map fn(x A) B):
+    $is_commutative_ring(A, add_A, zero_A, neg_A, mul_A, one_A)
+    $is_commutative_ring(B, add_B, zero_B, neg_B, mul_B, one_B)
     forall x, y A:
         map(add_A(x, y)) = add_B(map(x), map(y))
         map(mul_A(x, y)) = mul_B(map(x), map(y))
@@ -261,6 +263,7 @@ prop is_ring_homomorphism(A nonempty_set, add_A fn(x, y A) A, zero_A A, neg_A fn
 
 # Quotient presentation: flat parameters (no Setting pack).
 prop is_quotient_ring_presentation(A nonempty_set, add_A fn(x, y A) A, zero_A A, neg_A fn(x A) A, mul_A fn(x, y A) A, one_A A, B nonempty_set, add_B fn(x, y B) B, zero_B B, neg_B fn(x B) B, mul_B fn(x, y B) B, one_B B, map fn(x A) B, I power_set(A)):
+    $is_ring_homomorphism(A, add_A, zero_A, neg_A, mul_A, one_A, B, add_B, zero_B, neg_B, mul_B, one_B, map)
     $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
     forall kernel_element I:
         map(kernel_element) = zero_B
@@ -371,6 +374,19 @@ thm field_is_integral_domain:
         =>:
             $is_integral_domain(A, add, zero, neg, mul, one)
     by def $is_field(A, add, zero, neg, mul, one)
+    claim:
+        ? forall x, y A:
+            mul(x, y) = zero
+            =>:
+                x = zero or y = zero
+        by cases:
+            ? x = zero or y = zero
+            case x = zero:
+                x = zero
+            case x != zero:
+                obtain inverse_x from exist inv_x A st {mul(x, inv_x) = one, mul(inv_x, x) = one}
+                y = mul(one, y) = mul(mul(inverse_x, x), y) = mul(inverse_x, mul(x, y)) = mul(inverse_x, zero) = zero
+    by def $is_integral_domain(A, add, zero, neg, mul, one)
 
 thm prime_ideal_gives_integral_domain_quotient:
     ? forall A nonempty_set, add_A fn(x, y A) A, zero_A A, neg_A fn(x A) A, mul_A fn(x, y A) A, one_A A, B nonempty_set, add_B fn(x, y B) B, zero_B B, neg_B fn(x B) B, mul_B fn(x, y B) B, one_B B, map fn(x A) B, I power_set(A):

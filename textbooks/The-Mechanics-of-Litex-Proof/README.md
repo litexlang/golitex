@@ -1,100 +1,56 @@
 # The Mechanics of Litex Proof
 
-> **Development status:** This module is developed in public and may contain
-> work at different maturity levels. Its presence in the repository is not a
-> completion claim; the verification evidence, explicit `trust` boundaries,
-> and known limitations below describe what is currently established.
+A Litex textbook covering calculation, structured proofs, logic, induction,
+number theory, functions, sets and relations. Each chapter contains mathematical
+statements, proof ideas and executable Litex proofs. Shared supporting theorems
+are proved in `citation.lit`.
 
-This directory is the canonical Litex module for *The Mechanics of Litex
-Proof*. Its workspace is registered in `scripts/.textbooks`. The ordered
-exports in [`litex.config`](litex.config) load the preface, shared citation
-surface, Chapters 0--10, and the executable todo boundary; no second draft or
-publication tree is maintained.
+## Run
 
-Build and verify the complete module with the release binary:
+From the repository root:
 
-```text
+```sh
 cargo build --release
-target/release/litex -graph -r scripts/The-Mechanics-of-Litex-Proof/textbook
+target/release/litex -r textbooks/The-Mechanics-of-Litex-Proof
 ```
 
-For an individual registered chapter, use:
+For strict verification:
 
-```text
-target/release/litex -graph -f scripts/The-Mechanics-of-Litex-Proof/textbook/chapter09-sets.lit
+```sh
+target/release/litex -strict -r textbooks/The-Mechanics-of-Litex-Proof
 ```
 
-As of 2026-08-17, every registered `.lit` file passes `-f`, and the complete
-module passes the strict release project gate. The executable module contains
-no `trust`, `axiom`, or `abstract_prop` statement. It does not import
-`std/basics`: kernel builtins provide the primitive arithmetic interface, while
-book-specific reusable facts are defined in `citation.lit` and cited explicitly.
+To check the configured book prefix through an individual chapter:
 
-## Proof boundary used by the book
-
-Atomic proof search follows a visible order:
-
-1. an already-known non-forall atomic fact;
-2. deterministic builtin computation or one direct builtin rule;
-3. a structural builtin strategy;
-4. an applicable known forall visible in the current runtime;
-5. a user-defined strategy.
-
-A direct builtin rule does not recursively call another direct rule. A builtin
-rule premise may use a known non-forall fact or deterministic computation. A
-builtin strategy may descend through a strictly smaller constructor shape;
-each immediate child is checked first as a known fact or computation and then
-with one fresh direct rule before further structural decomposition.
-
-The corresponding source interfaces are:
-
-- `by def` introduces a positive defined predicate after its mathematical body
-  has been proved. Negative predicates continue to use ordinary proofs such as
-  `by contra`.
-- When a concrete predicate's whole body is one positive ordinary `exist` fact,
-  `obtain k from $p(args)` and `witness $p(args) from value` cross that named
-  boundary directly at runtime. Named construction excludes `exist!`, which
-  uses explicit `witness exist! ...` plus `by def`. Raw existentials, abstract
-  predicates, nested local definitions, and multi-clause definitions also keep
-  their explicit forms.
-- `release thm <builtin-name>(...)` invokes a named semantic object rule, such as
-  `set_builder_member` or `tuple_equal_from_coordinates`. These interfaces are
-  not silently included in automatic atomic search.
-- A nested function application is unfolded one function definition at a time.
-  The carrier of an immediate compound argument is stated before evaluation
-  when the domain check needs it as a known leaf.
-- Automatic known-forall instantiation uses the candidates visible in the
-  current runtime, which may include earlier exports or referenced imported
-  modules. Use qualified `release thm` when the dependency should be explicit or
-  automatic matching does not supply the intended instance; a local claim may
-  deliberately turn that result into a nearby reusable forall.
-- `let name = value` is used for a proof-local equality alias when the value's
-  carrier need not be established separately. Keep typed `have` when its
-  carrier fact is part of the proof, especially for products, sets, and
-  iterated objects.
-- A witness may omit its indented body when the substituted existential body is
-  already known. Chapter 8 exposes `inverse_implies_bijective` and
-  `bijective_implies_has_inverse`; examples that check both inverse equations
-  reuse the first theorem instead of reopening injectivity and surjectivity.
-
-The mathematical rationale and dependency map live in
-[`math_collections.md`](math_collections.md). Iteration evidence is kept outside
-the shipping module in
-`scripts/The-Mechanics-of-Litex-Proof/experience/proof_journals/`.
-
-## Editing workflow
-
-For proof iteration, put one literal outermost `try:` block in the current
-registered file and run the real configured prefix:
-
-```text
-target/release/litex -graph -f \
-  scripts/The-Mechanics-of-Litex-Proof/textbook/chapter10-relations.lit
+```sh
+target/release/litex -strict -f textbooks/The-Mechanics-of-Litex-Proof/chapter09-sets.lit
 ```
 
-Record materially distinct failures and the accepted replacement in the
-chapter's JSON proof journal. Materialize accepted source without the outer
-`try:` wrapper, then finish with a clean release `-f` and the complete release
-`-r` gate. A session can preload only a file that already verifies; it is not a
-pre-target repair environment. Keep working records in the owning workspace,
-outside `textbook/`.
+`litex.config` loads the preface, citation module and Chapters 0–10 in order.
+
+## Mathematical conventions
+
+When a concept is already provided by Litex, the book introduces its definition
+and simple examples, then uses the builtin object for later proofs. Quotients
+and remainders use `quot(n, d)` and `n % d` with positive divisors. For a negative
+divisor, change the quotient sign and retain the nonnegative remainder. The
+builtin `gcd(a, b)` requires at least one argument to be nonzero.
+
+Pascal's triangle is defined recursively. Bezout's identity uses the proved
+citation theorem. The natural-set shift examples use `power_set(N)`.
+
+## Contents
+
+| Chapter | Topic |
+| --- | --- |
+| 0 | Introduction |
+| 1 | Proofs by calculation |
+| 2 | Structured proofs |
+| 3 | Parity and divisibility |
+| 4 | Further structured proofs |
+| 5 | Logic |
+| 6 | Induction |
+| 7 | Number theory |
+| 8 | Functions |
+| 9 | Sets |
+| 10 | Relations |

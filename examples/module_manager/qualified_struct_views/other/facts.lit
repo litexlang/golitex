@@ -1,0 +1,3 @@
+struct Pair:
+    first Z
+    second Z

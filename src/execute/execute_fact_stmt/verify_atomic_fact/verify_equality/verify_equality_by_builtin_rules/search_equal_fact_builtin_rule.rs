@@ -301,6 +301,8 @@ fn map_equality_identities_wave5_proof(
         W::QuotSelfOne(p) => EqualitySearchProofByBuiltinRule::QuotSelfOne(p),
         W::LcmCommutative(p) => EqualitySearchProofByBuiltinRule::LcmCommutative(p),
         W::LcmIdempotentAbs(p) => EqualitySearchProofByBuiltinRule::LcmIdempotentAbs(p),
+        W::LcmLeftAbsDivisibility(p) => EqualitySearchProofByBuiltinRule::LcmLeftAbsDivisibility(p),
+        W::LcmRightAbsDivisibility(p) => EqualitySearchProofByBuiltinRule::LcmRightAbsDivisibility(p),
         W::GcdCommutative(p) => EqualitySearchProofByBuiltinRule::GcdCommutative(p),
         W::GcdIdempotentAbs(p) => EqualitySearchProofByBuiltinRule::GcdIdempotentAbs(p),
         W::GcdRightZeroAbs(p) => EqualitySearchProofByBuiltinRule::GcdRightZeroAbs(p),

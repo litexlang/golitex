@@ -145,12 +145,12 @@ fn order_stage_a_integer_successor_adjacency_predecessor() {
 #[test]
 fn order_stage_a_positive_even_gt_one() {
     let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "have i Z").is_failed());
-    assert!(!exec_one(&mut runtime, "trust i $in N+").is_failed());
+    assert!(!exec_one(&mut runtime, "have count Z").is_failed());
+    assert!(!exec_one(&mut runtime, "trust count $in N+").is_failed());
     assert!(!exec_one(&mut runtime, "trust 2 != 0").is_failed());
-    assert!(!exec_one(&mut runtime, "trust i % 2 = 0").is_failed());
+    assert!(!exec_one(&mut runtime, "trust count % 2 = 0").is_failed());
     assert!(
-        !exec_one(&mut runtime, "1 < i").is_failed(),
+        !exec_one(&mut runtime, "1 < count").is_failed(),
         "positive even exceeds one"
     );
 }

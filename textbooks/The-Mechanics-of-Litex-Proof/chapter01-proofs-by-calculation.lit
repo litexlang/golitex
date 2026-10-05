@@ -519,12 +519,17 @@ forall x, y Z:
 # Let `r` and `s` be rational numbers, and suppose that `s + 3 >= r` and
 # `s + r <= 3`. Show that `r <= 3`.
 
-forall r, s Q:
-    s + 3 >= r
-    s + r <= 3
-    =>:
-        r <= s + 3
-        r = (s + r + r - s) / 2 <= (3 + (s + 3) - s) / 2 = 3
+claim:
+    ? forall r, s Q:
+        s + 3 >= r
+        s + r <= 3
+        =>:
+            r <= s + 3
+            r = (s + r + r - s) / 2 <= (3 + (s + 3) - s) / 2 = 3
+    r <= s + 3
+    s + r + r <= 3 + (s + 3)
+    s + r + r - s <= 3 + (s + 3) - s
+    (s + r + r - s) / 2 <= (3 + (s + 3) - s) / 2
 
 # This example adds two useful order rules to the previous pattern.
 
@@ -567,26 +572,41 @@ forall x, y R:
 # `B >= 1`, `x <= B`, `y <= B`, `0 <= u < A` and `0 <= v < A`. Show that
 # `u * y + v * x + u * v < 3 * A * B`.
 
-forall u, v, x, y, A, B R:
-    0 < A
-    A <= 1
-    1 <= B
-    x <= B
-    y <= B
-    0 <= u
-    0 <= v
-    u < A
-    v < A
-    =>:
-        0 <= B
-        u <= A
-        v <= A
-        u * y + v * x + u * v <= u * B + v * B + u * v
-        u * B + v * B + u * v <= A * B + A * B + A * v
-        A * B + A * B + A * v <= A * B + A * B + 1 * v
-        A * B + A * B + 1 * v <= A * B + A * B + B * v
-        A * B + A * B + B * v < A * B + A * B + B * A
-        A * B + A * B + B * A = 3 * A * B
+claim:
+    ? forall u, v, x, y, A, B R:
+        0 < A
+        A <= 1
+        1 <= B
+        x <= B
+        y <= B
+        0 <= u
+        0 <= v
+        u < A
+        v < A
+        =>:
+            0 <= B
+            u <= A
+            v <= A
+            u * y + v * x + u * v <= u * B + v * B + u * v
+            u * B + v * B + u * v <= A * B + A * B + A * v
+            A * B + A * B + A * v <= A * B + A * B + 1 * v
+            A * B + A * B + 1 * v <= A * B + A * B + B * v
+            A * B + A * B + B * v < A * B + A * B + B * A
+            A * B + A * B + B * A = 3 * A * B
+    0 <= B
+    0 < B
+    u <= A
+    v <= A
+    u * y <= u * B
+    v * x <= v * B
+    u * v <= A * v
+    u * B <= A * B
+    v * B <= A * B
+    A * v <= 1 * v
+    1 * v <= B * v
+    B * v < B * A
+    u * y + v * x <= u * B + v * B
+    u * B + v * B <= A * B + A * B
 
 # New rules worth noticing here:
 
@@ -605,12 +625,18 @@ forall u, v, x, y, A, B R:
 
 # Show that if `t` is a real number and `t >= 10` then `t^2 - 3 * t + 17 >= 5`.
 
-forall t R:
-    t >= 10
-    =>:
-        10 <= t
-        0 <= t
-        t^2 - 3 * t + 17 = t * t - 3 * t + 17 >= 10 * t - 3 * t + 17 = 7 * t + 17 >= 7 * 10 + 17 >= 5
+claim:
+    ? forall t R:
+        t >= 10
+        =>:
+            10 <= t
+            0 <= t
+            t^2 - 3 * t + 17 = t * t - 3 * t + 17 >= 10 * t - 3 * t + 17 = 7 * t + 17 >= 7 * 10 + 17 >= 5
+    10 <= t
+    0 <= t
+    t * t >= 10 * t
+    7 * t >= 7 * 10
+    t * t - 3 * t >= 10 * t - 3 * t
 
 # New rules worth noticing here:
 
@@ -672,16 +698,28 @@ forall x, y R:
 # Let `a` and `b` be nonnegative rational numbers, and suppose that `a + b <= 8`.
 # Show that `3 * a * b + a <= 7 * b + 72`.
 
-forall a, b Q:
-    a >= 0
-    b >= 0
-    a + b <= 8
-    =>:
-        0 <= a
-        0 <= b
-        0 <= a^2
-        0 <= b^2
-        3 * a * b + a <= 2 * b^2 + a^2 + (3 * a * b + a) = 2 * ((a + b) * b) + (a + b) * a + a <= 2 * (8 * b) + 8 * a + a = 7 * b + 9 * (a + b) <= 7 * b + 9 * 8 = 7 * b + 72
+claim:
+    ? forall a, b Q:
+        a >= 0
+        b >= 0
+        a + b <= 8
+        =>:
+            0 <= a
+            0 <= b
+            0 <= a^2
+            0 <= b^2
+            3 * a * b + a <= 2 * b^2 + a^2 + (3 * a * b + a) = 2 * ((a + b) * b) + (a + b) * a + a <= 2 * (8 * b) + 8 * a + a = 7 * b + 9 * (a + b) <= 7 * b + 9 * 8 = 7 * b + 72
+    0 <= a
+    0 <= b
+    0 <= a^2
+    0 <= b^2
+    0 <= 2 * b^2
+    0 <= 2 * b^2 + a^2
+    (a + b) * b <= 8 * b
+    (a + b) * a <= 8 * a
+    9 * (a + b) <= 9 * 8
+    2 * ((a + b) * b) <= 2 * (8 * b)
+    2 * ((a + b) * b) + (a + b) * a <= 2 * (8 * b) + 8 * a
 
 # New rule worth noticing here:
 
@@ -694,11 +732,18 @@ forall a, b Q:
 # Let `a`, `b` and `c` be real numbers. Show that
 # `a^2 * (a^6 + 8 * b^3 * c^3) <= (a^4 + b^4 + c^4)^2`.
 
-forall a, b, c R:
+claim:
+    ? forall a, b, c R:
+        0 <= (a^2 * (b^2 - c^2))^2
+        0 <= (b^4 - c^4)^2
+        0 <= (a^2 * b * c - b^2 * c^2)^2
+        a^2 * (a^6 + 8 * b^3 * c^3) <= 2 * (a^2 * (b^2 - c^2))^2 + (b^4 - c^4)^2 + 4 * (a^2 * b * c - b^2 * c^2)^2 + a^2 * (a^6 + 8 * b^3 * c^3) = (a^4 + b^4 + c^4)^2
     0 <= (a^2 * (b^2 - c^2))^2
     0 <= (b^4 - c^4)^2
     0 <= (a^2 * b * c - b^2 * c^2)^2
-    a^2 * (a^6 + 8 * b^3 * c^3) <= 2 * (a^2 * (b^2 - c^2))^2 + (b^4 - c^4)^2 + 4 * (a^2 * b * c - b^2 * c^2)^2 + a^2 * (a^6 + 8 * b^3 * c^3) = (a^4 + b^4 + c^4)^2
+    0 <= 2 * (a^2 * (b^2 - c^2))^2
+    0 <= 4 * (a^2 * b * c - b^2 * c^2)^2
+    0 <= 2 * (a^2 * (b^2 - c^2))^2 + (b^4 - c^4)^2 + 4 * (a^2 * b * c - b^2 * c^2)^2
 
 # 1.5 How Litex verifies: matching and substitution
 
@@ -816,12 +861,14 @@ sketch:
 # known or be proved explicitly.
 
 sketch:
-    forall a, b, c R:
-        a > 0
-        b > 0
-        c > 0
-        =>:
-            0 < (a * b) * c
+    claim:
+        ? forall a, b, c R:
+            a > 0
+            b > 0
+            c > 0
+            =>:
+                0 < (a * b) * c
+        0 < a * b
 
 # Builtin proof search follows the same pattern-matching idea. Litex does not
 # start by asking you for a tactic name. It starts from the mathematical shape of

@@ -835,6 +835,10 @@ sketch:
 
 # 9.3.3 Example
 
+# This shift acts on sets of natural numbers. No natural n satisfies n + 1 = 0,
+# so both {} and {0} have empty preimages. Over the reals, -1 would belong to the
+# preimage of {0}; the example therefore uses power_set(N) throughout.
+
 # Here we show that the function
 
 # ```text
@@ -848,18 +852,31 @@ sketch:
 # contradiction.
 
 sketch:
-    prop injective_from_power_set_R_to_power_set_R(f fn(x power_set(R)) power_set(R)):
-        forall a, b power_set(R):
+    thm nonempty_from_not_empty:
+        ? forall s set:
+            s != {}
+            =>:
+                $is_nonempty_set(s)
+        by contra:
+            ? $is_nonempty_set(s)
+            impossible s = {}
+
+    prop injective_from_power_set_N_to_power_set_N(f fn(x power_set(N)) power_set(N)):
+        forall a, b power_set(N):
             f(a) = f(b)
             =>:
                 a = b
 
     have fn p(x power_set(N)) power_set(N) = {n N: (n + 1) $in x}
 
+    {0} $in power_set(N)
+    {} $in power_set(N)
+
     p({0}) = {n N: (n + 1) $in {0}}
 
     by contra:
         ? {n N: (n + 1) $in {0}} = {}
+        release thm nonempty_from_not_empty({n N: (n + 1) $in {0}})
         have x {n N: (n + 1) $in {0}}
         by enumerate finite_set:
             ? forall singleton_member {0}:
@@ -874,6 +891,7 @@ sketch:
 
     by contra:
         ? {n N: (n + 1) $in {}} = {}
+        release thm nonempty_from_not_empty({n N: (n + 1) $in {}})
         have n0 {n N: (n + 1) $in {}}
         witness $is_nonempty_set({}) from n0 + 1
         impossible $is_nonempty_set({})
@@ -881,7 +899,7 @@ sketch:
     p({}) = {}
 
     by contra:
-        ? not $injective_from_power_set_R_to_power_set_R(p)
+        ? not $injective_from_power_set_N_to_power_set_N(p)
         p({}) = p({0})
         {} = {0}
         0 = finite_set_size({}) = finite_set_size({0}) = 1
@@ -908,11 +926,10 @@ sketch:
 # Second, `witness $is_nonempty_set(s) from x` proves that a set is nonempty by
 # giving one concrete element of the set. For example, if the proof already knows
 # that `x $in s`, then the witness statement can derive `$is_nonempty_set(s)`.
-# When the witness needs a small proof, it can be written as a block:
+# The bodyless form uses that already established membership directly:
 
 # ```text
-# witness $is_nonempty_set(s) from x:
-#     proof_debt x $in s
+# witness $is_nonempty_set(s) from x
 # ```
 
 # Third, `finite_set_size(list_set)` is the number of elements in a finite listed set. For
@@ -930,18 +947,31 @@ sketch:
 # derive an impossible equality like `0 = 1`.
 
 sketch:
-    prop injective_from_power_set_R_to_power_set_R_empty(f fn(x power_set(R)) power_set(R)):
-        forall a, b power_set(R):
+    thm nonempty_from_not_empty:
+        ? forall s set:
+            s != {}
+            =>:
+                $is_nonempty_set(s)
+        by contra:
+            ? $is_nonempty_set(s)
+            impossible s = {}
+
+    prop injective_from_power_set_N_to_power_set_N_empty(f fn(x power_set(N)) power_set(N)):
+        forall a, b power_set(N):
             f(a) = f(b)
             =>:
                 a = b
 
     have fn p_shift_empty(x power_set(N)) power_set(N) = {n N: (n + 1) $in x}
 
+    {0} $in power_set(N)
+    {} $in power_set(N)
+
     p_shift_empty({0}) = {n N: (n + 1) $in {0}}
 
     by contra:
         ? {n N: (n + 1) $in {0}} = {}
+        release thm nonempty_from_not_empty({n N: (n + 1) $in {0}})
         have x {n N: (n + 1) $in {0}}
         by enumerate finite_set:
             ? forall singleton_member {0}:
@@ -961,6 +991,7 @@ sketch:
 
     by contra:
         ? {n N: (n + 1) $in {}} = {}
+        release thm nonempty_from_not_empty({n N: (n + 1) $in {}})
         have n0 {n N: (n + 1) $in {}}
         (n0 + 1) $in {}
         0 = n0 + 1 = 1
@@ -969,7 +1000,7 @@ sketch:
     p_shift_empty({}) = {}
 
     by contra:
-        ? not $injective_from_power_set_R_to_power_set_R_empty(p_shift_empty)
+        ? not $injective_from_power_set_N_to_power_set_N_empty(p_shift_empty)
         p_shift_empty({}) = p_shift_empty({0})
         {} = {0}
         0 $in {0}
@@ -1084,6 +1115,7 @@ sketch:
 
         by contra:
             ? not $surj_to_power(X, f)
+            {x X: not x $in f(x)} $in power_set(X)
             obtain a from exist a X st {f(a) = {x X: not x $in f(x)}}
             by contra:
                 ? not a $in f(a)

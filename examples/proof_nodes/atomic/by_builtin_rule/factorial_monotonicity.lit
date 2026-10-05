@@ -1,0 +1,23 @@
+# Natural factorial order, with the strict 0/1 boundary guarded.
+forall m,n N:
+    m<=n
+    =>:
+        factorial(m)<=factorial(n)
+forall m N+,n N:
+    m<n
+    =>:
+        factorial(m)<factorial(n)
+forall m,n N:
+    n>=m
+    =>:
+        factorial(n)>=factorial(m)
+forall m N+,n N:
+    n>m
+    =>:
+        factorial(n)>factorial(m)
+forall m,n N:
+    0<m
+    m<n
+    =>:
+        m $in N+
+        factorial(m)<factorial(n)

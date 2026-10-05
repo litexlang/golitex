@@ -1,0 +1,6 @@
+struct Pair:
+    first R
+    second R
+struct Tagged<S nonempty_set>:
+    value S
+    tag N

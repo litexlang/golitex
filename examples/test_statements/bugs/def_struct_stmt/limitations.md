@@ -62,3 +62,12 @@ definition still describe the same field set. No such partial patch is applied.
 [Canonical DEC04](../../../../plan/src收尾总清单.md#dec04).
 
 Back to [issue index](../README.md).
+
+## Serious-bug audit — 2026-10-05
+
+The complete Rust gate now has 933 passes and the same one unused-K negative
+assertion failure. No wrong numerical conclusion, strict trust bypass or new
+state defect was observed from this example. The original test remains; this
+turn does not repeat a semantic question or change struct representation.
+Qualified struct parsing is now repaired and its real module/path/carrier
+controls pass. [Consolidated acceptance](../../../../tests/tooling/acceptance/conversation-serious-bug-audit-2026-10-05.md).

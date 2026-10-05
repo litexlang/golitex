@@ -8,6 +8,6 @@ x $in A
 have B set, y B = R, 0
 y $in B
 y = 0
-have C nonempty_set, z C, n N = R, 2, 1
+have D nonempty_set, z D, n N = R, 2, 1
 z = 2
 n = 1

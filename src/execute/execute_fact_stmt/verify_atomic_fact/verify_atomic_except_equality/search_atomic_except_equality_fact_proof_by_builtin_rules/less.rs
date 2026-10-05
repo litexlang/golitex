@@ -20,6 +20,11 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    ExpStrictMonotone(super::exp_ln_order::ExpStrictMonotoneProof),
+    LnStrictMonotone(super::exp_ln_order::LnStrictMonotoneProof),
+    ExpStrictOrderReflection(super::exp_ln_order::ExpStrictOrderReflectionProof),
+    LnStrictOrderReflection(super::exp_ln_order::LnStrictOrderReflectionProof),
+    FactorialStrictMonotone(super::factorial_order::FactorialStrictMonotoneProof),
     // Converse order, citing an existing opposite-direction comparison.
     FromKnownGreater(FromKnownGreaterBuiltinRuleProof),
     FromKnownOrderComplement(FromKnownOrderComplementBuiltinRuleProof),
@@ -547,6 +552,10 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
+        if let Some(proof) = self.search_factorial_strict_order(fact, verify_state)? {
+            return Ok(Some(LessFactSearchProofByBuiltinRule::FactorialStrictMonotone(proof)));
+        }
+        if let Some(proof)=self.search_exp_ln_strict_order(fact,verify_state)? { return Ok(Some(proof)); }
         Ok(None)
     }
 

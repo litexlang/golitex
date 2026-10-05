@@ -4,6 +4,8 @@
 //! `AtomicExceptEqualityFactSearchProofByBuiltinRule`. Each family enum and
 //! leaf proof owns its copy here (not in `project_normal`).
 
+mod exp_ln_order;
+mod factorial_order;
 mod constructor_order;
 mod finite_aggregate;
 mod cite;

@@ -201,3 +201,84 @@ pub fn is_comparison_op(tok: &str) -> bool {
 pub fn is_comparison_str(atom_name: &str) -> bool {
     is_comparison_op(atom_name)
 }
+
+// These object spellings are parsed before identifier lookup. Binding one
+// would leave a declaration whose uses denote the builtin instead of its ID.
+pub(super) fn is_reserved_object_name(name: &str) -> bool {
+    matches!(
+        name,
+        I | E
+            | PI
+            | N
+            | Z
+            | Q
+            | R
+            | C
+            | N_POS
+            | Z_POS
+            | Q_POS
+            | R_POS
+            | Z_NEG
+            | Q_NEG
+            | R_NEG
+            | Z_STAR
+            | Q_STAR
+            | R_STAR
+            | C_STAR
+            | ABS
+            | SIN
+            | COS
+            | TAN
+            | COT
+            | ARCSIN
+            | ARCCOS
+            | ARCTAN
+            | ARCCOT
+            | SQRT
+            | FLOOR
+            | CEIL
+            | SIGN
+            | EXP
+            | LN
+            | RE
+            | IMG
+            | C_ABS
+            | FACTORIAL
+            | LOG
+            | UNION
+            | INTERSECT
+            | SET_MINUS
+            | FAMILY_UNION
+            | FAMILY_INTERSECT
+            | MIN
+            | MAX
+            | GCD
+            | LCM
+            | QUOT
+            | FINITE_SET_PRODUCT
+            | FINITE_SET_SUM
+            | SUM
+            | PRODUCT
+            | FINITE_SET_REDUCE
+            | REDUCE
+            | CART
+            | TUPLE
+            | CART_DIM
+            | TUPLE_DIM
+            | PROJ
+            | RANGE
+            | CLOSED_RANGE
+            | POWER_SET
+            | FINITE_SET_SIZE
+            | FINITE_SET_MAX
+            | FINITE_SET_MIN
+            | FN_RANGE
+            | FINITE_SEQ
+            | SEQ
+            | INDEX_UNION
+            | INDEX_INTERSECT
+            | INDEX_CART
+            | FN
+            | LET
+    )
+}

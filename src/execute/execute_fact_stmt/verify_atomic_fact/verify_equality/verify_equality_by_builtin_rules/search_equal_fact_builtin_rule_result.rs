@@ -33,7 +33,7 @@ use super::by_equality_identities_wave5::{
     FactorialSuccessorBuiltinRuleProof, GcdCommutativeBuiltinRuleProof,
     GcdIdempotentAbsBuiltinRuleProof, GcdLeftZeroAbsBuiltinRuleProof,
     GcdRightZeroAbsBuiltinRuleProof, LcmCommutativeBuiltinRuleProof,
-    LcmIdempotentAbsBuiltinRuleProof, QuotByOneBuiltinRuleProof, QuotSelfOneBuiltinRuleProof,
+    LcmIdempotentAbsBuiltinRuleProof, LcmLeftAbsDivisibilityProof, LcmRightAbsDivisibilityProof, QuotByOneBuiltinRuleProof, QuotSelfOneBuiltinRuleProof,
 };
 use super::by_equality_identities_wave6::{
     AbsNonnegEqualsSelfBuiltinRuleProof, AbsNonposEqualsNegationBuiltinRuleProof,
@@ -214,6 +214,8 @@ pub enum EqualitySearchProofByBuiltinRule {
     QuotSelfOne(QuotSelfOneBuiltinRuleProof),
     LcmCommutative(LcmCommutativeBuiltinRuleProof),
     LcmIdempotentAbs(LcmIdempotentAbsBuiltinRuleProof),
+    LcmLeftAbsDivisibility(LcmLeftAbsDivisibilityProof),
+    LcmRightAbsDivisibility(LcmRightAbsDivisibilityProof),
     GcdCommutative(GcdCommutativeBuiltinRuleProof),
     GcdIdempotentAbs(GcdIdempotentAbsBuiltinRuleProof),
     GcdRightZeroAbs(GcdRightZeroAbsBuiltinRuleProof),

@@ -506,7 +506,17 @@ impl Runtime {
                     fact_id: self.global_ids.allocate_fact_id(), left: fact.element.clone(),
                     right: Obj::Literal(Literal::Number(Number { normalized_value: "0".into() })), line_file: None,
                 }));
-                let positive_proof = self.verify_builtin_rule_premise(&positive, verify_state.clone())?;
+                let mut positive_proof = self.verify_builtin_rule_premise(&positive, verify_state)?;
+                if positive_proof.is_failed() {
+                    // The actual 0<x premise is equivalent to x>0, but the
+                    // inherited child cannot reopen a direction-flip builtin.
+                    let above_zero: Fact = LessFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: Obj::Literal(Literal::Number(Number { normalized_value: "0".into() })),
+                        right: fact.element.clone(), line_file: fact.line_file.clone(),
+                    }.into();
+                    positive_proof = self.verify_builtin_rule_premise(&above_zero, verify_state)?;
+                }
                 if !positive_proof.is_failed() {
                     return Ok(Some(InFactSearchProofByBuiltinRule::PositiveIntegerInNPos(
                         PositiveIntegerInNPosBuiltinRuleProof { integer_proof, positive_proof },

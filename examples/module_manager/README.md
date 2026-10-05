@@ -12,6 +12,7 @@ and [launch flow](../../src/run/README.md).
 | `export_order_repo/` | Import `A` before ordered root exports; preserve canonical module/export names. |
 | `trusted_template_prefix/` | Load an earlier checked generic template, then instantiate it from the later export. |
 | `import_alias_qualified_arithmetic/` | Qualified arithmetic using the `gf` import alias. |
+| `qualified_struct_views/` | Full and flattened qualified struct carriers, generic arguments, function returns and nested field types. |
 | `identifier_resolution/` | Distinct same-named exports and unknown-name rejection. |
 | `file_prefix/` | Selecting `a.lit` stops before the deliberately false `b.lit`. |
 | `file_extra/` | An unlisted `scratch.lit` requested with `-f` runs after all exports. It is not an export namespace. |
@@ -34,6 +35,7 @@ BIN="$PWD/target/release/litex"
 "$BIN" -strict -r examples/module_manager/export_order_repo
 "$BIN" -strict -f examples/module_manager/trusted_template_prefix/main.lit
 "$BIN" -strict -f examples/module_manager/qualified_template_names/main.lit
+"$BIN" -strict -f examples/module_manager/qualified_struct_views/main.lit
 "$BIN" -strict -f examples/module_manager/file_prefix/a.lit
 "$BIN" -strict -f examples/module_manager/file_extra/scratch.lit
 "$BIN" -strict -f examples/module_manager/isolated/alone.lit
@@ -74,5 +76,7 @@ eval code, and that the healthy cwd-eval control still succeeds.
 by existential consumption of an imported instance after `release struct def`.
 Imported facts do not automatically become ambient root facts. Structs with laws
 use source fallback until definitions-only KB products can restore the published
-foralls. Qualified carrier syntax such as `&L::base::RightZero<R>` is not used:
-that syntax is not yet supported by the parser.
+foralls. Qualified carrier syntax such as `&L::base::RightZero<R>` uses the same canonical
+owner lookup as template names. The dedicated
+[qualified struct fixture](qualified_struct_views/README.md) verifies current-export,
+full import and single-export paths with their type and path rejection controls.

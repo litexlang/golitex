@@ -30,6 +30,11 @@ use crate::json_output::explain::text::text;
 impl LessFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpStrictMonotone(p) => p.rule_name_and_message_en(),
+            Self::LnStrictMonotone(p) => p.rule_name_and_message_en(),
+            Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_en(),
+            Self::LnStrictOrderReflection(p) => p.rule_name_and_message_en(),
+            Self::FactorialStrictMonotone(p) => p.rule_name_and_message_en(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_en(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_en(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_en(),
@@ -76,6 +81,11 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpStrictMonotone(p) => p.rule_name_and_message_zh(),
+            Self::LnStrictMonotone(p) => p.rule_name_and_message_zh(),
+            Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_zh(),
+            Self::LnStrictOrderReflection(p) => p.rule_name_and_message_zh(),
+            Self::FactorialStrictMonotone(p) => p.rule_name_and_message_zh(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_zh(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_zh(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_zh(),
@@ -122,6 +132,11 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpStrictMonotone(p) => p.rule_name_and_message_zh_hant(),
+            Self::LnStrictMonotone(p) => p.rule_name_and_message_zh_hant(),
+            Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_zh_hant(),
+            Self::LnStrictOrderReflection(p) => p.rule_name_and_message_zh_hant(),
+            Self::FactorialStrictMonotone(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_zh_hant(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_zh_hant(),
@@ -168,6 +183,11 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpStrictMonotone(p) => p.rule_name_and_message_fr(),
+            Self::LnStrictMonotone(p) => p.rule_name_and_message_fr(),
+            Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_fr(),
+            Self::LnStrictOrderReflection(p) => p.rule_name_and_message_fr(),
+            Self::FactorialStrictMonotone(p) => p.rule_name_and_message_fr(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_fr(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_fr(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_fr(),
@@ -214,6 +234,11 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpStrictMonotone(p) => p.rule_name_and_message_ru(),
+            Self::LnStrictMonotone(p) => p.rule_name_and_message_ru(),
+            Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_ru(),
+            Self::LnStrictOrderReflection(p) => p.rule_name_and_message_ru(),
+            Self::FactorialStrictMonotone(p) => p.rule_name_and_message_ru(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_ru(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ru(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_ru(),
@@ -260,6 +285,11 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpStrictMonotone(p) => p.rule_name_and_message_es(),
+            Self::LnStrictMonotone(p) => p.rule_name_and_message_es(),
+            Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_es(),
+            Self::LnStrictOrderReflection(p) => p.rule_name_and_message_es(),
+            Self::FactorialStrictMonotone(p) => p.rule_name_and_message_es(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_es(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_es(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_es(),
@@ -306,6 +336,11 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpStrictMonotone(p) => p.rule_name_and_message_ar(),
+            Self::LnStrictMonotone(p) => p.rule_name_and_message_ar(),
+            Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_ar(),
+            Self::LnStrictOrderReflection(p) => p.rule_name_and_message_ar(),
+            Self::FactorialStrictMonotone(p) => p.rule_name_and_message_ar(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_ar(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ar(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_ar(),
@@ -352,6 +387,11 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpStrictMonotone(p) => p.rule_name_and_message_ja(),
+            Self::LnStrictMonotone(p) => p.rule_name_and_message_ja(),
+            Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_ja(),
+            Self::LnStrictOrderReflection(p) => p.rule_name_and_message_ja(),
+            Self::FactorialStrictMonotone(p) => p.rule_name_and_message_ja(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_ja(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ja(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_ja(),
@@ -398,6 +438,11 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpStrictMonotone(p) => p.rule_name_and_message_ko(),
+            Self::LnStrictMonotone(p) => p.rule_name_and_message_ko(),
+            Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_ko(),
+            Self::LnStrictOrderReflection(p) => p.rule_name_and_message_ko(),
+            Self::FactorialStrictMonotone(p) => p.rule_name_and_message_ko(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_ko(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ko(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_ko(),
@@ -444,6 +489,11 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpStrictMonotone(p) => p.rule_name_and_message_vi(),
+            Self::LnStrictMonotone(p) => p.rule_name_and_message_vi(),
+            Self::ExpStrictOrderReflection(p) => p.rule_name_and_message_vi(),
+            Self::LnStrictOrderReflection(p) => p.rule_name_and_message_vi(),
+            Self::FactorialStrictMonotone(p) => p.rule_name_and_message_vi(),
             Self::FromKnownGreater(p) => p.rule_name_and_message_vi(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_vi(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_vi(),
