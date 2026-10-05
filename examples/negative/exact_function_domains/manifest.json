@@ -1,0 +1,54 @@
+[
+  {
+    "file": "default_short_domain.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "release_short_domain.lit",
+    "expected_phase": "function_domain"
+  },
+  {
+    "file": "infinite_to_empty_domain.lit",
+    "expected_phase": "function_domain"
+  },
+  {
+    "file": "dropped_guard.lit",
+    "expected_phase": "function_domain"
+  },
+  {
+    "file": "different_complete_domains.lit",
+    "expected_phase": "by_fn_extension"
+  },
+  {
+    "file": "function_space_is_not_callable.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "empty_cart_false_equality.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "empty_forall_false_publication.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "empty_forall_undefined_conclusion.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "retired_cart_dimension.lit",
+    "expected_phase": "retired_syntax"
+  },
+  {
+    "file": "finite_function_out_of_range.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "finite_function_wrong_coordinate_carrier.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "finite_function_wrong_length.lit",
+    "expected_phase": "function_domain"
+  }
+]

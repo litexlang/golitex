@@ -1,7 +1,7 @@
 use crate::runtime::{RuntimeError, RuntimeResult};
 use std::path::PathBuf;
 
-/// Natural language for user-facing JSON / status text. Litex source is unchanged.
+/// Natural language for user-facing JSON. Litex source is unchanged.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum OutputLanguage {
     #[default]
@@ -161,10 +161,14 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
     let mut i = 0;
     while i < args.len() {
         let arg = &args[i];
-        if arg == "-e" {
+        let takes_operand = matches!(arg.as_str(), "-e" | "-f" | "-r")
+            || (matches!(arg.as_str(), "-extractpython" | "-extractc")
+                && !matches!(args.get(i + 1).map(String::as_str), Some("-f" | "-r")));
+        if takes_operand {
             rest.push(arg.clone());
             i += 1;
-            // The next argv item is source, even when it spells a shared flag.
+            // Operand position owns the next argv item, including leading `-`
+            // and exact option spellings. Extraction's -f/-r select input mode.
             if let Some(code) = args.get(i) {
                 rest.push(code.clone());
                 i += 1;
@@ -214,20 +218,22 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
             strict,
             language,
         }),
-        [flag, value] if flag == "-f" && is_value(value) => Ok(LaunchCommand::File {
+        [flag, value] if flag == "-f" && !value.is_empty() => Ok(LaunchCommand::File {
             path: PathBuf::from(value),
             session,
             strict,
             language,
         }),
-        [flag, value] if flag == "-r" && is_value(value) => Ok(LaunchCommand::Repository {
+        [flag, value] if flag == "-r" && !value.is_empty() => Ok(LaunchCommand::Repository {
             path: PathBuf::from(value),
             session,
             strict,
             language,
         }),
         [flag, value]
-            if (flag == "-extractpython" || flag == "-extractc") && is_value(value) =>
+            if (flag == "-extractpython" || flag == "-extractc")
+                && !value.is_empty()
+                && !matches!(value.as_str(), "-f" | "-r") =>
         {
             reject_session_strict_for_extract(session, strict)?;
             Ok(LaunchCommand::Extract {
@@ -239,7 +245,7 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
         [flag, mode, value]
             if (flag == "-extractpython" || flag == "-extractc")
                 && mode == "-f"
-                && is_value(value) =>
+                && !value.is_empty() =>
         {
             reject_session_strict_for_extract(session, strict)?;
             Ok(LaunchCommand::Extract {
@@ -251,7 +257,7 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
         [flag, mode, value]
             if (flag == "-extractpython" || flag == "-extractc")
                 && mode == "-r"
-                && is_value(value) =>
+                && !value.is_empty() =>
         {
             reject_session_strict_for_extract(session, strict)?;
             Ok(LaunchCommand::Extract {
@@ -282,8 +288,4 @@ fn reject_session_strict_for_extract(session: bool, strict: bool) -> RuntimeResu
         ));
     }
     Ok(())
-}
-
-fn is_value(token: &str) -> bool {
-    !token.is_empty() && !token.starts_with('-')
 }

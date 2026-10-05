@@ -20,6 +20,245 @@ fn count_facts(rt: &Runtime) -> usize {
 }
 
 #[test]
+fn exact_function_finite_values_support_named_calls_carriers_aliases_and_complete_domains() {
+    for code in [
+        "have p cart(R,Z) = (1,2)\np(1)=1\np(2) $in Z",
+        "have p cart(R,Z)\np(1) $in R\np(2) $in Z\np(2) $in R",
+        "have Carrier set=cart(R,Z)\nhave p Carrier=(1,2)\nhave q Carrier=p\nq(1)=1\nq(2) $in Z",
+        "(1,2) $in finite_seq(Z,2)\n(1,2) $in finite_seq(R,2)\nrelease thm fn_set_member((1,2),finite_seq(R,2))",
+        "let p=(1,2)\np $in finite_seq(Z,2)\nrelease thm fn_set_member(p,finite_seq(R,2))",
+        "let p=(1,1)\np(1)=1\np(2)=1\np $in finite_seq(Z,2)",
+        "let p=tuple(7)\np(1)=7\np $in finite_seq(Z,1)",
+        "let empty=()\nrelease thm fn_set_member(empty,finite_seq(R,0))",
+        "have a,b R\nlet p=(a,b)\np(1)=a\np(2)=b\np $in finite_seq(R,2)",
+        "have fn mk(x R) cart(R,Z)=(x,2)\nmk(7)(2) $in Z",
+        "release thm cart_member_from_coordinates((1,2),cart(R,Z))\nlet p=(1,2)\nrelease thm cart_member_from_coordinates(p,cart(R,Z))\nhave Carrier set=cart(R,Z)\nrelease thm cart_member_from_coordinates(p,Carrier)\np(2) $in Z",
+        "have fn f(k closed_range(1,2)) Z=0\nrelease thm cart_member_from_coordinates(f,cart(R,Z))\nf $in cart(R,Z)\nf(2) $in Z",
+    ] {
+        let mut rt=runtime();
+        let run=rt.run_litex_code(code).unwrap();
+        assert!(run.success && run.session_error.is_none(), "{code}\n{}", crate::json_output::emit_run_detailed(&run,&rt,"test",None));
+    }
+    for (setup, negative) in [
+        ("let p=(1,2)", "p(0)=1"),
+        ("let p=(1,2)", "p(3)=2"),
+        ("let p=(1,2)", "p(1/2)=1"),
+        ("let p=(1,2)", "p(1,2)=1"),
+        ("let p=(1,2)", "p(1)(1)=1"),
+        ("let p=(1,2)", "p(1)=2"),
+        ("let p=(1,2)", "release thm fn_set_member(p,finite_seq(R,3))"),
+        ("let p=tuple(7)", "p(2)=7"),
+        ("let p=()", "p(1)=0"),
+        ("have p cart(R,Z)", "p(1) $in Z"),
+        ("have fn mk(x R: x>0) cart(R,Z)=(x,2)", "mk(0)(2) $in Z"),
+        ("have fn mk(x R) cart(R,Z)=(x,2)", "mk(7)(3) $in Z"),
+        ("have fn z(k N+) Z=0", "release thm cart_member_from_coordinates(z,cart(R,Z))"),
+        ("let p=(1,2,3)", "release thm cart_member_from_coordinates(p,cart(R,Z))"),
+        ("let p=(1,2)", "release thm cart_member_from_coordinates(p,cart(R,{}))"),
+    ] {
+        let mut rt=runtime();
+        assert!(rt.run_litex_code(setup).unwrap().success,"{setup}");
+        let before=count_facts(&rt);
+        assert!(execute(&mut rt,negative).is_failed(),"{setup}\n{negative}");
+        assert_eq!(count_facts(&rt),before,"finite-function negative published facts");
+    }
+}
+
+#[test]
+fn exact_function_domain_acceptance_files_keep_successful_prefixes_and_failure_phases() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let negative_root = root.join("examples/negative/exact_function_domains");
+    let manifest = std::fs::read_to_string(negative_root.join("manifest.json")).unwrap();
+    let manifest = crate::knowledge_base::JsonValue::parse(&manifest).unwrap();
+    for case in manifest.as_array().unwrap() {
+        let case = case.as_object().unwrap();
+        let file = case.get("file").unwrap().as_str().unwrap();
+        let phase = case.get("expected_phase").unwrap().as_str().unwrap();
+        let source = std::fs::read_to_string(negative_root.join(file)).unwrap();
+        let mut rt = runtime();
+        let run = rt.run_litex_code(&source).unwrap();
+        assert!(!run.success, "negative fixture accepted: {file}");
+        if phase == "retired_syntax" {
+            assert_eq!(run.statement_results.len(), 2, "{file}");
+            assert!(run.statement_results.iter().all(|stmt| !stmt.is_failed()), "{file}");
+            assert!(format!("{:?}", run.session_error).contains("cart_dim is removed"), "{file}");
+            continue;
+        }
+        assert!(run.session_error.is_none(), "unexpected parse/exec failure: {file}");
+        let (last, prefix) = run.statement_results.split_last().expect("negative statement");
+        assert!(prefix.iter().all(|stmt| !stmt.is_failed()), "failed setup: {file}");
+        assert!(last.is_failed(), "negative target accepted: {file}");
+        let json = project_stmt_normal(last, &rt);
+        let failure = json.as_object().unwrap().get("why_failed").unwrap().as_object().unwrap();
+        let mut actual_phase = failure.get("phase").unwrap().as_str().unwrap();
+        // Release has an outer statement stage and a nested theorem stage.
+        // Check that exact owner, rather than finding an arbitrary phase in
+        // a premise's recursive proof tree.
+        if actual_phase == "release_thm" {
+            actual_phase = failure.get("failure").unwrap().as_object().unwrap()
+                .get("phase").unwrap().as_str().unwrap();
+        }
+        assert_eq!(actual_phase, phase, "wrong failure boundary: {file}");
+    }
+    for file in [
+        "examples/stmt_nodes/release_and_expand/builtin_thm/fn_set_member.lit",
+        "examples/proof_nodes/atomic/by_builtin_strategy/exact_function_space_membership.lit",
+        "examples/proof_nodes/atomic/by_builtin_strategy/finite_function_application_membership.lit",
+        "examples/proof_nodes/forall/empty_parameter_domain.lit",
+        "examples/proof_nodes/equal/by_object_definition/by_fn_application/both_function_bodies.lit",
+    ] {
+        let source = std::fs::read_to_string(root.join(file)).unwrap();
+        let mut rt = runtime();
+        let run = rt.run_litex_code(&source).unwrap();
+        assert!(run.success && run.session_error.is_none(), "{file}\n{}",
+            crate::json_output::emit_run_detailed(&run, &rt, "test", None));
+        assert!(!run.statement_results.is_empty(), "empty acceptance: {file}");
+        assert!(run.statement_results.iter().all(|stmt| !stmt.is_failed()), "{file}");
+    }
+}
+
+#[test]
+fn exact_function_membership_rejects_short_long_empty_and_dropped_guards_without_publishing() {
+    for (definition, target) in [
+        ("have fn z(i1 N+) R = 0", "finite_seq(R,2)"),
+        ("have fn z(i1 N+) R = 0", "finite_seq(R,3)"),
+        ("have fn z(i1 N+) R = 0", "fn(k closed_range(1,2)) R"),
+        ("have fn z(i1 N+) R = 0", "finite_seq(R,0)"),
+        ("have fn z(i1 N+) R = 0", "fn(k {}) R"),
+        ("have fn z(i1 closed_range(1,2)) R = 0", "finite_seq(R,3)"),
+        ("have fn z(i1 closed_range(1,3)) R = 0", "finite_seq(R,2)"),
+        ("have fn z(x R: x>0) R = 0", "fn(y R) R"),
+    ] {
+        for statement in [
+            format!("z $in {target}"),
+            format!("release thm fn_set_member(z, {target})"),
+            format!("by thm fn_set_member(z, {target}) => z $in {target}"),
+        ] {
+            let mut rt = runtime();
+            assert!(!execute(&mut rt, definition).is_failed(), "{definition}");
+            let before = count_facts(&rt);
+            let result = execute(&mut rt, &statement);
+            assert!(result.is_failed(), "false exact membership: {definition}\n{statement}");
+            assert_eq!(count_facts(&rt), before, "rejected exact membership published facts");
+            if statement.contains("thm") {
+                let detailed = format!("{:?}", project_stmt_detailed(&result, &rt));
+                assert!(detailed.contains("function_domain"), "{detailed}");
+            }
+        }
+    }
+}
+
+#[test]
+fn exact_function_membership_preserves_return_bounds_restrictions_and_aliases() {
+    for code in [
+        "have fn z(i1 N+) R = 0\nz $in seq(R)\nz(1)=0",
+        "have fn z(i1 N+) R = 0\nhave fn z2(k closed_range(1,2)) R = z(k)\nz2 $in finite_seq(R,2)\nrelease thm fn_set_member(z2, fn(j closed_range(1,2)) R)",
+        "have fn u(i1 closed_range(1,2)) Z = 0\nu $in finite_seq(Z,2)\nu $in finite_seq(R,2)\nu(1) $in Z\nu(1) $in R",
+        "have fn u(i1 closed_range(1,2)) Z = 0\nrelease thm fn_set_member(u, finite_seq(R,2))\nby thm fn_set_member(u, fn(j closed_range(1,2)) R) => u $in fn(k closed_range(1,2)) R",
+        "have fn z(x R: x>0) Z = 0\nz $in fn(y R: y>0) R\nrelease thm fn_set_member(z, fn(y R: y>0) R)",
+        "have F set = fn(k closed_range(1,2)) R\nhave fn z(x closed_range(1,2)) Z = 0\nhave q F = z\nq $in finite_seq(R,2)\nq(1)=0",
+        "have fn empty_fn(x {}) R = 0\nrelease thm fn_set_member(empty_fn, finite_seq(R,0))",
+        "have n N\nhave fn z(k closed_range(1,n)) Z = 0\nz $in finite_seq(Z,n)\nrelease thm fn_set_member(z, finite_seq(R,n))\nfinite_seq(R,n)=fn(j closed_range(1,n)) R",
+        "have fn z(k N+: k<=2) Z = 0\nrelease thm fn_set_member(z, fn(j closed_range(1,2)) R)\nz $in finite_seq(R,2)",
+        "template<A set>:\n    have fn zero(x A) Z = 0\nrelease thm fn_set_member(\\zero<closed_range(1,2)>, finite_seq(R,2))\nlet selected=\\zero<closed_range(1,2)>\nselected $in finite_seq(R,2)\n\\zero<closed_range(1,2)> = fn(x closed_range(1,2)) Z {0}\nselected(1)=0",
+        "template<a R>:\n    have fn maker(x R) fn(y R) Z = fn(y R) Z {0}\n\\maker<2>(3) $in fn(t R) R\nrelease thm fn_set_member(\\maker<2>(3), fn(t R) R)",
+    ] {
+        let mut rt = runtime();
+        let result = rt.run_litex_code(code).unwrap();
+        assert!(result.success && result.session_error.is_none(), "{code}\n{}", crate::json_output::emit_run_detailed(&result, &rt, "test", None));
+        for statement in &result.statement_results { assert!(!statement.is_failed()); }
+    }
+}
+
+#[test]
+fn function_space_alias_is_a_set_and_does_not_construct_a_callable_function() {
+    let mut rt = runtime();
+    assert!(!execute(&mut rt, "have F set = fn(x R) R").is_failed());
+    let before = count_facts(&rt);
+    assert!(execute(&mut rt, "F(1) $in R").is_failed());
+    assert_eq!(count_facts(&rt), before);
+}
+
+#[test]
+fn exact_function_empty_cart_equalities_do_not_publish_dimensions_or_false_equalities() {
+    let mut rt = runtime();
+    for statement in ["cart({},R)={}", "cart({},R,Z)={}"] {
+        assert!(!execute(&mut rt, statement).is_failed(), "{statement}");
+    }
+    for env in &rt.execution_environments_stack {
+        for fact in env.facts.facts_by_id.values() {
+            assert!(!fact.readable_string().contains("cart_dim"), "unexpected dimension fact: {}", fact.readable_string());
+        }
+    }
+    let before = count_facts(&rt);
+    assert!(execute(&mut rt, "2=3").is_failed());
+    assert_eq!(count_facts(&rt), before);
+}
+
+#[test]
+fn exact_function_retired_cart_dimension_has_no_parse_wd_or_numeric_route() {
+    for code in ["cart_dim({})=2", "cart_dim(cart({},R))=2", "cart_dim(cart({},R,Z))=3"] {
+        let mut rt = runtime();
+        let result = rt.run_litex_code(code).unwrap();
+        assert!(result.session_error.is_some(), "retired syntax accepted: {code}");
+        assert!(result.statement_results.is_empty());
+    }
+    let mut rt = runtime();
+    let blocks = Tokenizer::new().tokenize("cart({},R)={}", rt.current_file.clone()).unwrap();
+    let statement = rt.parse(&blocks).unwrap().remove(0);
+    let crate::ast::stmt::Stmt::Fact(crate::ast::fact::Fact::AtomicFact(crate::ast::fact::AtomicFact::EqualFact(fact))) = statement else { panic!("equality fixture"); };
+    let legacy = crate::ast::obj::Obj::ProductShape(crate::ast::obj::ProductShape::CartDim(crate::ast::obj::CartDim { set: Box::new(fact.left) }));
+    assert!(rt.verify_obj_well_definedness(&legacy, crate::execute::execute_fact_stmt::VerifyState::top_level()).unwrap().is_failed());
+    assert!(crate::rational_expression::evaluate_obj_to_normalized_decimal_number(&legacy).is_none());
+}
+
+#[test]
+fn exact_function_extension_uses_full_domains_and_ignores_return_upper_bounds() {
+    for code in [
+        "have fn a(k closed_range(1,2)) Z = 0\nhave fn b(j closed_range(1,2)) R = 0\nby fn_extension a=b\na=b",
+        "have fn a(x R: x>0) Z = 0\nhave fn b(y R: y>0) R = 0\nby fn_extension a=b",
+        "have fn a(x {}) R = 0\nhave fn b(y {}) Z = 1\nby fn_extension a=b",
+        "have fn make_a(x R) fn(y R) Z = fn(y R) Z {0}\nhave fn make_b(x R) fn(y R) R = fn(y R) R {0}\nby fn_extension:\n    ? make_a=make_b\n    claim:\n        ? forall x R:\n            make_a(x)=make_b(x)\n        by fn_extension make_a(x)=make_b(x)",
+    ] {
+        let mut rt=runtime();
+        let result=rt.run_litex_code(code).unwrap();
+        assert!(result.success && result.session_error.is_none(), "{code}\n{}", crate::json_output::emit_run_detailed(&result, &rt, "test", None));
+    }
+    for (setup, goal) in [
+        ("have fn a(k closed_range(1,2)) R = 0\nhave fn b(j closed_range(1,3)) R = 0", "by fn_extension a=b"),
+        ("have fn a(x R: x>0) R = 0\nhave fn b(y R) R = 0", "by fn_extension a=b"),
+        ("have fn a(x {}) R = 0\nhave fn b(y R) R = 0", "by fn_extension a=b"),
+        ("have fn a(x R) fn(y Z) R = fn(y Z) R {0}\nhave fn b(x R) fn(y R) R = fn(y R) R {0}", "by fn_extension:\n    ? a=b\n    claim:\n        ? forall x R:\n            a(x)=b(x)\n        by fn_extension a(x)=b(x)"),
+    ] {
+        let mut rt=runtime();
+        let setup_result=rt.run_litex_code(setup).unwrap();
+        assert!(setup_result.success && setup_result.session_error.is_none());
+        let before=count_facts(&rt);
+        let result=execute(&mut rt,goal);
+        assert!(result.is_failed(),"{setup}\n{goal}");
+        assert_eq!(count_facts(&rt),before);
+        assert!(format!("{:?}",project_stmt_detailed(&result,&rt)).contains("function_domain"));
+    }
+}
+
+#[test]
+fn exact_function_empty_domain_universals_do_not_publish_their_conclusions() {
+    for carrier in ["{}", "closed_range(1,0)"] {
+        let mut rt=runtime();
+        let universal=format!("forall x {carrier}:\n    2=3");
+        let result=execute(&mut rt,&universal);
+        assert!(!result.is_failed(),"empty-domain universal must be vacuous: {carrier}\n{:?}",project_stmt_detailed(&result,&rt));
+        assert!(format!("{:?}",project_stmt_detailed(&result,&rt)).contains("empty_parameter_domain"));
+        let before=count_facts(&rt);
+        assert!(execute(&mut rt,"2=3").is_failed(),"vacuous conclusions must not escape");
+        assert_eq!(count_facts(&rt),before);
+        assert!(execute(&mut rt,&format!("forall x {carrier}:\n    1/0=0")).is_failed(),"vacuity must not bypass WD");
+    }
+    let mut rt=runtime();
+    assert!(execute(&mut rt,"forall x {0}:\n    2=3").is_failed(),"nonempty-domain universal cannot be vacuous");
+}
+
+#[test]
 fn builtin_theorem_catalogue_has_twenty_nine_native_tracers() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/stmt_nodes/release_and_expand/builtin_thm");
     let mut count = 0;

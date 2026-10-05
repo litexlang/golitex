@@ -116,7 +116,7 @@ fn actual_three_guard_routes_and_four_typed_leaves_keep_ten_language_outputs() {
                 let json = crate::json_output::project_run_detailed(&run, &rt, "eval", None);
                 let leaf = find_rule(&json, names[kind]).unwrap();
                 assert!(contains_string(&leaf, route));
-                assert!(!leaf.as_object().unwrap().keys_in_order().contains(&"proof_of_requirement_facts".to_string()));
+                assert!(!leaf.as_object().unwrap().keys_in_order().contains(&"proof_of_requirement_facts"));
             }
         }
     }
@@ -195,22 +195,39 @@ fn illegal_domains_missing_guards_and_false_laws_remain_rejected() {
 fn inherited_ceiling_and_failed_publication_stay_bounded() {
     for kind in 0..4 {
         let code = input(kind, "a<1");
-        for (level, passed) in [(VerifyStateLevel::Direct, false), (VerifyStateLevel::KnownSpecialProperty, false), (VerifyStateLevel::BuiltinRule, true)] {
+        // BuiltinRule leaves their WD premises at KnownSpecialProperty: a<1
+        // cannot yet supply the derived a!=1 there. Strategy admits that
+        // existing proof for product/quotient/reciprocal. The symbolic power
+        // argument needs the normal root route for its own carrier proof.
+        for (level, passed) in [(VerifyStateLevel::Direct, false), (VerifyStateLevel::KnownSpecialProperty, false), (VerifyStateLevel::BuiltinRule, false), (VerifyStateLevel::Strategy, kind != 3)] {
             let mut rt = runtime(OutputLanguage::English);
             let tokens = Tokenizer::new().tokenize(&code, rt.current_file.clone()).unwrap();
             let mut stmts = rt.parse(&tokens).unwrap();
             let crate::ast::stmt::Stmt::Fact(fact) = stmts.remove(0) else { panic!("fact") };
+            if level == VerifyStateLevel::BuiltinRule {
+                assert!(rt.verify_fact_well_definedness(&fact, VerifyState::new(level)).unwrap().is_failed());
+            }
             let result = rt.verify_fact(&fact, VerifyState::new(level)).unwrap();
             assert_eq!(!result.is_failed(), passed, "{code}");
         }
+        let mut rt = runtime(OutputLanguage::English);
+        let tokens = Tokenizer::new().tokenize(&code, rt.current_file.clone()).unwrap();
+        let crate::ast::stmt::Stmt::Fact(fact) = rt.parse(&tokens).unwrap().remove(0) else { panic!("fact") };
+        assert!(!rt.verify_fact(&fact, VerifyState::top_level()).unwrap().is_failed(), "{code}");
     }
     let wrong = "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x*y)=log(a,x)*log(a,y)\n";
     let mut rt = runtime(OutputLanguage::English);
     check(&mut rt, wrong, false);
     let good = input(0, "a<1");
-    check(&mut rt, &good, true);
+    let original = check(&mut rt, &good, true);
     let reuse = check(&mut rt, &good, true);
-    assert!(contains_string(&reuse, "by_known_forall"));
+    // Repeating the complete forall cites the stored proposition, rather
+    // than instantiating it to a new atomic goal.
+    assert!(contains_string(&reuse, "by_known_forall_fact"));
+    let statement = &original.as_object().unwrap().get("statement_results").unwrap().as_array().unwrap()[0];
+    let stored = statement.as_object().unwrap().get("store_and_infer").unwrap().as_object().unwrap().get("stores").unwrap().as_array().unwrap();
+    let source_id = stored[0].as_object().unwrap().get("fact_id").unwrap().as_str().unwrap();
+    assert!(contains_string(&reuse, source_id));
     check(&mut rt, wrong, false);
 }
 

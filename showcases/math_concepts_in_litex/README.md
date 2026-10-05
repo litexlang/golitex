@@ -5,28 +5,28 @@ and early undergraduate topics.
 The numeric prefixes are editorial order only: the projects do not import one
 another.
 
-Migration checkpoint (2026-10-04): the pinned legacy snapshot contains 125
-public Litex files and this collection contains 127. No legacy file or named
-binding is missing in the structural inventory; this inventory does not prove
-mathematical equivalence. The original 2894 theorem citations now use
-`release thm`, including former line-end citations. The current public sources
-contain 2915 release calls and no executable `by thm` calls.
+Migration checkpoint (2026-10-05): the current published collection has
+17 standalone subject modules and 18 Litex source files. The maintainer
+replaced the former coordinate-geometry problem collection with the complete
+plane-geometry library from
+[`geo.lit`](../../scripts/LitexGeo-AutoBuild/shenjiachen/新geo和geo_definitions/geo.lit).
+This is an intentional scope change: the old geometry problem modules are
+outside the current collection. The pinned legacy snapshot remains available
+for historical comparison.
 
-On the named release snapshot recorded in the migration journal, the complete
-sets/functions/relations, number-theory, real-analysis, category-theory and
-linear-algebra subjects pass strict file and registered module verification.
-Linear algebra passes both exported files: main 56/56 and main2 29/29.
-Eleven other subject entry groups remain unaccepted. The coordinate-geometry
-producer is under separate work, and its broader dependent coverage remains
-open. The collection as a whole is not yet accepted.
+The published subject files and their configured modules have passed strict
+verification on the same current release binary recorded in the migration
+acceptance notes (2026-10-05). The replacement geometry module is checked through its
+complete file and its actual standalone module entry. Probability theory
+under `17_probability_theory` remains a draft without a published Litex entry.
+Lean analogies are outside these Litex verification results.
 
-The active Litex sources contain no direct `trust`. Three legacy `axiom`
-target interfaces remain in `problem_207/translation.lit`; they are assumed
-statements rather than completed proofs. Retained failing proofs and these
-axiomatic interfaces are migration work. See
-[`和showcase有关.md`](../../plan/迁移的plan/和showcase有关.md) and the
-[release migration acceptance](../../scripts/math_concepts_in_litex_upstream/experience/problem_notes/showcase_release_migration_acceptance.md)
-for exact gates, proof changes and remaining obligations.
+The current public Litex sources contain 690 `release thm` calls, no executable
+`by thm`, no direct `trust`, and no axioms. Exact source hashes, verification
+commands, and scope boundaries are recorded in
+[`和showcase有关.md`](../../plan/迁移的plan/和showcase有关.md), the
+[release migration acceptance](../../scripts/math_concepts_in_litex_upstream/experience/problem_notes/showcase_release_migration_acceptance.md),
+and the [geometry replacement acceptance](experience/problem_notes/plane-geometry-replacement-acceptance-2026-10-05.md).
 
 Use `release thm name(args)` for theorem instances in this collection.
 An exact released conclusion needs no repeated fact line. Keep a following
@@ -35,7 +35,7 @@ derived consequence. The language still accepts the older spelling.
 
 The usual project artifacts are:
 
-- `main.lit`: the mathematical spine, including retained migration blockers;
+- `main.lit`: the mathematical spine;
 - `litex.config`: the standalone module entry;
 - `README.md`: scope, run command, and trust boundary;
 - `math_collections.md`: the concept/interface inventory; and
@@ -58,7 +58,7 @@ The usual project artifacts are:
 | 12 | `12_ordinary_differential_equations_in_nutshell` | quadratic family and the IVP `y' = 2x, y(0)=1` |
 | 13 | `13_numerical_analysis_in_nutshell` | Newton iteration with a proved gap bound |
 | 14 | `14_tarski_geometry_from_axioms` | GeoCoq-aligned SST Chapters 2–11, Euclid I.5, and exact angle-based SAS |
-| 15 | `15_coordinate_geometry_case_study` | coordinate geometry library and individual problem modules |
+| 15 | `15_coordinate_geometry_case_study` | standalone plane geometry: 41 definitions and 186 proved theorems |
 | 16 | `16_category_theory_in_set_theory` | categories, functors, natural transformations, and finite instances |
 | 17 | `17_probability_theory` | draft probability-theory work; no active `main.lit` |
 
@@ -77,10 +77,10 @@ contexts are expressed as predicates with explicit theorem premises during
 this migration; structs are for values that must be constructed,
 stored, passed, compared, or returned.
 
-Active Litex sources contain no direct `trust`; the three retained legacy
-axioms described above remain proof debt. Lean analogies state missing
-mathematics as explicit structure fields or theorem hypotheses; analytic comparisons may use the
-repository's Mathlib environment for standard objects such as real series.
+Active Litex sources contain no direct `trust` or axioms. Lean analogies state
+missing mathematics as explicit structure fields or theorem hypotheses;
+analytic comparisons may use the repository's Mathlib environment for
+standard objects such as real series.
 The restoration journals are under `plan/迁移的plan/proof_journals/` and the
 passing restoration examples are under
 `scripts/math_concepts_in_litex_upstream/experience/problem_notes/`.
@@ -99,8 +99,7 @@ ambient setting / structure
   -> STOP
 ```
 
-These are acceptance targets, not a statement that the current migration
-passes its gates. The subject stopping lines are:
+The subject stopping lines are:
 
 - linear algebra: fields, vector spaces, linear maps, kernels, and the
   zero-kernel/injectivity criterion; no basis, dimension, rank-nullity, or

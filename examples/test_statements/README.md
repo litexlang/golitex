@@ -117,8 +117,10 @@ fixture includes one deliberately trusted `TemplateDefEnum::TrustHaveStmt`
 scenario; only that isolated scenario and the combined template file use
 non-strict mode. This is language-construct coverage, not proof debt inserted
 to make another test pass. Zorn and choice fixtures make obligations explicit
-inside conditional claims. Current strict mode permits named axioms and
-choice/regularity release; these are explicitly asserted boundaries.
+inside conditional claims. User axioms run only in ordinary mode; strict mode
+rejects their declarations, including nested and imported forms. Pure abstract
+signatures and choice/regularity release remain explicitly asserted strict
+boundaries.
 
 The template trust bypass under `-strict` is a resolved rejection regression.
 Conditional enumeration and binder-reference cases are ordinary boundaries;

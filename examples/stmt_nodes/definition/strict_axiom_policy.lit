@@ -1,0 +1,20 @@
+# Tracer: strict rejects user axioms before any assumed fact is stored.
+# Before (wrongly accepted under -strict):
+# axiom wrong:
+#     ? forall x R:
+#         0 = 1
+# by thm wrong(0) => 0 = 1
+# 0 = 1
+# Former behavior: strict accepted the axiom and both false equality uses.
+#
+# Now: ordinary mode still accepts this explicit assumption; strict rejects
+# the first declaration with `axiom` is forbidden, before the later uses run.
+axiom wrong:
+    ? forall x R:
+        0 = 1
+by thm wrong(0) => 0 = 1
+0 = 1
+# Boundary: abstract signatures, checked thm and named foundation releases stay legal.
+# Evidence: target/release/litex -f examples/stmt_nodes/definition/strict_axiom_policy.lit
+# Rejection: same command with -strict must exit 1 with success false and no statements.
+# Tests: execute::statement_boundary_tests and run_module::strict_cache_tests.

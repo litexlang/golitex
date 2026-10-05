@@ -1,0 +1,11 @@
+# Former failure with the parser's native negative-one object:
+# forall a,x R+:
+#     a<1
+#     =>:
+#         log(a,1/x)=(-1)*log(a,x)
+
+forall a,x R+:
+    a<1
+    =>:
+        log(a,1/x)=(-1)*log(a,x)
+        log(a,1/x)=log(a,x)*(-1)

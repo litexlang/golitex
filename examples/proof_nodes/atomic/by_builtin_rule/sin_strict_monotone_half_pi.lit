@@ -1,0 +1,14 @@
+# Former strict-session failure (same source; no trust):
+# forall a,b R:
+#     -pi/2<=a
+#     b<=pi/2
+#     a<b
+#     =>:
+#         sin(a)<sin(b)
+
+forall a,b R:
+    -pi/2<=a
+    b<=pi/2
+    a<b
+    =>:
+        sin(a)<sin(b)

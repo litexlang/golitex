@@ -451,6 +451,18 @@ pub(super) fn project_exist_failed(
 
 fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonValue {
     match result {
+        VerifyForallFactResult::Success(VerifyForallFactProof::ByEmptyParameterDomain(s)) => object_for(runtime, vec![
+            ("type", string("forall")), ("success", bool_value(true)),
+            ("fact", string(Fact::ForallFact(s.fact.clone()).readable_string())),
+            ("searched_proof", object_for(runtime, vec![
+                ("type", string("empty_parameter_domain")),
+                ("parameter_group_index", JsonValue::Number(s.parameter_group_index as f64)),
+                ("empty_carrier", string(s.empty_carrier.readable_string())),
+                ("empty_carrier_proof", project_verify_fact(&s.empty_carrier_proof, runtime)),
+                ("empty_carrier_store", super::store::project_store_and_infer(&s.empty_carrier_store, runtime)),
+                ("well_defined", super::wd::project_forall_wd(&s.well_defined, runtime)),
+            ])),
+        ]),
         VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(s)) => {
             object_for(
                 runtime,

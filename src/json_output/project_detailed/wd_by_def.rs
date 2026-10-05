@@ -65,6 +65,7 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
             ];
             if let Some(domain) = &p.domain_fn_set {
                 let d = match domain {
+                    FnObjDomainFnSetEvidence::FiniteFunction(source) => super::function_domain::project_finite_function_source(source, runtime),
                     FnObjDomainFnSetEvidence::InFunctionSet { fn_set, fact_id, function_equal } => object_for(runtime, vec![
                         ("type", string("in_function_set")),
                         ("fn_set", string(crate::display_and_ir::readable_string_from_ir_text(fn_set.ir().as_str()))),

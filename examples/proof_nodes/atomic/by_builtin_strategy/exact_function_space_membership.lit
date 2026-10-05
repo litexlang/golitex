@@ -1,0 +1,25 @@
+# Before: pointwise calls alone could claim the wrong complete domain.
+# have fn wide(k N+) R = 0
+# wide $in finite_seq(R,2)
+# Now: checked exact-domain constructors, upper bounds and aliases.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_strategy/exact_function_space_membership.lit
+
+have fn zero(k closed_range(1,2)) Z = 0
+
+zero $in finite_seq(Z,2)
+
+zero $in finite_seq(R,2)
+
+have Alias set = finite_seq(R,2)
+
+have value Alias = zero
+
+value(2)=0
+
+have length N
+
+have fn symbolic(k closed_range(1,length)) Z = 0
+
+symbolic $in finite_seq(Z,length)
+
+release thm fn_set_member(symbolic, finite_seq(R,length))

@@ -20,6 +20,9 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
+    LcmNonzeroFromNonzeroOperands(super::common_relation_nonzero::LcmNonzeroFromNonzeroOperandsProof),
+    LogNonzeroFromNonunitArgument(super::common_relation_nonzero::LogNonzeroFromNonunitArgumentProof),
+    PositiveNonunitIntegerPower(super::common_relation_nonzero::PositiveNonunitIntegerPowerProof),
     PeriodicTrigNonzero(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_periodic_trig::PeriodicTrigNonzeroBuiltinRuleProof),
     NonzeroFromSignedBound(NonzeroFromSignedBoundBuiltinRuleProof),
     InequalityFromDifferenceNonzero(InequalityFromDifferenceNonzeroBuiltinRuleProof),
@@ -245,6 +248,10 @@ impl Runtime {
             || (matches!(&fact.right, Obj::Literal(Literal::Pi(_))) && is_zero_obj(&fact.left))
         {
             return Ok(Some(NotEqualFactSearchProofByBuiltinRule::PiNonzero(PiNonzeroBuiltinRuleProof {})));
+        }
+
+        if let Some(proof) = self.search_common_relation_nonzero(fact, verify_state)? {
+            return Ok(Some(proof));
         }
 
         // B0 — non-shape

@@ -56,6 +56,28 @@ remain committed. For example, `let a = 1` followed by `let b =` commits a
 and restores the failed b binding. A tokenizer error anywhere still prevents
 all execution because tokenization happens before the block loop.
 
+Run results retain each complete parsed statement in readable form alongside
+its execution result, including soft failures. Normal, Compact and Detailed run JSON
+use this source text rather than reconstructing a declaration or theorem call
+from its published facts. This presentation metadata does not change parse
+transactions, execution, commit or rollback.
+Rust callers constructing `RunLitexCodeResult` directly include `statement_texts`;
+`RunLitexCodeResult::new` defaults it to empty for source-free result trees.
+
+The CLI emits failed Normal JSON for recognized `-e` / `-f` / `-r` commands
+even when tokenization or I/O fails before a run result exists. Extraction
+errors use the artifact error envelope. Invalid launch arguments still use
+stderr and exit code 2. The REPL prints `success` for accepted blocks and
+Normal JSON for soft failures, preserving the live session.
+Hard REPL errors are reported once by the caller. In `-session`, the final
+batch JSON keeps the initial source's statement results and adds the REPL error;
+the pre-REPL JSON snapshot keeps citations intact after the environment aborts.
+interactive parse/tokenizer diagnostics use `<repl>` rather than the initial
+file or `<eval>`. The REPL text is English; `-lang` selects JSON field names
+and explanations. Non-UTF-8 argv is a launch error rather than a panic.
+Closing a stdout pipe discards further output while preserving the command's
+exit status; other stdout I/O errors are reported as runtime errors.
+
 An internal invariant conflict returns `RuntimeError::InternalBug`, a hard
 session error. Its user-facing text is
 `internal_bug: Litex internal bug: <specific conflict reason>` in CLI, REPL,
@@ -143,7 +165,7 @@ No Runtime, no config.
 
 | Outcome | Soft Failed stmts | Mount FailToImport | Hard RuntimeError |
 |---------|-------------------|--------------------|-------------------|
-| `RunFile` / `RunEval` / `RunRepo` | in `statement_results`, `success: false` | `session_error: FailToImport` | often `Err(...)` before/around run |
+| `RunFile` / `RunEval` / `RunRepo` | in `statement_results`, `success: false` | `session_error: "failed to import project"` | readable error in batch JSON |
 | `RunRepl` | printed per step | start fails as `Err` | `Err` |
 
 Process exit uses `outcome.process_failed()` (false success or session error).

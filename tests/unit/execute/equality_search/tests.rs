@@ -559,7 +559,10 @@ fn compound_alpha_identity_preserves_ranges_bodies_and_free_ids_at_builtin_disab
 
 #[test]
 fn stored_sum_equality_is_reused_with_alpha_renamed_endpoints() {
-    let mut rt = runtime();
+    // This regression deliberately seeds an assumed equality in ordinary mode.
+    let mut rt = Runtime::new(LaunchCommand::Eval {
+        code: String::new(), session: false, strict: false, language: OutputLanguage::English,
+    });
     exec_ok(&mut rt, "have a R, b R");
     exec_ok(&mut rt, "axiom stored:\n    ? forall u, v R:\n        sum(1, 2, fn(x Z) R {x + u}) = sum(1, 2, fn(y Z) R {y + v})");
     exec_ok(&mut rt, "release thm stored(a, b)");

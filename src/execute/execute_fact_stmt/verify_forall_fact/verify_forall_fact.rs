@@ -73,6 +73,39 @@ impl Runtime {
                 )),
             )));
         }
+        // An empty parameter carrier means there are no input assignments.
+        // Prove emptiness with bounded evidence, then check the entire goal's
+        // WD. Do not store any individual conclusion or invent a witness.
+        for (parameter_group_index, group) in fact.typed_parameters.groups.iter().enumerate() {
+            if group.params.is_empty() { continue; }
+            let ParamType::Obj(carrier) = &group.param_type else { continue; };
+            let empty = Obj::SetFormer(crate::ast::obj::SetFormer::ListSet(crate::ast::obj::ListSet { list: vec![] }));
+            let equality: Fact = crate::ast::fact::EqualFact {
+                fact_id: self.global_ids.allocate_fact_id(), left: carrier.clone(), right: empty,
+                line_file: fact.line_file.clone(),
+            }.into();
+            let empty_carrier_proof = self.verify_fact(&equality,
+                verify_state.capped_at(super::super::VerifyStateLevel::BuiltinRule))?;
+            if empty_carrier_proof.is_failed() { continue; }
+            // Keep the proved carrier equality in the WD scope, so an input
+            // typed in closed_range(1,0) can be transported to {}. This does
+            // not assert any consequent or create an empty-domain witness.
+            let ((wd, empty_carrier_store), local_env) = self.run_in_local_env_and_take_env(|rt| {
+                let stored = rt.store_fact_and_infer(&equality, verify_state)?;
+                Ok((rt.verify_forall_fact_well_definedness(fact, verify_state)?, stored))
+            })?;
+            let well_defined = match wd {
+                VerifyForallFactWellDefinedResult::Success(proof) => proof,
+                VerifyForallFactWellDefinedResult::Failed(reason) => return Ok(forall_fact_result_from_wd_fail(reason)),
+            };
+            return Ok(VerifyFactResult::ForallFact(Box::new(VerifyForallFactResult::Success(
+                VerifyForallFactProof::ByEmptyParameterDomain(super::VerifyEmptyParameterDomainForallProof {
+                    fact: fact.clone(), well_defined, parameter_group_index,
+                    empty_carrier: carrier.clone(), empty_carrier_proof: Box::new(empty_carrier_proof),
+                    empty_carrier_store, local_env,
+                }),
+            ))));
+        }
         let (local_outcome, local_env) = self.run_in_local_env_and_take_env(|rt| {
             rt.verify_forall_fact_in_local(fact, verify_state.clone())
         })?;

@@ -62,9 +62,9 @@ fn internal_error_ordinary_user_failures_keep_their_existing_classification() {
     assert_eq!(launch.to_string(), "launch_error: unknown option");
     assert_eq!(
         RunSessionError::Runtime(launch.clone()).to_string(),
-        format!("{:?}", RunSessionError::Runtime(launch))
+        launch.to_string()
     );
-    assert_eq!(RunSessionError::FailToImport.to_string(), "FailToImport");
+    assert_eq!(RunSessionError::FailToImport.to_string(), "failed to import project");
     let mut rt = runtime();
     let proof = rt.run_litex_code("0 = 1").unwrap();
     assert!(!proof.success);

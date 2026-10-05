@@ -146,7 +146,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 impl Runtime {
     // Keep the former >1 route first; the two other guards describe the same
     // real-positive nonunit log domain. Every child inherits the caller ceiling.
-    pub(super) fn verify_log_algebra_base_guard(
+    pub(crate) fn verify_log_algebra_base_guard(
         &mut self,
         base: &Obj,
         state: VerifyState,
@@ -198,7 +198,7 @@ impl Runtime {
 
     // Preserve the actual positive source spelling and its FactId.
     // Example: x>0 can supply the log argument guard without nested conversion.
-    pub(super) fn verify_log_algebra_positive(
+    pub(crate) fn verify_log_algebra_positive(
         &mut self,
         obj: &Obj,
         state: VerifyState,

@@ -3,6 +3,19 @@
 Projects `ExecStmtResult` trees into user-facing JSON. Does **not** change the
 verify/exec IR (Lean replay and detail still read the full tree).
 
+Normal, Compact and Detailed run projections preserve the complete parsed statement
+text retained by the runner. Names, arguments and selected theorem conclusions
+stay in `statement`; published facts remain in `stores`. A failed expression
+such as `1 / 0 = 0` keeps that source text, with `why_failed.phase: well_defined`
+and an explicit localized message that well-definedness could not be proved.
+Standalone statement projections without source context use
+`<well_defined_not_proven>` when the result tree lacks the original goal.
+Session errors use readable Runtime diagnostics rather than Rust Debug wrappers.
+Extraction artifacts use the same command metadata on success and failure:
+`format`, `target`, `path`, `output_path`, and `language`. `content` is null on
+failure; `error` is null on success. Artifact field names follow `-lang` just
+like run envelopes; the English schema applies with `-lang en`.
+
 ## Detail levels
 
 ```rust
@@ -402,13 +415,32 @@ Named `have fn` Detailed results expose `anonymous_fn_well_defined` followed
 by `fn_set_well_defined` and `store_and_infer`; failures retain the failed WD
 stage.
 
-Detailed equality `fn_application_literal_beta` references the enclosing
-equality WD using `parent_well_defined_side` (`left` or `right`), then retains
+Detailed equality `fn_application_parent_checked_beta` references the enclosing
+equality WD using `parent_well_defined_side` (`left`, `right` or `both`). A named
+body retains its checked input signature and equality path. The route retains
 `expanded_body`, `residual_equal` and the success-only `residual_proof`. It does
 not fabricate a second WD certificate at the residual's restricted permission.
 Residual stored-equality paths preserve `cite_fact_id` and endpoints; readable
 `cite` text remains conditional on the source fact being visible in the live
 runtime when projected.
+
+`fn_application_both_function_bodies` retains separate checked bounded
+normalizations for the left and right applications, followed by the residual
+equality proof. Curried application layers remain separate in each expansion.
+
+Native `fn_set_member` and default function-space membership retain a
+`function_domain` stage before pointwise return proofs. It records function and
+target WD, the checked complete-domain source, equality transport paths and
+either domain alpha equality or both inclusion proofs. Failures identify the
+missing source, arity or failed inclusion stage. `by fn_extension` retains both
+complete-domain sources before its pointwise proof and reports the actual
+failed stage. Return upper bounds are not domain identity.
+
+The whole-forall `empty_parameter_domain` route retains the checked empty
+carrier equality, scoped store and full goal WD. Its conclusions are not
+projected as independently published facts. New evidence keys are localized
+in all supported output languages; source expressions and citation IDs remain
+unchanged.
 
 ## Native theorem and calculation evidence
 

@@ -9,6 +9,20 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::GcdCommonDivisor(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("GcdCommonDivisor")),
+            ("divisor_positive", project_verify_fact(&p.divisor_positive, runtime)),
+            ("first_divisibility", project_verify_fact(&p.first_divisibility, runtime)),
+            ("second_divisibility", project_verify_fact(&p.second_divisibility, runtime)),
+        ]),
+        EqualitySearchProofByBuiltinRule::LcmCommonMultiple(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("LcmCommonMultiple")),
+            ("first_positive", project_verify_fact(&p.first_positive, runtime)),
+            ("second_positive", project_verify_fact(&p.second_positive, runtime)),
+            ("first_divisibility", project_verify_fact(&p.first_divisibility, runtime)),
+            ("second_divisibility", project_verify_fact(&p.second_divisibility, runtime)),
+        ]),
+
         EqualitySearchProofByBuiltinRule::TanQuotientDefinition(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("TanQuotientDefinition"))]),
         EqualitySearchProofByBuiltinRule::CotQuotientDefinition(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("CotQuotientDefinition"))]),
         EqualitySearchProofByBuiltinRule::GcdEuclideanStep(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("GcdEuclideanStep"))]),
@@ -377,11 +391,12 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
                 ("argument_positive_proof", project_verify_fact(&p.argument_positive_proof, runtime)),
             ])
         },
-        EqualitySearchProofByBuiltinRule::LogChangeOfBase(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("LogChangeOfBase"))];
-            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
-            object_for(runtime, entries)
-        },
+        EqualitySearchProofByBuiltinRule::LogChangeOfBase(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("LogChangeOfBase")),
+            ("base_proof", project_log_algebra_base(&p.base_proof, runtime)),
+            ("chosen_base_proof", project_log_algebra_base(&p.chosen_base_proof, runtime)),
+            ("argument_positive_proof", project_verify_fact(&p.argument_positive_proof, runtime)),
+        ]),
         EqualitySearchProofByBuiltinRule::ZeroMod(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("ZeroMod"))];
             entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
@@ -1059,11 +1074,13 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             let _ = p;
             object_for(runtime, entries)
         },
-        EqualitySearchProofByBuiltinRule::LogBasePower(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("LogBasePower"))];
-            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
-            object_for(runtime, entries)
-        },
+        EqualitySearchProofByBuiltinRule::LogBasePower(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("LogBasePower")),
+            ("base_proof", project_log_algebra_base(&p.base_proof, runtime)),
+            ("exponent_real", project_verify_fact(&p.exponent_real, runtime)),
+            ("exponent_nonzero", project_verify_fact(&p.exponent_nonzero, runtime)),
+            ("argument_positive_proof", project_verify_fact(&p.argument_positive_proof, runtime)),
+        ]),
         EqualitySearchProofByBuiltinRule::ReOfProduct(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("ReOfProduct"))];
             let _ = p;

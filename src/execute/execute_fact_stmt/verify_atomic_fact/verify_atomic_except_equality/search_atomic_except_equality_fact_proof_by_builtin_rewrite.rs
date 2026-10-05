@@ -7,6 +7,7 @@ use crate::ast::fact::{
 use crate::ast::fact::atomic_fact_args_ref;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::replace_obj_matching_ir;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::runtime_ids::FactId;
@@ -22,7 +23,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 //   not silent resolve_obj.
 //
 // Also here:
-//   KnownEqualObjSubstitution — replace a goal arg by a one-hop known equal
+//   KnownEqualObjSubstitution — replace a goal arg by a checked equal
 //   peer (e.g. `1 $in S` with stored `S = {…}`), then prove the residual.
 //   FnApplicationUnfoldSubstitution — unfold top-level `f(args)` via have-fn
 //   definition into the body, then prove the residual (needed when equals are
@@ -54,8 +55,8 @@ pub struct AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution {
     pub proof_of_rewritten_fact: VerifyFactResult,
 }
 
-// One-hop known-equality substitution on a non-equality atomic goal.
-// Mathematical property: if `a = b` is a stored generating edge, then P(…, a, …)
+// Known-equality substitution on a non-equality atomic goal.
+// Mathematical property: if `a = b` has a stored equality path, then P(…, a, …)
 // follows from P(…, b, …).
 //
 // Example:
@@ -201,7 +202,9 @@ impl Runtime {
         ))
     }
 
-    // Try one-hop known equals for each goal arg; first residual success wins.
+    // Try the finite checked equality class for each goal arg. The residual
+    // disables rewrite, so aliases consume stored paths without recursive
+    // rewriting or broader child permissions. Every used edge is cited.
     // Example: `1 $in S` with stored `S = {x R: x > 0}` → prove `1 $in {…}`.
     fn search_atomic_except_equality_by_known_equal_obj_substitution(
         &mut self,
@@ -221,21 +224,13 @@ impl Runtime {
 
         for (arg_index, arg) in args.iter().enumerate() {
             let from_ir = arg.ir();
-            let Some(neighbors) = adjacency.get(&from_ir) else {
-                continue;
-            };
-            for (_peer_key, equal_fact) in neighbors.iter() {
-                let peer = if equal_fact.left.ir() == from_ir {
-                    &equal_fact.right
-                } else {
-                    &equal_fact.left
-                };
-                if peer.ir() == from_ir {
+            for (peer, path) in equivalence_class_members_with_paths_in_adjacency(&adjacency, arg) {
+                if path.is_empty() {
                     continue;
                 }
                 let mut rewritten_args = args.clone();
                 rewritten_args[arg_index] =
-                    replace_obj_matching_ir(&rewritten_args[arg_index], &from_ir, peer);
+                    replace_obj_matching_ir(&rewritten_args[arg_index], &from_ir, &peer);
                 if rewritten_args[arg_index].ir() == from_ir {
                     continue;
                 }
@@ -252,7 +247,7 @@ impl Runtime {
                 return Ok(Some(
                     AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution {
                         rewritten_fact: rewritten.into(),
-                        cited_equal_fact_ids: vec![equal_fact.fact_id],
+                        cited_equal_fact_ids: path.into_iter().map(|(_, _, fact_id)| fact_id).collect(),
                         proof_of_rewritten_fact,
                     },
                 ));

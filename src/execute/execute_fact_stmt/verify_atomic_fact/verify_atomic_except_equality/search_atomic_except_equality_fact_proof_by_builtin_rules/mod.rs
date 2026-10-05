@@ -52,3 +52,6 @@ pub mod closed_subtraction_bound;
 pub mod finite_set_extremum_membership;
 
 pub mod gcd_common_divisor_bound;
+
+pub mod trig_interval_order;
+pub mod common_relation_nonzero;

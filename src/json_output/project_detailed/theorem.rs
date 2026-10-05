@@ -25,6 +25,10 @@ pub(in crate::json_output) fn project_release_thm_failure(failed: &ExecReleaseTh
             ("index", JsonValue::Number(*index as f64)), ("goal", string(fact.readable_string())),
             ("result", project_verify_fact_wd_result(result, rt)),
         ]),
+        FunctionDomain { theorem, result } => object_for(rt, vec![
+            ("phase", string("function_domain")), ("thm_name", string(theorem.clone())),
+            ("result", super::function_domain::project_function_domain_failure(result, rt)),
+        ]),
         Store { theorem, index, message } => object_for(rt, vec![("phase", string("store")), ("thm_name", string(theorem.clone())), ("index", JsonValue::Number(*index as f64)), ("message", string(message.clone()))]),
     }
 }
@@ -55,6 +59,7 @@ pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtim
             ("success", bool_value(true)), ("kind", string("release_thm")), ("thm_name", string(s.thm_name.clone())),
             ("builtin", project_builtin_application(&s.builtin, rt)),
             ("type_proofs", super::store::project_verify_facts(&s.type_proofs, rt)),
+            ("function_domain", s.function_domain.as_ref().map(|p| super::function_domain::project_function_domain(p, rt)).unwrap_or(JsonValue::Null)),
             ("dom_proofs", super::store::project_verify_facts(&s.dom_proofs, rt)),
             ("conclusions_wd", project_conclusions_wd(&s.conclusions_wd, rt)),
             ("stored", JsonValue::Array(s.stored.iter().map(|x| project_store_and_infer(x, rt)).collect())),

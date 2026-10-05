@@ -5,7 +5,7 @@
 
 use super::helper::{bool_value, object, output_language, string};
 use super::json_keys::localize_key;
-use super::project_normal::{project_stmt_normal, OutputDetail};
+use super::project_normal::{project_run_statements_normal, project_stmt_normal, OutputDetail};
 use crate::execute::ExecStmtResult;
 use crate::knowledge_base::JsonValue;
 use crate::launch_command::OutputLanguage;
@@ -27,11 +27,8 @@ pub fn project_run_compact(
     path: Option<&Path>,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    let statement_results: Vec<JsonValue> = run
-        .statement_results
-        .iter()
-        .map(|stmt| project_stmt_compact(stmt, runtime))
-        .collect();
+    let statement_results = project_run_statements_normal(run, runtime)
+        .iter().map(|stmt| thin_to_compact(lang, stmt)).collect();
     let path_value = match path {
         Some(p) => string(p.display().to_string()),
         None => JsonValue::Null,

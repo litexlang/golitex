@@ -547,7 +547,9 @@ index in `finite_seq(s, finite_set_size(s))`, bijective from
 defined bijective.
 For compatibility with older source files, bare `by thm name(args)` remains a
 parser alias for `release thm name(args)`. It follows the same all-conclusions
-execution path and is rendered canonically as `release thm`.
+execution path and is rendered canonically as `release thm`. For new code,
+write `release thm name(args)` for a bare call. Use `by thm` with `=>` when
+selecting one atomic consequence.
 
 When only one atomic consequence should escape, use the preview form
 `by thm name(args) => atomic_fact`. Litex applies the ordinary
@@ -1514,7 +1516,9 @@ The cost is explicit. If a false statement is introduced with `trust`, later
 results can inherit that assumption. Serious Litex developments should keep
 remaining `trust` facts visible and treat them as assumptions or proof debt, not
 as completed proof. Litex reports this trust boundary, and strict mode rejects
-source-level `trust` entirely.
+executed user `trust`, `trust have`, and `axiom`, including nested proofs and
+imported dependencies. Pure `abstract_prop` signatures and named foundation
+releases remain allowed; neither supplies arbitrary user-assumed facts.
 
 ## Why does Litex infer extra facts after accepting a line?
 
@@ -1741,7 +1745,9 @@ enumeration is not supported. `by` proof bodies run nested statements through
 the same checked, transactional entry as claim/witness bodies, and publish only
 the enclosing target. A nested template cannot bypass `-strict` with
 `trust have`. `eval` checks source-expression well-definedness before rewriting
-or executing an algorithm; it displays a result without asserting it as a fact.
+or executing an algorithm; a successful computation publishes the checked
+`source = result` equality in the current scope. A failed computation or check
+publishes no equality.
 
 The runnable [finite-set proof tracer](../examples/stmt_nodes/by/finite_set_conditional_proof_steps.lit)
 and [eval domain tracer](../examples/stmt_nodes/command/eval_source_domain.lit)
@@ -1869,4 +1875,4 @@ The [strict-bound tracer](../examples/infer/atomic/strict_lower_bound_positive.l
 keeps the original logarithm premise. This does not permit negative or unknown
 bounds to imply positivity, and does not widen WD search permissions.
 
-A stored R-returning function can now supply `f(a) $in C` at the known-property stage after its application domain has been checked. This is numeric carrier inclusion, not equality of R and C. The checker requires every candidate stored return signature to fit the target, so it cannot select only a convenient signature. For a finite product insertion proof, explicitly establish `a $in union(S,{a})` and publish the callback's restriction with `release thm fn_set_member(f,fn(x S)R)`. Freshness remains a premise. Native template/field signatures retain their separate verification routes.
+A stored R-returning function can supply `f(a) $in C` at the known-property stage after its application domain has been checked. This is numeric carrier inclusion. The checker requires every candidate stored return signature to fit the target. Function-space membership additionally requires the complete input domain: a function defined on `union(S,{a})` cannot be published as a member of `fn(x S) R`. Construct `have fn restricted(x S) R = f(x)` and use that value for the smaller domain. Freshness remains a premise of finite-product insertion. Native template/field signatures retain their checked producers.

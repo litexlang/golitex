@@ -7,7 +7,7 @@ use super::helper::{
 };
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
-use crate::ast::fact::{AtomicFact, Fact, InFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::ast::obj::{
     FnObj, FnObjHead, FnRange, FnSet, FunctionSpace, IdentifierObj, Literal, Obj,
 };
@@ -100,6 +100,30 @@ impl Runtime {
             }
         };
         let root = Obj::FnObj(value.clone());
+        if value.body.is_empty() {
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root.clone(), reason: FailToVerifyObjWellDefinedResult::FnObj(
+                    FailToVerifyFnObjObjWellDefined::Domain(ObjWellDefinedByDefCommonStages::leaf().into_common_fail(&root))),
+            });
+        }
+        let mut finite_domain_failure = None;
+        for source in self.finite_function_signatures(&head_obj) {
+            let head_wd = self.verify_obj_well_definedness(&head_obj, verify_state)?;
+            if head_wd.is_failed() { continue; }
+            match self.try_verify_fn_obj_against_fn_set(value, &source.signature, verify_state)? {
+                Ok(mut stages) => {
+                    stages.child_obj_well_defined.insert(0, head_wd);
+                    let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+                    return Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+                        obj: root, proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                            domain_fn_set: Some(FnObjDomainFnSetEvidence::FiniteFunction(Box::new(source))),
+                            child_obj_well_defined, requirement_fact_verified,
+                        }),
+                    }));
+                }
+                Err(stages) => finite_domain_failure = Some(stages),
+            }
+        }
         // An equality alias retains the checked template's callable contract.
         // Instance WD still checks template parameters and guards before use.
         for (candidate, path) in equivalence_class_members_with_paths_in_adjacency(
@@ -147,6 +171,12 @@ impl Runtime {
         }
         let candidates = self.collect_in_function_set_candidates(&head_obj);
         if candidates.is_empty() {
+            if let Some(stages) = finite_domain_failure {
+                return Ok(VerifyObjWellDefinedResult::Failed {
+                    obj: root.clone(), reason: FailToVerifyObjWellDefinedResult::FnObj(
+                        FailToVerifyFnObjObjWellDefined::Domain(stages.into_common_fail(&root))),
+                });
+            }
             return Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::FnObj(
@@ -451,6 +481,15 @@ impl Runtime {
                     continue;
                 };
                 for prop in props {
+                    // A space alias C=fn(...)S identifies a set. It does not
+                    // construct a function with that signature. Function
+                    // equality to an anonymous function remains callable.
+                    if let crate::exec_env::SpecialProperty::Equality(fact) = prop {
+                        if !matches!(&fact.left, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)))
+                            && !matches!(&fact.right, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))) {
+                            continue;
+                        }
+                    }
                     if let Some(signature) = prop.function_signature() {
                         let candidate = (signature, prop.fact_id());
                         if !out.contains(&candidate) {
@@ -500,11 +539,7 @@ impl Runtime {
             let subst = set_bound_params_to_arg_map(&space.set_bound_parameters, &args);
             let next_ret = self.inst_obj(space.ret_set.as_ref(), &subst).ok()?;
             if layer_index < last {
-                space = match next_ret {
-                    Obj::FunctionSpace(FunctionSpace::FnSet(next)) => next,
-                    Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => anon.body,
-                    _ => return None,
-                };
+                space = self.returned_function_signature(&next_ret)?.0;
             } else {
                 return Some(next_ret);
             }
@@ -521,7 +556,7 @@ impl Runtime {
     {
         let mut proof = ObjWellDefinedByDefCommonStages::leaf();
         let mut space = fn_set.clone();
-        let last = value.body.len() - 1;
+        let Some(last) = value.body.len().checked_sub(1) else { return Ok(Err(proof)); };
         for (layer_index, layer) in value.body.iter().enumerate() {
             let args: Vec<Obj> = layer.iter().map(|a| a.as_ref().clone()).collect();
             let expected = set_bound_parameter_count(&space.set_bound_parameters);
@@ -579,12 +614,21 @@ impl Runtime {
                     Ok(o) => o,
                     Err(_) => return Ok(Err(proof)),
                 };
-                // Curried return may be FnSet or an anonymous fn value.
-                space = match next_ret {
-                    Obj::FunctionSpace(FunctionSpace::FnSet(next)) => next,
-                    Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => anon.body,
-                    _ => return Ok(Err(proof)),
-                };
+                // Every function-valued return uses its exact space contract;
+                // seq/finite_seq and set aliases preserve the call layers.
+                let Some((next_space, carrier)) = self.returned_function_signature(&next_ret)
+                else { return Ok(Err(proof)); };
+                if carrier != next_ret {
+                    let equality = AtomicFact::EqualFact(EqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(), left: next_ret,
+                        right: carrier, line_file: None,
+                    });
+                    let requirement = self.verify_fact(&Fact::AtomicFact(equality), verify_state)?;
+                    let failed = requirement.is_failed();
+                    proof.requirement_fact_verified.push(requirement);
+                    if failed { return Ok(Err(proof)); }
+                }
+                space = next_space;
             }
         }
         Ok(Ok(proof))

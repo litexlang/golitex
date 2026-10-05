@@ -1,0 +1,21 @@
+# Former direct search failure:
+# forall n N+:
+#     factorial(n)=product(1,n,fn(k Z) Z{k})
+# Existing successor and product rules suffice for this induction.
+
+thm factorial_as_product:
+    ? forall n N+:
+        factorial(n)=product(1,n,fn(k Z) Z{k})
+    by induc m from 1:
+        ? factorial(m)=product(1,m,fn(k Z) Z{k})
+        ? from m=1:
+            product(1,m,fn(k Z) Z{k})=product(1,1,fn(k Z) Z{k})=fn(k Z) Z{k}(1)=1=factorial(m)
+        ? induc:
+            fn(k Z) Z{k}(m+1)=m+1
+            factorial(m+1)=(m+1)*factorial(m)
+            product(1,m+1,fn(k Z) Z{k})=product(1,m,fn(k Z) Z{k})*fn(k Z) Z{k}(m+1)=factorial(m)*(m+1)=factorial(m+1)
+    factorial(n)=product(1,n,fn(k Z) Z{k})
+
+have n N+
+release thm factorial_as_product(n)
+factorial(n)=product(1,n,fn(k Z) Z{k})

@@ -1,0 +1,4 @@
+# Expected rejection: search_proof; all preceding setup statements must succeed.
+cart({},R)={}
+cart({},R,Z)={}
+2=3

@@ -4,6 +4,8 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::runtime::FactId;
 
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
+    FiniteFunctionApplicationMembership(FiniteFunctionApplicationMembershipStrategySingleStep),
+    FunctionSetMembership(FunctionSetMembershipStrategySingleStep),
     ListSetMembership(ListSetMembershipStrategySingleStep),
     ListSetNonMembership(ListSetNonMembershipStrategySingleStep),
     LiteralTupleProjectionMembership(LiteralTupleProjectionMembershipStrategySingleStep),
@@ -124,6 +126,19 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     AnonymousFnNonemptyFromCodomain(AnonymousFnNonemptyFromCodomainStrategySingleStep),
     FiniteSeqSetNonemptyFromCodomain(FiniteSeqSetNonemptyFromCodomainStrategySingleStep),
     SeqSetNonemptyFromCodomain(SeqSetNonemptyFromCodomainStrategySingleStep),
+}
+
+pub struct FunctionSetMembershipStrategySingleStep {
+    pub domain: crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof,
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct FiniteFunctionApplicationMembershipStrategySingleStep {
+    pub source: crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof,
+    pub index: Option<usize>,
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 // A displayed finite set contains x iff one displayed element equals x.

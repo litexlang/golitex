@@ -1,9 +1,10 @@
+use super::output::write_stdout;
 use super::run_command::VERSION;
 use crate::launch_command::LaunchCommand;
 use crate::run_module::{mount_cwd_config, MountCwdConfigOutcome};
 use crate::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
 use crate::LITEX;
-use std::io::{self, Write};
+use std::io;
 
 /// Interactive REPL: mount cwd `litex.config` when present (else empty), then loop.
 pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
@@ -26,8 +27,10 @@ pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
 /// Continue a REPL in an already-open file/eval Runtime env (used by `-session`).
 pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
     runtime.set_code_source(crate::runtime::CodeSource::Repl);
-    println!("{} REPL {}", LITEX, VERSION);
-    println!("type `exit` or Ctrl-D to quit; end a block with a blank line");
+    write_stdout(format_args!("{} REPL {}\n", LITEX, VERSION))?;
+    write_stdout(format_args!(
+        "type `exit` or Ctrl-D to quit; end a block with a blank line\n"
+    ))?;
 
     loop {
         let Some(code) = read_repl_block()? else {
@@ -36,28 +39,23 @@ pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
         let code_result = match runtime.run_litex_code(&code) {
             Ok(result) => result,
             Err(error) => {
-                eprintln!("session_error: {}", format_runtime_error(&error));
                 runtime.abort_file();
                 return Err(error);
             }
         };
 
         if let Some(session_error) = code_result.session_error {
-            eprintln!("session_error: {}", session_error);
             runtime.abort_file();
-            return match session_error {
-                super::run_command_outcome::RunSessionError::Runtime(error) => Err(error),
-                other => {
-                    let _ = other;
-                    Ok(())
-                }
-            };
+            return Err(mount_session_error_to_runtime_error(session_error));
         }
 
         if code_result.success {
-            println!("success");
+            write_stdout(format_args!("success\n"))?;
         } else {
-            println!("error");
+            write_stdout(format_args!(
+                "{}\n",
+                crate::json_output::emit_run_normal(&code_result, runtime, "repl", None)
+            ))?;
         }
     }
 
@@ -78,31 +76,18 @@ fn mount_session_error_to_runtime_error(
     }
 }
 
-fn format_runtime_error(error: &RuntimeError) -> String {
-    match error {
-        RuntimeError::InvalidArguments(message) => message.clone(),
-        RuntimeError::Io { path, message } => format!("{}: {}", path.display(), message),
-        RuntimeError::ParseError(error) => {
-            format!("{} at line {} in {}", error.message, error.line, error.path)
-        }
-        RuntimeError::Unsupported(message) => message.clone(),
-        RuntimeError::InternalBug(_) => error.to_string(),
-    }
-}
-
 #[cfg(test)]
 #[test]
 fn internal_error_repl_names_litex_and_preserves_the_conflict_reason() {
     let error = RuntimeError::InternalBug("merge identifier conflict".into());
     assert_eq!(
-        format_runtime_error(&error),
+        error.to_string(),
         "internal_bug: Litex internal bug: merge identifier conflict",
     );
     assert_eq!(
         super::run_command_outcome::RunSessionError::Runtime(error).to_string(),
         "internal_bug: Litex internal bug: merge identifier conflict",
     );
-    assert_eq!(format_runtime_error(&RuntimeError::Unsupported("unsupported input".into())), "unsupported input");
 }
 
 fn read_repl_block() -> RuntimeResult<Option<String>> {
@@ -115,8 +100,7 @@ fn read_repl_block() -> RuntimeResult<Option<String>> {
         } else {
             "... ".to_string()
         };
-        print!("{}", prompt);
-        let _ = io::stdout().flush();
+        write_stdout(format_args!("{}", prompt))?;
 
         let mut line = String::new();
         let n = stdin

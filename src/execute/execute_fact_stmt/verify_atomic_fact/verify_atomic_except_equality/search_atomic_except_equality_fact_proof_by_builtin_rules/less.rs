@@ -20,6 +20,8 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    SinPositiveOnOpenPi(super::trig_interval_order::SinPositiveOnOpenPiProof),
+    SinStrictMonotoneOnHalfPi(super::trig_interval_order::SinStrictMonotoneOnHalfPiProof),
     FloorStrictUpperBound(super::rounding_definition_bounds::FloorStrictUpperBoundProof),
     CeilStrictLowerBound(super::rounding_definition_bounds::CeilStrictLowerBoundProof),
     ExpStrictMonotone(super::exp_ln_order::ExpStrictMonotoneProof),
@@ -559,6 +561,9 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
+        if let Some(proof) = self.search_sin_interval_order(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
         if let Some(proof) = self.search_factorial_strict_order(fact, verify_state)? {
             return Ok(Some(LessFactSearchProofByBuiltinRule::FactorialStrictMonotone(proof)));
         }

@@ -47,7 +47,7 @@ pub fn run_export_file(
     runtime.set_code_source(code_source);
     runtime.begin_file(RealOrVirtualPath::Real(export_path.to_path_buf()));
 
-    let code_result = match runtime.run_litex_code(&source) {
+    let mut code_result = match runtime.run_litex_code(&source) {
         Ok(result) => result,
         Err(error) => {
             runtime.abort_file();
@@ -55,6 +55,8 @@ pub fn run_export_file(
             return Err(error);
         }
     };
+    // Capture fact-ID-backed stores and citations while the file env is live.
+    code_result.attach_normal_json(runtime, "file", Some(export_path));
 
     if !code_result.success {
         runtime.abort_file();

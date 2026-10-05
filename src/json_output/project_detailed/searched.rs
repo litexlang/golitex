@@ -209,20 +209,15 @@ fn project_object_definition(
             ]),
         },
         EqualitySearchProofByObjectDefinition::ByFnApplication(inner) => match inner {
-            EqualitySearchProofByFnApplicationObjectDefinition::LiteralBeta(p) => {
-                use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_literal_beta::ParentEqualitySide;
-                object_for(runtime, vec![
-                    ("type", string("by_object_definition")),
-                    ("kind", string("fn_application_literal_beta")),
-                    ("parent_well_defined_side", string(match p.parent_well_defined_side {
-                        ParentEqualitySide::Left => "left",
-                        ParentEqualitySide::Right => "right",
-                    })),
-                    ("expanded_body", string(p.expanded_body.readable_string())),
-                    ("residual_equal", string(Fact::from(p.residual_equal.clone()).readable_string())),
-                    ("residual_proof", project_equal_searched(&p.residual_proof, runtime)),
-                ])
-            }
+            EqualitySearchProofByFnApplicationObjectDefinition::ParentCheckedBeta(p) =>
+                super::function_body::project_parent_checked_beta(p, runtime),
+            EqualitySearchProofByFnApplicationObjectDefinition::BothFunctionBodies(p) => object_for(runtime, vec![
+                ("type", string("by_object_definition")),
+                ("kind", string("fn_application_both_function_bodies")),
+                ("left_normalization", super::function_body::project_function_body_normalization(&p.left_normalization, runtime)),
+                ("right_normalization", super::function_body::project_function_body_normalization(&p.right_normalization, runtime)),
+                ("residual_equal", project_verify_fact(&p.residual_equal, runtime)),
+            ]),
             EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(p) => object_for(runtime, vec![
                 ("type", string("by_object_definition")),
                 ("kind", string("fn_application_have_fn_equal")),

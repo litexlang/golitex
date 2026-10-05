@@ -2654,69 +2654,69 @@ impl LogChangeOfBaseBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         text(
             "Change of logarithm base",
-            "The Change of logarithm base law gives: log_a(b) = log_c(b) / log_c(a)",
+            "The Change of logarithm base law gives: log_a(b) = log_c(b) / log_c(a); a,c>0; a!=1; c!=1; b>0",
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text(
             "对数换底",
-            "对数换底可写为：log_a(b) = log_c(b) / log_c(a)",
+            "对数换底可写为：log_a(b) = log_c(b) / log_c(a); a,c>0; a!=1; c!=1; b>0",
         )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         text(
             "對數換底",
-            "對數換底可寫為：log_a(b) = log_c(b) / log_c(a)",
+            "對數換底可寫為：log_a(b) = log_c(b) / log_c(a); a,c>0; a!=1; c!=1; b>0",
         )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         text(
             "Changement de base du logarithme",
-            "La propriété « Changement de base du logarithme » donne: log_a(b) = log_c(b) / log_c(a)",
+            "La propriété « Changement de base du logarithme » donne: log_a(b) = log_c(b) / log_c(a); a,c>0; a!=1; c!=1; b>0",
         )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         text(
             "Переход к другому основанию логарифма",
-            "Свойство «Переход к другому основанию логарифма» выражается равенством: log_a(b) = log_c(b) / log_c(a)",
+            "Свойство «Переход к другому основанию логарифма» выражается равенством: log_a(b) = log_c(b) / log_c(a); a,c>0; a!=1; c!=1; b>0",
         )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         text(
             "Cambio de base del logaritmo",
-            "La propiedad «Cambio de base del logaritmo» se expresa como: log_a(b) = log_c(b) / log_c(a)",
+            "La propiedad «Cambio de base del logaritmo» se expresa como: log_a(b) = log_c(b) / log_c(a); a,c>0; a!=1; c!=1; b>0",
         )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         text(
             "تغيير أساس اللوغاريتم",
-            "تُكتب خاصية «تغيير أساس اللوغاريتم» كما يلي: log_a(b) = log_c(b) / log_c(a)",
+            "تُكتب خاصية «تغيير أساس اللوغاريتم» كما يلي: log_a(b) = log_c(b) / log_c(a); a,c>0; a!=1; c!=1; b>0",
         )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         text(
             "対数の底の変換",
-            "対数の底の変換は次の式で表されます：log_a(b) = log_c(b) / log_c(a)",
+            "対数の底の変換は次の式で表されます：log_a(b) = log_c(b) / log_c(a); a,c>0; a!=1; c!=1; b>0",
         )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         text(
             "로그의 밑 변환",
-            "로그의 밑 변환은 다음 식으로 나타납니다: log_a(b) = log_c(b) / log_c(a)",
+            "로그의 밑 변환은 다음 식으로 나타납니다: log_a(b) = log_c(b) / log_c(a); a,c>0; a!=1; c!=1; b>0",
         )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         text(
             "Đổi cơ số logarit",
-            "Tính chất «Đổi cơ số logarit» được biểu diễn bởi: log_a(b) = log_c(b) / log_c(a)",
+            "Tính chất «Đổi cơ số logarit» được biểu diễn bởi: log_a(b) = log_c(b) / log_c(a); a,c>0; a!=1; c!=1; b>0",
         )
     }
 
@@ -12149,69 +12149,69 @@ impl LogBasePowerBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         text(
             "Power in the logarithm base",
-            "The Power in the logarithm base law gives: log_(a^n)(b) = (1/n)·log_a(b)",
+            "The Power in the logarithm base law gives: log_(a^n)(b) = (1/n)·log_a(b); a>0; a!=1; n in R; n!=0; b>0",
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text(
             "对数底数中的幂",
-            "对数底数中的幂可写为：log_(a^n)(b) = (1/n)·log_a(b)",
+            "对数底数中的幂可写为：log_(a^n)(b) = (1/n)·log_a(b); a>0; a!=1; n in R; n!=0; b>0",
         )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         text(
             "對數底數中的冪",
-            "對數底數中的冪可寫為：log_(a^n)(b) = (1/n)·log_a(b)",
+            "對數底數中的冪可寫為：log_(a^n)(b) = (1/n)·log_a(b); a>0; a!=1; n in R; n!=0; b>0",
         )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         text(
             "Puissance dans la base du logarithme",
-            "La propriété « Puissance dans la base du logarithme » donne: log_(a^n)(b) = (1/n)·log_a(b)",
+            "La propriété « Puissance dans la base du logarithme » donne: log_(a^n)(b) = (1/n)·log_a(b); a>0; a!=1; n in R; n!=0; b>0",
         )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         text(
             "Степень в основании логарифма",
-            "Свойство «Степень в основании логарифма» выражается равенством: log_(a^n)(b) = (1/n)·log_a(b)",
+            "Свойство «Степень в основании логарифма» выражается равенством: log_(a^n)(b) = (1/n)·log_a(b); a>0; a!=1; n in R; n!=0; b>0",
         )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         text(
             "Potencia en la base del logaritmo",
-            "La propiedad «Potencia en la base del logaritmo» se expresa como: log_(a^n)(b) = (1/n)·log_a(b)",
+            "La propiedad «Potencia en la base del logaritmo» se expresa como: log_(a^n)(b) = (1/n)·log_a(b); a>0; a!=1; n in R; n!=0; b>0",
         )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         text(
             "القوة في أساس اللوغاريتم",
-            "تُكتب خاصية «القوة في أساس اللوغاريتم» كما يلي: log_(a^n)(b) = (1/n)·log_a(b)",
+            "تُكتب خاصية «القوة في أساس اللوغاريتم» كما يلي: log_(a^n)(b) = (1/n)·log_a(b); a>0; a!=1; n in R; n!=0; b>0",
         )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         text(
             "対数の底の累乗",
-            "対数の底の累乗は次の式で表されます：log_(a^n)(b) = (1/n)·log_a(b)",
+            "対数の底の累乗は次の式で表されます：log_(a^n)(b) = (1/n)·log_a(b); a>0; a!=1; n in R; n!=0; b>0",
         )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         text(
             "로그 밑의 거듭제곱",
-            "로그 밑의 거듭제곱은 다음 식으로 나타납니다: log_(a^n)(b) = (1/n)·log_a(b)",
+            "로그 밑의 거듭제곱은 다음 식으로 나타납니다: log_(a^n)(b) = (1/n)·log_a(b); a>0; a!=1; n in R; n!=0; b>0",
         )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         text(
             "Lũy thừa trong cơ số logarit",
-            "Tính chất «Lũy thừa trong cơ số logarit» được biểu diễn bởi: log_(a^n)(b) = (1/n)·log_a(b)",
+            "Tính chất «Lũy thừa trong cơ số logarit» được biểu diễn bởi: log_(a^n)(b) = (1/n)·log_a(b); a>0; a!=1; n in R; n!=0; b>0",
         )
     }
 

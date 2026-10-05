@@ -1031,6 +1031,8 @@ fn project_by_fn_extension(result: &ExecByFnExtensionStmtResult, runtime: &Runti
                         s.carrier.ir().as_str(),
                     )),
                 ),
+                ("right_domain", super::function_domain::project_source(&s.right_domain, runtime)),
+                ("function_domain", super::function_domain::project_function_domain(&s.domain_match, runtime)),
                 ("proof_steps", project_stmt_steps(&s.proof_steps, runtime)),
                 (
                     "pointwise_proof",
@@ -1039,11 +1041,34 @@ fn project_by_fn_extension(result: &ExecByFnExtensionStmtResult, runtime: &Runti
                 ("stored", project_store_and_infer(&s.stored, runtime)),
             ],
         ),
-        ExecByFnExtensionStmtResult::Failed(_) => object_for(
+        ExecByFnExtensionStmtResult::Failed(failed) => object_for(
             runtime,
             vec![
                 ("success", bool_value(false)),
                 ("kind", string("by_fn_extension")),
+                ("failure", match failed {
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::GoalWd(result) => object_for(runtime, vec![
+                        ("phase", string("goal_well_defined")), ("result", project_verify_fact_wd_result(result, runtime)),
+                    ]),
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::NoCompatibleFnSet => object_for(runtime, vec![("phase", string("function_space_unavailable"))]),
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::DomainMatch(candidates) => object_for(runtime, vec![
+                        ("phase", string("function_domain")),
+                        ("candidates", JsonValue::Array(candidates.iter().map(|candidate| object_for(runtime, vec![
+                            ("right_domain", super::function_domain::project_source(&candidate.right_source, runtime)),
+                            ("result", super::function_domain::project_function_domain_failure(&candidate.result, runtime)),
+                        ])).collect())),
+                    ]),
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::ProofBody(f) => object_for(runtime, vec![
+                        ("phase", string("proof_body")), ("index", JsonValue::Number(f.step_index as f64)),
+                        ("result", project_stmt_detailed(&f.result, runtime)),
+                    ]),
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::Pointwise(result) => object_for(runtime, vec![
+                        ("phase", string("pointwise")), ("result", project_verify_fact(result, runtime)),
+                    ]),
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::Store(message) => object_for(runtime, vec![
+                        ("phase", string("store")), ("message", string(message.clone())),
+                    ]),
+                }),
             ],
         ),
     }
@@ -1217,6 +1242,7 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
                     super::theorem::project_conclusions_wd(&s.conclusions_wd, runtime),
                 ),
                 ("type_proofs", project_verify_facts(&s.type_proofs, runtime)),
+                ("function_domain", s.function_domain.as_ref().map(|p| super::function_domain::project_function_domain(p, runtime)).unwrap_or(JsonValue::Null)),
                 ("dom_proofs", project_verify_facts(&s.dom_proofs, runtime)),
                 (
                     "selected_proof",

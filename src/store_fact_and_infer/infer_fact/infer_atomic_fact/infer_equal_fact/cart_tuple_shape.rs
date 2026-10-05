@@ -1,6 +1,6 @@
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, IsCartFact, IsTupleFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, IsTupleFact};
 use crate::ast::obj::{
-    Cart, CartDim, Literal, Number, Obj, ProductShape, Tuple, TupleDim,
+    Literal, Number, Obj, ProductShape, Tuple, TupleDim,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
@@ -8,27 +8,14 @@ use crate::store_fact_and_infer::{
 };
 
 impl Runtime {
-    // Equal-fact stage: literal cart/tuple side records shape facts on the other side.
-    // Example: store `s = cart(R, R)` also stores `$is_cart(s)` and `cart_dim(s) = 2`.
+    // Transitional tuple producer only; cart is an ordinary set. Equality to
+    // cart(...) cannot recover a unique construction dimension. For example,
+    // both cart({}, R) and cart({}, R, Z) equal the same empty set.
     pub(super) fn infer_equal_fact_cart_tuple_shape(
         &mut self,
         equal_fact: &EqualFact,
      verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferEqualFactCartTupleShapeResult>> {
         let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
-        if let Obj::ProductShape(ProductShape::Cart(cart)) = &equal_fact.left {
-            derived.extend(self.infer_equal_fact_cart_from_known_side(
-                cart,
-                &equal_fact.right,
-                equal_fact,
-             verify_state)?);
-        }
-        if let Obj::ProductShape(ProductShape::Cart(cart)) = &equal_fact.right {
-            derived.extend(self.infer_equal_fact_cart_from_known_side(
-                cart,
-                &equal_fact.left,
-                equal_fact,
-             verify_state)?);
-        }
         if let Obj::ProductShape(ProductShape::Tuple(tuple)) = &equal_fact.left {
             derived.extend(self.infer_equal_fact_tuple_from_known_side(
                 tuple,
@@ -46,34 +33,6 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(InferEqualFactCartTupleShapeResult { derived }))
-    }
-
-    // Infer: `target = cart(...)` ⇒ `$is_cart(target)` and `cart_dim(target) = n`.
-    fn infer_equal_fact_cart_from_known_side(
-        &mut self,
-        known_cart: &Cart,
-        target: &Obj,
-        equal_fact: &EqualFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
-        let is_cart = AtomicFact::IsCartFact(IsCartFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            set: target.clone(),
-            line_file: equal_fact.line_file.clone(),
-        });
-        let dim_equal = AtomicFact::EqualFact(EqualFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: Obj::ProductShape(ProductShape::CartDim(CartDim {
-                set: Box::new(target.clone()),
-            })),
-            right: Obj::Literal(Literal::Number(Number {
-                normalized_value: known_cart.args.len().to_string(),
-            })),
-            line_file: equal_fact.line_file.clone(),
-        });
-        Ok(vec![
-            self.store_inferred_fact_and_infer(&Fact::AtomicFact(is_cart), verify_state)?,
-            self.store_inferred_fact_and_infer(&Fact::AtomicFact(dim_equal), verify_state)?,
-        ])
     }
 
     // Infer: `target = (…)` with len >= 2 ⇒ `$is_tuple(target)` and `tuple_dim(target) = n`.

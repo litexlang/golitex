@@ -75,12 +75,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
             crate::runtime::CodeSource::RootExport { export_file_id },
             keep_env_open,
         ) {
-            Ok(mut file_result) => {
-                file_result.run.attach_normal_json(
-                    &runtime,
-                    "file",
-                    Some(file_result.path.as_path()),
-                );
+            Ok(file_result) => {
                 let failed = !file_result.run.success;
                 let session_error = file_result.run.session_error.clone().unwrap_or(RunSessionError::FailToImport);
                 file_results.push(file_result);

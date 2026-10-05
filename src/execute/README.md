@@ -288,6 +288,25 @@ direction, domain and local-scope rejection.
 
 ## Local finite aggregation and constructor proofs (2026-10-05)
 
+Function-space membership now checks complete domains before pointwise return
+typing. `function_domain` reads checked function constructions, existing exact
+memberships, equality paths and checked function-valued application returns.
+It does not add a signature cache or state owner. Domain comparison ignores
+return upper bounds, but retains input carriers, all guards and application
+layers; ordinary FnSet set equality still compares its return carrier.
+Native `fn_set_member`, default membership and `by fn_extension` consume this
+same evidence. Explicit release can prove domain conversions that bounded
+default search does not discover. No target membership is published before
+those checks finish, and rejected statements retain the existing rollback.
+
+Cart equality no longer infers construction dimensions on its opposite side:
+`cart({},R)={}` and `cart({},R,Z)={}` preserve the true set equalities without
+generating incompatible `cart_dim({})` facts. `cart_dim` is retired at parsing,
+WD and numeric evaluation, including calls with literal cart arguments. The
+remaining old AST types and the new tuple/cart application/release interfaces
+are still tracked in the tuple/cart implementation plan. KB ABI 5 invalidates
+previous checked products through the existing compatibility mechanism.
+
 Finite product/unordered-fold bijective reindexing, finite-sum triangle and
 finite indexed union have dedicated leaf proof structs and exhaustive output
 arms. The finite partition owner accepts literal restrictions on each part

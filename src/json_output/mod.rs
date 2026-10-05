@@ -33,7 +33,7 @@ mod rule_language_methods_tests;
 #[cfg(test)]
 mod template_failure_tests;
 
-pub use emit::{emit_run_compact, emit_run_detailed, emit_run_normal};
+pub use emit::{emit_command_error, emit_run_compact, emit_run_detailed, emit_run_normal};
 pub use project_compact::{project_run_compact, project_stmt_compact};
 pub use project_detailed::{project_run_detailed, project_stmt_detailed};
 pub use project_normal::{project_run_normal, project_stmt_normal, OutputDetail};

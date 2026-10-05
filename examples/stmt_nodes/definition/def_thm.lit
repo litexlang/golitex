@@ -3,3 +3,13 @@
 
 thm one_is_one:
     ? 1 = 1
+
+# Before: run JSON replaced this declaration with its stored forall fact and
+# reduced the application to `by thm identity`, losing the name/arguments.
+# Now: `statement` retains the complete declaration/application; stores still
+# contain the proved facts. Gate: litex -strict -f this file.
+thm identity:
+    ? forall x R:
+        x = x
+by thm identity(2) => 2 = 2
+release thm identity(3)

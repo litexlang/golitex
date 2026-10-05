@@ -1,0 +1,7 @@
+# Boundary: strict-axiom-rejected
+# Owner: AxiomStmt
+# Even a true conclusion is rejected: an axiom has no checked proof.
+
+axiom identity:
+    ? forall x R:
+        x = x

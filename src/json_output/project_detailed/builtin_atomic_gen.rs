@@ -1,4 +1,5 @@
 //! Generated atomic-except-equality builtin-rule detailed projection.
+use super::log_algebra_base::project_log_algebra_base;
 use super::store::project_verify_facts;
 use super::verify::project_verify_fact;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules as br;
@@ -16,6 +17,34 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::SinPositiveOnOpenPi(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("SinPositiveOnOpenPi")),
+            ("lower_bound", project_verify_fact(&p.lower_bound, runtime)),
+            ("upper_bound", project_verify_fact(&p.upper_bound, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::SinStrictMonotoneOnHalfPi(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("SinStrictMonotoneOnHalfPi")),
+            ("left_lower_bound", project_verify_fact(&p.left_lower_bound, runtime)),
+            ("right_upper_bound", project_verify_fact(&p.right_upper_bound, runtime)),
+            ("argument_order", project_verify_fact(&p.argument_order, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::LcmNonzeroFromNonzeroOperands(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("NotEqualFact")), ("rule", string("LcmNonzeroFromNonzeroOperands")),
+            ("first_nonzero", project_verify_fact(&p.first_nonzero, runtime)),
+            ("second_nonzero", project_verify_fact(&p.second_nonzero, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::LogNonzeroFromNonunitArgument(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("NotEqualFact")), ("rule", string("LogNonzeroFromNonunitArgument")),
+            ("base_proof", project_log_algebra_base(&p.base_proof, runtime)),
+            ("argument_proof", project_log_algebra_base(&p.argument_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::PositiveNonunitIntegerPower(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("NotEqualFact")), ("rule", string("PositiveNonunitIntegerPower")),
+            ("base_proof", project_log_algebra_base(&p.base_proof, runtime)),
+            ("exponent_integer", project_verify_fact(&p.exponent_integer, runtime)),
+            ("exponent_nonzero", project_verify_fact(&p.exponent_nonzero, runtime)),
+        ]),
+
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::LogStrictDecreasing(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("LogStrictDecreasing")),
             ("guards", object_for(runtime, vec![

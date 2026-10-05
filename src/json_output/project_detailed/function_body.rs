@@ -7,6 +7,58 @@ use crate::runtime::Runtime;
 use super::searched::project_known_equality_path;
 use super::wd::project_obj_wd_proof;
 
+pub(super) fn project_parent_checked_beta(
+    proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ByParentCheckedBetaObjectDefinitionProof,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::{ByParentCheckedBetaObjectDefinitionProof, ParentEqualitySide};
+    let mut fields = vec![("type", string("by_object_definition")), ("kind", string("fn_application_parent_checked_beta"))];
+    match proof {
+        ByParentCheckedBetaObjectDefinitionProof::OneSide(p) => {
+            fields.extend([
+                ("parent_well_defined_side", string(match p.parent_well_defined_side { ParentEqualitySide::Left => "left", ParentEqualitySide::Right => "right" })),
+                ("function_body", project_parent_checked_function_body(&p.function_body, runtime)),
+                ("expanded_body", string(p.expanded_body.readable_string())),
+                ("residual_equal", string(crate::ast::fact::Fact::from(p.residual_equal.clone()).readable_string())),
+                ("residual_proof", super::searched::project_equal_searched(&p.residual_proof, runtime)),
+            ]);
+        }
+        ByParentCheckedBetaObjectDefinitionProof::TwoSides(p) => {
+            fields.extend([
+                ("parent_well_defined_side", string("both")),
+                ("left_function_body", project_parent_checked_function_body(&p.left_function_body, runtime)),
+                ("left_expanded_body", string(p.left_expanded_body.readable_string())),
+                ("right_function_body", project_parent_checked_function_body(&p.right_function_body, runtime)),
+                ("right_expanded_body", string(p.right_expanded_body.readable_string())),
+                ("residual_equal", string(crate::ast::fact::Fact::from(p.residual_equal.clone()).readable_string())),
+                ("residual_proof", super::searched::project_equal_searched(&p.residual_proof, runtime)),
+            ]);
+        }
+    }
+    object_for(runtime, fields)
+}
+
+fn project_parent_checked_function_body(
+    proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody;
+    match proof {
+        ParentCheckedBetaFunctionBody::KnownFiniteFunctionCoordinate { source, index } => object_for(runtime, vec![
+            ("type", string("finite_function_coordinate")),
+            ("source", super::function_domain::project_finite_function_source(source, runtime)),
+            ("index", string(index.to_string())),
+        ]),
+        ParentCheckedBetaFunctionBody::AnonymousLiteral => object_for(runtime, vec![("type", string("anonymous_literal"))]),
+        ParentCheckedBetaFunctionBody::KnownAnonymousFunction { function, function_equal, checked_domain } => object_for(runtime, vec![
+            ("type", string("known_anonymous_function")),
+            ("function", string(Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.clone())).readable_string())),
+            ("function_equal", project_known_equality_path(function_equal, runtime)),
+            ("checked_domain", string(Obj::FunctionSpace(FunctionSpace::FnSet(checked_domain.clone())).readable_string())),
+        ]),
+    }
+}
+
 pub(super) fn project_function_body_normalization(
     proof: &FunctionBodyNormalizationProof,
     runtime: &Runtime,
@@ -35,11 +87,13 @@ pub(super) fn project_function_body_normalization(
                                 FunctionBodySourceProof::Template {
                                     instance,
                                     instantiated_function,
+                                    function_equal,
                                 } => object_for(
                                     runtime,
                                     vec![
                                         ("type", string("template")),
                                         ("instance", string(instance.readable_string())),
+                                        ("function_equal", project_known_equality_path(function_equal, runtime)),
                                         (
                                             "instantiated_function",
                                             string(

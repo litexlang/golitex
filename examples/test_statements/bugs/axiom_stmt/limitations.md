@@ -10,10 +10,10 @@ These are explicit implementation restrictions, documented policy, or tooling dr
 
 ### Current strict-mode contract
 
-This is a checked policy boundary, not an additional bug. With `-strict` the CLI accepts this input:
+This is a checked policy boundary, not an additional bug. With `-strict` the CLI rejects this input before checking or storing its axiom interface:
 
 ```litex
-# Boundary: strict-axiom-interface-allowed
+# Boundary: strict-axiom-rejected
 # Owner: AxiomStmt
 
 axiom identity:
@@ -21,7 +21,14 @@ axiom identity:
         x = x
 ```
 
-Runnable control: [strict-axiom-interface-allowed.lit](../../boundaries/strict-axiom-interface-allowed.lit).
+Expected: exit 1, top-level `success: false`, no executed statement results,
+and a session error containing `` `axiom` is forbidden ``. This also applies to
+axioms with true conclusions: use a checked `thm` in strict mode. Ordinary mode
+still supports explicit axiomatic interfaces.
+
+Runnable control: [strict-axiom-rejected.lit](../../boundaries/strict-axiom-rejected.lit).
+The [false-equality tracer](../../../stmt_nodes/definition/strict_axiom_policy.lit)
+preserves the former acceptance and current rejection commands.
 
 Malformed initial attempts and unsupported shorthand remain in the chronological journal; they are not silently promoted to confirmed bugs.
 

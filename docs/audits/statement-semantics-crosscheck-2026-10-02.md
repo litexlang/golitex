@@ -94,6 +94,9 @@ thm irrelevant:
 by thm irrelevant => 2 = 2
 ```
 
-[Manual § Named interfaces](../Manual.md#named-interfaces-thm-axiom-release-thm-and-by-thm--fact) explicitly permits a target that is not a direct theorem conclusion. This is a provenance/interface choice, not a verifier bug under the documented rule. Similarly, `-strict` intentionally still permits named `axiom` and set-theoretic releases; the template bypass above is different because strict explicitly promises to reject `trust have`.
+[Manual § Named interfaces](../Manual.md#named-interfaces-thm-axiom-release-thm-and-by-thm--fact) explicitly permits a target that is not a direct theorem conclusion. This is a provenance/interface choice, not a verifier bug under the documented rule. At the time of this audit, `-strict` intentionally still permitted named `axiom` and set-theoretic releases; the template bypass above was different because strict explicitly promised to reject `trust have`.
+
+Update, 2026-10-05: strict mode now also rejects user `axiom` declarations.
+Named foundation releases remain allowed. See the [source-owned acceptance](../../examples/test_statements/experience/problem_notes/strict-user-axiom-2026-10-05.md).
 
 This review did not edit the kernel or change any statement contract. The per-statement suite is strong coverage of entry points and regression behavior; it does not establish that every supported proposition or every nested environment transition is sound.

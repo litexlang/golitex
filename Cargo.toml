@@ -35,6 +35,10 @@ path = "src/main.rs"
 name = "test_statements"
 path = "tests/integration/test_statements.rs"
 
+[[test]]
+name = "cli_feedback"
+path = "tests/integration/cli_feedback.rs"
+
 [dependencies]
 
 [profile.dev]

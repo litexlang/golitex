@@ -290,7 +290,7 @@ explicit construction or control structure.
 | Direct arithmetic, equality, membership, or known consequence | State the fact | Let the verifier match the current context |
 | Concrete positive definition | <code>by def $P(args)</code> | Fold a named definition |
 | A named ordinary theorem fact | <code>release thm name</code> | Cite its stored fact |
-| A universal theorem | <code>release thm name(args)</code> (legacy alias: <code>by thm name(args)</code>) | Instantiate its parameters |
+| A universal theorem | <code>release thm name(args)</code> | Instantiate its parameters |
 | One theorem consequence | <code>by thm name(args) =&gt; fact</code> | Select only the needed result |
 | Existential target | <code>witness ... from ...</code> | Supply the witness and prove its body |
 | Known existential | <code>obtain ... from ...</code> | Open its witness in a local context |
@@ -473,7 +473,7 @@ mathematics.
 | Well-definedness soft miss | An object is not legal yet | Prove membership, bounds, nonzero divisors, or a typed construction |
 | Search soft miss | The fact is meaningful but current evidence is insufficient | Add the smallest equality, membership fact, theorem call, or witness |
 | Later use fails | The earlier statement stored a different interface than expected | Inspect <code>stores</code>/<code>infers</code>; distinguish an object, fact, predicate, and function |
-| <code>trust</code> or <code>axiom</code> appears | The route includes an explicit assumption | Mark the assumption; current strict mode rejects executed <code>trust</code>, but still accepts <code>axiom</code> |
+| <code>trust</code> or <code>axiom</code> appears | The route includes an explicit assumption | Mark the assumption; strict mode rejects executed <code>trust</code>, <code>trust have</code>, and user <code>axiom</code> |
 
 A soft miss is not a proof that the proposition is false:
 
@@ -667,10 +667,11 @@ Before each new line or block, ask:
 Litex is an experimental language in beta. A successful check is relative to
 the checker, its builtin and inference rules, imported facts, and any explicit
 trusted inputs. <code>trust</code>, <code>trust have</code>, and <code>axiom</code>
-are visible assumptions. Current strict mode rejects executed <code>trust</code>,
-<code>trust have</code>, and <code>abstract_prop</code>; it still accepts
-<code>axiom</code> and named foundation releases. Imports may reuse cached
-environments. The current Cargo build has no Lean compiler entrypoint; see
+are visible assumptions. Strict mode rejects executed <code>trust</code>,
+<code>trust have</code>, and user <code>axiom</code>, including nested proofs
+and dependencies. Pure <code>abstract_prop</code> signatures and named
+foundation releases remain allowed. Strict imports re-execute source exports
+instead of replaying cached environments. The current Cargo build has no Lean compiler entrypoint; see
 the [CLI boundary](cli.md#lean-compiler-boundary).
 
 ### Where to go next
@@ -679,6 +680,10 @@ the [CLI boundary](cli.md#lean-compiler-boundary).
   boundaries, output contracts, inference, modules, and compiler coverage.
 - Prefer the phase acceptance tree under [examples/](../examples/)
   (`proof_nodes/`, `stmt_nodes/`, `wd/`, `module_manager/`, …).
+
+For new code, write `release thm name(args)` whenever the call has no `=>`
+selection. Bare `by thm name(args)` remains accepted for source compatibility;
+the recommended spelling is `release thm`.
 
 The learner's central habit is simple: write the next mathematical fact, read
 the verifier's evidence, and let only accepted context drive the next line.
@@ -695,5 +700,6 @@ i * i = -1
 ```
 
 `release thm` checks premises before storing conclusions. `by thm NAME(args)
-=> FACT` selects an atomic/and/chain conclusion. Existential conclusions use
-`release`. Indexed operators require a nonempty index, including named families.
+=> FACT` selects one atomic consequence; compound and chain targets are
+rejected. Existential conclusions use `release thm`. Indexed operators require
+a nonempty index, including named families.

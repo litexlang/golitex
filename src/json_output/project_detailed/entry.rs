@@ -14,7 +14,7 @@ use crate::execute::{
     ExecHaveObjEqualStmtResult, ExecHaveObjInNonemptySetStmtFailed,
     ExecHaveObjInNonemptySetStmtResult, ParamTypeFactCheckResult,
 };
-use crate::json_output::helper::{bool_value, object_for, string};
+use crate::json_output::helper::{bool_value, object_for, string, with_source_statement};
 use crate::json_output::project_normal::OutputDetail;
 use crate::knowledge_base::JsonValue;
 use crate::run::run_command_outcome::RunLitexCodeResult;
@@ -30,7 +30,14 @@ pub fn project_run_detailed(
     let statement_results: Vec<JsonValue> = run
         .statement_results
         .iter()
-        .map(|stmt| project_stmt_detailed(stmt, runtime))
+        .enumerate()
+        .map(|(index, stmt)| {
+            with_source_statement(
+                project_stmt_detailed(stmt, runtime),
+                run.statement_texts.get(index),
+                runtime.launch_command.output_language(),
+            )
+        })
         .collect();
     let path_value = match path {
         Some(p) => string(p.display().to_string()),
@@ -243,7 +250,7 @@ fn verify_goal_display(verify: &VerifyFactResult) -> String {
             ) => fact.readable_string(),
             VerifyAtomicExceptEqualityFactResult::Failed(
                 VerifyAtomicExceptEqualityFactFailed::FailToVerifyWellDefined(_),
-            ) => "<wd_failed>".into(),
+            ) => "<well_defined_not_proven>".into(),
         },
         VerifyFactResult::Equality(r) => match r.as_ref() {
             VerifyEqualityResult::Success(s) => {
@@ -253,7 +260,7 @@ fn verify_goal_display(verify: &VerifyFactResult) -> String {
                 AtomicFact::EqualFact(fact.clone()).readable_string()
             }
             VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(_)) => {
-                "<wd_failed>".into()
+                "<well_defined_not_proven>".into()
             }
         },
         _ => super::super::project_normal::verify_goal_display(verify),

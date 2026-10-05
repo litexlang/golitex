@@ -1,6 +1,0 @@
-# Boundary: strict-axiom-interface-allowed
-# Owner: AxiomStmt
-
-axiom identity:
-    ? forall x R:
-        x = x

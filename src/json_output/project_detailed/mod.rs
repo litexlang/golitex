@@ -18,6 +18,7 @@ mod stmt;
 mod store;
 mod strategy_gen;
 mod theorem;
+mod function_domain;
 mod verify;
 mod wd;
 mod wd_by_def;

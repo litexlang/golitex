@@ -132,9 +132,11 @@ impl LogReciprocalBuiltinRuleProof {
     }
 }
 
-// Builtin LogChangeOfBase: log(a,x) = log(b,x)/log(b,a) when 1 < a,b and 0 < x.
+// Builtin LogChangeOfBase: positive nonunit real bases and 0<x.
 pub struct LogChangeOfBaseBuiltinRuleProof {
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub base_proof: LogAlgebraBaseProof,
+    pub chosen_base_proof: LogAlgebraBaseProof,
+    pub argument_positive_proof: VerifyFactResult,
 }
 
 // --- mod ---
@@ -927,21 +929,11 @@ impl Runtime {
         if x1.ir() != x.ir() || a2.ir() != a.ir() || b1.ir() != b2.ir() {
             return Ok(None);
         }
-        let pa = self.verify_order_gt_one(a, verify_state.clone())?;
-        if pa.is_failed() {
-            return Ok(None);
-        }
-        let pb = self.verify_order_gt_one(b1, verify_state.clone())?;
-        if pb.is_failed() {
-            return Ok(None);
-        }
-        let px = self.verify_order_positive(x, verify_state)?;
-        if px.is_failed() {
-            return Ok(None);
-        }
-        Ok(Some(LogChangeOfBaseBuiltinRuleProof {
-            proof_of_requirement_facts: vec![pa, pb, px],
-        }))
+        let Some(base_proof) = self.verify_log_algebra_base_guard(a, verify_state)? else { return Ok(None); };
+        let Some(chosen_base_proof) = self.verify_log_algebra_base_guard(b1, verify_state)? else { return Ok(None); };
+        let argument_positive_proof = self.verify_log_algebra_positive(x, verify_state)?;
+        if argument_positive_proof.is_failed() { return Ok(None); }
+        Ok(Some(LogChangeOfBaseBuiltinRuleProof { base_proof, chosen_base_proof, argument_positive_proof }))
     }
 
     fn try_zero_mod(
@@ -1162,6 +1154,11 @@ fn is_two_obj(obj: &Obj) -> bool {
 }
 
 fn is_neg_one_obj(obj: &Obj) -> bool {
+    // The current parser represents surface (-1) with native Neg.
+    // Example: log(a,1/x)=(-1)*log(a,x), with the same legal-base guard.
+    if let Obj::ArithmeticOperator(ArithmeticOperator::Neg(negative)) = obj {
+        if is_one_obj(&negative.arg) { return true; }
+    }
     if matches!(
         obj,
         Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "-1"

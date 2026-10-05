@@ -1,0 +1,12 @@
+# Former strict-session failure (same source; no trust):
+# forall b,x R+:
+#     b!=1
+#     x!=1
+#     =>:
+#         log(b,x)!=0
+
+forall b,x R+:
+    b!=1
+    x!=1
+    =>:
+        log(b,x)!=0

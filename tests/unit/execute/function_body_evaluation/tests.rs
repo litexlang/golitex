@@ -302,16 +302,16 @@ fn restriction_beta_consumes_exact_parent_wd_without_raising_premise_permissions
         assert!(!app_child && restricted.is_none(), "do not raise the ordinary normalizer ceiling");
         for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty,
             VerifyStateLevel::BuiltinRule, VerifyStateLevel::Strategy] {
-            assert!(rt.try_literal_beta_with_parent_well_definedness(
+            assert!(rt.try_parent_checked_beta_with_parent_well_definedness(
                 &goal, &parent_wd, VerifyState::new(level)
             )?.is_none(), "definition stage unavailable at {level:?}");
         }
-        assert!(rt.try_literal_beta_with_parent_well_definedness(
+        assert!(rt.try_parent_checked_beta_with_parent_well_definedness(
             &goal, &parent_wd, VerifyState::top_level()
         )?.is_some());
         let mut mismatched = goal.clone();
         std::mem::swap(&mut mismatched.left, &mut mismatched.right);
-        assert!(rt.try_literal_beta_with_parent_well_definedness(
+        assert!(rt.try_parent_checked_beta_with_parent_well_definedness(
             &mismatched, &parent_wd, VerifyState::top_level()
         )?.is_none(), "parent certificate must match both exact AST sides");
         Ok(())

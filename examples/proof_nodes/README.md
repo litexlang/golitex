@@ -44,6 +44,25 @@ links fixed source/binary receipts and the before/after journal.
 
 ## Sequence and struct contracts
 
+[Exact function-space membership](atomic/by_builtin_strategy/exact_function_space_membership.lit)
+checks complete domains with numeric return upper bounds, carrier/object
+aliases and symbolic finite length. [Empty parameter domains](forall/empty_parameter_domain.lit)
+permit vacuous universals only after the whole goal passes WD; a false bare
+conclusion and an undefined consequent remain negative controls.
+[Finite-function applications](atomic/by_builtin_strategy/finite_function_application_membership.lit)
+check stored cart members and object/carrier aliases, coordinate values and
+types, repeated and symbolic values, singleton and empty tuples, and a cart
+return value. Dedicated negative fixtures reject an alias's out-of-range call,
+an unsupported coordinate carrier and a wrong complete length at their actual
+WD, search and domain stages.
+[Both function bodies](equal/by_object_definition/by_fn_application/both_function_bodies.lit)
+retains checked bounded normalization on both equality sides and explicit
+extensionality one application layer at a time. The
+[negative manifest](../negative/exact_function_domains/manifest.json) checks
+short/empty domains, guards, extensionality, callable-set confusion and
+publication boundaries. These tracers do not certify the still-pending new
+tuple/cart syntax or its complete property matrix.
+
 [One-based sequences](equal/by_builtin_rule/sequence_one_based.lit) cover
 `seq(S) = fn(n N+) S`, finite indices 1 through n, and the empty sequence.
 [Struct existential laws](exist/by_known_forall/struct_existential_law.lit)

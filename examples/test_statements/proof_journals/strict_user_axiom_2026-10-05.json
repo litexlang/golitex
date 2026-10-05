@@ -1,0 +1,716 @@
+{
+  "date": "2026-10-05",
+  "binary_sha256": "8fa5e6e06acdab9e76edf7a0799e1b1be5ed98910c35794b8c5ca6eea9dc0300",
+  "baseline": {
+    "source": "axiom wrong:\n    ? forall x R:\n        0 = 1\nby thm wrong(0) => 0 = 1\n0 = 1",
+    "observed_before": {
+      "exit_code": 0,
+      "success": true,
+      "statement_success": [
+        true,
+        true,
+        true
+      ]
+    },
+    "evidence": "Original conversation read-only current-release probe before this change."
+  },
+  "cli_cases": [
+    {
+      "case": "tracer-ordinary",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-f",
+        "examples/stmt_nodes/definition/strict_axiom_policy.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/definition/strict_axiom_policy.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall x R:\n    0 = 1",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Axiom",
+              "message": "Assume an axiom"
+            },
+            "stores": [
+              "forall x R:\n    0 = 1"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "by thm wrong",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By theorem",
+              "message": "Apply a recorded theorem"
+            },
+            "stores": [
+              "0 = 1"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "0 = 1",
+            "proof_method": {
+              "type": "equivalence_class",
+              "rule_name": "Equivalence class",
+              "message": "Equality follows from stored paths, possibly joined by a checked peer proof"
+            },
+            "stores": [
+              "0 = 1"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "case": "tracer-strict",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/stmt_nodes/definition/strict_axiom_policy.lit"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "examples/stmt_nodes/definition/strict_axiom_policy.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": "Runtime(InvalidArguments(\"`axiom` is forbidden under Litex `-strict`\"))"
+      }
+    },
+    {
+      "case": "original-counterexample",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-e",
+        "axiom wrong:\n    ? forall x R:\n        0 = 1\nby thm wrong(0) => 0 = 1\n0 = 1"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": "Runtime(InvalidArguments(\"`axiom` is forbidden under Litex `-strict`\"))"
+      }
+    },
+    {
+      "case": "true-axiom-strict",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_statements/boundaries/strict-axiom-rejected.lit"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "examples/test_statements/boundaries/strict-axiom-rejected.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": "Runtime(InvalidArguments(\"`axiom` is forbidden under Litex `-strict`\"))"
+      }
+    },
+    {
+      "case": "abstract-signature",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/stmt_nodes/definition/strict_abstract_prop.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/definition/strict_abstract_prop.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "abstract_prop strict_mark(x)",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define abstract prop",
+              "message": "Declare an abstract predicate"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "forall x R:\n    $strict_mark(x)\n    =>:\n        $strict_mark(x)",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall x R:\n    $strict_mark(x)\n    =>:\n        $strict_mark(x)"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "case": "abstract-instance-unproved",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-e",
+        "abstract_prop P(x)\n$P(0)"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "abstract_prop P(x)",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define abstract prop",
+              "message": "Declare an abstract predicate"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": false,
+            "statement": "$P(0)",
+            "why_failed": {
+              "phase": "search_proof",
+              "goal": "$P(0)"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "case": "checked-thm",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-e",
+        "thm checked:\n    ? forall x R:\n        x = x\nrelease thm checked(2)"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall x R:\n    x = x",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem"
+            },
+            "stores": [
+              "forall x R:\n    x = x"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "release thm checked",
+            "proof_method": {
+              "type": "release",
+              "rule_name": "Release theorem",
+              "message": "Release a theorem into the environment"
+            },
+            "stores": [
+              "2 = 2"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "case": "choice",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_statements/boundaries/strict-choice-allowed.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/test_statements/boundaries/strict-choice-allowed.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "release choice …",
+            "proof_method": {
+              "type": "release",
+              "rule_name": "Axiom of choice",
+              "message": "Release the axiom of choice"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "case": "regularity",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_statements/boundaries/strict-regularity-allowed.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/test_statements/boundaries/strict-regularity-allowed.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "release regularity …",
+            "proof_method": {
+              "type": "release",
+              "rule_name": "Regularity axiom",
+              "message": "Release the regularity axiom"
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "case": "trust",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_statements/boundaries/strict-trust-rejected.lit"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "examples/test_statements/boundaries/strict-trust-rejected.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+      }
+    },
+    {
+      "case": "trust-have",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-f",
+        "examples/test_statements/boundaries/strict-trust-have-rejected.lit"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "examples/test_statements/boundaries/strict-trust-have-rejected.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+      }
+    },
+    {
+      "case": "template-trust",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+        "-strict",
+        "-e",
+        "template<S set>:\n    trust have hidden R:\n        hidden = 1"
+      ],
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+      }
+    }
+  ],
+  "help_verified": true,
+  "documentation_audit": [
+    {
+      "file": "README.md",
+      "unchanged_executable_blocks": 5
+    },
+    {
+      "file": "docs/Manual.md",
+      "unchanged_executable_blocks": 105
+    },
+    {
+      "file": "docs/cli.md",
+      "unchanged_executable_blocks": 0
+    },
+    {
+      "file": "docs/FAQ.md",
+      "unchanged_executable_blocks": 19
+    },
+    {
+      "file": "docs/Litex_Learner_Cheatsheet.md",
+      "unchanged_executable_blocks": 22
+    }
+  ],
+  "statement_leaf_gates": [
+    {
+      "leaf": "AxiomStmt",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--leaf",
+        "AxiomStmt",
+        "--binary",
+        "target/release/litex",
+        "--require-no-gaps"
+      ],
+      "exit_code": 0,
+      "summary": "1 statement leaves; 7 checks; 0 unexpected failures; 0 recorded gaps"
+    },
+    {
+      "leaf": "TrustStmt",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--leaf",
+        "TrustStmt",
+        "--binary",
+        "target/release/litex",
+        "--require-no-gaps"
+      ],
+      "exit_code": 0,
+      "summary": "1 statement leaves; 7 checks; 0 unexpected failures; 0 recorded gaps"
+    },
+    {
+      "leaf": "TrustHaveStmt",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--leaf",
+        "TrustHaveStmt",
+        "--binary",
+        "target/release/litex",
+        "--require-no-gaps"
+      ],
+      "exit_code": 0,
+      "summary": "1 statement leaves; 7 checks; 0 unexpected failures; 0 recorded gaps"
+    },
+    {
+      "leaf": "DefAbstractPropStmt",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--leaf",
+        "DefAbstractPropStmt",
+        "--binary",
+        "target/release/litex",
+        "--require-no-gaps"
+      ],
+      "exit_code": 0,
+      "summary": "1 statement leaves; 8 checks; 0 unexpected failures; 0 recorded gaps"
+    },
+    {
+      "leaf": "DefTemplateStmt",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--leaf",
+        "DefTemplateStmt",
+        "--binary",
+        "target/release/litex",
+        "--require-no-gaps"
+      ],
+      "exit_code": 0,
+      "summary": "1 statement leaves; 14 checks; 0 unexpected failures; 0 recorded gaps"
+    },
+    {
+      "leaf": "ReleaseAxiomOfChoiceStmt",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--leaf",
+        "ReleaseAxiomOfChoiceStmt",
+        "--binary",
+        "target/release/litex",
+        "--require-no-gaps"
+      ],
+      "exit_code": 0,
+      "summary": "1 statement leaves; 7 checks; 0 unexpected failures; 0 recorded gaps"
+    },
+    {
+      "leaf": "ReleaseRegularityAxiomStmt",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--leaf",
+        "ReleaseRegularityAxiomStmt",
+        "--binary",
+        "target/release/litex",
+        "--require-no-gaps"
+      ],
+      "exit_code": 0,
+      "summary": "1 statement leaves; 8 checks; 0 unexpected failures; 0 recorded gaps"
+    }
+  ],
+  "retained_test_binary": {
+    "path": "target/release/deps/litex-c95878c5b5c21dbd",
+    "sha256": "c472e31a9190c201489b468a461b14a61b967be5e54882a12b7b313f3434238a",
+    "reason": "Built successfully for statement_boundary_tests before unrelated concurrent Rust source edits made the next Cargo invocation fail."
+  },
+  "retained_test_binary_gates": [
+    {
+      "filter": "statement_boundary_tests",
+      "command": [
+        "target/release/deps/litex-c95878c5b5c21dbd",
+        "statement_boundary_tests",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 11 tests\ntest execute::statement_boundary_tests::strict_rejects_template_trust_at_top_level_and_in_proof_bodies ... ok\ntest execute::statement_boundary_tests::trust_have_display_replays_body_names_and_preserves_strict_policy ... ok\ntest execute::statement_boundary_tests::strict_keeps_checked_theorems_abstract_signatures_and_foundation_releases ... ok\ntest execute::statement_boundary_tests::strict_rejects_user_axioms_at_top_level_and_in_proof_bodies ... ok\ntest execute::statement_boundary_tests::nested_by_steps_preserve_helper_scope_and_failure_rollback ... ok\ntest execute::statement_boundary_tests::statement_boundary_json_retains_nested_proofs_and_wd_failure ... ok\ntest execute::statement_boundary_tests::eval_checks_source_domain_before_rewrite_or_execution ... ok\ntest execute::statement_boundary_tests::finite_proof_bodies_keep_binders_premises_and_nested_proof_evidence ... ok\ntest execute::statement_boundary_tests::run_examples_statement_boundary_tracers ... ok\ntest execute::statement_boundary_tests::finite_guards_skip_only_proved_false_premises_and_reject_false_conclusions ... ok\ntest execute::statement_boundary_tests::finite_numeric_carriers_verify_symbolic_arithmetic_and_each_assignment ... ok\n\ntest result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 970 filtered out; finished in 0.08s\n\n"
+    },
+    {
+      "filter": "strict_cache_tests",
+      "command": [
+        "target/release/deps/litex-c95878c5b5c21dbd",
+        "strict_cache_tests",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 4 tests\ntest run_module::strict_cache_tests::strict_import_cannot_replay_a_non_strict_trusted_theorem ... ok\ntest run_module::strict_cache_tests::strict_import_rechecks_trust_in_a_transitive_dependency ... ok\ntest run_module::strict_cache_tests::strict_import_rechecks_user_axioms_in_a_cached_transitive_dependency ... ok\ntest run_module::strict_cache_tests::strict_valid_imports_pass_cold_verification_after_non_strict_cache_warmup ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 977 filtered out; finished in 0.01s\n\n"
+    },
+    {
+      "filter": "predicate_signature_tests",
+      "command": [
+        "target/release/deps/litex-c95878c5b5c21dbd",
+        "predicate_signature_tests",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 10 tests\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::wrong_arity_is_rejected_in_hypotheses_of_both_polarities ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::local_helper_for_an_already_well_defined_goal_stays_valid ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::signature_failure_is_not_an_object_failure_in_detailed_output ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::undefined_nullary_goal_still_fails_before_its_local_definition ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::undefined_claim_goal_fails_before_a_later_local_declaration_can_prove_it ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::nullary_concrete_propositions_keep_definition_wd_and_exact_arity ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::run_examples_strict_abstract_and_negative_source_tracers ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::nullary_abstract_propositions_preserve_strict_and_signature_checks ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::valid_signatures_remain_valid_in_nested_quantifiers_and_existence ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::legacy_real_bound_certificate_signatures_work_without_granting_truth ... ok\n\ntest result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 971 filtered out; finished in 0.00s\n\n"
+    },
+    {
+      "filter": "stored_sum_equality_is_reused_with_alpha_renamed_endpoints",
+      "command": [
+        "target/release/deps/litex-c95878c5b5c21dbd",
+        "stored_sum_equality_is_reused_with_alpha_renamed_endpoints",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 1 test\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::stored_sum_equality_is_reused_with_alpha_renamed_endpoints ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 980 filtered out; finished in 0.02s\n\n"
+    }
+  ],
+  "final_current_source_build": {
+    "command": [
+      "cargo",
+      "build",
+      "--release",
+      "--offline",
+      "--message-format=json"
+    ],
+    "exit_code": 0,
+    "errors": []
+  },
+  "successful_cargo_gates": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--lib",
+        "statement_boundary_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "passed": 11
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--lib",
+        "strict_cache_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "passed": 4
+    }
+  ],
+  "initial_release_build": {
+    "command": [
+      "cargo",
+      "build",
+      "--release",
+      "--offline"
+    ],
+    "exit_code": 0
+  },
+  "scoped_source_sha256": {
+    "src/execute/exec_stmt.rs": "ccbb0e505a66c34b94e550ca86dfcb5a00da4d6379e4b5437c772330bb959236",
+    "src/run/run_command.rs": "b345f4e1721e380a08917fc01a5c16730d167e46f29db871478259935eed569b",
+    "tests/unit/execute/statement_boundaries/tests.rs": "b3b81d11adaed00d0968b1612ded340077737b928fb947cf925b5ab6ddc37c1a",
+    "tests/unit/run_module/strict_cache/tests.rs": "2586a492091008b79305aa78816bdc2fd66946dec218dce952c52906dca35e9f",
+    "tests/unit/execute/equality_search/tests.rs": "400f2e115b5673018ba03b4ac8b4d929b1b185948000bdb2d34bc2cfc6567a60"
+  },
+  "workspace_build_history": [
+    {
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--offline",
+        "--message-format=json"
+      ],
+      "exit_code": 101,
+      "errors": [
+        "error[E0432]: unresolved import `super::well_defined_results::verify_obj::ObjWellDefinedByDefCommonStages`\n  --> src/execute/execute_fact_stmt/function_domain.rs:14:73\n   |\n14 | use super::well_defined_results::verify_obj::{FnObjDomainFnSetEvidence, ObjWellDefinedByDefCommonStages};\n   |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `ObjWellDefinedByDefCommonStages` in `execute::execute_fact_stmt::well_defined_results::verify_obj`\n   |\nnote: struct `crate::execute::execute_fact_stmt::well_defined_results::verify_obj::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages` exists but is inaccessible\n  --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/obj_well_defined_by_def_common.rs:10:1\n   |\n10 | pub struct ObjWellDefinedByDefCommonStages {\n   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not accessible\n\n",
+        "error[E0004]: non-exhaustive patterns: `&execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::ApplicationReturn { .. }` not covered\n  --> src/json_output/project_detailed/function_domain.rs:16:24\n   |\n16 |     let source = match &proof.source {\n   |                        ^^^^^^^^^^^^^ pattern `&execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::ApplicationReturn { .. }` not covered\n   |\nnote: `execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof` defined here\n  --> src/execute/execute_fact_stmt/function_domain.rs:38:10\n   |\n38 | pub enum CompleteFunctionDomainSourceProof {\n   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n...\n48 |     ApplicationReturn {\n   |     ----------------- not covered\n   = note: the matched value is of type `&execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof`\nhelp: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown\n   |\n28 ~         ]),\n29 ~         &execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::ApplicationReturn { .. } => todo!(),\n   |\n\n"
+      ]
+    },
+    {
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--offline",
+        "--message-format=json"
+      ],
+      "exit_code": 0,
+      "errors": []
+    }
+  ],
+  "initial_cli_binary_sha256": "ce8fa319ebac9babd0d55caacc043fa783f6ee7becbdd5caea7612c48dbd29c8",
+  "final_current_source_cli_verified": true,
+  "final_current_source_rust_gates": [
+    {
+      "filter": "statement_boundary_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--lib",
+        "statement_boundary_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 11 tests\ntest execute::statement_boundary_tests::strict_rejects_template_trust_at_top_level_and_in_proof_bodies ... ok\ntest execute::statement_boundary_tests::trust_have_display_replays_body_names_and_preserves_strict_policy ... ok\ntest execute::statement_boundary_tests::strict_keeps_checked_theorems_abstract_signatures_and_foundation_releases ... ok\ntest execute::statement_boundary_tests::nested_by_steps_preserve_helper_scope_and_failure_rollback ... ok\ntest execute::statement_boundary_tests::strict_rejects_user_axioms_at_top_level_and_in_proof_bodies ... ok\ntest execute::statement_boundary_tests::statement_boundary_json_retains_nested_proofs_and_wd_failure ... ok\ntest execute::statement_boundary_tests::eval_checks_source_domain_before_rewrite_or_execution ... ok\ntest execute::statement_boundary_tests::finite_proof_bodies_keep_binders_premises_and_nested_proof_evidence ... ok\ntest execute::statement_boundary_tests::run_examples_statement_boundary_tracers ... ok\ntest execute::statement_boundary_tests::finite_guards_skip_only_proved_false_premises_and_reject_false_conclusions ... ok\ntest execute::statement_boundary_tests::finite_numeric_carriers_verify_symbolic_arithmetic_and_each_assignment ... ok\n\ntest result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 971 filtered out; finished in 0.09s\n\n"
+    },
+    {
+      "filter": "strict_cache_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--lib",
+        "strict_cache_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 4 tests\ntest run_module::strict_cache_tests::strict_import_cannot_replay_a_non_strict_trusted_theorem ... ok\ntest run_module::strict_cache_tests::strict_import_rechecks_trust_in_a_transitive_dependency ... ok\ntest run_module::strict_cache_tests::strict_valid_imports_pass_cold_verification_after_non_strict_cache_warmup ... ok\ntest run_module::strict_cache_tests::strict_import_rechecks_user_axioms_in_a_cached_transitive_dependency ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 978 filtered out; finished in 0.01s\n\n"
+    },
+    {
+      "filter": "predicate_signature_tests",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--lib",
+        "predicate_signature_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 10 tests\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::signature_failure_is_not_an_object_failure_in_detailed_output ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::wrong_arity_is_rejected_in_hypotheses_of_both_polarities ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::undefined_nullary_goal_still_fails_before_its_local_definition ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::local_helper_for_an_already_well_defined_goal_stays_valid ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::run_examples_strict_abstract_and_negative_source_tracers ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::nullary_concrete_propositions_keep_definition_wd_and_exact_arity ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::nullary_abstract_propositions_preserve_strict_and_signature_checks ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::undefined_claim_goal_fails_before_a_later_local_declaration_can_prove_it ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::valid_signatures_remain_valid_in_nested_quantifiers_and_existence ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_well_defined::predicate_signature_tests::legacy_real_bound_certificate_signatures_work_without_granting_truth ... ok\n\ntest result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 972 filtered out; finished in 0.00s\n\n"
+    },
+    {
+      "filter": "stored_sum_equality_is_reused_with_alpha_renamed_endpoints",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--lib",
+        "stored_sum_equality_is_reused_with_alpha_renamed_endpoints",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "stdout": "\nrunning 1 test\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::stored_sum_equality_is_reused_with_alpha_renamed_endpoints ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 981 filtered out; finished in 0.02s\n\n"
+    }
+  ],
+  "status": "complete",
+  "cleanup": "Completed execution ledger removed; no task-owned drafts remain. Unrelated concurrent edits preserved."
+}

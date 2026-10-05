@@ -1,0 +1,749 @@
+# Common cross-Obj relations with explicit checked author routes.
+# Task: final Obj relations audit, 2026-10-05.
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/common_obj_relation_author_routes.lit
+# Every sketch is independent. Guarded/restricted domains remain explicit.
+
+# A05-materialized-members
+sketch:
+    claim:
+        ? forall a,b R:
+            a!=b
+            =>:
+                finite_set_max({a,b})=max(a,b)
+        finite_set_max({a,b}) $in {a,b}
+        a $in {a,b}
+        b $in {a,b}
+        a<=finite_set_max({a,b})
+        b<=finite_set_max({a,b})
+        by cases:
+            ? finite_set_max({a,b})=max(a,b)
+            case finite_set_max({a,b})=a:
+                b<=a
+                max(a,b)=a
+            case finite_set_max({a,b})=b:
+                a<=b
+                max(a,b)=b
+
+
+# A06-explicit-finite-union
+sketch:
+    claim:
+        ? forall S,T finite_set:
+            $is_nonempty_set(S)
+            $is_nonempty_set(T)
+            S $subset R
+            T $subset R
+            =>:
+                finite_set_max(union(S,T))=max(finite_set_max(S),finite_set_max(T))
+        $is_finite_set(union(S,T))
+        union(S,T) $subset R
+        $is_nonempty_set(union(S,T))
+        finite_set_max(S) $in S
+        finite_set_max(T) $in T
+        finite_set_max(S) $in union(S,T)
+        finite_set_max(T) $in union(S,T)
+        finite_set_max(S)<=finite_set_max(union(S,T))
+        finite_set_max(T)<=finite_set_max(union(S,T))
+        finite_set_max(union(S,T)) $in union(S,T)
+        by cases:
+            ? finite_set_max(union(S,T))=max(finite_set_max(S),finite_set_max(T))
+            case finite_set_max(S)<=finite_set_max(T):
+                max(finite_set_max(S),finite_set_max(T))=finite_set_max(T)
+                by cases:
+                    ? finite_set_max(union(S,T))<=finite_set_max(T)
+                    case finite_set_max(union(S,T)) $in S:
+                        finite_set_max(union(S,T))<=finite_set_max(S)<=finite_set_max(T)
+                    case finite_set_max(union(S,T)) $in T:
+                        finite_set_max(union(S,T))<=finite_set_max(T)
+                finite_set_max(union(S,T))=finite_set_max(T)
+            case finite_set_max(T)<finite_set_max(S):
+                finite_set_max(T)<=finite_set_max(S)
+                max(finite_set_max(S),finite_set_max(T))=finite_set_max(S)
+                by cases:
+                    ? finite_set_max(union(S,T))<=finite_set_max(S)
+                    case finite_set_max(union(S,T)) $in S:
+                        finite_set_max(union(S,T))<=finite_set_max(S)
+                    case finite_set_max(union(S,T)) $in T:
+                        finite_set_max(union(S,T))<=finite_set_max(T)<=finite_set_max(S)
+                finite_set_max(union(S,T))=finite_set_max(S)
+
+
+# A07-canonical-form
+sketch:
+    forall S,T finite_set:
+        finite_set_size(union(S,T))=finite_set_size(S)+finite_set_size(T)-finite_set_size(intersect(S,T))
+
+
+# A08-canonical-difference
+sketch:
+    claim:
+        ? forall S,T finite_set:
+            T $subset S
+            =>:
+                finite_set_size(set_minus(S,T))=finite_set_size(S)-finite_set_size(T)
+        by extension intersect(S,T)=T
+        finite_set_size(set_minus(S,T))=finite_set_size(S)-finite_set_size(intersect(S,T))
+
+
+# C02-rectangular-form
+sketch:
+    claim:
+        ? forall z C:
+            C_abs(z)^2=re(z)^2+img(z)^2
+        z=re(z)+i*img(z)
+        C_abs(z)^2=C_abs(re(z)+i*img(z))^2
+        C_abs(re(z)+i*img(z))^2=re(z)^2+img(z)^2
+
+
+# C03-principal-root
+sketch:
+    claim:
+        ? forall x R:
+            C_abs(x)=abs(x)
+        x=x+i*0
+        C_abs(x)^2=C_abs(x+i*0)^2=x^2+0^2=x^2
+        0<=C_abs(x)
+        sqrt(C_abs(x)^2)=C_abs(x)
+        sqrt(x^2)=abs(x)
+        C_abs(x)=sqrt(C_abs(x)^2)=sqrt(x^2)=abs(x)
+
+
+# D01-division-window
+sketch:
+    claim:
+        ? forall x R,n Z:
+            n<=x
+            x<n+1
+            =>:
+                floor(x)=n
+        floor(x)<=x
+        floor(n)=n
+        floor(n)<=floor(x)
+        n<=floor(x)
+        floor(x)<n+1
+        floor(x)<=n
+        floor(x)=n
+    claim:
+        ? forall a Z,d N+:
+            quot(a,d)=floor(a/d)
+        0<d
+        a=d*quot(a,d)+a%d
+        0<=a%d
+        a%d<d
+        d*quot(a,d)<=d*quot(a,d)+a%d=a
+        quot(a,d)=(d*quot(a,d))/d<=a/d
+        a=d*quot(a,d)+a%d<d*quot(a,d)+d=d*(quot(a,d)+1)
+        a/d<(d*(quot(a,d)+1))/d=quot(a,d)+1
+        floor(a/d)=quot(a,d)
+
+
+# D03-equality-chain
+sketch:
+    claim:
+        ? forall a Z,d N+:
+            quot(a,d)=(a-a%d)/d
+        a=d*quot(a,d)+a%d
+        (a-a%d)/d=(d*quot(a,d)+a%d-a%d)/d=quot(a,d)
+
+
+# D04-materialized-instance
+sketch:
+    claim:
+        ? forall x R,n Z:
+            n<=x
+            x<n+1
+            =>:
+                floor(x)=n
+        floor(x)<=x
+        floor(n)=n
+        floor(n)<=floor(x)
+        n<=floor(x)
+        floor(x)<n+1
+        floor(x)<=n
+        floor(x)=n
+    claim:
+        ? forall a Z,d N+:
+            quot(a,d)=floor(a/d)
+        0<d
+        a=d*quot(a,d)+a%d
+        0<=a%d
+        a%d<d
+        d*quot(a,d)<=d*quot(a,d)+a%d=a
+        quot(a,d)=(d*quot(a,d))/d<=a/d
+        a=d*quot(a,d)+a%d<d*quot(a,d)+d=d*(quot(a,d)+1)
+        a/d<(d*(quot(a,d)+1))/d=quot(a,d)+1
+        floor(a/d)=quot(a,d)
+    claim:
+        ? forall a Z,d N+:
+            a%d=a-d*floor(a/d)
+        quot(a,d)=floor(a/d)
+        a=d*quot(a,d)+a%d
+        a%d=a-d*quot(a,d)=a-d*floor(a/d)
+
+
+# D08-natural-domain
+sketch:
+    claim:
+        ? forall a,b N:
+            a!=0
+            gcd(a,b)=1
+            =>:
+                $coprime(a,b)
+        by def $coprime(a,b)
+
+
+# E03-existing-owner
+sketch:
+    # Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/ln_as_euler_log.lit
+    # Former exact failure:
+    # 1<e
+    # e!=1
+    # forall x R+:
+    #     ln(x)=log(e,x)
+    # Current same source; parent WD guards retained. Wrong base/argument and illegal domains reject.
+    1<e
+    e!=1
+    forall x R+:
+        ln(x)=log(e,x)
+
+
+# E04-existing-owner
+sketch:
+    # Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/exp_as_euler_integer_power.lit
+    # Former exact failure:
+    # e $in R+
+    # 0<e
+    # e!=0
+    # forall n Z:
+    #     exp(n)=e^n
+    # Current same source; parent WD guards retained. Wrong base/argument and illegal domains reject.
+    e $in R+
+    0<e
+    e!=0
+    forall n Z:
+        exp(n)=e^n
+
+
+# E05-existing-owner
+sketch:
+    claim:
+        ? forall a,b R:
+            exp(a)=exp(b)
+            =>:
+                a=b
+        ln(exp(a))=a
+        ln(exp(b))=b
+        ln(exp(a))=ln(exp(b))
+        a=ln(exp(a))=ln(exp(b))=b
+    forall a,b R:
+        exp(a)=exp(b)
+        =>:
+            a=b
+    claim:
+        ? forall a,b R+:
+            ln(a*b)=ln(a)+ln(b)
+        a*b $in R+
+        0<a*b
+        exp(ln(a))=a
+        exp(ln(b))=b
+        exp(ln(a)+ln(b))=exp(ln(a))*exp(ln(b))
+        exp(ln(a))*exp(ln(b))=a*b
+        exp(ln(a*b))=a*b
+        exp(ln(a*b))=exp(ln(a)+ln(b))
+        ln(a*b)=ln(a)+ln(b)
+    forall a,b R+:
+        ln(a*b)=ln(a)+ln(b)
+
+
+# E06-existing-owner
+sketch:
+    claim:
+        ? forall a,b R:
+            exp(a)=exp(b)
+            =>:
+                a=b
+        ln(exp(a))=a
+        ln(exp(b))=b
+        ln(exp(a))=ln(exp(b))
+        a=ln(exp(a))=ln(exp(b))=b
+    forall a,b R:
+        exp(a)=exp(b)
+        =>:
+            a=b
+    claim:
+        ? forall x R:
+            exp(x)!=0
+        0<exp(x)
+        exp(x)!=0
+    forall x R:
+        exp(x)!=0
+    claim:
+        ? forall a,b R:
+            exp(a-b)=exp(a)/exp(b)
+        exp(b)!=0
+        (a-b)+b=a
+        exp((a-b)+b)=exp(a-b)*exp(b)
+        exp(a)=exp((a-b)+b)
+        exp(a)=exp(a-b)*exp(b)
+        exp(a-b)=(exp(a-b)*exp(b))/exp(b)=exp(a)/exp(b)
+    forall a,b R:
+        exp(a-b)=exp(a)/exp(b)
+    forall a,b R+:
+        0<a
+        0<b
+        0/b<a/b
+        0/b=0
+        0<a/b
+        a/b $in R+
+    claim:
+        ? forall a,b R+:
+            ln(a/b)=ln(a)-ln(b)
+        exp(ln(a))=a
+        exp(ln(b))=b
+        a/b $in R+
+        0<a/b
+        exp(ln(a/b))=a/b
+        exp(ln(a)-ln(b))=exp(ln(a))/exp(ln(b))
+        exp(ln(a))/exp(ln(b))=a/b
+        exp(ln(a/b))=exp(ln(a)-ln(b))
+        ln(a/b)=ln(a)-ln(b)
+    forall a,b R+:
+        ln(a/b)=ln(a)-ln(b)
+
+
+# E07-e-log-bridge
+sketch:
+    1<e
+    e!=1
+    forall x R+,n Z:
+        0<x
+        0<x^n
+        x^n $in R+
+    claim:
+        ? forall x R+,n Z:
+            ln(x^n)=n*ln(x)
+        ln(x^n)=log(e,x^n)=n*log(e,x)
+        ln(x)=log(e,x)
+        n*log(e,x)=n*ln(x)
+
+
+# E08-zero-difference
+sketch:
+    claim:
+        ? forall x R:
+            exp(x)!=0
+        0<exp(x)
+        exp(x)!=0
+    forall x R:
+        exp(x)!=0
+    claim:
+        ? forall a,b R:
+            exp(a-b)=exp(a)/exp(b)
+        exp(b)!=0
+        (a-b)+b=a
+        exp((a-b)+b)=exp(a-b)*exp(b)
+        exp(a)=exp((a-b)+b)
+        exp(a)=exp(a-b)*exp(b)
+        exp(a-b)=(exp(a-b)*exp(b))/exp(b)=exp(a)/exp(b)
+    forall a,b R:
+        exp(a-b)=exp(a)/exp(b)
+    claim:
+        ? forall x R:
+            exp(-x)=1/exp(x)
+        -x=0-x
+        exp(-x)=exp(0-x)=exp(0)/exp(x)=1/exp(x)
+
+
+# E09-base-above-one
+sketch:
+    forall a,b,x R+:
+        1<a
+        1<b
+        log(b,a)!=0
+        =>:
+            log(a,x)=log(b,x)/log(b,a)
+
+
+# E10-base-above-one
+sketch:
+    forall b,x R+,n N+:
+        1<b
+        b^n!=1
+        =>:
+            log(b^n,x)=log(b,x)/n
+
+
+# P01-tuple-membership
+sketch:
+    claim:
+        ? forall A,B,Target set:
+            cart(union(A,B),Target)=union(cart(A,Target),cart(B,Target))
+        by extension:
+            ? cart(union(A,B),Target)=union(cart(A,Target),cart(B,Target))
+            claim:
+                ? forall p cart(union(A,B),Target):
+                    p $in union(cart(A,Target),cart(B,Target))
+                p[1] $in union(A,B)
+                p[2] $in Target
+                by cases:
+                    ? p $in union(cart(A,Target),cart(B,Target))
+                    case p[1] $in A:
+                        p=(p[1],p[2])
+                        (p[1],p[2]) $in cart(A,Target)
+                        p $in cart(A,Target)
+                    case p[1] $in B:
+                        p=(p[1],p[2])
+                        (p[1],p[2]) $in cart(B,Target)
+                        p $in cart(B,Target)
+            claim:
+                ? forall p union(cart(A,Target),cart(B,Target)):
+                    p $in cart(union(A,B),Target)
+                by cases:
+                    ? p $in cart(union(A,B),Target)
+                    case p $in cart(A,Target):
+                        p[1] $in A
+                        p[1] $in union(A,B)
+                        p[2] $in Target
+                        p=(p[1],p[2])
+                        (p[1],p[2]) $in cart(union(A,B),Target)
+                        p $in cart(union(A,B),Target)
+                    case p $in cart(B,Target):
+                        p[1] $in B
+                        p[1] $in union(A,B)
+                        p[2] $in Target
+                        p=(p[1],p[2])
+                        (p[1],p[2]) $in cart(union(A,B),Target)
+                        p $in cart(union(A,B),Target)
+
+
+# P03-reconstruct
+sketch:
+    claim:
+        ? forall p,q cart(R,Z):
+            p[1]=q[1]
+            p[2]=q[2]
+            =>:
+                p=q
+        p=(p[1],p[2])
+        q=(q[1],q[2])
+        p=(p[1],p[2])=(q[1],q[2])=q
+
+
+# R03-order-orientation
+sketch:
+    forall x,y R:
+        0<=x
+        0<=y
+        =>:
+            sqrt(x*y)=sqrt(x)*sqrt(y)
+
+
+# R04-exact-guards
+sketch:
+    claim:
+        ? forall x R,y R+:
+            x>=0
+            =>:
+                sqrt(x/y)=sqrt(x)/sqrt(y)
+        0<=x
+        0<y
+        sqrt(y)!=0
+        sqrt(x/y)=sqrt(x)/sqrt(y)
+
+
+# R06-common-subtraction
+sketch:
+    claim:
+        ? forall x R:
+            abs(x)=max(x,-x)
+        by cases:
+            ? abs(x)=max(x,-x)
+            case 0<=x:
+                abs(x)=x
+                -x=0-x<=x-x=0<=x
+                max(x,-x)=x
+            case x<0:
+                x<=0
+                abs(x)=-x
+                x<=0=x-x<=0-x=-x
+                max(x,-x)=-x
+
+
+# R07-corrected-indentation
+sketch:
+    claim:
+        ? forall x R:
+            min(x,-x)=-abs(x)
+        by cases:
+            ? min(x,-x)=-abs(x)
+            case 0<=x:
+                abs(x)=x
+                -x=0-x<=x-x=0<=x
+                min(x,-x)=-x
+                -abs(x)=-x
+                min(x,-x)=-x=-abs(x)
+            case x<0:
+                x<=0
+                abs(x)=-x
+                x<=0=x-x<=0-x=-x
+                min(x,-x)=x
+                -abs(x)=-(-x)=x
+                min(x,-x)=x=-abs(x)
+
+
+# R08-branch-chains
+sketch:
+    claim:
+        ? forall x,y R:
+            min(x,y)+max(x,y)=x+y
+        by cases:
+            ? min(x,y)+max(x,y)=x+y
+            case x<=y:
+                min(x,y)=x
+                max(x,y)=y
+                min(x,y)+max(x,y)=x+max(x,y)=x+y
+            case y<x:
+                y<=x
+                min(x,y)=y
+                max(x,y)=x
+                min(x,y)+max(x,y)=y+max(x,y)=y+x=x+y
+
+
+# R09-branch-chains
+sketch:
+    claim:
+        ? forall x,y R:
+            max(x,y)-min(x,y)=abs(x-y)
+        by cases:
+            ? max(x,y)-min(x,y)=abs(x-y)
+            case x<=y:
+                min(x,y)=x
+                max(x,y)=y
+                x-y<=0
+                abs(x-y)=-(x-y)
+                max(x,y)-min(x,y)=y-min(x,y)=y-x=-(x-y)=abs(x-y)
+            case y<x:
+                y<=x
+                min(x,y)=y
+                max(x,y)=x
+                0<=x-y
+                abs(x-y)=x-y
+                max(x,y)-min(x,y)=x-min(x,y)=x-y=abs(x-y)
+
+
+# R10-materialized-instances
+sketch:
+    claim:
+        ? forall x,y R:
+            min(x,y)+max(x,y)=x+y
+        by cases:
+            ? min(x,y)+max(x,y)=x+y
+            case x<=y:
+                min(x,y)=x
+                max(x,y)=y
+                min(x,y)+max(x,y)=x+max(x,y)=x+y
+            case y<x:
+                y<=x
+                min(x,y)=y
+                max(x,y)=x
+                min(x,y)+max(x,y)=y+max(x,y)=y+x=x+y
+    claim:
+        ? forall x,y R:
+            max(x,y)-min(x,y)=abs(x-y)
+        by cases:
+            ? max(x,y)-min(x,y)=abs(x-y)
+            case x<=y:
+                min(x,y)=x
+                max(x,y)=y
+                x-y<=0
+                abs(x-y)=-(x-y)
+                max(x,y)-min(x,y)=y-min(x,y)=y-x=-(x-y)=abs(x-y)
+            case y<x:
+                y<=x
+                min(x,y)=y
+                max(x,y)=x
+                0<=x-y
+                abs(x-y)=x-y
+                max(x,y)-min(x,y)=x-min(x,y)=x-y=abs(x-y)
+    claim:
+        ? forall x,y R:
+            min(x,y)=(x+y-abs(x-y))/2
+        min(x,y)+max(x,y)=x+y
+        max(x,y)-min(x,y)=abs(x-y)
+        (x+y-abs(x-y))/2=(min(x,y)+max(x,y)-abs(x-y))/2=(min(x,y)+max(x,y)-(max(x,y)-min(x,y)))/2=min(x,y)
+
+
+# R11-materialized-instances
+sketch:
+    claim:
+        ? forall x,y R:
+            min(x,y)+max(x,y)=x+y
+        by cases:
+            ? min(x,y)+max(x,y)=x+y
+            case x<=y:
+                min(x,y)=x
+                max(x,y)=y
+                min(x,y)+max(x,y)=x+max(x,y)=x+y
+            case y<x:
+                y<=x
+                min(x,y)=y
+                max(x,y)=x
+                min(x,y)+max(x,y)=y+max(x,y)=y+x=x+y
+    claim:
+        ? forall x,y R:
+            max(x,y)-min(x,y)=abs(x-y)
+        by cases:
+            ? max(x,y)-min(x,y)=abs(x-y)
+            case x<=y:
+                min(x,y)=x
+                max(x,y)=y
+                x-y<=0
+                abs(x-y)=-(x-y)
+                max(x,y)-min(x,y)=y-min(x,y)=y-x=-(x-y)=abs(x-y)
+            case y<x:
+                y<=x
+                min(x,y)=y
+                max(x,y)=x
+                0<=x-y
+                abs(x-y)=x-y
+                max(x,y)-min(x,y)=x-min(x,y)=x-y=abs(x-y)
+    claim:
+        ? forall x,y R:
+            max(x,y)=(x+y+abs(x-y))/2
+        min(x,y)+max(x,y)=x+y
+        max(x,y)-min(x,y)=abs(x-y)
+        (x+y+abs(x-y))/2=(min(x,y)+max(x,y)+abs(x-y))/2=(min(x,y)+max(x,y)+(max(x,y)-min(x,y)))/2=max(x,y)
+
+
+# R12-equality-chain
+sketch:
+    claim:
+        ? forall x R:
+            ceil(x)=-floor(-x)
+        floor(-x)=-ceil(x)
+        -floor(-x)=-(-ceil(x))=ceil(x)
+
+
+# R13-order-chain
+sketch:
+    claim:
+        ? forall x R:
+            ceil(x)<=floor(x)+1
+        ceil(x)-1<x<floor(x)+1
+        ceil(x)=(ceil(x)-1)+1<(floor(x)+1)+1=floor(x)+2
+        ceil(x)<=floor(x)+1
+
+
+# R17-order-chain
+sketch:
+    claim:
+        ? forall x R:
+            x-floor(x)<1
+        x<floor(x)+1
+        x-floor(x)<(floor(x)+1)-floor(x)=1
+
+
+# R18-integer-adjacency
+sketch:
+    claim:
+        ? forall x R,n Z:
+            n<=x
+            x<n+1
+            =>:
+                floor(x)=n
+        floor(x)<=x
+        floor(n)=n
+        floor(n)<=floor(x)
+        n<=floor(x)
+        floor(x)<n+1
+        floor(x)<=n
+        floor(x)=n
+
+
+# S01-extension
+sketch:
+    claim:
+        ? forall A,B set:
+            intersect(A,union(A,B))=A
+        by extension intersect(A,union(A,B))=A
+
+
+# S02-fresh-binder
+sketch:
+    forall A,B,Target set:
+        set_minus(A,union(B,Target))=intersect(set_minus(A,B),set_minus(A,Target))
+
+
+# S03-definition-fold
+sketch:
+    claim:
+        ? forall A,B set:
+            power_set(intersect(A,B))=intersect(power_set(A),power_set(B))
+        by extension:
+            ? power_set(intersect(A,B))=intersect(power_set(A),power_set(B))
+            claim:
+                ? forall S power_set(intersect(A,B)):
+                    S $in intersect(power_set(A),power_set(B))
+                forall t S:
+                    t $in intersect(A,B)
+                    t $in A
+                    t $in B
+                by def S $subset A
+                by def S $subset B
+                S $in power_set(A)
+                S $in power_set(B)
+                S $in intersect(power_set(A),power_set(B))
+            claim:
+                ? forall S intersect(power_set(A),power_set(B)):
+                    S $in power_set(intersect(A,B))
+                by def S $subset A
+                by def S $subset B
+                forall t S:
+                    t $in A
+                    t $in B
+                    t $in intersect(A,B)
+                by def S $subset intersect(A,B)
+                S $in power_set(intersect(A,B))
+
+
+# S05-explicit-extension
+sketch:
+    by extension:
+        ? {x R: x>0}=R+
+        claim:
+            ? forall u {x R: x>0}:
+                u $in R+
+            0<u
+            u $in R+
+        forall u R+:
+            u $in {x R: x>0}
+
+
+# S06-extension
+sketch:
+    by extension intersect(Z,R+)=Z+
+
+
+# S08-explicit-extension
+sketch:
+    claim:
+        ? forall a,b N:
+            a<=b
+            =>:
+                range(a,b+1)=closed_range(a,b)
+        by extension:
+            ? range(a,b+1)=closed_range(a,b)
+            claim:
+                ? forall x range(a,b+1):
+                    x $in closed_range(a,b)
+                x<b+1
+                x<=b
+                x $in closed_range(a,b)
+            claim:
+                ? forall x closed_range(a,b):
+                    x $in range(a,b+1)
+                x<=b
+                x<b+1
+                x $in range(a,b+1)
+
+

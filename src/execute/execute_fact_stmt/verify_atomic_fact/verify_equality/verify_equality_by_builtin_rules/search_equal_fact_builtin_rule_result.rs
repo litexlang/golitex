@@ -138,6 +138,8 @@ pub enum EqualitySearchProofByBuiltinRule {
     RangeSize(super::by_range_size::RangeSizeProof),
     ClosedRangeSize(super::by_range_size::ClosedRangeSizeProof),
     EuclideanRemainder(super::by_euclidean_remainder::EuclideanRemainderProof),
+    GcdCommonDivisor(super::by_gcd_lcm_universal_divisibility::GcdCommonDivisorProof),
+    LcmCommonMultiple(super::by_gcd_lcm_universal_divisibility::LcmCommonMultipleProof),
     FactorialDivisibility(super::by_factorial_divisibility::FactorialDivisibilityProof),
     CartReconstruction(super::by_cart_reconstruction::CartReconstructionProof),
     FiniteSetProductReindex(super::by_finite_set_product_reindex::FiniteSetProductReindexProof),

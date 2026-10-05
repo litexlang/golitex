@@ -41,6 +41,121 @@ fn output_detail_normal_is_default_label() {
 }
 
 #[test]
+fn run_json_preserves_named_declarations_and_complete_theorem_calls() {
+    for declaration in ["thm", "axiom"] {
+        let mut runtime = runtime_with_file_env();
+        let code = format!("{declaration} identity:\n    ? forall x R:\n        x = x\nby thm identity(2) => 2 = 2\nrelease thm identity(3)");
+        let run = runtime.run_litex_code(&code).unwrap();
+        assert!(run.success, "{code}: {:?}", run.session_error);
+        let json = super::project_run_normal(&run, &runtime, "eval", None);
+        let statements = object_field(&json, "statement_results").as_array().unwrap();
+        assert!(object_field(&statements[0], "statement")
+            .as_str()
+            .unwrap()
+            .starts_with(&format!("{declaration} identity:")));
+        assert_eq!(
+            object_field(&statements[1], "statement").as_str().unwrap(),
+            "by thm identity(2) => 2 = 2"
+        );
+        assert_eq!(
+            object_field(&statements[2], "statement").as_str().unwrap(),
+            "release thm identity(3)"
+        );
+        assert_eq!(
+            object_field(&statements[1], "stores"),
+            &JsonValue::Array(vec![JsonValue::String("2 = 2".into())])
+        );
+        if declaration == "axiom" {
+            assert_eq!(
+                object_field(object_field(&statements[0], "proof_method"), "rule_name")
+                    .as_str()
+                    .unwrap(),
+                "Axiom"
+            );
+        }
+        for projected in [
+            super::project_run_compact(&run, &runtime, "eval", None),
+            super::project_run_detailed(&run, &runtime, "eval", None),
+        ] {
+            let projected_statements = object_field(&projected, "statement_results")
+                .as_array().unwrap();
+            for (normal, projected) in statements.iter().zip(projected_statements) {
+                assert_eq!(object_field(normal, "statement"), object_field(projected, "statement"));
+            }
+        }
+    }
+}
+
+#[test]
+fn run_json_keeps_source_aligned_through_failures_and_locales() {
+    for language in OutputLanguage::ALL {
+        let mut runtime = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        });
+        let run = runtime.run_litex_code("1 / 0 = 0\n1 = 1\nhave").unwrap();
+        assert!(!run.success);
+        assert!(run.session_error.is_some());
+        assert_eq!(run.statement_results.len(), 2);
+        assert_eq!(run.statement_texts.len(), 2);
+        assert_eq!(run.failed_statement_results, Some(vec![0]));
+        let json = super::project_run_normal(&run, &runtime, "eval", None);
+        let key = |name| super::json_keys::localize_key(name, language);
+        let statements = object_field(&json, &key("statement_results"))
+            .as_array()
+            .unwrap();
+        assert_eq!(
+            object_field(&statements[0], &key("statement"))
+                .as_str()
+                .unwrap(),
+            "1 / 0 = 0"
+        );
+        assert_eq!(
+            object_field(&statements[1], &key("statement"))
+                .as_str()
+                .unwrap(),
+            "1 = 1"
+        );
+        let why = object_field(&statements[0], &key("why_failed"));
+        assert_eq!(
+            object_field(why, &key("phase")).as_str().unwrap(),
+            super::helper::phase_value_well_defined(language)
+        );
+        assert_eq!(
+            object_field(why, &key("message")).as_str().unwrap(),
+            super::explain::well_defined_not_proven_message(language)
+        );
+        assert!(object_field(&statements[0], &key("stores"))
+            .as_array()
+            .unwrap()
+            .is_empty());
+        assert!(!object_field(&json, &key("session_error"))
+            .as_str()
+            .unwrap()
+            .contains("Runtime("));
+        let without_source = project_stmt_normal(&run.statement_results[0], &runtime);
+        assert_eq!(
+            object_field(&without_source, &key("statement"))
+                .as_str()
+                .unwrap(),
+            "<well_defined_not_proven>"
+        );
+        for projected in [
+            super::project_run_compact(&run, &runtime, "eval", None),
+            super::project_run_detailed(&run, &runtime, "eval", None),
+        ] {
+            let projected_statements = object_field(&projected, &key("statement_results"))
+                .as_array().unwrap();
+            for (normal, projected) in statements.iter().zip(projected_statements) {
+                assert_eq!(object_field(normal, &key("statement")), object_field(projected, &key("statement")));
+            }
+        }
+    }
+}
+
+#[test]
 fn normal_json_have_natural_then_nonnegative_by_builtin() {
     let mut runtime = runtime_with_file_env();
     let have = exec_one(&mut runtime, "have k N");

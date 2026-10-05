@@ -1,5 +1,17 @@
 # Obj regression corpus
 
+The [2026-10-05 cross-Obj relation audit](obj_relations_audit_2026-10-05.md)
+checks 81 representative interactions and partitions the recorded 99-object
+inventory. It separates direct support, checked author routes, restricted
+domains and remaining interface candidates. The [38 explicit author routes](../proof_nodes/equal/by_builtin_rule/common_obj_relation_author_routes.lit)
+pass a strict standalone gate; this focused result does not certify every
+owning Obj file, including the concurrently changed `cart_dim` boundary.
+
+The subsequent [common relation completion](../proof_nodes/experience/problem_notes/common-obj-relations-2026-10-05.md)
+supplies the selected gcd/lcm, factorial/product, sine-interval and general
+positive logarithm-base interfaces, with dedicated examples and focused boundary
+checks. The remaining LEG35/36 trigonometric cases keep their existing owners.
+
 > **统一收尾入口：** [src收尾总清单.md](../../plan/src收尾总清单.md)（2026-10-04）。活动事项及跨来源去重在总清单维护；本页保留专项代码、决定和历史验收。新增进展应同步对应总清单ID，不能用旧快照覆盖新证据。
 
 原审计的32个问题主题按原编号列在[逐项清理计划](../../plan/src收尾总清单.md#obj-original-32)：第1项的显式Litex证明与第3项的 eval 结果存储已完成，第2项已撤回。关闭项从[活动纠错记录](remaining_issues_2026-10-04.md)删除；[eval 解法及验收](experience/problem_notes/eval_store_result_2026-10-04.md)保留经验与回执，其余按原编号对应总清单。

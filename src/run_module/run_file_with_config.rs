@@ -5,9 +5,7 @@ use super::run_export_file::run_export_file;
 use super::run_import_module::{run_import_module, RunImportModuleOutcome};
 use crate::launch_command::LaunchCommand;
 use crate::module_manager::LitexConfigExport;
-use crate::run::run_command_outcome::{
-    RunFileResult, RunLitexCodeResult, RunSessionError,
-};
+use crate::run::run_command_outcome::{RunFileResult, RunLitexCodeResult, RunSessionError};
 use crate::run::run_repl::run_repl_loop;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::collections::HashSet;
@@ -94,7 +92,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
             crate::runtime::CodeSource::RootExport { export_file_id },
             keep_env_open,
         ) {
-            Ok(file_result) => {
+            Ok(mut file_result) => {
                 if !file_result.run.success {
                     if is_target {
                         return Ok(file_result_with_json(&runtime, path, file_result.run));
@@ -102,21 +100,25 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
                     return Ok(fail_to_import_result(
                         &runtime,
                         path,
-                        file_result.run.session_error.unwrap_or(RunSessionError::FailToImport),
+                        file_result
+                            .run
+                            .session_error
+                            .unwrap_or(RunSessionError::FailToImport),
                     ));
                 }
                 if is_target {
                     if keep_env_open {
+                        attach_file_json(&runtime, &path, &mut file_result.run);
                         if let Err(error) = run_repl_loop(&mut runtime) {
-                            return Ok(file_result_with_json(
+                            file_result.run.attach_session_error(
                                 &runtime,
-                                path,
-                                RunLitexCodeResult::new(
-                                    file_result.run.statement_results,
-                                    Some(RunSessionError::Runtime(error)),
-                                ),
-                            ));
+                                "file",
+                                Some(path.as_path()),
+                                RunSessionError::Runtime(error),
+                            );
+                            return Ok(RunFileResult::new(path, file_result.run));
                         }
+                        return Ok(RunFileResult::new(path, file_result.run));
                     }
                     return Ok(file_result_with_json(&runtime, path, file_result.run));
                 }
@@ -143,21 +145,22 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
         crate::runtime::CodeSource::StandaloneFile,
         session,
     ) {
-        Ok(file_result) => {
+        Ok(mut file_result) => {
             if !file_result.run.success {
                 return Ok(file_result_with_json(&runtime, path, file_result.run));
             }
             if session {
+                attach_file_json(&runtime, &path, &mut file_result.run);
                 if let Err(error) = run_repl_loop(&mut runtime) {
-                    return Ok(file_result_with_json(
+                    file_result.run.attach_session_error(
                         &runtime,
-                        path,
-                        RunLitexCodeResult::new(
-                            file_result.run.statement_results,
-                            Some(RunSessionError::Runtime(error)),
-                        ),
-                    ));
+                        "file",
+                        Some(path.as_path()),
+                        RunSessionError::Runtime(error),
+                    );
+                    return Ok(RunFileResult::new(path, file_result.run));
                 }
+                return Ok(RunFileResult::new(path, file_result.run));
             }
             Ok(file_result_with_json(&runtime, path, file_result.run))
         }
@@ -191,7 +194,15 @@ fn run_file_isolated(
     }
 
     if session {
-        run_repl_loop(&mut runtime)?;
+        if let Err(error) = run_repl_loop(&mut runtime) {
+            code_result.attach_session_error(
+                &runtime,
+                "file",
+                Some(path.as_path()),
+                RunSessionError::Runtime(error),
+            );
+            return Ok(RunFileResult::new(path, code_result));
+        }
         return Ok(RunFileResult::new(path, code_result));
     }
 
@@ -205,8 +216,32 @@ fn file_result_with_json(
     path: PathBuf,
     mut run: RunLitexCodeResult,
 ) -> RunFileResult {
-    run.attach_normal_json(runtime, "file", Some(path.as_path()));
+    attach_file_json(runtime, &path, &mut run);
     RunFileResult::new(path, run)
+}
+
+fn attach_file_json(runtime: &Runtime, path: &Path, run: &mut RunLitexCodeResult) {
+    // Export-file rendering happens before finish/abort. Preserve its evidence
+    // and retain the CLI operand as the envelope path.
+    if let Some(crate::knowledge_base::JsonValue::Object(mut fields)) = run
+        .normal_json
+        .as_deref()
+        .and_then(|json| crate::knowledge_base::JsonValue::parse(json).ok())
+    {
+        let language = runtime.launch_command.output_language();
+        let key = |name| crate::json_output::json_keys::localize_key(name, language);
+        fields.insert(
+            key("target"),
+            crate::knowledge_base::JsonValue::String("file".into()),
+        );
+        fields.insert(
+            key("path"),
+            crate::knowledge_base::JsonValue::String(path.display().to_string()),
+        );
+        run.normal_json = Some(crate::knowledge_base::JsonValue::Object(fields).stringify_pretty());
+    } else {
+        run.attach_normal_json(runtime, "file", Some(path));
+    }
 }
 
 fn fail_to_import_result(

@@ -5,7 +5,8 @@ use super::by_have_fn_equal_case_by_case::ByUnfoldHaveFnEqualCaseByCaseApplicati
 // Anonymous-function equality evidence, or named cases/induction definitions.
 pub enum EqualitySearchProofByFnApplicationObjectDefinition {
     HaveFnEqual(ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof),
+    BothFunctionBodies(super::by_both_function_bodies::ByBothFunctionBodiesObjectDefinitionProof),
     HaveFnEqualCaseByCase(ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof),
     HaveFnByInduc(ByUnfoldHaveFnByInducApplicationObjectDefinitionProof),
-    LiteralBeta(super::by_literal_beta::ByLiteralBetaObjectDefinitionProof),
+    ParentCheckedBeta(super::by_parent_checked_beta::ByParentCheckedBetaObjectDefinitionProof),
 }

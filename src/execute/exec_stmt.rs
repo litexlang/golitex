@@ -41,16 +41,20 @@ impl Runtime {
 
     fn exec_stmt_in_current_env(&mut self, stmt: &Stmt) -> RuntimeResult<ExecStmtResult> {
         if self.launch_command.is_strict() {
-            let has_user_trust = match stmt {
-                Stmt::Trust(_) => true,
-                Stmt::Definition(DefinitionStmt::DefTemplateStmt(template)) => {
-                    matches!(&template.template_def_stmt, TemplateDefEnum::TrustHaveStmt(_))
+            let forbidden_assumption = match stmt {
+                Stmt::Trust(_) => Some("`trust` / `trust have` are forbidden"),
+                Stmt::Definition(DefinitionStmt::AxiomStmt(_)) => Some("`axiom` is forbidden"),
+                Stmt::Definition(DefinitionStmt::DefTemplateStmt(template))
+                    if matches!(&template.template_def_stmt, TemplateDefEnum::TrustHaveStmt(_)) =>
+                {
+                    Some("`trust` / `trust have` are forbidden")
                 }
-                _ => false,
+                _ => None,
             };
-            if has_user_trust {
+            if let Some(forbidden_assumption) = forbidden_assumption {
                 return Err(RuntimeError::InvalidArguments(format!(
-                    "`trust` / `trust have` are forbidden under {} `-strict`",
+                    "{} under {} `-strict`",
+                    forbidden_assumption,
                     crate::LITEX
                 )));
             }

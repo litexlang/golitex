@@ -70,7 +70,7 @@ withdrawn. [Current acceptance](../../../tests/tooling/acceptance/conversation-c
 New concrete source routes are [ByInducStmt](by_induc_stmt/limitations.md),
 the [phantom struct identity](def_struct_stmt/limitations.md),
 [strict import-cache safety](../../module_manager/strict_cache_policy/README.md),
-and [qualified geometry WD](../../../showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/problem_927/issues.md).
+and [qualified geometry WD acceptance](../../../tests/tooling/acceptance/conversation-clarifications-2026-10-04.md).
 These are not additional K-number groups or a claim of full-release coverage.
 
 - [DefAlgoByInducStmt](def_algo_by_induc_stmt/README.md) (cross-reference; no additional confirmed bug)

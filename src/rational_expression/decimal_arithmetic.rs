@@ -188,10 +188,7 @@ fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
                 Some(argument)
             }
         }
-        Obj::ProductShape(ProductShape::CartDim(cart_dim)) => match &*cart_dim.set {
-            Obj::ProductShape(ProductShape::Cart(cart)) => Some(Number::new(cart.args.len().to_string())),
-            _ => None,
-        },
+        Obj::ProductShape(ProductShape::CartDim(_)) => None,
         Obj::ProductShape(ProductShape::TupleDim(tuple_dim)) => match &*tuple_dim.arg {
             Obj::ProductShape(ProductShape::Tuple(tuple)) => Some(Number::new(tuple.args.len().to_string())),
             _ => None,

@@ -1,0 +1,6 @@
+# Negative: checked finite-function setup succeeds; final target rejects.
+# Expected phase: well_defined
+have Carrier set = cart(R,Z)
+have p Carrier = (1,2)
+have q Carrier = p
+q(3) = 2

@@ -1,6 +1,6 @@
-use crate::launch_command::LaunchCommand;
-use super::run_command_outcome::{RunEvalResult, RunLitexCodeResult};
+use super::run_command_outcome::{RunEvalResult, RunLitexCodeResult, RunSessionError};
 use super::run_repl::run_repl_loop;
+use crate::launch_command::LaunchCommand;
 use crate::run_module::{mount_cwd_config, MountCwdConfigOutcome};
 use crate::runtime::{RealOrVirtualPath, Runtime, RuntimeResult};
 
@@ -46,7 +46,15 @@ pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
     }
 
     if session {
-        run_repl_loop(&mut runtime)?;
+        if let Err(error) = run_repl_loop(&mut runtime) {
+            code_result.attach_session_error(
+                &runtime,
+                "eval",
+                None,
+                RunSessionError::Runtime(error),
+            );
+            return Ok(RunEvalResult::new(code_result));
+        }
         return Ok(RunEvalResult::new(code_result));
     }
 

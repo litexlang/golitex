@@ -1,0 +1,4 @@
+# Negative: checked finite-function setup succeeds; final target rejects.
+# Expected phase: function_domain
+let p = (1,2)
+release thm fn_set_member(p,finite_seq(R,3))

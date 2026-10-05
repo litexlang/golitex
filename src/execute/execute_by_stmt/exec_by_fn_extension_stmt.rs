@@ -1,8 +1,8 @@
-//! `by fn_extension`: prove `f = g` from pointwise equality on alpha-equivalent FnSets.
+//! `by fn_extension`: equal complete domains and pointwise equal values.
 //!
 //! Mathematical property: function extensionality on a shared carrier.
-//! When both sides have alpha-equivalent FnSet signatures, agreement on every
-//! argument tuple of that signature yields ordinary object equality.
+//! Return upper bounds do not identify the function. Each application layer
+//! proves its own full-domain equality; returned functions are not flattened.
 //!
 //! Example:
 //!   have fn f(x R) R = x
@@ -20,11 +20,10 @@ use super::result::{
 use crate::ast::fact::{
     AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
 };
-use crate::ast::names::BoundName;
 use crate::ast::obj::{FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj};
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::ast::stmt::ByFnExtensionStmt;
-use crate::execute::execute_fact_stmt::fn_sets_alpha_equal;
+use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -50,21 +49,25 @@ pub fn exec_by_fn_extension_stmt(
         ));
     }
 
-    let Some(left_fn_set) = resolve_fn_set_for_fn_extension(runtime, &stmt.left) else {
-        return Ok(ExecByStmtResult::FnExtension(
-            ExecByFnExtensionStmtResult::Failed(ExecByFnExtensionStmtFailed::NoCompatibleFnSet),
-        ));
-    };
-    let Some(right_fn_set) = resolve_fn_set_for_fn_extension(runtime, &stmt.right) else {
-        return Ok(ExecByStmtResult::FnExtension(
-            ExecByFnExtensionStmtResult::Failed(ExecByFnExtensionStmtFailed::NoCompatibleFnSet),
-        ));
-    };
-    if !fn_sets_alpha_equal(&left_fn_set, &right_fn_set) {
-        return Ok(ExecByStmtResult::FnExtension(
-            ExecByFnExtensionStmtResult::Failed(ExecByFnExtensionStmtFailed::NoCompatibleFnSet),
-        ));
+    let right_sources = runtime.complete_function_domains(&stmt.right, proof_verify_state())?;
+    let mut failures = Vec::new();
+    let mut matched = None;
+    for right_source in right_sources {
+        match runtime.verify_complete_function_domain(
+            &stmt.left, &right_source.signature, proof_verify_state(),
+        )? {
+            Ok(domain_match) => { matched = Some((right_source, domain_match)); break; }
+            Err(result) => failures.push(super::result::FnExtensionDomainCandidateFailure {
+                right_source, result,
+            }),
+        }
     }
+    let Some((right_domain, domain_match)) = matched else {
+        return Ok(ExecByStmtResult::FnExtension(ExecByFnExtensionStmtResult::Failed(
+            ExecByFnExtensionStmtFailed::DomainMatch(failures),
+        )));
+    };
+    let left_fn_set = domain_match.source.signature.clone();
 
     let Some(pointwise) =
         build_pointwise_forall(runtime, &stmt.left, &stmt.right, &left_fn_set)?
@@ -75,6 +78,12 @@ pub fn exec_by_fn_extension_stmt(
     };
 
     let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
+        // These facts were proved by the domain stage. Publish them only in
+        // this proof scope, so pointwise WD can use the checked inclusions.
+        if let FunctionDomainComparisonProof::MutualInclusion { forward, reverse, .. } = &domain_match.comparison {
+            rt.store_fact_and_infer(forward, proof_verify_state())?;
+            rt.store_fact_and_infer(reverse, proof_verify_state())?;
+        }
         let proof_steps = match run_proof_body_stmts(rt, &stmt.proof)? {
             Ok(steps) => steps,
             Err(failed) => {
@@ -109,6 +118,8 @@ pub fn exec_by_fn_extension_stmt(
     Ok(ExecByStmtResult::FnExtension(
         ExecByFnExtensionStmtResult::Success(ExecByFnExtensionStmtSuccess {
             goal_wd,
+            right_domain,
+            domain_match,
             carrier: left_fn_set,
             proof_steps,
             pointwise_proof,
@@ -118,110 +129,40 @@ pub fn exec_by_fn_extension_stmt(
     ))
 }
 
-fn resolve_fn_set_for_fn_extension(runtime: &Runtime, function: &Obj) -> Option<FnSet> {
-    if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = function {
-        return Some(anon.body.clone());
-    }
-    if let Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) = function {
-        return Some(fn_set.clone());
-    }
-    runtime
-        .collect_in_function_set_candidates(function)
-        .into_iter()
-        .next()
-        .map(|(fn_set, _)| fn_set)
-}
-
 fn build_pointwise_forall(
     runtime: &mut Runtime,
     left: &Obj,
     right: &Obj,
     carrier: &FnSet,
 ) -> RuntimeResult<Option<Fact>> {
-    let mut typed_groups: Vec<TypedParameterGroup> = Vec::new();
-    let mut dom_facts: Vec<Fact> = Vec::new();
-    let mut left_ap = left.clone();
-    let mut right_ap = right.clone();
-    let mut space = carrier.clone();
+    let mut typed_groups = Vec::new();
+    let mut dom_facts = Vec::new();
+    let mut arguments = Vec::new();
     let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
-
-    loop {
-        let mut layer_args: Vec<Obj> = Vec::new();
-        for group in &space.set_bound_parameters.groups {
-            let param_type_obj = match runtime.inst_obj(group.param_type.as_ref(), &subst) {
-                Ok(o) => o,
-                Err(_) => return Ok(None),
-            };
-            let mut fresh_params: Vec<BoundName> = Vec::new();
-            for old in &group.params {
-                let fresh = runtime.fresh_internal_param();
-                let obj = Obj::Identifier(IdentifierObj::from_bound_name(&fresh));
-                subst.insert(old.id, obj.clone());
-                layer_args.push(obj);
-                fresh_params.push(fresh);
-            }
-            if fresh_params.is_empty() {
-                continue;
-            }
-            typed_groups.push(TypedParameterGroup {
-                params: fresh_params,
-                param_type: ParamType::Obj(param_type_obj),
-            });
+    for group in &carrier.set_bound_parameters.groups {
+        let mut params = Vec::new();
+        for old in &group.params {
+            let fresh = runtime.fresh_internal_param();
+            let value = Obj::Identifier(IdentifierObj::from_bound_name(&fresh));
+            subst.insert(old.id, value.clone());
+            arguments.push(value);
+            params.push(fresh);
         }
-        if layer_args.is_empty() {
-            return Ok(None);
-        }
-
-        for dom in &space.dom_facts {
-            let Ok(qf) = runtime.inst_quantifier_free_fact(dom, &subst) else {
-                return Ok(None);
-            };
-            dom_facts.push(quantifier_free_fact_to_fact(qf));
-        }
-
-        let Some(next_left) = apply_fn_layer(&left_ap, &layer_args) else {
-            return Ok(None);
-        };
-        let Some(next_right) = apply_fn_layer(&right_ap, &layer_args) else {
-            return Ok(None);
-        };
-        left_ap = next_left;
-        right_ap = next_right;
-
-        let next_ret = match runtime.inst_obj(space.ret_set.as_ref(), &subst) {
-            Ok(o) => o,
-            Err(_) => return Ok(None),
-        };
-        match next_ret {
-            Obj::FunctionSpace(FunctionSpace::FnSet(inner)) => {
-                space = inner;
-            }
-            Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => {
-                space = anon.body;
-            }
-            _ => break,
-        }
+        let Ok(param_type) = runtime.inst_obj(&group.param_type, &subst) else { return Ok(None); };
+        typed_groups.push(TypedParameterGroup { params, param_type: ParamType::Obj(param_type) });
     }
-
-    if typed_groups.is_empty() {
-        return Ok(None);
+    for guard in &carrier.dom_facts {
+        let Ok(guard) = runtime.inst_quantifier_free_fact(guard, &subst) else { return Ok(None); };
+        dom_facts.push(quantifier_free_fact_to_fact(guard));
     }
-
+    let Some(left_ap) = apply_fn_layer(left, &arguments) else { return Ok(None); };
+    let Some(right_ap) = apply_fn_layer(right, &arguments) else { return Ok(None); };
     Ok(Some(Fact::ForallFact(ForallFact {
         fact_id: runtime.global_ids.allocate_fact_id(),
-        typed_parameters: TypedParameterList {
-            groups: typed_groups,
-        },
-        dom_facts,
-        then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-            EqualFact {
-                fact_id: runtime.global_ids.allocate_fact_id(),
-                left: left_ap,
-                right: right_ap,
-                line_file: None,
-            },
-        ))],
-        line_file: None,
+        typed_parameters: TypedParameterList { groups: typed_groups }, dom_facts,
+        then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+            fact_id: runtime.global_ids.allocate_fact_id(), left: left_ap, right: right_ap, line_file: None,
+        }))], line_file: None,
     })))
 }
 
