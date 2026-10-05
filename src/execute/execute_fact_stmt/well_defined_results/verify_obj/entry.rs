@@ -67,6 +67,20 @@ impl Runtime {
         obj: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        // A retired operator cannot acquire WD through either a fresh proof
+        // or a previously recorded cache entry. Its legacy AST shape remains
+        // only until the separately proposed AST deletion is authorized.
+        if matches!(obj, Obj::ProductShape(ProductShape::CartDim(_))) {
+            use super::fail_to_verify_obj_well_defined::{FailToVerifyProductShapeObjWellDefinedResult, FailToVerifyCartDimObjWellDefined, FailToVerifyObjWellDefinedByDefCommon};
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: obj.clone(),
+                reason: FailToVerifyObjWellDefinedResult::ProductShape(
+                    FailToVerifyProductShapeObjWellDefinedResult::CartDim(FailToVerifyCartDimObjWellDefined(
+                        FailToVerifyObjWellDefinedByDefCommon::Others("cart_dim is removed: construction dimension is not a property of a Cartesian set".to_string()),
+                    )),
+                ),
+            });
+        }
         if let Some(wd_id) = self.well_defined_visible_in_stack(obj) {
             return Ok(VerifyObjWellDefinedResult::Success(
                 ObjWellDefinedProof::ByKnown {

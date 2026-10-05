@@ -92,9 +92,11 @@ pub enum ExecByFnExtensionStmtResult {
     Failed(ExecByFnExtensionStmtFailed),
 }
 
-// Stage order: goal_wd → carrier → proof_steps → pointwise_proof → local_env → stored.
+// Stage order: goal_wd → domain sources/match → pointwise → local_env → store.
 pub struct ExecByFnExtensionStmtSuccess {
     pub goal_wd: VerifyFactWellDefinedResult,
+    pub right_domain: crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
+    pub domain_match: crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof,
     pub carrier: FnSet,
     pub proof_steps: Vec<ExecStmtResult>,
     pub pointwise_proof: VerifyFactResult,
@@ -105,9 +107,15 @@ pub struct ExecByFnExtensionStmtSuccess {
 pub enum ExecByFnExtensionStmtFailed {
     GoalWd(VerifyFactWellDefinedResult),
     NoCompatibleFnSet,
+    DomainMatch(Vec<FnExtensionDomainCandidateFailure>),
     ProofBody(ProofBlockBodyFailed),
     Pointwise(VerifyFactResult),
     Store(String),
+}
+
+pub struct FnExtensionDomainCandidateFailure {
+    pub right_source: crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
+    pub result: crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchFailure,
 }
 
 impl ExecByFnExtensionStmtResult {
@@ -289,11 +297,12 @@ pub enum ExecReleaseThmStmtResult {
     Failed(ExecReleaseThmStmtFailed),
 }
 
-// Stage order: type_proofs → dom_proofs → local_env → stored conclusions.
+// Stage order: type_proofs → complete domain → dom_proofs → WD → store.
 pub struct ExecReleaseThmStmtSuccess {
     pub thm_name: String,
     pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
+    pub function_domain: Option<crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof>,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub conclusions_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
@@ -318,6 +327,10 @@ pub enum ExecReleaseThmStmtFailed {
         result: VerifyFactResult,
     },
     Instantiate(String),
+    FunctionDomain {
+        theorem: String,
+        result: crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchFailure,
+    },
     ConclusionWd {
         theorem: String,
         fact: Fact,
@@ -346,11 +359,12 @@ pub enum ExecByThmStmtResult {
     Failed(ExecByThmStmtFailed),
 }
 
-// Stage order: type_proofs → dom_proofs → selected_proof → local_env → stored.
+// Stage order: type_proofs → complete domain → dom_proofs → WD → selected → store.
 pub struct ExecByThmStmtSuccess {
     pub thm_name: String,
     pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
+    pub function_domain: Option<crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof>,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub conclusions_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
     pub selected_proof: VerifyFactResult,

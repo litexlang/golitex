@@ -28,7 +28,7 @@ impl Runtime {
             };
         let searched_proof = match self.search_equal_fact_proof(fact, verify_state)? {
             Some(proof) => Some(proof),
-            None => self.try_literal_beta_with_parent_well_definedness(
+            None => self.try_parent_checked_beta_with_parent_well_definedness(
                 fact,
                 &well_defined_proof,
                 verify_state,
@@ -36,7 +36,7 @@ impl Runtime {
                 use super::by_object_definition::by_fn_application::EqualitySearchProofByFnApplicationObjectDefinition;
                 EqualFactSearchedProof::ByObjectDefinition(
                     super::EqualitySearchProofByObjectDefinition::ByFnApplication(
-                        EqualitySearchProofByFnApplicationObjectDefinition::LiteralBeta(proof),
+                        EqualitySearchProofByFnApplicationObjectDefinition::ParentCheckedBeta(proof),
                     ),
                 )
             }),

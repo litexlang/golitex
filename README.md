@@ -7,8 +7,15 @@
 
 Created and maintained by Jiachen Shen.
 
+Litex is designed as an everyday formal language for everyone who wants to
+write and understand checkable mathematics.
+
 Write the next mathematical fact directly; Litex checks it and shows the
 grounds it found or where checking stopped.
+
+_“Language is an instrument of human reason, and not merely a medium for the expression of thought.”_
+
+_— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 
 [Try Litex online](https://litexlang.com) ·
 [Read the Blueprint](docs/Litex_Blueprint.md) ·
@@ -52,9 +59,8 @@ See the [CLI language options](docs/cli.md#basic-shape).
 
 ## Start from familiar mathematical objects
 
-Litex asks whether formal proofs can stay close to everyday mathematics while
-remaining checkable. It aims for a Python-like entry into formal mathematics,
-where more people can learn to build checkable knowledge.
+Litex aims for a Python-like entry into formal mathematics, where more people
+can learn to build checkable knowledge.
 
 Litex takes set theory (ZFC) as its mathematical foundation and presents sets,
 elements, functions, and relations as the working vocabulary. In
@@ -92,6 +98,10 @@ failure feedback. The [Blueprint's design discussion](docs/Litex_Blueprint.md#de
 explains this tradeoff in detail.
 
 ## Let checked knowledge grow
+
+_“If I have seen further it is by standing on the shoulders of Giants.”_
+
+_— Isaac Newton, letter to Robert Hooke (1676)_
 
 Every accepted statement extends the mathematical context for the statements
 that follow.
@@ -169,10 +179,12 @@ example {α : Type*} (s t u : Set α) (h : s ⊆ t) :
 </table>
 
 Litex is an experimental beta project. Its builtin and inference rules, and
-any user-written `trust`, are part of the present trust boundary. A successful
+any user-written `trust` or `axiom`, are part of the present trust boundary. A successful
 Litex check should be read with that scope in mind; the
 [Manual's trust and strict-mode section](docs/Manual.md#trust-and-strict-mode)
-explains how assumptions are handled.
+explains how assumptions are handled. `-strict` rejects executed user `trust`,
+`trust have`, and `axiom`, including imported dependencies; abstract predicate
+signatures and named foundation releases remain allowed.
 
 ## Try Litex
 
@@ -194,6 +206,10 @@ are in the [Blueprint](docs/Litex_Blueprint.md) and
 [中文蓝图](docs/Litex中文蓝图.md).
 
 ## About
+
+_“The best way to predict the future is to invent it.”_
+
+_— Alan Kay, “The Early History of Smalltalk” (1993)_
 
 Jiachen Shen (沈嘉辰) is a mathematics PhD student at Fudan University. Lean
 showed him that mathematics and programming can meet in a real language;

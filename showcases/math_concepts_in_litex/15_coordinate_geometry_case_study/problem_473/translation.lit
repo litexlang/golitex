@@ -1,5 +1,0 @@
-# Problem 473 semantic translation.
-# The same-side clause records the orientation supplied by the diagram.
-prop are_on_same_strict_side_of_line(a, b, c, d cart(R, R)):
-    geo::det(geo::vec(a, b), geo::vec(a, c)) * geo::det(geo::vec(a, b), geo::vec(a, d)) > 0
-

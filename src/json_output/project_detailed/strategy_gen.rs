@@ -11,6 +11,21 @@ pub(super) fn project_atomic_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteFunctionApplicationMembership(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("FiniteFunctionApplicationMembership")),
+            ("source", super::function_domain::project_finite_function_source(&p.source, runtime)),
+            ("index", p.index.map(|index| string(index.to_string())).unwrap_or(JsonValue::Null)),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionSetMembership(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("FunctionSetMembership")),
+            ("function_domain", super::function_domain::project_function_domain(&p.domain, runtime)),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FieldArithmeticCarrierClosure(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FieldArithmeticCarrierClosure")),

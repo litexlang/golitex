@@ -119,12 +119,14 @@ impl JsonValue {
     }
 
     pub fn as_u64(&self) -> Result<u64, JsonError> {
+        // u64::MAX rounds up to 2^64 in f64, so this bound is exclusive.
         match self {
-            JsonValue::Number(n) if n.is_finite() && *n >= 0.0 && n.fract() == 0.0 => {
+            JsonValue::Number(n)
+                if n.is_finite() && *n >= 0.0 && *n < (u64::MAX as f64) && n.fract() == 0.0 => {
                 Ok(*n as u64)
             }
             _ => Err(JsonError(
-                "expected non-negative integer JSON number".to_string(),
+                "expected non-negative integer JSON number within u64 range".to_string(),
             )),
         }
     }
@@ -244,7 +246,7 @@ fn write_indent(out: &mut String, depth: usize) {
 }
 
 fn write_number(out: &mut String, n: f64) {
-    if n.is_finite() && n.fract() == 0.0 && n >= 0.0 && n <= (u64::MAX as f64) {
+    if n.is_finite() && n.fract() == 0.0 && n >= 0.0 && n < (u64::MAX as f64) {
         out.push_str(&(n as u64).to_string());
     } else {
         out.push_str(&n.to_string());
@@ -277,7 +279,7 @@ struct Parser<'a> {
 impl<'a> Parser<'a> {
     fn skip_ws(&mut self) {
         while let Some(b) = self.peek() {
-            if b.is_ascii_whitespace() {
+            if matches!(b, b' ' | b'\n' | b'\r' | b'\t') {
                 self.index += 1;
             } else {
                 break;
@@ -416,17 +418,22 @@ impl<'a> Parser<'a> {
                     b'"' => out.push(b'"'),
                     b'\\' => out.push(b'\\'),
                     b'/' => out.push(b'/'),
+                    b'b' => out.push(0x08),
+                    b'f' => out.push(0x0c),
                     b'n' => out.push(b'\n'),
                     b'r' => out.push(b'\r'),
                     b't' => out.push(b'\t'),
                     b'u' => {
-                        let mut code = 0u32;
-                        for _ in 0..4 {
-                            let h = self.bump()?;
-                            code = code * 16
-                                + hex_digit(h).ok_or_else(|| {
-                                    JsonError("invalid \\u escape in JSON string".to_string())
-                                })?;
+                        let mut code = self.parse_hex_quad()?;
+                        if (0xd800..=0xdbff).contains(&code) {
+                            if self.bump()? != b'\\' || self.bump()? != b'u' {
+                                return Err(JsonError("expected low Unicode surrogate".to_string()));
+                            }
+                            let low = self.parse_hex_quad()?;
+                            if !(0xdc00..=0xdfff).contains(&low) {
+                                return Err(JsonError("invalid low Unicode surrogate".to_string()));
+                            }
+                            code = 0x10000 + ((code - 0xd800) << 10) + low - 0xdc00;
                         }
                         let ch = char::from_u32(code)
                             .ok_or_else(|| JsonError("invalid unicode escape".to_string()))?;
@@ -440,11 +447,25 @@ impl<'a> Parser<'a> {
                         )))
                     }
                 },
+                0x00..=0x1f => {
+                    return Err(JsonError("unescaped control character in JSON string".to_string()));
+                }
                 b => out.push(b),
             }
         }
         String::from_utf8(out)
             .map_err(|_| JsonError("invalid UTF-8 in JSON string".to_string()))
+    }
+
+    fn parse_hex_quad(&mut self) -> Result<u32, JsonError> {
+        let mut code = 0;
+        for _ in 0..4 {
+            code = code * 16
+                + hex_digit(self.bump()?).ok_or_else(|| {
+                    JsonError("invalid \\u escape in JSON string".to_string())
+                })?;
+        }
+        Ok(code)
     }
 
     fn parse_number(&mut self) -> Result<JsonValue, JsonError> {
@@ -495,6 +516,9 @@ impl<'a> Parser<'a> {
         let n: f64 = s
             .parse()
             .map_err(|_| JsonError(format!("invalid JSON number `{s}`")))?;
+        if !n.is_finite() {
+            return Err(JsonError(format!("JSON number `{s}` exceeds the finite numeric range")));
+        }
         Ok(JsonValue::Number(n))
     }
 }

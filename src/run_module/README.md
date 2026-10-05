@@ -10,7 +10,7 @@ This package **calls** those APIs and runs files.
 |---------|------|
 | LaunchCommand design | [`../run/README.md`](../run/README.md) |
 | Module tables / `::` | [`../module_manager/README.md`](../module_manager/README.md) |
-| Fixtures | [`examples/module_manager/`](../../../examples/module_manager/) |
+| Fixtures | [`examples/module_manager/`](../../examples/module_manager/) |
 
 ## Layout
 
@@ -69,6 +69,12 @@ then:
 
 `[import std]` is path sugar only (`std_root/Name`).
 `-session` keeps the last target/eval env open and enters REPL.
+
+Each executed export captures its Normal JSON while its environment still
+holds fact-ID-backed stores and citations. File/project callers retain this
+snapshot after the existing finish/abort. The `-f` envelope keeps the original
+CLI path; a REPL error changes the snapshot's success/session-error fields
+without dropping prior statements or evidence.
 
 Import aliases are package-local. Before calling `mount_module`, the loader
 chooses a free global display label (`alias`, or a free `alias__mN` on collision).

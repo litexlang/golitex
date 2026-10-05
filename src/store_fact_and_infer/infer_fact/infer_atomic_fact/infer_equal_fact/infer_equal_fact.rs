@@ -4,7 +4,7 @@ use crate::store_fact_and_infer::InferEqualityResult;
 
 impl Runtime {
     // Collect every equality-infer rule that fires for a stored equal fact.
-    // Example: `s = cart(R, R)` pushes CartTupleShape with `$is_cart(s)` and dim.
+    // Cart equalities store ordinary set equality, without dimension facts.
     pub(crate) fn infer_equal_fact(
         &mut self,
         equal_fact: &EqualFact,

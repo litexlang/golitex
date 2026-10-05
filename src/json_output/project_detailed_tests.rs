@@ -98,6 +98,7 @@ fn detailed_run_envelope_detail_and_language() {
     let run = RunLitexCodeResult {
         success: true,
         statement_results: vec![stmt],
+        statement_texts: Vec::new(),
         failed_statement_results: None,
         session_error: None,
         normal_json: None,

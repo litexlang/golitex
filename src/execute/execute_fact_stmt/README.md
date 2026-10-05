@@ -340,9 +340,16 @@ with a real source FactId and parameter renamings. An unused parameter is
 never instantiated with a default term. This exact citation does not enter
 deep forall-pattern search or consume its budget.
 
-On a miss, the existing local-introduction pipeline remains: introduce typed
+On a miss, a checked empty parameter carrier permits vacuous truth after the
+entire forall has passed WD. This route retains the carrier-equality proof,
+its scoped store, the full WD proof and the closed local environment. It does
+not publish individual conclusions or supply an empty-domain witness.
+For example, `forall x closed_range(1,0): 2=3` is true while bare `2=3` is still
+rejected; `forall x {}: 1/0=0` still fails WD.
+
+Otherwise the existing local-introduction pipeline remains: introduce typed
 parameters, assume checked domains, then prove and locally store conclusions.
-Both routes retain their WD/local environments in typed evidence. The nested
+All routes retain their WD/local environments in typed evidence. The nested
 carrier comparison preserves domains, return carriers, guards and free owners.
 This source replay does not extend automatic dependent-function existential
 projection; an explicit theorem application may still be needed.

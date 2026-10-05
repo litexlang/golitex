@@ -1,8 +1,0 @@
-# Problem 505 / zhongkao_307 — minimal general mathematical vocabulary
-#
-# A directed angle retains the orientation omitted by the public undirected
-# angle predicate.  This is needed because the original phrase “如图” selects
-# the same turning direction for ∠BAD and ∠CAE.
-prop are_directed_angles_congruent(p, q, r, u, v, w cart(R, R)):
-    $geo::are_angles_congruent(p, q, r, u, v, w)
-    geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::det(geo::vec(v, u), geo::vec(v, w)) >= 0

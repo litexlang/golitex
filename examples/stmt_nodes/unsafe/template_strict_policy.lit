@@ -11,8 +11,8 @@ template<S set>:
     trust have template_assumed R:
         template_assumed = 1
 
-# Boundary: ordinary checked templates still pass strict; named axioms retain
-# their existing explicit trust contract.
+# Boundary: ordinary checked templates still pass strict; user axioms also
+# require ordinary mode and cannot bypass the strict gate in proof bodies.
 # Evidence: target/release/litex -lang en -f examples/stmt_nodes/unsafe/template_strict_policy.lit
 # Rejection: same command with -strict exits 1 with forbidden trust-have.
 # Tests: execute::statement_boundary_tests::strict_rejects_template_trust_at_top_level_and_in_proof_bodies.

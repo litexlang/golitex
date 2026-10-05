@@ -21,8 +21,9 @@ classic examples.
   -> 12 ordinary differential equations
   -> 13 numerical analysis
   -> 14 Tarski geometry from axioms
-  -> 15 generic small categories plus two finite instances encoded inside set theory
-  -> 16 probability theory from the Kolmogorov axioms
+  -> 15 coordinate plane geometry: definitions and theorem proofs
+  -> 16 generic small categories plus two finite instances encoded inside set theory
+  -> 17 probability theory from the Kolmogorov axioms (draft)
 ```
 
 The arrows mean suggested reading order only. Shared interfaces should move to

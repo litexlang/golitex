@@ -3684,7 +3684,7 @@
       "expect": {
         "success": false,
         "statement_success": [],
-        "session_error_contains": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+        "session_error_contains": "launch_error: `trust` / `trust have` are forbidden under Litex `-strict`"
       }
     },
     {
@@ -3695,7 +3695,7 @@
       "expect": {
         "success": false,
         "statement_success": [],
-        "session_error_contains": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+        "session_error_contains": "launch_error: `trust` / `trust have` are forbidden under Litex `-strict`"
       }
     },
     {
@@ -3731,11 +3731,13 @@
     },
     {
       "leaf": "AxiomStmt",
-      "name": "strict-axiom-interface-allowed",
-      "file": "boundaries/strict-axiom-interface-allowed.lit",
+      "name": "strict-axiom-rejected",
+      "file": "boundaries/strict-axiom-rejected.lit",
       "strict": true,
       "expect": {
-        "success": true
+        "success": false,
+        "statement_success": [],
+        "session_error_contains": "`axiom` is forbidden"
       }
     },
     {
@@ -3791,7 +3793,7 @@
       "expect": {
         "success": false,
         "statement_success": [],
-        "session_error_contains": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+        "session_error_contains": "launch_error: `trust` / `trust have` are forbidden under Litex `-strict`"
       }
     },
     {
@@ -3802,7 +3804,7 @@
       "expect": {
         "success": false,
         "statement_success": [],
-        "session_error_contains": "Runtime(InvalidArguments(\"`trust` / `trust have` are forbidden under Litex `-strict`\"))"
+        "session_error_contains": "launch_error: `trust` / `trust have` are forbidden under Litex `-strict`"
       }
     },
     {

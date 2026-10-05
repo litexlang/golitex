@@ -211,6 +211,88 @@ fn parses_extract_commands() {
 }
 
 #[test]
+fn dash_leading_extraction_source_is_not_an_option() {
+    use crate::launch_command::{CodeExtractionTarget, ExtractInput};
+    for (flag, target) in [
+        ("-extractpython", CodeExtractionTarget::Python),
+        ("-extractc", CodeExtractionTarget::C),
+    ] {
+        for code in ["-2 < 0", "-strict", "--session", "-lang", "-unknown"] {
+            for parts in [
+                vec!["-lang", "zh", flag, code],
+                vec![flag, code, "-lang", "zh"],
+            ] {
+                assert_eq!(
+                    parse_launch_command(&args(&parts)).unwrap(),
+                    LaunchCommand::Extract {
+                        target,
+                        input: ExtractInput::Code(code.to_string()),
+                        language: OutputLanguage::Chinese,
+                    }
+                );
+            }
+        }
+        for parts in [
+            vec![flag],
+            vec![flag, ""],
+            vec![flag, "-f"],
+            vec![flag, "-r"],
+            vec![flag, "-2 < 0", "extra"],
+            vec!["-strict", flag, "-2 < 0"],
+        ] {
+            assert!(parse_launch_command(&args(&parts)).is_err(), "{parts:?}");
+        }
+    }
+}
+
+#[test]
+fn file_and_repository_operands_can_spell_options() {
+    use crate::launch_command::{CodeExtractionTarget, ExtractInput};
+    for path in ["-chapter.lit", "-strict", "--session", "-lang", "-f", "-r"] {
+        assert_eq!(
+            parse_launch_command(&args(&["-f", path, "-strict"])).unwrap(),
+            LaunchCommand::File {
+                path: PathBuf::from(path),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            }
+        );
+        assert_eq!(
+            parse_launch_command(&args(&["-r", path, "-session"])).unwrap(),
+            LaunchCommand::Repository {
+                path: PathBuf::from(path),
+                session: true,
+                strict: false,
+                language: OutputLanguage::English,
+            }
+        );
+        for (flag, target) in [
+            ("-extractpython", CodeExtractionTarget::Python),
+            ("-extractc", CodeExtractionTarget::C),
+        ] {
+            for (mode, input) in [
+                ("-f", ExtractInput::File(PathBuf::from(path))),
+                ("-r", ExtractInput::Repository(PathBuf::from(path))),
+            ] {
+                assert_eq!(
+                    parse_launch_command(&args(&[flag, mode, path, "-lang", "zh"])).unwrap(),
+                    LaunchCommand::Extract {
+                        target,
+                        input,
+                        language: OutputLanguage::Chinese,
+                    }
+                );
+            }
+        }
+    }
+    for mode in ["-f", "-r"] {
+        assert!(parse_launch_command(&args(&[mode])).is_err());
+        assert!(parse_launch_command(&args(&[mode, ""])).is_err());
+    }
+}
+
+#[test]
 fn parses_all_output_languages_and_preserves_source() {
     for language in OutputLanguage::ALL {
         let command =

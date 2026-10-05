@@ -51,10 +51,13 @@ pub struct ComplexAbsSquaredOfRectFormBuiltinRuleProof {}
 // Example: have a R; have b R; exp(a + b) = exp(a) * exp(b).
 pub struct ExpOfSumBuiltinRuleProof {}
 
-// Builtin LogBasePower: log(a^b, c) = log(a, c) / b when 1 < a, b != 0, 0 < c.
+// Builtin LogBasePower: a>0, a!=1, real b!=0, c>0 => log(a^b,c)=log(a,c)/b.
 // Example: have c N+; log(2^3, c) = log(2, c) / 3.
 pub struct LogBasePowerBuiltinRuleProof {
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub base_proof: super::log_algebra_base_proof::LogAlgebraBaseProof,
+    pub exponent_real: VerifyFactResult,
+    pub exponent_nonzero: VerifyFactResult,
+    pub argument_positive_proof: VerifyFactResult,
 }
 
 // Builtin ReOfProduct: re(z*w) = re(z)*re(w) - img(z)*img(w).
@@ -212,40 +215,18 @@ impl Runtime {
         {
             return Ok(None);
         }
-        let one = one_obj();
-        let zero = zero_obj();
-        let mut proofs = Vec::new();
-        for premise in [
-            Fact::AtomicFact(AtomicFact::LessFact(LessFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left: one.clone(),
-                right: pow_base.clone(),
-                line_file: None,
-            })),
-            Fact::AtomicFact(AtomicFact::NotEqualFact(
-                crate::ast::fact::NotEqualFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    left: pow_exp.clone(),
-                    right: zero.clone(),
-                    line_file: None,
-                },
-            )),
-            Fact::AtomicFact(AtomicFact::LessFact(LessFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left: zero,
-                right: arg.clone(),
-                line_file: None,
-            })),
-        ] {
-            let proof = self.verify_builtin_rule_premise(&premise, verify_state.clone())?;
-            if proof.is_failed() {
-                return Ok(None);
-            }
-            proofs.push(proof);
-        }
-        Ok(Some(LogBasePowerBuiltinRuleProof {
-            proof_of_requirement_facts: proofs,
-        }))
+        let Some(base_proof) = self.verify_log_algebra_base_guard(pow_base, verify_state)? else { return Ok(None); };
+        let real: Fact = crate::ast::fact::InFact {
+            fact_id: self.global_ids.allocate_fact_id(), element: pow_exp.clone(),
+            set: Obj::StandardSet(StandardSet::R), line_file: None,
+        }.into();
+        let exponent_real = self.verify_builtin_rule_premise(&real, verify_state)?;
+        if exponent_real.is_failed() { return Ok(None); }
+        let exponent_nonzero = self.verify_order_nonzero(pow_exp, verify_state)?;
+        if exponent_nonzero.is_failed() { return Ok(None); }
+        let argument_positive_proof = self.verify_log_algebra_positive(arg, verify_state)?;
+        if argument_positive_proof.is_failed() { return Ok(None); }
+        Ok(Some(LogBasePowerBuiltinRuleProof { base_proof, exponent_real, exponent_nonzero, argument_positive_proof }))
     }
 
     fn try_reduce_single_term_with_add_zero(

@@ -14,7 +14,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::{
     AbsOfNegationBuiltinRuleProof, AbsProductBuiltinRuleProof, AbsSquareBuiltinRuleProof,
-    LogArgPowerBuiltinRuleProof, LogBaseSelfBuiltinRuleProof, LogChangeOfBaseBuiltinRuleProof,
+    LogArgPowerBuiltinRuleProof, LogBaseSelfBuiltinRuleProof,
     LogOfOneBuiltinRuleProof, LogOfPowerSameBaseBuiltinRuleProof, LogProductBuiltinRuleProof,
     LogQuotientBuiltinRuleProof, LogReciprocalBuiltinRuleProof, ModOneBuiltinRuleProof,
     NestedSameModAbsorptionBuiltinRuleProof, ModCompatibleSmallerModulusBuiltinRuleProof,
@@ -110,7 +110,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
     ExpOfSumBuiltinRuleProof, FiniteSeqZeroEqualsFnOnEmptyBuiltinRuleProof,
     ImgOfProductBuiltinRuleProof, IndexCartEmptyIndexBuiltinRuleProof,
     IndexIntersectEmptyIndexBuiltinRuleProof, IndexUnionEmptyIndexBuiltinRuleProof,
-    IndexUnionSingletonBuiltinRuleProof, LogBasePowerBuiltinRuleProof,
+    IndexUnionSingletonBuiltinRuleProof,
     ReduceSingleTermWithAddZeroBuiltinRuleProof, ReOfProductBuiltinRuleProof,
     SetBuilderObviouslyEmptyBuiltinRuleProof, SinOfSumBuiltinRuleProof
 };
@@ -307,9 +307,7 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         actual_log_algebra_fixture("forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x*y)=log(a,x)+log(a,y)\n"),
         actual_log_algebra_fixture("forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x/y)=log(a,x)-log(a,y)\n"),
         actual_log_algebra_fixture("forall a,x R+:\n    a<1\n    =>:\n        log(a,1/x)=-log(a,x)\n"),
-        EqualitySearchProofByBuiltinRule::LogChangeOfBase(LogChangeOfBaseBuiltinRuleProof {
-            proof_of_requirement_facts: Vec::new(),
-        }),
+        actual_log_algebra_fixture("forall a,b,x R+:\n    a!=1\n    b!=1\n    =>:\n        log(a,x)=log(b,x)/log(b,a)\n"),
         EqualitySearchProofByBuiltinRule::ZeroMod(ZeroModBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),
         }),
@@ -680,9 +678,7 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
             ComplexAbsSquaredOfRectFormBuiltinRuleProof {},
         ),
         EqualitySearchProofByBuiltinRule::ExpOfSum(ExpOfSumBuiltinRuleProof {}),
-        EqualitySearchProofByBuiltinRule::LogBasePower(LogBasePowerBuiltinRuleProof {
-            proof_of_requirement_facts: Vec::new(),
-        }),
+        actual_log_algebra_fixture("forall a,x R+,n Z*:\n    a!=1\n    =>:\n        log(a^n,x)=log(a,x)/n\n"),
         EqualitySearchProofByBuiltinRule::ReOfProduct(ReOfProductBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::ImgOfProduct(ImgOfProductBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::SinOfSum(SinOfSumBuiltinRuleProof {}),
@@ -1111,6 +1107,7 @@ fn acceptance_run_envelope_language() {
     let run = RunLitexCodeResult {
         success: true,
         statement_results: vec![stmt],
+        statement_texts: Vec::new(),
         failed_statement_results: None,
         session_error: None,
         normal_json: None,

@@ -25,6 +25,9 @@ pub fn exec_release_thm_stmt(
             Ok(proofs) => proofs,
             Err(failed) => return Ok(Err(failed)),
         };
+        let function_domain = match verify_prepared_function_domain(rt, &thm_name, &prepared.builtin)? {
+            Ok(proof) => proof, Err(failed) => return Ok(Err(failed)),
+        };
         let mut dom_proofs = Vec::with_capacity(prepared.dom_facts.len());
         for (index, dom) in prepared.dom_facts.iter().enumerate() {
             let proof = verify_goal_fact(rt, dom)?;
@@ -37,10 +40,10 @@ pub fn exec_release_thm_stmt(
         let conclusions_wd = match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
             Ok(proofs) => proofs, Err(failed) => return Ok(Err(failed)),
         };
-        Ok(Ok((type_proofs, dom_proofs, conclusions_wd)))
+        Ok(Ok((type_proofs, function_domain, dom_proofs, conclusions_wd)))
     })?;
 
-    let (type_proofs, dom_proofs, conclusions_wd) = match dom_outcome {
+    let (type_proofs, function_domain, dom_proofs, conclusions_wd) = match dom_outcome {
         Ok(p) => p,
         Err(failed) => return Ok(ExecReleaseThmStmtResult::Failed(failed)),
     };
@@ -61,6 +64,7 @@ pub fn exec_release_thm_stmt(
         thm_name,
         builtin: prepared.builtin,
         type_proofs,
+        function_domain,
         dom_proofs,
         conclusions_wd,
         local_env,
@@ -88,6 +92,10 @@ pub fn exec_by_thm_stmt(
             Ok(proofs) => proofs,
             Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
         };
+        let function_domain = match verify_prepared_function_domain(rt, &thm_name, &prepared.builtin)? {
+            Ok(proof) => proof,
+            Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
+        };
         let mut dom_proofs = Vec::with_capacity(prepared.dom_facts.len());
         for (index, dom) in prepared.dom_facts.iter().enumerate() {
             let proof = verify_goal_fact(rt, dom)?;
@@ -110,10 +118,10 @@ pub fn exec_by_thm_stmt(
         if selected_proof.is_failed() {
             return Ok(Err(ExecByThmStmtFailed::Selected { theorem: thm_name.clone(), fact: selected.clone(), result: selected_proof }));
         }
-        Ok(Ok((type_proofs, dom_proofs, conclusions_wd, selected_proof)))
+        Ok(Ok((type_proofs, function_domain, dom_proofs, conclusions_wd, selected_proof)))
     })?;
 
-    let (type_proofs, dom_proofs, conclusions_wd, selected_proof) = match local_outcome {
+    let (type_proofs, function_domain, dom_proofs, conclusions_wd, selected_proof) = match local_outcome {
         Ok(v) => v,
         Err(failed) => {
             return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(failed)));
@@ -134,6 +142,7 @@ pub fn exec_by_thm_stmt(
             thm_name,
             builtin: prepared.builtin,
             type_proofs,
+            function_domain,
             dom_proofs,
             conclusions_wd,
             selected_proof,
@@ -141,6 +150,36 @@ pub fn exec_by_thm_stmt(
             stored,
         },
     )))
+}
+
+fn verify_prepared_function_domain(
+    runtime: &mut Runtime, theorem: &str,
+    builtin: &Option<super::result::BuiltinThmApplication>,
+) -> RuntimeResult<Result<Option<crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof>, ExecReleaseThmStmtFailed>> {
+    let Some(application) = builtin else { return Ok(Ok(None)); };
+    use crate::builtin_theorem::BuiltinTheoremId;
+    if !matches!(application.theorem, BuiltinTheoremId::FunctionSetMember | BuiltinTheoremId::CartesianMemberFromCoordinates) {
+        return Ok(Ok(None));
+    }
+    let target = if application.theorem == BuiltinTheoremId::CartesianMemberFromCoordinates {
+        runtime.cart_definition_for_set(&application.arguments[1]).map(|cart| runtime.cart_function_signature(&cart))
+    } else { runtime.function_space_signature(&application.arguments[1]) };
+    let Some(target) = target else {
+        return Ok(Err(ExecReleaseThmStmtFailed::BuiltinShape {
+            theorem: application.theorem,
+            message: "second argument must be a function or sequence set".to_string(),
+        }));
+    };
+    // Check before pointwise premises or the conclusion are stored. In
+    // particular, an empty forall cannot supply an exact empty-domain proof.
+    Ok(match runtime.verify_complete_function_domain(
+        &application.arguments[0], &target, super::helper::proof_verify_state(),
+    )? {
+        Ok(proof) => Ok(Some(proof)),
+        Err(result) => Err(ExecReleaseThmStmtFailed::FunctionDomain {
+            theorem: theorem.to_string(), result,
+        }),
+    })
 }
 
 pub(crate) struct PreparedRelease {

@@ -28,6 +28,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
+        if let Some(proof) = self.search_finite_function_application_membership_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteFunctionApplicationMembership(proof)));
+        }
+        if let Some(proof) = self.search_function_set_membership_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionSetMembership(proof)));
+        }
         if let Some(proof) = self.search_literal_tuple_projection_membership_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::LiteralTupleProjectionMembership(proof)));
         }

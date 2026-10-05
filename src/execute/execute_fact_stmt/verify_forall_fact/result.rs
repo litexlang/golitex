@@ -16,6 +16,7 @@ pub enum VerifyForallFactResult {
 pub enum VerifyForallFactProof {
     ByLocalIntroduction(VerifyForallFactSuccess),
     ByKnownForallFact(VerifyKnownForallFactProof),
+    ByEmptyParameterDomain(VerifyEmptyParameterDomainForallProof),
 }
 
 impl VerifyForallFactProof {
@@ -23,8 +24,19 @@ impl VerifyForallFactProof {
         match self {
             Self::ByLocalIntroduction(p) => &p.fact,
             Self::ByKnownForallFact(p) => &p.fact,
+            Self::ByEmptyParameterDomain(p) => &p.fact,
         }
     }
+}
+
+pub struct VerifyEmptyParameterDomainForallProof {
+    pub fact: ForallFact,
+    pub parameter_group_index: usize,
+    pub empty_carrier: crate::ast::obj::Obj,
+    pub empty_carrier_proof: Box<VerifyFactResult>,
+    pub empty_carrier_store: StoreFactAndInferResult,
+    pub well_defined: ForallFactWellDefinedProof,
+    pub local_env: Box<ExecEnv>,
 }
 
 pub struct VerifyKnownForallFactProof {

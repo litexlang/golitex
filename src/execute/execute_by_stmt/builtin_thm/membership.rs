@@ -27,21 +27,12 @@ pub(super) fn prepare_membership(rt: &mut Runtime, id: BuiltinTheoremId, args: &
     let conclusion = if id == TupleEqualFromCoordinates { equal(rt, a.clone(), b.clone()) } else { atomic_in(rt, a.clone(), b.clone()) };
     let requirements = match id {
         FunctionSetMember => {
-            let target = match &b {
-                Obj::FunctionSpace(FunctionSpace::FnSet(fs)) => fs.clone(),
-                Obj::SetFormer(SetFormer::SeqSet(fs)) => as_fn_set(rt, Obj::StandardSet(StandardSet::NPos), fs.set.as_ref().clone()),
-                Obj::SetFormer(SetFormer::FiniteSeqSet(fs)) => as_fn_set(rt, range(number("1"), fs.n.as_ref().clone()), fs.set.as_ref().clone()),
-                _ => return Ok(Err("second argument must be a function or sequence set".to_string())),
+            let Some(target) = rt.function_space_signature(&b) else {
+                return Ok(Err("second argument must be a function or sequence set".to_string()));
             };
-            let mut groups = vec![];
-            let mut arguments = vec![];
-            for group in &target.set_bound_parameters.groups {
-                groups.push(TypedParameterGroup { params: group.params.clone(), param_type: ParamType::Obj(group.param_type.as_ref().clone()) });
-                arguments.extend(group.params.iter().map(identifier));
+            match rt.build_function_return_requirements(&a, &target) {
+                Ok(requirements) => requirements, Err(message) => return Ok(Err(message)),
             }
-            let value = match apply(&a, arguments) { Ok(x) => x, Err(e) => return Ok(Err(e)) };
-            let body = atomic_in(rt, value, target.ret_set.as_ref().clone());
-            vec![Fact::ForallFact(ForallFact { fact_id: rt.global_ids.allocate_fact_id(), typed_parameters: TypedParameterList { groups }, dom_facts: target.dom_facts.into_iter().map(crate::instantiate::quantifier_free_fact_to_fact).collect(), then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(body)], line_file: None })]
         }
         SetBuilderMember => {
             let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &b else { return Ok(Err("second argument must be a set builder".to_string())); };
@@ -64,7 +55,9 @@ pub(super) fn prepare_membership(rt: &mut Runtime, id: BuiltinTheoremId, args: &
             if !matches!(b, Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(_))) { return Ok(Err("second argument must be a struct object".to_string())); }
             vec![conclusion.clone().into()]
         }
-        CartesianMemberFromCoordinates => cart_requirements(rt, a, b),
+        CartesianMemberFromCoordinates => match rt.cart_coordinate_membership_requirements(&a, &b) {
+            Ok(requirements) => requirements, Err(message) => return Ok(Err(message)),
+        },
         IndexCartesianMember => {
             let Obj::SetOperator(SetOperator::IndexCart(cart)) = &b else { return Ok(Err("second argument must be index_cart(...)".to_string())); };
             let carrier = Obj::SetOperator(SetOperator::FamilyUnion(FamilyUnion { left: cart.family_set.clone() }));
@@ -78,10 +71,6 @@ pub(super) fn prepare_membership(rt: &mut Runtime, id: BuiltinTheoremId, args: &
     Ok(Ok((requirements, vec![conclusion.into()])))
 }
 
-fn as_fn_set(rt: &mut Runtime, domain: Obj, ret: Obj) -> FnSet {
-    let Obj::FunctionSpace(FunctionSpace::FnSet(fs)) = unary_fn(rt, domain, ret) else { unreachable!() };
-    fs
-}
 fn tuple_dim(obj: Obj) -> Obj { Obj::ProductShape(ProductShape::TupleDim(TupleDim { arg: Box::new(obj) })) }
 fn at(obj: Obj, index: Obj) -> Obj { Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex { obj: Box::new(obj), index: Box::new(index) })) }
 fn tuple_requirements(rt: &mut Runtime, a: Obj, b: Obj) -> Vec<Fact> {
@@ -108,27 +97,6 @@ fn tuple_requirements(rt: &mut Runtime, a: Obj, b: Obj) -> Vec<Fact> {
         let bound = le(rt, identifier(&i), dimension).into();
         let body = equal(rt, at(a, identifier(&i)), at(b, identifier(&i)));
         requirements.push(forall(rt, i, Obj::StandardSet(StandardSet::NPos), vec![bound], vec![body]));
-    }
-    requirements
-}
-fn cart_requirements(rt: &mut Runtime, a: Obj, b: Obj) -> Vec<Fact> {
-    let tuple: AtomicFact = IsTupleFact { fact_id: rt.global_ids.allocate_fact_id(), set: a.clone(), line_file: None }.into();
-    let cart: AtomicFact = IsCartFact { fact_id: rt.global_ids.allocate_fact_id(), set: b.clone(), line_file: None }.into();
-    let dimension = Obj::ProductShape(ProductShape::CartDim(CartDim { set: Box::new(b.clone()) }));
-    let mut requirements = vec![tuple.into(), cart.into(), equal(rt, tuple_dim(a.clone()), dimension.clone()).into()];
-    if let Obj::ProductShape(ProductShape::Cart(cart)) = &b {
-        for (index, factor) in cart.args.iter().enumerate() {
-            let coordinate = match &a {
-                Obj::ProductShape(ProductShape::Tuple(tuple)) => tuple.args.get(index).map(|x| x.as_ref().clone()).unwrap_or_else(|| at(a.clone(), number(&(index + 1).to_string()))),
-                _ => at(a.clone(), number(&(index + 1).to_string())),
-            };
-            requirements.push(atomic_in(rt, coordinate, factor.as_ref().clone()).into());
-        }
-    } else {
-        let i = rt.fresh_internal_param();
-        let factor = Obj::ProductShape(ProductShape::Proj(Proj { set: Box::new(b), dim: Box::new(identifier(&i)) }));
-        let body = atomic_in(rt, at(a, identifier(&i)), factor);
-        requirements.push(forall(rt, i, range(number("1"), dimension), vec![], vec![body]));
     }
     requirements
 }

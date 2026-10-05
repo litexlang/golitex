@@ -15,5 +15,5 @@ thm dot_symmetric:
         dot(u,v) = dot(v,u)
     dot(u,v) = u[1]*v[1]+u[2]*v[2] = v[1]*u[1]+v[2]*u[2] = dot(v,u)
 have ga,gb,gc,gd cart(R,R)
-by thm dot_symmetric(vec(ga,gb),vec(gc,gd))
+release thm dot_symmetric(vec(ga,gb),vec(gc,gd))
 dot(vec(ga,gb),vec(gc,gd)) = dot(vec(gc,gd),vec(ga,gb))

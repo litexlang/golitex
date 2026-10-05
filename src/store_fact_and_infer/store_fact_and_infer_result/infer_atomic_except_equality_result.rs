@@ -1,4 +1,5 @@
 use crate::runtime::FactId;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 
 use super::StoreFactAndInferResult;
 
@@ -192,7 +193,13 @@ pub struct InferInFactSignedStandardSetSignResult {
 }
 
 pub struct InferInFactEqualFnSetExpandResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub transports: Vec<InferInFactEqualFnSetTransport>,
+}
+
+pub struct InferInFactEqualFnSetTransport {
+    pub membership_fact_id: FactId,
+    pub carrier_equal: KnownEqualityPathProof,
+    pub derived: StoreFactAndInferResult,
 }
 
 pub struct InferInFactFnRangeResult {
@@ -341,8 +348,8 @@ impl InferAtomicExceptEqualityResult {
             }
             Self::InFactEqualFnSetExpand(r) => {
                 let mut ids = Vec::new();
-                for d in &r.derived {
-                    ids.extend(d.stored_fact_ids());
+                for transport in &r.transports {
+                    ids.extend(transport.derived.stored_fact_ids());
                 }
                 ids
             }

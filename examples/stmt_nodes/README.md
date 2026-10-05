@@ -61,6 +61,7 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | [definition/template_alias_struct_tuple.lit](definition/template_alias_struct_tuple.lit) | Template aliases and named tuple results | Checked callable signatures and stored value paths reach struct fields |
 | `definition/def_thm.lit` | Named theorem | `thm name: ? fact` + proof |
 | `definition/axiom.lit` | Named axiom (trusted forall) | `axiom name: ? forall …` |
+| [definition/strict_axiom_policy.lit](definition/strict_axiom_policy.lit) | Strict user-axiom policy | ordinary mode accepts the explicit assumption; strict rejects before publication |
 | `definition/def_strategy.lit` | Named strategy (proved forall) | `strategy name: ? forall …` + proof; later `$P` via known_strategy |
 | `definition/def_strategy_peel_sum.lit` | known_strategy peel | binary `$is_pos(a+b)` package → `$is_pos(a+b+c+d)` without intermediate sums |
 | `definition/release_*.lit` | Unpack packaged facts | `release thm` / `struct def` / `obj def` |
@@ -93,7 +94,9 @@ exact forall shapes; obligations are fact-only in the body (trust them outside
 first, same pattern as `release axiom_of_choice`).
 `eval` rewrites via `known_closed_numeric_equal`, then recursively evaluates:
 closed-numeric simplify, and plain-Identifier `FnObj` through a stored algo.
-It does **not** store a proof fact. Recursive-algo examples are deferred.
+Successful evaluation publishes the checked `source = result` equality in
+the current scope; failed evaluation publishes no equality. Algorithm and
+recursive examples are in `command/eval_store_result.lit`.
 Tracer: `command/eval.lit`.
 Top-level `algo … by cases` / `by induc` is wired (see `definition/def_algo.lit`).
 `obtain … from exist` / `exist!` / `$P` is wired (see `definition/obtain_*.lit`
@@ -101,8 +104,9 @@ and `definition/def_template_obtain_from_*.lit`).
 `have by replacement_axiom` is wired (see `definition/have_by_replacement_axiom.lit`
 and `definition/def_template_have_by_replacement_axiom.lit`).
 `have by fn_preimage` is wired (see `definition/have_by_fn_preimage.lit`).
-`axiom` is wired (see `definition/axiom.lit`); `release thm` / `by thm` resolve
-axiom names the same way as theorems.
+`axiom` is wired in ordinary mode (see `definition/axiom.lit`); `release thm` /
+`by thm` resolve axiom names the same way as theorems. Strict mode rejects user
+axiom declarations, including those inside proofs and dependencies.
 `strategy` is wired (see `definition/def_strategy.lit`): proves a `? forall`,
 stores the named interface under `strategy_definitions`, and later non-equality
 atomics may apply it via the `known_strategy` search stage (after by-definition,
@@ -152,6 +156,13 @@ the conclusion. Parser migration tracers include
 `by/induction_reuses_goal_parameter.lit`. Wrong arity, unsupported argument
 shape, missing premises, selected-fact failure and transaction rollback are
 covered by `src/execute/execute_by_stmt/builtin_thm/tests.rs`.
+
+[Exact function membership](release_and_expand/builtin_thm/fn_set_member.lit)
+requires the complete input domain before pointwise return checks. It covers
+an actual restriction, alternative return upper bounds, aliases and the empty
+domain. The [negative manifest](../negative/exact_function_domains/manifest.json)
+is executed by the same unit gate; successful setup and the final failure
+phase are checked separately, including retired `cart_dim` syntax.
 
 The internal [finite-set induction regression](../_internal/regression/finite_set_induction.lit) proves the mathematical principle through ordinary induction on cardinality. Its original empty-set and fresh-insertion inputs are explicit hypotheses; singleton removal and reconstruction provide the checked successor step, followed by the concrete {1,2} replay. It does not reintroduce the removed finite-set induction syntax.
 

@@ -5,6 +5,7 @@ use super::helper::{
     array_of_strings, bool_value, builtin_rule_with_optional_cite, cite_forall_from_fact_id,
     cite_from_fact_id, empty_string_array, infer_fact_texts_from_store_and_infer, object,
     output_language, phase_value_search_proof, phase_value_well_defined, store_fact_texts, string,
+    with_source_statement,
 };
 use super::project_stmt_catalog::project_non_fact_stmt;
 use crate::ast::fact::{AtomicFact, Fact};
@@ -69,6 +70,24 @@ pub fn project_stmt_normal(result: &ExecStmtResult, runtime: &Runtime) -> JsonVa
     }
 }
 
+pub(super) fn project_run_statements_normal(
+    run: &RunLitexCodeResult,
+    runtime: &Runtime,
+) -> Vec<JsonValue> {
+    let lang = output_language(runtime);
+    run.statement_results
+        .iter()
+        .enumerate()
+        .map(|(index, stmt)| {
+            with_source_statement(
+                project_stmt_normal(stmt, runtime),
+                run.statement_texts.get(index),
+                lang,
+            )
+        })
+        .collect()
+}
+
 /// Build the Normal run envelope while Runtime still holds cited facts.
 pub fn project_run_normal(
     run: &RunLitexCodeResult,
@@ -77,11 +96,7 @@ pub fn project_run_normal(
     path: Option<&Path>,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    let statement_results: Vec<JsonValue> = run
-        .statement_results
-        .iter()
-        .map(|stmt| project_stmt_normal(stmt, runtime))
-        .collect();
+    let statement_results = project_run_statements_normal(run, runtime);
     let path_value = match path {
         Some(p) => string(p.display().to_string()),
         None => JsonValue::Null,
@@ -147,7 +162,7 @@ pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
             ) => fact.readable_string(),
             VerifyAtomicExceptEqualityFactResult::Failed(
                 VerifyAtomicExceptEqualityFactFailed::FailToVerifyWellDefined(_),
-            ) => "<wd_failed>".into(),
+            ) => "<well_defined_not_proven>".into(),
         },
         VerifyFactResult::Equality(r) => match r.as_ref() {
             VerifyEqualityResult::Success(s) => {
@@ -157,7 +172,7 @@ pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
                 AtomicFact::EqualFact(fact.clone()).readable_string()
             }
             VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(_)) => {
-                "<wd_failed>".into()
+                "<well_defined_not_proven>".into()
             }
         },
         VerifyFactResult::AndFact(r) => match r.as_ref() {
@@ -182,7 +197,7 @@ pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
                 Fact::OrFact(fact.clone()).readable_string()
             }
             VerifyOrFactResult::Failed(VerifyOrFactFailed::FailToVerifyWellDefined(_)) => {
-                "<wd_failed>".into()
+                "<well_defined_not_proven>".into()
             }
         },
         VerifyFactResult::ExistShapedFact(r) => exist_shaped_goal_display(r),
@@ -194,7 +209,7 @@ pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
                 fact, ..
             }) => Fact::ForallFact(fact.clone()).readable_string(),
             VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(_)) => {
-                "<wd_failed>".into()
+                "<well_defined_not_proven>".into()
             }
         },
         VerifyFactResult::ForallFactWithIff(r) => match r.as_ref() {
@@ -248,7 +263,7 @@ fn exist_shaped_goal_display(r: &VerifyExistShapedFactResult) -> String {
         ))
         | VerifyExistShapedFactResult::NotExistFact(VerifyNotExistFactResult::Failed(
             VerifyExistShapedFactFailed::FailToVerifyWellDefined(_),
-        )) => return "<wd_failed>".into(),
+        )) => return "<well_defined_not_proven>".into(),
     };
     readable_string_from_ir_text(fact.ir().as_str())
 }
@@ -304,6 +319,7 @@ fn why_failed(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
         return object(
             lang,
             vec![("phase", string(phase_value_well_defined(lang))),
+                ("message", string(super::explain::well_defined_not_proven_message(lang))),
                 ("verification", super::project_detailed::project_verify_fact(verify, runtime))],
         );
     }

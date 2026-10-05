@@ -9,6 +9,34 @@ fn fresh_root(case: &str) -> std::path::PathBuf {
 }
 
 #[test]
+fn strict_import_rechecks_user_axioms_in_a_cached_transitive_dependency() {
+    let root = fresh_root("axiom-transitive");
+    fs::create_dir_all(root.join("dep/leaf")).unwrap();
+    fs::write(root.join("litex.config"), "[import]\nDep = \"./dep\"\n[export]\nmain = \"./main.lit\"\n").unwrap();
+    fs::write(root.join("dep/litex.config"), "[import]\nLeaf = \"./leaf\"\n[export]\nmain = \"./main.lit\"\n").unwrap();
+    fs::write(root.join("dep/leaf/litex.config"), "[export]\nmain = \"./main.lit\"\n").unwrap();
+    fs::write(root.join("dep/leaf/main.lit"), "axiom false_axiom:\n    ? forall x R:\n        0 = 1\n").unwrap();
+    fs::write(root.join("dep/main.lit"), "thm forwarded:\n    ? 0 = 1\n    release thm Leaf::main::false_axiom(0)\n").unwrap();
+    fs::write(root.join("main.lit"), "release thm Dep::main::forwarded\n0 = 1\n").unwrap();
+    let command = |strict| LaunchCommand::Repository { path: root.clone(), session: false,
+        strict, language: OutputLanguage::English };
+    let cold = run_project(command(true)).unwrap();
+    assert!(!cold.run.success);
+    assert!(format!("{:?}", cold.run.session_error).contains("`axiom` is forbidden"));
+    assert!(run_project(command(false)).unwrap().run.success, "deliberate ordinary-mode axiom fixture");
+    for dep in ["dep", "dep/leaf"] {
+        assert!(root.join(dep).join("__litex_knowledge_base__/manifest.json").is_file());
+    }
+    let cached = run_project(command(false)).unwrap();
+    assert!(cached.run.success);
+    assert_eq!(cached.files.len(), 1, "ordinary mode actually replays the cache");
+    let warm = run_project(command(true)).unwrap();
+    fs::remove_dir_all(root).unwrap();
+    assert!(!warm.run.success, "strict must recheck transitive source axioms");
+    assert!(format!("{:?}", warm.run.session_error).contains("`axiom` is forbidden"));
+}
+
+#[test]
 fn strict_import_cannot_replay_a_non_strict_trusted_theorem() {
     let root = fresh_root("direct");
     fs::create_dir_all(root.join("dep")).unwrap();

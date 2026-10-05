@@ -32,6 +32,54 @@ fn every_language_preserves_success_failure_and_source() {
 }
 
 #[test]
+fn every_language_preserves_exact_function_domain_evidence_and_rejection() {
+    for language in OutputLanguage::ALL {
+        let mut rt = runtime(language);
+        assert!(!execute(&mut rt, "have fn u(k closed_range(1,2)) Z = 0").is_failed());
+        for (code, success) in [
+            ("release thm fn_set_member(u, finite_seq(R,2))", true),
+            ("release thm fn_set_member(u, finite_seq(R,3))", false),
+        ] {
+            let result = execute(&mut rt, code);
+            for json in [project_stmt_compact(&result, &rt), project_stmt_normal(&result, &rt), project_stmt_detailed(&result, &rt)] {
+                assert_eq!(field(&json, "success", language), &JsonValue::Bool(success), "{language:?}: {code}");
+            }
+            let detailed = project_stmt_detailed(&result, &rt);
+            if success {
+                let domain = find_evidence_value(&detailed, &localize_key("function_domain", language)).unwrap();
+                let target = field(&domain, "target_signature", language).as_str().unwrap();
+                assert!(target.contains("closed_range(1, 2)"), "{language:?}: {target}");
+                assert!(find_evidence_value(&domain, &localize_key("subject_equal", language)).is_some());
+            } else {
+                let failure = find_evidence_value(&detailed, &localize_key("failure", language)).unwrap();
+                assert_eq!(field(&failure, "phase", language).as_str().unwrap(), "function_domain");
+            }
+        }
+        for key in ["function_domain", "subject_equal", "target_signature"] {
+            if language != OutputLanguage::English { assert_ne!(localize_key(key, language), key); }
+        }
+    }
+}
+
+fn find_evidence_value(json: &JsonValue, key: &str) -> Option<JsonValue> {
+    match json {
+        JsonValue::Object(object) => {
+            if let Some(value) = object.get(key) { return Some(value.clone()); }
+            for (_, value) in object.iter() {
+                if let Some(found) = find_evidence_value(value, key) { return Some(found); }
+            }
+        }
+        JsonValue::Array(values) => {
+            for value in values {
+                if let Some(found) = find_evidence_value(value, key) { return Some(found); }
+            }
+        }
+        _ => {}
+    }
+    None
+}
+
+#[test]
 fn normal_output_keeps_field_order_and_localizes_explanations() {
     let expected_names = [
         "Closed calculation",
@@ -144,6 +192,14 @@ fn field<'a>(json: &'a JsonValue, key: &str, language: OutputLanguage) -> &'a Js
 }
 
 const LOCALIZED_KEYS: &[&str] = &[
+    "artifact", "format", "output_path", "content", "error",
+    "function_domain", "domain_comparison", "source_signature", "target_signature",
+    "function_wd", "target_wd", "subject_equal", "carrier_equal", "right_domain",
+    "comparison", "source", "forward", "reverse", "forward_proof", "reverse_proof",
+    "pointwise", "pointwise_proof", "signature_source", "return_space", "checked_domain",
+    "left_function_body", "left_expanded_body", "right_function_body", "right_expanded_body",
+    "parameter_group_index", "empty_carrier", "empty_carrier_proof", "empty_carrier_store",
+    "left_normalization", "right_normalization", "parent_well_defined_side",
     "kind",
     "shape",
     "left_path",

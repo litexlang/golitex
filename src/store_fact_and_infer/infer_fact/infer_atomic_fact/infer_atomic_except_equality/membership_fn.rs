@@ -1,21 +1,24 @@
 use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, InFact, LessEqualFact, PlainExistFact, QuantifierFreeFact,
+    AtomicFact, EqualFact, Fact, InFact, PlainExistFact, QuantifierFreeFact,
 };
 use crate::ast::obj::{
-    FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, SetFormer, StandardSet,
+    FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, SetFormer,
     StructAndFieldAccessObj,
 };
 use crate::ast::param::{
-    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
+    ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferInFactEqualFnSetExpandResult,
+    InferInFactEqualFnSetTransport,
     InferInFactFiniteSeqExpandResult, InferInFactFnRangeResult, InferInFactSeqExpandResult,
     StoreFactAndInferResult,
 };
 use std::collections::HashMap;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 
 impl Runtime {
     // When: `x $in fn(...)` peer / `fn_range(f)` / `finite_seq` / `seq`.
@@ -43,9 +46,10 @@ impl Runtime {
 }
 
 impl Runtime {
-    // When: `x $in S` and some equality peer of S is a literal FnSet.
-    // Infers: `x $in FnSet` (store registers InFunctionSet).
-    // Example: `A = fn(x R) R`, `trust f $in A` ⇒ `f $in fn(x R) R`.
+    // A checked membership transports through the carrier's equality graph.
+    // Example: A=finite_seq(R,2), B=A, f in B => f in finite_seq(R,2).
+    // Literal sequence inference then derives its exact FnSet. A set alias
+    // without a member does not construct a callable function.
     fn infer_in_fact_equal_fn_set_expand(
         &mut self,
         in_fact: &InFact,
@@ -53,42 +57,42 @@ impl Runtime {
         if matches!(
             &in_fact.set,
             Obj::FunctionSpace(FunctionSpace::FnSet(_))
+                | Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_))
         ) {
             return Ok(None);
         }
-        let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
-        let adjacency = self.visible_equivalence_class_adjacency();
-        let Some(neighbors) = adjacency.get(&in_fact.set.ir()) else {
-            return Ok(None);
-        };
-        for (_peer_key, equal_fact) in neighbors.iter() {
-            let peer = if equal_fact.left.ir() == in_fact.set.ir() {
-                &equal_fact.right
-            } else {
-                &equal_fact.left
-            };
-            let Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) = peer else {
+        let mut transports = Vec::new();
+        let peers = equivalence_class_members_with_paths_in_adjacency(
+            &self.visible_equivalence_class_adjacency(), &in_fact.set,
+        );
+        for (peer, path) in peers {
+            if !matches!(&peer, Obj::FunctionSpace(FunctionSpace::FnSet(_))
+                | Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_))) {
                 continue;
-            };
+            }
             let fact_id = self.global_ids.allocate_fact_id();
             let expanded = AtomicFact::InFact(InFact {
                 fact_id,
                 element: in_fact.element.clone(),
-                set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
+                set: peer,
                 line_file: in_fact.line_file.clone(),
             });
             if let Some(stored) =
                 self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(expanded), verify_state)?
             {
-                derived.push(stored);
+                transports.push(InferInFactEqualFnSetTransport {
+                    membership_fact_id: in_fact.fact_id,
+                    carrier_equal: KnownEqualityPathProof::new(path),
+                    derived: stored,
+                });
             }
         }
-        if derived.is_empty() {
+        if transports.is_empty() {
             return Ok(None);
         }
         Ok(Some(
             InferAtomicExceptEqualityResult::InFactEqualFnSetExpand(
-                InferInFactEqualFnSetExpandResult { derived },
+                InferInFactEqualFnSetExpandResult { transports },
             ),
         ))
     }
@@ -135,16 +139,17 @@ impl Runtime {
     }
 
     // When: `x $in finite_seq(S, n)`.
-    // Infers: `x $in fn(i N+: i <= n) S` (registers InFunctionSet on store).
-    // Example: `trust s $in finite_seq(R, 3)` ⇒ `s $in fn(i N+: i <= 3) R`.
+    // Infers: `x $in fn(k closed_range(1,n)) S`, with the same exact domain.
+    // Example: a typed s in finite_seq(R,3) supplies its one-based FnSet.
     fn infer_in_fact_finite_seq_expand(
         &mut self,
         in_fact: &InFact,
      verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
-        let Obj::SetFormer(SetFormer::FiniteSeqSet(fs)) = &in_fact.set else {
+        let Obj::SetFormer(SetFormer::FiniteSeqSet(_)) = &in_fact.set else {
             return Ok(None);
         };
-        let fn_set = self.finite_seq_set_to_fn_set(fs, in_fact.line_file.clone());
+        let fn_set = self.function_space_signature(&in_fact.set)
+            .expect("literal finite_seq has an exact function-space signature");
         let fact_id = self.global_ids.allocate_fact_id();
         let expanded = AtomicFact::InFact(InFact {
             fact_id,
@@ -172,10 +177,11 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
      verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
-        let Obj::SetFormer(SetFormer::SeqSet(ss)) = &in_fact.set else {
+        let Obj::SetFormer(SetFormer::SeqSet(_)) = &in_fact.set else {
             return Ok(None);
         };
-        let fn_set = self.seq_set_to_fn_set(ss);
+        let fn_set = self.function_space_signature(&in_fact.set)
+            .expect("literal seq has an exact function-space signature");
         let fact_id = self.global_ids.allocate_fact_id();
         let expanded = AtomicFact::InFact(InFact {
             fact_id,
@@ -202,46 +208,6 @@ impl Runtime {
             .into_iter()
             .next()
             .map(|(fn_set, _)| fn_set)
-    }
-
-    fn finite_seq_set_to_fn_set(
-        &mut self,
-        fs: &crate::ast::obj::FiniteSeqSet,
-        line_file: Option<crate::ast::line_file::SourceLine>,
-    ) -> FnSet {
-        let binder = self.fresh_internal_param();
-        let binder_obj = Obj::Identifier(IdentifierObj::from_bound_name(&binder));
-        FnSet {
-            set_bound_parameters: SetBoundParameterList {
-                groups: vec![SetBoundParameterGroup {
-                    params: vec![binder],
-                    param_type: Box::new(Obj::StandardSet(StandardSet::NPos)),
-                }],
-            },
-            dom_facts: vec![QuantifierFreeFact::AtomicFact(AtomicFact::LessEqualFact(
-                LessEqualFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    left: binder_obj,
-                    right: fs.n.as_ref().clone(),
-                    line_file: line_file.clone(),
-                },
-            ))],
-            ret_set: Box::new(fs.set.as_ref().clone()),
-        }
-    }
-
-    fn seq_set_to_fn_set(&mut self, ss: &crate::ast::obj::SeqSet) -> FnSet {
-        let binder = self.fresh_internal_param();
-        FnSet {
-            set_bound_parameters: SetBoundParameterList {
-                groups: vec![SetBoundParameterGroup {
-                    params: vec![binder],
-                    param_type: Box::new(Obj::StandardSet(StandardSet::NPos)),
-                }],
-            },
-            dom_facts: Vec::new(),
-            ret_set: Box::new(ss.set.as_ref().clone()),
-        }
     }
 
     fn preimage_exist_fact_from_fn_set(

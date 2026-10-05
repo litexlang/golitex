@@ -1,0 +1,57 @@
+# Before: checked tuple values had no named function application route.
+# have p cart(R,Z) = (1,2)
+# p(1) = 1
+# p(2) $in Z
+# Former result: constructor accepted, calls failed WD on binary d5425298.
+# Now: complete finite-function domains and coordinate evidence survive aliases.
+# Boundary: q(3), wrong coordinate carriers and wrong complete lengths reject.
+# General literal application and complete old-API retirement remain pending.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_strategy/finite_function_application_membership.lit
+
+have Carrier set = cart(R,Z)
+
+have p Carrier = (1,2)
+
+have q Carrier = p
+
+q(1) = 1
+
+q(2) $in Z
+
+q(2) $in R
+
+q $in finite_seq(Z,2)
+
+q $in finite_seq(R,2)
+
+release thm cart_member_from_coordinates(q,Carrier)
+
+(1,2) $in finite_seq(Z,2)
+
+let repeated = (1,1)
+
+repeated(2) = 1
+
+repeated $in finite_seq(Z,2)
+
+let one = tuple(7)
+
+one(1) = 7
+
+one $in finite_seq(Z,1)
+
+let empty = ()
+
+release thm fn_set_member(empty,finite_seq(R,0))
+
+have a,b R
+
+let symbolic = (a,b)
+
+symbolic(2) = b
+
+symbolic $in finite_seq(R,2)
+
+have fn mk(x R) cart(R,Z) = (x,2)
+
+mk(7)(2) $in Z

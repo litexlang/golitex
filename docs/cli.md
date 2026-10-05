@@ -30,8 +30,12 @@ litex
 The REPL mounts `cwd/litex.config` when that file exists (otherwise an empty
 project), then accepts interactive blocks. A single line without a trailing
 colon runs immediately; finish an indented block with a blank line. Use
-`exit`, `quit`, `:quit`, or end-of-input to exit. Each block prints
-a short status line (`success` or `error`), not a full JSON document.
+`exit`, `quit`, `:quit`, or end-of-input to exit. Successful blocks print
+`success`. A failed verification prints Normal JSON with the original
+statement and failure reason, then accepts the next block. Hard session
+errors stop the REPL and are reported once. In a continued `-session`, the
+final JSON retains the initial batch's statement results and adds the hard
+error. Interactive parse/tokenizer errors refer to `<repl>`.
 
 Run a `.lit` file:
 
@@ -68,7 +72,7 @@ Shared flags outside command operands may appear before or after the command:
 
 | Flag | Meaning |
 |------|---------|
-| `-strict` | Forbid user `trust` and `trust have`; allow abstract predicate declarations. |
+| `-strict` | Forbid user `trust`, `trust have`, and `axiom`; allow abstract predicate declarations and named foundation releases. |
 | `-session` | After a successful `-e` / `-f` / `-r` run, keep the Runtime open and continue as REPL. |
 | `-lang <tok>` | Output language for JSON verification feedback: `en` (default), `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, or `vi`. Does not change Litex source or verification. |
 
@@ -86,8 +90,11 @@ litex -f examples/tmp.lit
 The parser is a small whitelist. Unsupported options and trailing tokens are
 rejected. Both `-strict -e "1 = 1"` and `-e "1 = 1" -strict` work.
 Keep the source string quoted as one argument. The shell removes the quotes;
-the argv item immediately following `-e` is then consumed as source, including
-a leading minus or an exact option spelling. For example, `-e '-strict'`
+the argv item immediately following `-e`, or an inline extraction command,
+is consumed as source, including a leading minus or an exact option spelling.
+The next item after `-f` / `-r` is likewise a path even if it starts with `-`.
+For extraction, `-f` / `-r` immediately after the command select file/repository
+input; their next item is the path. For example, `-e '-strict'`
 passes `-strict` to the Litex parser and fails as invalid source; it does not
 enable strict mode or start a REPL.
 
@@ -95,11 +102,12 @@ The current whitelist does not include `-compact`, `-detailed`, `-runner`,
 `-before`, `-isolated`, graph flags, or `-lean`. Those older command recipes
 are not entrypoints for this build. Rust projection APIs are separate from CLI flags.
 
-`-strict` rejects `trust` and `trust have` when executed. An `abstract_prop`
+`-strict` rejects user `trust`, `trust have`, and `axiom` when executed,
+including nested proof statements and imported dependencies. An `abstract_prop`
 declaration is allowed: it introduces only a predicate signature, with no
 proved instances. Calls still require valid arguments, exact arity and proof.
-It still accepts `axiom` and named set-theoretic releases; imported cache hits
-are not rerun as a fresh strict audit. See the
+Named set-theoretic releases remain allowed. Strict imports bypass cached
+environments and re-execute dependency sources with the same policy. See the
 [trust boundary](Manual.md#trust-and-strict-mode).
 
 ## Commands
@@ -120,8 +128,11 @@ source must contain `# [-extract]` / `# [end of -extract]` marker pairs; only
 those blocks are verified and translated. Inline code and `-r` use whole-input
 semantics. Details: [`src/extract_executable_code/README.md`](../src/extract_executable_code/README.md).
 
-`-e` values must be the next token and must not start with `-`. Source that
-begins with `-` belongs in a `.lit` file and should be run with `-f`.
+Source and path operands must be the next argv item and must be nonempty.
+Both `litex -e '-2 < 0'` and `litex -extractpython '-2 < 0'` are valid.
+All argv items must be valid UTF-8; invalid bytes produce a launch error with
+exit code `2`. `-lang` selects JSON keys and explanations; usage text, REPL
+prompts and `success` feedback remain English.
 
 Launch and mount details live in
 [`src/run/README.md`](../src/run/README.md) and
@@ -156,13 +167,19 @@ fix a domain obligation, or repair the statement.
 ## JSON Output Contract
 
 `-e`, `-f`, and `-r` batch outcomes emit one Normal `run` document on stdout.
-Launch, tokenization/parsing, or early I/O errors can instead produce text on
-stderr with no JSON document. A successful `-session` enters the text REPL
+Tokenization, parsing and early I/O failures also produce a failed Normal
+document with `session_error`. Invalid command-line shapes still produce text
+on stderr with exit code `2`, because no command was selected. Extraction
+failures produce a failed artifact document with `error`. Success and failure
+artifacts share `format`, `target`, `path`, `output_path`, and `language`, and
+their field names follow `-lang`. A successful `-session` enters the text REPL
 before the batch JSON is printed, so its stdout is not one standalone JSON value.
 The projection
 is defined in [`src/json_output/README.md`](../src/json_output/README.md).
 It does **not** dump the full verify/exec IR; that tree remains available for
 the Rust Detailed projection and other tooling.
+When a downstream reader closes stdout, Litex preserves the command's exit
+status without panicking. Other output I/O errors are reported normally.
 
 ### Run envelope
 
@@ -199,6 +216,13 @@ require `kind == "run"`, `success == true`, and `session_error == null`.
 The current envelope has no `ok` field. `-r` computes overall success from
 its files but does not serialize their statement arrays into this summary.
 Use `-f` on a target file when you need its statement explanations.
+
+`statement` preserves the complete parsed source in readable form, including
+theorem/axiom names, theorem arguments and selected conclusions. Computed or
+published facts belong in `stores`. For `1 / 0 = 0`, the failed statement stays
+`1 / 0 = 0`; `why_failed.phase` is `well_defined` and its message says that
+well-definedness could not be proved. This is a proof failure, not an assertion
+that every unproved expression is mathematically undefined.
 
 ### Chinese output
 
@@ -376,9 +400,10 @@ Use `litex.config` to organize a module:
 `[export]` is an explicit selection list, not a directory inventory. Unlisted
 files are sidecars: discovery does not parse or execute them. Source-level
 `import` is rejected in files and in the REPL; project source uses its manifest.
-Imported modules may load a matching `__litex_knowledge_base__/` cache; on a
-miss, Litex executes their exports and attempts a cache write-back. This applies
-to strict runs too. Root exports follow the execution order below.
+Ordinary runs may load a matching `__litex_knowledge_base__/` cache; on a
+miss, Litex executes the imported exports and attempts a cache write-back.
+Strict runs always execute imported source exports instead of replaying the
+cache. Root exports follow the execution order below.
 
 ### Mount behavior
 

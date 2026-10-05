@@ -535,7 +535,9 @@ fn closed_range_literal_expansion_shape(range_side: &Obj, list_side: &Obj) -> bo
         return false;
     };
     if s > e {
-        return false;
+        // No integer satisfies s <= x <= e when s > e.
+        // In particular, closed_range(1, 0) is the zero-length domain.
+        return is_empty_list_set(list_side);
     }
     let expected: Vec<Obj> = (s..=e).map(number_obj).collect();
     list_side.ir() == list_set_of(expected).ir()
@@ -552,7 +554,8 @@ fn range_literal_expansion_shape(range_side: &Obj, list_side: &Obj) -> bool {
         return false;
     };
     if s >= e {
-        return false;
+        // Half-open integer ranges are empty when s >= e.
+        return is_empty_list_set(list_side);
     }
     let expected: Vec<Obj> = (s..e).map(number_obj).collect();
     list_side.ir() == list_set_of(expected).ir()

@@ -21,11 +21,7 @@ impl Runtime {
             AtomicFact::InFact(in_fact) => {
                 rules.extend(self.infer_in_fact_rules(in_fact, verify_state)?);
             }
-            AtomicFact::IsCartFact(is_cart) => {
-                rules.push(InferAtomicExceptEqualityResult::IsCartDimensionLowerBound(
-                    self.infer_is_cart_dimension_lower_bound(is_cart, verify_state)?,
-                ));
-            }
+            AtomicFact::IsCartFact(_) => {}
             AtomicFact::SubsetFact(subset) => {
                 if let Some(r) = self.infer_subset_finite_upper_bound(subset, verify_state)? {
                     rules.push(InferAtomicExceptEqualityResult::SubsetFiniteUpperBound(r));

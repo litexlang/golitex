@@ -1,0 +1,4 @@
+# Negative: checked finite-function setup succeeds; final target rejects.
+# Expected phase: search_proof
+have p cart(R,Z)
+p(1) $in Z

@@ -153,6 +153,7 @@ impl IdentifierObjWellDefinedProof {
 // their own body. Templates may read a checked declaration after instance WD,
 // including nested checks where signature caching is disabled.
 pub enum FnObjDomainFnSetEvidence {
+    FiniteFunction(Box<crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof>),
     InFunctionSet {
         fn_set: FnSet,
         fact_id: FactId,

@@ -1,0 +1,4 @@
+# Expected rejection: by_fn_extension; all preceding setup statements must succeed.
+have fn a(k closed_range(1,2)) R = 0
+have fn b(k closed_range(1,3)) R = 0
+by fn_extension a=b

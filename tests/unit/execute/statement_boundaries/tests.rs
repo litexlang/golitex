@@ -17,6 +17,45 @@ fn check(rt: &mut Runtime, code: &str, expected: &[bool]) {
 }
 
 #[test]
+fn strict_rejects_user_axioms_at_top_level_and_in_proof_bodies() {
+    for conclusion in ["0 = 1", "x = x"] {
+        let source = format!("axiom wrong:\n    ? forall x R:\n        {conclusion}\n");
+        let nested = source.lines().map(|line| format!("    {line}\n")).collect::<String>();
+        for code in [
+            source,
+            format!("claim:\n    ? 1 = 1\n{nested}"),
+            format!("thm outer:\n    ? 1 = 1\n{nested}"),
+            format!("by extension:\n    ? {{1}} = {{1}}\n{nested}"),
+            format!("sketch:\n{nested}"),
+        ] {
+            check(&mut runtime(false), &code, &[true]);
+            let mut rt = runtime(true);
+            let run = rt.run_litex_code(&code).unwrap();
+            assert!(!run.success, "{code}");
+            assert!(run.statement_results.is_empty());
+            let error = format!("{:?}", run.session_error);
+            assert!(error.contains("`axiom` is forbidden") && error.contains("-strict"), "{error}");
+            assert_eq!(rt.execution_environments_stack.len(), 1);
+            assert!(rt.axiom_visible_in_stack("wrong").is_none());
+            assert!(rt.def_thm_visible_in_stack("outer").is_none());
+            check(&mut rt, "0 = 1", &[false]);
+            check(&mut rt, "thm wrong:\n    ? 1 = 1", &[true]);
+        }
+    }
+}
+
+#[test]
+fn strict_keeps_checked_theorems_abstract_signatures_and_foundation_releases() {
+    check(&mut runtime(true), "abstract_prop P(x)\nthm checked:\n    ? forall x R:\n        x = x\nrelease thm checked(2)\n$P(0)", &[true, true, true, false]);
+    for source in [
+        include_str!("../../../../examples/test_statements/boundaries/strict-choice-allowed.lit"),
+        include_str!("../../../../examples/test_statements/boundaries/strict-regularity-allowed.lit"),
+    ] {
+        check(&mut runtime(true), source, &[true]);
+    }
+}
+
+#[test]
 fn strict_rejects_template_trust_at_top_level_and_in_proof_bodies() {
     let source = "template<S set>:\n    trust have hidden R:\n        hidden = 1\n";
     for code in [source.to_string(), format!("by extension:\n    ? {{1}} = {{1}}\n{}", source.lines().map(|line| format!("    {line}\n")).collect::<String>())] {
@@ -166,6 +205,7 @@ fn run_examples_statement_boundary_tracers() {
         (true, include_str!("../../../../examples/stmt_nodes/by/finite_set_conditional_proof_steps.lit")),
         (true, include_str!("../../../../examples/stmt_nodes/command/eval_source_domain.lit")),
         (false, include_str!("../../../../examples/stmt_nodes/unsafe/template_strict_policy.lit")),
+        (false, include_str!("../../../../examples/stmt_nodes/definition/strict_axiom_policy.lit")),
     ] {
         let run = runtime(strict).run_litex_code(code).unwrap();
         assert!(run.success && run.session_error.is_none(), "{code}\n{:?}", run.session_error);

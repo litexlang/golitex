@@ -26,6 +26,11 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByObjectDefinition>> {
+        if let Some(proof) = self.try_unfold_both_function_bodies(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByObjectDefinition::ByFnApplication(
+                EqualitySearchProofByFnApplicationObjectDefinition::BothFunctionBodies(proof),
+            )));
+        }
         if let Some(proof) = self.search_object_definition_on_def_side(
             &fact.left,
             &fact.right,

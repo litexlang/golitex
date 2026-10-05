@@ -23,6 +23,18 @@ pub(super) fn object_for(runtime: &Runtime, entries: Vec<(&str, JsonValue)>) -> 
     object(output_language(runtime), entries)
 }
 
+/// Keep the parsed source identity when projecting a complete code run.
+pub(super) fn with_source_statement(
+    mut projected: JsonValue,
+    statement: Option<&String>,
+    lang: OutputLanguage,
+) -> JsonValue {
+    if let (Some(statement), JsonValue::Object(fields)) = (statement, &mut projected) {
+        fields.insert(localize_key("statement", lang), string(statement));
+    }
+    projected
+}
+
 pub(super) fn string(s: impl Into<String>) -> JsonValue {
     JsonValue::String(s.into())
 }

@@ -1,0 +1,16 @@
+# Before: this true universal failed its consequent search.
+# forall x closed_range(1,0):
+#     2=3
+# Now: checked emptiness plus full goal WD permits vacuous truth.
+# Boundary: bare 2=3 and forall x {}: 1/0=0 still reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/forall/empty_parameter_domain.lit
+
+closed_range(1,0)={}
+
+range(0,0)={}
+
+forall x closed_range(1,0):
+    2=3
+
+forall x {}:
+    2=3

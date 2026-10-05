@@ -1,0 +1,22 @@
+# Before: the direct nested comparison missed with only one body unfolded.
+# have fn make_left(x R) fn(y R) Z = fn(y R) Z {0}
+# have fn make_right(x R) fn(y R) R = fn(y R) R {0}
+# make_left(2)(3)=make_right(2)(3)
+# Now: both checked bounded normalizations retain the residual proof.
+# Nested global extensionality proves one application layer at a time.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_object_definition/by_fn_application/both_function_bodies.lit
+
+have fn make_left(x R) fn(y R) Z = fn(y R) Z {0}
+
+have fn make_right(x R) fn(y R) R = fn(y R) R {0}
+
+make_left(2)(3)=make_right(2)(3)
+
+by fn_extension:
+    ? make_left=make_right
+    claim:
+        ? forall x R:
+            make_left(x)=make_right(x)
+        by fn_extension make_left(x)=make_right(x)
+
+make_left=make_right

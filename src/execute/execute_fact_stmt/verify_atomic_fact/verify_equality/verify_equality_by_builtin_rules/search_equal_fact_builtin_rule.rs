@@ -28,6 +28,12 @@ impl Runtime {
         }
         if let Some(proof)=self.search_range_size(fact,verify_state)? { return Ok(Some(proof)); }
         if let Some(proof)=self.search_euclidean_remainder(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::EuclideanRemainder(proof))); }
+        if let Some(proof) = self.search_gcd_common_divisor(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::GcdCommonDivisor(proof)));
+        }
+        if let Some(proof) = self.search_lcm_common_multiple(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::LcmCommonMultiple(proof)));
+        }
         if let Some(proof)=self.search_factorial_divisibility(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::FactorialDivisibility(proof))); }
         if let Some(proof)=self.search_cart_reconstruction(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::CartReconstruction(proof))); }
         if let Some(proof) = self.search_cartesian_size(fact, verify_state.clone())? {

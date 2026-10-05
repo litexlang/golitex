@@ -93,11 +93,12 @@ objects, builtin verification and inference rules, imported assumptions, and
 every explicit `trust` or `axiom` are relevant to the trusted boundary.
 `trust` records an assumption; it is not a proof. A successful Litex check is
 therefore a claim relative to the checker, its builtin rules, and any visible
-trusted inputs. Use `-strict` when a run must reject user `trust` and `trust have`,
-including `trust have` inside templates and trust steps inside local proof
-bodies. Pure `abstract_prop` declarations are allowed: they introduce a
-predicate signature, not a proved instance or a definition body. The current strict gate does not reject
-`axiom` or the named set-theoretic releases; it is not an axiom-free mode.
+trusted inputs. Use `-strict` when a run must reject user `trust`, `trust have`,
+and `axiom`, including template trust-have and assumptions inside local proof
+bodies or imported dependencies. Pure `abstract_prop` declarations are allowed:
+they introduce a predicate signature, not a proved instance or a definition
+body. Named set-theoretic releases remain part of the fixed mathematical
+foundation and are allowed under strict mode.
 
 Lean rechecking is a separate experimental direction. The current `src/lib.rs`
 and `Cargo.toml` do not build a Litex-to-Lean compiler, and the current CLI has
@@ -936,6 +937,24 @@ builtin unfold).
 `fn(...) ReturnSet` is a function set. Adding `{body}` produces an anonymous
 function value. Function calls are ordinary objects, but the argument and all
 domain conditions must be verified.
+
+Membership in `fn(...) ReturnSet` requires the function's complete domain to
+equal the declared input domain, including every domain condition. The return
+set is an upper bound on values. A function on `N+` cannot also belong to
+`fn(k closed_range(1,2)) R` merely because its first two values are real.
+Construct an actual restriction when a smaller domain is needed:
+
+```litex
+have fn z(i1 N+) Z = 0
+have fn z2(k closed_range(1,2)) Z = z(k)
+z2 $in finite_seq(Z,2)
+release thm fn_set_member(z2, finite_seq(R,2))
+```
+
+`seq(S)` has complete domain `N+`; `finite_seq(S,n)` has complete domain
+`closed_range(1,n)`. The same function may belong to several return upper
+bounds while retaining that domain. `finite_seq(S,0)` has empty domain.
+Default membership and `release thm fn_set_member` check the same contract.
 
 Both `have fn f(x S) T = body` and `fn(x S) T {body}` must prove
 `body $in T` under the declared parameter types and domain conditions before
@@ -2140,7 +2159,7 @@ fact or theorem.
 
 > **Preview:** `$fn_eq` and `$fn_eq_in` are removed. Prefer
 > ordinary equality `f = g` for global function equality, proved with
-> `by fn_extension` when the shared `FnSet` carriers are alpha-equivalent and
+> `by fn_extension` when the complete input domains are proved equal and
 > pointwise agreement closes. Local agreement on a set `S` is an ordinary
 > `forall x S: f(x) = g(x)`.
 
@@ -2186,8 +2205,8 @@ have f, g set
 by fn_extension f = g
 ```
 
-This produces `error` when `f` and `g` do not have alpha-equivalent known
-function sets / pointwise evidence.
+This produces `error` when `f` and `g` lack complete-domain evidence or the
+required pointwise equality.
 
 ### User-defined predicates
 
@@ -3042,7 +3061,9 @@ conclusion, and stores all of them with the existing theorem-instantiation
 provenance. It accepts only the bare call: no `=>` selection and no indented
 goal or proof body. For source compatibility, the older bare spelling
 `by thm name(args)` is accepted as a parser alias and is lowered to the same
-`release thm` statement; its canonical output uses `release thm`.
+`release thm` statement; its canonical output uses `release thm`. Write
+`release thm name(args)` in new code whenever the call has no `=>` selection.
+Keep `by thm name(args) => fact` for an explicit atomic selection.
 
 The preview selection form keeps the ordinary theorem application explicit but
 commits only one requested atomic consequence. It requires the inline arrow:
@@ -3354,7 +3375,7 @@ forms share one row, such as the related object-introduction statements.
 | `witness $P(args)` | Every predicate argument has its declared type, and the concrete prop has one positive ordinary `exist` clause; the projected existential uses the same witness checks. `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
 | `witness $is_nonempty_set(S)` | The proposed object is in `S` (optional local proof body). | Nonemptiness of `S`. |
 | `by cases`, `by contra` | Every branch closes the target, or an explicit contradiction is produced. | The requested target only. |
-| Enumeration, induction, `by for`, `by extension`, `by fn_extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. Preview: `by fn_extension` proves `f = g` from pointwise equality on alpha-equivalent FnSet carriers. | The requested universal/equality/atomic target. |
+| Enumeration, induction, `by for`, `by extension`, `by fn_extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. Preview: `by fn_extension` proves `f = g` from pointwise equality on proved-equal complete input domains. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. Preview: qualified `$Mod::export::P` looks up the prop in a finished export Env. | The target with explicit definition provenance. |
 | `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | `release obj def I` | Preview: `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). For `have fn … by exist!`, re-stores membership + property + uniqueness. |
@@ -4177,9 +4198,11 @@ by extension {1} = {1}
 ```
 
 > **Preview:** `by fn_extension` proves ordinary function
-> equality `f = g` when both sides have alpha-equivalent `FnSet` carriers and
-> the reconstructed pointwise forall succeeds (including multi-argument /
-> curried signatures taken from that carrier). It stores `f = g`, not a
+> equality `f = g` when both sides have equal complete input domains and
+> the reconstructed pointwise forall succeeds. Domains may match by binder
+> alpha equality or by checked inclusion in both directions, including guards.
+> Return upper bounds may differ. Each curried application layer proves its
+> own equality; returned functions are not flattened. It stores `f = g`, not a
 > separate `$fn_eq` fact. One-line and block forms mirror `by extension`:
 >
 > ```litex
@@ -4194,8 +4217,7 @@ by extension {1} = {1}
 > ```
 >
 > Local agreement on a proper subset of the domain remains an ordinary
-> `forall`; do not use `by fn_extension` for that. Mutual function-space
-> membership without alpha-equivalent carriers is not yet supported.
+> `forall`; global extensionality still requires equal complete domains.
 
 Use the block extension form when its proof needs additional statements:
 
@@ -4773,7 +4795,7 @@ aggregate, and remainder rows.
 | Division | From `a/b=c` and `b!=0`, Litex proves `a=c*b`. From `a=b*c` and `b!=0`, it proves `a/b=c`. The displayed multiplier and divisor positions must match; the rule does not silently commute a product first. |
 | Absolute value and square root | A known sign selects `abs(x)=x` or `abs(x)=(-x)`; `abs(x)=0` gives `x=0`; even powers may replace a real base by its absolute value. Square-root rules include the principal-root square, special values, product/quotient laws under their domains, and `sqrt(a^2)=a` when `a>=0`. |
 | Powers and logarithms | Zero/one, exponent addition, iterated power, product power, negative exponent, roots, and inverse logarithm/power shapes are supported only in the carrier branches listed below. |
-| Remainder and divisibility | Special residues, Euclidean-remainder uniqueness, compatible nested moduli, and congruence under matching `+`, `-`, and `*` operands. `gcd(a,b)` divides both inputs, and `(a*b)%a=(a*b)%b=0` when the objects are well-defined. |
+| Remainder and divisibility | Special residues, Euclidean-remainder uniqueness, compatible nested moduli, and congruence under matching `+`, `-`, and `*` operands. `gcd(a,b)` divides both inputs. A positive common divisor `d` divides `gcd(a,b)`; `lcm(a,b)` for positive integer inputs divides every integer common multiple. `(a*b)%a=(a*b)%b=0` when the objects are well-defined. |
 | Set and cardinality objects | Union/intersection/difference algebra, intersection reduction from a known subset, cardinality of differences, unions and power sets, concrete product cardinality by expansion, and empty-set equality from emptiness or zero finite cardinality. The general symbolic Cartesian-product cardinality formula remains a migration gap. |
 | Tuples and Cartesian products | Tuple reconstruction from Cartesian membership; tuple/cart equality from equal dimensions and projections; canonical `index_cart` expansion. |
 | Functions and materialized definitions | Application equations, alpha-equivalent anonymous functions, `by fn_extension` / pointwise forall, same-signature function-set equality, and equality of materialized template or struct values when their resolved objects agree. |
@@ -4999,7 +5021,7 @@ forall a, b R+:
 > `power_set({})`/`power_set({a})`; `family_union({})`; empty-factor `cart`;
 > union-over-intersect; set_minus chain; constant `fn_range` (literal
 > anonymous ok); `seq(S)=fn(x N+) S` and
-> `finite_seq(S,n)=fn(x N+: x <= n) S` (indices 1 through n; length 0 has empty domain).
+> `finite_seq(S,n)=fn(x closed_range(1,n)) S` (indices 1 through n; length 0 has empty domain).
 > Equality identities wave 14 / Obj P0–P2 (preview): WD fixes so basic
 > `ln(e)`, `tan(0)`, Pythagorean, `sum`/`product` Add/Mul, anonymous
 > `fn_range`, `finite_seq` finiteness, and reduce-single no longer need
@@ -5194,6 +5216,13 @@ forall a, b, c R:
 This soft-fails because multiplication reverses or collapses order when the
 sign of `c` is not known.
 
+The [gcd universal divisor](../examples/proof_nodes/equal/by_builtin_rule/gcd_common_divisor.lit)
+and [lcm universal multiple](../examples/proof_nodes/equal/by_builtin_rule/lcm_common_multiple.lit)
+examples use ordinary remainder facts. The
+[factorial/product theorem](../examples/proof_nodes/equal/by_builtin_rule/factorial_product_relation.lit)
+uses existing induction, factorial successor and product endpoint rules on `N+`;
+it adds no primitive factorial-product identity and no empty-range convention.
+
 ### Trigonometric rules
 
 The symbolic trigonometric interface recognizes the following exact families:
@@ -5207,8 +5236,8 @@ The symbolic trigonometric interface recognizes the following exact families:
 | Principal inverse cotangent | `arccot(x)` is total on `R`, returns a value in `(0,pi)`, and satisfies `cot(arccot(x))=x`. Conversely, `arccot(cot(y))=y` requires `y` in `(0,pi)`. |
 | Exact special values | Rational `pi` coefficients at sixths, quarters, thirds and halves; checked symbolic integer periods and a separate sine/cosine nonzero certificate for tangent/cotangent WD. Sine integer zeros and cosine half-integer zeros require only integer multiples of `pi`; nonzero signed sine/cosine values require multiples of `2*pi`. |
 | Symmetry and angles | Odd/even parity, double-angle and cofunction formulas, supported integral and half-integral multiples of `pi`, shifts by `pi` and `pi/2`, and period `2*pi` for sine/cosine or `pi` for tangent/cotangent when defined. |
-| Bounds and signs | `(-1) <= sin(x), cos(x) <= 1`, `3 < pi < 4`, and the standard sign intervals for sine, cosine, tangent, and cotangent. Open-domain bounds remain necessary for tangent and cotangent. |
-| Local order | Sine is monotone on `[(-pi)/2, pi/2]`, cosine on `[0, pi]`, tangent on `((-pi)/2, pi/2)`, and cotangent in the reverse direction on `(0, pi)`. |
+| Bounds and signs | `(-1) <= sin(x), cos(x) <= 1`, `3 < pi < 4`, and `0<x<pi => 0<sin(x)`. The sine endpoints are excluded. Other interval-sign shortcuts remain scoped migration candidates; tangent and cotangent require their nonzero denominators. |
+| Local order | `-pi/2<=a<b<=pi/2 => sin(a)<sin(b)`, including the sine interval endpoints. Other sine/cosine/tangent/cotangent weak or strict order shortcuts remain scoped migration candidates. |
 
 These are exact symbolic rules, not numerical approximation. Unlisted special
 angles, complex trigonometry, continuity, and analytic definitions need
@@ -5249,7 +5278,7 @@ logarithms, and even-power absolute-value rules remain real-only.
 |---|---|
 | Power identities | `a^0=1`, `a^1=a`, `1^x=1`, and `0^x=0` for positive `x`; `a^(m+n)=a^m*a^n`; `(a^m)^n=a^(m*n)`; `(a*b)^x=a^x*b^x`; `a^(-n)=1/a^n` for nonzero `a` and positive-natural `n`. The exponent-addition, iterated-power, and product-power laws use the carrier branches stated above. |
 | Roots and inverse powers | `(sqrt(x))^2=x` for `x>=0`; `sqrt(a^2)=a` for `a>=0`; product and quotient roots require nonnegative inputs and a positive denominator. `x^(1/n)=z` is recognized from `x=z^n`, `n in N+`, and `z>=0`; equal nonzero integer powers of positive bases can recover equality of the bases. |
-| Logarithms | With valid positive arguments and a positive base unequal to one: `log(a,1)=0`, `log(a,a)=1`, product, quotient, reciprocal, and power laws; `log(a,a^b)=b`; `a^c=b` and `log(a,b)=c` are inverse shapes; change of base and powered-base formulas are supported when their denominators are well-defined. |
+| Logarithms | With valid positive arguments and a positive base unequal to one: `log(a,1)=0`, `log(a,a)=1`, product, quotient, reciprocal, and power laws; `log(a,a^b)=b`; `a^c=b` and `log(a,b)=c` are inverse shapes; change of base accepts any two positive nonunit real bases, including `(0,1)`, and obtains the nonzero logarithm denominator from the nonunit argument. The powered-base formula retains the supported power domains and a nonzero real exponent; positive nonunit bases with nonzero integer exponents supply the powered-base nonunit guard directly. |
 | Integer-range `sum`/`product` | Singleton ranges, last-term recurrence, adjacent partition, constants and pointwise congruence; sums also support addition/subtraction and scalar laws. Both support integer shift-reindexing. Bounds are closed integer endpoints with start <= end; source and target legality must be proved. Pointwise facts are required on the consumed range. Empty finite-set aggregates use their separate interface. |
 | `finite_set_sum` | Empty/displayed/closed-range expansion, constant and pointwise congruence, insertion or disjoint union, pointwise addition, scalar distribution, Cartesian double-sum/Fubini, unique-cover substitution, and bijective re-enumeration. |
 | `finite_set_product` | Empty/displayed/closed-range expansion, insert/remove, constant and pointwise congruence, pointwise multiplication, and bijective substitution. |
@@ -5387,7 +5416,7 @@ reduces to compatible function interfaces and pointwise equality.
 | Interface | Definition or derived builtin consequence |
 |---|---|
 | `A $subset B` / `B $superset A` | Dual spellings of the same inclusion. Reflexivity, structural constructor containment, one-edge membership lifting, and subset chains are supported. Componentwise Cartesian inclusions, integer range into its numeric carrier, real interval into `R`, `fn_range(f)` into its codomain, and union containment from both operands have dedicated shapes. Proper relations unfold to ordinary inclusion plus inequality. Preview: `not A $subset B` from known `not B $superset A`, and `not A $superset B` from known `not B $subset A`; binary `union(A,B) $subset union(C,D)` from componentwise subsets; `range` / `closed_range` into `N`/`N+` when the start inhabits that carrier (and into any standard set above `Z` with no extra premise). |
-| `by fn_extension: f = g` | Function extensionality to ordinary `f = g` when FnSet carriers are alpha-equivalent (preview). Local agreement remains a bare `forall`. |
+| `by fn_extension: f = g` | Function extensionality to ordinary `f = g` when complete input domains are proved equal (preview). Local agreement remains a bare `forall`. |
 | `$injective(A,B,f)` | Definition route: members of `A` with equal images are equal. For finite `A`, injectivity gives `finite_set_size(fn_range(f)) = finite_set_size(A)`. |
 | `$surjective(A,B,f)` | Definition route: each member of `B` has a preimage in `A`. A finite source makes the codomain finite and gives `finite_set_size(B) <= finite_set_size(A)`. |
 | `$bijective(A,B,f)` | Definition route combines injectivity and surjectivity. A stored certificate and `y $in B` prove `exist! x A st {f(x)=y}`. For finite source and target, it preserves cardinality; it also enables finite aggregate reindexing. |
@@ -5849,19 +5878,18 @@ inventory that can drift out of sync.
 |---|---|---|
 | Checked source statement | Verified | Verified |
 | `trust`, `trust have` | Explicit assumptions | Rejected when executed |
-| `abstract_prop` | Uninterpreted predicate interface | Rejected when executed |
-| `axiom` | Interface checked; truth assumed | Still accepted |
+| `abstract_prop` | Uninterpreted predicate interface | Allowed; no instance is proved |
+| `axiom` | Interface checked; truth assumed | Rejected when executed |
 | Named set-theoretic releases | Obligations checked; foundation assumed | Still accepted |
-| Imports | Cold execution or an import knowledge-base cache hit | The same cache path; not a fresh audit guarantee |
+| Imports | Cold execution or an import knowledge-base cache hit | Source exports are re-executed with the strict policy; cache hits are bypassed |
 
 The strict check lives in `src/execute/exec_stmt.rs`, including inspection of
 a template's `trust have` body. Nested proof statements use the same entry.
-It blocks the three
-source forms above when they execute; it does not certify absence of all
-assumptions. In particular, `src/run_module/import_kb.rs` may reuse imported
-environments, and its fingerprint does not include strictness. Earlier root
-exports are executed in project order. Review axioms, imported dependencies,
-cache provenance, and builtin rules separately.
+It rejects executed `trust`, `trust have`, and user `axiom` before their facts
+or definitions are stored. Strict imports bypass cached environments in
+`src/run_module/import_kb.rs` and re-execute dependency sources under the same
+policy. Earlier root exports are executed in project order. The checker,
+builtin rules and named foundation releases remain part of the trusted basis.
 
 ### Documentation and test contract
 

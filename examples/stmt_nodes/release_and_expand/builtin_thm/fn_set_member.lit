@@ -1,6 +1,37 @@
 # Before: named builtin was not found.
 # release thm fn_set_member(fn(x R) R {x}, fn(y R) R)
-# Now: native builtin contract; verify premises before storing conclusions.
-# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_set_member.lit
+# The old verifier also wrongly accepted the short-domain release below:
+# have fn wide(i1 N+) R = 0
+# release thm fn_set_member(wide, finite_seq(R,2))
+# Now: exact complete domain precedes pointwise return checks.
+# Gate: target/release/litex -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_set_member.lit
+
 release thm fn_set_member(fn(x R) R {x}, fn(y R) R)
-# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.
+
+have fn wide(i1 N+) R = 0
+
+wide $in seq(R)
+
+have fn restricted(k closed_range(1,2)) R = wide(k)
+
+release thm fn_set_member(restricted, finite_seq(R,2))
+
+restricted $in fn(j closed_range(1,2)) R
+
+have fn narrow(k closed_range(1,2)) Z = 0
+
+release thm fn_set_member(narrow, finite_seq(Z,2))
+
+release thm fn_set_member(narrow, finite_seq(R,2))
+
+have F set = fn(k closed_range(1,2)) R
+
+have named F = narrow
+
+named(1)=0
+
+have fn empty_fn(x {}) R = 0
+
+release thm fn_set_member(empty_fn, finite_seq(R,0))
+
+finite_seq(R,0)=fn(k closed_range(1,0)) R

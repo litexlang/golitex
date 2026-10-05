@@ -25,7 +25,13 @@ litex -extractc -r project
 ```
 
 File extraction (`-f`) requires `# [-extract]` / `# [end of -extract]` marker
-pairs. Inline (`-e`) and repository (`-r`) use whole-input semantics.
+pairs. Inline source and repository (`-r`) use whole-input semantics.
+
+The CLI emits one artifact JSON document. Success and failure retain `format`
+(`python` / `c`), `target` (`eval` / `file` / `repository`), `path`,
+`output_path`, and `language`. Success has string `content` and null `error`;
+failure has null `content` and an `extraction_error` payload. `-lang` localizes
+artifact keys on both paths. Example: `litex -lang zh -extractpython 'have a R = 1'`.
 
 ## Layout
 

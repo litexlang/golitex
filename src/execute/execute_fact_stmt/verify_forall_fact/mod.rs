@@ -7,6 +7,7 @@ pub use result::{
     AssumeDomFactResult, ProveAndStoreThenFactResult,
     VerifyForallFactFailed, VerifyForallFactResult,
     VerifyForallFactProof, VerifyKnownForallFactProof, ForallParameterRenaming,
+    VerifyEmptyParameterDomainForallProof,
 };
 pub use well_defined_result::{
     FailToVerifyForallFactWellDefinedResult, ForallFactWellDefinedProof,

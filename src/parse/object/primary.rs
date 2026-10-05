@@ -1,6 +1,6 @@
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
-    Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, ArithmeticOperator, Cart, CartDim, Ceil,
+    Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, ArithmeticOperator, Cart, Ceil,
     ClosedRange, ComplexAbs, ComplexOperator, Cos, Cot, EulerNumber, Exp, ExpLogOperator,
     Factorial, FamilyIntersect, FamilyUnion, FiniteSeqSet, FiniteSetMax, FiniteSetMin,
     FiniteSetReduce, FiniteSetSize, FiniteSetStat, Floor, FnObjHead, FnRange, FnSet, FunctionSpace,
@@ -642,9 +642,7 @@ fn try_parse_keyword_primary(
                 args: args.into_iter().map(Box::new).collect(),
             }))))
         }
-        CART_DIM => Ok(Some(parse_unary_keyword(rt, tb, CART_DIM, |set| {
-            Obj::ProductShape(ProductShape::CartDim(CartDim { set: Box::new(set) }))
-        })?)),
+        CART_DIM => Err(tb.parse_error("cart_dim is removed: a Cartesian set has no unique construction dimension")),
         TUPLE_DIM => Ok(Some(parse_unary_keyword(rt, tb, TUPLE_DIM, |arg| {
             Obj::ProductShape(ProductShape::TupleDim(TupleDim { arg: Box::new(arg) }))
         })?)),

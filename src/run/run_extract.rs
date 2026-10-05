@@ -3,16 +3,13 @@ use crate::extract_executable_code::{
     to_python_from_repository, to_python_from_source,
 };
 use crate::knowledge_base::JsonValue;
-use crate::launch_command::{CodeExtractionTarget, ExtractInput, LaunchCommand};
+use crate::launch_command::{CodeExtractionTarget, ExtractInput, LaunchCommand, OutputLanguage};
 use crate::run::run_command_outcome::ExtractResult;
 use crate::runtime::{RuntimeError, RuntimeResult};
 
 /// `-extractpython` / `-extractc`: verify then emit extracted code artifact JSON.
 pub fn run_extract(command: LaunchCommand) -> RuntimeResult<ExtractResult> {
-    let LaunchCommand::Extract {
-        target, input, ..
-    } = &command
-    else {
+    let LaunchCommand::Extract { target, input, .. } = &command else {
         panic!("run_extract expects LaunchCommand::Extract");
     };
 
@@ -42,58 +39,81 @@ pub fn run_extract(command: LaunchCommand) -> RuntimeResult<ExtractResult> {
         }
     };
 
-    let json = render_extracted_artifact(target.format_name(), exec_target, path.as_deref(), &content);
+    let json = render_extracted_artifact(
+        Some(target.format_name()),
+        Some(exec_target),
+        path.as_deref(),
+        command.output_language(),
+        Some(&content),
+        None,
+    );
     Ok(ExtractResult::new(json, true))
 }
 
 fn render_extracted_artifact(
-    format: &str,
-    target: &str,
+    format: Option<&str>,
+    target: Option<&str>,
     path: Option<&str>,
-    content: &str,
+    language: OutputLanguage,
+    content: Option<&str>,
+    error: Option<&RuntimeError>,
 ) -> String {
-    let path_value = match path {
-        Some(p) => JsonValue::String(p.to_string()),
-        None => JsonValue::Null,
+    let key = |name| crate::json_output::json_keys::localize_key(name, language);
+    let optional_string = |value: Option<&str>| {
+        value
+            .map(|s| JsonValue::String(s.to_string()))
+            .unwrap_or(JsonValue::Null)
     };
+    let error_value = error
+        .map(|error| {
+            JsonValue::object_from(vec![
+                (key("kind"), JsonValue::String("extraction_error".into())),
+                (
+                    key("message"),
+                    JsonValue::String(format_runtime_error(error)),
+                ),
+            ])
+        })
+        .unwrap_or(JsonValue::Null);
     JsonValue::object_from(vec![
-        ("kind".into(), JsonValue::String("artifact".into())),
-        ("success".into(), JsonValue::Bool(true)),
-        (
-            "artifact".into(),
-            JsonValue::String("extracted_code".into()),
-        ),
-        ("format".into(), JsonValue::String(format.to_string())),
-        ("target".into(), JsonValue::String(target.to_string())),
-        ("path".into(), path_value),
-        ("output_path".into(), JsonValue::Null),
-        ("content".into(), JsonValue::String(content.to_string())),
-        ("error".into(), JsonValue::Null),
+        (key("kind"), JsonValue::String("artifact".into())),
+        (key("success"), JsonValue::Bool(error.is_none())),
+        (key("artifact"), JsonValue::String("extracted_code".into())),
+        (key("format"), optional_string(format)),
+        (key("target"), optional_string(target)),
+        (key("path"), optional_string(path)),
+        (key("output_path"), JsonValue::Null),
+        (key("language"), JsonValue::String(language.as_str().into())),
+        (key("content"), optional_string(content)),
+        (key("error"), error_value),
     ])
     .stringify_pretty()
 }
 
 pub fn extract_launch_error_json(error: &RuntimeError) -> String {
-    JsonValue::object_from(vec![
-        ("kind".into(), JsonValue::String("artifact".into())),
-        ("success".into(), JsonValue::Bool(false)),
-        (
-            "artifact".into(),
-            JsonValue::String("extracted_code".into()),
-        ),
-        ("content".into(), JsonValue::Null),
-        (
-            "error".into(),
-            JsonValue::object_from(vec![
-                ("kind".into(), JsonValue::String("extraction_error".into())),
-                (
-                    "message".into(),
-                    JsonValue::String(format_runtime_error(error)),
-                ),
-            ]),
-        ),
-    ])
-    .stringify_pretty()
+    render_extracted_artifact(None, None, None, OutputLanguage::English, None, Some(error))
+}
+
+/// Retain the selected extraction command even when input loading fails.
+pub fn extract_command_error_json(
+    target: &CodeExtractionTarget,
+    input: &ExtractInput,
+    language: OutputLanguage,
+    error: &RuntimeError,
+) -> String {
+    let (exec_target, path) = match input {
+        ExtractInput::Code(_) => ("eval", None),
+        ExtractInput::File(path) => ("file", Some(path.to_string_lossy().into_owned())),
+        ExtractInput::Repository(path) => ("repository", Some(path.to_string_lossy().into_owned())),
+    };
+    render_extracted_artifact(
+        Some(target.format_name()),
+        Some(exec_target),
+        path.as_deref(),
+        language,
+        None,
+        Some(error),
+    )
 }
 
 fn format_runtime_error(error: &RuntimeError) -> String {

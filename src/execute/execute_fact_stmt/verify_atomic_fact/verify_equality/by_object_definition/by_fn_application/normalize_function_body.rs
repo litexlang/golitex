@@ -33,6 +33,7 @@ pub enum FunctionBodySourceProof {
     Template {
         instance: Obj,
         instantiated_function: AnonymousFn,
+        function_equal: KnownEqualityPathProof,
     },
 }
 
@@ -247,51 +248,35 @@ impl Runtime {
             FnObjHead::AnonymousFnLiteral(v) => {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(v.as_ref().clone()))
             }
-            FnObjHead::FieldAccess(_) => return Ok(Vec::new()),
-            FnObjHead::InstantiatedTemplateObj(inst) => {
-                let Some(def) = self.def_template_visible(&inst.template_name) else {
-                    return Ok(Vec::new());
-                };
-                let TemplateDefEnum::HaveFnEqualStmt(have_fn) = &def.template_def_stmt else {
-                    return Ok(Vec::new());
-                };
-                let ids = def.template_arg_def.ordered_param_ids();
-                if ids.len() != inst.args.len() {
-                    return Ok(Vec::new());
-                }
-                let subst = ids.into_iter().zip(inst.args.iter().cloned()).collect();
-                let literal = Obj::FunctionSpace(FunctionSpace::AnonymousFn(
-                    have_fn.equal_to_anonymous_fn.clone(),
-                ));
-                let Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon))) =
-                    self.inst_obj(&literal, &subst)
-                else {
-                    return Ok(Vec::new());
-                };
-                return Ok(vec![(
-                    anon.clone(),
-                    FunctionBodySourceProof::Template {
-                        instance: Obj::InstantiatedTemplateObj(inst.clone()),
-                        instantiated_function: anon,
-                    },
-                )]);
-            }
+            FnObjHead::FieldAccess(v) => Obj::StructAndFieldAccessObj(crate::ast::obj::StructAndFieldAccessObj::FieldAccess(v.clone())),
+            FnObjHead::InstantiatedTemplateObj(inst) => Obj::InstantiatedTemplateObj(inst.clone()),
         };
-        Ok(equivalence_class_members_with_paths_in_adjacency(
+        let mut candidates = Vec::new();
+        for (candidate, path) in equivalence_class_members_with_paths_in_adjacency(
             &self.visible_equivalence_class_adjacency(),
             &head,
-        )
-        .into_iter()
-        .filter_map(|(candidate, path)| {
-            let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = candidate else {
-                return None;
-            };
-            Some((
-                anon,
-                FunctionBodySourceProof::KnownEquality(KnownEqualityPathProof::new(path)),
-            ))
-        })
-        .collect())
+        ) {
+            match candidate {
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => candidates.push((
+                    anon, FunctionBodySourceProof::KnownEquality(KnownEqualityPathProof::new(path)),
+                )),
+                Obj::InstantiatedTemplateObj(instance) => {
+                    let Some(def) = self.def_template_visible(&instance.template_name).cloned() else { continue; };
+                    let TemplateDefEnum::HaveFnEqualStmt(have_fn) = &def.template_def_stmt else { continue; };
+                    let ids = def.template_arg_def.ordered_param_ids();
+                    if ids.len() != instance.args.len() { continue; }
+                    let subst = ids.into_iter().zip(instance.args.iter().cloned()).collect();
+                    let literal = Obj::FunctionSpace(FunctionSpace::AnonymousFn(have_fn.equal_to_anonymous_fn.clone()));
+                    let Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon))) = self.inst_obj(&literal, &subst) else { continue; };
+                    candidates.push((anon.clone(), FunctionBodySourceProof::Template {
+                        instance: Obj::InstantiatedTemplateObj(instance), instantiated_function: anon,
+                        function_equal: KnownEqualityPathProof::new(path),
+                    }));
+                }
+                _ => {}
+            }
+        }
+        Ok(candidates)
     }
 }
 

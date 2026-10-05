@@ -1,0 +1,15 @@
+# Former strict-session failure (same source; no trust):
+# forall b,x R+,n N+:
+#     b!=1
+#     =>:
+#         log(b^n,x)=log(b,x)/n
+
+forall b,x R+,n N+:
+    b!=1
+    =>:
+        log(b^n,x)=log(b,x)/n
+
+forall b,x R+,n Z*:
+    b<1
+    =>:
+        log(b^n,x)=log(b,x)/n

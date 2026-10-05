@@ -25,7 +25,7 @@ thm dot_add_left:
         dot((u[1] + v[1], u[2] + v[2]), w) = dot(u, w) + dot(v, w)
     (u[1]+v[1],u[2]+v[2])[1] = u[1]+v[1]
     (u[1]+v[1],u[2]+v[2])[2] = u[2]+v[2]
-    by thm dot_coordinate_formula((u[1]+v[1],u[2]+v[2]),w)
+    release thm dot_coordinate_formula((u[1]+v[1],u[2]+v[2]),w)
     dot(u,w) = u[1]*w[1]+u[2]*w[2]
     dot(v,w) = v[1]*w[1]+v[2]*w[2]
     dot((u[1]+v[1],u[2]+v[2]),w) = (u[1]+v[1])*w[1]+(u[2]+v[2])*w[2] = (u[1]*w[1]+u[2]*w[2])+(v[1]*w[1]+v[2]*w[2]) = dot(u,w)+dot(v,w)
@@ -35,7 +35,7 @@ thm dot_add_right:
         dot(u, (v[1] + w[1], v[2] + w[2])) = dot(u, v) + dot(u, w)
     (v[1]+w[1],v[2]+w[2])[1] = v[1]+w[1]
     (v[1]+w[1],v[2]+w[2])[2] = v[2]+w[2]
-    by thm dot_coordinate_formula(u,(v[1]+w[1],v[2]+w[2]))
+    release thm dot_coordinate_formula(u,(v[1]+w[1],v[2]+w[2]))
     dot(u,v) = u[1]*v[1]+u[2]*v[2]
     dot(u,w) = u[1]*w[1]+u[2]*w[2]
     dot(u,(v[1]+w[1],v[2]+w[2])) = u[1]*(v[1]+w[1])+u[2]*(v[2]+w[2]) = (u[1]*v[1]+u[2]*v[2])+(u[1]*w[1]+u[2]*w[2]) = dot(u,v)+dot(u,w)
@@ -64,10 +64,10 @@ thm dot_bilinear_expand:
         dot((v[1] - u[1], v[2] - u[2]), (v[1] - u[1], v[2] - u[2])) = dot(v, v) - 2 * dot(u, v) + dot(u, u)
     (v[1]-u[1],v[2]-u[2])[1] = v[1]-u[1]
     (v[1]-u[1],v[2]-u[2])[2] = v[2]-u[2]
-    by thm dot_coordinate_formula((v[1]-u[1],v[2]-u[2]),(v[1]-u[1],v[2]-u[2]))
-    by thm dot_coordinate_formula(v,v)
-    by thm dot_coordinate_formula(u,u)
-    by thm dot_coordinate_formula(u,v)
+    release thm dot_coordinate_formula((v[1]-u[1],v[2]-u[2]),(v[1]-u[1],v[2]-u[2]))
+    release thm dot_coordinate_formula(v,v)
+    release thm dot_coordinate_formula(u,u)
+    release thm dot_coordinate_formula(u,v)
     2*dot(u,v) = 2*(u[1]*v[1]+u[2]*v[2])
     dot(v,v)-2*dot(u,v) = (v[1]*v[1]+v[2]*v[2])-2*(u[1]*v[1]+u[2]*v[2])
     dot((v[1]-u[1],v[2]-u[2]),(v[1]-u[1],v[2]-u[2])) = (v[1]-u[1])*(v[1]-u[1])+(v[2]-u[2])*(v[2]-u[2]) = (v[1]*v[1]+v[2]*v[2])-2*(u[1]*v[1]+u[2]*v[2])+(u[1]*u[1]+u[2]*u[2]) = dot(v,v)-2*dot(u,v)+dot(u,u)

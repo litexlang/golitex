@@ -1,7 +1,7 @@
 use crate::execute::ExecStmtResult;
 use crate::runtime::RuntimeError;
-use std::path::PathBuf;
 use std::fmt;
+use std::path::PathBuf;
 
 /// CLI command outcome. Run* carry payloads for later JSON; Help/Version/Repl are meta.
 pub enum RunCommandOutcome {
@@ -17,7 +17,7 @@ pub enum RunCommandOutcome {
 
 /// Session-stopping failure.
 /// Soft stmt Failed stays in `statement_results` / `failed_statement_results`.
-/// JSON maps Failed → `"error"` (presentation only; Rust stays Failed, not Error).
+/// JSON exposes a failed statement with `success: false` and failure details.
 /// Top-level / hard stop is SessionError → `"session_error"`.
 /// `FailToImport`: mount / import / export soft-fail while loading a project (`-r` / `-f` / `-e` / REPL).
 #[derive(Clone, Debug)]
@@ -29,8 +29,8 @@ pub enum RunSessionError {
 impl fmt::Display for RunSessionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Runtime(error @ RuntimeError::InternalBug(_)) => write!(f, "{error}"),
-            other => write!(f, "{other:?}"),
+            Self::Runtime(error) => write!(f, "{error}"),
+            Self::FailToImport => write!(f, "failed to import project"),
         }
     }
 }
@@ -39,6 +39,9 @@ impl fmt::Display for RunSessionError {
 pub struct RunLitexCodeResult {
     pub success: bool,
     pub statement_results: Vec<ExecStmtResult>,
+    /// Parsed source rendered before execution, aligned with statement_results.
+    /// Empty for manually assembled result trees without source context.
+    pub statement_texts: Vec<String>,
     /// Indices into `statement_results` of soft-Failed stmts.
     /// `None` when there is no soft Failed (JSON: null). `ExecStmtResult` is not
     /// Clone yet, so Rust stores indices; JSON can expand them to objects.
@@ -107,6 +110,7 @@ impl RunLitexCodeResult {
         Self {
             success,
             statement_results,
+            statement_texts: Vec::new(),
             failed_statement_results,
             session_error,
             normal_json: None,
@@ -127,6 +131,40 @@ impl RunLitexCodeResult {
         self.normal_json = Some(crate::json_output::emit_run_normal(
             self, runtime, target, path,
         ));
+    }
+
+    /// Preserve the batch's already-rendered citations after a REPL abort has
+    /// discarded the live environment. Only the run envelope changes.
+    pub fn attach_session_error(
+        &mut self,
+        runtime: &crate::runtime::Runtime,
+        target: &str,
+        path: Option<&std::path::Path>,
+        error: RunSessionError,
+    ) {
+        let message = error.to_string();
+        self.success = false;
+        self.session_error = Some(error);
+        if let Some(crate::knowledge_base::JsonValue::Object(mut fields)) = self
+            .normal_json
+            .as_deref()
+            .and_then(|json| crate::knowledge_base::JsonValue::parse(json).ok())
+        {
+            let language = runtime.launch_command.output_language();
+            let key = |name| crate::json_output::json_keys::localize_key(name, language);
+            fields.insert(
+                key("success"),
+                crate::knowledge_base::JsonValue::Bool(false),
+            );
+            fields.insert(
+                key("session_error"),
+                crate::knowledge_base::JsonValue::String(message),
+            );
+            self.normal_json =
+                Some(crate::knowledge_base::JsonValue::Object(fields).stringify_pretty());
+        } else {
+            self.attach_normal_json(runtime, target, path);
+        }
     }
 }
 
@@ -160,6 +198,7 @@ impl RunRepoResult {
         let run = RunLitexCodeResult {
             success,
             statement_results: Vec::new(),
+            statement_texts: Vec::new(),
             failed_statement_results: None,
             session_error,
             normal_json: None,

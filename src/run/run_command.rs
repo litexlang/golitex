@@ -1,3 +1,4 @@
+use super::output::write_stdout;
 use super::run_command_outcome::{HelpResult, RunCommandOutcome, VersionResult};
 use super::{run_eval, run_extract, run_repl};
 use crate::launch_command::LaunchCommand;
@@ -10,11 +11,11 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn run_command(command: LaunchCommand) -> RuntimeResult<RunCommandOutcome> {
     match command {
         LaunchCommand::Help { .. } => {
-            let entries = print_help_message();
+            let entries = print_help_message()?;
             Ok(RunCommandOutcome::Help(HelpResult::new(entries)))
         }
         LaunchCommand::Version { .. } => {
-            println!("{} {}", LITEX, VERSION);
+            write_stdout(format_args!("{} {}\n", LITEX, VERSION))?;
             Ok(RunCommandOutcome::Version(VersionResult::new(VERSION)))
         }
         command @ LaunchCommand::Repl { .. } => {
@@ -40,38 +41,41 @@ pub fn run_command(command: LaunchCommand) -> RuntimeResult<RunCommandOutcome> {
     }
 }
 
-fn print_help_message() -> Vec<String> {
+fn print_help_message() -> RuntimeResult<Vec<String>> {
     let bin = LITEX.to_ascii_lowercase();
-    let entries = vec![
-        format!("{}", LITEX),
+    let usage = vec![
         format!("{}", bin),
         format!("{} -e <code>", bin),
         format!("{} -f <file>", bin),
         format!("{} -r <repository>", bin),
         format!("{} -extractpython <code>", bin),
         format!("{} -extractpython -f <file>", bin),
+        format!("{} -extractpython -r <repository>", bin),
         format!("{} -extractc <code>", bin),
         format!("{} -extractc -f <file>", bin),
+        format!("{} -extractc -r <repository>", bin),
         format!("{} -lang zh -e <code>", bin),
         format!("{} -strict -e <code>", bin),
         format!("{} -f <file> -session", bin),
         format!("{} -help", bin),
         format!("{} -version", bin),
+    ];
+    let notes = vec![
         "-session keeps the Runtime env open and continues as REPL after -e/-f/-r.".to_string(),
-        "-strict forbids `trust` / `trust have`; abstract predicate declarations are allowed.".to_string(),
-        "-lang en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi selects JSON / status output language (default en; English language names also accepted).".to_string(),
+        "-strict forbids `trust` / `trust have` / user `axiom`; abstract predicate declarations and named foundation releases are allowed.".to_string(),
+        "-lang en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi selects JSON output language (default en; English language names also accepted).".to_string(),
         "-extractpython / -extractc emit verified numeric/algo fragments as Python or C.".to_string(),
     ];
-    println!("{}", entries[0]);
-    println!();
-    println!("Usage:");
-    for entry in &entries[1..14] {
-        println!("  {}", entry);
+    write_stdout(format_args!("{}\n\nUsage:\n", LITEX))?;
+    for entry in &usage {
+        write_stdout(format_args!("  {}\n", entry))?;
     }
-    println!();
-    println!("{}", entries[14]);
-    println!("{}", entries[15]);
-    println!("{}", entries[16]);
-    println!("{}", entries[17]);
-    entries
+    write_stdout(format_args!("\n"))?;
+    for note in &notes {
+        write_stdout(format_args!("{}\n", note))?;
+    }
+    let mut entries = vec![LITEX.to_string()];
+    entries.extend(usage);
+    entries.extend(notes);
+    Ok(entries)
 }
