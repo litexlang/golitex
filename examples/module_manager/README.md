@@ -55,18 +55,24 @@ Unlisted `notes/` and `unlisted_sidecar.lit` remain in place; they never become
 exports merely because they exist beside the config. An explicit extra-file
 launch and an exported namespace are different operations.
 
-## Remaining qualified-use findings
+## Qualified definition publication
 
-The migrated configs parse, but these unchanged positive sources still fail
-at later boundaries:
+The arithmetic consumer explicitly publishes imported object definitions before
+using their scalar types, tuple coordinates and cart dimension:
 
 ```litex
-gf::main::a + gf::main::a = gf::main2::b  # compound qualified-object WD
+release obj def gf::main::a
+release obj def gf::main2::b
+release obj def gf::main::pair
+release obj def gf::main2::pair
+release obj def gf::main::ProductSet
+gf::main::a + gf::main::a = gf::main2::b
 ```
 
-Keep the assertions and their configured dependency owner. Its direct gate is
+The original assertions and configured dependency owner are preserved. The
+strict configured `-r` gate now passes; the file gate is
 `-strict -f examples/module_manager/import_alias_qualified_arithmetic/main.lit`.
-Config migration alone does not establish these capabilities.
+The release steps are checked authoring, not a module lookup or cache change.
 
 [`eval_mount_failure/check.py`](eval_mount_failure/check.py) checks that failed
 cwd mounts emit a structured `FailToImport` result without executing requested

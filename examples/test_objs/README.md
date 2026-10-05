@@ -144,3 +144,11 @@ A rejected mathematically correct direct assertion can be a missing proof route
 or an authoring limitation. The todo distinguishes those observations from
 confirmed violations of well-definedness contracts. This finite regression
 corpus cannot prove the absence of all object bugs.
+
+
+P200 in `floor`, `ceil`, `tan`, `cot`, `gcd`, `finite_set_max` and
+`finite_set_min` covers their defining bounds, guarded quotients, Euclidean
+recursion and member bounds. Each case keeps its discarded sketch scope.
+The [definition-rule acceptance record](../proof_nodes/experience/problem_notes/obj-definition-builtin-rules-2026-10-05.md)
+contains the former failures and nearest rejected domains; the corresponding
+`coverage.json` entries include P200.

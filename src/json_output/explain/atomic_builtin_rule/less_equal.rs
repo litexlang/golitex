@@ -71,6 +71,8 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorLowerBound(p) => p.rule_name_and_message_en(),
+            Self::CeilUpperBound(p) => p.rule_name_and_message_en(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_en(),
             Self::LnWeakMonotone(p) => p.rule_name_and_message_en(),
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_en(),
@@ -121,6 +123,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::SqrtMonotoneNondecreasing(p) => p.rule_name_and_message_en(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_en(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_en(),
+            Self::LogWeakDecreasing(p) => p.rule_name_and_message_en(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_en(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_en(),
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_en(),
@@ -151,6 +154,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorLowerBound(p) => p.rule_name_and_message_zh(),
+            Self::CeilUpperBound(p) => p.rule_name_and_message_zh(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_zh(),
             Self::LnWeakMonotone(p) => p.rule_name_and_message_zh(),
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_zh(),
@@ -207,6 +212,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::SqrtMonotoneNondecreasing(p) => p.rule_name_and_message_zh(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_zh(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_zh(),
+            Self::LogWeakDecreasing(p) => p.rule_name_and_message_zh(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_zh(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_zh(),
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_zh(),
@@ -237,6 +243,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorLowerBound(p) => p.rule_name_and_message_zh_hant(),
+            Self::CeilUpperBound(p) => p.rule_name_and_message_zh_hant(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_zh_hant(),
             Self::LnWeakMonotone(p) => p.rule_name_and_message_zh_hant(),
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_zh_hant(),
@@ -293,6 +301,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::SqrtMonotoneNondecreasing(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_zh_hant(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_zh_hant(),
+            Self::LogWeakDecreasing(p) => p.rule_name_and_message_zh_hant(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_zh_hant(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_zh_hant(),
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_zh_hant(),
@@ -323,6 +332,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorLowerBound(p) => p.rule_name_and_message_fr(),
+            Self::CeilUpperBound(p) => p.rule_name_and_message_fr(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_fr(),
             Self::LnWeakMonotone(p) => p.rule_name_and_message_fr(),
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_fr(),
@@ -373,6 +384,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::SqrtMonotoneNondecreasing(p) => p.rule_name_and_message_fr(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_fr(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_fr(),
+            Self::LogWeakDecreasing(p) => p.rule_name_and_message_fr(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_fr(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_fr(),
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_fr(),
@@ -403,6 +415,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorLowerBound(p) => p.rule_name_and_message_ru(),
+            Self::CeilUpperBound(p) => p.rule_name_and_message_ru(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_ru(),
             Self::LnWeakMonotone(p) => p.rule_name_and_message_ru(),
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ru(),
@@ -453,6 +467,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::SqrtMonotoneNondecreasing(p) => p.rule_name_and_message_ru(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ru(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_ru(),
+            Self::LogWeakDecreasing(p) => p.rule_name_and_message_ru(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_ru(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ru(),
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_ru(),
@@ -483,6 +498,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorLowerBound(p) => p.rule_name_and_message_es(),
+            Self::CeilUpperBound(p) => p.rule_name_and_message_es(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_es(),
             Self::LnWeakMonotone(p) => p.rule_name_and_message_es(),
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_es(),
@@ -533,6 +550,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::SqrtMonotoneNondecreasing(p) => p.rule_name_and_message_es(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_es(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_es(),
+            Self::LogWeakDecreasing(p) => p.rule_name_and_message_es(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_es(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_es(),
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_es(),
@@ -563,6 +581,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorLowerBound(p) => p.rule_name_and_message_ar(),
+            Self::CeilUpperBound(p) => p.rule_name_and_message_ar(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_ar(),
             Self::LnWeakMonotone(p) => p.rule_name_and_message_ar(),
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ar(),
@@ -619,6 +639,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::SqrtMonotoneNondecreasing(p) => p.rule_name_and_message_ar(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ar(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_ar(),
+            Self::LogWeakDecreasing(p) => p.rule_name_and_message_ar(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_ar(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ar(),
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_ar(),
@@ -649,6 +670,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorLowerBound(p) => p.rule_name_and_message_ja(),
+            Self::CeilUpperBound(p) => p.rule_name_and_message_ja(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_ja(),
             Self::LnWeakMonotone(p) => p.rule_name_and_message_ja(),
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ja(),
@@ -705,6 +728,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::SqrtMonotoneNondecreasing(p) => p.rule_name_and_message_ja(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ja(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_ja(),
+            Self::LogWeakDecreasing(p) => p.rule_name_and_message_ja(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_ja(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ja(),
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_ja(),
@@ -735,6 +759,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorLowerBound(p) => p.rule_name_and_message_ko(),
+            Self::CeilUpperBound(p) => p.rule_name_and_message_ko(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_ko(),
             Self::LnWeakMonotone(p) => p.rule_name_and_message_ko(),
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ko(),
@@ -791,6 +817,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::SqrtMonotoneNondecreasing(p) => p.rule_name_and_message_ko(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ko(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_ko(),
+            Self::LogWeakDecreasing(p) => p.rule_name_and_message_ko(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_ko(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ko(),
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_ko(),
@@ -821,6 +848,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::FloorLowerBound(p) => p.rule_name_and_message_vi(),
+            Self::CeilUpperBound(p) => p.rule_name_and_message_vi(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_vi(),
             Self::LnWeakMonotone(p) => p.rule_name_and_message_vi(),
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_vi(),
@@ -877,6 +906,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::SqrtMonotoneNondecreasing(p) => p.rule_name_and_message_vi(),
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_vi(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_vi(),
+            Self::LogWeakDecreasing(p) => p.rule_name_and_message_vi(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_vi(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_vi(),
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_vi(),
@@ -922,6 +952,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::FloorLowerBound(_) => None,
+            Self::CeilUpperBound(_) => None,
             Self::ClosedSubtractionBound(p) => Some(p.bound.cite_fact_id),
             Self::FromKnownGreaterEqual(p) => p.premise_proof.cite_fact_id(),
             Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),

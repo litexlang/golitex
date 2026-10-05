@@ -303,18 +303,10 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         EqualitySearchProofByBuiltinRule::LogOfPowerSameBase(LogOfPowerSameBaseBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),
         }),
-        EqualitySearchProofByBuiltinRule::LogArgPower(LogArgPowerBuiltinRuleProof {
-            proof_of_requirement_facts: Vec::new(),
-        }),
-        EqualitySearchProofByBuiltinRule::LogProduct(LogProductBuiltinRuleProof {
-            proof_of_requirement_facts: Vec::new(),
-        }),
-        EqualitySearchProofByBuiltinRule::LogQuotient(LogQuotientBuiltinRuleProof {
-            proof_of_requirement_facts: Vec::new(),
-        }),
-        EqualitySearchProofByBuiltinRule::LogReciprocal(LogReciprocalBuiltinRuleProof {
-            proof_of_requirement_facts: Vec::new(),
-        }),
+        actual_log_algebra_fixture("forall a,x R+,n Z:\n    a<1\n    =>:\n        log(a,x^n)=n*log(a,x)\n"),
+        actual_log_algebra_fixture("forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x*y)=log(a,x)+log(a,y)\n"),
+        actual_log_algebra_fixture("forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x/y)=log(a,x)-log(a,y)\n"),
+        actual_log_algebra_fixture("forall a,x R+:\n    a<1\n    =>:\n        log(a,1/x)=-log(a,x)\n"),
         EqualitySearchProofByBuiltinRule::LogChangeOfBase(LogChangeOfBaseBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),
         }),
@@ -1448,4 +1440,22 @@ fn acceptance_all_locales_cover_statement_and_proof_routes() {
             }
         }
     }
+}
+
+
+fn actual_log_algebra_fixture(code: &str) -> EqualitySearchProofByBuiltinRule {
+    use crate::execute::{ExecFactStmtResult, ExecStmtResult};
+    use crate::execute::execute_fact_stmt::VerifyFactResult;
+    use crate::execute::execute_fact_stmt::verify_forall_fact::{VerifyForallFactProof, VerifyForallFactResult};
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{EqualFactSearchedProof, VerifyEqualityResult};
+    let mut runtime = runtime_en();
+    let mut run = runtime.run_litex_code(code).unwrap();
+    assert!(run.success && run.session_error.is_none());
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = run.statement_results.pop().unwrap() else { panic!("actual forall") };
+    let VerifyFactResult::ForallFact(proof) = statement.verify_result else { panic!("forall result") };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(mut proof)) = *proof else { panic!("local introduction") };
+    let VerifyFactResult::Equality(proof) = proof.proved_then_facts.pop().unwrap().verify_result else { panic!("actual equality") };
+    let VerifyEqualityResult::Success(proof) = *proof else { panic!("equality success") };
+    let EqualFactSearchedProof::ByBuiltinRule(rule) = proof.searched_proof else { panic!("actual builtin") };
+    rule
 }

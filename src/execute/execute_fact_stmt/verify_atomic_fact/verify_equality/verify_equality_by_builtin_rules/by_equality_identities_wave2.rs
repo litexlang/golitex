@@ -2,6 +2,7 @@
 //!
 //! One matcher ↔ one dedicated proof struct.
 
+use super::log_algebra_base_proof::LogAlgebraBaseProof;
 use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, LessEqualFact, LessFact, NotEqualFact, GreaterFact,
 };
@@ -81,24 +82,54 @@ pub struct LogOfPowerSameBaseBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-// Builtin LogArgPower: log(b, x^y) = y * log(b, x) when 1 < b and 0 < x.
+// Example: a<1, a>0, x>0, n Z => log(a,x^n)=n*log(a,x).
+// Builtin LogArgPower: log(b, x^y) = y * log(b, x) when b>0, b!=1 and 0<x.
 pub struct LogArgPowerBuiltinRuleProof {
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub base_proof: LogAlgebraBaseProof,
+    pub argument_positive_proof: VerifyFactResult,
+}
+impl LogArgPowerBuiltinRuleProof {
+    pub fn new(base_proof: LogAlgebraBaseProof, argument_positive_proof: VerifyFactResult) -> Self {
+        Self { base_proof, argument_positive_proof }
+    }
 }
 
-// Builtin LogProduct: log(b, x*y) = log(b,x)+log(b,y) when 1 < b and 0 < x,y.
+// Example: 0<a<1, x,y R+ => log(a,x*y)=log(a,x)+log(a,y).
+// Builtin LogProduct: log(b, x*y) = log(b,x)+log(b,y) when b>0, b!=1 and 0<x,y.
 pub struct LogProductBuiltinRuleProof {
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub base_proof: LogAlgebraBaseProof,
+    pub left_argument_positive_proof: VerifyFactResult,
+    pub right_argument_positive_proof: VerifyFactResult,
+}
+impl LogProductBuiltinRuleProof {
+    pub fn new(base_proof: LogAlgebraBaseProof, left_argument_positive_proof: VerifyFactResult, right_argument_positive_proof: VerifyFactResult) -> Self {
+        Self { base_proof, left_argument_positive_proof, right_argument_positive_proof }
+    }
 }
 
-// Builtin LogQuotient: log(b, x/y) = log(b,x)-log(b,y) when 1 < b and 0 < x,y.
+// Example: 0<a<1, x,y R+ => log(a,x/y)=log(a,x)-log(a,y).
+// Builtin LogQuotient: log(b, x/y) = log(b,x)-log(b,y) when b>0, b!=1 and 0<x,y.
 pub struct LogQuotientBuiltinRuleProof {
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub base_proof: LogAlgebraBaseProof,
+    pub numerator_positive_proof: VerifyFactResult,
+    pub denominator_positive_proof: VerifyFactResult,
+}
+impl LogQuotientBuiltinRuleProof {
+    pub fn new(base_proof: LogAlgebraBaseProof, numerator_positive_proof: VerifyFactResult, denominator_positive_proof: VerifyFactResult) -> Self {
+        Self { base_proof, numerator_positive_proof, denominator_positive_proof }
+    }
 }
 
-// Builtin LogReciprocal: log(b, 1/x) = 0 - log(b,x) when 1 < b and 0 < x.
+// Example: 0<a<1, x R+ => log(a,1/x)=-log(a,x).
+// Builtin LogReciprocal: log(b, 1/x) = 0 - log(b,x) when b>0, b!=1 and 0<x.
 pub struct LogReciprocalBuiltinRuleProof {
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub base_proof: LogAlgebraBaseProof,
+    pub argument_positive_proof: VerifyFactResult,
+}
+impl LogReciprocalBuiltinRuleProof {
+    pub fn new(base_proof: LogAlgebraBaseProof, argument_positive_proof: VerifyFactResult) -> Self {
+        Self { base_proof, argument_positive_proof }
+    }
 }
 
 // Builtin LogChangeOfBase: log(a,x) = log(b,x)/log(b,a) when 1 < a,b and 0 < x.
@@ -686,17 +717,14 @@ impl Runtime {
             if lb.ir() != base.ir() || la.ir() != pbase.ir() {
                 continue;
             }
-            let pb = self.verify_order_gt_one(base, verify_state.clone())?;
-            if pb.is_failed() {
+            let Some(base_proof) = self.verify_log_algebra_base_guard(base, verify_state)? else {
                 continue;
-            }
-            let px = self.verify_order_positive(pbase, verify_state.clone())?;
+            };
+            let px = self.verify_log_algebra_positive(pbase, verify_state.clone())?;
             if px.is_failed() {
                 continue;
             }
-            return Ok(Some(LogArgPowerBuiltinRuleProof {
-                proof_of_requirement_facts: vec![pb, px],
-            }));
+            return Ok(Some(LogArgPowerBuiltinRuleProof::new(base_proof, px)));
         }
         Ok(None)
     }
@@ -743,21 +771,18 @@ impl Runtime {
             if a1.ir() != x.ir() || a2.ir() != y.ir() {
                 continue;
             }
-            let pb = self.verify_order_gt_one(base, verify_state.clone())?;
-            if pb.is_failed() {
+            let Some(base_proof) = self.verify_log_algebra_base_guard(base, verify_state)? else {
                 continue;
-            }
-            let px = self.verify_order_positive(x, verify_state.clone())?;
+            };
+            let px = self.verify_log_algebra_positive(x, verify_state.clone())?;
             if px.is_failed() {
                 continue;
             }
-            let py = self.verify_order_positive(y, verify_state.clone())?;
+            let py = self.verify_log_algebra_positive(y, verify_state.clone())?;
             if py.is_failed() {
                 continue;
             }
-            return Ok(Some(LogProductBuiltinRuleProof {
-                proof_of_requirement_facts: vec![pb, px, py],
-            }));
+            return Ok(Some(LogProductBuiltinRuleProof::new(base_proof, px, py)));
         }
         Ok(None)
     }
@@ -797,21 +822,18 @@ impl Runtime {
         if a1.ir() != a.as_ref().ir() || a2.ir() != b.as_ref().ir() {
             return Ok(None);
         }
-        let pb = self.verify_order_gt_one(base, verify_state.clone())?;
-        if pb.is_failed() {
+        let Some(base_proof) = self.verify_log_algebra_base_guard(base, verify_state)? else {
             return Ok(None);
-        }
-        let px = self.verify_order_positive(a.as_ref(), verify_state.clone())?;
+        };
+        let px = self.verify_log_algebra_positive(a.as_ref(), verify_state.clone())?;
         if px.is_failed() {
             return Ok(None);
         }
-        let py = self.verify_order_positive(b.as_ref(), verify_state)?;
+        let py = self.verify_log_algebra_positive(b.as_ref(), verify_state)?;
         if py.is_failed() {
             return Ok(None);
         }
-        Ok(Some(LogQuotientBuiltinRuleProof {
-            proof_of_requirement_facts: vec![pb, px, py],
-        }))
+        Ok(Some(LogQuotientBuiltinRuleProof::new(base_proof, px, py)))
     }
 
     fn try_log_reciprocal(
@@ -833,7 +855,7 @@ impl Runtime {
         if !is_one_obj(num.as_ref()) {
             return Ok(None);
         }
-        // right is 0 - log(b,x) or (-1)*log(b,x)
+        // right is 0-log(b,x), (-1)*log(b,x), or -log(b,x)
         let log_side = if let Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
             left: z,
             right: t,
@@ -856,6 +878,8 @@ impl Runtime {
             } else {
                 None
             }
+        } else if let Obj::ArithmeticOperator(ArithmeticOperator::Neg(negative)) = right {
+            Some(negative.arg.as_ref())
         } else {
             None
         };
@@ -868,17 +892,14 @@ impl Runtime {
         if lb.ir() != base.ir() || la.ir() != den.as_ref().ir() {
             return Ok(None);
         }
-        let pb = self.verify_order_gt_one(base, verify_state.clone())?;
-        if pb.is_failed() {
+        let Some(base_proof) = self.verify_log_algebra_base_guard(base, verify_state)? else {
             return Ok(None);
-        }
-        let px = self.verify_order_positive(den.as_ref(), verify_state)?;
+        };
+        let px = self.verify_log_algebra_positive(den.as_ref(), verify_state)?;
         if px.is_failed() {
             return Ok(None);
         }
-        Ok(Some(LogReciprocalBuiltinRuleProof {
-            proof_of_requirement_facts: vec![pb, px],
-        }))
+        Ok(Some(LogReciprocalBuiltinRuleProof::new(base_proof, px)))
     }
 
     fn try_log_change_of_base(

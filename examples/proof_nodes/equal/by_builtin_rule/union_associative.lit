@@ -3,5 +3,5 @@
 
 have A set
 have B set
-have C set
-union(union(A, B), C) = union(A, union(B, C))
+have Target set
+union(union(A, B), Target) = union(A, union(B, Target))

@@ -1,6 +1,6 @@
 # Showcase migration regression: verified without trust.
 # Run: target/release/litex -strict -f examples/wd/template_unique_from_typed_carrier.lit
-# Recover S from the already matched t : Point<S> when using a theorem.
+# Recover S from the already matched t : Point<K,S> when using a theorem.
 struct Point<K nonempty_set, S nonempty_set>:
     value S
     tag N

@@ -1,0 +1,18 @@
+# CosDoubleAngle: three fixed real double-angle forms.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/cos_double_angle.lit
+# Before: each isolated direct assertion failed in search_proof.
+# forall x R:
+#     cos(2*x)=cos(x)^2-sin(x)^2
+# forall x R:
+#     cos(2*x)=1-2*sin(x)^2
+# forall x R:
+#     cos(2*x)=2*cos(x)^2-1
+forall x R:
+    cos(2*x)=cos(x)^2-sin(x)^2
+    cos(2*x)=1-2*sin(x)^2
+    cos(2*x)=2*cos(x)^2-1
+forall x R:
+    cos(x+x)=cos(x)*cos(x)-sin(x)*sin(x)
+forall x R:
+    2*cos(x)^2-1=cos(x*2)
+# Boundary: sum instead of difference, wrong coefficients and complex inputs reject.

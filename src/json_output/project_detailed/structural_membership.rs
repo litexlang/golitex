@@ -22,6 +22,11 @@ pub(super) fn project_structural_membership(
             fields.push(("cite", super::searched::project_known_atomic(p, rt)));
             "known"
         }
+        KnownSubset(p) => {
+            fields.push(("member_proof", super::searched::project_known_premise(&p.member_proof, rt)));
+            fields.push(("subset_proof", super::searched::project_known_premise(&p.subset_proof, rt)));
+            "known_subset"
+        }
         Closed(p) => {
             fields.push((
                 "calculation",
@@ -103,6 +108,8 @@ fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
         TupleDim => "tuple_dim",
         CartDim => "cart_dim",
         FiniteSetSize => "finite_set_size",
+        FiniteSetMax => "finite_set_max",
+        FiniteSetMin => "finite_set_min",
         EulerNumber => "e",
         Pi => "pi",
         ImaginaryUnit => "i",

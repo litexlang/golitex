@@ -2,6 +2,8 @@
 //!
 //! Call site: `rule.rule_name_and_message(lang)` on `EqualitySearchProofByBuiltinRule`.
 
+mod native_fixed_base;
+mod elementary_definitions;
 mod lcm_divisibility;
 mod constructor_order;
 mod finite_set_reindex;
@@ -19,6 +21,9 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::TanQuotientDefinition(p) => p.rule_name_and_message_en(),
+            Self::CotQuotientDefinition(p) => p.rule_name_and_message_en(),
+            Self::GcdEuclideanStep(p) => p.rule_name_and_message_en(),
             Self::RangeSize(p)=>p.rule_name_and_message_en(),
             Self::ClosedRangeSize(p)=>p.rule_name_and_message_en(),
             Self::EuclideanRemainder(p)=>p.rule_name_and_message_en(),
@@ -189,6 +194,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ProductSplitLastTerm(p) => p.rule_name_and_message_en(),
             Self::FiniteSetSumListExpansion(p) => p.rule_name_and_message_en(),
             Self::FiniteSetProductListExpansion(p) => p.rule_name_and_message_en(),
+            Self::LnAsEulerLog(p) => p.rule_name_and_message_en(),
+            Self::ExpAsEulerIntegerPower(p) => p.rule_name_and_message_en(),
             Self::EulerEqualsExpOne(p) => p.rule_name_and_message_en(),
             Self::LnOfEuler(p) => p.rule_name_and_message_en(),
             Self::ReOfReal(p) => p.rule_name_and_message_en(),
@@ -239,6 +246,9 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::TanQuotientDefinition(p) => p.rule_name_and_message_zh(),
+            Self::CotQuotientDefinition(p) => p.rule_name_and_message_zh(),
+            Self::GcdEuclideanStep(p) => p.rule_name_and_message_zh(),
             Self::RangeSize(p)=>p.rule_name_and_message_zh(),
             Self::ClosedRangeSize(p)=>p.rule_name_and_message_zh(),
             Self::EuclideanRemainder(p)=>p.rule_name_and_message_zh(),
@@ -409,6 +419,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ProductSplitLastTerm(p) => p.rule_name_and_message_zh(),
             Self::FiniteSetSumListExpansion(p) => p.rule_name_and_message_zh(),
             Self::FiniteSetProductListExpansion(p) => p.rule_name_and_message_zh(),
+            Self::LnAsEulerLog(p) => p.rule_name_and_message_zh(),
+            Self::ExpAsEulerIntegerPower(p) => p.rule_name_and_message_zh(),
             Self::EulerEqualsExpOne(p) => p.rule_name_and_message_zh(),
             Self::LnOfEuler(p) => p.rule_name_and_message_zh(),
             Self::ReOfReal(p) => p.rule_name_and_message_zh(),
@@ -459,6 +471,9 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::TanQuotientDefinition(p) => p.rule_name_and_message_zh_hant(),
+            Self::CotQuotientDefinition(p) => p.rule_name_and_message_zh_hant(),
+            Self::GcdEuclideanStep(p) => p.rule_name_and_message_zh_hant(),
             Self::RangeSize(p)=>p.rule_name_and_message_zh_hant(),
             Self::ClosedRangeSize(p)=>p.rule_name_and_message_zh_hant(),
             Self::EuclideanRemainder(p)=>p.rule_name_and_message_zh_hant(),
@@ -629,6 +644,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ProductSplitLastTerm(p) => p.rule_name_and_message_zh_hant(),
             Self::FiniteSetSumListExpansion(p) => p.rule_name_and_message_zh_hant(),
             Self::FiniteSetProductListExpansion(p) => p.rule_name_and_message_zh_hant(),
+            Self::LnAsEulerLog(p) => p.rule_name_and_message_zh_hant(),
+            Self::ExpAsEulerIntegerPower(p) => p.rule_name_and_message_zh_hant(),
             Self::EulerEqualsExpOne(p) => p.rule_name_and_message_zh_hant(),
             Self::LnOfEuler(p) => p.rule_name_and_message_zh_hant(),
             Self::ReOfReal(p) => p.rule_name_and_message_zh_hant(),
@@ -679,6 +696,9 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::TanQuotientDefinition(p) => p.rule_name_and_message_fr(),
+            Self::CotQuotientDefinition(p) => p.rule_name_and_message_fr(),
+            Self::GcdEuclideanStep(p) => p.rule_name_and_message_fr(),
             Self::RangeSize(p)=>p.rule_name_and_message_fr(),
             Self::ClosedRangeSize(p)=>p.rule_name_and_message_fr(),
             Self::EuclideanRemainder(p)=>p.rule_name_and_message_fr(),
@@ -849,6 +869,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ProductSplitLastTerm(p) => p.rule_name_and_message_fr(),
             Self::FiniteSetSumListExpansion(p) => p.rule_name_and_message_fr(),
             Self::FiniteSetProductListExpansion(p) => p.rule_name_and_message_fr(),
+            Self::LnAsEulerLog(p) => p.rule_name_and_message_fr(),
+            Self::ExpAsEulerIntegerPower(p) => p.rule_name_and_message_fr(),
             Self::EulerEqualsExpOne(p) => p.rule_name_and_message_fr(),
             Self::LnOfEuler(p) => p.rule_name_and_message_fr(),
             Self::ReOfReal(p) => p.rule_name_and_message_fr(),
@@ -899,6 +921,9 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::TanQuotientDefinition(p) => p.rule_name_and_message_ru(),
+            Self::CotQuotientDefinition(p) => p.rule_name_and_message_ru(),
+            Self::GcdEuclideanStep(p) => p.rule_name_and_message_ru(),
             Self::RangeSize(p)=>p.rule_name_and_message_ru(),
             Self::ClosedRangeSize(p)=>p.rule_name_and_message_ru(),
             Self::EuclideanRemainder(p)=>p.rule_name_and_message_ru(),
@@ -1069,6 +1094,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ProductSplitLastTerm(p) => p.rule_name_and_message_ru(),
             Self::FiniteSetSumListExpansion(p) => p.rule_name_and_message_ru(),
             Self::FiniteSetProductListExpansion(p) => p.rule_name_and_message_ru(),
+            Self::LnAsEulerLog(p) => p.rule_name_and_message_ru(),
+            Self::ExpAsEulerIntegerPower(p) => p.rule_name_and_message_ru(),
             Self::EulerEqualsExpOne(p) => p.rule_name_and_message_ru(),
             Self::LnOfEuler(p) => p.rule_name_and_message_ru(),
             Self::ReOfReal(p) => p.rule_name_and_message_ru(),
@@ -1119,6 +1146,9 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::TanQuotientDefinition(p) => p.rule_name_and_message_es(),
+            Self::CotQuotientDefinition(p) => p.rule_name_and_message_es(),
+            Self::GcdEuclideanStep(p) => p.rule_name_and_message_es(),
             Self::RangeSize(p)=>p.rule_name_and_message_es(),
             Self::ClosedRangeSize(p)=>p.rule_name_and_message_es(),
             Self::EuclideanRemainder(p)=>p.rule_name_and_message_es(),
@@ -1289,6 +1319,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ProductSplitLastTerm(p) => p.rule_name_and_message_es(),
             Self::FiniteSetSumListExpansion(p) => p.rule_name_and_message_es(),
             Self::FiniteSetProductListExpansion(p) => p.rule_name_and_message_es(),
+            Self::LnAsEulerLog(p) => p.rule_name_and_message_es(),
+            Self::ExpAsEulerIntegerPower(p) => p.rule_name_and_message_es(),
             Self::EulerEqualsExpOne(p) => p.rule_name_and_message_es(),
             Self::LnOfEuler(p) => p.rule_name_and_message_es(),
             Self::ReOfReal(p) => p.rule_name_and_message_es(),
@@ -1339,6 +1371,9 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::TanQuotientDefinition(p) => p.rule_name_and_message_ar(),
+            Self::CotQuotientDefinition(p) => p.rule_name_and_message_ar(),
+            Self::GcdEuclideanStep(p) => p.rule_name_and_message_ar(),
             Self::RangeSize(p)=>p.rule_name_and_message_ar(),
             Self::ClosedRangeSize(p)=>p.rule_name_and_message_ar(),
             Self::EuclideanRemainder(p)=>p.rule_name_and_message_ar(),
@@ -1509,6 +1544,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ProductSplitLastTerm(p) => p.rule_name_and_message_ar(),
             Self::FiniteSetSumListExpansion(p) => p.rule_name_and_message_ar(),
             Self::FiniteSetProductListExpansion(p) => p.rule_name_and_message_ar(),
+            Self::LnAsEulerLog(p) => p.rule_name_and_message_ar(),
+            Self::ExpAsEulerIntegerPower(p) => p.rule_name_and_message_ar(),
             Self::EulerEqualsExpOne(p) => p.rule_name_and_message_ar(),
             Self::LnOfEuler(p) => p.rule_name_and_message_ar(),
             Self::ReOfReal(p) => p.rule_name_and_message_ar(),
@@ -1559,6 +1596,9 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::TanQuotientDefinition(p) => p.rule_name_and_message_ja(),
+            Self::CotQuotientDefinition(p) => p.rule_name_and_message_ja(),
+            Self::GcdEuclideanStep(p) => p.rule_name_and_message_ja(),
             Self::RangeSize(p)=>p.rule_name_and_message_ja(),
             Self::ClosedRangeSize(p)=>p.rule_name_and_message_ja(),
             Self::EuclideanRemainder(p)=>p.rule_name_and_message_ja(),
@@ -1729,6 +1769,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ProductSplitLastTerm(p) => p.rule_name_and_message_ja(),
             Self::FiniteSetSumListExpansion(p) => p.rule_name_and_message_ja(),
             Self::FiniteSetProductListExpansion(p) => p.rule_name_and_message_ja(),
+            Self::LnAsEulerLog(p) => p.rule_name_and_message_ja(),
+            Self::ExpAsEulerIntegerPower(p) => p.rule_name_and_message_ja(),
             Self::EulerEqualsExpOne(p) => p.rule_name_and_message_ja(),
             Self::LnOfEuler(p) => p.rule_name_and_message_ja(),
             Self::ReOfReal(p) => p.rule_name_and_message_ja(),
@@ -1779,6 +1821,9 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::TanQuotientDefinition(p) => p.rule_name_and_message_ko(),
+            Self::CotQuotientDefinition(p) => p.rule_name_and_message_ko(),
+            Self::GcdEuclideanStep(p) => p.rule_name_and_message_ko(),
             Self::RangeSize(p)=>p.rule_name_and_message_ko(),
             Self::ClosedRangeSize(p)=>p.rule_name_and_message_ko(),
             Self::EuclideanRemainder(p)=>p.rule_name_and_message_ko(),
@@ -1949,6 +1994,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ProductSplitLastTerm(p) => p.rule_name_and_message_ko(),
             Self::FiniteSetSumListExpansion(p) => p.rule_name_and_message_ko(),
             Self::FiniteSetProductListExpansion(p) => p.rule_name_and_message_ko(),
+            Self::LnAsEulerLog(p) => p.rule_name_and_message_ko(),
+            Self::ExpAsEulerIntegerPower(p) => p.rule_name_and_message_ko(),
             Self::EulerEqualsExpOne(p) => p.rule_name_and_message_ko(),
             Self::LnOfEuler(p) => p.rule_name_and_message_ko(),
             Self::ReOfReal(p) => p.rule_name_and_message_ko(),
@@ -1999,6 +2046,9 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::TanQuotientDefinition(p) => p.rule_name_and_message_vi(),
+            Self::CotQuotientDefinition(p) => p.rule_name_and_message_vi(),
+            Self::GcdEuclideanStep(p) => p.rule_name_and_message_vi(),
             Self::RangeSize(p)=>p.rule_name_and_message_vi(),
             Self::ClosedRangeSize(p)=>p.rule_name_and_message_vi(),
             Self::EuclideanRemainder(p)=>p.rule_name_and_message_vi(),
@@ -2169,6 +2219,8 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ProductSplitLastTerm(p) => p.rule_name_and_message_vi(),
             Self::FiniteSetSumListExpansion(p) => p.rule_name_and_message_vi(),
             Self::FiniteSetProductListExpansion(p) => p.rule_name_and_message_vi(),
+            Self::LnAsEulerLog(p) => p.rule_name_and_message_vi(),
+            Self::ExpAsEulerIntegerPower(p) => p.rule_name_and_message_vi(),
             Self::EulerEqualsExpOne(p) => p.rule_name_and_message_vi(),
             Self::LnOfEuler(p) => p.rule_name_and_message_vi(),
             Self::ReOfReal(p) => p.rule_name_and_message_vi(),

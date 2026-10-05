@@ -1,0 +1,211 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/exp_ln_order_author_routes.lit
+# Complete unchanged targets: explicit strict-to-weak bridge, ln(1)=0 endpoint,
+# inner exp order publication, and existing inverse equalities. No search reset.
+
+# exp-stronger-weak-full-author-forward
+claim:
+    ? forall a,b R:
+        a<b
+        =>:
+            exp(a)<=exp(b)
+    a<=b
+    exp(a)<=exp(b)
+
+forall a,b R:
+    a<b
+    =>:
+        exp(a)<=exp(b)
+
+# exp-stronger-weak-full-author-reflect
+claim:
+    ? forall a,b R:
+        exp(a)<exp(b)
+        =>:
+            a<=b
+    exp(a)<=exp(b)
+    a<=b
+
+forall a,b R:
+    exp(a)<exp(b)
+    =>:
+        a<=b
+
+# ln-stronger-weak-full-author-forward
+claim:
+    ? forall a,b R+:
+        a<b
+        =>:
+            ln(a)<=ln(b)
+    a<=b
+    ln(a)<=ln(b)
+
+forall a,b R+:
+    a<b
+    =>:
+        ln(a)<=ln(b)
+
+# ln-stronger-weak-full-author-reflect
+claim:
+    ? forall a,b R+:
+        ln(a)<ln(b)
+        =>:
+            a<=b
+    ln(a)<=ln(b)
+    a<=b
+
+forall a,b R+:
+    ln(a)<ln(b)
+    =>:
+        a<=b
+
+# ln-sign-positive-strict-full-author
+claim:
+    ? forall x R+:
+        1<x
+        =>:
+            0<ln(x)
+    ln(1)=0
+    ln(1)<ln(x)
+    0<ln(x)
+
+forall x R+:
+    1<x
+    =>:
+        0<ln(x)
+
+# ln-sign-positive-weak-full-author
+claim:
+    ? forall x R+:
+        1<=x
+        =>:
+            0<=ln(x)
+    ln(1)=0
+    ln(1)<=ln(x)
+    0<=ln(x)
+
+forall x R+:
+    1<=x
+    =>:
+        0<=ln(x)
+
+# ln-sign-negative-strict-full-author
+claim:
+    ? forall x R+:
+        x<1
+        =>:
+            ln(x)<0
+    ln(1)=0
+    ln(x)<ln(1)
+    ln(x)<0
+
+forall x R+:
+    x<1
+    =>:
+        ln(x)<0
+
+# ln-sign-negative-weak-full-author
+claim:
+    ? forall x R+:
+        x<=1
+        =>:
+            ln(x)<=0
+    ln(1)=0
+    ln(x)<=ln(1)
+    ln(x)<=0
+
+forall x R+:
+    x<=1
+    =>:
+        ln(x)<=0
+
+# ln-sign-reflect-positive-strict-full-author
+claim:
+    ? forall x R+:
+        0<ln(x)
+        =>:
+            1<x
+    ln(1)=0
+    ln(1)<ln(x)
+    1<x
+
+forall x R+:
+    0<ln(x)
+    =>:
+        1<x
+
+# ln-sign-reflect-positive-weak-full-author
+claim:
+    ? forall x R+:
+        0<=ln(x)
+        =>:
+            1<=x
+    ln(1)=0
+    ln(1)<=ln(x)
+    1<=x
+
+forall x R+:
+    0<=ln(x)
+    =>:
+        1<=x
+
+# ln-sign-reflect-negative-strict-full-author
+claim:
+    ? forall x R+:
+        ln(x)<0
+        =>:
+            x<1
+    ln(1)=0
+    ln(x)<ln(1)
+    x<1
+
+forall x R+:
+    ln(x)<0
+    =>:
+        x<1
+
+# ln-sign-reflect-negative-weak-full-author
+claim:
+    ? forall x R+:
+        ln(x)<=0
+        =>:
+            x<=1
+    ln(1)=0
+    ln(x)<=ln(1)
+    x<=1
+
+forall x R+:
+    ln(x)<=0
+    =>:
+        x<=1
+
+# exp-nested-full-author
+claim:
+    ? forall a,b R:
+        a<b
+        =>:
+            exp(exp(a))<exp(exp(b))
+    exp(a)<exp(b)
+    exp(exp(a))<exp(exp(b))
+
+forall a,b R:
+    a<b
+    =>:
+        exp(exp(a))<exp(exp(b))
+
+# exp-inverse-full-author
+claim:
+    ? forall a,b R:
+        a<b
+        =>:
+            exp(a)<exp(b)
+    exp(a) $in R+
+    exp(b) $in R+
+    ln(exp(a))=a
+    ln(exp(b))=b
+    ln(exp(a))<ln(exp(b))
+    exp(a)<exp(b)
+
+forall a,b R:
+    a<b
+    =>:
+        exp(a)<exp(b)

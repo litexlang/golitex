@@ -1,0 +1,12 @@
+# CosPiReflection: real reflection about pi/2.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/cos_pi_reflection.lit
+# Before: failed in search_proof.
+# forall x R:
+#     cos(pi-x)=-cos(x)
+forall x R:
+    cos(pi-x)=-cos(x)
+forall x R:
+    0-cos(x)=cos(pi+(-x))
+forall x R:
+    cos(pi-(x+1))=-cos(x+1)
+# Boundary: positive cosine, pi/3 in place of pi and complex inputs reject.

@@ -1,0 +1,12 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/ln_as_euler_log.lit
+# Former exact failure:
+# 1<e
+# e!=1
+# forall x R+:
+#     ln(x)=log(e,x)
+
+# Current same source; parent WD guards retained. Wrong base/argument and illegal domains reject.
+1<e
+e!=1
+forall x R+:
+    ln(x)=log(e,x)

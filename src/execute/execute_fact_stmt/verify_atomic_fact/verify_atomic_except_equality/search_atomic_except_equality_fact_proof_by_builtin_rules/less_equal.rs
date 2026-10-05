@@ -12,6 +12,8 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    FloorLowerBound(super::rounding_definition_bounds::FloorLowerBoundProof),
+    CeilUpperBound(super::rounding_definition_bounds::CeilUpperBoundProof),
     ExpWeakMonotone(super::exp_ln_order::ExpWeakMonotoneProof),
     LnWeakMonotone(super::exp_ln_order::LnWeakMonotoneProof),
     ExpWeakOrderReflection(super::exp_ln_order::ExpWeakOrderReflectionProof),
@@ -133,6 +135,8 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `1 < a`, `0 < x`, `0 < y`, `x <= y` ⇒ `log(a, x) <= log(a, y)`.
     // Example: known `1 < 2`, `0 < x`, `0 < y`, `x <= y` prove `log(2, x) <= log(2, y)`.
     LogOrderPreservingWeak(LogOrderPreservingWeakBuiltinRuleProof),
+    // 0<a<1 and positive arguments: x<=y implies log(a,y)<=log(a,x).
+    LogWeakDecreasing(super::log_unit_interval_order::LogWeakDecreasingProof),
     // Order transitivity: known `a <= b`/`a < b` and `b <= c`/`b < c` prove `a <= c`.
     // Example: known `x <= y` and `y <= z` prove `x <= z`.
     LessEqualTransitivity(LessEqualTransitivityBuiltinRuleProof),
@@ -465,6 +469,9 @@ impl Runtime {
         fact: &LessEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = super::rounding_definition_bounds::rounding_weak_bound(fact) {
+            return Ok(Some(proof));
+        }
         // The principal complex modulus is nonnegative; whole-fact WD is prior.
         if matches!(&fact.right, Obj::ComplexOperator(crate::ast::obj::ComplexOperator::ComplexAbs(_)))
             && crate::rational_expression::exact_rational::EvalRational::from_obj(&fact.left).is_some_and(|n| n.is_zero()) {

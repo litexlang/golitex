@@ -17,57 +17,23 @@ The dated observations below distinguish restrictions from unresolved semantics.
 
 Malformed initial attempts and unsupported shorthand remain in the chronological journal; they are not silently promoted to confirmed bugs.
 
-## Phantom parameter identity — retested 2026-10-04
+## Unused parameter test expectation — closed 2026-10-05
 
-Task: user-requested conversation closeout retest. Label: `trust` (semantic
-decision, not a demonstrated false mathematical equality). Category: discuss
-shared struct carrier semantics before changing the existing contract.
+The maintainer confirmed the old negative was wrong: K absent from the fields
+does not distinguish Point<N,R> from Point<Z,R>. The exact old template call
+and its reverse are now executable positives. Actual value-carrier, tag-carrier,
+wrong-object and missing-guard negatives remain checked. Struct semantics and
+production proof search are unchanged.
 
-```litex
-struct Point<K nonempty_set,S nonempty_set>:
-    value S
-    tag N
-forall t &Point<N,R>:
-    t $in &Point<Z,R>
-```
-
-Currently passes: K does not occur in a field type. The old template
-wrong-carrier negative consequently fails its Rust assertion. The positive
-unique-function template now succeeds in both RootExport and Eval. Wrong
-object values and missing template guards still reject; an actually used
-field parameter retains its type boundary.
-
-Both instances currently describe pairs with `value` in R and `tag` in N,
-because K is unused. Explicit extension also proves:
-
-```litex
-by extension:
-    ? &Point<N,R> = &Point<Z,R>
-```
-
-Bare equality and inequality searches both reject; that is weaker automatic
-search, not evidence that the sets differ. The maintainer's “different?” reply
-also said the original explanation was unclear, so it is not treated as
-authorization for a new struct representation. The precise question is whether
-the test intended `tag K`, or whether even an unused K must distinguish the
-instances. No original wrong-carrier assertion has been removed or relabeled.
-The final stable Rust run has 829 passes and this one remaining failed assertion.
-
-Making unused K a separate identity cannot safely be achieved by only blocking
-this membership proof: the current literal tuple construction and extension
-definition still describe the same field set. No such partial patch is applied.
-
-[Acceptance and raw controls](../../../../tests/tooling/acceptance/conversation-closeout-retest-2026-10-04.md#phantom).
-[Current clarification and extension control](../../../../tests/tooling/acceptance/conversation-clarifications-2026-10-04.md).
-[Canonical DEC04](../../../../plan/src收尾总清单.md#dec04).
+The current release Rust gate passes 955/955 lib tests and 1/1 integration test;
+the surrounding module passes 7/7. Concrete pending paragraphs were removed.
+[Solution and raw evidence](../../experience/problem_notes/unused-struct-parameter-test-cleanup-2026-10-05.md).
+[Closed DEC04](../../../../plan/src收尾总清单.md#dec04).
 
 Back to [issue index](../README.md).
 
-## Serious-bug audit — 2026-10-05
+## Historical serious-bug audit — 2026-10-05
 
-The complete Rust gate now has 933 passes and the same one unused-K negative
-assertion failure. No wrong numerical conclusion, strict trust bypass or new
-state defect was observed from this example. The original test remains; this
-turn does not repeat a semantic question or change struct representation.
-Qualified struct parsing is now repaired and its real module/path/carrier
-controls pass. [Consolidated acceptance](../../../../tests/tooling/acceptance/conversation-serious-bug-audit-2026-10-05.md).
+The earlier 933/934 snapshot and its stale expectation are preserved in the
+[frozen consolidated acceptance](../../../../tests/tooling/acceptance/conversation-serious-bug-audit-2026-10-05.md).
+It is not the current test status; the cleanup above supplies the current gate.

@@ -36,3 +36,10 @@ sketch:
 sketch:
     have k Z
     tan(pi / 3 + k * pi)=sqrt(3)
+
+# P200: Quotient definition with its nonzero denominator
+sketch:
+    forall x R:
+        cos(x)!=0
+        =>:
+            tan(x)=sin(x)/cos(x)

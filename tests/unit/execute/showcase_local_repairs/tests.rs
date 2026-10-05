@@ -61,12 +61,30 @@ fn unique_function_templates_recover_hidden_carriers_and_work_in_nested_wd() {
     let detail = check(TEMPLATE, true);
     assert!(detail.contains("template_definition"));
     assert!(detail.contains("TemplateApplicationInDeclaredCodomain"));
-    check(&format!("{TEMPLATE}\nthm bad:\n    ? forall t &Point<N, R>:\n        \\selected_value<Z, R, t>(0) = t.value"), false);
+    // K is absent from Point's fields; both instances describe R x N.
+    check(&format!("{TEMPLATE}\nthm same_fields:\n    ? forall t &Point<N, R>:\n        \\selected_value<Z, R, t>(0) = t.value"), true);
+    check(&format!("{TEMPLATE}\nthm same_fields_reverse:\n    ? forall t &Point<Z, R>:\n        \\selected_value<N, R, t>(0) = t.value"), true);
+    // S is used by value S. A general real field is not an integer field.
+    check(&format!("{TEMPLATE}\nthm wrong_value_carrier:\n    ? forall t &Point<N, R>:\n        \\selected_value<N, Z, t>(0) = t.value"), false);
     check(&format!("{TEMPLATE}\nthm bad:\n    ? forall t, u &Point<N, R>:\n        \\selected_value<N, R, t>(0) = u.value"), false);
     // A template guard is checked even when its result is a nested argument.
     let guarded = "template<S set: $is_nonempty_set(S)>:\n    have fn guarded_identity(x R) R = x\nhave fn identity(x R) R = x\n";
     check(&format!("{guarded}\nthm good:\n    ? forall S nonempty_set:\n        identity(\\guarded_identity<S>(0)) $in R"), true);
     check(&format!("{guarded}\nthm bad:\n    ? forall S set:\n        identity(\\guarded_identity<S>(0)) $in R"), false);
+}
+
+#[test]
+fn struct_parameter_tests_follow_actual_field_carriers() {
+    const SOURCE: &str = include_str!("../../../../examples/wd/struct_parameter_carriers.lit");
+    check(SOURCE, true);
+    for goal in [
+        "forall t &FieldParameterPoint<Z, R>:\n    t $in &FieldParameterPoint<N, R>",
+        "(0, -1) $in &FieldParameterPoint<N, R>",
+        "(i, 0) $in &FieldParameterPoint<N, R>",
+        "(0, 1/2) $in &FieldParameterPoint<Z, R>",
+    ] {
+        check(&format!("{SOURCE}\n{goal}"), false);
+    }
 }
 
 #[test]

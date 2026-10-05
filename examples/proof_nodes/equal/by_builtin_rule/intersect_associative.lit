@@ -3,5 +3,5 @@
 
 have A set
 have B set
-have C set
-intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
+have Target set
+intersect(intersect(A, B), Target) = intersect(A, intersect(B, Target))

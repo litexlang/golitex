@@ -1,22 +1,23 @@
-//! Source-direction helpers confined to the exp/ln builtin leaves.
+//! Actual source-direction evidence for elementary function order builtin leaves.
 use crate::ast::fact::{Fact, GreaterEqualFact, GreaterFact, LessEqualFact, LessFact};
 use crate::ast::obj::Obj;
+use crate::ast::line_file::SourceLine;
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    pub(super) fn exp_ln_strict_source_order(
+    pub(super) fn strict_order_premise(
         &mut self,
         left: &Obj,
         right: &Obj,
-        target: &LessFact,
+        line_file: Option<SourceLine>,
         state: VerifyState,
     ) -> RuntimeResult<Option<VerifyFactResult>> {
         let premise: Fact = LessFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: left.clone(),
             right: right.clone(),
-            line_file: target.line_file.clone(),
+            line_file: line_file.clone(),
         }
         .into();
         let proof = self.verify_builtin_rule_premise(&premise, state)?;
@@ -29,7 +30,7 @@ impl Runtime {
             fact_id: self.global_ids.allocate_fact_id(),
             left: right.clone(),
             right: left.clone(),
-            line_file: target.line_file.clone(),
+            line_file: line_file.clone(),
         }
         .into();
         let proof = self.verify_builtin_rule_premise(&reverse, state)?;
@@ -39,18 +40,18 @@ impl Runtime {
         Ok(Some(proof))
     }
 
-    pub(super) fn exp_ln_weak_source_order(
+    pub(super) fn weak_order_premise(
         &mut self,
         left: &Obj,
         right: &Obj,
-        target: &LessEqualFact,
+        line_file: Option<SourceLine>,
         state: VerifyState,
     ) -> RuntimeResult<Option<VerifyFactResult>> {
         let premise: Fact = LessEqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: left.clone(),
             right: right.clone(),
-            line_file: target.line_file.clone(),
+            line_file: line_file.clone(),
         }
         .into();
         let proof = self.verify_builtin_rule_premise(&premise, state)?;
@@ -63,7 +64,7 @@ impl Runtime {
             fact_id: self.global_ids.allocate_fact_id(),
             left: right.clone(),
             right: left.clone(),
-            line_file: target.line_file.clone(),
+            line_file: line_file.clone(),
         }
         .into();
         let proof = self.verify_builtin_rule_premise(&reverse, state)?;

@@ -1,7 +1,9 @@
 pub mod exp_ln_order;
+pub mod log_unit_interval_order;
 mod helper;
 pub mod factorial_order;
 pub mod rounding_order;
+pub mod rounding_definition_bounds;
 pub mod complex_triangle;
 pub mod finite_sum_triangle;
 pub mod finite_index_union;

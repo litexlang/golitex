@@ -1,0 +1,11 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/gcd_euclidean_step.lit
+# Before: the following direct defining facts were rejected (see task journal).
+# forall a Z,b N+:
+#     gcd(a,b)=gcd(b,a%b)
+#     gcd(b,a%b)=gcd(a,b)
+# Boundary: A zero divisor or replacing a%b by b%a is rejected.
+# Now: the same direct facts pass without trust or a user theorem.
+
+forall a Z,b N+:
+    gcd(a,b)=gcd(b,a%b)
+    gcd(b,a%b)=gcd(a,b)

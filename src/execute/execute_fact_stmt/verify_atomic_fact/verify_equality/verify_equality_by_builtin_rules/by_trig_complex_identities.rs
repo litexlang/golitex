@@ -11,6 +11,11 @@ use crate::runtime::{Runtime, RuntimeResult};
 pub enum TrigComplexIdentityProof {
     SinHalfPiShift(SinHalfPiShiftProof),
     CosHalfPiShift(CosHalfPiShiftProof),
+    CosDoubleAngle(CosDoubleAngleBuiltinRuleProof),
+    SinPiReflection(SinPiReflectionBuiltinRuleProof),
+    CosPiReflection(CosPiReflectionBuiltinRuleProof),
+    SinHalfPiReflection(SinHalfPiReflectionBuiltinRuleProof),
+    CosHalfPiReflection(CosHalfPiReflectionBuiltinRuleProof),
     PeriodicTrig(super::by_periodic_trig::PeriodicTrigBuiltinRuleProof),
     NumericComplexModulus(super::by_numeric_complex_modulus::NumericComplexModulusBuiltinRuleProof),
     SinNegation,
@@ -41,11 +46,44 @@ pub enum TrigComplexIdentityProof {
 }
 pub struct SinHalfPiShiftProof;
 pub struct CosHalfPiShiftProof;
+pub enum CosDoubleAngleForm {
+    CosineSquareMinusSineSquare,
+    OneMinusTwiceSineSquare,
+    TwiceCosineSquareMinusOne,
+}
+pub struct CosDoubleAngleBuiltinRuleProof {
+    pub angle: Obj,
+    pub form: CosDoubleAngleForm,
+}
+impl CosDoubleAngleBuiltinRuleProof {
+    pub fn new(angle: Obj, form: CosDoubleAngleForm) -> Self { Self { angle, form } }
+}
+pub struct SinPiReflectionBuiltinRuleProof { pub angle: Obj }
+impl SinPiReflectionBuiltinRuleProof {
+    pub fn new(angle: Obj) -> Self { Self { angle } }
+}
+pub struct CosPiReflectionBuiltinRuleProof { pub angle: Obj }
+impl CosPiReflectionBuiltinRuleProof {
+    pub fn new(angle: Obj) -> Self { Self { angle } }
+}
+pub struct SinHalfPiReflectionBuiltinRuleProof { pub angle: Obj }
+impl SinHalfPiReflectionBuiltinRuleProof {
+    pub fn new(angle: Obj) -> Self { Self { angle } }
+}
+pub struct CosHalfPiReflectionBuiltinRuleProof { pub angle: Obj }
+impl CosHalfPiReflectionBuiltinRuleProof {
+    pub fn new(angle: Obj) -> Self { Self { angle } }
+}
 impl TrigComplexIdentityProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
             Self::SinHalfPiShift(_) => "SinHalfPiShift",
             Self::CosHalfPiShift(_) => "CosHalfPiShift",
+            Self::CosDoubleAngle(_) => "CosDoubleAngle",
+            Self::SinPiReflection(_) => "SinPiReflection",
+            Self::CosPiReflection(_) => "CosPiReflection",
+            Self::SinHalfPiReflection(_) => "SinHalfPiReflection",
+            Self::CosHalfPiReflection(_) => "CosHalfPiReflection",
             Self::PeriodicTrig(_) => "PeriodicTrig",
             Self::NumericComplexModulus(_) => "NumericComplexModulus",
             Self::SinNegation => "SinNegation",
@@ -86,6 +124,43 @@ impl Runtime {
             }
             for sine in [true, false] {
                 if let Some(arg) = trig_arg(left, sine) {
+                    // Real reflections: sin(pi-x)=sin(x), cos(pi-x)=-cos(x),
+                    // sin(pi/2-x)=cos(x), cos(pi/2-x)=sin(x). Parent WD owns R.
+                    for half_turn in [true, false] {
+                        if let Some(x) = super::helper::pi_reflection_argument(arg, half_turn) {
+                            let expected = match (sine, half_turn) {
+                                (true, true) | (false, false) => sin(x),
+                                (true, false) => cos(x),
+                                (false, true) => Obj::ArithmeticOperator(A::Neg(crate::ast::obj::Neg {
+                                    arg: Box::new(cos(x)),
+                                })),
+                            };
+                            if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
+                                return Ok(Some(match (sine, half_turn) {
+                                    (true, true) => P::SinPiReflection(SinPiReflectionBuiltinRuleProof::new(x.clone())),
+                                    (false, true) => P::CosPiReflection(CosPiReflectionBuiltinRuleProof::new(x.clone())),
+                                    (true, false) => P::SinHalfPiReflection(SinHalfPiReflectionBuiltinRuleProof::new(x.clone())),
+                                    (false, false) => P::CosHalfPiReflection(CosHalfPiReflectionBuiltinRuleProof::new(x.clone())),
+                                }));
+                            }
+                        }
+                    }
+                    // cos(2*x) has three equivalent fixed real double-angle forms.
+                    // No trig expansion search: only compare RHS rational expressions.
+                    if !sine {
+                        if let Some(x) = doubled_arg(arg) {
+                            use CosDoubleAngleForm as F;
+                            for (expected, form) in [
+                                (subtract(square(cos(x)), square(sin(x))), F::CosineSquareMinusSineSquare),
+                                (subtract(number("1"), mul(number("2"), square(sin(x)))), F::OneMinusTwiceSineSquare),
+                                (subtract(mul(number("2"), square(cos(x))), number("1")), F::TwiceCosineSquareMinusOne),
+                            ] {
+                                if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
+                                    return Ok(Some(P::CosDoubleAngle(CosDoubleAngleBuiltinRuleProof::new(x.clone(), form))));
+                                }
+                            }
+                        }
+                    }
                     // Real quarter-turn: sin(x+pi/2)=cos(x), cos(x+pi/2)=-sin(x).
                     // The whole equality WD establishes real arguments and defined arithmetic.
                     if let Obj::ArithmeticOperator(A::Add(sum)) = arg {
@@ -371,6 +446,16 @@ fn mul(a: Obj, b: Obj) -> Obj {
     Obj::ArithmeticOperator(A::Mul(crate::ast::obj::Mul {
         left: Box::new(a),
         right: Box::new(b),
+    }))
+}
+fn subtract(left: Obj, right: Obj) -> Obj {
+    Obj::ArithmeticOperator(A::Sub(crate::ast::obj::Sub {
+        left: Box::new(left), right: Box::new(right),
+    }))
+}
+fn square(base: Obj) -> Obj {
+    Obj::ArithmeticOperator(A::Pow(crate::ast::obj::Pow {
+        base: Box::new(base), exponent: Box::new(number("2")),
     }))
 }
 fn sin(x: &Obj) -> Obj {

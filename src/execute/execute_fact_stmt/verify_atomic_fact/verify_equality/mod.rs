@@ -45,3 +45,7 @@ mod equality_search_tests;
 #[cfg(test)]
 #[path = "../../../../../tests/unit/execute/showcase_local_rules/tests.rs"]
 mod showcase_local_rules_tests;
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/trig_reflections_double_angle/tests.rs"]
+mod trig_reflections_double_angle_tests;

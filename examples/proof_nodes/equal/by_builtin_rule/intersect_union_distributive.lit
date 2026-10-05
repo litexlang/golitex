@@ -3,5 +3,5 @@
 
 have A set
 have B set
-have C set
-intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
+have Target set
+intersect(A, union(B, Target)) = union(intersect(A, B), intersect(A, Target))

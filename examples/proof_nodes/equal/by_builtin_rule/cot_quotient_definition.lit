@@ -1,0 +1,15 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/cot_quotient_definition.lit
+# Before: the following direct defining facts were rejected (see task journal).
+# forall x R:
+#     sin(x)!=0
+#     =>:
+#         cot(x)=cos(x)/sin(x)
+#         cos(x)/sin(x)=cot(x)
+# Boundary: A missing sin(x)!=0 guard or a mismatched argument is rejected.
+# Now: the same direct facts pass without trust or a user theorem.
+
+forall x R:
+    sin(x)!=0
+    =>:
+        cot(x)=cos(x)/sin(x)
+        cos(x)/sin(x)=cot(x)

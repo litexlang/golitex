@@ -1,0 +1,14 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/exp_as_euler_integer_power.lit
+# Former exact failure:
+# e $in R+
+# 0<e
+# e!=0
+# forall n Z:
+#     exp(n)=e^n
+
+# Current same source; parent WD guards retained. Wrong base/argument and illegal domains reject.
+e $in R+
+0<e
+e!=0
+forall n Z:
+    exp(n)=e^n

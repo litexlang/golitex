@@ -39,6 +39,17 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         match (&fact.left, &fact.right) {
+            // Principal arccos nonnegativity must precede the generic left-zero arm.
+            (_, Obj::TrigOperator(TrigOperator::Arccos(_)))
+                if match_arccos_principal_lower(&fact.left, &fact.right) =>
+            {
+                Ok(Some(
+                    LessEqualFactSearchProofByBuiltinRule::ArccosPrincipalLowerBound(
+                        ArccosPrincipalLowerBoundBuiltinRuleProof {},
+                    ),
+                ))
+            }
+
             // Both Add: congruence on shared addend.
             (
                 Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
@@ -227,15 +238,6 @@ impl Runtime {
                 Ok(Some(
                     LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalUpperBound(
                         ArcsinPrincipalUpperBoundBuiltinRuleProof {},
-                    ),
-                ))
-            }
-            (_, Obj::TrigOperator(TrigOperator::Arccos(_)))
-                if match_arccos_principal_lower(&fact.left, &fact.right) =>
-            {
-                Ok(Some(
-                    LessEqualFactSearchProofByBuiltinRule::ArccosPrincipalLowerBound(
-                        ArccosPrincipalLowerBoundBuiltinRuleProof {},
                     ),
                 ))
             }

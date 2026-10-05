@@ -68,10 +68,19 @@ impl Runtime {
         ) = (&fact.left, &fact.right)
         {
             if left_base.as_ref().ir() == right_base.as_ref().ir() {
-                return self.log_order_preserving_weak_proof(
+                if let Some(proof) = self.log_order_preserving_weak_proof(
                     left_base.as_ref(),
                     left_arg.as_ref(),
                     right_arg.as_ref(),
+                    verify_state,
+                )? {
+                    return Ok(Some(proof));
+                }
+                return self.log_unit_interval_weak_proof(
+                    left_base.as_ref(),
+                    left_arg.as_ref(),
+                    right_arg.as_ref(),
+                    fact.line_file.clone(),
                     verify_state,
                 );
             }
@@ -142,10 +151,19 @@ impl Runtime {
         ) = (&fact.left, &fact.right)
         {
             if left_base.as_ref().ir() == right_base.as_ref().ir() {
-                return self.log_order_preserving_strict_proof(
+                if let Some(proof) = self.log_order_preserving_strict_proof(
                     left_base.as_ref(),
                     left_arg.as_ref(),
                     right_arg.as_ref(),
+                    verify_state,
+                )? {
+                    return Ok(Some(proof));
+                }
+                return self.log_unit_interval_strict_proof(
+                    left_base.as_ref(),
+                    left_arg.as_ref(),
+                    right_arg.as_ref(),
+                    fact.line_file.clone(),
                     verify_state,
                 );
             }

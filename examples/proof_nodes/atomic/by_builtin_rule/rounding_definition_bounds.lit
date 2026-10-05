@@ -1,0 +1,15 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/rounding_definition_bounds.lit
+# Before: the following direct defining facts were rejected (see task journal).
+# forall x R:
+#     floor(x)<=x
+#     x<floor(x)+1
+#     ceil(x)-1<x
+#     x<=ceil(x)
+# Boundary: floor(0)<0 and ceil(0)>0 are false; floor(i) is outside the real domain.
+# Now: the same direct facts pass without trust or a user theorem.
+
+forall x R:
+    floor(x)<=x
+    x<floor(x)+1
+    ceil(x)-1<x
+    x<=ceil(x)

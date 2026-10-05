@@ -21,6 +21,10 @@ thm distance_sq_coordinate_formula:
 (3, 4) $in cart(R, R)
 (3, 4) $in points
 release thm distance_sq_coordinate_formula((0, 0), (3, 4))
+(0, 0)[1] = 0
+(0, 0)[2] = 0
+(3, 4)[1] = 3
+(3, 4)[2] = 4
 distance_sq((0, 0), (3, 4)) = (3 - 0)^2 + (4 - 0)^2
 distance_sq((0, 0), (3, 4)) = (3 - 0)^2 + (4 - 0)^2 = 25
 
@@ -39,8 +43,27 @@ have fn equilateral_vertex(a, b cart(R, R)) cart(R, R) = ((a[1] + b[1]) / 2 - sq
 thm equilateral_rotation_norm:
     ? forall x, y R:
         (x / 2 - sqrt(3) * y / 2)^2 + (y / 2 + sqrt(3) * x / 2)^2 = x^2 + y^2
+    sqrt(3)^2 = 3
+    1 + sqrt(3)^2 = 4
+    x^2 - 2 * x * sqrt(3) * y + sqrt(3)^2 * y^2 + y^2 + 2 * y * sqrt(3) * x + sqrt(3)^2 * x^2 = (1 + sqrt(3)^2) * (x^2 + y^2) = 4 * (x^2 + y^2) = 4 * x^2 + 4 * y^2
     (x - sqrt(3) * y)^2 + (y + sqrt(3) * x)^2 = x^2 - 2 * x * sqrt(3) * y + sqrt(3)^2 * y^2 + y^2 + 2 * y * sqrt(3) * x + sqrt(3)^2 * x^2 = 4 * x^2 + 4 * y^2
     (x / 2 - sqrt(3) * y / 2)^2 + (y / 2 + sqrt(3) * x / 2)^2 = ((x - sqrt(3) * y)^2 + (y + sqrt(3) * x)^2) / 4 = (4 * x^2 + 4 * y^2) / 4 = x^2 + y^2
+
+thm euclid_add_equalities:
+    ? forall a, b, c, d R:
+        a = b
+        c = d
+        =>:
+            a + c = b + d
+    a + c = b + c = b + d
+
+thm euclid_subtract_equalities:
+    ? forall a, b, c, d R:
+        a = b
+        c = d
+        =>:
+            a - c = b - d
+    a - c = b - c = b - d
 
 thm equilateral_vertex_distance_lemma:
     ? forall a, b cart(R, R):
@@ -49,7 +72,11 @@ thm equilateral_vertex_distance_lemma:
     equilateral_vertex(a, b) = ((a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2, (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)
     equilateral_vertex(a, b)[1] = (a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
     equilateral_vertex(a, b)[2] = (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2
+    release thm euclid_subtract_equalities(equilateral_vertex(a, b)[1], (a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2, a[1], a[1])
+    equilateral_vertex(a, b)[1] - a[1] = ((a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2) - a[1] = (b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
     equilateral_vertex(a, b)[1] - a[1] = (b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
+    release thm euclid_subtract_equalities(equilateral_vertex(a, b)[2], (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2, a[2], a[2])
+    equilateral_vertex(a, b)[2] - a[2] = ((a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2) - a[2] = (b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2
     equilateral_vertex(a, b)[2] - a[2] = (b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2
     release thm distance_sq_coordinate_formula(a, equilateral_vertex(a, b))
     distance_sq(a, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - a[1])^2 + (equilateral_vertex(a, b)[2] - a[2])^2
@@ -57,13 +84,24 @@ thm equilateral_vertex_distance_lemma:
     distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
     release thm equilateral_rotation_norm(b[1] - a[1], b[2] - a[2])
     ((b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    (equilateral_vertex(a, b)[1] - a[1])^2 = ((b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2
+    (equilateral_vertex(a, b)[2] - a[2])^2 = ((b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)^2
+    release thm euclid_add_equalities((equilateral_vertex(a, b)[1] - a[1])^2, ((b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2, (equilateral_vertex(a, b)[2] - a[2])^2, ((b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)^2)
     distance_sq(a, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - a[1])^2 + (equilateral_vertex(a, b)[2] - a[2])^2 = ((b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2 = distance_sq(a, b)
+    release thm euclid_subtract_equalities(equilateral_vertex(a, b)[1], (a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2, b[1], b[1])
+    equilateral_vertex(a, b)[1] - b[1] = ((a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2) - b[1] = (a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
     equilateral_vertex(a, b)[1] - b[1] = (a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
+    release thm euclid_subtract_equalities(equilateral_vertex(a, b)[2], (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2, b[2], b[2])
+    equilateral_vertex(a, b)[2] - b[2] = ((a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2) - b[2] = -((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)
     equilateral_vertex(a, b)[2] - b[2] = -((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)
     release thm distance_sq_coordinate_formula(b, equilateral_vertex(a, b))
     distance_sq(b, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - b[1])^2 + (equilateral_vertex(a, b)[2] - b[2])^2
     release thm equilateral_rotation_norm(a[1] - b[1], b[2] - a[2])
     ((a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)^2 = (a[1] - b[1])^2 + (b[2] - a[2])^2
+    (equilateral_vertex(a, b)[1] - b[1])^2 = ((a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2
+    (equilateral_vertex(a, b)[2] - b[2])^2 = (-((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2))^2 = ((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)^2
+    (equilateral_vertex(a, b)[2] - b[2])^2 = ((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)^2
+    release thm euclid_add_equalities((equilateral_vertex(a, b)[1] - b[1])^2, ((a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2, (equilateral_vertex(a, b)[2] - b[2])^2, ((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)^2)
     distance_sq(b, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - b[1])^2 + (equilateral_vertex(a, b)[2] - b[2])^2 = ((a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)^2 = (a[1] - b[1])^2 + (b[2] - a[2])^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2 = distance_sq(a, b)
 
 # Euclid I.1: construct an equilateral triangle on a nondegenerate segment.
@@ -89,5 +127,16 @@ by contra:
     (2, 0)[1] = 2
     0 = (0, 0)[1] = (2, 0)[1] = 2
     impossible 0 != 2
-equilateral_vertex((0, 0), (2, 0)) = (1, sqrt(3))
+claim:
+    ? equilateral_vertex((0, 0), (2, 0)) = (1, sqrt(3))
+    (2, 0)[1] = 2
+    (2, 0)[2] = 0
+    equilateral_vertex((0, 0), (2, 0)) = (((0, 0)[1] + (2, 0)[1]) / 2 - sqrt(3) * ((2, 0)[2] - (0, 0)[2]) / 2, ((0, 0)[2] + (2, 0)[2]) / 2 + sqrt(3) * ((2, 0)[1] - (0, 0)[1]) / 2)
+    equilateral_vertex((0, 0), (2, 0))[1] = ((0, 0)[1] + (2, 0)[1]) / 2 - sqrt(3) * ((2, 0)[2] - (0, 0)[2]) / 2 = 1
+    equilateral_vertex((0, 0), (2, 0))[2] = ((0, 0)[2] + (2, 0)[2]) / 2 + sqrt(3) * ((2, 0)[1] - (0, 0)[1]) / 2 = sqrt(3)
+    (1, sqrt(3))[1] = 1
+    (1, sqrt(3))[2] = sqrt(3)
+    tuple_dim(equilateral_vertex((0, 0), (2, 0))) = 2
+    tuple_dim((1, sqrt(3))) = 2
+    release thm tuple_equal_from_coordinates(equilateral_vertex((0, 0), (2, 0)), (1, sqrt(3)))
 exist c cart(R, R) st {$is_equilateral_triangle((0, 0), (2, 0), c)}

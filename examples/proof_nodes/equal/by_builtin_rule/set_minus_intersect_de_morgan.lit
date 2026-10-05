@@ -3,5 +3,5 @@
 
 have A set
 have B set
-have C set
-set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
+have Target set
+set_minus(A, intersect(B, Target)) = union(set_minus(A, B), set_minus(A, Target))
