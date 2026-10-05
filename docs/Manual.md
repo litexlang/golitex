@@ -172,6 +172,13 @@ during tokenization. Names beginning with one underscore remain ordinary user
 space, as do prefixes such as `h_` and `fn_`. Comments and quoted strings are
 not symbol tokens and may contain the reserved spelling.
 
+Builtin object spellings are also reserved at declaration sites: literals
+`i`, `e`, `pi`, standard sets such as `N`, `R`, `C`, and object constructor/function
+names such as `sin`, `sqrt`, `fn`, `sum` and `cart` cannot be user definitions,
+parameters, fields, indices or witnesses. Their uses are parsed as builtins
+before identifier lookup. Use a fresh name such as `t`, `epsilon` or `pi_value`;
+a rejected declaration does not leave its attempted names bound.
+
 ```litex
 have x R = 3
 
@@ -3220,6 +3227,13 @@ Important rules:
    single-export sugar for `a::<sole_export>::b`.
 4. Canonical names follow the mount alias and export name, for example
    `Algebra::chap1::name` or `basics:::name` when `basics` has one export.
+
+Struct carriers accept these same paths: `&local::Pair`,
+`&Lib::facts::Tagged<R>` and, for an import with exactly one export,
+`&Lib:::Tagged<R>`. The full definition owner is retained for field types,
+function returns and nested struct fields. Missing paths, wrong arguments
+and tuples outside the chosen carrier are rejected. See the runnable
+[qualified struct fixture](../examples/module_manager/qualified_struct_views/README.md).
 
 Cross-module references always use canonical qualified names. Module aliases
 and symbols are separate, so a local symbol may also be named `A`; field

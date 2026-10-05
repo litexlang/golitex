@@ -1927,15 +1927,15 @@ fn have_fn_by_exist_rejects_set_typed_witness() {
 #[test]
 fn have_fn_by_cases_sign_trichotomy_slice() {
     let mut runtime = runtime_with_file_env();
-    let code = "have fn sign(x R) Z by cases:\n    case x > 0: 1\n    case x = 0: 0\n    case x < 0: (-1)";
+    let code = "have fn signum(x R) Z by cases:\n    case x > 0: 1\n    case x = 0: 0\n    case x < 0: (-1)";
     assert!(
         !exec_one(&mut runtime, code).is_failed(),
-        "sign by cases (trichotomy) must succeed"
+        "signum by cases (trichotomy) must succeed"
     );
     assert!(!exec_one(&mut runtime, "have a R = 2").is_failed());
     assert!(
-        !exec_one(&mut runtime, "sign(a) = sign(a)").is_failed(),
-        "sign(a)=sign(a)"
+        !exec_one(&mut runtime, "signum(a) = signum(a)").is_failed(),
+        "signum(a)=signum(a)"
     );
 }
 

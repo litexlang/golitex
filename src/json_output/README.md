@@ -714,3 +714,17 @@ known-source searched proof. The [dedicated reflection tracer](../../examples/pr
 and [source evidence note](../../examples/proof_nodes/experience/problem_notes/zero-nonzero-reflection-2026-10-05.md)
 record exact source-ID tests in English and Chinese. Normal projection and
 locale key maps are unchanged; independent certificate replay is unverified.
+
+
+Detailed `FactorialMonotone` projects the actual `argument_order` verification;
+`FactorialStrictMonotone` projects `positive_smaller`, then `argument_order`
+in producer order. Either order spelling retains its actual source citation.
+The four new factorial/lcm typed winning leaves own ten language selectors.
+`LcmLeftAbsDivisibility` and `LcmRightAbsDivisibility` are separate unconditional
+identities under checked parent WD; no nonexistent source premise is projected.
+The enclosing equality owns integer and nonzero-modulus evidence. Existing
+`PositiveIntegerInNPos` retains `integer_proof` and the actual `positive_proof`
+for either x>0 or 0<x; its payload and projector shape are unchanged.
+The [leaf evidence record](../../examples/proof_nodes/experience/problem_notes/factorial-lcm-leaf-repair-2026-10-05.md)
+links source-ID, permission, negative and selected consumer gates. Independent
+certificate replay and Lean compilation remain outside this verification scope.

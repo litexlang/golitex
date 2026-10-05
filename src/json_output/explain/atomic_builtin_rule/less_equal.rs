@@ -71,6 +71,11 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpWeakMonotone(p) => p.rule_name_and_message_en(),
+            Self::LnWeakMonotone(p) => p.rule_name_and_message_en(),
+            Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_en(),
+            Self::LnWeakOrderReflection(p) => p.rule_name_and_message_en(),
+            Self::FactorialMonotone(p) => p.rule_name_and_message_en(),
             Self::FloorMonotone(p)=>p.rule_name_and_message_en(),
             Self::CeilMonotone(p)=>p.rule_name_and_message_en(),
             Self::ComplexTriangle(p)=>p.rule_name_and_message_en(),
@@ -146,6 +151,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpWeakMonotone(p) => p.rule_name_and_message_zh(),
+            Self::LnWeakMonotone(p) => p.rule_name_and_message_zh(),
+            Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_zh(),
+            Self::LnWeakOrderReflection(p) => p.rule_name_and_message_zh(),
+            Self::FactorialMonotone(p) => p.rule_name_and_message_zh(),
             Self::FloorMonotone(p)=>p.rule_name_and_message_zh(),
             Self::CeilMonotone(p)=>p.rule_name_and_message_zh(),
             Self::ComplexTriangle(p)=>p.rule_name_and_message_zh(),
@@ -227,6 +237,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpWeakMonotone(p) => p.rule_name_and_message_zh_hant(),
+            Self::LnWeakMonotone(p) => p.rule_name_and_message_zh_hant(),
+            Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_zh_hant(),
+            Self::LnWeakOrderReflection(p) => p.rule_name_and_message_zh_hant(),
+            Self::FactorialMonotone(p) => p.rule_name_and_message_zh_hant(),
             Self::FloorMonotone(p)=>p.rule_name_and_message_zh_hant(),
             Self::CeilMonotone(p)=>p.rule_name_and_message_zh_hant(),
             Self::ComplexTriangle(p)=>p.rule_name_and_message_zh_hant(),
@@ -308,6 +323,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpWeakMonotone(p) => p.rule_name_and_message_fr(),
+            Self::LnWeakMonotone(p) => p.rule_name_and_message_fr(),
+            Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_fr(),
+            Self::LnWeakOrderReflection(p) => p.rule_name_and_message_fr(),
+            Self::FactorialMonotone(p) => p.rule_name_and_message_fr(),
             Self::FloorMonotone(p)=>p.rule_name_and_message_fr(),
             Self::CeilMonotone(p)=>p.rule_name_and_message_fr(),
             Self::ComplexTriangle(p)=>p.rule_name_and_message_fr(),
@@ -383,6 +403,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpWeakMonotone(p) => p.rule_name_and_message_ru(),
+            Self::LnWeakMonotone(p) => p.rule_name_and_message_ru(),
+            Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ru(),
+            Self::LnWeakOrderReflection(p) => p.rule_name_and_message_ru(),
+            Self::FactorialMonotone(p) => p.rule_name_and_message_ru(),
             Self::FloorMonotone(p)=>p.rule_name_and_message_ru(),
             Self::CeilMonotone(p)=>p.rule_name_and_message_ru(),
             Self::ComplexTriangle(p)=>p.rule_name_and_message_ru(),
@@ -458,6 +483,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpWeakMonotone(p) => p.rule_name_and_message_es(),
+            Self::LnWeakMonotone(p) => p.rule_name_and_message_es(),
+            Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_es(),
+            Self::LnWeakOrderReflection(p) => p.rule_name_and_message_es(),
+            Self::FactorialMonotone(p) => p.rule_name_and_message_es(),
             Self::FloorMonotone(p)=>p.rule_name_and_message_es(),
             Self::CeilMonotone(p)=>p.rule_name_and_message_es(),
             Self::ComplexTriangle(p)=>p.rule_name_and_message_es(),
@@ -533,6 +563,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpWeakMonotone(p) => p.rule_name_and_message_ar(),
+            Self::LnWeakMonotone(p) => p.rule_name_and_message_ar(),
+            Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ar(),
+            Self::LnWeakOrderReflection(p) => p.rule_name_and_message_ar(),
+            Self::FactorialMonotone(p) => p.rule_name_and_message_ar(),
             Self::FloorMonotone(p)=>p.rule_name_and_message_ar(),
             Self::CeilMonotone(p)=>p.rule_name_and_message_ar(),
             Self::ComplexTriangle(p)=>p.rule_name_and_message_ar(),
@@ -614,6 +649,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpWeakMonotone(p) => p.rule_name_and_message_ja(),
+            Self::LnWeakMonotone(p) => p.rule_name_and_message_ja(),
+            Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ja(),
+            Self::LnWeakOrderReflection(p) => p.rule_name_and_message_ja(),
+            Self::FactorialMonotone(p) => p.rule_name_and_message_ja(),
             Self::FloorMonotone(p)=>p.rule_name_and_message_ja(),
             Self::CeilMonotone(p)=>p.rule_name_and_message_ja(),
             Self::ComplexTriangle(p)=>p.rule_name_and_message_ja(),
@@ -695,6 +735,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpWeakMonotone(p) => p.rule_name_and_message_ko(),
+            Self::LnWeakMonotone(p) => p.rule_name_and_message_ko(),
+            Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ko(),
+            Self::LnWeakOrderReflection(p) => p.rule_name_and_message_ko(),
+            Self::FactorialMonotone(p) => p.rule_name_and_message_ko(),
             Self::FloorMonotone(p)=>p.rule_name_and_message_ko(),
             Self::CeilMonotone(p)=>p.rule_name_and_message_ko(),
             Self::ComplexTriangle(p)=>p.rule_name_and_message_ko(),
@@ -776,6 +821,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpWeakMonotone(p) => p.rule_name_and_message_vi(),
+            Self::LnWeakMonotone(p) => p.rule_name_and_message_vi(),
+            Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_vi(),
+            Self::LnWeakOrderReflection(p) => p.rule_name_and_message_vi(),
+            Self::FactorialMonotone(p) => p.rule_name_and_message_vi(),
             Self::FloorMonotone(p)=>p.rule_name_and_message_vi(),
             Self::CeilMonotone(p)=>p.rule_name_and_message_vi(),
             Self::ComplexTriangle(p)=>p.rule_name_and_message_vi(),

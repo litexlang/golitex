@@ -719,3 +719,19 @@ explicitly publish product!=0 before component reflection and exact reuse;
 the bare alias shortcut remains optional and unimplemented. The
 [source-owned note](experience/problem_notes/zero-nonzero-reflection-2026-10-05.md)
 records cold versus valid prior-context reuse and excludes false old accepts.
+
+
+## Factorial order and lcm input divisibility
+
+The [factorial tracer](atomic/by_builtin_rule/factorial_monotonicity.lit)
+checks weak order and strict order with the smaller natural argument positive,
+including reverse-written premises and explicit positive refinement.
+The [lcm tracer](equal/by_builtin_rule/lcm_input_divisibility.lit) keeps
+integer/nonzero-modulus WD and allows the other input to be zero. Left/right
+input leaves remain distinct. The [full author tracer](atomic/by_builtin_rule/factorial_order_author_routes.lit)
+publishes an inner factorial order before the bounded outer rule, and retains
+the two positive-integer spelling bridges already checkable before the shortcut.
+All three whole strict files pass current and legacy. The
+[source-owned record](experience/problem_notes/factorial-lcm-leaf-repair-2026-10-05.md)
+separates missing leaves, optional authors, first failure phases and cold versus
+valid prior-forall reuse; no recursive search or domain contract is broadened.

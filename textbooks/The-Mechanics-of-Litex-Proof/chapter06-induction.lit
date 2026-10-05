@@ -35,13 +35,13 @@ claim:
         2 ^ n >= n + 1
     by induc n from 0:
         ? 2 ^ n >= n + 1
-        2^0 = 1 >= 0 + 1
-
-        forall m Z:
-            m >= 0
-            2^m >= m + 1
-            =>:
-                2 ^ (m + 1) = 2 ^ m * 2^1 >= (m + 1) * 2 = (m + 1) + (m + 1) >= m + 1 + 1
+        ? from n = 0:
+            2^0 = 1 >= 0 + 1
+        ? induc:
+            n $in N
+            1 $in N
+            2 $in C
+            2 ^ (n + 1) = 2 ^ n * 2^1 >= (n + 1) * 2 = (n + 1) + (n + 1) >= n + 1 + 1
 
 # 6.1.2
 
@@ -66,7 +66,7 @@ sketch:
             case n % 2 = 0:
                 quot(n, 2) $in Z
                 let k = quot(n, 2)
-                release thm citation::quot_euclidean(n, 2)
+                (n) = (2) * quot(n, 2) + (n) % (2)
                 witness $even(n) from k:
                     n = 2 * k + n % 2
                     n % 2 = 0
@@ -76,7 +76,7 @@ sketch:
             case n % 2 = 1:
                 quot(n, 2) $in Z
                 let k = quot(n, 2)
-                release thm citation::quot_euclidean(n, 2)
+                (n) = (2) * quot(n, 2) + (n) % (2)
                 witness $odd(n) from k:
                     n = 2 * k + n % 2
                     n % 2 = 1
@@ -112,41 +112,42 @@ prop mod_eq(a Z, b Z, d Z):
     exist k Z st {a - b = d * k}
 
 sketch:
-    prop congruence_power_rule(a Z, b Z, d Z):
-        forall n N+:
-            $mod_eq(a^n, b^n, d)
-
     # At the base exponent the original congruence is the claim itself. In the
     # step, factor `a^(m+1) - b^(m+1)` using the quotient witnesses for both
     # the induction hypothesis and `a - b`.
+    prop congruence_power_rule(a Z, b Z, d Z):
+        forall n N+:
+            $mod_eq(a^n, b^n, d)
+    claim:
+        ? forall a, b, d Z, n N+:
+            $mod_eq(a, b, d)
+            =>:
+                $mod_eq(a^n, b^n, d)
+        by induc n from 1:
+            ? $mod_eq(a^n, b^n, d)
+            ? from n = 1:
+                obtain k from exist k Z st {a - b = d * k}
+                d != 0
+                witness exist mod_witness Z st {a^1 - b^1 = d * mod_witness} from k:
+                    a^1 - b^1 = a - b = d * k
+                by def $mod_eq(a^1, b^1, d)
+            ? induc:
+                obtain x from exist x Z st {a^n - b^n = d * x}
+                obtain y from exist y Z st {a - b = d * y}
+                d != 0
+                n $in N+
+                a^(n + 1) = a^n * a^1 = a^n * a
+                b^(n + 1) = b^n * b^1 = b^n * b
+                witness exist mod_witness Z st {a^(n + 1) - b^(n + 1) = d * mod_witness} from x * a + b^n * y:
+                    a^(n + 1) - b^(n + 1) = a^n * a - b^n * b = (a^n - b^n) * a + b^n * (a - b) = d * x * a + b^n * (d * y) = d * (x * a + b^n * y)
+                by def $mod_eq(a^(n + 1), b^(n + 1), d)
     claim:
         ? forall a, b, d Z:
             $mod_eq(a, b, d)
             =>:
                 $congruence_power_rule(a, b, d)
-        by induc n from 1:
-            ? $mod_eq(a^n, b^n, d)
-            obtain k from exist k Z st {a - b = d * k}
-            d != 0
-            witness exist mod_witness Z st {a^1 - b^1 = d * mod_witness} from k:
-                a^1 - b^1 = a - b = d * k
-            by def $mod_eq(a^1, b^1, d)
-
-            claim:
-                ? forall m Z:
-                    m >= 1
-                    $mod_eq(a^m, b^m, d)
-                    =>:
-                        $mod_eq(a^(m + 1), b^(m + 1), d)
-                obtain x from exist x Z st {a^m - b^m = d * x}
-                obtain y from exist y Z st {a - b = d * y}
-                d != 0
-                m $in N+
-                a^(m + 1) = a^m * a
-                b^(m + 1) = b^m * b
-                witness exist mod_witness Z st {a^(m + 1) - b^(m + 1) = d * mod_witness} from x * a + b^m * y:
-                    a^(m + 1) - b^(m + 1) = a^m * a - b^m * b = (a^m - b^m) * a + b^m * (a - b) = d * x * a + b^m * (d * y) = d * (x * a + b^m * y)
-                by def $mod_eq(a^(m + 1), b^(m + 1), d)
+        forall n N+:
+            $mod_eq(a^n, b^n, d)
         by def $congruence_power_rule(a, b, d)
 
 # 6.1.4
@@ -157,50 +158,45 @@ sketch:
 # `1`.
 
 sketch:
-    prop residue_is_one_or_four(n N):
-        $mod_eq(4^n, 1, 15) or $mod_eq(4^n, 4, 15)
-
     # The base residue is `1`. Multiplying a residue `1` by `4` gives `4`,
     # while multiplying a residue `4` gives `16`, which is congruent to `1`.
+    prop residue_is_one_or_four(n N):
+        $mod_eq(4^n, 1, 15) or $mod_eq(4^n, 4, 15)
     claim:
         ? forall n N:
-            $residue_is_one_or_four(n)
+            $mod_eq(4^n, 1, 15) or $mod_eq(4^n, 4, 15)
         by induc n from 0:
-            ? $residue_is_one_or_four(n)
-            15 != 0
-            witness exist mod_witness Z st {4^0 - 1 = 15 * mod_witness} from 0:
-                4^0 - 1 = 1 - 1 = 15 * 0
-            by def $mod_eq(4^0, 1, 15)
-            $mod_eq(4^0, 1, 15) or $mod_eq(4^0, 4, 15)
-            by def $residue_is_one_or_four(0)
-
-            claim:
-                ? forall m Z:
-                    m >= 0
-                    $residue_is_one_or_four(m)
-                    =>:
-                        $residue_is_one_or_four(m + 1)
+            ? $mod_eq(4^n, 1, 15) or $mod_eq(4^n, 4, 15)
+            ? from n = 0:
+                15 != 0
+                witness exist mod_witness Z st {4^0 - 1 = 15 * mod_witness} from 0:
+                    4^0 - 1 = 1 - 1 = 15 * 0
+                by def $mod_eq(4^0, 1, 15)
+                $mod_eq(4^0, 1, 15) or $mod_eq(4^0, 4, 15)
+            ? induc:
+                4^(n + 1) = 4^n * 4^1 = 4^n * 4
                 15 != 0
                 by cases:
-                    ? $residue_is_one_or_four(m + 1)
-                    case $mod_eq(4^m, 1, 15):
-                        obtain x from exist x Z st {4^m - 1 = 15 * x}
-                        witness exist mod_witness Z st {4^(m + 1) - 4 = 15 * mod_witness} from 4 * x:
-                            4^(m + 1) - 4 = 4^m * 4 - 4 = 4 * (4^m - 1) = 4 * (15 * x) = 15 * (4 * x)
-                        by def $mod_eq(4^(m + 1), 4, 15)
-                        $mod_eq(4^(m + 1), 1, 15) or $mod_eq(4^(m + 1), 4, 15)
-                        by def $residue_is_one_or_four(m + 1)
-                    case $mod_eq(4^m, 4, 15):
-                        obtain x from exist x Z st {4^m - 4 = 15 * x}
-                        witness exist mod_witness Z st {4^(m + 1) - 1 = 15 * mod_witness} from 4 * x + 1:
-                            4^(m + 1) - 1 = 4^m * 4 - 1 = 4 * (4^m - 4) + 15 = 4 * (15 * x) + 15 = 15 * (4 * x + 1)
-                        by def $mod_eq(4^(m + 1), 1, 15)
-                        $mod_eq(4^(m + 1), 1, 15) or $mod_eq(4^(m + 1), 4, 15)
-                        by def $residue_is_one_or_four(m + 1)
-
+                    ? $mod_eq(4^(n + 1), 1, 15) or $mod_eq(4^(n + 1), 4, 15)
+                    case $mod_eq(4^n, 1, 15):
+                        obtain x from exist x Z st {4^n - 1 = 15 * x}
+                        witness exist mod_witness Z st {4^(n + 1) - 4 = 15 * mod_witness} from 4 * x:
+                            4^(n + 1) - 4 = 4^n * 4 - 4 = 4 * (4^n - 1) = 4 * (15 * x) = 15 * (4 * x)
+                        by def $mod_eq(4^(n + 1), 4, 15)
+                        $mod_eq(4^(n + 1), 1, 15) or $mod_eq(4^(n + 1), 4, 15)
+                    case $mod_eq(4^n, 4, 15):
+                        obtain x from exist x Z st {4^n - 4 = 15 * x}
+                        witness exist mod_witness Z st {4^(n + 1) - 1 = 15 * mod_witness} from 4 * x + 1:
+                            4^(n + 1) - 1 = 4^n * 4 - 1 = 4 * (4^n - 4) + 15 = 4 * (15 * x) + 15 = 15 * (4 * x + 1)
+                        by def $mod_eq(4^(n + 1), 1, 15)
+                        $mod_eq(4^(n + 1), 1, 15) or $mod_eq(4^(n + 1), 4, 15)
+    claim:
+        ? forall n N:
+            $mod_eq(4^n, 1, 15) or $mod_eq(4^n, 4, 15)
     claim:
         ? forall n N:
             $residue_is_one_or_four(n)
+        by def $residue_is_one_or_four(n)
 
 # The code above records the theorem as a reusable fact. A fully expanded proof
 # would be an induction whose step is a `by cases` block on the previous
@@ -220,17 +216,15 @@ claim:
             3^n >= 2^n + 5
     by induc k from 2:
         ? 3^k >= 2^k + 5
-        3^2 = 9 >= 2^2 + 5 = 4 + 5 = 9
-
-        forall m Z:
-            m >= 2
-            3^m >= 2^m + 5
-            =>:
-                15 > 10
-                10 > 5
-                2^m > 0
-                3^(m + 1) = 3^1 * 3^m >= 3^1 * (2^m + 5) = 3 * (2^m + 5) = 3 * 2^m + 15 = 2 * 2^m + 2^m + 15 >= 2 * 2^m + 2^m + 10 >= 2 * 2^m + 0 + 5 = 2 * 2^m + 5 = 2^(m + 1) + 5
-                3^(m + 1) >= 2^(m + 1) + 5
+        ? from k = 2:
+            3^2 = 9 >= 2^2 + 5 = 4 + 5 = 9
+        ? induc:
+            k $in N
+            3^(k + 1) = 3^k * 3^1 = 3^k * 3
+            2^(k + 1) = 2^k * 2^1 = 2 * 2^k
+            0 <= 2^k
+            2^k + 15 >= 0 + 15 = 15 >= 5
+            3^(k + 1) >= (2^k + 5) * 3 = 2 * 2^k + (2^k + 15) >= 2 * 2^k + 5 = 2^(k + 1) + 5
 
 # 6.1.6
 
@@ -239,32 +233,28 @@ claim:
 # `2^n >= n^2` is true for all `n >= 4`.
 
 sketch:
+    # Start at `4`. In the step, `m^2 >= 4m` makes the difference
+    # `2m^2 - (m+1)^2` positive, so doubling the induction bound is enough.
     prop sufficiently_large_power_bound(N0 Z):
         forall n Z:
             n >= N0
             =>:
                 2^n >= n^2
-
-    # Start at `4`. In the step, `m^2 >= 4m` makes the difference
-    # `2m^2 - (m+1)^2` positive, so doubling the induction bound is enough.
     claim:
         ? $sufficiently_large_power_bound(4)
         by induc n from 4:
             ? 2^n >= n^2
-            2^4 = 16 = 4^2
-
-            claim:
-                ? forall m Z:
-                    m >= 4
-                    2^m >= m^2
-                    =>:
-                        2^(m + 1) >= (m + 1)^2
-                m^2 = m * m >= 4 * m
-                m^2 - 2 * m - 1 >= 4 * m - 2 * m - 1 = 2 * m - 1 >= 2 * 4 - 1 = 7 > 0
-                2 * m^2 = (m^2 - 2 * m - 1) + (m + 1)^2 >= 0 + (m + 1)^2 = (m + 1)^2
-                2^(m + 1) = 2^m * 2^1 = 2 * 2^m >= 2 * m^2 >= (m + 1)^2
+            ? from n = 4:
+                2^4 = 16 = 4^2
+            ? induc:
+                n^2 = n * n >= 4 * n
+                n^2 - 2 * n >= 4 * n - 2 * n = 2 * n
+                2 * n >= 2 * 4 = 8
+                2 * n - 1 >= 8 - 1 = 7
+                n^2 - 2 * n - 1 >= 4 * n - 2 * n - 1 = 2 * n - 1 >= 2 * 4 - 1 = 7 > 0
+                2 * n^2 = (n^2 - 2 * n - 1) + (n + 1)^2 >= 0 + (n + 1)^2 = (n + 1)^2
+                2^(n + 1) = 2^n * 2^1 = 2 * 2^n >= 2 * n^2 >= (n + 1)^2
         by def $sufficiently_large_power_bound(4)
-
     claim:
         ? exist N0 Z st {$sufficiently_large_power_bound(N0)}
         witness exist N0 Z st {$sufficiently_large_power_bound(N0)} from 4:
@@ -363,19 +353,16 @@ claim:
             x(n) = 2^(n + 2) + 1
     by induc n from 0:
         ? x(n) = 2^(n + 2) + 1
-        x(0) = 5 = 2^2 + 1 = 2^(0 + 2) + 1
-
-        claim:
-            ? forall m Z:
-                m >= 0
-                x(m) = 2^(m + 2) + 1
-                =>:
-                    x(m + 1) = 2^((m + 1) + 2) + 1
-            x(m + 1) = 2 * x(m) - 1
-            m + 2 $in N+
-            2^1 * 2^(m + 2) = 2^(1 + (m + 2))
-            2 * x(m) - 1 = 2 * (2^(m + 2) + 1) - 1 = 2 * 2^(m + 2) + 2 * 1 - 1 = 2^1 * 2^(m + 2) + 1 = 2^(1 + (m + 2)) + 1 = 2^(m + 3) + 1
-            2^(m + 3) + 1 = 2^((m + 1) + 2) + 1
+        ? from n = 0:
+            x(0) = 5 = 2^2 + 1 = 2^(0 + 2) + 1
+        ? induc:
+            x(n + 1) = 2 * x(n) - 1
+            n + 2 $in N+
+            1 + (n + 2) = n + 3 = (n + 1) + 2
+            2^(1 + (n + 2)) = 2^(n + 3) = 2^((n + 1) + 2)
+            2^1 * 2^(n + 2) = 2^(1 + (n + 2))
+            2 * x(n) - 1 = 2 * (2^(n + 2) + 1) - 1 = 2 * 2^(n + 2) + 2 * 1 - 1 = 2^1 * 2^(n + 2) + 1 = 2^(1 + (n + 2)) + 1 = 2^(n + 3) + 1
+            2^(n + 3) + 1 = 2^((n + 1) + 2) + 1
 
 # 6.2.4 Example
 
@@ -416,7 +403,6 @@ claim:
 sketch:
     prop divides(a Z, b Z):
         exist c Z st {b = a * c}
-
     prop factorial_divisible(f fn(n Z: n >= 0) N, n Z):
         n >= 0
         forall d N:
@@ -424,7 +410,6 @@ sketch:
             d <= n
             =>:
                 $divides(d, f(n))
-
     claim:
         ? forall f fn(n Z: n >= 0) N, n Z:
             f(0) = 1
@@ -437,49 +422,50 @@ sketch:
                 $factorial_divisible(f, n)
         by induc n from 0:
             ? $factorial_divisible(f, n)
-            claim:
-                ? forall d N:
+            ? from n = 0:
+                claim:
+                    ? forall d N:
+                        1 <= d
+                        d <= 0
+                        =>:
+                            $divides(d, f(0))
+                    by contra:
+                        ? $divides(d, f(0))
+                        0 < d
+                        impossible d <= 0
+                forall d N:
                     1 <= d
                     d <= 0
                     =>:
                         $divides(d, f(0))
-                by contra:
-                    ? $divides(d, f(0))
-                    impossible d <= 0
-            by def $factorial_divisible(f, 0)
-
-            claim:
-                ? forall m Z:
-                    m >= 0
-                    $factorial_divisible(f, m)
-                    =>:
-                        $factorial_divisible(f, m + 1)
+                $factorial_divisible(f, 0)
+            ? induc:
                 claim:
                     ? forall d N:
                         1 <= d
-                        d <= m + 1
+                        d <= n + 1
                         =>:
-                            $divides(d, f(m + 1))
-                    d <= m or d >= m + 1
+                            $divides(d, f(n + 1))
+                    d <= n or d >= n + 1
                     by cases:
-                        ? $divides(d, f(m + 1))
-                        case d <= m:
-                            $divides(d, f(m))
-                            obtain c from exist c Z st {f(m) = d * c}
-                            witness $divides(d, f(m + 1)) from (m + 1) * c:
-                                f(m + 1) = (m + 1) * f(m) = (m + 1) * (d * c) = d * ((m + 1) * c)
-                        case d >= m + 1:
-                            d = m + 1
-                            witness $divides(d, f(m + 1)) from f(m):
-                                f(m + 1) = (m + 1) * f(m) = d * f(m)
-                by def $factorial_divisible(f, m + 1)
+                        ? $divides(d, f(n + 1))
+                        case d <= n:
+                            $divides(d, f(n))
+                            obtain c from exist c Z st {f(n) = d * c}
+                            witness $divides(d, f(n + 1)) from (n + 1) * c:
+                                f(n + 1) = (n + 1) * f(n) = (n + 1) * (d * c) = d * ((n + 1) * c)
+                        case d >= n + 1:
+                            d = n + 1
+                            witness $divides(d, f(n + 1)) from f(n):
+                                f(n + 1) = (n + 1) * f(n) = d * f(n)
+                by def $factorial_divisible(f, n + 1)
 
 # 6.2.6 Example
 
 # Show forall natural numbers `n`, `(n+1)! >= 2^n`.
 
 claim:
-    ? forall f fn(n Z: n >= 0) N, n Z:
+    ? forall f fn(t Z: t >= 0) N, n Z:
         f(0) = 1
         forall k Z:
             k >= 0
@@ -490,16 +476,21 @@ claim:
             f(n + 1) >= 2^n
     by induc n from 0:
         ? f(n + 1) >= 2^n
-        f(0 + 1) = (0 + 1) * f(0) = 1 * f(0) = 1 * 1 = 1 >= 2^0
+        ? from n = 0:
+            f(0 + 1) = (0 + 1) * f(0) = 1 * f(0) = 1 * 1 = 1 >= 2^0
+        ? induc:
+            n $in N
+            n + 2 >= 0 + 2 = 2
+            f(n + 1) >= 2^n
+            2^n >= 0
+            f(n + 1) $in N
+            0 <= f(n + 1)
+            f(n + 1) >= 0
+            2^(n + 1) = 2^n * 2^1 = 2^n * 2 = 2 * 2^n
+            n + 1 >= 0
+            n + 1 + 1 = n + 2
+            f(n + 1 + 1) = (n + 1 + 1) * f(n + 1) = (n + 2) * f(n + 1) >= 2 * f(n + 1) >= 2 * 2^n = 2^(n + 1)
 
-        claim:
-            ? forall k Z:
-                k >= 0
-                f(k + 1) >= 2^k
-                =>:
-                    f(k + 1 + 1) >= 2^(k + 1)
-            k + 2 >= 0 + 2 = 2
-            f(k + 1 + 1) = (k + 2) * f(k + 1) >= 2 * f(k + 1) >= 2 * 2^k = 2^(k + 1)
 
 # 6.3 Two-Step Induction
 
@@ -524,31 +515,33 @@ claim:
 # Sequence `a(n)` is defined by the initial value `a(0) = 2`, `a(1) = 1`, `forall k: N => a(k + 2) = a(k + 1) + 2 * a(k)`. Show that for all natural numbers `n`, `a(n) = 2^n + (-1)^n`.
 
 # The useful induction predicate remembers two adjacent formulas at once. The
-# extra `proof_debt` line records the routine algebra identity used in the step.
+# local checked algebra lemma supplies the identity used in the step.
 
 sketch:
+    # Expand each successor power, then collect the two `2^m` terms and the
+    # two alternating-sign terms.
     prop seq_formula(a fn(n Z: n >= 0) Z, n Z):
         n >= 0
         a(n) = 2^n + (-1)^n
-
     prop seq_formula_pair(a fn(n Z: n >= 0) Z, n Z):
         n >= 0
         $seq_formula(a, n)
         $seq_formula(a, n + 1)
-
-    # Expand each successor power, then collect the two `2^m` terms and the
-    # two alternating-sign terms.
-    claim:
+    thm seq_formula_algebra:
         ? forall m Z:
             m >= 0
             =>:
                 2^(m + 1) + (-1)^(m + 1) + 2 * (2^m + (-1)^m) = 2^(m + 2) + (-1)^(m + 2)
         m $in N
+        2^(m + 1) = 2^m * 2^1
+        (-1)^(m + 1) = (-1)^m * (-1)^1
+        2^(m + 2) = 2^m * 2^2
+        (-1)^(m + 2) = (-1)^m * (-1)^2
+        2^(m + 1) + (-1)^(m + 1) = 2^m * 2^1 + (-1)^m * (-1)^1
         2^(m + 1) + (-1)^(m + 1) + 2 * (2^m + (-1)^m) = 2^m * 2^1 + (-1)^m * (-1)^1 + 2 * (2^m + (-1)^m) = 4 * 2^m + (-1)^m
         2^(m + 2) + (-1)^(m + 2) = 2^m * 2^2 + (-1)^m * (-1)^2 = 4 * 2^m + (-1)^m
         2^(m + 1) + (-1)^(m + 1) + 2 * (2^m + (-1)^m) = 4 * 2^m + (-1)^m = 2^(m + 2) + (-1)^(m + 2)
-
-    claim:
+    thm seq_formula_pair_by_induction:
         ? forall a fn(n Z: n >= 0) Z, n Z:
             a(0) = 2
             a(1) = 1
@@ -561,39 +554,34 @@ sketch:
                 $seq_formula_pair(a, n)
         by induc n from 0:
             ? $seq_formula_pair(a, n)
-            0 >= 0
-            a(0) = 2 = 2^0 + (-1)^0
-            0 + 1 >= 0
-            2^1 = 2
-            (-1)^1 = (-1)
-            2^1 + (-1)^1 = 2 + (-1) = 1
-            2^(0 + 1) + (-1)^(0 + 1) = 2^1 + (-1)^1 = 1
-            a(0 + 1) = a(1) = 1 = 2^(0 + 1) + (-1)^(0 + 1)
-            by def $seq_formula(a, 0)
-            by def $seq_formula(a, 0 + 1)
-            by def $seq_formula_pair(a, 0)
-
-            claim:
-                ? forall m Z:
-                    m >= 0
-                    $seq_formula_pair(a, m)
-                    =>:
-                        $seq_formula_pair(a, m + 1)
-                m >= 0
-                m $in N
-                $seq_formula_pair(a, m)
-                $seq_formula(a, m)
-                a(m) = 2^m + (-1)^m
-                $seq_formula(a, m + 1)
-                a(m + 1) = 2^(m + 1) + (-1)^(m + 1)
-                m + 1 >= 0
-                (m + 1) + 1 = m + 2
-                a((m + 1) + 1) = a(m + 2) = a(m + 1) + 2 * a(m)
-                a(m + 1) + 2 * a(m) = 2^(m + 1) + (-1)^(m + 1) + 2 * (2^m + (-1)^m)
-                a((m + 1) + 1) = 2^(m + 2) + (-1)^(m + 2) = 2^((m + 1) + 1) + (-1)^((m + 1) + 1)
-                by def $seq_formula(a, (m + 1) + 1)
-                by def $seq_formula_pair(a, m + 1)
-
+            ? from n = 0:
+                0 >= 0
+                a(0) = 2 = 2^0 + (-1)^0
+                0 + 1 >= 0
+                2^1 = 2
+                (-1)^1 = (-1)
+                2^1 + (-1)^1 = 2 + (-1) = 1
+                2^(0 + 1) + (-1)^(0 + 1) = 2^1 + (-1)^1 = 1
+                a(0 + 1) = a(1) = 1 = 2^(0 + 1) + (-1)^(0 + 1)
+                by def $seq_formula(a, 0)
+                by def $seq_formula(a, 0 + 1)
+                by def $seq_formula_pair(a, 0)
+            ? induc:
+                n >= 0
+                n $in N
+                $seq_formula_pair(a, n)
+                $seq_formula(a, n)
+                a(n) = 2^n + (-1)^n
+                $seq_formula(a, n + 1)
+                a(n + 1) = 2^(n + 1) + (-1)^(n + 1)
+                n + 1 >= 0
+                (n + 1) + 1 = n + 2
+                a((n + 1) + 1) = a(n + 2) = a(n + 1) + 2 * a(n)
+                a(n + 1) + 2 * a(n) = 2^(n + 1) + (-1)^(n + 1) + 2 * (2^n + (-1)^n)
+                release thm seq_formula_algebra(n)
+                a((n + 1) + 1) = 2^(n + 2) + (-1)^(n + 2) = 2^((n + 1) + 1) + (-1)^((n + 1) + 1)
+                by def $seq_formula(a, (n + 1) + 1)
+                by def $seq_formula_pair(a, n + 1)
     claim:
         ? forall a fn(n Z: n >= 0) Z, n Z:
             a(0) = 2
@@ -605,6 +593,7 @@ sketch:
             n >= 0
             =>:
                 a(n) = 2^n + (-1)^n
+        release thm seq_formula_pair_by_induction(a, n)
         $seq_formula_pair(a, n)
         $seq_formula(a, n)
 
@@ -620,17 +609,14 @@ sketch:
         n >= 1
         $mod_eq(a(n), 1, 6)
         $mod_eq(a(n + 1), 5, 6)
-
     prop seq_mod_pair_51(a fn(n Z: n >= 0) Z, n Z):
         n >= 1
         $mod_eq(a(n), 5, 6)
         $mod_eq(a(n + 1), 1, 6)
-
     prop seq_mod_pair(a fn(n Z: n >= 0) Z, n Z):
         n >= 1
         $seq_mod_pair_15(a, n) or $seq_mod_pair_51(a, n)
-
-    claim:
+    thm sequence_residue_pairs:
         ? forall a fn(n Z: n >= 0) Z, n Z:
             a(0) = 2
             a(1) = 1
@@ -643,67 +629,63 @@ sketch:
                 $seq_mod_pair(a, n)
         by strong_induc n from 1:
             ? $seq_mod_pair(a, n)
-            claim:
-                ? $seq_mod_pair(a, 1)
-                1 >= 1
-                6 != 0
-                witness exist mod_witness Z st {a(1) - 1 = 6 * mod_witness} from 0:
-                    a(1) - 1 = 1 - 1 = 0 = 6 * 0
-                by def $mod_eq(a(1), 1, 6)
-                a(1 + 1) = a(2) = a(0 + 2) = a(0 + 1) + 2 * a(0) = a(1) + 2 * a(0) = 1 + 2 * 2 = 5
-                witness exist mod_witness Z st {a(1 + 1) - 5 = 6 * mod_witness} from 0:
-                    a(1 + 1) - 5 = 5 - 5 = 0 = 6 * 0
-                by def $mod_eq(a(1 + 1), 5, 6)
-                by def $seq_mod_pair_15(a, 1)
-                $seq_mod_pair_15(a, 1) or $seq_mod_pair_51(a, 1)
-                by def $seq_mod_pair(a, 1)
-
-            claim:
-                ? forall m Z:
-                    m >= 1
-                    forall y Z:
-                        y >= 1
-                        y <= m
-                        =>:
-                            $seq_mod_pair(a, y)
-                    =>:
-                        $seq_mod_pair(a, m + 1)
-                m >= 1
-                $seq_mod_pair(a, m)
-                $seq_mod_pair_15(a, m) or $seq_mod_pair_51(a, m)
+            ? from n = 1:
+                claim:
+                    ? $seq_mod_pair(a, 1)
+                    1 >= 1
+                    6 != 0
+                    witness exist mod_witness Z st {a(1) - 1 = 6 * mod_witness} from 0:
+                        a(1) - 1 = 1 - 1 = 0 = 6 * 0
+                    by def $mod_eq(a(1), 1, 6)
+                    a(1 + 1) = a(2) = a(0 + 2) = a(0 + 1) + 2 * a(0) = a(1) + 2 * a(0) = 1 + 2 * 2 = 5
+                    witness exist mod_witness Z st {a(1 + 1) - 5 = 6 * mod_witness} from 0:
+                        a(1 + 1) - 5 = 5 - 5 = 0 = 6 * 0
+                    by def $mod_eq(a(1 + 1), 5, 6)
+                    by def $seq_mod_pair_15(a, 1)
+                    $seq_mod_pair_15(a, 1) or $seq_mod_pair_51(a, 1)
+                    by def $seq_mod_pair(a, 1)
+            ? strong_induc:
+                n >= 1
+                $seq_mod_pair(a, n)
+                $seq_mod_pair_15(a, n) or $seq_mod_pair_51(a, n)
                 by cases:
-                    ? $seq_mod_pair(a, m + 1)
-                    case $seq_mod_pair_15(a, m):
-                        $mod_eq(a(m), 1, 6)
-                        $mod_eq(a(m + 1), 5, 6)
-                        obtain k from exist k Z st {a(m) - 1 = 6 * k}
-                        obtain l from exist l Z st {a(m + 1) - 5 = 6 * l}
-                        m + 1 >= 1
-                        $mod_eq(a(m + 1), 5, 6)
-                        a((m + 1) + 1) = a(m + 2) = a(m + 1) + 2 * a(m)
+                    ? $seq_mod_pair(a, n + 1)
+                    case $seq_mod_pair_15(a, n):
+                        $mod_eq(a(n), 1, 6)
+                        $mod_eq(a(n + 1), 5, 6)
+                        obtain k from exist k Z st {a(n) - 1 = 6 * k}
+                        obtain l from exist l Z st {a(n + 1) - 5 = 6 * l}
+                        n + 1 >= 1
+                        $mod_eq(a(n + 1), 5, 6)
+                        (n + 1) + 1 = n + 2
+                        n + 2 >= 1 + 2 = 3 >= 0
+                        (n + 1) + 1 >= 0
+                        a((n + 1) + 1) = a(n + 2) = a(n + 1) + 2 * a(n)
                         6 != 0
-                        witness exist mod_witness Z st {a((m + 1) + 1) - 1 = 6 * mod_witness} from l + 2 * k + 1:
-                            a((m + 1) + 1) - 1 = a(m + 1) + 2 * a(m) - 1 = (a(m + 1) - 5) + 2 * (a(m) - 1) + 6 = 6 * l + 2 * (6 * k) + 6 = 6 * (l + 2 * k + 1)
-                        by def $mod_eq(a((m + 1) + 1), 1, 6)
-                        by def $seq_mod_pair_51(a, m + 1)
-                        $seq_mod_pair_15(a, m + 1) or $seq_mod_pair_51(a, m + 1)
-                        by def $seq_mod_pair(a, m + 1)
-                    case $seq_mod_pair_51(a, m):
-                        $mod_eq(a(m), 5, 6)
-                        $mod_eq(a(m + 1), 1, 6)
-                        obtain k from exist k Z st {a(m) - 5 = 6 * k}
-                        obtain l from exist l Z st {a(m + 1) - 1 = 6 * l}
-                        m + 1 >= 1
-                        $mod_eq(a(m + 1), 1, 6)
-                        a((m + 1) + 1) = a(m + 2) = a(m + 1) + 2 * a(m)
+                        witness exist mod_witness Z st {a((n + 1) + 1) - 1 = 6 * mod_witness} from l + 2 * k + 1:
+                            a((n + 1) + 1) - 1 = a(n + 1) + 2 * a(n) - 1 = (a(n + 1) - 5) + 2 * (a(n) - 1) + 6 = 6 * l + 2 * (6 * k) + 6 = 6 * (l + 2 * k + 1)
+                        by def $mod_eq(a((n + 1) + 1), 1, 6)
+                        by def $seq_mod_pair_51(a, n + 1)
+                        $seq_mod_pair_15(a, n + 1) or $seq_mod_pair_51(a, n + 1)
+                        by def $seq_mod_pair(a, n + 1)
+                    case $seq_mod_pair_51(a, n):
+                        $mod_eq(a(n), 5, 6)
+                        $mod_eq(a(n + 1), 1, 6)
+                        obtain k from exist k Z st {a(n) - 5 = 6 * k}
+                        obtain l from exist l Z st {a(n + 1) - 1 = 6 * l}
+                        n + 1 >= 1
+                        $mod_eq(a(n + 1), 1, 6)
+                        (n + 1) + 1 = n + 2
+                        n + 2 >= 1 + 2 = 3 >= 0
+                        (n + 1) + 1 >= 0
+                        a((n + 1) + 1) = a(n + 2) = a(n + 1) + 2 * a(n)
                         6 != 0
-                        witness exist mod_witness Z st {a((m + 1) + 1) - 5 = 6 * mod_witness} from l + 2 * k + 1:
-                            a((m + 1) + 1) - 5 = a(m + 1) + 2 * a(m) - 5 = (a(m + 1) - 1) + 2 * (a(m) - 5) + 6 = 6 * l + 2 * (6 * k) + 6 = 6 * (l + 2 * k + 1)
-                        by def $mod_eq(a((m + 1) + 1), 5, 6)
-                        by def $seq_mod_pair_15(a, m + 1)
-                        $seq_mod_pair_15(a, m + 1) or $seq_mod_pair_51(a, m + 1)
-                        by def $seq_mod_pair(a, m + 1)
-
+                        witness exist mod_witness Z st {a((n + 1) + 1) - 5 = 6 * mod_witness} from l + 2 * k + 1:
+                            a((n + 1) + 1) - 5 = a(n + 1) + 2 * a(n) - 5 = (a(n + 1) - 1) + 2 * (a(n) - 5) + 6 = 6 * l + 2 * (6 * k) + 6 = 6 * (l + 2 * k + 1)
+                        by def $mod_eq(a((n + 1) + 1), 5, 6)
+                        by def $seq_mod_pair_15(a, n + 1)
+                        $seq_mod_pair_15(a, n + 1) or $seq_mod_pair_51(a, n + 1)
+                        by def $seq_mod_pair(a, n + 1)
     claim:
         ? forall a fn(n Z: n >= 0) Z, n Z:
             a(0) = 2
@@ -715,6 +697,7 @@ sketch:
             n >= 1
             =>:
                 $mod_eq(a(n), 1, 6) or $mod_eq(a(n), 5, 6)
+        release thm sequence_residue_pairs(a, n)
         $seq_mod_pair(a, n)
         $seq_mod_pair_15(a, n) or $seq_mod_pair_51(a, n)
         by cases:
@@ -737,13 +720,11 @@ sketch:
     prop fib_bound(Fibonacci fn(n Z: n >= 0) Z, n Z):
         n >= 0
         Fibonacci(n) <= 2^n
-
     prop fib_bound_pair(Fibonacci fn(n Z: n >= 0) Z, n Z):
         n >= 0
         $fib_bound(Fibonacci, n)
         $fib_bound(Fibonacci, n + 1)
-
-    claim:
+    thm fib_pair_by_induction:
         ? forall Fibonacci fn(n Z: n >= 0) Z, n Z:
             Fibonacci(0) = 1
             Fibonacci(1) = 1
@@ -756,42 +737,32 @@ sketch:
                 $fib_bound_pair(Fibonacci, n)
         by strong_induc n from 0:
             ? $fib_bound_pair(Fibonacci, n)
-            claim:
-                ? $fib_bound_pair(Fibonacci, 0)
-                0 >= 0
-                Fibonacci(0) = 1 = 2^0
-                by def $fib_bound(Fibonacci, 0)
-                0 + 1 >= 0
-                Fibonacci(0 + 1) = Fibonacci(1) = 1 <= 2^1
-                by def $fib_bound(Fibonacci, 0 + 1)
-                by def $fib_bound_pair(Fibonacci, 0)
-
-            claim:
-                ? forall m Z:
-                    m >= 0
-                    forall y Z:
-                        y >= 0
-                        y <= m
-                        =>:
-                            $fib_bound_pair(Fibonacci, y)
-                    =>:
-                        $fib_bound_pair(Fibonacci, m + 1)
-                m >= 0
-                $fib_bound_pair(Fibonacci, m)
-                $fib_bound(Fibonacci, m)
-                $fib_bound(Fibonacci, m + 1)
-                Fibonacci(m) <= 2^m
-                Fibonacci(m + 1) <= 2^(m + 1)
-                m + 1 >= 0
-                $fib_bound(Fibonacci, m + 1)
-                (m + 1) + 1 = m + 2
-                Fibonacci((m + 1) + 1) = Fibonacci(m + 2) = Fibonacci(m + 1) + Fibonacci(m)
-                2^m <= 2 * 2^m = 2^1 * 2^m = 2^(1 + m) = 2^(m + 1)
-                Fibonacci(m + 1) + Fibonacci(m) <= 2^(m + 1) + 2^m <= 2^(m + 1) + 2^(m + 1) = 2 * 2^(m + 1) = 2^1 * 2^(m + 1) = 2^(1 + (m + 1)) = 2^(m + 2)
-                Fibonacci((m + 1) + 1) <= 2^(m + 2) = 2^((m + 1) + 1)
-                by def $fib_bound(Fibonacci, (m + 1) + 1)
-                by def $fib_bound_pair(Fibonacci, m + 1)
-
+            ? from n = 0:
+                claim:
+                    ? $fib_bound_pair(Fibonacci, 0)
+                    0 >= 0
+                    Fibonacci(0) = 1 = 2^0
+                    by def $fib_bound(Fibonacci, 0)
+                    0 + 1 >= 0
+                    Fibonacci(0 + 1) = Fibonacci(1) = 1 <= 2^1
+                    by def $fib_bound(Fibonacci, 0 + 1)
+                    by def $fib_bound_pair(Fibonacci, 0)
+            ? strong_induc:
+                n >= 0
+                $fib_bound_pair(Fibonacci, n)
+                $fib_bound(Fibonacci, n)
+                $fib_bound(Fibonacci, n + 1)
+                Fibonacci(n) <= 2^n
+                Fibonacci(n + 1) <= 2^(n + 1)
+                n + 1 >= 0
+                $fib_bound(Fibonacci, n + 1)
+                (n + 1) + 1 = n + 2
+                Fibonacci((n + 1) + 1) = Fibonacci(n + 2) = Fibonacci(n + 1) + Fibonacci(n)
+                2^n <= 2 * 2^n = 2^1 * 2^n = 2^(1 + n) = 2^(n + 1)
+                Fibonacci(n + 1) + Fibonacci(n) <= 2^(n + 1) + 2^n <= 2^(n + 1) + 2^(n + 1) = 2 * 2^(n + 1) = 2^1 * 2^(n + 1) = 2^(1 + (n + 1)) = 2^(n + 2)
+                Fibonacci((n + 1) + 1) <= 2^(n + 2) = 2^((n + 1) + 1)
+                by def $fib_bound(Fibonacci, (n + 1) + 1)
+                by def $fib_bound_pair(Fibonacci, n + 1)
     claim:
         ? forall Fibonacci fn(n Z: n >= 0) Z, n Z:
             Fibonacci(0) = 1
@@ -803,6 +774,7 @@ sketch:
             n >= 0
             =>:
                 Fibonacci(n) <= 2^n
+        release thm fib_pair_by_induction(Fibonacci, n)
         $fib_bound_pair(Fibonacci, n)
         $fib_bound(Fibonacci, n)
 
@@ -810,25 +782,26 @@ sketch:
 
 # Sequence `Fibonacci(n)` is defined by the initial value `Fibonacci(0) = 1`, `Fibonacci(1) = 1`, `forall k: N => Fibonacci(k + 2) = Fibonacci(k + 1) + Fibonacci(k)`. Show that for all natural numbers `n`, `Fibonacci(n + 1)^2 - Fibonacci(n + 1) * Fibonacci(n) - Fibonacci(n)^2 = -((-1)^n)`.
 
-# The algebra identity in the `proof_debt` block is the Cassini step after substituting
+# The checked algebra lemma gives the Cassini step after substituting
 # `x = Fibonacci(m + 1)` and `y = Fibonacci(m)`.
 
 sketch:
+    # The sign changes when the exponent increases by one; this is the
+    # successor-power rule for the base `(-1)`.
     prop cassini(Fibonacci fn(n Z: n >= 0) Z, n Z):
         n >= 0
         Fibonacci(n + 1)^2 - Fibonacci(n + 1) * Fibonacci(n) - Fibonacci(n)^2 = -((-1)^n)
-
-    # The sign changes when the exponent increases by one; this is the
-    # successor-power rule for the base `(-1)`.
     claim:
         ? forall m Z:
             (-1) * (-((-1)^m)) = -((-1)^(m + 1))
-
-    forall x, y, m Z:
-        x^2 - x * y - y^2 = -((-1)^m)
-        =>:
-            (x + y)^2 - (x + y) * x - x^2 = (-1) * (x^2 - x * y - y^2) = (-1) * (-((-1)^m)) = -((-1)^(m + 1))
-
+        (-1)^(m + 1) = (-1)^m * (-1)^1 = (-1)^m * (-1)
+        (-1) * (-((-1)^m)) = (-1)^m = -((-1)^m * (-1)) = -((-1)^(m + 1))
+    thm cassini_step_algebra:
+        ? forall x, y, m Z:
+            x^2 - x * y - y^2 = -((-1)^m)
+            =>:
+                (x + y)^2 - (x + y) * x - x^2 = -((-1)^(m + 1))
+        (x + y)^2 - (x + y) * x - x^2 = (-1) * (x^2 - x * y - y^2) = (-1) * (-((-1)^m)) = -((-1)^(m + 1))
     claim:
         ? forall Fibonacci fn(n Z: n >= 0) Z, n Z:
             Fibonacci(0) = 1
@@ -842,32 +815,28 @@ sketch:
                 $cassini(Fibonacci, n)
         by strong_induc n from 0:
             ? $cassini(Fibonacci, n)
-            claim:
-                ? $cassini(Fibonacci, 0)
-                0 >= 0
-                (-1)^0 = 1
-                Fibonacci(0 + 1)^2 - Fibonacci(0 + 1) * Fibonacci(0) - Fibonacci(0)^2 = Fibonacci(1)^2 - Fibonacci(1) * Fibonacci(0) - Fibonacci(0)^2 = 1^2 - 1 * 1 - 1^2 = (-1) = (-1) * 1 = -((-1)^0)
-                by def $cassini(Fibonacci, 0)
-
-            claim:
-                ? forall m Z:
-                    m >= 0
-                    forall y Z:
-                        y >= 0
-                        y <= m
-                        =>:
-                            $cassini(Fibonacci, y)
-                    =>:
-                        $cassini(Fibonacci, m + 1)
-                m >= 0
-                $cassini(Fibonacci, m)
-                Fibonacci(m + 1)^2 - Fibonacci(m + 1) * Fibonacci(m) - Fibonacci(m)^2 = -((-1)^m)
-                m + 1 >= 0
-                (m + 1) + 1 = m + 2
-                Fibonacci((m + 1) + 1) = Fibonacci(m + 2) = Fibonacci(m + 1) + Fibonacci(m)
-                Fibonacci((m + 1) + 1)^2 - Fibonacci((m + 1) + 1) * Fibonacci(m + 1) - Fibonacci(m + 1)^2 = (Fibonacci(m + 1) + Fibonacci(m))^2 - (Fibonacci(m + 1) + Fibonacci(m)) * Fibonacci(m + 1) - Fibonacci(m + 1)^2
-                (Fibonacci(m + 1) + Fibonacci(m))^2 - (Fibonacci(m + 1) + Fibonacci(m)) * Fibonacci(m + 1) - Fibonacci(m + 1)^2 = -((-1)^(m + 1))
-                by def $cassini(Fibonacci, m + 1)
+            ? from n = 0:
+                claim:
+                    ? $cassini(Fibonacci, 0)
+                    0 >= 0
+                    Fibonacci(0 + 1) = Fibonacci(1) = 1
+                    (-1)^0 = 1
+                    Fibonacci(0 + 1)^2 - Fibonacci(0 + 1) * Fibonacci(0) - Fibonacci(0)^2 = Fibonacci(1)^2 - Fibonacci(1) * Fibonacci(0) - Fibonacci(0)^2 = 1^2 - 1 * 1 - 1^2 = (-1) = (-1) * 1 = -((-1)^0)
+                    by def $cassini(Fibonacci, 0)
+            ? strong_induc:
+                n >= 0
+                $cassini(Fibonacci, n)
+                Fibonacci(n + 1)^2 - Fibonacci(n + 1) * Fibonacci(n) - Fibonacci(n)^2 = -((-1)^n)
+                n + 1 >= 0
+                (n + 1) + 1 = n + 2
+                Fibonacci((n + 1) + 1) = Fibonacci(n + 2) = Fibonacci(n + 1) + Fibonacci(n)
+                Fibonacci((n + 1) + 1)^2 = (Fibonacci(n + 1) + Fibonacci(n))^2
+                Fibonacci((n + 1) + 1) * Fibonacci(n + 1) = (Fibonacci(n + 1) + Fibonacci(n)) * Fibonacci(n + 1)
+                Fibonacci((n + 1) + 1)^2 - Fibonacci((n + 1) + 1) * Fibonacci(n + 1) = (Fibonacci(n + 1) + Fibonacci(n))^2 - (Fibonacci(n + 1) + Fibonacci(n)) * Fibonacci(n + 1)
+                Fibonacci((n + 1) + 1)^2 - Fibonacci((n + 1) + 1) * Fibonacci(n + 1) - Fibonacci(n + 1)^2 = (Fibonacci(n + 1) + Fibonacci(n))^2 - (Fibonacci(n + 1) + Fibonacci(n)) * Fibonacci(n + 1) - Fibonacci(n + 1)^2
+                release thm cassini_step_algebra(Fibonacci(n + 1), Fibonacci(n), n)
+                (Fibonacci(n + 1) + Fibonacci(n))^2 - (Fibonacci(n + 1) + Fibonacci(n)) * Fibonacci(n + 1) - Fibonacci(n + 1)^2 = -((-1)^(n + 1))
+                by def $cassini(Fibonacci, n + 1)
 
 # 6.3.5 Example
 
@@ -880,20 +849,17 @@ sketch:
     prop d_bound(d fn(n Z: n >= 0) Z, n Z):
         n >= 4
         d(n) >= 4^n
-
     prop d_bound_pair(d fn(n Z: n >= 0) Z, n Z):
         n >= 4
         $d_bound(d, n)
         $d_bound(d, n + 1)
-
     prop sufficiently_large_d_bound(d fn(n Z: n >= 0) Z, N0 Z):
         forall n Z:
             n >= 0
             n >= N0
             =>:
                 d(n) >= 4^n
-
-    claim:
+    thm d_pair_by_induction:
         ? forall d fn(n Z: n >= 0) Z, n Z:
             d(0) = 3
             d(1) = 1
@@ -906,45 +872,38 @@ sketch:
                 $d_bound_pair(d, n)
         by strong_induc n from 4:
             ? $d_bound_pair(d, n)
-            claim:
-                ? $d_bound_pair(d, 4)
-                4 >= 4
-                d(2) = d(0 + 2) = 3 * d(0 + 1) + 5 * d(0) = 3 * d(1) + 5 * d(0) = 3 * 1 + 5 * 3 = 18
-                d(3) = d(1 + 2) = 3 * d(1 + 1) + 5 * d(1) = 3 * d(2) + 5 * d(1) = 3 * 18 + 5 * 1 = 59
-                d(4) = d(2 + 2) = 3 * d(2 + 1) + 5 * d(2) = 3 * d(3) + 5 * d(2) = 3 * 59 + 5 * 18 = 267 >= 256 = 4^4
-                by def $d_bound(d, 4)
-                4 + 1 >= 4
-                d(4 + 1) = d(5) = d(3 + 2) = 3 * d(3 + 1) + 5 * d(3) = 3 * d(4) + 5 * d(3) = 3 * 267 + 5 * 59 = 1096 >= 1024 = 4^5 = 4^(4 + 1)
-                by def $d_bound(d, 4 + 1)
-                by def $d_bound_pair(d, 4)
-
-            claim:
-                ? forall m Z:
-                    m >= 4
-                    forall y Z:
-                        y >= 4
-                        y <= m
-                        =>:
-                            $d_bound_pair(d, y)
-                    =>:
-                        $d_bound_pair(d, m + 1)
-                m >= 4
-                $d_bound_pair(d, m)
-                $d_bound(d, m)
-                $d_bound(d, m + 1)
-                d(m) >= 4^m
-                d(m + 1) >= 4^(m + 1)
-                m + 1 >= 4
-                $d_bound(d, m + 1)
-                (m + 1) + 1 = m + 2
-                d((m + 1) + 1) = d(m + 2) = 3 * d(m + 1) + 5 * d(m)
-                4^(m + 1) = 4^1 * 4^m = 4 * 4^m
-                3 * d(m + 1) + 5 * d(m) >= 3 * 4^(m + 1) + 5 * 4^m = 3 * (4 * 4^m) + 5 * 4^m = 12 * 4^m + 5 * 4^m = 17 * 4^m
-                17 * 4^m >= 16 * 4^m = 4^2 * 4^m = 4^(2 + m) = 4^(m + 2)
-                d((m + 1) + 1) = 3 * d(m + 1) + 5 * d(m) >= 3 * 4^(m + 1) + 5 * 4^m = 17 * 4^m >= 16 * 4^m = 4^(m + 2) = 4^((m + 1) + 1)
-                by def $d_bound(d, (m + 1) + 1)
-                by def $d_bound_pair(d, m + 1)
-
+            ? from n = 4:
+                claim:
+                    ? $d_bound_pair(d, 4)
+                    4 >= 4
+                    d(2) = d(0 + 2) = 3 * d(0 + 1) + 5 * d(0) = 3 * d(1) + 5 * d(0) = 3 * 1 + 5 * 3 = 18
+                    d(3) = d(1 + 2) = 3 * d(1 + 1) + 5 * d(1) = 3 * d(2) + 5 * d(1) = 3 * 18 + 5 * 1 = 59
+                    d(4) = d(2 + 2) = 3 * d(2 + 1) + 5 * d(2) = 3 * d(3) + 5 * d(2) = 3 * 59 + 5 * 18 = 267 >= 256 = 4^4
+                    by def $d_bound(d, 4)
+                    4 + 1 >= 4
+                    d(4 + 1) = d(5) = d(3 + 2) = 3 * d(3 + 1) + 5 * d(3) = 3 * d(4) + 5 * d(3) = 3 * 267 + 5 * 59 = 1096 >= 1024 = 4^5 = 4^(4 + 1)
+                    by def $d_bound(d, 4 + 1)
+                    by def $d_bound_pair(d, 4)
+            ? strong_induc:
+                n >= 4
+                $d_bound_pair(d, n)
+                $d_bound(d, n)
+                $d_bound(d, n + 1)
+                d(n) >= 4^n
+                d(n + 1) >= 4^(n + 1)
+                n + 1 >= 4
+                $d_bound(d, n + 1)
+                (n + 1) + 1 = n + 2
+                d((n + 1) + 1) = d(n + 2) = 3 * d(n + 1) + 5 * d(n)
+                4^(n + 1) = 4^1 * 4^n = 4 * 4^n
+                3 * d(n + 1) >= 3 * 4^(n + 1)
+                5 * d(n) >= 5 * 4^n
+                3 * d(n + 1) + 5 * d(n) $in Z
+                3 * d(n + 1) + 5 * d(n) >= 3 * 4^(n + 1) + 5 * 4^n = 3 * (4 * 4^n) + 5 * 4^n = 12 * 4^n + 5 * 4^n = 17 * 4^n
+                17 * 4^n >= 16 * 4^n = 4^2 * 4^n = 4^(2 + n) = 4^(n + 2)
+                d((n + 1) + 1) = 3 * d(n + 1) + 5 * d(n) >= 3 * 4^(n + 1) + 5 * 4^n = 17 * 4^n >= 16 * 4^n = 4^(n + 2) = 4^((n + 1) + 1)
+                by def $d_bound(d, (n + 1) + 1)
+                by def $d_bound_pair(d, n + 1)
     claim:
         ? forall d fn(n Z: n >= 0) Z:
             d(0) = 3
@@ -957,13 +916,16 @@ sketch:
                 exist N0 Z st {$sufficiently_large_d_bound(d, N0)}
         claim:
             ? $sufficiently_large_d_bound(d, 4)
-            forall n Z:
-                n >= 0
-                n >= 4
-                =>:
-                    $d_bound_pair(d, n)
-                    $d_bound(d, n)
-                    d(n) >= 4^n
+            claim:
+                ? forall n Z:
+                    n >= 0
+                    n >= 4
+                    =>:
+                        d(n) >= 4^n
+                release thm d_pair_by_induction(d, n)
+                $d_bound_pair(d, n)
+                $d_bound(d, n)
+                d(n) >= 4^n
             by def $sufficiently_large_d_bound(d, 4)
         witness exist N0 Z st {$sufficiently_large_d_bound(d, N0)} from 4:
             $sufficiently_large_d_bound(d, 4)
@@ -997,40 +959,39 @@ claim:
         n >= 0
         =>:
             fib(n) <= 2^n
+    claim:
+        ? forall k Z:
+            k >= 0
+            =>:
+                k + 1 >= 0
+        k + 1 >= 0 + 1 = 1 >= 0
     by strong_induc n from 0:
         ? fib(n) <= 2^n
-        fib(0) = 0 <= 1 = 2^0
-
-        claim:
-            ? forall k Z:
-                k >= 0
-                forall y Z:
-                    y >= 0
-                    y <= k
-                    =>:
-                        fib(y) <= 2^y
-                =>:
-                    fib(k + 1) <= 2^(k + 1)
+        ? from n = 0:
+            fib(0) = 0 <= 1 = 2^0
+        ? strong_induc:
+            n + 1 >= 0 + 1 = 1 >= 0
             by cases:
-                ? fib(k + 1) <= 2^(k + 1)
-                case k < 1:
-                    k <= 0 or k >= 0 + 1
+                ? fib(n + 1) <= 2^(n + 1)
+                case n < 1:
+                    n <= 0 or n >= 0 + 1
                     by cases:
-                        ? k = 0
-                        case k <= 0:
-                            k = 0
-                        case k >= 0 + 1:
-                            impossible k >= 1
-                    fib(k + 1) = fib(1) = 1 <= 2 = 2^1 = 2^(k + 1)
-                case k >= 1:
-                    k - 1 >= 0
-                    k - 1 $in N
-                    k - 1 <= k
-                    fib(k - 1) <= 2^(k - 1)
-                    fib(k) <= 2^k
-                    2^k = 2^((k - 1) + 1) = 2^(k - 1) * 2^1 >= 2^(k - 1) * 1 = 2^(k - 1)
-                    2^k + 2^(k - 1) <= 2^k + 2^k = 2 * 2^k = 2^1 * 2^k = 2^(1 + k) = 2^(k + 1)
-                    fib(k + 1) = fib(k) + fib(k - 1) <= 2^k + 2^(k - 1) <= 2^(k + 1)
+                        ? n = 0
+                        case n <= 0:
+                            n = 0
+                        case n >= 0 + 1:
+                            impossible n >= 1
+                    n + 1 = 0 + 1 = 1
+                    fib(n + 1) = fib(1) = 1 <= 2 = 2^1 = 2^(n + 1)
+                case n >= 1:
+                    n - 1 >= 0
+                    n - 1 $in N
+                    n - 1 <= n
+                    fib(n - 1) <= 2^(n - 1)
+                    fib(n) <= 2^n
+                    2^n = 2^((n - 1) + 1) = 2^(n - 1) * 2^1 >= 2^(n - 1) * 1 = 2^(n - 1)
+                    2^n + 2^(n - 1) <= 2^n + 2^n = 2 * 2^n = 2^1 * 2^n = 2^(1 + n) = 2^(n + 1)
+                    fib(n + 1) = fib(n) + fib(n - 1) <= 2^n + 2^(n - 1) <= 2^(n + 1)
 
 # 6.4.2 Example
 
@@ -1041,122 +1002,107 @@ claim:
 # hypothesis gives a prime divisor of `c`; that same prime divides `n + 1`.
 
 sketch:
+    # This no-small-divisor formulation is convenient for the strong-induction split below.
     prop dvdN(a N, b N):
         a >= 1
         exist c Z st {b = a * c}
-
-    # This no-small-divisor formulation is convenient for the strong-induction split below.
     prop prime_by_trial_division(a N+):
         2 <= a
         forall b N+:
             2 <= b < a
             =>:
                 a % b != 0
-
-    claim:
+    thm prime_factor_by_strong_induction:
         ? forall a N+:
             2 <= a
             =>:
                 exist p N+ st {$prime(p), a % p = 0}
         by strong_induc x from 2:
             ? exist p N+ st {$prime(p), x % p = 0}
-
-            claim:
-                ? forall b N+:
-                    2 <= b < 2
-                    =>:
-                        2 % b != 0
-                by contra:
-                    ? 2 % b != 0
-                    impossible b < 2
-            by def $prime_by_trial_division(2)
-            by def $prime(2)
-            witness exist t Z st {2 = t * 2} from 1
-            0 < 2
-            2 = 2 * 1 + 0
-            2 % 2 = 0
-            witness exist p N+ st {$prime(p), 2 % p = 0} from 2
-
-            claim:
-                ? forall n Z:
-                    n >= 2
-                    forall m Z:
-                        2 <= m
-                        m <= n
+            ? from x = 2:
+                claim:
+                    ? forall b N+:
+                        2 <= b < 2
                         =>:
-                            exist p N+ st {$prime(p), m % p = 0}
-                    =>:
-                        exist p N+ st {$prime(p), (n + 1) % p = 0}
-
+                            2 % b != 0
+                    by contra:
+                        ? 2 % b != 0
+                        impossible b < 2
+                by def $prime_by_trial_division(2)
+                by def $prime(2)
+                witness exist t Z st {2 = t * 2} from 1
+                0 < 2
+                2 = 2 * 1 + 0
+                2 % 2 = 0
+                witness exist p N+ st {$prime(p), 2 % p = 0} from 2
+            ? strong_induc:
+                0 < x + 1
+                x + 1 $in N+
                 by cases:
-                    ? exist p N+ st {$prime(p), (n + 1) % p = 0}
-                    case $prime(n + 1):
-                        n + 1 $in N+
-                        witness exist t Z st {n + 1 = t * (n + 1)} from 1
-                        0 < n + 1
-                        n + 1 = (n + 1) * 1 + 0
-                        (n + 1) % (n + 1) = 0
-                        witness exist p N+ st {$prime(p), (n + 1) % p = 0} from n + 1
-                    case not $prime(n + 1):
+                    ? exist p N+ st {$prime(p), (x + 1) % p = 0}
+                    case $prime(x + 1):
+                        x + 1 $in N+
+                        witness exist t Z st {x + 1 = t * (x + 1)} from 1
+                        0 < x + 1
+                        x + 1 = (x + 1) * 1 + 0
+                        (x + 1) % (x + 1) = 0
+                        witness exist p N+ st {$prime(p), (x + 1) % p = 0} from x + 1
+                    case not $prime(x + 1):
                         by contra:
                             ? not forall b N+:
-                                2 <= b < n + 1
+                                2 <= b < x + 1
                                 =>:
-                                    (n + 1) % b != 0
-                            2 <= n + 1
-                            by def $prime_by_trial_division(n + 1)
-                            by def $prime(n + 1)
-                            impossible $prime(n + 1)
-
-                        obtain c from exist b N+ st {2 <= b < n + 1, not (n + 1) % b != 0}
-
-                        2 <= c < n + 1
-
-                        (n + 1) % c = 0
-                        c <= n or c >= n + 1
+                                    (x + 1) % b != 0
+                            2 <= x + 1
+                            by def $prime_by_trial_division(x + 1)
+                            by def $prime(x + 1)
+                            impossible $prime(x + 1)
+                        obtain c from exist b N+ st {2 <= b < x + 1, not (x + 1) % b != 0}
+                        2 <= c < x + 1
+                        (x + 1) % c = 0
+                        c <= x or c >= x + 1
                         by cases:
-                            ? c <= n
-                            case c <= n
-                            case c >= n + 1:
-                                impossible c < n + 1
-
+                            ? c <= x
+                            case c <= x
+                            case c >= x + 1:
+                                impossible c < x + 1
                         obtain d from exist p N+ st {$prime(p), c % p = 0}
-
-                        quot(n + 1, c) $in Z
-                        release thm citation::quot_euclidean(n + 1, c)
-                        witness exist q Z st {n + 1 = c * q + (n + 1) % c} from quot(n + 1, c):
-                            n + 1 = c * quot(n + 1, c) + (n + 1) % c
-                        obtain e1 from exist q Z st {n + 1 = c * q + (n + 1) % c}
-                        n + 1 = c * e1 + (n + 1) % c = c * e1 = e1 * c
-
+                        quot(x + 1, c) $in Z
+                        (x + 1) = (c) * quot(x + 1, c) + (x + 1) % (c)
+                        witness exist q Z st {x + 1 = c * q + (x + 1) % c} from quot(x + 1, c):
+                            x + 1 = c * quot(x + 1, c) + (x + 1) % c
+                        obtain e1 from exist q Z st {x + 1 = c * q + (x + 1) % c}
+                        x + 1 = c * e1 + (x + 1) % c = c * e1 = e1 * c
                         quot(c, d) $in Z
-                        release thm citation::quot_euclidean(c, d)
+                        (c) = (d) * quot(c, d) + (c) % (d)
                         witness exist q Z st {c = d * q + c % d} from quot(c, d):
                             c = d * quot(c, d) + c % d
                         obtain f from exist r Z st {c = d * r + c % d}
                         c = d * f + c % d = d * f = f * d
-
                         witness exist t Z st {e1 * f * d = t * d} from e1 * f
                         0 < d
                         e1 * f * d = d * (e1 * f) + 0
                         (e1 * f * d) % d = 0
-
-                        n + 1 = e1 * c = e1 * (f * d) = (e1 * f) * d
+                        x + 1 = e1 * c = e1 * (f * d) = (e1 * f) * d
                         0 < d
-                        n + 1 = d * (e1 * f) + 0
-                        (n + 1) % d = 0
-                        witness exist p N+ st {$prime(p), (n + 1) % p = 0} from d:
-                            (n + 1) % d = 0
-
+                        x + 1 = d * (e1 * f) + 0
+                        (x + 1) % d = 0
+                        witness exist p N+ st {$prime(p), (x + 1) % p = 0} from d:
+                            (x + 1) % d = 0
     claim:
         ? forall n N:
             n >= 2
             =>:
                 exist p N+ st {$prime(p), $dvdN(p, n)}
+        n >= 2 >= 1
+        n > 0
+        0 < n
+        n $in N+
+        release thm prime_factor_by_strong_induction(n)
         obtain p from exist p N+ st {$prime(p), n % p = 0}
         p != 0
         quot(n, p) $in Z
-        release thm citation::quot_euclidean(n, p)
+        (n) = (p) * quot(n, p) + (n) % (p)
         witness exist q Z st {n = p * q + n % p} from quot(n, p):
             n = p * quot(n, p) + n % p
         obtain k from exist q Z st {n = p * q + n % p}
@@ -1204,20 +1150,45 @@ sketch:
 # > mechanical expansion while the verifier remains the source of trust.
 
 sketch:
+    claim:
+        ? forall x Z:
+            x > 0
+            =>:
+                x - 1 >= 0
+        x <= 0 or x >= 0 + 1
+        by cases:
+            ? x - 1 >= 0
+            case x <= 0:
+                impossible x > 0
+            case x >= 0 + 1:
+                x - 1 >= (0 + 1) - 1 = 0
+    claim:
+        ? forall x, y Z:
+            x > 0
+            y >= 0
+            =>:
+                (x - 1) + y >= 0
+        x - 1 >= 0
+        (x - 1) + y >= 0 + y = y >= 0
+    claim:
+        ? forall x, y Z:
+            x >= 0
+            y > 0
+            =>:
+                x + (y - 1) >= 0
+        y - 1 >= 0
+        x + (y - 1) >= x + 0 = x >= 0
     have fn pascal(a Z, b Z: a >= 0, b >= 0) N by induc a + b from 0:
         case a = 0: 1
         case a > 0:
             case b = 0: 1
             case b > 0: pascal(a - 1, b) + pascal(a, b - 1)
-
     pascal(0, 0) = 1
     pascal(0, 3) = 1
     pascal(2, 0) = 1
     pascal(1, 1) = pascal(0, 1) + pascal(1, 0)
-
     factorial(0) = 1
     factorial(3) = 3 * factorial(2)
-
     claim:
         ? forall n Z:
             n >= 0
@@ -1225,18 +1196,15 @@ sketch:
                 factorial(n) >= 1
         by induc n from 0:
             ? factorial(n) >= 1
-            factorial(0) = 1 >= 1
-
-            forall k Z:
-                k >= 0
-                factorial(k) >= 1
-                =>:
-                    k + 1 >= 1
-                    k + 1 > 0
-                    factorial(k + 1) = (k + 1) * factorial((k + 1) - 1) = (k + 1) * factorial(k)
-                    (k + 1) * factorial(k) >= 1 * 1 = 1
-                    factorial(k + 1) >= 1
-
+            ? from n = 0:
+                factorial(0) = 1 >= 1
+            ? induc:
+                n + 1 >= 1
+                n + 1 > 0
+                n $in N
+                factorial(n + 1) = (n + 1) * factorial(n)
+                (n + 1) * factorial(n) >= 1 * 1 = 1
+                factorial(n + 1) >= 1
     prop pascal_factorial_formula_on_sum(s Z):
         s >= 0
         forall a, b Z:
@@ -1245,7 +1213,6 @@ sketch:
             a + b = s
             =>:
                 pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
-
     claim:
         ? forall s Z:
             s >= 0
@@ -1253,7 +1220,6 @@ sketch:
                 $pascal_factorial_formula_on_sum(s)
         by strong_induc s from 0:
             ? $pascal_factorial_formula_on_sum(s)
-
             claim:
                 ? forall a, b Z:
                     a >= 0
@@ -1274,7 +1240,6 @@ sketch:
                         a + b > 0
                         impossible a + b = 0
             by def $pascal_factorial_formula_on_sum(0)
-
             claim:
                 ? forall step_s Z:
                     step_s >= 0
@@ -1285,7 +1250,6 @@ sketch:
                             $pascal_factorial_formula_on_sum(y)
                     =>:
                         $pascal_factorial_formula_on_sum(step_s + 1)
-
                 step_s + 1 >= 0
                 claim:
                     ? forall a, b Z:
@@ -1308,6 +1272,7 @@ sketch:
                                 case b = 0:
                                     pascal(a, b) = pascal(a, 0) = 1
                                     factorial(b) = factorial(0) = 1
+                                    a + b = a + 0 = a
                                     factorial(a + b) = factorial(a)
                                     pascal(a, b) * factorial(a) * factorial(b) = 1 * factorial(a) * 1 = factorial(a) = factorial(a + b)
                                 case b > 0:
@@ -1320,9 +1285,24 @@ sketch:
                                     pascal(a - 1, b) * factorial(a - 1) * factorial(b) = factorial((a - 1) + b)
                                     pascal(a, b - 1) * factorial(a) * factorial(b - 1) = factorial(a + (b - 1))
                                     pascal(a, b) = pascal(a - 1, b) + pascal(a, b - 1)
+                                    a - 1 $in N
+                                    a = (a - 1) + 1
+                                    factorial((a - 1) + 1) = ((a - 1) + 1) * factorial(a - 1)
+                                    factorial(a) = factorial((a - 1) + 1)
+                                    ((a - 1) + 1) * factorial(a - 1) = a * factorial(a - 1)
                                     factorial(a) = a * factorial(a - 1)
+                                    b - 1 $in N
+                                    b = (b - 1) + 1
+                                    factorial((b - 1) + 1) = ((b - 1) + 1) * factorial(b - 1)
+                                    factorial(b) = factorial((b - 1) + 1)
+                                    ((b - 1) + 1) * factorial(b - 1) = b * factorial(b - 1)
                                     factorial(b) = b * factorial(b - 1)
                                     a + b > 0
+                                    a + b - 1 $in N
+                                    a + b = (a + b - 1) + 1
+                                    factorial((a + b - 1) + 1) = ((a + b - 1) + 1) * factorial(a + b - 1)
+                                    factorial(a + b) = factorial((a + b - 1) + 1)
+                                    ((a + b - 1) + 1) * factorial(a + b - 1) = (a + b) * factorial(a + b - 1)
                                     factorial(a + b) = (a + b) * factorial(a + b - 1)
                                     pascal(a, b) * factorial(a) * factorial(b) = (pascal(a - 1, b) + pascal(a, b - 1)) * factorial(a) * factorial(b)
                                     (pascal(a - 1, b) + pascal(a, b - 1)) * factorial(a) * factorial(b) = pascal(a - 1, b) * factorial(a) * factorial(b) + pascal(a, b - 1) * factorial(a) * factorial(b)
@@ -1335,7 +1315,6 @@ sketch:
                                     (a + b) * factorial(a + b - 1) = factorial(a + b)
                                     pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
                 by def $pascal_factorial_formula_on_sum(step_s + 1)
-
     claim:
         ? forall a, b Z:
             a >= 0
@@ -1344,7 +1323,6 @@ sketch:
                 pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
         a + b >= 0
         $pascal_factorial_formula_on_sum(a + b)
-
     claim:
         ? forall a, b Z:
             a >= 0
@@ -1356,674 +1334,111 @@ sketch:
         pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
         factorial(a) >= 1
         factorial(b) >= 1
+        pascal(a, b) $in N
+        0 <= pascal(a, b)
         pascal(a, b) >= 0
         pascal(a, b) = pascal(a, b) * 1 <= pascal(a, b) * factorial(a) = pascal(a, b) * factorial(a) * 1 <= pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
 
-# 6.6 Division Algorithm, 6.7 Remainder Bounds and GCD, 6.8 Extended Euclidean Algorithm
 
-# The division algorithm can be developed as a well-founded recursive
-# calculation. We define two integer functions at the same time:
+# 6.6 Division Algorithm, 6.7 Remainder Bounds and GCD, 6.8 Bezout Coefficients
 
-# - `fmod(n, d)`, the remainder-like value;
-# - `fdiv(n, d)`, the quotient-like value.
-
-# The recursive definitions move `n` by adding or subtracting `d` until it lies
-# in the terminal range. The decreasing measure is `abs(2 * n - d)`. The first
-# four claims below prove exactly the inequalities needed by `by induc`.
-# Then a strong induction on that same measure proves the quotient-remainder
-# identity:
-
-# ```text
-# fmod(n, d) + d * fdiv(n, d) = n
-# ```
-
-# The next step is to prove that the recursive remainder is small enough for the
-# Euclidean algorithm. For a positive divisor, the remainder has absolute value
-# strictly smaller than the divisor. The negative-divisor case follows by applying
-# the positive result to `(-b)`.
-
-# Once those bounds are available, `gcd(a, b)` is well-defined with decreasing
-# measure `abs(b)`: when `b` is nonzero, recurse to the pair `(b, remainder)`, whose
-# second component has smaller absolute value.
-
-# The extended Euclidean algorithm is written as one recursive function
-# `egcd_pair(a, b)` returning a pair of coefficients. The two coefficient
-# functions `egcd_l` and `egcd_r` are projections from that pair. Keeping the pair
-# as the single recursive function avoids mutual recursion while still matching
-# the usual mathematical algorithm.
-
-# The full block below is meant to be read and tested as one continuous example
-# for Sections 6.6, 6.7, and 6.8. It is intentionally not split into separate
-# snippets because the later definitions rely on the earlier measure and
-# remainder facts.
+# We first spell out the textbook definitions and check small examples.
+# Litex already supplies quotient, remainder and greatest common divisor:
+# after these teaching definitions, all subsequent calculations use the builtin
+# objects quot(n,d), n%d and gcd(a,b).
+# The Euclidean quotient uses a positive divisor; gcd excludes (0,0).
+# For a negative divisor, use its absolute value and change the quotient sign.
+# The remainder is nonnegative and smaller than the absolute value of the divisor.
 
 sketch:
+    prop textbook_division(n Z, d N+, q Z, r Z):
+        n = d * q + r
+        0 <= r < d
+    prop textbook_greatest_common_divisor(a Z, b Z, g N+):
+        a % g = 0
+        b % g = 0
+        forall c N+:
+            a % c = 0
+            b % c = 0
+            =>:
+                c <= g
+    by def $textbook_division(7, 3, 2, 1)
+    by def $textbook_division(-7, 3, -3, 2)
     claim:
-        ? forall x, y R:
-            0 <= x
-            0 <= y
-            x^2 < y^2
-            =>:
-                x < y
-
-        by contra:
-            ? x < y
-            y <= x
-            y^2 <= x^2
-            impossible x^2 < y^2
-
-    claim:
-        ? forall n, d Z:
-            n * d < 0
-            =>:
-                abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
-
-        0 < -(n * d)
-        0 < 8
-        0 < 8 * (-(n * d))
-        8 * (-(n * d)) = (-8) * n * d
-        0 < (-8) * n * d
-        (2 * (n + d) - d)^2 < (2 * (n + d) - d)^2 + ((-8) * n * d) = (2 * n - d)^2
-        abs(2 * (n + d) - d)^2 = (2 * (n + d) - d)^2 < (2 * n - d)^2 = abs(2 * n - d)^2
-
-    claim:
-        ? forall n, d Z:
-            n * d < 0
-            =>:
-                abs(2 * (n + d) - d) < abs(2 * n - d)
-
-        0 <= abs(2 * (n + d) - d)
-        0 <= abs(2 * n - d)
-        abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
-
-    claim:
-        ? forall n, d Z:
-            n * d >= 0
-            0 < d * (n - d)
-            =>:
-                abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
-
-        0 < 8
-        0 < 8 * (d * (n - d))
-        8 * (d * (n - d)) = 8 * d * (n - d)
-        0 < 8 * d * (n - d)
-        (2 * (n - d) - d)^2 < (2 * (n - d) - d)^2 + 8 * d * (n - d) = (2 * n - d)^2
-        abs(2 * (n - d) - d)^2 = (2 * (n - d) - d)^2 < (2 * n - d)^2 = abs(2 * n - d)^2
-
-    claim:
-        ? forall n, d Z:
-            n * d >= 0
-            0 < d * (n - d)
-            =>:
-                abs(2 * (n - d) - d) < abs(2 * n - d)
-
-        0 <= abs(2 * (n - d) - d)
-        0 <= abs(2 * n - d)
-        abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
-
-    have fn fmod(n Z, d Z) Z by induc abs(2 * n - d) from 0:
-        case n * d < 0: fmod(n + d, d)
-        case n * d >= 0:
-            case 0 < d * (n - d): fmod(n - d, d)
-            case 0 >= d * (n - d):
-                case n = d: 0
-                case n != d: n
-
-    have fn fdiv(n Z, d Z) Z by induc abs(2 * n - d) from 0:
-        case n * d < 0: fdiv(n + d, d) - 1
-        case n * d >= 0:
-            case 0 < d * (n - d): fdiv(n - d, d) + 1
-            case 0 >= d * (n - d):
-                case n = d: 1
-                case n != d: 0
-
-    prop fmod_add_fdiv_at_measure(m Z):
-        forall u, v Z:
-            abs(2 * u - v) = m
-            =>:
-                fmod(u, v) + v * fdiv(u, v) = u
-
-    claim:
-        ? forall n, d Z:
-            abs(2 * n - d) = 0
-            =>:
-                fmod(n, d) + d * fdiv(n, d) = n
-
-        by cases:
-            ? fmod(n, d) + d * fdiv(n, d) = n
-            case n * d < 0:
-                abs(2 * (n + d) - d) < abs(2 * n - d) = 0
-                0 <= abs(2 * (n + d) - d)
-                impossible abs(2 * (n + d) - d) < 0
-            case n * d >= 0:
-                by cases:
-                    ? fmod(n, d) + d * fdiv(n, d) = n
-                    case 0 < d * (n - d):
-                        abs(2 * (n - d) - d) < abs(2 * n - d) = 0
-                        0 <= abs(2 * (n - d) - d)
-                        impossible abs(2 * (n - d) - d) < 0
-                    case 0 >= d * (n - d):
-                        by cases:
-                            ? fmod(n, d) + d * fdiv(n, d) = n
-                            case n = d:
-                                fmod(n, d) = 0
-                                fdiv(n, d) = 1
-                                fmod(n, d) + d * fdiv(n, d) = 0 + d * 1 = d = n
-                            case n != d:
-                                fmod(n, d) = n
-                                fdiv(n, d) = 0
-                                fmod(n, d) + d * fdiv(n, d) = n + d * 0 = n
-
-    by def $fmod_add_fdiv_at_measure(0)
-
-    claim:
-        ? forall m Z:
-            m >= 0
-            forall y Z:
-                y >= 0
-                y <= m
-                =>:
-                    $fmod_add_fdiv_at_measure(y)
-            =>:
-                $fmod_add_fdiv_at_measure(m + 1)
-
+        ? $textbook_greatest_common_divisor(12, 8, 4)
+        12 % 4 = 0
+        8 % 4 = 0
         claim:
-            ? forall n, d Z:
-                abs(2 * n - d) = m + 1
+            ? forall c N+:
+                12 % c = 0
+                8 % c = 0
                 =>:
-                    fmod(n, d) + d * fdiv(n, d) = n
+                    c <= 4
+            c <= gcd(12, 8) = 4
+        by def $textbook_greatest_common_divisor(12, 8, 4)
 
-            by cases:
-                ? fmod(n, d) + d * fdiv(n, d) = n
-                case n * d < 0:
-                    abs(2 * (n + d) - d) >= 0
-                    abs(2 * (n + d) - d) < abs(2 * n - d) = m + 1
-                    abs(2 * (n + d) - d) $in N
-                    abs(2 * (n + d) - d) <= m or abs(2 * (n + d) - d) >= m + 1
-                    by cases:
-                        ? abs(2 * (n + d) - d) <= m
-                        case abs(2 * (n + d) - d) <= m
-                        case abs(2 * (n + d) - d) >= m + 1:
-                            impossible abs(2 * (n + d) - d) < m + 1
-                    $fmod_add_fdiv_at_measure(abs(2 * (n + d) - d))
-                    n + d $in Z
-                    abs(2 * (n + d) - d) = abs(2 * (n + d) - d)
-                    fmod(n + d, d) + d * fdiv(n + d, d) = n + d
-                    fmod(n, d) = fmod(n + d, d)
-                    fdiv(n, d) = fdiv(n + d, d) - 1
-                    fmod(n, d) + d * fdiv(n, d) = fmod(n + d, d) + d * (fdiv(n + d, d) - 1) = fmod(n + d, d) + d * fdiv(n + d, d) - d = n + d - d = n
-                case n * d >= 0:
-                    by cases:
-                        ? fmod(n, d) + d * fdiv(n, d) = n
-                        case 0 < d * (n - d):
-                            abs(2 * (n - d) - d) >= 0
-                            abs(2 * (n - d) - d) < abs(2 * n - d) = m + 1
-                            abs(2 * (n - d) - d) $in N
-                            abs(2 * (n - d) - d) <= m or abs(2 * (n - d) - d) >= m + 1
-                            by cases:
-                                ? abs(2 * (n - d) - d) <= m
-                                case abs(2 * (n - d) - d) <= m
-                                case abs(2 * (n - d) - d) >= m + 1:
-                                    impossible abs(2 * (n - d) - d) < m + 1
-                            $fmod_add_fdiv_at_measure(abs(2 * (n - d) - d))
-                            n - d $in Z
-                            abs(2 * (n - d) - d) = abs(2 * (n - d) - d)
-                            fmod(n - d, d) + d * fdiv(n - d, d) = n - d
-                            fmod(n, d) = fmod(n - d, d)
-                            fdiv(n, d) = fdiv(n - d, d) + 1
-                            fmod(n, d) + d * fdiv(n, d) = fmod(n - d, d) + d * (fdiv(n - d, d) + 1) = fmod(n - d, d) + d * fdiv(n - d, d) + d = n - d + d = n
-                        case 0 >= d * (n - d):
-                            by cases:
-                                ? fmod(n, d) + d * fdiv(n, d) = n
-                                case n = d:
-                                    fmod(n, d) = 0
-                                    fdiv(n, d) = 1
-                                    fmod(n, d) + d * fdiv(n, d) = 0 + d * 1 = d = n
-                                case n != d:
-                                    fmod(n, d) = n
-                                    fdiv(n, d) = 0
-                                    fmod(n, d) + d * fdiv(n, d) = n + d * 0 = n
-
-        by def $fmod_add_fdiv_at_measure(m + 1)
-
-    by strong_induc m from 0:
-        ? $fmod_add_fdiv_at_measure(m)
-
-        ? from m = 0:
-            $fmod_add_fdiv_at_measure(0)
-
-        ? strong_induc:
-            $fmod_add_fdiv_at_measure(m + 1)
-
+    # From here on, use the builtin objects. A quotient/remainder witness is
+    # supplied directly; no second implementation of division is required.
     claim:
-        ? forall n, d Z:
-            fmod(n, d) + d * fdiv(n, d) = n
+        ? forall n Z, d N+:
+            exist q, r Z st {n = d * q + r, 0 <= r < d}
+        n = d * quot(n, d) + n % d
+        0 <= n % d < d
+        witness exist q, r Z st {n = d * q + r, 0 <= r < d} from quot(n, d), n % d
+    forall n Z, d N+:
+        n = d * quot(n, d) + n % d
+        0 <= n % d < d
 
-        abs(2 * n - d) >= 0
-        $fmod_add_fdiv_at_measure(abs(2 * n - d))
-
+    # Example with a negative divisor: -3*2+2=-4, with 0<=2<3.
+    -4 = (-3) * (-quot(-4, 3)) + (-4) % 3
+    (-4) % 3 = 2
+    (-4) % 3 != -1
+    # Every negative integer divisor is -d for a unique positive d.
     claim:
-        ? forall x, y Z:
-            0 < y
-            x * y >= 0
-            =>:
-                0 <= x
-
-        by contra:
-            ? 0 <= x
-            x < 0
-            x * y < 0
-            impossible x * y >= 0
-
-    claim:
-        ? forall x, y Z:
-            0 < y
-            0 >= y * (x - y)
-            =>:
-                x <= y
-
-        by contra:
-            ? x <= y
-            y < x
-            0 < x - y
-            0 < y * (x - y)
-            impossible 0 >= y * (x - y)
-
-    claim:
-        ? forall x, y Z:
-            x <= y
-            x != y
-            =>:
-                x < y
-
-        by contra:
-            ? x < y
-            x >= y
-            x = y
-            impossible x != y
-
-    prop fmod_bound_at_measure(m Z):
-        forall u, v Z:
-            abs(2 * u - v) = m
-            0 < v
-            =>:
-                abs(fmod(u, v)) < abs(v)
+        ? forall n Z, d N+:
+            n = (-d) * (-quot(n, d)) + n % d
+            0 <= n % d < d
+        n = d * quot(n, d) + n % d
+        d * quot(n, d) = (-d) * (-quot(n, d))
+        n = (-d) * (-quot(n, d)) + n % d
+        0 <= n % d < d
 
     claim:
         ? forall a, b Z:
-            abs(2 * a - b) = 0
-            0 < b
+            a != 0 or b != 0
             =>:
-                abs(fmod(a, b)) < abs(b)
-
-        by cases:
-            ? abs(fmod(a, b)) < abs(b)
-            case a * b < 0:
-                abs(2 * (a + b) - b) < abs(2 * a - b) = 0
-                0 <= abs(2 * (a + b) - b)
-                impossible abs(2 * (a + b) - b) < 0
-            case a * b >= 0:
-                by cases:
-                    ? abs(fmod(a, b)) < abs(b)
-                    case 0 < b * (a - b):
-                        abs(2 * (a - b) - b) < abs(2 * a - b) = 0
-                        0 <= abs(2 * (a - b) - b)
-                        impossible abs(2 * (a - b) - b) < 0
-                    case 0 >= b * (a - b):
-                        by cases:
-                            ? abs(fmod(a, b)) < abs(b)
-                            case a = b:
-                                fmod(a, b) = 0
-                                abs(fmod(a, b)) = abs(0) = 0
-                                abs(b) = b
-                                0 < abs(b)
-                                abs(fmod(a, b)) < abs(b)
-                            case a != b:
-                                fmod(a, b) = a
-                                by contra:
-                                    ? 0 <= a
-                                    a < 0
-                                    a * b < 0
-                                    impossible a * b >= 0
-                                by contra:
-                                    ? a <= b
-                                    b < a
-                                    0 < a - b
-                                    0 < b * (a - b)
-                                    impossible 0 >= b * (a - b)
-                                by contra:
-                                    ? a < b
-                                    a >= b
-                                    a = b
-                                    impossible a != b
-                                abs(a) = a
-                                abs(b) = b
-                                0 <= fmod(a, b)
-                                abs(fmod(a, b)) = fmod(a, b) = a < b = abs(b)
-
-    by def $fmod_bound_at_measure(0)
-
+                gcd(a, b) $in N+
+                a % gcd(a, b) = 0
+                b % gcd(a, b) = 0
+        gcd(a, b) $in N+
+        a % gcd(a, b) = 0
+        b % gcd(a, b) = 0
+    forall a, b Z, c N+:
+        a != 0 or b != 0
+        a % c = 0
+        b % c = 0
+        =>:
+            c <= gcd(a, b)
+    forall a Z:
+        a != 0
+        =>:
+            gcd(a, 0) = abs(a)
     claim:
-        ? forall m Z:
-            m >= 0
-            forall y Z:
-                y >= 0
-                y <= m
-                =>:
-                    $fmod_bound_at_measure(y)
-            =>:
-                $fmod_bound_at_measure(m + 1)
-
-        claim:
-            ? forall a, b Z:
-                abs(2 * a - b) = m + 1
-                0 < b
-                =>:
-                    abs(fmod(a, b)) < abs(b)
-
-            by cases:
-                ? abs(fmod(a, b)) < abs(b)
-                case a * b < 0:
-                    abs(2 * (a + b) - b) >= 0
-                    abs(2 * (a + b) - b) < abs(2 * a - b) = m + 1
-                    abs(2 * (a + b) - b) $in N
-                    abs(2 * (a + b) - b) <= m or abs(2 * (a + b) - b) >= m + 1
-                    by cases:
-                        ? abs(2 * (a + b) - b) <= m
-                        case abs(2 * (a + b) - b) <= m
-                        case abs(2 * (a + b) - b) >= m + 1:
-                            impossible abs(2 * (a + b) - b) < m + 1
-                    $fmod_bound_at_measure(abs(2 * (a + b) - b))
-                    a + b $in Z
-                    abs(2 * (a + b) - b) = abs(2 * (a + b) - b)
-                    abs(fmod(a + b, b)) < abs(b)
-                    fmod(a, b) = fmod(a + b, b)
-                    fmod(a, b) - fmod(a + b, b) = 0
-                    abs(fmod(a, b)) - abs(fmod(a + b, b)) <= abs(fmod(a, b) - fmod(a + b, b)) = abs(0) = 0
-                    abs(fmod(a, b)) <= abs(fmod(a + b, b))
-                    abs(fmod(a, b)) <= abs(fmod(a + b, b)) < abs(b)
-                    abs(fmod(a, b)) < abs(b)
-                case a * b >= 0:
-                    by cases:
-                        ? abs(fmod(a, b)) < abs(b)
-                        case 0 < b * (a - b):
-                            abs(2 * (a - b) - b) >= 0
-                            abs(2 * (a - b) - b) < abs(2 * a - b) = m + 1
-                            abs(2 * (a - b) - b) $in N
-                            abs(2 * (a - b) - b) <= m or abs(2 * (a - b) - b) >= m + 1
-                            by cases:
-                                ? abs(2 * (a - b) - b) <= m
-                                case abs(2 * (a - b) - b) <= m
-                                case abs(2 * (a - b) - b) >= m + 1:
-                                    impossible abs(2 * (a - b) - b) < m + 1
-                            $fmod_bound_at_measure(abs(2 * (a - b) - b))
-                            a - b $in Z
-                            abs(2 * (a - b) - b) = abs(2 * (a - b) - b)
-                            abs(fmod(a - b, b)) < abs(b)
-                            fmod(a, b) = fmod(a - b, b)
-                            fmod(a, b) - fmod(a - b, b) = 0
-                            abs(fmod(a, b)) - abs(fmod(a - b, b)) <= abs(fmod(a, b) - fmod(a - b, b)) = abs(0) = 0
-                            abs(fmod(a, b)) <= abs(fmod(a - b, b))
-                            abs(fmod(a, b)) <= abs(fmod(a - b, b)) < abs(b)
-                            abs(fmod(a, b)) < abs(b)
-                        case 0 >= b * (a - b):
-                            by cases:
-                                ? abs(fmod(a, b)) < abs(b)
-                                case a = b:
-                                    fmod(a, b) = 0
-                                    abs(fmod(a, b)) = abs(0) = 0
-                                    abs(b) = b
-                                    0 < abs(b)
-                                    abs(fmod(a, b)) < abs(b)
-                                case a != b:
-                                    fmod(a, b) = a
-                                    by contra:
-                                        ? 0 <= a
-                                        a < 0
-                                        a * b < 0
-                                        impossible a * b >= 0
-                                    by contra:
-                                        ? a <= b
-                                        b < a
-                                        0 < a - b
-                                        0 < b * (a - b)
-                                        impossible 0 >= b * (a - b)
-                                    by contra:
-                                        ? a < b
-                                        a >= b
-                                        a = b
-                                        impossible a != b
-                                    abs(a) = a
-                                    abs(b) = b
-                                    0 <= fmod(a, b)
-                                    abs(fmod(a, b)) = fmod(a, b) = a < b = abs(b)
-
-        by def $fmod_bound_at_measure(m + 1)
-
-    by strong_induc m from 0:
-        ? $fmod_bound_at_measure(m)
-
-        ? from m = 0:
-            $fmod_bound_at_measure(0)
-
-        ? strong_induc:
-            $fmod_bound_at_measure(m + 1)
-
-    claim:
-        ? forall a, b Z:
-            0 < b
-            =>:
-                abs(fmod(a, b)) < abs(b)
-
-        abs(2 * a - b) >= 0
-        $fmod_bound_at_measure(abs(2 * a - b))
-
-    claim:
-        ? forall a, b Z:
-            b < 0
-            =>:
-                abs(fmod(a, (-b))) < abs(b)
-
-        0 < (-b)
-        (-b) $in Z
-        abs(fmod(a, (-b))) < abs(-b)
-        b <= 0
-        abs(b) = (-b)
-        abs(-b) = (-b)
-        abs(-b) = abs(b)
-
-    have fn euclidean_gcd(a Z, b Z) Z by induc abs(b) from 0:
-        case 0 < b: euclidean_gcd(b, fmod(a, b))
-        case 0 >= b:
-            case b < 0: euclidean_gcd(b, fmod(a, (-b)))
-            case b >= 0:
-                case 0 <= a: a
-                case 0 > a: (-a)
-
-    have fn egcd_pair(a Z, b Z) cart(Z, Z) by induc abs(b) from 0:
-        case 0 < b: (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])
-        case 0 >= b:
-            case b < 0: (egcd_pair(b, fmod(a, (-b)))[2], egcd_pair(b, fmod(a, (-b)))[1] + fdiv(a, (-b)) * egcd_pair(b, fmod(a, (-b)))[2])
-            case b >= 0:
-                case 0 <= a: (1, 0)
-                case 0 > a: (-1, 0)
-
-    have fn egcd_l(a Z, b Z) Z = egcd_pair(a, b)[1]
-
-    have fn egcd_r(a Z, b Z) Z = egcd_pair(a, b)[2]
-
-    prop egcd_identity_at_measure(m Z):
-        forall u, v Z:
-            abs(v) = m
-            =>:
-                egcd_l(u, v) * u + egcd_r(u, v) * v = euclidean_gcd(u, v)
-
-    claim:
-        ? forall a, b Z:
-            abs(b) = 0
-            =>:
-                egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
-
-        b = 0
-        0 >= b
+        ? forall a Z, b N+:
+            gcd(a, b) = gcd(b, a % b)
         b >= 0
-        by cases:
-            ? egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
-            case 0 <= a:
-                egcd_pair(a, b) = (1, 0)
-                egcd_l(a, b) = egcd_pair(a, b)[1] = (1, 0)[1] = 1
-                egcd_r(a, b) = egcd_pair(a, b)[2] = (1, 0)[2] = 0
-                euclidean_gcd(a, b) = a
-                egcd_l(a, b) * a + egcd_r(a, b) * b = 1 * a + 0 * b = a = euclidean_gcd(a, b)
-            case 0 > a:
-                egcd_pair(a, b) = (-1, 0)
-                egcd_l(a, b) = egcd_pair(a, b)[1] = (-1, 0)[1] = (-1)
-                egcd_r(a, b) = egcd_pair(a, b)[2] = (-1, 0)[2] = 0
-                euclidean_gcd(a, b) = (-a)
-                egcd_l(a, b) * a + egcd_r(a, b) * b = (-1) * a + 0 * b = (-a) = euclidean_gcd(a, b)
+        abs(b) = b
+        release thm citation::gcd_euclidean_step(a, b)
+        gcd(a, b) = gcd(b, a % b)
 
-    by def $egcd_identity_at_measure(0)
-
-    claim:
-        ? forall m Z:
-            m >= 0
-            forall y Z:
-                y >= 0
-                y <= m
-                =>:
-                    $egcd_identity_at_measure(y)
-            =>:
-                $egcd_identity_at_measure(m + 1)
-
-        claim:
-            ? forall a, b Z:
-                abs(b) = m + 1
-                =>:
-                    egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
-
-            by cases:
-                ? egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
-                case 0 < b:
-                    abs(fmod(a, b)) >= 0
-                    abs(fmod(a, b)) < abs(b) = m + 1
-                    abs(fmod(a, b)) $in N
-                    abs(fmod(a, b)) <= m or abs(fmod(a, b)) >= m + 1
-                    by cases:
-                        ? abs(fmod(a, b)) <= m
-                        case abs(fmod(a, b)) <= m
-                        case abs(fmod(a, b)) >= m + 1:
-                            impossible abs(fmod(a, b)) < m + 1
-                    $egcd_identity_at_measure(abs(fmod(a, b)))
-                    fmod(a, b) $in Z
-                    abs(fmod(a, b)) = abs(fmod(a, b))
-                    egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = euclidean_gcd(b, fmod(a, b))
-                    egcd_pair(a, b) = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])
-                    egcd_l(a, b) = egcd_pair(a, b)[1] = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])[1] = egcd_pair(b, fmod(a, b))[2]
-                    egcd_r(b, fmod(a, b)) = egcd_pair(b, fmod(a, b))[2]
-                    egcd_l(a, b) = egcd_r(b, fmod(a, b))
-                    egcd_r(a, b) = egcd_pair(a, b)[2] = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])[2] = egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2]
-                    egcd_l(b, fmod(a, b)) = egcd_pair(b, fmod(a, b))[1]
-                    egcd_pair(b, fmod(a, b))[1] = egcd_l(b, fmod(a, b))
-                    egcd_pair(b, fmod(a, b))[2] = egcd_r(b, fmod(a, b))
-                    egcd_r(a, b) = egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2] = egcd_l(b, fmod(a, b)) - fdiv(a, b) * egcd_r(b, fmod(a, b))
-                    fmod(a, b) + b * fdiv(a, b) = a
-                    a = fmod(a, b) + b * fdiv(a, b)
-                    a - b * fdiv(a, b) = fmod(a, b) + b * fdiv(a, b) - b * fdiv(a, b) = fmod(a, b)
-                    euclidean_gcd(a, b) = euclidean_gcd(b, fmod(a, b))
-                    egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, b)) * a + (egcd_l(b, fmod(a, b)) - fdiv(a, b) * egcd_r(b, fmod(a, b))) * b = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * (a - b * fdiv(a, b)) = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = euclidean_gcd(b, fmod(a, b)) = euclidean_gcd(a, b)
-                case 0 >= b:
-                    by cases:
-                        ? egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
-                        case b < 0:
-                            abs(fmod(a, (-b))) >= 0
-                            abs(fmod(a, (-b))) < abs(b) = m + 1
-                            abs(fmod(a, (-b))) $in N
-                            abs(fmod(a, (-b))) <= m or abs(fmod(a, (-b))) >= m + 1
-                            by cases:
-                                ? abs(fmod(a, (-b))) <= m
-                                case abs(fmod(a, (-b))) <= m
-                                case abs(fmod(a, (-b))) >= m + 1:
-                                    impossible abs(fmod(a, (-b))) < m + 1
-                            $egcd_identity_at_measure(abs(fmod(a, (-b))))
-                            fmod(a, (-b)) $in Z
-                            abs(fmod(a, (-b))) = abs(fmod(a, (-b)))
-                            egcd_l(b, fmod(a, (-b))) * b + egcd_r(b, fmod(a, (-b))) * fmod(a, (-b)) = euclidean_gcd(b, fmod(a, (-b)))
-                            egcd_pair(a, b) = (egcd_pair(b, fmod(a, (-b)))[2], egcd_pair(b, fmod(a, (-b)))[1] + fdiv(a, (-b)) * egcd_pair(b, fmod(a, (-b)))[2])
-                            egcd_l(a, b) = egcd_pair(a, b)[1] = (egcd_pair(b, fmod(a, (-b)))[2], egcd_pair(b, fmod(a, (-b)))[1] + fdiv(a, (-b)) * egcd_pair(b, fmod(a, (-b)))[2])[1] = egcd_pair(b, fmod(a, (-b)))[2]
-                            egcd_r(b, fmod(a, (-b))) = egcd_pair(b, fmod(a, (-b)))[2]
-                            egcd_l(a, b) = egcd_r(b, fmod(a, (-b)))
-                            egcd_r(a, b) = egcd_pair(a, b)[2] = (egcd_pair(b, fmod(a, (-b)))[2], egcd_pair(b, fmod(a, (-b)))[1] + fdiv(a, (-b)) * egcd_pair(b, fmod(a, (-b)))[2])[2] = egcd_pair(b, fmod(a, (-b)))[1] + fdiv(a, (-b)) * egcd_pair(b, fmod(a, (-b)))[2]
-                            egcd_l(b, fmod(a, (-b))) = egcd_pair(b, fmod(a, (-b)))[1]
-                            egcd_pair(b, fmod(a, (-b)))[1] = egcd_l(b, fmod(a, (-b)))
-                            egcd_pair(b, fmod(a, (-b)))[2] = egcd_r(b, fmod(a, (-b)))
-                            egcd_r(a, b) = egcd_pair(b, fmod(a, (-b)))[1] + fdiv(a, (-b)) * egcd_pair(b, fmod(a, (-b)))[2] = egcd_l(b, fmod(a, (-b))) + fdiv(a, (-b)) * egcd_r(b, fmod(a, (-b)))
-                            fmod(a, (-b)) + (-b) * fdiv(a, (-b)) = a
-                            a = fmod(a, (-b)) + (-b) * fdiv(a, (-b))
-                            a + b * fdiv(a, (-b)) = fmod(a, (-b)) + (-b) * fdiv(a, (-b)) + b * fdiv(a, (-b)) = fmod(a, (-b))
-                            euclidean_gcd(a, b) = euclidean_gcd(b, fmod(a, (-b)))
-                            egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, (-b))) * a + (egcd_l(b, fmod(a, (-b))) + fdiv(a, (-b)) * egcd_r(b, fmod(a, (-b)))) * b = egcd_l(b, fmod(a, (-b))) * b + egcd_r(b, fmod(a, (-b))) * (a + b * fdiv(a, (-b))) = egcd_l(b, fmod(a, (-b))) * b + egcd_r(b, fmod(a, (-b))) * fmod(a, (-b)) = euclidean_gcd(b, fmod(a, (-b))) = euclidean_gcd(a, b)
-                        case b >= 0:
-                            b = 0
-                            by cases:
-                                ? egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
-                                case 0 <= a:
-                                    egcd_pair(a, b) = (1, 0)
-                                    egcd_l(a, b) = egcd_pair(a, b)[1] = (1, 0)[1] = 1
-                                    egcd_r(a, b) = egcd_pair(a, b)[2] = (1, 0)[2] = 0
-                                    euclidean_gcd(a, b) = a
-                                    egcd_l(a, b) * a + egcd_r(a, b) * b = 1 * a + 0 * b = a = euclidean_gcd(a, b)
-                                case 0 > a:
-                                    egcd_pair(a, b) = (-1, 0)
-                                    egcd_l(a, b) = egcd_pair(a, b)[1] = (-1, 0)[1] = (-1)
-                                    egcd_r(a, b) = egcd_pair(a, b)[2] = (-1, 0)[2] = 0
-                                    euclidean_gcd(a, b) = (-a)
-                                    egcd_l(a, b) * a + egcd_r(a, b) * b = (-1) * a + 0 * b = (-a) = euclidean_gcd(a, b)
-
-        by def $egcd_identity_at_measure(m + 1)
-
-    by strong_induc m from 0:
-        ? $egcd_identity_at_measure(m)
-
-        ? from m = 0:
-            $egcd_identity_at_measure(0)
-
-        ? strong_induc:
-            $egcd_identity_at_measure(m + 1)
-
+    # Litex has builtin gcd. Bezout is an ordinary proved theorem in citation,
+    # which constructs integer coefficients; there is no builtin egcd_pair.
     claim:
         ? forall a, b Z:
-            egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
-
-        abs(b) >= 0
-        $egcd_identity_at_measure(abs(b))
-
-# The proof is organized around three induction measures:
-
-# - `abs(2 * n - d)` for the quotient-remainder identity;
-# - `abs(2 * a - b)` for the remainder bound when the divisor is positive;
-# - `abs(b)` for the Euclidean and extended Euclidean algorithms.
-
-# This is the main lesson of these examples: recursive algorithms often become
-# straightforward once the induction statement is indexed by the same measure
-# that makes the function definition well-founded.
-
-# Summary
-
-# Induction turns a proof about infinitely many inputs into a proof about how a
-# statement starts and how it is preserved. In Litex, `by induc` handles ordinary
-# one-step induction, `by strong_induc` handles proofs that may use all smaller
-# cases, and the proof body records exactly which induction statement is being
-# proved.
-
-# The chapter uses this idea in several forms:
-
-# - direct induction on natural numbers;
-# - induction for recursively defined sequences;
-# - two-step induction, where two base cases are needed;
-# - strong induction, where the current case can appeal to any smaller case;
-# - recursive function definitions checked by a decreasing measure.
-
-# The later examples show why choosing the right measure matters. Division,
-# remainders, gcd, and the extended Euclidean algorithm are recursive algorithms,
-# but their correctness proofs become ordinary induction proofs once the measure
-# matches the recursive calls.
+            a != 0 or b != 0
+            =>:
+                exist u, v Z st {a * u + b * v = gcd(a, b)}
+        release thm citation::bezout_identity(a, b)
+        obtain u, v from exist x Z, y Z st {gcd(a, b) = x * a + y * b}
+        a * u + b * v = u * a + v * b = gcd(a, b)
+        witness exist bezout_u, bezout_v Z st {a * bezout_u + b * bezout_v = gcd(a, b)} from u, v

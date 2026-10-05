@@ -11,6 +11,8 @@ thm distance_sq_coordinate_formula:
     vec(a, b) = (b[1] - a[1], b[2] - a[2])
     vec(a, b)[1] = b[1] - a[1]
     vec(a, b)[2] = b[2] - a[2]
+    vec(a, b)[1] * vec(a, b)[1] = (b[1] - a[1]) * (b[1] - a[1]) = (b[1] - a[1])^2
+    vec(a, b)[2] * vec(a, b)[2] = (b[2] - a[2]) * (b[2] - a[2]) = (b[2] - a[2])^2
     distance_sq(a, b) = dot(vec(a, b), vec(a, b))
     dot(vec(a, b), vec(a, b)) = vec(a, b)[1] * vec(a, b)[1] + vec(a, b)[2] * vec(a, b)[2] = (b[1] - a[1])^2 + (b[2] - a[2])^2
 

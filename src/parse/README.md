@@ -478,7 +478,7 @@ Precedence low → high:
 | fn space | `fn(x A) B`, `fn(x A: x > 0) B`, `A -> B` (sugar, right-assoc) |
 | anonymous fn | `fn(x R) R {x + 1}` |
 | apply / index / field / bang | `f(a)`, `f(a)(b)`, `obj[i]`, `obj.field`, postfix `n!` (= `factorial(n)`) |
-| struct view | `&Point`, `&Pair<R>` |
+| struct view | `&Point`, `&Pair<R>`, `&Lib::facts::Pair`, `&Lib:::Tagged<R>` |
 | template instance | `\Name<args>` (angles required) |
 | interval literals | `'[a,b]` `'(a,b)` `'[a,b)` `'(a,b]` ; rays `'(,a]` `'[a,)` … |
 | fn_range | `fn_range(f)` |
@@ -555,3 +555,12 @@ Iron rules (also in `mod.rs`):
 2. ParseScope maps plain name → id only.
 3. Do not store facts or read `ExecEnv` here.
 4. Errors: `RuntimeParseError` + path from `TokenBlock`; AST stamps `SourceLine` via live `CodeSource`.
+
+Object-primary builtin spellings cannot be declared as user names, including
+parameters, fields and witnesses. The shared binder wrapper rejects them before
+allocating an identifier; literal builtin uses and nearby fresh names remain
+valid. Struct views use the same full module/export owner resolver as templates.
+The configured acceptance fixture is
+[`qualified_struct_views`](../../examples/module_manager/qualified_struct_views/README.md);
+reserved-binding acceptance is
+[`reserved_object_bindings.lit`](../../examples/wd/reserved_object_bindings.lit).

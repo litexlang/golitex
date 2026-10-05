@@ -1,0 +1,474 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "task": "Conversation serious-bug audit; L4 checkpoint with bounded parser repairs",
+  "git_head_at_report": "7c1cdc4866eb2084198d88d533e80c80f397edad",
+  "production_binaries": {
+    "litex-baseline": "96faac20863a4c694d04fbe92f3e86ad3323c2040d92489cc40e352ef8898270",
+    "litex-repaired": "1d7bda24fb3c504bd8fb8af38b7df688d709dc33f86be5fd775022e133f5cd2a",
+    "litex-final": "dddc1902feee4bbdfd163994ed84aef4867ea447041184f680d1d24b87f55b8d"
+  },
+  "final_build_bytes_match_pinned": true,
+  "final_source_drift_after_record_end": [],
+  "gates": [
+    {
+      "label": "build-current",
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--offline",
+        "--bin",
+        "litex",
+        "--target-dir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/target"
+      ],
+      "exit": 0,
+      "seconds": 53.019508542027324,
+      "source_before_manifest_sha256": "2b0beddc752105ddaf4b090c4dbba4daae0b852dab37f5e6667305e697033ef4",
+      "source_after_manifest_sha256": "2b0beddc752105ddaf4b090c4dbba4daae0b852dab37f5e6667305e697033ef4",
+      "files_watched": 1308,
+      "changed": [],
+      "raw_record": "build-current.json"
+    },
+    {
+      "label": "rust-baseline",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--all-targets",
+        "--no-fail-fast",
+        "--target-dir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/target"
+      ],
+      "exit": 101,
+      "seconds": 65.59680737485178,
+      "source_before_manifest_sha256": "2b0beddc752105ddaf4b090c4dbba4daae0b852dab37f5e6667305e697033ef4",
+      "source_after_manifest_sha256": "2b0beddc752105ddaf4b090c4dbba4daae0b852dab37f5e6667305e697033ef4",
+      "files_watched": 1308,
+      "changed": [],
+      "raw_record": "rust-baseline.json"
+    },
+    {
+      "label": "stmt-baseline",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--binary",
+        "tmp/2026-10-05/conversation-serious-bug-audit/litex-baseline",
+        "--require-no-gaps",
+        "--report",
+        "tmp/2026-10-05/conversation-serious-bug-audit/stmt-baseline-results.json"
+      ],
+      "exit": 0,
+      "seconds": 3.8881181250326335,
+      "source_before_manifest_sha256": "2b0beddc752105ddaf4b090c4dbba4daae0b852dab37f5e6667305e697033ef4",
+      "source_after_manifest_sha256": "2b0beddc752105ddaf4b090c4dbba4daae0b852dab37f5e6667305e697033ef4",
+      "files_watched": 1308,
+      "changed": [],
+      "raw_record": "stmt-baseline.json"
+    },
+    {
+      "label": "basics-baseline-corrected",
+      "command": [
+        "python3",
+        "examples/test_statements/release_basics/run.py",
+        "--binary",
+        "tmp/2026-10-05/conversation-serious-bug-audit/litex-baseline",
+        "--manifest",
+        "examples/test_statements/release_basics/cases.json",
+        "--workdir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/basic-work",
+        "--report",
+        "tmp/2026-10-05/conversation-serious-bug-audit/basic-baseline-results.json"
+      ],
+      "exit": 0,
+      "seconds": 0.9784118749666959,
+      "source_before_manifest_sha256": "2b0beddc752105ddaf4b090c4dbba4daae0b852dab37f5e6667305e697033ef4",
+      "source_after_manifest_sha256": "2b0beddc752105ddaf4b090c4dbba4daae0b852dab37f5e6667305e697033ef4",
+      "files_watched": 1308,
+      "changed": [],
+      "raw_record": "basics-baseline-corrected.json"
+    },
+    {
+      "label": "objects-baseline",
+      "command": [
+        "python3",
+        "tmp/2026-10-05/conversation-serious-bug-audit/obj_baseline.py"
+      ],
+      "exit": 0,
+      "seconds": 12.883368959184736,
+      "source_before_manifest_sha256": "2b0beddc752105ddaf4b090c4dbba4daae0b852dab37f5e6667305e697033ef4",
+      "source_after_manifest_sha256": "2b0beddc752105ddaf4b090c4dbba4daae0b852dab37f5e6667305e697033ef4",
+      "files_watched": 1308,
+      "changed": [],
+      "raw_record": "objects-baseline.json"
+    },
+    {
+      "label": "core-baseline",
+      "command": [
+        "python3",
+        "tmp/2026-10-05/conversation-serious-bug-audit/core_probes.py"
+      ],
+      "exit": 1,
+      "seconds": 0.8801913340575993,
+      "source_before_manifest_sha256": "d5d93662d1399eb8cb514bb2acd3225f4349b5d8326d690b3e5c870251896559",
+      "source_after_manifest_sha256": "d5d93662d1399eb8cb514bb2acd3225f4349b5d8326d690b3e5c870251896559",
+      "files_watched": 1309,
+      "changed": [],
+      "raw_record": "core-baseline.json"
+    },
+    {
+      "label": "build-repairs",
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--offline",
+        "--bin",
+        "litex",
+        "--target-dir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/target"
+      ],
+      "exit": 0,
+      "seconds": 51.73878354183398,
+      "source_before_manifest_sha256": "0a1169d45bfd826c130380c9790b636690390b06768ce1d0cde476047bc8d4bd",
+      "source_after_manifest_sha256": "0a1169d45bfd826c130380c9790b636690390b06768ce1d0cde476047bc8d4bd",
+      "files_watched": 1313,
+      "changed": [],
+      "raw_record": "build-repairs.json"
+    },
+    {
+      "label": "reserved-rust-final",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--target-dir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/target",
+        "reserved_object_binding_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit": 0,
+      "seconds": 71.78491758392192,
+      "source_before_manifest_sha256": "fb1aa600c07503ee14764695f12915f08a5cbacd20d3d1f59b5be496b888cbfb",
+      "source_after_manifest_sha256": "fb1aa600c07503ee14764695f12915f08a5cbacd20d3d1f59b5be496b888cbfb",
+      "files_watched": 1313,
+      "changed": [],
+      "raw_record": "reserved-rust-final.json"
+    },
+    {
+      "label": "qualified-rust",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--target-dir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/target",
+        "qualified_struct_view_tests",
+        "--",
+        "--nocapture"
+      ],
+      "exit": 0,
+      "seconds": 63.837098666932434,
+      "source_before_manifest_sha256": "08d37fb2b43309c78f820fdf51fe45113dc222174657ae5a38cad800680cb4c8",
+      "source_after_manifest_sha256": "08d37fb2b43309c78f820fdf51fe45113dc222174657ae5a38cad800680cb4c8",
+      "files_watched": 1314,
+      "changed": [],
+      "raw_record": "qualified-rust.json"
+    },
+    {
+      "label": "build-final",
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--offline",
+        "--bin",
+        "litex",
+        "--target-dir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/target"
+      ],
+      "exit": 0,
+      "seconds": 55.976758167147636,
+      "source_before_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "source_after_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "files_watched": 1314,
+      "changed": [],
+      "raw_record": "build-final.json"
+    },
+    {
+      "label": "rust-final",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--all-targets",
+        "--no-fail-fast",
+        "--target-dir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/target"
+      ],
+      "exit": 101,
+      "seconds": 68.92776087485254,
+      "source_before_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "source_after_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "files_watched": 1314,
+      "changed": [],
+      "raw_record": "rust-final.json"
+    },
+    {
+      "label": "rust-final-migrated",
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--offline",
+        "--all-targets",
+        "--no-fail-fast",
+        "--target-dir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/target"
+      ],
+      "exit": 101,
+      "seconds": 68.43215291714296,
+      "source_before_manifest_sha256": "a718ddff23a462b5bc56098f7c39891b9353c63c39577e483535e0c3797fd04c",
+      "source_after_manifest_sha256": "a718ddff23a462b5bc56098f7c39891b9353c63c39577e483535e0c3797fd04c",
+      "files_watched": 1314,
+      "changed": [],
+      "raw_record": "rust-final-migrated.json"
+    },
+    {
+      "label": "stmt-final",
+      "command": [
+        "python3",
+        "examples/test_statements/run.py",
+        "--binary",
+        "tmp/2026-10-05/conversation-serious-bug-audit/litex-final",
+        "--require-no-gaps",
+        "--report",
+        "tmp/2026-10-05/conversation-serious-bug-audit/stmt-final-results.json"
+      ],
+      "exit": 0,
+      "seconds": 4.952307833125815,
+      "source_before_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "source_after_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "files_watched": 1314,
+      "changed": [],
+      "raw_record": "stmt-final.json"
+    },
+    {
+      "label": "basics-final",
+      "command": [
+        "python3",
+        "examples/test_statements/release_basics/run.py",
+        "--binary",
+        "tmp/2026-10-05/conversation-serious-bug-audit/litex-final",
+        "--manifest",
+        "examples/test_statements/release_basics/cases.json",
+        "--workdir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/basic-final-work",
+        "--report",
+        "tmp/2026-10-05/conversation-serious-bug-audit/basic-final-results.json"
+      ],
+      "exit": 0,
+      "seconds": 2.797727999975905,
+      "source_before_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "source_after_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "files_watched": 1314,
+      "changed": [],
+      "raw_record": "basics-final.json"
+    },
+    {
+      "label": "objects-final",
+      "command": [
+        "python3",
+        "tmp/2026-10-05/conversation-serious-bug-audit/obj_final.py"
+      ],
+      "exit": 0,
+      "seconds": 15.536456833127886,
+      "source_before_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "source_after_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "files_watched": 1314,
+      "changed": [],
+      "raw_record": "objects-final.json"
+    },
+    {
+      "label": "core-final-pinned",
+      "command": [
+        "python3",
+        "tmp/2026-10-05/conversation-serious-bug-audit/core_probes_final_pinned.py"
+      ],
+      "exit": 0,
+      "seconds": 1.2655688340310007,
+      "source_before_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "source_after_manifest_sha256": "ad237405772766ba8c34708c99ffe80ab8004c30f7cd92b048ec9ee3c78f446a",
+      "files_watched": 1314,
+      "changed": [],
+      "raw_record": "core-final-pinned.json"
+    },
+    {
+      "label": "build-record-end",
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--offline",
+        "--bin",
+        "litex",
+        "--target-dir",
+        "tmp/2026-10-05/conversation-serious-bug-audit/target"
+      ],
+      "exit": 0,
+      "seconds": 0.27974479109980166,
+      "source_before_manifest_sha256": "a718ddff23a462b5bc56098f7c39891b9353c63c39577e483535e0c3797fd04c",
+      "source_after_manifest_sha256": "a718ddff23a462b5bc56098f7c39891b9353c63c39577e483535e0c3797fd04c",
+      "files_watched": 1314,
+      "changed": [],
+      "raw_record": "build-record-end.json"
+    }
+  ],
+  "final_counts": {
+    "rust_lib": {
+      "selected": 934,
+      "passed": 933,
+      "failed": 1,
+      "exit": 101
+    },
+    "rust_integration": {
+      "selected": 1,
+      "passed": 1
+    },
+    "new_reserved_rust": 4,
+    "new_qualified_rust": 4,
+    "stmt": {
+      "leaves": 50,
+      "checks": 378,
+      "pass": 378,
+      "gaps": 0
+    },
+    "basics": {
+      "checks": 175,
+      "pass": 175
+    },
+    "obj": {
+      "positive_files": 99,
+      "positive_assertions": 666,
+      "negative_files": 309,
+      "mismatches": 0
+    },
+    "additional_cli": {
+      "checks": 49,
+      "mismatches": 0
+    },
+    "stable_files": 5,
+    "qualified_project": 1,
+    "migrated_fixture_files": 2
+  },
+  "closed_issues": [
+    "LEG30",
+    "LEG27"
+  ],
+  "remaining_test_failure": {
+    "canonical": "DEC04",
+    "name": "execute::showcase_local_repair_tests::unique_function_templates_recover_hidden_carriers_and_work_in_nested_wd",
+    "original_negative_preserved": true,
+    "soundness_bug_demonstrated": false,
+    "code": "struct Point<K nonempty_set,S nonempty_set>:\n    value S\n    tag N\nforall t &Point<N,R>:\n    t $in &Point<Z,R>\n"
+  },
+  "consumer_migrations": [
+    {
+      "file": "examples/stmt_nodes/definition/dependent_have.lit",
+      "before": "have C nonempty_set, z C, n N = R, 2, 1",
+      "after": "have D nonempty_set, z D, n N = R, 2, 1",
+      "before_sha256": "7a75d4a03851a8ab24e168504941872c824ad4753e73f351a023189a8b5f190e",
+      "after_sha256": "a5c310a7ee36d22fc78530f5ac39b4fe7beab32b45fe8ce3b08c12e1b50db2f3"
+    },
+    {
+      "file": "examples/stmt_nodes/release_and_expand/builtin_thm/index_cart_member.lit",
+      "before": "f fn(i {1}) family_union({{1}})",
+      "after": "f fn(index {1}) family_union({{1}})",
+      "before_sha256": "74cd16b195fd8cfe533e02d8bb9edd17d1ba5eb24950c9ce52a907c7051347e2",
+      "after_sha256": "cc2cd58fe9e87a78a5513df7ed6788a219d6275c80a4a178ad97622bb3a66af4"
+    },
+    {
+      "file": "tests/unit/execute/function_body_evaluation/tests.rs",
+      "before": "forall X, Y, Z set, K power_set(X), f fn(x X) Y, point K:\\n        fn(x K) Z {f(x)}(point) = f(point)\\n    point $in X\\n    f(point) $in Y\\n    fn(x K) Z {f(x)}(point) = f(point)",
+      "after": "forall X, Y, W set, K power_set(X), f fn(x X) Y, point K:\\n        fn(x K) W {f(x)}(point) = f(point)\\n    point $in X\\n    f(point) $in Y\\n    fn(x K) W {f(x)}(point) = f(point)",
+      "before_sha256": "35482195098f76da58a351cff26ea90c07c5040d68b689a77f3378de04e501f6",
+      "after_sha256": "c55eb7c344b262a6e704792757434a864c5756771954fd893576d182707d1387"
+    },
+    {
+      "file": "src/execute/order_stage_a_remainder_tests.rs",
+      "before": "fn order_stage_a_positive_even_gt_one() {\n    let mut runtime = runtime_with_file_env();\n    assert!(!exec_one(&mut runtime, \"have i Z\").is_failed());\n    assert!(!exec_one(&mut runtime, \"trust i $in N+\").is_failed());\n    assert!(!exec_one(&mut runtime, \"trust 2 != 0\").is_failed());\n    assert!(!exec_one(&mut runtime, \"trust i % 2 = 0\").is_failed());\n    assert!(\n        !exec_one(&mut runtime, \"1 < i\").is_failed(),\n        \"positive even exceeds one\"\n    );\n}\n",
+      "after": "fn order_stage_a_positive_even_gt_one() {\n    let mut runtime = runtime_with_file_env();\n    assert!(!exec_one(&mut runtime, \"have count Z\").is_failed());\n    assert!(!exec_one(&mut runtime, \"trust count $in N+\").is_failed());\n    assert!(!exec_one(&mut runtime, \"trust 2 != 0\").is_failed());\n    assert!(!exec_one(&mut runtime, \"trust count % 2 = 0\").is_failed());\n    assert!(\n        !exec_one(&mut runtime, \"1 < count\").is_failed(),\n        \"positive even exceeds one\"\n    );\n}\n",
+      "before_sha256": "be49e412c7e3415f3988ba642d17df0b71e2b23559f7ca0d8b41cd8e6972629b",
+      "after_sha256": "abe5549d0aa7eaedf723e8d45fa65e9a3748b57f854f635288f58a82afaa4e97"
+    },
+    {
+      "file": "src/execute/exec_stmt_transaction_tests.rs",
+      "before": "fn have_fn_by_cases_sign_trichotomy_slice() {\n    let mut runtime = runtime_with_file_env();\n    let code = \"have fn sign(x R) Z by cases:\\n    case x > 0: 1\\n    case x = 0: 0\\n    case x < 0: (-1)\";\n    assert!(\n        !exec_one(&mut runtime, code).is_failed(),\n        \"sign by cases (trichotomy) must succeed\"\n    );\n    assert!(!exec_one(&mut runtime, \"have a R = 2\").is_failed());\n    assert!(\n        !exec_one(&mut runtime, \"sign(a) = sign(a)\").is_failed(),\n        \"sign(a)=sign(a)\"\n    );\n}\n",
+      "after": "fn have_fn_by_cases_sign_trichotomy_slice() {\n    let mut runtime = runtime_with_file_env();\n    let code = \"have fn signum(x R) Z by cases:\\n    case x > 0: 1\\n    case x = 0: 0\\n    case x < 0: (-1)\";\n    assert!(\n        !exec_one(&mut runtime, code).is_failed(),\n        \"signum by cases (trichotomy) must succeed\"\n    );\n    assert!(!exec_one(&mut runtime, \"have a R = 2\").is_failed());\n    assert!(\n        !exec_one(&mut runtime, \"signum(a) = signum(a)\").is_failed(),\n        \"signum(a)=signum(a)\"\n    );\n}\n",
+      "before_sha256": "58f9132972447104e78373e807a989895b29acd50d0ccb4432c07c3866db0ad3",
+      "after_sha256": "35bb164304e8d437d13bed58b89fcbd9ec3e0199879eaf89e1d78de8a2bf64f4"
+    }
+  ],
+  "fixture_sha256": {
+    "examples/module_manager/qualified_struct_views/README.md": "27b23b3a397fc38b9e6138b9c21739ed7ecd3174d343b37566cbe49b93eb24da",
+    "examples/module_manager/qualified_struct_views/library/facts.lit": "5dcb6207fac2b8608e40817543c4b075068bad6d481cfd0b46b7ee178890f60c",
+    "examples/module_manager/qualified_struct_views/library/litex.config": "9bf6284618e2b08aab1fa1fed25f057162086299c73564903c3f5655913c8730",
+    "examples/module_manager/qualified_struct_views/litex.config": "0d8af88276bfa5520e7a5f7d0c7b5979288a29da30aaa152ba70fe38a0edd991",
+    "examples/module_manager/qualified_struct_views/local.lit": "fa087badec73cbf98065204a64e79d76b7cc560473706f2977f697a5a34a94e0",
+    "examples/module_manager/qualified_struct_views/main.lit": "3a1831b6828a2b5d7633e00dda5ab30ea5becfa7fc07f452256e7d276ed5f131",
+    "examples/module_manager/qualified_struct_views/math_collections.md": "468820188a72f411fc56f63b77a205c39ffaf249bcf444b11c54b06a5c990ceb",
+    "examples/module_manager/qualified_struct_views/other/facts.lit": "9f1a3710be9249a05f3444d8ebe94c6eb09f7b0ec16f57e597b65c6d2d735943",
+    "examples/module_manager/qualified_struct_views/other/litex.config": "9bf6284618e2b08aab1fa1fed25f057162086299c73564903c3f5655913c8730",
+    "examples/stmt_nodes/definition/dependent_have.lit": "a5c310a7ee36d22fc78530f5ac39b4fe7beab32b45fe8ce3b08c12e1b50db2f3",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/index_cart_member.lit": "cc2cd58fe9e87a78a5513df7ed6788a219d6275c80a4a178ad97622bb3a66af4",
+    "examples/wd/reserved_object_bindings.lit": "bff2f4dc047ccd4a17441f09e5dbd52951c8c174bed34f974c1c25569dd5d3d4",
+    "tests/unit/parse/reserved_object_bindings.rs": "97ee467fa0e6864ba95879b6b068ecdad7a8523f5d9e70a2d487e971ef472525",
+    "tests/unit/run_module/qualified_struct_views.rs": "06e6a85e26e0d12951443a16ca88f9d54e2f2ff5d0c72da1651c2dfd764173db"
+  },
+  "initial_failures_preserved": {
+    "baseline_lib": "914/915, existing DEC04",
+    "first_final_lib": "928/934, five reserved-name consumers plus DEC04",
+    "probe_expectation_corrections": [
+      "0^0=1 matches existing contract",
+      "e>1 followed by e!=0 is checked author route"
+    ],
+    "invalid_setups_and_test_compile_attempts": "all exact scripts/raw outputs included"
+  },
+  "scope_exclusions": [
+    "complete mathematical showcases/geometry/textbooks/Lean",
+    "all document collectors",
+    "every builtin branch",
+    "independent evidence replay"
+  ],
+  "no_surviving_severe_bug_observed_in_tested_scope": true,
+  "archive": {
+    "file": "conversation-serious-bug-audit-2026-10-05_receipts.zip",
+    "sha256": "9c6dafa97eb779c52178bc3462a858717de693b2f51c3a1929f540ebba5a8e78",
+    "bytes": 20545363,
+    "entries": 3162,
+    "crc_verified": true,
+    "entry_sha256_verified": true,
+    "entry_manifest": "entry-hashes.json"
+  },
+  "cleanup": {
+    "draft_relative": "tmp/2026-10-05/conversation-serious-bug-audit",
+    "ledger_relative": "todo/2026-10-5/conversation-serious-bug-audit.md",
+    "status": "verified complete",
+    "draft_absent": true,
+    "ledger_absent": true,
+    "generated_fixture_caches_removed": [
+      "examples/module_manager/qualified_struct_views/library/__litex_knowledge_base__",
+      "examples/module_manager/qualified_struct_views/other/__litex_knowledge_base__"
+    ],
+    "followup_cleanup_verified": true,
+    "rust_source_unchanged_since_audit": true
+  }
+}

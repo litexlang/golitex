@@ -63,42 +63,45 @@ claim:
 # case is the smallest positive natural number, `m = 1`: if `n` divides `1`,
 # then `n` cannot be larger than `1`.
 
-# Migrated: sketch soft-fails in current pipeline; commented out.
-# sketch:
-#     prop dvdN(a N, b N):
-#         a >= 1
-#         exist c N st {b = a * c}
-# 
-#     claim:
-#         ? forall a, b N+:
-#             $dvdN(a, b)
-#             =>:
-#                 a <= b
-# 
-#         obtain c from exist c N st {b = a * c}
-#         by contra:
-#             ? c != 0
-#             b = a * c = a * 0 = 0
-#             impossible 0 > 0
-#         by cases:
-#             ? c > 0
-#             case c = 0:
-#                 impossible c = 0
-#             case c > 0
-#         c >= 1
-#         a = a * 1 <= a * c = b
-# 
-#     claim:
-#         ? forall n N:
-#             forall m N:
-#                 $dvdN(n, m)
-#             =>:
-#                 n = 1
-#         $dvdN(n, 1)
-#         1 > 0
-#         n <= 1
-#         n >= 1
-# 
+sketch:
+    prop dvdN(a N, b N):
+        a >= 1
+        exist c N st {b = a * c}
+
+    claim:
+        ? forall a, b N+:
+            $dvdN(a, b)
+            =>:
+                a <= b
+
+        obtain c from exist c N st {b = a * c}
+        by contra:
+            ? c != 0
+            b = a * c = a * 0 = 0
+            impossible b > 0
+        by cases:
+            ? c >= 1
+            case c = 0:
+                impossible c = 0
+            case c >= 1
+        c > 0
+        1 <= c
+        a = a * 1 <= a * c = b
+
+    claim:
+        ? forall n N:
+            forall m N:
+                $dvdN(n, m)
+            =>:
+                n = 1
+        $dvdN(n, 1)
+        1 > 0
+        n >= 1
+        n > 0
+        n $in N+
+        n <= 1
+
+
 # Inside the proof, `$dvdN(n, 1)` is obtained by matching the known hypothesis
 # 
 # ```text
@@ -118,13 +121,20 @@ claim:
 # produces an `or` statement, and `by cases` lets us finish the proof in the two
 # possible branches.
 
-# Migrated: midpoint case split trusted for now.
-trust:
-    forall a, b R:
+claim:
+    ? forall a, b R:
         forall x R:
             x >= a or x <= b
         =>:
             a <= b
+    (a + b) / 2 >= a or (a + b) / 2 <= b
+    by cases:
+        ? a <= b
+        case (a + b) / 2 >= a:
+            a <= (a + b) / 2
+            a = 2 * a - a <= 2 * ((a + b) / 2) - a = b
+        case (a + b) / 2 <= b:
+            a = 2 * ((a + b) / 2) - b <= 2 * b - b = b
 
 # 4.1.4
 
@@ -164,20 +174,19 @@ claim:
 # choose `b = -1`, and then prove that this chosen value works for every real
 # number `x`.
 
-# Migrated: sketch soft-fails in current pipeline; commented out.
-# sketch:
-#     prop lower_bound_for_parabola(b R):
-#         forall x R:
-#             b <= x^2 - 2 * x
-# 
-#     claim:
-#         ? exist b R st {$lower_bound_for_parabola(b)}
-#         witness exist b R st {$lower_bound_for_parabola(b)} from -1:
-#             forall x R:
-#                 -1 <= -1 + (x - 1)^2 = x^2 - 2 * x
-#                 -1 <= x^2 - 2 * x
-#             by def $lower_bound_for_parabola(-1)
-# 
+sketch:
+    prop lower_bound_for_parabola(b R):
+        forall x R:
+            b <= x^2 - 2 * x
+    claim:
+        ? exist b R st {$lower_bound_for_parabola(b)}
+        witness exist b R st {$lower_bound_for_parabola(b)} from -1:
+            forall x R:
+                0 <= (x - 1)^2
+                -1 <= -1 + (x - 1)^2 = x^2 - 2 * x
+                -1 <= x^2 - 2 * x
+            by def $lower_bound_for_parabola(-1)
+
 # Inside the `witness` block (witness block is used to prove an existence
 # statement), the line `forall x R:` proves the universal definition body. The
 # following `by def` explicitly introduces
@@ -194,39 +203,36 @@ claim:
 # for arbitrary `x` and `y`, assuming `x^2 + y^2 <= 4`, prove the desired lower
 # bound for `x + y`.
 
-# Migrated: sketch soft-fails in current pipeline; commented out.
-# sketch:
-#     prop lower_bound_on_disk(c R):
-#         forall x, y R:
-#             x^2 + y^2 <= 4
-#             =>:
-#                 x + y >= c
-# 
-#     claim:
-#         ? exist c R st {$lower_bound_on_disk(c)}
-#         witness exist c R st {$lower_bound_on_disk(c)} from -3:
-#             claim:
-#                 ? forall x, y R:
-#                     x^2 + y^2 <= 4
-#                     =>:
-#                         x + y >= -3
-#                 (x + y)^2 <= (x + y)^2 + (x - y)^2 = 2 * (x^2 + y^2) <= 2 * 4 = 8 <= 9 = 3^2
-#                 (x + y)^2 <= 3^2
-#                 abs(x + y) <= abs(3)
-#                 -3 <= x + y
-#             by def $lower_bound_on_disk(-3)
-# 
-# The calculation shows `(x + y)^2 <= 3^2`. The known fact about squares then
-# turns that into `x + y >= -3`. This is a typical Litex pattern: write the
-# estimate you would write on paper, and let the previously stated rule bridge
-# from the squared inequality to the final inequality.
-# 
-# The three direct lines use the verifier's order-chain, even-power, and
-# absolute-value rules. The first stores the endpoint of the squared estimate,
-# the second records the bridge to `abs(x + y) <= abs(3)`, and the third turns
-# it into the required lower bound.
-# No named source theorem is needed for this kernel-supported move.
-# 
+sketch:
+    prop lower_bound_on_disk(c R):
+        forall x, y R:
+            x^2 + y^2 <= 4
+            =>:
+                x + y >= c
+
+    claim:
+        ? exist c R st {$lower_bound_on_disk(c)}
+        witness exist c R st {$lower_bound_on_disk(c)} from -3:
+            claim:
+                ? forall x, y R:
+                    x^2 + y^2 <= 4
+                    =>:
+                        x + y >= -3
+                (x + y)^2 <= (x + y)^2 + (x - y)^2 = 2 * (x^2 + y^2) <= 2 * 4 = 8 <= 9 = 3^2
+                by contra:
+                    ? x + y >= -3
+                    0 = (x + y) - (x + y) < -3 - (x + y)
+                    3 = 0 + 3 < (-3 - (x + y)) + 3 = -(x + y)
+                    0 <= -(x + y)
+                    9 = 3 * 3 < 3 * (-(x + y)) < (-(x + y)) * (-(x + y)) = (x + y)^2 <= 8
+                    impossible 9 < 8
+            by def $lower_bound_on_disk(-3)
+
+
+# The sum-of-squares calculation bounds `(x + y)^2` by8. If `x + y < -3`,
+# shifting the inequality gives `3 < -(x + y)`, so its square exceeds9.
+# The contradiction establishes the required lower bound for the witness -3.
+#
 # 4.1.7
 # 
 # Definition: a property is true for all sufficiently large integers if there is
@@ -237,37 +243,36 @@ claim:
 # always holds. The proposition below packages the part after a proposed
 # threshold has been chosen.
 
-# Migrated: sketch soft-fails in current pipeline; commented out.
-# sketch:
-#     prop cubic_eventually_large(M Z):
-#         forall n Z:
-#             n >= M
-#             =>:
-#                 n^3 >= 4 * n^2 + 7
-# 
+sketch:
+    prop cubic_eventually_large(M Z):
+        forall n Z:
+            n >= M
+            =>:
+                n^3 >= 4 * n^2 + 7
+
     # Factor the excess over `4 * n^2` as `n^2 * (n - 4)`. For `n >= 5`,
     # this is at least `25`, which is more than the required constant `7`.
-#     claim:
-#         ? forall n Z:
-#             n >= 5
-#             =>:
-#                 n^3 >= 4 * n^2 + 7
-#         n - 4 >= 1
-#         n^2 >= 5^2 = 25
-#         n^2 * (n - 4) >= 25 * 1 = 25
-#         n^3 = n^2 * n = n^2 * ((n - 4) + 4) = n^2 * (n - 4) + 4 * n^2 >= 25 + 4 * n^2 >= 7 + 4 * n^2 = 4 * n^2 + 7
-# 
-#     claim:
-#         ? exist M Z st {$cubic_eventually_large(M)}
-#         witness exist M Z st {$cubic_eventually_large(M)} from 5:
-#             forall n Z:
-#                 n >= 5
-#                 =>:
-#                     n^3 >= 4 * n^2 + 7
-#             by def $cubic_eventually_large(5)
-# 
-# The proof supplies `M = 5`. The `proof_debt` block records the estimate needed after
-# the threshold is chosen.
+    claim:
+        ? forall n Z:
+            n >= 5
+            =>:
+                n^3 >= 4 * n^2 + 7
+        n - 4 >= 1
+        n^2 >= 5^2 = 25
+        n^2 * (n - 4) >= 25 * 1 = 25
+        n^3 = n^2 * n = n^2 * ((n - 4) + 4) = n^2 * (n - 4) + 4 * n^2 >= 25 + 4 * n^2 >= 7 + 4 * n^2 = 4 * n^2 + 7
+
+    claim:
+        ? exist M Z st {$cubic_eventually_large(M)}
+        witness exist M Z st {$cubic_eventually_large(M)} from 5:
+            forall n Z:
+                n >= 5
+                =>:
+                    n^3 >= 4 * n^2 + 7
+            by def $cubic_eventually_large(5)
+
+
+# The proof supplies `M = 5`; the preceding claim proves the required estimate.
 # 
 # 4.1.8 and 4.1.9
 # 
@@ -276,22 +281,30 @@ claim:
 # The example `p = 2` is small enough that the divisor condition can be checked
 # from the general divisibility facts already established.
 
-# Migrated: sketch soft-fails in current pipeline; commented out.
-# sketch:
-#     prop prime_by_trial_division(a N+):
-#         2 <= a
-#         forall b N+:
-#             2 <= b < a
-#             =>:
-#                 a % b != 0
-# 
-#     by for:
-#         ? forall n range(2, 2):
-#             2 % n != 0
-# 
-#     by def $prime_by_trial_division(2)
-#     by def $prime(2)
-# 
+sketch:
+    prop prime_by_trial_division(a N+):
+        2 <= a
+        forall b N+:
+            2 <= b < a
+            =>:
+                a % b != 0
+    claim:
+        ? forall n range(2, 2):
+            2 % n != 0
+        by contra:
+            ? 2 % n != 0
+            impossible n < 2
+    claim:
+        ? forall b N+:
+            2 <= b < 2
+            =>:
+                2 % b != 0
+        by contra:
+            ? 2 % b != 0
+            impossible b < 2
+    by def $prime_by_trial_division(2)
+    $prime(2)
+
 # 4.2 “If and Only If”
 # 
 # In Litex, an if and only if proof can be unfolded into two separate `claim`s,
@@ -301,23 +314,25 @@ claim:
 # 
 # Problem: Let `a` be a rational number. Show that `3a + 1 <= 7` iff `a <= 2`.
 
-forall a Q:
-    3 * a + 1 <= 7
-    =>:
-        a = ((3 * a + 1) - 1) / 3 <= (7 - 1) / 3 = 2
+claim:
+    ? forall a Q:
+        3 * a + 1 <= 7
+        =>:
+            a <= 2
+    a = ((3 * a + 1) - 1) / 3 <= (7 - 1) / 3 = 2
+
+claim:
+    ? forall a Q:
+        a <= 2
+        =>:
+            3 * a + 1 <= 7
+    3 * a + 1 <= 3 * 2 + 1 = 7
 
 forall a Q:
-    a <= 2
     =>:
-        3 * a + 1 <= 3 * 2 + 1 = 7
-
-# Migrated: <=> surface skipped; both directions already proved above.
-# Original form was:
-# forall a Q:
-#     =>:
-#         a <= 2
-#     <=>:
-#         3 * a + 1 <= 7
+        a <= 2
+    <=>:
+        3 * a + 1 <= 7
 
 # For a `forall`-level iff fact, put the quantified variables outside:
 
@@ -349,27 +364,27 @@ forall a Q:
 
 # Problem: Let `n` be an integer. Show that `5n` is a multiple of `8` iff `n` is.
 
-# Migrated: sketch soft-fails in current pipeline; commented out.
-# sketch:
-#     prop dvdZ(a Z, b Z):
-#         exist c Z st {b = a * c}
-# 
-#     claim:
-#         ? forall n, a Z:
-#             5 * n = 8 * a
-#             =>:
-#                 $dvdZ(8, n)
-#         witness $dvdZ(8, n) from -3 * a + 2 * n:
-#             n = -3 * (5 * n) + 16 * n = -3 * (8 * a) + 16 * n = 8 * (-3 * a + 2 * n)
-# 
-#     claim:
-#         ? forall n, a Z:
-#             n = 8 * a
-#             =>:
-#                 $dvdZ(8, 5 * n)
-#         witness $dvdZ(8, 5 * n) from 5 * a:
-#             5 * n = 5 * (8 * a) = 8 * (5 * a)
-# 
+sketch:
+    prop dvdZ(a Z, b Z):
+        exist c Z st {b = a * c}
+
+    claim:
+        ? forall n, a Z:
+            5 * n = 8 * a
+            =>:
+                $dvdZ(8, n)
+        witness $dvdZ(8, n) from -3 * a + 2 * n:
+            n = -3 * (5 * n) + 16 * n = -3 * (8 * a) + 16 * n = 8 * (-3 * a + 2 * n)
+
+    claim:
+        ? forall n, a Z:
+            n = 8 * a
+            =>:
+                $dvdZ(8, 5 * n)
+        witness $dvdZ(8, 5 * n) from 5 * a:
+            5 * n = 5 * (8 * a) = 8 * (5 * a)
+
+
 # 4.2.3 and 4.2.4
 # 
 # Problem: characterize oddness and evenness by congruence modulo `2`.
@@ -384,65 +399,75 @@ thm quot_euclidean:
     ? forall a Z, d N+:
         a = d * quot(a, d) + a % d
 
-# Migrated: sketch soft-fails in current pipeline; commented out.
-# sketch:
-#     prop even(a Z):
-#         exist t Z st {a = 2 * t}
-# 
-#     claim:
-#         ? forall n Z:
-#             $odd(n)
-#             =>:
-#                 $mod_eq(n, 1, 2)
-#         obtain k from $odd(n)
-#         witness $mod_eq(n, 1, 2) from k:
-#             n - 1 = 2 * k + 1 - 1 = 2 * k
-# 
-#     claim:
-#         ? forall n Z:
-#             $mod_eq(n, 1, 2)
-#             =>:
-#                 $odd(n)
-#         obtain k from exist k Z st {n - 1 = 2 * k}
-#         witness $odd(n) from k:
-#             n = n - 1 + 1 = 2 * k + 1
-# 
-#     claim:
-#         ? forall n Z:
-#             $even(n)
-#             =>:
-#                 $mod_eq(n, 0, 2)
-#         obtain k from exist k Z st {n = 2 * k}
-#         witness $mod_eq(n, 0, 2) from k:
-#             n - 0 = n = 2 * k
-# 
-#     claim:
-#         ? forall n Z:
-#             $mod_eq(n, 0, 2)
-#             =>:
-#                 $even(n)
-#         obtain k from exist k Z st {n - 0 = 2 * k}
-#         witness $even(n) from k:
-#             n = n - 0 = 2 * k
-# 
+sketch:
+    prop even(a Z):
+        exist t Z st {a = 2 * t}
+
+    claim:
+        ? forall n Z:
+            $odd(n)
+            =>:
+                $mod_eq(n, 1, 2)
+        obtain k from $odd(n)
+        witness $mod_eq(n, 1, 2) from k:
+            n - 1 = 2 * k + 1 - 1 = 2 * k
+
+    claim:
+        ? forall n Z:
+            $mod_eq(n, 1, 2)
+            =>:
+                $odd(n)
+        obtain k from exist k Z st {n - 1 = 2 * k}
+        witness $odd(n) from k:
+            n = n - 1 + 1 = 2 * k + 1
+
+    claim:
+        ? forall n Z:
+            $even(n)
+            =>:
+                $mod_eq(n, 0, 2)
+        obtain k from exist k Z st {n = 2 * k}
+        witness $mod_eq(n, 0, 2) from k:
+            n - 0 = n = 2 * k
+
+    claim:
+        ? forall n Z:
+            $mod_eq(n, 0, 2)
+            =>:
+                $even(n)
+        obtain k from exist k Z st {n - 0 = 2 * k}
+        witness $even(n) from k:
+            n = n - 0 = 2 * k
+
+
 # 4.2.5 and 4.2.6
 # 
 # Solving equations is also an iff proof: narrow down all solutions, then check
 # the listed solutions.
 
-# Migrated: factor/cases or-goal trusted for now.
-trust:
-    forall x R:
+claim:
+    ? forall x R:
         x^2 + x - 6 = 0
         =>:
             x = -3 or x = 2
+    (x + 3) * (x - 2) = x^2 + x - 6 = 0
+    x + 3 = 0 or x - 2 = 0
+    by cases:
+        ? x = -3 or x = 2
+        case x + 3 = 0:
+            x = (x + 3) - 3 = 0 - 3 = -3
+        case x - 2 = 0:
+            x = (x - 2) + 2 = 0 + 2 = 2
 
-# Migrated: reverse or-implication trusted (claim after forall-x trust hit binder clash).
-trust:
-    forall x R:
+claim:
+    ? forall x R:
         x = -3 or x = 2
         =>:
             x^2 + x - 6 = 0
+    by cases:
+        ? x^2 + x - 6 = 0
+        case x = -3
+        case x = 2
 
 # The two bodyless case headers still run their ordinary branch-final goal
 # checks; an empty branch is not an admission.
@@ -454,77 +479,77 @@ trust:
 # 4.2.7 to 4.2.9
 
 # Once an iff theorem is known, use it as a translation rule. Here oddness is
-# translated to modulo `2`. The `proof_debt` block repeats the Chapter 3 modular facts
-# so the snippet can stand alone.
+# translated to modulo `2`. The local checked claims establish the Chapter 3
+# modular facts needed by this standalone snippet.
 
-# Migrated: sketch soft-fails in current pipeline; commented out.
-# sketch:
-#     prop mod_eq_trans(a Z, b Z, c Z, n Z):
-#         $mod_eq(a, c, n)
-# 
-#     claim:
-#         ? forall a Z:
-#             $odd(a)
-#             =>:
-#                 $mod_eq(a, 1, 2)
-#         obtain k from $odd(a)
-#         witness $mod_eq(a, 1, 2) from k:
-#             a - 1 = (2 * k + 1) - 1 = 2 * k
-# 
-#     claim:
-#         ? forall a Z:
-#             $mod_eq(a, 1, 2)
-#             =>:
-#                 $odd(a)
-#         obtain k from $mod_eq(a, 1, 2)
-#         witness $odd(a) from k:
-#             a = (a - 1) + 1 = 2 * k + 1
-# 
-#     claim:
-#         ? forall a, n Z:
-#             $mod_eq(a, a, n)
-#         witness $mod_eq(a, a, n) from 0:
-#             a - a = n * 0
-# 
-#     claim:
-#         ? forall a, b, c, n Z:
-#             $mod_eq(a, b, n)
-#             $mod_eq(b, c, n)
-#             =>:
-#                 $mod_eq_trans(a, b, c, n)
-#         obtain x from $mod_eq(a, b, n)
-#         obtain y from exist y Z st {b - c = n * y}
-#         witness $mod_eq(a, c, n) from x + y:
-#             a - c = (a - b) + (b - c) = n * x + n * y = n * (x + y)
-#         by def $mod_eq_trans(a, b, c, n)
-# 
-#     claim:
-#         ? forall a, b, c, d, n Z:
-#             $mod_eq(a, b, n)
-#             $mod_eq(c, d, n)
-#             =>:
-#                 $mod_eq(a + c, b + d, n)
-#         obtain x from $mod_eq(a, b, n)
-#         obtain y from $mod_eq(c, d, n)
-#         witness $mod_eq(a + c, b + d, n) from x + y:
-#             (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
-# 
-#     claim:
-#         ? forall x, y Z:
-#             $odd(x)
-#             $odd(y)
-#             =>:
-#                 $odd(x + y + 1)
-#         $mod_eq(x, 1, 2)
-#         $mod_eq(y, 1, 2)
-#         $mod_eq(x + y, 1 + 1, 2)
-#         $mod_eq(1, 1, 2)
-#         $mod_eq(x + y + 1, 1 + 1 + 1, 2)
-#         witness $mod_eq(1 + 1 + 1, 1, 2) from 1:
-#             1 + 1 + 1 - 1 = 2 * 1
-#         $mod_eq_trans(x + y + 1, 1 + 1 + 1, 1, 2)
-#         $mod_eq(x + y + 1, 1, 2)
-# 
+sketch:
+    prop mod_eq_trans(a Z, b Z, c Z, n Z):
+        $mod_eq(a, c, n)
+
+    claim:
+        ? forall a Z:
+            $odd(a)
+            =>:
+                $mod_eq(a, 1, 2)
+        obtain k from $odd(a)
+        witness $mod_eq(a, 1, 2) from k:
+            a - 1 = (2 * k + 1) - 1 = 2 * k
+
+    claim:
+        ? forall a Z:
+            $mod_eq(a, 1, 2)
+            =>:
+                $odd(a)
+        obtain k from $mod_eq(a, 1, 2)
+        witness $odd(a) from k:
+            a = (a - 1) + 1 = 2 * k + 1
+
+    claim:
+        ? forall a, n Z:
+            $mod_eq(a, a, n)
+        witness $mod_eq(a, a, n) from 0:
+            a - a = n * 0
+
+    claim:
+        ? forall a, b, c, n Z:
+            $mod_eq(a, b, n)
+            $mod_eq(b, c, n)
+            =>:
+                $mod_eq_trans(a, b, c, n)
+        obtain x from $mod_eq(a, b, n)
+        obtain y from exist y Z st {b - c = n * y}
+        witness $mod_eq(a, c, n) from x + y:
+            a - c = (a - b) + (b - c) = n * x + n * y = n * (x + y)
+        by def $mod_eq_trans(a, b, c, n)
+
+    claim:
+        ? forall a, b, c, d, n Z:
+            $mod_eq(a, b, n)
+            $mod_eq(c, d, n)
+            =>:
+                $mod_eq(a + c, b + d, n)
+        obtain x from $mod_eq(a, b, n)
+        obtain y from $mod_eq(c, d, n)
+        witness $mod_eq(a + c, b + d, n) from x + y:
+            (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
+
+    claim:
+        ? forall x, y Z:
+            $odd(x)
+            $odd(y)
+            =>:
+                $odd(x + y + 1)
+        $mod_eq(x, 1, 2)
+        $mod_eq(y, 1, 2)
+        $mod_eq(x + y, 1 + 1, 2)
+        $mod_eq(1, 1, 2)
+        $mod_eq(x + y + 1, 1 + 1 + 1, 2)
+        witness $mod_eq(1 + 1 + 1, 1, 2) from 1:
+            1 + 1 + 1 - 1 = 2 * 1
+        $mod_eq_trans(x + y + 1, 1 + 1 + 1, 1, 2)
+        $mod_eq(x + y + 1, 1, 2)
+
+
 # 4.3 “There Exists a Unique”
 # 
 # In Litex, uniqueness can be unfolded into two steps: first give a witness for
@@ -546,9 +571,16 @@ forall a R:
     =>:
         a = (3 * a + 1 - 1) / 3 = (7 - 1) / 3 = 2
 
-# Migrated: exist! packaging trusted for now (witness + uniqueness already above).
-trust:
-    exist! a R st {3 * a + 1 = 7}
+witness exist! a R st {3 * a + 1 = 7} from 2:
+    claim:
+        ? forall u R, v R:
+            3 * u + 1 = 7
+            3 * v + 1 = 7
+            =>:
+                u = v
+        u = (3 * u + 1 - 1) / 3 = (7 - 1) / 3 = 2
+        v = (3 * v + 1 - 1) / 3 = (7 - 1) / 3 = 2
+        u = 2 = v
 
 # The final `exist!` line uses the two facts just proved: a witness exists, and
 # any value satisfying the same equation must equal that witness.
@@ -563,28 +595,28 @@ trust:
 # proposition: `r` is between `0` and `5`, and the built-in modulo expression
 # `14 % 5` is equal to `r`.
 
-# Migrated: sketch soft-fails in current pipeline; commented out.
-# sketch:
-#     prop remainder_property(r Z):
-#         0 <= r
-#         r < 5
-#         14 % 5 = r
-# 
-#     claim:
-#         ? exist r Z st {$remainder_property(r)}
-#         witness exist r Z st {$remainder_property(r)} from 4:
-#             0 <= 4
-#             4 < 5
-#             14 % 5 = 4
-#             by def $remainder_property(4)
-# 
-#     claim:
-#         ? forall r Z:
-#             $remainder_property(r)
-#             =>:
-#                 r = 4
-#         r = 14 % 5 = 4
-# 
+sketch:
+    prop remainder_property(r Z):
+        0 <= r
+        r < 5
+        14 % 5 = r
+
+    claim:
+        ? exist r Z st {$remainder_property(r)}
+        witness exist r Z st {$remainder_property(r)} from 4:
+            0 <= 4
+            4 < 5
+            14 % 5 = 4
+            by def $remainder_property(4)
+
+    claim:
+        ? forall r Z:
+            $remainder_property(r)
+            =>:
+                r = 4
+        r = 14 % 5 = 4
+
+
 # The first claim proves existence by giving the witness `r = 4`. The three body
 # facts are checked directly, including the builtin calculation `14 % 5 = 4`;
 # `by def` then explicitly introduces the named remainder property for that
@@ -619,14 +651,17 @@ trust:
 # Problem: Let `x` and `y` be real numbers, and suppose that `0 < x*y` and
 # `0 <= x`. Show that `0 < y`.
 
-# Migrated: product-sign contradiction trusted for now.
-trust:
-    forall x, y R:
+claim:
+    ? forall x, y R:
         0 < x * y
         0 <= x
         =>:
             0 < y
-
+    by contra:
+        ? 0 < y
+        y <= 0
+        x * y <= x * 0 = 0
+        impossible x * y <= 0
 # 4.4.2
 
 # Problem: Let `t` be an integer with `t < 3` and `t - 1 = 6`. Show that `t != 13`.
@@ -634,13 +669,17 @@ trust:
 # This is the explosion principle: once the hypotheses imply an impossible
 # numeric fact, the branch is closed.
 
-# Migrated: explosion/contra example trusted for now.
-trust:
-    forall t Z:
+claim:
+    ? forall t Z:
         t < 3
         t - 1 = 6
         =>:
             t != 13
+    by contra:
+        ? t != 13
+        t = (t - 1) + 1 = 6 + 1 = 7
+        13 = t = 7
+        impossible 13 = 7
 
 # 4.4.3 to 4.4.5
 
@@ -661,11 +700,10 @@ trust:
 
 # To refute a universal statement, provide a counterexample.
 
-# Migrated: top-level by-contra counterexample trusted for now.
-trust:
-    not forall x R:
+by contra:
+    ? not forall x R:
         x^2 >= x
-
+    impossible 0.5^2 >= 0.5
 # In this `by contra` proof, Litex temporarily assumes the reverse of the goal:
 # `forall x R: x^2 >= x`. From that universal hypothesis, it gets
 # `0.5^2 >= 0.5`. Direct calculation also gives `not 0.5^2 >= 0.5`, so
@@ -678,49 +716,86 @@ trust:
 # The contradiction is that `$dvdN(3, 13)` would force `13 % 3 = 0`, while direct
 # calculation gives `13 % 3 != 0`.
 
-# Migrated: sketch soft-fails in current pipeline; commented out.
-# sketch:
-#     prop dvdN(a N, b N):
-#         exist c N st {b = a * c}
-# 
-#     claim:
-#         ? not $dvdN(3, 13)
-#         by contra:
-#             ? not $dvdN(3, 13)
-#             obtain a from exist c N st {13 = 3 * c}
-#             witness exist k Z st {13 = 3 * k + 0} from a
-#             0 < 3
-#             13 = 3 * a + 0
-#             13 % 3 = 0
-#             impossible 13 % 3 = 0
-# 
-# The witness line writes `13 = 3 * k + 0` on purpose. The builtin modulo facts
-# match equations in the form `a = m * r + k`, where the last term is the
-# remainder. To match the remainder with `0`, the equation must include the final
-# `+ 0`; writing only `13 = 3 * k` does not expose the remainder slot that the
-# builtin rule expects.
+sketch:
+    prop dvdN(a N, b N):
+        exist c N st {b = a * c}
+    by contra:
+        ? not $dvdN(3, 13)
+        obtain a from exist c N st {13 = 3 * c}
+        13 % 3 = (3 * a) % 3 = 0
+        impossible 13 % 3 = 0
 
-# Migrated: obtain/cases proof replaced by trust under export prefix.
-trust:
-    forall a Z, m N+, k N:
+# The obtained witness gives `13 = 3 * a`. Taking the remainder modulo 3
+# gives 0 for this multiple, contradicting the actual remainder of 13.
+
+claim:
+    ? forall a Z, m N+, k N:
         a % m = k
         =>:
             exist r Z st {a = m * r + k}
+    witness exist r Z st {a = m * r + k} from quot(a, m):
+        a = m * quot(a, m) + a % m = m * quot(a, m) + k
 
-# Migrated: obtain/cases proof replaced by trust under export prefix.
-trust:
-    forall a Z, m N+, k N:
+claim:
+    ? forall a Z, m N+, k N:
         k < m
         exist r Z st {a = m * r + k}
         =>:
             a % m = k
+    obtain r from exist q Z st {a = m * q + k}
+    have q Z = quot(a, m)
+    have s N = a % m
+    have t Z = q - r
+    0 <= s
+    s < m
+    0 <= k
+    0 < m
+    a = m * quot(a, m) + a % m = m * q + s
+    m * q = (m * q + s) - s = a - s
+    m * r = (m * r + k) - k = a - k
+    m * t = m * (q - r) = m * q - m * r = (a - s) - (a - k) = k - s
+    by cases:
+        ? t = 0
+        case t <= -1:
+            m * t <= m * (-1) = 0 - m
+            0 - s > 0 - m
+            k - s >= 0 - s > 0 - m
+            m * t = k - s > 0 - m
+            impossible m * t <= 0 - m
+        case t >= -1 + 1:
+            t >= 0
+            by cases:
+                ? t = 0
+                case t <= 0:
+                    t = 0
+                case t >= 0 + 1:
+                    t >= 1
+                    m * t >= m * 1 = m
+                    k - s <= k - 0 = k < m
+                    m * t = k - s < m
+                    impossible m * t >= m
+    k - s = m * t = m * 0 = 0
+    s = s + (k - s) = k
+    a % m = s = k
 
-# Migrated: trichotomy case for or-goal trusted for now.
-trust:
-    forall x, y R:
+# 4.5.3
+
+# Problem: Let x and y be real numbers with x + y = 0. They cannot both be
+# positive: if x > 0, then y = -x < 0; otherwise x <= 0.
+
+claim:
+    ? forall x, y R:
         x + y = 0
         =>:
             x <= 0 or y <= 0
+    x > 0 or x <= 0
+    by cases:
+        ? x <= 0 or y <= 0
+        case x <= 0
+        case x > 0:
+            0 < x
+            y = (x + y) - x = 0 - x < 0
+            y <= 0
 
 # `x > 0 or x <= 0` is a builtin comparison split: for comparable real
 # expressions, Litex can use `a > b or a <= b`.
@@ -730,10 +805,21 @@ trust:
 # Problem: Show that there does not exist a natural number `n` such that
 # `n^2 = 2`.
 
-# Migrated: integer dichotomy for n^2 != 2 trusted for now.
-trust:
-    forall n N:
+claim:
+    ? forall n N:
         n^2 != 2
+    n <= 1 or n >= 1 + 1
+    by cases:
+        ? n^2 != 2
+        case n <= 1:
+            n $in 0...1
+            by for:
+                ? forall k 0...1:
+                    k^2 != 2
+        case n >= 1 + 1:
+            0 <= n
+            2 <= n
+            n^2 = n * n >= 2 * n >= 2 * 2 = 4 > 2
 
 # `n <= 1 or n >= 2` is the integer comparison split. For integers, Litex can use
 # `n <= m or n >= m + 1`.
@@ -788,8 +874,8 @@ trust:
 # 8. `impossible <FACT>` closes a contradiction when the current context also
 #    proves the opposite or an incompatible fact.
 
-# 9. `proof_debt:` is used to state standard facts needed by a standalone example, such
-#    as order facts, divisibility bounds, and modular facts.
+# 9. `claim:` checks supporting facts before they are reused, including order,
+#    divisibility and modular facts.
 
 # Litex knowledge points
 

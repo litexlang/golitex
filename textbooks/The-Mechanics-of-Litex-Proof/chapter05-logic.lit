@@ -126,6 +126,7 @@ sketch:
             $is_odd_or_multiple_of_three(n)
             =>:
                 $is_even_and_odd(n) or $is_even_and_multiple_of_three(n)
+        $is_odd(n) or $is_multiple_of_three(n)
         by cases:
             ? $is_even_and_odd(n) or $is_even_and_multiple_of_three(n)
             case $is_odd(n):
@@ -162,6 +163,9 @@ sketch:
 prop is_square_two(n N):
     n^2 = 2
 
+prop some_square_two():
+    exist n N st {$is_square_two(n)}
+
 # The same idea works for predicates. If `P(x)` holds for every integer `x`, and
 # `Q(x)` holds for every integer `x`, then for any particular integer `a`, both
 # `P(a)` and `Q(a)` hold.
@@ -193,20 +197,21 @@ sketch:
 # goal as one nested statement, we move the later universal variable `y` to the
 # top level.
 
+prop is_at_most_square(x, y Z):
+    x <= y^2
+
+prop is_at_most_every_square(x Z):
+    forall y Z:
+        $is_at_most_square(x, y)
+
 sketch:
-    prop is_at_most_square(x, y Z):
-        x <= y^2
-
-    prop is_at_most_every_square(x Z):
-        forall y Z:
-            $is_at_most_square(x, y)
-
     claim:
         ? forall y Z:
             exist x Z st {$is_at_most_every_square(x)}
             =>:
                 exist x Z st {$is_at_most_square(x, y)}
         obtain x0 from exist x Z st {$is_at_most_every_square(x)}
+        $is_at_most_square(x0, y)
         witness exist x Z st {$is_at_most_square(x, y)} from x0
 
 # Finally, here is the common equivalence between "there is no `x` satisfying
@@ -215,9 +220,6 @@ sketch:
 # inside every proof shape.
 
 sketch:
-    prop some_square_two():
-        exist n N st {$is_square_two(n)}
-
     claim:
         ? forall a N:
             not $some_square_two()
@@ -236,7 +238,7 @@ sketch:
                 not $some_square_two()
         by contra:
             ? not $some_square_two()
-            obtain n0 from exist n N st {$is_square_two(n)}
+            obtain n0 from $some_square_two()
             not $is_square_two(n0)
             impossible $is_square_two(n0)
 
@@ -274,6 +276,10 @@ prop Prime(x N+):
     forall y range(2, x):
         x % y != 0
 
+prop superpowered(k N+):
+    forall n N+:
+        $Prime(k ^ (k ^ n) + 1)
+
 # For a concrete number, `by for` proves the bounded universal condition, and
 # then `by def` explicitly introduces the corresponding `Prime` fact.
 
@@ -292,32 +298,25 @@ by def $Prime(17)
 # predicate above.
 
 sketch:
-    prop superpowered(k N+):
-        forall n N+:
-            $Prime(k ^ (k ^ n) + 1)
-
     by for:
         ? forall n range(2, 2):
             2 % n != 0
-
     by def $Prime(2)
-
     forall n N+:
         1^n = 1
         1^(1^n) + 1 = 1^1 + 1 = 2
         $Prime(1^(1^n) + 1)
-
     by def $superpowered(1)
-
     by contra:
         ? not $superpowered(2)
         $Prime(2^(2^5) + 1)
         (2^(2^5) + 1) % 641 = 0
+        641 $in range(2, 2^(2^5) + 1)
         impossible (2^(2^5) + 1) % 641 = 0
-
     claim:
         ? exist k N+ st {$superpowered(k) and not $superpowered(k + 1)}
         witness exist k N+ st {$superpowered(k) and not $superpowered(k + 1)} from 1:
+            1 + 1 = 2
             $superpowered(1)
             not $superpowered(1 + 1)
             $superpowered(1) and not $superpowered(1 + 1)
@@ -610,6 +609,8 @@ sketch:
                     n^2 = 2
                     impossible n^2 < 2
             case n >= 1 + 1:
+                1 + 1 = 2
+                n >= 2
                 n^2 >= 2^2 = 4 > 2
                 by contra:
                     ? not $is_square_two(n)

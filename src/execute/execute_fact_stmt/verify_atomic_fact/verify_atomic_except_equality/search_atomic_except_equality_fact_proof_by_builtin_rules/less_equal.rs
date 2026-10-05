@@ -12,6 +12,11 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    ExpWeakMonotone(super::exp_ln_order::ExpWeakMonotoneProof),
+    LnWeakMonotone(super::exp_ln_order::LnWeakMonotoneProof),
+    ExpWeakOrderReflection(super::exp_ln_order::ExpWeakOrderReflectionProof),
+    LnWeakOrderReflection(super::exp_ln_order::LnWeakOrderReflectionProof),
+    FactorialMonotone(super::factorial_order::FactorialMonotoneProof),
     FloorMonotone(super::rounding_order::FloorMonotoneProof),
     CeilMonotone(super::rounding_order::CeilMonotoneProof),
     ComplexTriangle(super::complex_triangle::ComplexTriangleProof),
@@ -554,6 +559,10 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
+        if let Some(proof) = self.search_factorial_weak_order(fact, verify_state)? {
+            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FactorialMonotone(proof)));
+        }
+        if let Some(proof)=self.search_exp_ln_weak_order(fact,verify_state)? { return Ok(Some(proof)); }
         Ok(None)
     }
 }

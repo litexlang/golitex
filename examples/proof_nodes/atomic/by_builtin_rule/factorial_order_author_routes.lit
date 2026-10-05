@@ -1,0 +1,41 @@
+# Publish a checked inner order before applying the same bounded factorial leaf.
+# The positive-integer direction bridges were checkable before the local shortcut.
+
+claim:
+    ? forall m,n N:
+        m<=n
+        =>:
+            factorial(factorial(m))<=factorial(factorial(n))
+    factorial(m)<=factorial(n)
+    factorial(factorial(m))<=factorial(factorial(n))
+
+forall m,n N:
+    m<=n
+    =>:
+        factorial(factorial(m))<=factorial(factorial(n))
+
+claim:
+    ? forall x N:
+        0<x
+        =>:
+            x $in N+
+    x>0
+    x $in N+
+
+forall x N:
+    0<x
+    =>:
+        x $in N+
+
+claim:
+    ? forall x Z:
+        0<x
+        =>:
+            x $in N+
+    x>0
+    x $in N+
+
+forall x Z:
+    0<x
+    =>:
+        x $in N+

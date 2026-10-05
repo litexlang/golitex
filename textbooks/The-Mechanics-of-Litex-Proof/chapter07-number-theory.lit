@@ -34,64 +34,154 @@
 claim:
     ? forall a N+:
         product(1, a, fn(x N+) N+ {x}) % a = 0 and a <= product(1, a, fn(x N+) N+ {x})
-
+    thm bounded_remainder_unique:
+        ? forall dividend Z, m N+, k N:
+            k < m
+            exist r Z st {dividend = m * r + k}
+            =>:
+                dividend % m = k
+        obtain r from exist q Z st {dividend = m * q + k}
+        have q Z = quot(dividend, m)
+        have s N = dividend % m
+        have t Z = q - r
+        0 <= s
+        s < m
+        0 <= k
+        0 < m
+        dividend = m * quot(dividend, m) + dividend % m = m * q + s
+        m * q = (m * q + s) - s = dividend - s
+        m * r = (m * r + k) - k = dividend - k
+        m * t = m * (q - r) = m * q - m * r = (dividend - s) - (dividend - k) = k - s
+        by cases:
+            ? t = 0
+            case t <= -1:
+                m * t <= m * (-1) = 0 - m
+                0 - s > 0 - m
+                k - s >= 0 - s > 0 - m
+                m * t = k - s > 0 - m
+                impossible m * t <= 0 - m
+            case t >= -1 + 1:
+                t >= 0
+                by cases:
+                    ? t = 0
+                    case t <= 0:
+                        t = 0
+                    case t >= 0 + 1:
+                        t >= 1
+                        m * t >= m * 1 = m
+                        k - s <= k - 0 = k < m
+                        m * t = k - s < m
+                        impossible m * t >= m
+        k - s = m * t = m * 0 = 0
+        s = s + (k - s) = k
+        dividend % m = s = k
     by induc a from 1:
         ? product(1, a, fn(x N+) N+ {x}) % a = 0 and a <= product(1, a, fn(x N+) N+ {x})
-
-        product(1, 1, fn(x N+) N+ {x}) = 1
-        1 <= product(1, 1, fn(x N+) N+ {x})
-
-        claim:
-            ? forall k Z:
-                k >= 1
-                product(1, k, fn(x N+) N+ {x}) % k = 0 and k <= product(1, k, fn(x N+) N+ {x})
-                =>:
-                    product(1, k + 1, fn(x N+) N+ {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N+) N+ {x})
-
-            have prefix_product N+ = product(1, k, fn(x N+) N+ {x})
-            have next_product N+ = product(1, k + 1, fn(x N+) N+ {x})
-            k + 1 $in N+
-            witness exist quotient Z st {next_product = (k + 1) * quotient + 0} from prefix_product:
-                next_product = product(1, k + 1, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * (k + 1) = prefix_product * (k + 1) = (k + 1) * prefix_product = (k + 1) * prefix_product + 0
-            obtain quotient_value from exist quotient Z st {next_product = (k + 1) * quotient + 0}
-            next_product = (k + 1) * quotient_value + 0
-            next_product % (k + 1) = 0
-            product(1, k + 1, fn(x N+) N+ {x}) % (k + 1) = next_product % (k + 1) = 0
+        ? from a = 1:
+            product(1, 1, fn(x N+) N+ {x}) = 1
+            1 <= product(1, 1, fn(x N+) N+ {x})
+        ? induc:
+            a + 1 >= 1 + 1 = 2
+            a + 1 > 0
+            a + 1 $in N+
+            a + 1 != 0
+            (fn(x N+) N+ {x})(a + 1) = a + 1
+            have prefix_product N+ = product(1, a, fn(x N+) N+ {x})
+            have next_product N+ = product(1, a + 1, fn(x N+) N+ {x})
+            a + 1 $in N+
+            witness exist quotient Z st {next_product = (a + 1) * quotient + 0} from prefix_product:
+                next_product = product(1, a + 1, fn(x N+) N+ {x}) = product(1, a, fn(x N+) N+ {x}) * (a + 1) = prefix_product * (a + 1) = (a + 1) * prefix_product = (a + 1) * prefix_product + 0
+            obtain quotient_value from exist quotient Z st {next_product = (a + 1) * quotient + 0}
+            next_product = (a + 1) * quotient_value + 0
+            release thm bounded_remainder_unique(next_product, a + 1, 0)
+            next_product % (a + 1) = 0
+            witness exist actual_quotient Z st {product(1, a + 1, fn(x N+) N+ {x}) = (a + 1) * actual_quotient + 0} from quotient_value:
+                product(1, a + 1, fn(x N+) N+ {x}) = next_product = (a + 1) * quotient_value + 0
+            release thm bounded_remainder_unique(product(1, a + 1, fn(x N+) N+ {x}), a + 1, 0)
+            product(1, a + 1, fn(x N+) N+ {x}) % (a + 1) = 0
             prefix_product >= 1
-            next_product = product(1, k + 1, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * (k + 1) = prefix_product * (k + 1) = (k + 1) * prefix_product
-            k + 1 = (k + 1) * 1 <= (k + 1) * prefix_product = next_product = product(1, k + 1, fn(x N+) N+ {x})
+            next_product = product(1, a + 1, fn(x N+) N+ {x}) = product(1, a, fn(x N+) N+ {x}) * (a + 1) = prefix_product * (a + 1) = (a + 1) * prefix_product
+            a + 1 = (a + 1) * 1 <= (a + 1) * prefix_product = next_product = product(1, a + 1, fn(x N+) N+ {x})
 
 claim:
     ? forall a, k N+:
         k <= a
         =>:
             product(1, a, fn(x N+) N+ {x}) % k = 0
-
+    thm product_quotient_decomposition:
+        ? forall dividend Z, divisor N+:
+            dividend = divisor * quot(dividend, divisor) + dividend % divisor
+    thm factor_product_remainder_unique:
+        ? forall dividend Z, divisor N+, residue N:
+            residue < divisor
+            exist r Z st {dividend = divisor * r + residue}
+            =>:
+                dividend % divisor = residue
+        obtain r from exist q Z st {dividend = divisor * q + residue}
+        have q Z = quot(dividend, divisor)
+        have s N = dividend % divisor
+        have t Z = q - r
+        0 <= s
+        s < divisor
+        0 <= residue
+        0 < divisor
+        dividend = divisor * quot(dividend, divisor) + dividend % divisor = divisor * q + s
+        divisor * q = (divisor * q + s) - s = dividend - s
+        divisor * r = (divisor * r + residue) - residue = dividend - residue
+        divisor * t = divisor * (q - r) = divisor * q - divisor * r = (dividend - s) - (dividend - residue) = residue - s
+        by cases:
+            ? t = 0
+            case t <= -1:
+                divisor * t <= divisor * (-1) = 0 - divisor
+                0 - s > 0 - divisor
+                residue - s >= 0 - s > 0 - divisor
+                divisor * t = residue - s > 0 - divisor
+                impossible divisor * t <= 0 - divisor
+            case t >= -1 + 1:
+                t >= 0
+                by cases:
+                    ? t = 0
+                    case t <= 0:
+                        t = 0
+                    case t >= 0 + 1:
+                        t >= 1
+                        divisor * t >= divisor * 1 = divisor
+                        residue - s <= residue - 0 = residue < divisor
+                        divisor * t = residue - s < divisor
+                        impossible divisor * t >= divisor
+        residue - s = divisor * t = divisor * 0 = 0
+        s = s + (residue - s) = residue
+        dividend % divisor = s = residue
     by cases:
         ? product(1, a, fn(x N+) N+ {x}) % k = 0
         case k = a:
             product(1, a, fn(x N+) N+ {x}) % a = 0
             product(1, a, fn(x N+) N+ {x}) % k = product(1, a, fn(x N+) N+ {x}) % a = 0
         case k < a:
+            k + 1 > 0
+            k + 1 $in N+
             k + 1 <= a
             product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x})
             have prefix_product Z = product(1, k, fn(x N+) N+ {x})
             have suffix_product Z = product(k + 1, a, fn(x N+) N+ {x})
             have whole_product N+ = product(1, a, fn(x N+) N+ {x})
             product(1, k, fn(x N+) N+ {x}) % k = 0
+            release thm product_quotient_decomposition(product(1, k, fn(x N+) N+ {x}), k)
             quot(product(1, k, fn(x N+) N+ {x}), k) $in Z
-            release thm citation::quot_euclidean(product(1, k, fn(x N+) N+ {x}), k)
+            (product(1, k, fn(x N+) N+ {x})) = (k) * quot(product(1, k, fn(x N+) N+ {x}), k) + (product(1, k, fn(x N+) N+ {x})) % (k)
             witness exist q Z st {product(1, k, fn(x N+) N+ {x}) = k * q + product(1, k, fn(x N+) N+ {x}) % k} from quot(product(1, k, fn(x N+) N+ {x}), k):
                 product(1, k, fn(x N+) N+ {x}) = k * quot(product(1, k, fn(x N+) N+ {x}), k) + product(1, k, fn(x N+) N+ {x}) % k
             obtain r from exist q Z st {product(1, k, fn(x N+) N+ {x}) = k * q + product(1, k, fn(x N+) N+ {x}) % k}
             prefix_product = product(1, k, fn(x N+) N+ {x}) = k * r + product(1, k, fn(x N+) N+ {x}) % k = k * r + 0 = k * r = r * k
-            release thm citation::mul_swap_tail(r, k, product(k + 1, a, fn(x N+) N+ {x}))
-            witness exist t Z st {whole_product = t * k} from r * product(k + 1, a, fn(x N+) N+ {x}):
-                whole_product = product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x}) = (r * k) * product(k + 1, a, fn(x N+) N+ {x}) = (r * product(k + 1, a, fn(x N+) N+ {x})) * k
+            ((r) * (k)) * (suffix_product) = ((r) * (suffix_product)) * (k)
+            witness exist t Z st {whole_product = t * k} from r * suffix_product:
+                whole_product = product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * suffix_product = (r * k) * suffix_product = (r * suffix_product) * k
             obtain whole_quotient from exist t Z st {whole_product = t * k}
             whole_product = whole_quotient * k = k * whole_quotient = k * whole_quotient + 0
-            whole_product % k = 0
-            product(1, a, fn(x N+) N+ {x}) % k = whole_product % k = 0
+            witness exist aggregate_quotient Z st {product(1, a, fn(x N+) N+ {x}) = k * aggregate_quotient + 0} from r * suffix_product:
+                product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * suffix_product = prefix_product * suffix_product = (k * r) * suffix_product = k * (r * suffix_product) + 0
+            release thm factor_product_remainder_unique(product(1, a, fn(x N+) N+ {x}), k, 0)
+            product(1, a, fn(x N+) N+ {x}) % k = 0
 
 claim:
     ? forall a N+:
@@ -104,95 +194,76 @@ claim:
         2 <= a
         =>:
             exist k N+ st {$prime(k), a % k = 0}
-
     by strong_induc x from 2:
         ? exist k N+ st {$prime(k), x % k = 0}
-
-        claim:
-            ? forall b N+:
-                2 <= b < 2
-                =>:
-                    2 % b != 0
-            by contra:
-                ? 2 % b != 0
-                impossible b < 2
-        $prime(2)
-
-        witness exist t Z st {2 = t * 2} from 1
-        0 < 2
-        2 = 2 * 1 + 0
-        2 % 2 = 0
-        witness exist k N+ st {$prime(k), 2 % k = 0} from 2
-
-        claim:
-            ? forall n Z:
-                n >= 2
-                forall m Z:
-                    2 <= m
-                    m <= n
+        ? from x = 2:
+            claim:
+                ? forall b N+:
+                    2 <= b < 2
                     =>:
-                        exist k N+ st {$prime(k), m % k = 0}
-                =>:
-                    exist k N+ st {$prime(k), (n + 1) % k = 0}
-
+                        2 % b != 0
+                by contra:
+                    ? 2 % b != 0
+                    impossible b < 2
+            $prime(2)
+            witness exist t Z st {2 = t * 2} from 1
+            0 < 2
+            2 = 2 * 1 + 0
+            2 % 2 = 0
+            witness exist k N+ st {$prime(k), 2 % k = 0} from 2
+        ? strong_induc:
+            x + 1 > 0
+            x + 1 $in N+
             by cases:
-                ? exist k N+ st {$prime(k), (n + 1) % k = 0}
-                case $prime(n+1):
-                    witness exist t Z st {n + 1 = t * (n + 1)} from 1
-                    0 < n + 1
-                    n + 1 $in N+
-                    n + 1 = (n + 1) * 1 + 0
-                    (n + 1) % (n + 1) = 0
-                    witness exist k N+ st {$prime(k), (n + 1) % k = 0} from n+1
-                case not $prime(n+1):
+                ? exist k N+ st {$prime(k), (x + 1) % k = 0}
+                case $prime(x+1):
+                    witness exist t Z st {x + 1 = t * (x + 1)} from 1
+                    0 < x + 1
+                    x + 1 $in N+
+                    x + 1 = (x + 1) * 1 + 0
+                    (x + 1) % (x + 1) = 0
+                    witness exist k N+ st {$prime(k), (x + 1) % k = 0} from x+1
+                case not $prime(x+1):
                     by contra:
                         ? not forall b N+:
-                            2 <= b < n + 1
+                            2 <= b < x + 1
                             =>:
-                                (n + 1) % b != 0
-                        2 <= n + 1
-                        by def $prime(n + 1)
-                        impossible $prime(n+1)
-
-                    obtain c from exist b N+ st {2 <= b < n+1, not (n + 1) % b != 0}
-
-                    2 <= c < n+1
-
-                    (n+1) % c = 0
-                    c <= n or c >= n + 1
+                                (x + 1) % b != 0
+                        2 <= x + 1
+                        by def $prime(x + 1)
+                        impossible $prime(x+1)
+                    obtain c from exist b N+ st {2 <= b < x+1, not (x + 1) % b != 0}
+                    2 <= c < x+1
+                    (x+1) % c = 0
+                    c <= x or c >= x + 1
                     by cases:
-                        ? c <= n
-                        case c <= n
-                        case c >= n + 1:
-                            impossible c < n + 1
-
+                        ? c <= x
+                        case c <= x
+                        case c >= x + 1:
+                            impossible c < x + 1
                     obtain d from exist k N+ st {$prime(k), c % k = 0}
-
-                    quot(n + 1, c) $in Z
-                    release thm citation::quot_euclidean(n + 1, c)
-                    witness exist q Z st {n + 1 = c * q + (n + 1) % c} from quot(n + 1, c):
-                        n + 1 = c * quot(n + 1, c) + (n + 1) % c
-                    obtain e1 from exist q Z st {n + 1 = c * q + (n + 1) % c}
-                    n + 1 = c * e1 + (n + 1) % c = c * e1 = e1 * c
-
+                    quot(x + 1, c) $in Z
+                    (x + 1) = (c) * quot(x + 1, c) + (x + 1) % (c)
+                    witness exist q Z st {x + 1 = c * q + (x + 1) % c} from quot(x + 1, c):
+                        x + 1 = c * quot(x + 1, c) + (x + 1) % c
+                    obtain e1 from exist q Z st {x + 1 = c * q + (x + 1) % c}
+                    x + 1 = c * e1 + (x + 1) % c = c * e1 = e1 * c
                     quot(c, d) $in Z
-                    release thm citation::quot_euclidean(c, d)
+                    (c) = (d) * quot(c, d) + (c) % (d)
                     witness exist q Z st {c = d * q + c % d} from quot(c, d):
                         c = d * quot(c, d) + c % d
                     obtain f from exist r Z st {c = d * r + c % d}
                     c = d * f + c % d = d * f = f * d
-
                     witness exist t Z st {e1 * f * d = t * d} from e1 * f
                     0 < d
                     e1 * f * d = d * (e1 * f) + 0
                     (e1 * f * d) % d = 0
-
-                    n + 1 = e1 * c = e1 * (f * d) = (e1 * f) * d
+                    x + 1 = e1 * c = e1 * (f * d) = (e1 * f) * d
                     0 < d
-                    n + 1 = d * (e1 * f) + 0
-                    (n + 1) % d = 0
-                    witness exist k N+ st {$prime(k), (n + 1) % k = 0} from d:
-                        (n + 1) % d = 0
+                    x + 1 = d * (e1 * f) + 0
+                    (x + 1) % d = 0
+                    witness exist k N+ st {$prime(k), (x + 1) % k = 0} from d:
+                        (x + 1) % d = 0
 
 # With these facts in the context, the whole proof body is the following 11 lines:
 
@@ -201,6 +272,13 @@ claim:
         2 <= a
         =>:
             exist k N+ st {k > a, $prime(k)}
+    thm scalar_successor_bound:
+        ? forall value R:
+            value <= value + 1
+    a >= 2 >= 1
+    product(1, a, fn(x N+) N+ {x}) $in N+
+    product(1, a, fn(x N+) N+ {x}) + 1 $in N+
+    release thm scalar_successor_bound(product(1, a, fn(x N+) N+ {x}))
     2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1
     obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}
     by cases:
@@ -209,6 +287,8 @@ claim:
             product(1, a, fn(x N+) N+ {x}) % k = 0
             2 <= k
             (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k
+            0 % k = 0
+            1 < k
             1 % k = 1
             (0 + 1) % k = 1 % k = 1
             (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
@@ -365,29 +445,23 @@ claim:
 # time we use it.
 
 sketch:
-    # The gcd laws are named in `citation.lit`; Bézout exposes only the
-    # existence of coefficients, not a separate public extended-gcd object.
-
     claim:
         ? forall d, a, b Z:
             $citation::divides(d, a * b)
             $gcd_eq_one(a, d)
             =>:
                 $citation::divides(d, b)
-
         release thm bezout_of_coprime(a, d)
         obtain u, v from exist u Z, v Z st {1 = u * a + v * d}
         obtain z from exist z Z st {a * b = d * z}
         witness exist k Z st {b = d * k} from u * z + b * v:
             b = b * 1 = b * (u * a + v * d) = u * (a * b) + b * v * d = u * (d * z) + b * v * d = d * (u * z + b * v)
-
     claim:
         ? forall a, b N, p N+:
             $prime(p)
             $citation::divides(p, a * b)
             =>:
                 $citation::divides(p, a) or $citation::divides(p, b)
-
         a $in Z
         b $in Z
         p $in Z
@@ -411,7 +485,6 @@ sketch:
                 witness $citation::divides(p, a) from q:
                     a = gcd(a, p) * q = p * q
                 $citation::divides(p, a) or $citation::divides(p, b)
-
     prop euclid_lemma_pow_at(k Z):
         forall a N, p N+:
             k >= 1
@@ -419,10 +492,8 @@ sketch:
             $citation::divides(p, a ^ k)
             =>:
                 $citation::divides(p, a)
-
     by induc k from 1:
         ? $euclid_lemma_pow_at(k)
-
         ? from k = 1:
             claim:
                 ? forall a N, p N+:
@@ -431,11 +502,8 @@ sketch:
                     $citation::divides(p, a ^ k)
                     =>:
                         $citation::divides(p, a)
-
                 a ^ k = a ^ 1 = a
-
             by def $euclid_lemma_pow_at(k)
-
         ? induc:
             claim:
                 ? forall a N, p N+:
@@ -444,10 +512,10 @@ sketch:
                     $citation::divides(p, a ^ (k + 1))
                     =>:
                         $citation::divides(p, a)
-
+                k > 0
                 k $in N+
                 a ^ k $in N
-                a ^ (k + 1) = a ^ k * a
+                a ^ (k + 1) = a ^ k * a ^ 1 = a ^ k * a
                 $citation::divides(p, a ^ k * a)
                 $citation::divides(p, a ^ k) or $citation::divides(p, a)
                 by cases:
@@ -456,9 +524,7 @@ sketch:
                         $citation::divides(p, a)
                     case $citation::divides(p, a):
                         $citation::divides(p, a)
-
             by def $euclid_lemma_pow_at(k + 1)
-
     claim:
         ? forall a, k N, p N+:
             1 <= k
@@ -466,7 +532,6 @@ sketch:
             $citation::divides(p, a ^ k)
             =>:
                 $citation::divides(p, a)
-
         k $in Z
         $euclid_lemma_pow_at(k)
 
@@ -489,6 +554,47 @@ sketch:
 # square, and primality of 2 -- are proved locally below.
 
 sketch:
+    thm prime_remainder_unique:
+        ? forall dividend Z, divisor N+, residue N:
+            residue < divisor
+            exist r Z st {dividend = divisor * r + residue}
+            =>:
+                dividend % divisor = residue
+        obtain r from exist q Z st {dividend = divisor * q + residue}
+        have q Z = quot(dividend, divisor)
+        have s N = dividend % divisor
+        have t Z = q - r
+        0 <= s
+        s < divisor
+        0 <= residue
+        0 < divisor
+        dividend = divisor * quot(dividend, divisor) + dividend % divisor = divisor * q + s
+        divisor * q = (divisor * q + s) - s = dividend - s
+        divisor * r = (divisor * r + residue) - residue = dividend - residue
+        divisor * t = divisor * (q - r) = divisor * q - divisor * r = (dividend - s) - (dividend - residue) = residue - s
+        by cases:
+            ? t = 0
+            case t <= -1:
+                divisor * t <= divisor * (-1) = 0 - divisor
+                0 - s > 0 - divisor
+                residue - s >= 0 - s > 0 - divisor
+                divisor * t = residue - s > 0 - divisor
+                impossible divisor * t <= 0 - divisor
+            case t >= -1 + 1:
+                t >= 0
+                by cases:
+                    ? t = 0
+                    case t <= 0:
+                        t = 0
+                    case t >= 0 + 1:
+                        t >= 1
+                        divisor * t >= divisor * 1 = divisor
+                        residue - s <= residue - 0 = residue < divisor
+                        divisor * t = residue - s < divisor
+                        impossible divisor * t >= divisor
+        residue - s = divisor * t = divisor * 0 = 0
+        s = s + (residue - s) = residue
+        dividend % divisor = s = residue
     claim:
         ? forall a Q:
             a > 0
@@ -504,7 +610,6 @@ sketch:
         witness exist r, s N+ st {a = r / s, gcd(r, s) = 1} from p, q:
             a = p / q
             gcd(p, q) = 1
-
     claim:
         ? forall a, k N+:
             $prime(a)
@@ -522,7 +627,7 @@ sketch:
                     release thm bezout_of_coprime(k, a)
                     obtain x, y from exist x Z, y Z st {1 = x * k + y * a}
                     quot(k^2, a) $in Z
-                    release thm citation::quot_euclidean(k^2, a)
+                    (k^2) = (a) * quot(k^2, a) + (k^2) % (a)
                     witness exist q Z st {k^2 = a * q + k^2 % a} from quot(k^2, a):
                         k^2 = a * quot(k^2, a) + k^2 % a
                     obtain q from exist q Z st {k^2 = a * q + k^2 % a}
@@ -531,6 +636,8 @@ sketch:
                         k = 1 * k = (x * k + y * a) * k = x * k^2 + y * a * k = x * (a * q) + y * a * k = a * (x * q + y * k)
                     obtain t from exist t Z st {k = a * t}
                     k = a * t + 0
+                    witness exist actual_multiple Z st {k = a * actual_multiple + 0} from t
+                    release thm prime_remainder_unique(k, a, 0)
                     k % a = 0
                     impossible k % a != 0
             case gcd(k, a) = a:
@@ -541,9 +648,10 @@ sketch:
                     obtain t from exist t Z st {k = gcd(k, a) * t}
                     k = gcd(k, a) * t = a * t
                     k = a * t + 0
+                    witness exist actual_multiple Z st {k = a * actual_multiple + 0} from t
+                    release thm prime_remainder_unique(k, a, 0)
                     k % a = 0
                     impossible k % a != 0
-
     claim:
         ? $prime(2)
         2 <= 2
@@ -551,24 +659,32 @@ sketch:
             ? forall d range(2, 2):
                 2 % d != 0
         by def $prime(2)
-
     by contra:
         ? not 2^(1/2) $in Q
+        2^(1/2) > 0
         obtain p, q from exist p, q N+ st {2^(1/2) = p / q, gcd(p, q) = 1}
         0 < q^2
         q^2 != 0
         p^2 $in Z
         q^2 $in Z
+        log(2, 2^(1/2)) = 1/2
+        (2^(1/2))^2 > 0
+        0 < (2^(1/2))^2
+        log(2, (2^(1/2))^2) = 2 * log(2, 2^(1/2)) = 2 * (1/2) = 1
+        (2^(1/2))^2 = 2^log(2, (2^(1/2))^2) = 2^1 = 2
+        2^(1/2 * 2) = 2^1 = 2
         (2^(1 / 2))^2 = 2^(1 / 2 * 2)
         p^2 / q^2 = (p/q)^2 = (2^(1/2))^2 = 2^(1/2 * 2) = 2^(1) = 2
-        p^2 = 2 * q^2
+        p^2 = (p^2 / q^2) * q^2 = 2 * q^2
         witness exist k Z st {p^2 = 2 * k} from q^2
         0 < 2
         p^2 = 2 * q^2 + 0
+        witness exist square_multiple Z st {p^2 = 2 * square_multiple + 0} from q^2
+        release thm prime_remainder_unique(p^2, 2, 0)
         p^2 % 2 = 0
         p % 2 = 0
         quot(p, 2) $in Z
-        release thm citation::quot_euclidean(p, 2)
+        (p) = (2) * quot(p, 2) + (p) % (2)
         witness exist quotient_p Z st {p = 2 * quotient_p + p % 2} from quot(p, 2):
             p = 2 * quot(p, 2) + p % 2
         obtain c from exist quotient_p Z st {p = 2 * quotient_p + p % 2}
@@ -578,11 +694,13 @@ sketch:
         c^2 $in Z
         0 < 2
         q^2 = 2 * c^2 + 0
-        q^2 % 2= 0
+        witness exist square_multiple Z st {q^2 = 2 * square_multiple + 0} from c^2
+        release thm prime_remainder_unique(q^2, 2, 0)
+        q^2 % 2 = 0
         q % 2 = 0
         witness $citation::divides(2, p) from c
         quot(q, 2) $in Z
-        release thm citation::quot_euclidean(q, 2)
+        (q) = (2) * quot(q, 2) + (q) % (2)
         witness exist t Z st {q = 2 * t + q % 2} from quot(q, 2):
             q = 2 * quot(q, 2) + q % 2
         obtain d from exist t Z st {q = 2 * t + q % 2}

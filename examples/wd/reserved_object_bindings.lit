@@ -1,0 +1,22 @@
+# Tracer: builtin object names cannot bind unrelated user identifiers.
+# Run: litex -strict -f examples/wd/reserved_object_bindings.lit
+# Before: the declaration bound e, but the function body read Euler's number:
+# have fn picked(e R) R = e
+# picked(2) = e
+# Both lines were accepted, while the intended identity picked(2)=2 failed.
+# Now: that declaration is rejected during parse. Fresh names retain their IDs.
+# The rejected e/C/function/field/index/witness forms are executable Rust controls.
+
+have fn picked(t R) R = t
+picked(2) = 2
+have e1 R = 2
+have epsilon R = 3
+have pi_value R = 4
+e1 + epsilon + pi_value = 9
+have fn sinus(x R) R = sin(x)
+sinus(0) = 0
+i * i = -1
+e > 1
+e != 0
+pi != 0
+0^0 = 1

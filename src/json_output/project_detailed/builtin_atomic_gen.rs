@@ -16,6 +16,47 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ExpStrictMonotone(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("rule",string("ExpStrictMonotone")),
+            ("argument_order",project_verify_fact(&p.argument_order,runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::LnStrictMonotone(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("rule",string("LnStrictMonotone")),
+            ("argument_order",project_verify_fact(&p.argument_order,runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ExpStrictOrderReflection(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("rule",string("ExpStrictOrderReflection")),
+            ("image_order",project_verify_fact(&p.image_order,runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::LnStrictOrderReflection(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("rule",string("LnStrictOrderReflection")),
+            ("image_order",project_verify_fact(&p.image_order,runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ExpWeakMonotone(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("rule",string("ExpWeakMonotone")),
+            ("argument_order",project_verify_fact(&p.argument_order,runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LnWeakMonotone(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("rule",string("LnWeakMonotone")),
+            ("argument_order",project_verify_fact(&p.argument_order,runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ExpWeakOrderReflection(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("rule",string("ExpWeakOrderReflection")),
+            ("image_order",project_verify_fact(&p.image_order,runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LnWeakOrderReflection(p)) => object_for(runtime,vec![
+            ("type",string("builtin_rule")),("rule",string("LnWeakOrderReflection")),
+            ("image_order",project_verify_fact(&p.image_order,runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FactorialMonotone(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("FactorialMonotone")),
+            ("argument_order", project_verify_fact(&p.argument_order, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::FactorialStrictMonotone(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("FactorialStrictMonotone")),
+            ("positive_smaller", project_verify_fact(&p.positive_smaller, runtime)),
+            ("argument_order", project_verify_fact(&p.argument_order, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FloorMonotone(p))=> object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("FloorMonotone")),("argument_order",project_verify_fact(&p.argument_order,runtime))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::CeilMonotone(p))=> object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("CeilMonotone")),("argument_order",project_verify_fact(&p.argument_order,runtime))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetSumTriangle(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("FiniteSetSumTriangle"))]),

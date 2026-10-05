@@ -121,12 +121,17 @@ forall m, n Z:
 
 # Let r and s be rational numbers, and suppose that s + 3 >= r and s + r <= 3. Show that r <= 3.
 
-forall r, s Q:
+claim:
+    ? forall r, s Q:
+        r <= s + 3
+        s + r <= 3
+        =>:
+            s + 3 >= r
+            r = (s + r + r - s) / 2 <= (3 + (s + 3) - s) / 2 = 3
     r <= s + 3
-    s + r <= 3
-    =>:
-        s + 3 >= r
-        r = (s + r + r - s) / 2 <= (3 + (s + 3) - s) / 2 = 3
+    s + r + r <= 3 + (s + 3)
+    s + r + r - s <= 3 + (s + 3) - s
+    (s + r + r - s) / 2 <= (3 + (s + 3) - s) / 2
 
 # 2.1.4 Example
 
@@ -215,14 +220,14 @@ claim:
         a >= 0
         =>:
             a >= 1
-    0 <= b^2
-    a^2 = b^2 + 1 >= 0 + 1 = 1
-    a^2 >= 1
-    0 <= a
-    # Square-root / cancel-power step is trusted for now.
-    trust:
-        a >= 1
-
+    by contra:
+        ? a >= 1
+        a^2 = b^2 + 1 >= 0 + 1 = 1
+        a^2 >= 1
+        a < 1
+        a^2 < 1^2 = 1
+        1 <= a^2 < 1
+        impossible 1 < 1
 # This example is structurally different from the previous ones. It is no longer
 # just a `forall ... =>:` block whose body is a list of facts. The example uses
 # `by contra a >= 1:`, the shorthand form above.
@@ -277,10 +282,8 @@ claim:
 # impossible <FACT>
 # ```
 
-# Here the fact is `a^2 < 1^2`. The `proof_debt` block at the start records the lemma
-# that, for nonnegative numbers, squaring preserves strict order. Using that
-# lemma with `a >= 0`, `a < 1`, and `0 <= 1`, Litex verifies the line
-# `a^2 < 1^2`.
+# Here the fact is `a^2 < 1^2`. For nonnegative numbers, squaring preserves
+# strict order. Using `a >= 0`, `a < 1`, and `0 <= 1`, Litex verifies this fact.
 
 # But the context also contains `a^2 >= 1`, and `1 = 1^2`, so `a^2 < 1^2` is
 # impossible. The contradiction shows that the temporary assumption `a < 1`
@@ -330,23 +333,34 @@ forall x, y Z:
 
 # Let a and b be real numbers and suppose that -b <= a <= b. Show that a^2 <= b^2.
 
-# Product nonpositivity from opposite-sign factors is trusted for now.
-trust:
-    forall a, b R:
+claim:
+    ? forall a, b R:
         -b <= a <= b
         =>:
             a^2 <= b^2
+    0 = b - b <= b - a
+    0 = (-b) + b <= a + b = b + a
+    0 <= (b - a) * (b + a)
+    a^2 = b^2 - (b - a) * (b + a) <= b^2 - 0 = b^2
 
 # 2.1.8
 
 # Let a and b be real numbers and suppose that a <= b. Show that a^3 <= b^3.
 
-# Cube monotonicity on R is trusted for now.
-trust:
-    forall a, b R:
+claim:
+    ? forall a, b R:
         a <= b
         =>:
             a^3 <= b^3
+    0 = a - a <= b - a
+    0 <= (a + b / 2)^2
+    0 <= b^2
+    0 <= 3 / 4 * b^2
+    0 <= (a + b / 2)^2 + 3 / 4 * b^2
+    a^2 + a * b + b^2 = (a + b / 2)^2 + 3 / 4 * b^2
+    0 <= a^2 + a * b + b^2
+    0 <= (b - a) * (a^2 + a * b + b^2)
+    a^3 = b^3 - (b - a) * (a^2 + a * b + b^2) <= b^3 - 0 = b^3
 
 # 2.2 Reusing Verified Facts
 
@@ -491,10 +505,21 @@ claim:
 # Litex verifies this dichotomy directly from integer discreteness. It uses the
 # shorthand `by cases n^2 != 2:`.
 
-# Finite case enumeration / discreteness proof is trusted for now.
-trust:
-    forall n N:
+claim:
+    ? forall n N:
         n^2 != 2
+    n <= 1 or n >= 1 + 1
+    by cases:
+        ? n^2 != 2
+        case n <= 1:
+            n $in 0...1
+            by for:
+                ? forall k 0...1:
+                    k^2 != 2
+        case n >= 1 + 1:
+            0 <= n
+            2 <= n
+            n^2 = n * n >= 2 * n >= 2 * 2 = 4 > 2
 
 # 2.3.3 Proving One Side Of An Or Goal
 
@@ -536,16 +561,28 @@ claim:
 
 # Let n be a integer number. Show that n^2 != 2.
 
-# Nested `by cases` blocks are useful when a first split leaves a branch that
-# still needs more structure. Here the first split separates `n <= 1` from
-# `n >= 2`; the left branch is split again into the finite interval `-1 <= n <= 1`
-# and the negative tail `n <= -2`. Both outer and inner splits use the shorthand
-# form `by cases n^2 != 2:`.
-
-# Nested integer case split for n^2 != 2 is trusted for now.
-trust:
-    forall n Z:
+# The source uses nested integer cases. This checked proof instead splits the
+# remainder of n modulo 2: an even square is 0 modulo 4, and an odd square is 1.
+# Both cases contradict n^2 = 2, including when n is negative.
+claim:
+    ? forall n Z:
         n^2 != 2
+    by contra:
+        ? n^2 != 2
+        n % 2 = 0 or n % 2 = 1
+        by cases:
+            ? n^2 % 4 != 2
+            case n % 2 = 0:
+                n = 2 * quot(n, 2) + n % 2 = 2 * quot(n, 2)
+                n^2 = (2 * quot(n, 2))^2 = 4 * quot(n, 2)^2
+                n^2 % 4 = (4 * quot(n, 2)^2) % 4 = 0
+            case n % 2 = 1:
+                n = 2 * quot(n, 2) + n % 2 = 2 * quot(n, 2) + 1
+                n^2 = (2 * quot(n, 2) + 1)^2 = 4 * (quot(n, 2)^2 + quot(n, 2)) + 1
+                (4 * (quot(n, 2)^2 + quot(n, 2))) % 4 = 0
+                0 % 4 = 0
+                n^2 % 4 = (4 * (quot(n, 2)^2 + quot(n, 2)) + 1) % 4 = (0 + 1) % 4 = 1
+        impossible n^2 % 4 = 2
 
 # 2.4 And Facts
 
@@ -577,12 +614,19 @@ forall x, y Z:
 # We first record a standard bound as a known fact, then use it to prove the
 # target statement.
 
-# Bound from p^2 <= 8 to p >= -5 is trusted for now.
-trust:
-    forall p R:
+claim:
+    ? forall p R:
         p^2 <= 8
         =>:
             p >= -5
+    by contra:
+        ? p >= -5
+        0 = p - p < (-5) - p
+        5 = 0 + 5 < ((-5) - p) + 5 = -p
+        5 <= -p
+        0 <= -p
+        25 = 5 * 5 <= 5 * (-p) <= (-p) * (-p) = p^2 <= 8
+        impossible 25 <= 8
 
 # 2.4.3
 
@@ -611,13 +655,24 @@ forall a, b R:
 # Each block proves one fact from its inner `prove:` line. This example uses the
 # long form `by contra:` twice, once for `a = 0` and once for `b = 0`.
 
-# Nonzero squares are positive: trusted for now, then both components follow.
-trust:
-    forall a, b R:
+claim:
+    ? forall a, b R:
         a^2 + b^2 = 0
         =>:
             a = 0
             b = 0
+    0 <= a^2
+    0 <= b^2
+    by contra:
+        ? a = 0
+        0 < a^2
+        0 < a^2 + b^2 = 0
+        impossible 0 < 0
+    by contra:
+        ? b = 0
+        0 < b^2
+        0 < a^2 + b^2 = 0
+        impossible 0 < 0
 
 # 2.5 Existence Proofs
 
@@ -650,19 +705,22 @@ forall a,b Q:
 # Let t be a real number and suppose that there
 # exists a real number a such that a*t < 0. Show that t != 0.
 
-# The existential assumption is written with the witness `a` exposed as a
-# parameter, same pattern as 2.5.1. The contradiction step uses `by contra:`.
+# The existential premise remains quantified. `obtain` chooses its witness
+# and exposes its property; `by contra:` then excludes t = 0.
 
 claim:
-    ? forall t, a R:
-        a * t < 0
+    ? forall t R:
+        exist a R st {a*t < 0}
         =>:
             t != 0
+    obtain a from exist a R st {a*t < 0}
+    a * t < 0
     by contra:
         ? t != 0
         t = 0
         a * t = 0
         impossible a * t < 0
+
 
 # 2.5.3
 

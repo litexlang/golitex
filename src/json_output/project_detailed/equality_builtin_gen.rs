@@ -8,6 +8,12 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::LcmLeftAbsDivisibility(_) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("LcmLeftAbsDivisibility")),
+        ]),
+        EqualitySearchProofByBuiltinRule::LcmRightAbsDivisibility(_) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("LcmRightAbsDivisibility")),
+        ]),
         EqualitySearchProofByBuiltinRule::FiniteSetProductReindex(p) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("FiniteSetProductReindex")),
             ("bijection", project_verify_fact(&p.bijection, runtime)),

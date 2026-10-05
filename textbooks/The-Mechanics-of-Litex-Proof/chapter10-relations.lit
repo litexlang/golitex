@@ -24,20 +24,11 @@
 # These four properties are about the relation (prop) itself, not about one
 # particular pair of objects.
 
-# In Litex, once you have proved that a user-defined relation has one of these
-# properties, you can register that fact with a `by ..._prop` statement. The point
-# is not to prove a new goal immediately, but to let Litex remember the property
-# and use it later during proof checking.
-
-# The three registration keywords are:
-
-# - `by reflexive_prop`: after proving `forall x set: $p(x, x)`, Litex can later
-#   close goals of the form `$p(a, a)`.
-# - `by symmetric_prop`: after proving `$p(x, y) => $p(y, x)`, Litex can later use
-#   a known `$p(a, b)` to prove `$p(b, a)` without repeating the proof.
-# - `by transitive_prop`: after proving `$p(x, y)` and `$p(y, z) => $p(x, z)`,
-#   Litex can use chains like `a $p b $p c` and remember `$p(a, c)` without
-#   repeating the proof.
+# Prove relation properties with ordinary claims. Reflexivity, symmetry and
+# transitivity can then be registered with `register reflexive`, `register
+# symmetric`, and `register transitive`. Each registration accepts one shaped
+# forall goal and no proof body; the property must already be verified.
+# Antisymmetry remains an ordinary proved forall used during later proofs.
 
 # Here is the basic pattern, made executable with the equality relation on sets.
 # For a different user-defined relation, first prove the property that actually
@@ -48,13 +39,12 @@ prop rel(x, y set):
     x = y
 
 sketch:
-    by reflexive_prop:
+    claim:
         ? forall x set:
             $rel(x, x)
         x = x
         by def $rel(x, x)
-
-    by symmetric_prop:
+    claim:
         ? forall x, y set:
             $rel(x, y)
             =>:
@@ -62,8 +52,7 @@ sketch:
         x = y
         y = x
         by def $rel(y, x)
-
-    by transitive_prop:
+    claim:
         ? forall x, y, z set:
             $rel(x, y)
             $rel(y, z)
@@ -71,29 +60,55 @@ sketch:
                 $rel(x, z)
         x = y = z
         by def $rel(x, z)
-
+    claim:
+        ? forall x, y set:
+            $rel(x, y)
+            $rel(y, x)
+            =>:
+                x = y
+        $rel(x, y)
+        x = y
+    register reflexive:
+        ? forall x set:
+            $rel(x, x)
+    register symmetric:
+        ? forall x, y set:
+            $rel(x, y)
+            =>:
+                $rel(y, x)
+    register transitive:
+        ? forall x, y, z set:
+            $rel(x, y)
+            $rel(y, z)
+            =>:
+                $rel(x, z)
     have a, b, c set
-
     claim:
         ? $rel(a, a)
-
     claim:
         ? forall u, v set:
             $rel(u, v)
             =>:
                 $rel(v, u)
-
     claim:
         ? forall u, v, w set:
             $rel(u, v)
             $rel(v, w)
             =>:
                 $rel(u, w)
-        u $rel v $rel w
+        $rel(u, v)
+        $rel(v, w)
+        $rel(u, w)
+    claim:
+        ? forall u, v set:
+            $rel(u, v)
+            $rel(v, u)
+            =>:
+                u = v
 
 # After these registrations, later proofs can be shorter: you state the local
 # facts, and Litex uses the registered relation properties as background steps.
-# These keywords are for user-defined relations such as `$rel(...)`; they are not
+# These registrations are for user-defined relations such as `$rel(...)`; they are not
 # used to register builtin predicates such as `=`, `<`, `$in`, or `$subset`.
 
 # 10.1.1 Divisibility on the natural numbers
@@ -108,6 +123,19 @@ sketch:
 sketch:
     prop divides(a N, b N):
         exist k N st {b = a * k}
+
+    # A nonzero natural multiplier is at least one: exclude the zero case.
+    claim:
+        ? forall k N:
+            k != 0
+            =>:
+                k >= 1
+        by cases:
+            ? k >= 1
+            case k = 0:
+                impossible k = 0
+            case k >= 1:
+                k >= 1
 
     # Reflexive
     claim:
@@ -153,6 +181,7 @@ sketch:
                 b = a * k1 = 0 * k1 = 0
                 a = b
             case k2 != 0:
+                k2 >= 1
                 a = b * k2 >= b * 1 = b
 
 
@@ -265,7 +294,7 @@ sketch:
             x = 0 and y = 0 or x = 0 and y = 1 or x = 0 and y = 2 or x = 1 and y = 0 or x = 1 and y = 1 or x = 1 and y = 2 or x = 2 and y = 0 or x = 2 and y = 1 or x = 2 and y = 2
 
     # 1 means winning, 0 means losing or draw
-    have fn rock_paper_scissors(x {0, 1, 2}, y {0, 1, 2}) {0, 1}:
+    have fn rock_paper_scissors(x {0, 1, 2}, y {0, 1, 2}) {0, 1} by cases:
         case x = 0 and y = 0: 0
         case x = 0 and y = 1: 1
         case x = 0 and y = 2: 0
@@ -413,23 +442,36 @@ sketch:
 # Its two registrations show the same proof shape that applies after another
 # relation's symmetry and transitivity have been established.
 
-by symmetric_prop:
+claim:
     ? forall x, y set:
         $rel(x, y)
         =>:
             $rel(y, x)
     x = y
     y = x
-    $rel(y, x)
+    by def $rel(y, x)
 
-by transitive_prop:
+register symmetric:
+    ? forall x, y set:
+        $rel(x, y)
+        =>:
+            $rel(y, x)
+
+claim:
     ? forall x, y, z set:
         $rel(x, y)
         $rel(y, z)
         =>:
             $rel(x, z)
     x = y = z
-    $rel(x, z)
+    by def $rel(x, z)
+
+register transitive:
+    ? forall x, y, z set:
+        $rel(x, y)
+        $rel(y, z)
+        =>:
+            $rel(x, z)
 
 claim:
     ? forall X set, a1, a2 X:
@@ -441,14 +483,16 @@ claim:
             $rel(a1, b)
             =>:
                 $rel(a2, b)
-        a2 $rel a1 $rel b
+        $rel(a2, a1)
+        $rel(a2, b)
 
     claim:
         ? forall b X:
             $rel(a2, b)
             =>:
                 $rel(a1, b)
-        a1 $rel a2 $rel b
+        $rel(a1, a2)
+        $rel(a1, b)
 
     by extension:
         ? {b X: $rel(a1, b)} = {b X: $rel(a2, b)}
@@ -524,33 +568,33 @@ sketch:
 # - Transitive: if `S` is bijective with `T`, and `T` is bijective with `U`, then
 #   the composition of the two bijections gives a bijection `S -> U`.
 
+prop injective_fn(S, T set, f fn(x S) T):
+    forall x1, x2 S:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
+
+prop surjective_fn(S, T set, f fn(x S) T):
+    forall y T:
+        exist x S st {y = f(x)}
+
+prop bijective_fn(S, T set, f fn(x S) T):
+    $injective_fn(S, T, f)
+    $surjective_fn(S, T, f)
+
+prop exist_bijection(S, T set):
+    exist f fn(x S) T st {$bijective_fn(S, T, f)}
+
+prop is_inverse_of_fn(S, T set, f fn(x S) T, g fn(x T) S):
+    forall x S:
+        g(f(x)) = x
+    forall y T:
+        y = f(g(y))
+
 sketch:
-    prop injective_fn(S, T set, f fn(x S) T):
-        forall x1, x2 S:
-            f(x1) = f(x2)
-            =>:
-                x1 = x2
-
-    prop surjective_fn(S, T set, f fn(x S) T):
-        forall y T:
-            exist x S st {y = f(x)}
-
-    prop bijective_fn(S, T set, f fn(x S) T):
-        $injective_fn(S, T, f)
-        $surjective_fn(S, T, f)
-
-    prop exist_bijection(S, T set):
-        exist f fn(x S) T st {$bijective_fn(S, T, f)}
-
-    prop is_inverse_of_fn(S, T set, f fn(x S) T, g fn(x T) S):
-        forall x S:
-            g(f(x)) = x
-        forall y T:
-            y = f(g(y))
-
     # A bijection has an inverse: surjectivity supplies a preimage for each
     # output, and injectivity makes that preimage unique.
-    claim:
+    thm bijective_has_inverse:
         ? forall A, B set, f fn(x A) B:
             $bijective_fn(A, B, f)
             =>:
@@ -569,7 +613,7 @@ sketch:
                     =>:
                         x1 = x2
                 f(x1) = y = f(x2)
-            exist! unique_input A st {y = f(unique_input)}
+            witness exist! unique_input A st {y = f(unique_input)} from x
 
         have fn g by exist!:
             ? forall y B:
@@ -624,8 +668,8 @@ sketch:
             $exist_bijection(S, T)
             =>:
                 $exist_bijection(T, S)
-        obtain f from exist f fn(x S) T st {$bijective_fn(S, T, f)}
-        exist g fn(x T) S st {$is_inverse_of_fn(S, T, f, g)}
+        obtain f from $exist_bijection(S, T)
+        release thm bijective_has_inverse(S, T, f)
         obtain g from exist g fn(x T) S st {$is_inverse_of_fn(S, T, f, g)}
 
         claim:
@@ -652,8 +696,8 @@ sketch:
             $exist_bijection(T, U)
             =>:
                 $exist_bijection(S, U)
-        obtain f from exist f fn(x S) T st {$bijective_fn(S, T, f)}
-        obtain g from exist g fn(x T) U st {$bijective_fn(T, U, g)}
+        obtain f from $exist_bijection(S, T)
+        obtain g from $exist_bijection(T, U)
         $injective_fn(S, T, f)
         $surjective_fn(S, T, f)
         $injective_fn(T, U, g)
@@ -695,17 +739,14 @@ sketch:
 # - Transitive: two related steps can be composed into one.
 
 # In ordinary proofs, these properties are useful because they become reusable
-# background facts. Litex mirrors the reflexive, symmetric, and transitive cases
-# with `by reflexive_prop`, `by symmetric_prop`, and `by transitive_prop`: first
-# you prove the property for a user-defined relation, then Litex can use it later
-# without making you restate the same argument. This is why equivalence relations
-# and order-like relations are so convenient: once their basic properties are
-# registered, later proofs can focus on the mathematical idea rather than on
-# repeating routine relation steps.
+# background facts. Litex remembers proved reflexivity, symmetry, and transitivity
+# with `register reflexive`, `register symmetric`, and `register transitive`.
+# Antisymmetry is an ordinary proved forall. These reusable facts let later proofs
+# focus on the mathematical idea without repeating routine relation arguments.
 
 # Registration and definition introduction have distinct roles. To establish a
 # positive user-defined relation, first prove its mathematical body and then use
-# `by def`. A `by ..._prop` block registers a checked universal behavior for later
+# `by def`. A `register` block registers a checked universal behavior for later
 # reuse; it does not silently unfold or fold the relation definition. When a
 # compound concept such as "there exists a bijection" is built from injectivity,
 # surjectivity, bijectivity, and an existential witness, introduce those named

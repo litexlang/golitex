@@ -156,3 +156,9 @@ comparison chains and `not exist!` keep their existing syntax restrictions.
 - `struct_dependent_fields.lit`: field types may use earlier fields; checks guarded calls, nested receiver substitution, concrete tuple construction, and struct laws in forall WD. Self/forward references and missing guards are covered by `struct_dependent_fields` Rust regressions.
 
 - `category_dependent_fields.lit`: the selected two-parameter Category interface, explicit Hom closure, unit/associativity laws, and an actual guarded identity-composition call. This isolates the accepted interface from the chapter's remaining migration proofs.
+
+[Reserved object bindings](reserved_object_bindings.lit) keeps native constants
+and object constructors distinct from nearby user names. The original Euler
+parameter bug is commented in the tracer; executable parser regressions reject
+reserved declaration/binder/field/witness names and verify same-runtime reuse
+after failure in eval, REPL and root-export contexts.

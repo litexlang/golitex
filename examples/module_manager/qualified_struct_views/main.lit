@@ -1,0 +1,25 @@
+# Run: target/release/litex -strict -f examples/module_manager/qualified_struct_views/main.lit
+# Formerly valid documented qualified view stopped at the :: token.
+# have item &Lib::facts::Pair=(1,2)
+# item.first=item.first
+have item &Lib::facts::Pair=(1/2,3/2)
+item.first=1/2
+item.second=3/2
+(1/2,3/2) $in &Lib::facts::Pair
+have own &local::Pair=(1,2)
+own.first=1
+have whole &Other::facts::Pair=(1,2)
+whole.second=2
+have tagged &Lib::facts::Tagged<R> =(1/2,0)
+tagged.value=1/2
+have flat &Lib:::Tagged<R> = (3/2,0)
+flat.value=3/2
+have fn make(x R)&Lib::facts::Pair=(x,x+1)
+make(2) $in &Lib::facts::Pair
+struct Nested:
+    point &Lib::facts::Pair
+    tag N
+have nested &Nested=((1/2,3/2),0)
+nested.point.first $in R
+# Chained field value equality may need explicit representation facts;
+# this parser tracer asserts the declared field type without opening laws.

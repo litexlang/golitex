@@ -355,7 +355,7 @@ fn restricted_literal_beta_rejects_missing_guards_carriers_arity_and_wrong_body(
     for source in [
         "claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point X:\n        fn(x K) Y {f(x)}(point) = f(point)\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = f(point)\n",
         "claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:\n        fn(x K: x != point) Y {f(x)}(point) = f(point)\n    point $in X\n    f(point) $in Y\n    fn(x K: x != point) Y {f(x)}(point) = f(point)\n",
-        "claim:\n    ? forall X, Y, Z set, K power_set(X), f fn(x X) Y, point K:\n        fn(x K) Z {f(x)}(point) = f(point)\n    point $in X\n    f(point) $in Y\n    fn(x K) Z {f(x)}(point) = f(point)\n",
+        "claim:\n    ? forall X, Y, W set, K power_set(X), f fn(x X) Y, point K:\n        fn(x K) W {f(x)}(point) = f(point)\n    point $in X\n    f(point) $in Y\n    fn(x K) W {f(x)}(point) = f(point)\n",
         "claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:\n        fn(x, y K) Y {f(x)}(point) = f(point)\n    point $in X\n    f(point) $in Y\n    fn(x, y K) Y {f(x)}(point) = f(point)\n",
         "claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K, other Y:\n        fn(x K) Y {f(x)}(point) = other\n    point $in X\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = other\n",
     ] {

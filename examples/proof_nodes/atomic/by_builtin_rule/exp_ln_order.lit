@@ -1,0 +1,99 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/exp_ln_order.lit
+# Before this migration the following exact eight statements failed truth search.
+# Domains remain exp R / ln R+; weak premises cannot justify strict conclusions.
+
+# Formerly rejected:
+# forall a,b R:
+#     a<b
+#     =>:
+#         exp(a)<exp(b)
+
+# Current supported statement:
+forall a,b R:
+    a<b
+    =>:
+        exp(a)<exp(b)
+
+# Formerly rejected:
+# forall a,b R:
+#     exp(a)<exp(b)
+#     =>:
+#         a<b
+
+# Current supported statement:
+forall a,b R:
+    exp(a)<exp(b)
+    =>:
+        a<b
+
+# Formerly rejected:
+# forall a,b R:
+#     a<=b
+#     =>:
+#         exp(a)<=exp(b)
+
+# Current supported statement:
+forall a,b R:
+    a<=b
+    =>:
+        exp(a)<=exp(b)
+
+# Formerly rejected:
+# forall a,b R:
+#     exp(a)<=exp(b)
+#     =>:
+#         a<=b
+
+# Current supported statement:
+forall a,b R:
+    exp(a)<=exp(b)
+    =>:
+        a<=b
+
+# Formerly rejected:
+# forall a,b R+:
+#     a<b
+#     =>:
+#         ln(a)<ln(b)
+
+# Current supported statement:
+forall a,b R+:
+    a<b
+    =>:
+        ln(a)<ln(b)
+
+# Formerly rejected:
+# forall a,b R+:
+#     ln(a)<ln(b)
+#     =>:
+#         a<b
+
+# Current supported statement:
+forall a,b R+:
+    ln(a)<ln(b)
+    =>:
+        a<b
+
+# Formerly rejected:
+# forall a,b R+:
+#     a<=b
+#     =>:
+#         ln(a)<=ln(b)
+
+# Current supported statement:
+forall a,b R+:
+    a<=b
+    =>:
+        ln(a)<=ln(b)
+
+# Formerly rejected:
+# forall a,b R+:
+#     ln(a)<=ln(b)
+#     =>:
+#         a<=b
+
+# Current supported statement:
+forall a,b R+:
+    ln(a)<=ln(b)
+    =>:
+        a<=b

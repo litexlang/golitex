@@ -129,17 +129,21 @@ pub fn is_atom_name(s: &str) -> bool {
     )
 }
 
-// `&Name` / `&Name<...>` → StructObj. No `&Struct{obj}` / `&Name(...)` form.
+// `&Name` / `&Module::export::Name<...>` → StructObj.
+// No `&Struct{obj}` / `&Name(...)` form.
 fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     tb.expect(STRUCT_VIEW_PREFIX)?;
     let name_tok = tb
-        .advance()
-        .map_err(|_| tb.parse_error("`&` expects a struct name"))?;
+        .peek()
+        .ok_or_else(|| tb.parse_error("`&` expects a struct name"))?;
     if !is_simple_name(&name_tok) {
         return Err(tb.parse_error(format!("invalid struct name `{name_tok}` after `&`")));
     }
-    // Same file-root qualification rule as prop refs; store lookup still uses plain name.
-    let name = rt.atomic_name_for_plain_prop_ref(name_tok);
+    // Reuse the canonical owner/export resolver already used by templates.
+    let name = rt.parse_prop_name(tb).map_err(|err| match err {
+        crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
+        other => other,
+    })?;
 
     if tb.peek() == Some(LEFT_CURLY) {
         return Err(tb.parse_error(

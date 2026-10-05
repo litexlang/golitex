@@ -84,7 +84,7 @@ eval sum(1, 2, fn(x Z) Z {sum(2, 3, fn(y Z) Z {x + y})})
 # If the formula depends on cases, write a `case` branch for each condition:
 
 # ```text
-# have fn g(x S) T:
+# have fn g(x S) T by cases:
 #     case condition_1: value_1
 #     case condition_2: value_2
 # ```
@@ -95,7 +95,7 @@ eval sum(1, 2, fn(x Z) Z {sum(2, 3, fn(y Z) Z {x + y})})
 # finite lookup tables.
 
 sketch:
-    have fn g_max(x, y R) R:
+    have fn g_max(x, y R) R by cases:
         case x > y: x
         case x <= y: y
 
@@ -121,7 +121,7 @@ sketch:
     claim:
         ? forall x, x2 R:
             exist! y R st {y = x + x2}
-        witness exist y R st {y = x + x2} from x + x2
+        witness exist! y R st {y = x + x2} from x + x2
         forall y1, y2 R:
             y1 = x + x2
             y2 = x + x2
@@ -159,9 +159,11 @@ sketch:
     have fn fib_fn(x Z: x >= 0) R by induc x from 0:
         case x < 2: 1
         case x >= 2: fib_fn(x - 2) + fib_fn(x - 1)
-
     fib_fn(0) = 1
     fib_fn(1) = 1
+    fib_fn(2) = fib_fn(2 - 2) + fib_fn(2 - 1)
+    fib_fn(2 - 2) = fib_fn(0)
+    fib_fn(2 - 1) = fib_fn(1)
     fib_fn(2) = fib_fn(0) + fib_fn(1)
     fib_fn(2) = fib_fn(0) + fib_fn(1) = 1 + 1 = 2
 
@@ -186,13 +188,13 @@ prop injective_fn(S, T set, f fn(x S) T):
 
 sketch:
     have fn q_shift(x R) R = x + 1
-
-    forall x1, x2 R:
-        q_shift(x1) = q_shift(x2)
-        =>:
-            x2 + 1 = q_shift(x2) = q_shift(x1) = x1 + 1
-            x1 = x1 + 1 - 1 = x2 + 1 - 1 = x2
-
+    claim:
+        ? forall x1, x2 R:
+            q_shift(x1) = q_shift(x2)
+            =>:
+                x1 = x2
+        x2 + 1 = q_shift(x2) = q_shift(x1) = x1 + 1
+        x1 = x1 + 1 - 1 = x2 + 1 - 1 = x2
     by def $injective_fn(R, R, q_shift)
 
 # Equivalently, you can use `forall` to prove this statement without defining the specific function.
@@ -203,21 +205,25 @@ claim:
             f(a) = a + 1
         =>:
             $injective_fn(R, R, f)
-    forall x1, x2 R:
-        f(x1) = f(x2)
-        =>:
-            f(x1) = x1 + 1
-            f(x2) = x2 + 1
-            x1 = x1 + 1 - 1 = f(x1) - 1 = f(x2) - 1 = x2 + 1 - 1 = x2
+    claim:
+        ? forall x1, x2 R:
+            f(x1) = f(x2)
+            =>:
+                x1 = x2
+        f(x1) = x1 + 1
+        f(x2) = x2 + 1
+        x1 = x1 + 1 - 1 = f(x1) - 1 = f(x2) - 1 = x2 + 1 - 1 = x2
     by def $injective_fn(R, R, f)
 
 # Equivalently, you can use anonymous function to define the function.
 
-forall x1, x2 R:
-    fn(x R) R {x + 1}(x1) = fn(x R) R {x + 1}(x2)
-    =>:
-        x1 + 1 = fn(x R) R {x + 1}(x1) = fn(x R) R {x + 1}(x2) = x2 + 1
-        x1 = (x1 + 1) - 1 = (x2 + 1) - 1 = x2
+claim:
+    ? forall x1, x2 R:
+        fn(x R) R {x + 1}(x1) = fn(x R) R {x + 1}(x2)
+        =>:
+            x1 = x2
+    x1 + 1 = fn(x R) R {x + 1}(x1) = fn(x R) R {x + 1}(x2) = x2 + 1
+    x1 = (x1 + 1) - 1 = (x2 + 1) - 1 = x2
 
 by def $injective_fn(R, R, fn(x R) R {x + 1})
 
@@ -389,7 +395,7 @@ sketch:
 # no two different inputs share an output.
 
 sketch:
-    have fn g_cycle_inj(x {1, 2, 3}) {1, 2, 3}:
+    have fn g_cycle_inj(x {1, 2, 3}) {1, 2, 3} by cases:
         case x = 1: 2
         case x = 2: 3
         case x = 3: 1
@@ -457,7 +463,7 @@ sketch:
 # Thus every element of `Musketeer` is hit.
 
 sketch:
-    have fn g_cycle_surj(x {1, 2, 3}) {1, 2, 3}:
+    have fn g_cycle_surj(x {1, 2, 3}) {1, 2, 3} by cases:
         case x = 1: 2
         case x = 2: 3
         case x = 3: 1
@@ -511,6 +517,9 @@ sketch:
                     ? x1 = x2
                     case x1 != 0:
                         0 < x1^2
+                        0 <= (x1+x2)^2
+                        0 <= x2^2
+                        0 <= (x1+x2)^2+x2^2
                         0 < x1^2 +((x1+x2)^2+x2^2) = 2 * (x1^2 + x1 * x2 + x2^2) = 2 * 0 = 0
                         impossible 0 < 0
                     case x1 = 0:
@@ -684,32 +693,25 @@ prop exist_unique_preimage(S, T set, f fn(x S) T):
     forall y T:
         exist! x S st {y = f(x)}
 
-claim:
+thm bijective_implies_unique_preimage:
     ? forall S, T set, f fn(x S) T:
         $bijective_fn(S, T, f)
         =>:
             $exist_unique_preimage(S, T, f)
-
     $injective_fn(S, T, f)
     $surjective_fn(S, T, f)
-
     claim:
         ? forall y T:
             exist! x S st {y = f(x)}
-
         obtain x from exist x S st {y = f(x)}
-
         claim:
             ? forall x1, x2 S:
                 y = f(x1)
                 y = f(x2)
                 =>:
                     x1 = x2
-
             f(x1) = y = f(x2)
-
-        exist! unique_input S st {y = f(unique_input)}
-
+        witness exist! unique_input S st {y = f(unique_input)} from x
     by def $exist_unique_preimage(S, T, f)
 
 claim:
@@ -914,13 +916,13 @@ thm inverse_implies_bijective:
 # just the two finite checks `q(p(x)) = x` and `p(q(x)) = x`.
 
 sketch:
-    have fn p_mood(x {1, 2, 3, 4}) {1, 2, 3, 4}:
+    have fn p_mood(x {1, 2, 3, 4}) {1, 2, 3, 4} by cases:
         case x = 1: 2
         case x = 2: 4
         case x = 3: 3
         case x = 4: 1
 
-    have fn q_mood(x {1, 2, 3, 4}) {1, 2, 3, 4}:
+    have fn q_mood(x {1, 2, 3, 4}) {1, 2, 3, 4} by cases:
         case x = 1: 4
         case x = 2: 1
         case x = 3: 3
@@ -1000,7 +1002,7 @@ thm bijective_implies_has_inverse:
         =>:
             $has_inverse(S, T, f)
 
-    $exist_unique_preimage(S, T, f)
+    release thm bijective_implies_unique_preimage(S, T, f)
 
     have fn g by exist!:
         ? forall y T:
@@ -1138,7 +1140,7 @@ sketch:
             0 = (0, 0)[1] = (n + 1, 2 - n)[1] = n + 1
             0 = (0, 0)[2] = (n + 1, 2 - n)[2] = 2 - n
             n = 0 - 1 = -1
-            n = 2 - 0 = 2
+            n = 2 - (2 - n) = 2 - 0 = 2
             impossible -1 = 2
 
 # 8.4.2 Example: A Bijective Linear Map On `Z^2`
@@ -1192,16 +1194,24 @@ sketch:
         ? forall t cart(Z, Z):
             Finv_Z2(F_Z2(t)) = t
         F_Z2(t) = (t[1] + t[2], t[1] + 2 * t[2])
+        F_Z2(t)[1] = t[1] + t[2]
+        F_Z2(t)[2] = t[1] + 2 * t[2]
         Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)[1] - F_Z2(t)[2], F_Z2(t)[2] - F_Z2(t)[1])
         release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+        2 * F_Z2(t)[1] - F_Z2(t)[2] = 2 * (t[1] + t[2]) - (t[1] + 2 * t[2]) = t[1]
+        F_Z2(t)[2] - F_Z2(t)[1] = (t[1] + 2 * t[2]) - (t[1] + t[2]) = t[2]
         Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)[1] - F_Z2(t)[2], F_Z2(t)[2] - F_Z2(t)[1]) = (2 * (t[1] + t[2]) - (t[1] + 2 * t[2]), (t[1] + 2 * t[2]) - (t[1] + t[2])) = (t[1], t[2]) = t
 
     claim:
         ? forall s cart(Z, Z):
             F_Z2(Finv_Z2(s)) = s
         Finv_Z2(s) = (2 * s[1] - s[2], s[2] - s[1])
+        Finv_Z2(s)[1] = 2 * s[1] - s[2]
+        Finv_Z2(s)[2] = s[2] - s[1]
         F_Z2(Finv_Z2(s)) = (Finv_Z2(s)[1] + Finv_Z2(s)[2], Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2])
         release thm tuple_equal_from_coordinates(s, (s[1], s[2]))
+        Finv_Z2(s)[1] + Finv_Z2(s)[2] = 2 * s[1] - s[2] + (s[2] - s[1]) = s[1]
+        Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2] = 2 * s[1] - s[2] + 2 * (s[2] - s[1]) = s[2]
         F_Z2(Finv_Z2(s)) = (Finv_Z2(s)[1] + Finv_Z2(s)[2], Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2]) = (2 * s[1] - s[2] + (s[2] - s[1]), 2 * s[1] - s[2] + 2 * (s[2] - s[1])) = (s[1], s[2]) = s
 
     by def $is_inverse(cart(Z, Z), cart(Z, Z), F_Z2, Finv_Z2)
@@ -1239,16 +1249,24 @@ sketch:
         ? forall t cart(R, R):
             Finv_R2(F_R2(t)) = t
         F_R2(t) = (t[1] + t[2], t[1] - t[2])
+        F_R2(t)[1] = t[1] + t[2]
+        F_R2(t)[2] = t[1] - t[2]
         Finv_R2(F_R2(t)) = ((F_R2(t)[1] + F_R2(t)[2]) / 2, (F_R2(t)[1] - F_R2(t)[2]) / 2)
         release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+        (F_R2(t)[1] + F_R2(t)[2]) / 2 = (t[1] + t[2] + (t[1] - t[2])) / 2 = t[1]
+        (F_R2(t)[1] - F_R2(t)[2]) / 2 = ((t[1] + t[2]) - (t[1] - t[2])) / 2 = t[2]
         Finv_R2(F_R2(t)) = ((F_R2(t)[1] + F_R2(t)[2]) / 2, (F_R2(t)[1] - F_R2(t)[2]) / 2) = ((t[1] + t[2] + (t[1] - t[2])) / 2, ((t[1] + t[2]) - (t[1] - t[2])) / 2) = (t[1], t[2]) = t
 
     claim:
         ? forall s cart(R, R):
             F_R2(Finv_R2(s)) = s
         Finv_R2(s) = ((s[1] + s[2]) / 2, (s[1] - s[2]) / 2)
+        Finv_R2(s)[1] = (s[1] + s[2]) / 2
+        Finv_R2(s)[2] = (s[1] - s[2]) / 2
         F_R2(Finv_R2(s)) = (Finv_R2(s)[1] + Finv_R2(s)[2], Finv_R2(s)[1] - Finv_R2(s)[2])
         release thm tuple_equal_from_coordinates(s, (s[1], s[2]))
+        Finv_R2(s)[1] + Finv_R2(s)[2] = (s[1] + s[2]) / 2 + (s[1] - s[2]) / 2 = s[1]
+        Finv_R2(s)[1] - Finv_R2(s)[2] = (s[1] + s[2]) / 2 - (s[1] - s[2]) / 2 = s[2]
         F_R2(Finv_R2(s)) = (Finv_R2(s)[1] + Finv_R2(s)[2], Finv_R2(s)[1] - Finv_R2(s)[2]) = ((s[1] + s[2]) / 2 + (s[1] - s[2]) / 2, (s[1] + s[2]) / 2 - (s[1] - s[2]) / 2) = (s[1], s[2]) = s
 
     by def $is_inverse(cart(R, R), cart(R, R), F_R2, Finv_R2)
@@ -1371,7 +1389,7 @@ sketch:
             ? forall a R:
                 exist p cart(R, R) st {a = add_R2(p)}
             witness exist p cart(R, R) st {a = add_R2(p)} from (a, 0):
-                a = a + 0 = add_R2((a, 0))
+                a = a + 0 = (a, 0)[1] + (a, 0)[2] = add_R2((a, 0))
         by def $surjective_fn(cart(R, R), R, add_R2)
 
 # 8.4.6 Example: `5m + 8n` From `Z^2` To `Z`
@@ -1413,6 +1431,10 @@ sketch:
             $injective_fn(cart(Z, Z), Z, Z_lin58)
             (0, 0) $in cart(Z, Z)
             (8, -5) $in cart(Z, Z)
+            (0, 0)[1] = 0
+            (0, 0)[2] = 0
+            (8, -5)[1] = 8
+            (8, -5)[2] = -5
             Z_lin58((0, 0)) = 5 * (0, 0)[1] + 8 * (0, 0)[2] = 5 * 0 + 8 * 0 = 0
             Z_lin58((8, -5)) = 5 * (8, -5)[1] + 8 * (8, -5)[2] = 5 * 8 + 8 * (-5) = 0
             Z_lin58((0, 0)) = Z_lin58((8, -5))
@@ -1426,7 +1448,9 @@ sketch:
             ? forall a Z:
                 exist u cart(Z, Z) st {a = Z_lin58(u)}
             witness exist u cart(Z, Z) st {a = Z_lin58(u)} from (-3 * a, 2 * a):
-                a = 5 * (-3 * a) + 8 * (2 * a) = Z_lin58((-3 * a, 2 * a))
+                (-3 * a, 2 * a)[1] = -3 * a
+                (-3 * a, 2 * a)[2] = 2 * a
+                a = 5 * (-3 * a) + 8 * (2 * a) = 5 * (-3 * a, 2 * a)[1] + 8 * (-3 * a, 2 * a)[2] = Z_lin58((-3 * a, 2 * a))
         by def $surjective_fn(cart(Z, Z), Z, Z_lin58)
 
 # 8.4.7 Example: `5m + 10n` From `Z^2` To `Z`
@@ -1463,7 +1487,6 @@ sketch:
     claim:
         ? forall k Z:
             (5 * k) % 5 = 0
-        (5 * k) % 5 = ((5 % 5) * (k % 5)) % 5 = (0 * (k % 5)) % 5 = 0 % 5 = 0
 
     claim:
         ? not $injective_fn(cart(Z, Z), Z, Z_lin510)
@@ -1472,6 +1495,10 @@ sketch:
             $injective_fn(cart(Z, Z), Z, Z_lin510)
             (0, 0) $in cart(Z, Z)
             (2, -1) $in cart(Z, Z)
+            (0, 0)[1] = 0
+            (0, 0)[2] = 0
+            (2, -1)[1] = 2
+            (2, -1)[2] = -1
             Z_lin510((0, 0)) = 5 * (0, 0)[1] + 10 * (0, 0)[2] = 5 * 0 + 10 * 0 = 0
             Z_lin510((2, -1)) = 5 * (2, -1)[1] + 10 * (2, -1)[2] = 5 * 2 + 10 * (-1) = 0
             Z_lin510((0, 0)) = Z_lin510((2, -1))
@@ -1550,9 +1577,8 @@ sketch:
 # This example is also a good test case for AI-assisted formalization. The
 # mathematical path is clear, but the checked proof has many local algebraic and
 # order details. An agent can work on it much like a human does: draft the
-# argument, leave precise `proof_debt` scaffolding where a branch is not ready, run
-# Litex, read the verifier output, and replace each broad assumption with smaller
-# verified facts.
+# argument, run Litex one mathematical step at a time, read the verifier output,
+# and fill the remaining branches with verified facts.
 
 # This does not show that the theorem is beyond systems such as Lean. It shows
 # why Litex's fact-by-fact feedback loop is useful: each failed or accepted line
@@ -1561,20 +1587,24 @@ sketch:
 sketch:
     prop exist_bijection(S, T set):
         exist f fn(x S) T st {$bijective_fn(S, T, f)}
-
     claim:
         ? forall n N:
             exist! y N st {2 * y = n * (n + 1)}
-
         by cases:
             ? n * (n + 1) % 2 = 0
             case n % 2 = 0:
+                (n % 2) * ((n + 1) % 2) = 0 * ((n + 1) % 2) = 0
+                0 % 2 = 0
                 n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 0 * ((n + 1) % 2) % 2 = 0 % 2 = 0
             case n % 2 = 1:
-                (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
+                1 % 2 = 1
+                n % 2 + 1 % 2 = 1 + 1 = 2
+                (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 2 % 2 = 0
+                (n % 2) * ((n + 1) % 2) = 1 * 0 = 0
+                0 % 2 = 0
                 n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
         have quotient Z = quot(n * (n + 1), 2)
-        release thm citation::quot_euclidean(n * (n + 1), 2)
+        (n * (n + 1)) = (2) * quot(n * (n + 1), 2) + (n * (n + 1)) % (2)
         n * (n + 1) = 2 * quot(n * (n + 1), 2) + n * (n + 1) % 2
         2 * quot(n * (n + 1), 2) + n * (n + 1) % 2 = 2 * quotient + n * (n + 1) % 2 = 2 * quotient + 0 = 2 * quotient
         n * (n + 1) = 2 * quotient
@@ -1588,23 +1618,23 @@ sketch:
         witness exist y N st {2 * y = n * (n + 1)} from r:
             n * (n + 1) = 2 * r
             2 * r = n * (n + 1)
-        forall y1, y2 N:
-            2 * y1 = n * (n + 1)
-            2 * y2 = n * (n + 1)
-            =>:
-                y1 = (2 * y1) / 2 = n * (n + 1) / 2
-                y2 = (2 * y2) / 2 = n * (n + 1) / 2
-                y1 = n * (n + 1) / 2 = y2
-
+        claim:
+            ? forall y1, y2 N:
+                2 * y1 = n * (n + 1)
+                2 * y2 = n * (n + 1)
+                =>:
+                    y1 = y2
+            y1 = (2 * y1) / 2 = n * (n + 1) / 2
+            y2 = (2 * y2) / 2 = n * (n + 1) / 2
+            y1 = n * (n + 1) / 2 = y2
+        witness exist! y N st {2 * y = n * (n + 1)} from r
     have fn tri by exist!:
         ? forall n N:
             exist! y N st {2 * y = n * (n + 1)}
-
     claim:
         ? tri(0) = 0
         2 * tri(0) = 0 * (0 + 1)
         tri(0) = (2 * tri(0)) / 2 = (0 * (0 + 1)) / 2 = 0
-
     claim:
         ? forall n N:
             tri(n + 1) = tri(n) + n + 1
@@ -1612,41 +1642,48 @@ sketch:
         2 * tri(n) = n * (n + 1)
         2 * (tri(n) + n + 1) = 2 * tri(n) + 2 * n + 2 = n * (n + 1) + 2 * n + 2 = (n + 1) * (n + 2)
         tri(n + 1) = (2 * tri(n + 1)) / 2 = ((n + 1) * (n + 2)) / 2 = (2 * (tri(n) + n + 1)) / 2 = tri(n) + n + 1
-
     prop triangular_interval(n, s N):
         tri(s) <= n
         n < tri(s + 1)
-
     have fn diagonal_index(u cart(N, N)) N = tri(u[1]) + u[2]
-
-    claim:
+    thm diagonal_interval:
         ? forall u cart(N, N):
             u[2] <= u[1]
             =>:
                 tri(u[1]) <= diagonal_index(u)
                 diagonal_index(u) < tri(u[1] + 1)
+        tri(u[1]) + u[1] $in N
+        tri(u[1]) + u[1] + 1 $in N
         tri(u[1]) <= tri(u[1]) + u[2] = diagonal_index(u)
         diagonal_index(u) = tri(u[1]) + u[2] <= tri(u[1]) + u[1] < tri(u[1]) + u[1] + 1 = tri(u[1] + 1)
-
-    claim:
+    thm triangular_monotone:
         ? forall a, b N:
             a < b
             =>:
                 tri(a + 1) <= tri(b)
         a + 1 <= b
+        a + 1 + 1 <= b + 1
+        a + 1 + 1 >= 0 + 1 + 1 = 2 >= 0
+        a + 1 + 1 > 0
+        (a + 1) * (a + 1 + 1) <= b * (a + 1 + 1)
+        b * (a + 1 + 1) <= b * (b + 1)
         2 * tri(a + 1) = (a + 1) * ((a + 1) + 1) <= b * (b + 1) = 2 * tri(b)
+        2 * tri(a + 1) $in N
+        2 * tri(b) $in N
+        (2 * tri(a + 1)) / 2 $in Q
+        (2 * tri(b)) / 2 $in Q
         tri(a + 1) = (2 * tri(a + 1)) / 2 <= (2 * tri(b)) / 2 = tri(b)
-
-    claim:
+    thm diagonal_strict_order:
         ? forall u, v cart(N, N):
             u[2] <= u[1]
             v[2] <= v[1]
             u[1] < v[1]
             =>:
                 diagonal_index(u) < diagonal_index(v)
+        release thm diagonal_interval(u)
+        release thm triangular_monotone(u[1], v[1])
+        release thm diagonal_interval(v)
         diagonal_index(u) < tri(u[1] + 1) <= tri(v[1]) <= diagonal_index(v)
-
-    # If two valid diagonal positions have the same number, they are on the same diagonal.
     claim:
         ? forall u, v cart(N, N):
             u[2] <= u[1]
@@ -1656,18 +1693,17 @@ sketch:
                 u[1] = v[1]
         by contra:
             ? not u[1] < v[1]
+            release thm diagonal_strict_order(u, v)
             diagonal_index(u) < diagonal_index(v)
             impossible diagonal_index(u) = diagonal_index(v)
         by contra:
             ? not v[1] < u[1]
+            release thm diagonal_strict_order(v, u)
             diagonal_index(v) < diagonal_index(u)
             impossible diagonal_index(u) = diagonal_index(v)
         u[1] >= v[1]
         v[1] >= u[1]
-
     have fn cauchy_pair(t cart(N, N)) N = tri(t[1] + t[2]) + t[2]
-
-    # On one diagonal, the offset determines the position.
     claim:
         ? forall u, v cart(N, N):
             u[1] = v[1]
@@ -1676,7 +1712,6 @@ sketch:
                 u[2] = v[2]
         tri(u[1]) + u[2] = diagonal_index(u) = diagonal_index(v) = tri(v[1]) + v[2]
         u[2] = (tri(u[1]) + u[2]) - tri(u[1]) = (tri(v[1]) + v[2]) - tri(v[1]) = v[2]
-
     claim:
         ? forall t1, t2 cart(N, N):
             cauchy_pair(t1) = cauchy_pair(t2)
@@ -1695,7 +1730,6 @@ sketch:
         release thm tuple_equal_from_coordinates(t1, (t1[1], t1[2]))
         release thm tuple_equal_from_coordinates(t2, (t2[1], t2[2]))
         t1 = (t1[1], t1[2]) = (t2[1], t2[2]) = t2
-
     claim:
         ? forall a, b N:
             b <= a
@@ -1703,58 +1737,71 @@ sketch:
                 a - b $in N
         a - b >= 0
         a - b $in Z
-
     claim:
         ? forall n, s N:
             $triangular_interval(n, s)
             =>:
                 n - tri(s) <= s
         n < tri(s + 1) = tri(s) + s + 1
+        tri(s) + s $in N
+        tri(s) + s + 1 $in N
+        (tri(s) + s + 1) - 1 $in Z
         n <= tri(s) + s + 1 - 1
         n <= (tri(s) + s + 1) - 1 = tri(s) + s
         n - tri(s) <= (tri(s) + s) - tri(s) = s
-
-    by induc n from 0:
-        ? exist s N st {$triangular_interval(n, s)}
-
-        ? from n = 0:
-            tri(0) <= 0
-            tri(0 + 1) = tri(0) + 0 + 1 = 1
-            0 < 1 = tri(0 + 1)
-            witness exist s N st {$triangular_interval(0, s)} from 0:
-                by def $triangular_interval(0, 0)
-
-        ? induc:
-            obtain s from exist s N st {$triangular_interval(n, s)}
-            by cases:
-                ? exist t N st {$triangular_interval(n + 1, t)}
-                case n + 1 < tri(s + 1):
-                    tri(s) <= n <= n + 1
-                    witness exist t N st {$triangular_interval(n + 1, t)} from s:
-                        by def $triangular_interval(n + 1, s)
-                case n + 1 >= tri(s + 1):
-                    tri((s + 1) + 1) = tri(s + 1) + (s + 1) + 1 = tri(s + 1) + s + 2
-                    n + 1 < n + 2 <= tri(s + 1) + s + 2 = tri((s + 1) + 1)
-                    witness exist t N st {$triangular_interval(n + 1, t)} from s + 1:
-                        by def $triangular_interval(n + 1, s + 1)
-
+    thm triangular_interval_exists:
+        ? forall n N:
+            exist s N st {$triangular_interval(n, s)}
+        by induc n from 0:
+            ? exist s N st {$triangular_interval(n, s)}
+            ? from n = 0:
+                tri(0) <= 0
+                tri(0 + 1) = tri(0) + 0 + 1 = 1
+                0 < 1 = tri(0 + 1)
+                witness exist s N st {$triangular_interval(0, s)} from 0:
+                    by def $triangular_interval(0, 0)
+            ? induc:
+                n $in N
+                n + 1 $in N
+                obtain s from exist s N st {$triangular_interval(n, s)}
+                by cases:
+                    ? exist t N st {$triangular_interval(n + 1, t)}
+                    case n + 1 < tri(s + 1):
+                        tri(s) <= n <= n + 1
+                        witness exist t N st {$triangular_interval(n + 1, t)} from s:
+                            by def $triangular_interval(n + 1, s)
+                    case n + 1 >= tri(s + 1):
+                        tri((s + 1) + 1) = tri(s + 1) + (s + 1) + 1 = tri(s + 1) + s + 2
+                        tri(s + 1) + s $in N
+                        tri(s + 1) + s + 2 $in N
+                        tri(s + 1) - 1 $in Z
+                        n <= tri(s + 1) - 1
+                        n + 1 <= (tri(s + 1) - 1) + 1 = tri(s + 1)
+                        n + 1 = tri(s + 1)
+                        s + 2 >= 0 + 2 = 2 > 0
+                        n + 1 = tri(s + 1) < tri(s + 1) + s + 2 = tri((s + 1) + 1)
+                        witness exist t N st {$triangular_interval(n + 1, t)} from s + 1:
+                            by def $triangular_interval(n + 1, s + 1)
     claim:
         ? forall n N:
             exist t cart(N, N) st {n = cauchy_pair(t)}
+        release thm triangular_interval_exists(n)
         obtain s0 from exist s N st {$triangular_interval(n, s)}
         have b N = n - tri(s0)
         n - tri(s0) <= s0
         have a N = s0 - b
         a + b = (s0 - b) + b = s0
         have p cart(N, N) = (a, b)
-        cauchy_pair(p) = tri(p[1] + p[2]) + p[2] = tri(a + b) + b = tri(s0) + b = tri(s0) + (n - tri(s0)) = n
+        p[1] = a
+        p[2] = b
+        p[1] + p[2] = a + b = s0
+        tri(p[1] + p[2]) = tri(a + b) = tri(s0)
+        cauchy_pair(p) = tri(p[1] + p[2]) + p[2] = tri(s0) + p[2] = tri(s0) + b = tri(s0) + (n - tri(s0)) = n
         witness exist t cart(N, N) st {n = cauchy_pair(t)} from p:
             n = cauchy_pair(p)
-
     by def $injective_fn(cart(N, N), N, cauchy_pair)
     by def $surjective_fn(cart(N, N), N, cauchy_pair)
     by def $bijective_fn(cart(N, N), N, cauchy_pair)
-
     claim:
         ? $exist_bijection(cart(N, N), N)
         witness $exist_bijection(cart(N, N), N) from cauchy_pair
