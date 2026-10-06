@@ -1,12 +1,18 @@
-# Before: this used the removed $fn_eq predicate.
-# Ordinary equality and checked fn_extension preserve the original theorem.
+# Checked function extensionality with explicit callback values.
+# The two premises define the same functions as the former inline lambdas.
 thm direct_anonymous_function_body_equality:
-    ? forall g fn(x R) R:
-        fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
-    by fn_extension:
-        ? fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
+    ? forall g, left_fn, right_fn fn(x R) R:
         forall y R:
-            fn(x R) R {-1 * 1 * g(x)}(y) = -1 * 1 * g(y)
-            -1 * 1 * g(y) = -1 * g(y)
-            fn(x R) R {-1 * g(x)}(y) = -1 * g(y)
-            fn(x R) R {-1 * 1 * g(x)}(y) = fn(x R) R {-1 * g(x)}(y)
+            left_fn(y) = -1 * 1 * g(y)
+            right_fn(y) = -1 * g(y)
+        =>:
+            left_fn = right_fn
+    by fn_extension:
+        ? left_fn = right_fn
+        forall y R:
+            left_fn(y) = -1 * 1 * g(y) = -1 * g(y) = right_fn(y)
+            left_fn(y) = right_fn(y)
+have g fn(x R) R
+have fn left_fn(x R) R = -1 * 1 * g(x)
+have fn right_fn(x R) R = -1 * g(x)
+by thm direct_anonymous_function_body_equality(g, left_fn, right_fn) => left_fn = right_fn

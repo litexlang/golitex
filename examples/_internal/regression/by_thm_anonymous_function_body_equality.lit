@@ -4,33 +4,37 @@ thm apply_equal_argument:
         =>:
             F(a) = F(b)
 abstract_prop is_probe_integrable(f)
+# Checked function extensionality with explicit callback values.
+# The two premises define the same functions as the former inline lambdas.
 thm direct_anonymous_function_body_equality:
-    ? forall g fn(x R) R:
-        fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
-    by fn_extension:
-        ? fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
+    ? forall g, left_fn, right_fn fn(x R) R:
         forall y R:
-            fn(x R) R {-1 * 1 * g(x)}(y) = -1 * 1 * g(y)
-            -1 * 1 * g(y) = -1 * g(y)
-            fn(x R) R {-1 * g(x)}(y) = -1 * g(y)
-            fn(x R) R {-1 * 1 * g(x)}(y) = fn(x R) R {-1 * g(x)}(y)
+            left_fn(y) = -1 * 1 * g(y)
+            right_fn(y) = -1 * g(y)
+        =>:
+            left_fn = right_fn
+    by fn_extension:
+        ? left_fn = right_fn
+        forall y R:
+            left_fn(y) = -1 * 1 * g(y) = -1 * g(y) = right_fn(y)
+            left_fn(y) = right_fn(y)
 
 claim:
-    ? forall probe_integral fn(f fn(x R) R) R,f,g fn(x R) R:
-        probe_integral(fn(x R) R {-1*g(x)}) = -1*probe_integral(g)
-        probe_integral(fn(x R) R {f(x)+-1*g(x)}) = probe_integral(f)+probe_integral(fn(x R) R {-1*g(x)})
+    ? forall probe_integral fn(f fn(x R) R) R, f, g, negative_g, difference_fn, additive_fn fn(x R) R:
+        forall x R:
+            negative_g(x) = -1*g(x)
+            difference_fn(x) = f(x)-g(x)
+            additive_fn(x) = f(x)+-1*g(x)
+        probe_integral(negative_g) = -1*probe_integral(g)
+        probe_integral(additive_fn) = probe_integral(f)+probe_integral(negative_g)
         $is_probe_integrable(f)
         $is_probe_integrable(g)
         =>:
-            probe_integral(fn(x R) R {f(x)-g(x)}) = probe_integral(f)-probe_integral(g)
+            probe_integral(difference_fn) = probe_integral(f)-probe_integral(g)
     by fn_extension:
-        ? fn(x R)R{f(x)-g(x)} = fn(x R)R{f(x)+-1*g(x)}
+        ? difference_fn = additive_fn
         forall z R:
-            fn(x R)R{f(x)-g(x)}(z) = f(z)-g(z)
-            f(z)-g(z) = f(z)+-1*g(z)
-            fn(x R)R{f(x)+-1*g(x)}(z) = f(z)+-1*g(z)
-            fn(x R)R{f(x)-g(x)}(z) = fn(x R)R{f(x)+-1*g(x)}(z)
-    release thm apply_equal_argument(fn(x R)R,R,probe_integral,fn(x R)R{f(x)-g(x)},fn(x R)R{f(x)+-1*g(x)})
-    probe_integral(f)+probe_integral(fn(x R)R{-1*g(x)}) = probe_integral(f)+-1*probe_integral(g)
-    probe_integral(f)+-1*probe_integral(g) = probe_integral(f)-probe_integral(g)
-    probe_integral(fn(x R)R{f(x)-g(x)}) = probe_integral(fn(x R)R{f(x)+-1*g(x)}) = probe_integral(f)+probe_integral(fn(x R)R{-1*g(x)}) = probe_integral(f)+-1*probe_integral(g) = probe_integral(f)-probe_integral(g)
+            difference_fn(z) = f(z)-g(z) = f(z)+-1*g(z) = additive_fn(z)
+            difference_fn(z) = additive_fn(z)
+    by thm apply_equal_argument(fn(x R)R, R, probe_integral, difference_fn, additive_fn) => probe_integral(difference_fn) = probe_integral(additive_fn)
+    probe_integral(difference_fn) = probe_integral(additive_fn) = probe_integral(f)+probe_integral(negative_g) = probe_integral(f)+-1*probe_integral(g) = probe_integral(f)-probe_integral(g)

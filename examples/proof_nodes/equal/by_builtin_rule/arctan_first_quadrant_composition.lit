@@ -1,0 +1,17 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/arctan_first_quadrant_composition.lit
+
+# Complete before source(s), historically rejected:
+# forall x R:
+#     0<x
+#     x<pi/2
+#     =>:
+#         arctan(tan(x))=x
+#
+# Before: the same source was rejected; 0<x was not consumed as a stronger principal lower bound.
+# Now: retain the actual stronger bound and original tan WD.
+
+forall x R:
+    0<x
+    x<pi/2
+    =>:
+        arctan(tan(x))=x

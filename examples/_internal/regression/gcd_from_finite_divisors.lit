@@ -1,6 +1,8 @@
 # This teaching example constructs gcd from the largest positive common divisor.
 # Ordinary user code should call the native `gcd(a, b)` object directly.
 
+have fn common_divisors(a, b Z) power_set(N+) = {d N+: $dvd(a, d), $dvd(b, d)}
+
 thm positive_divisor_le_abs:
     ? forall d N+, a Z:
         $dvd(a, d)
@@ -35,11 +37,20 @@ thm common_divisor_set_is_finite_and_nonempty:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
-            $is_finite_set({d N+: $dvd(a, d), $dvd(b, d)})
-            $is_nonempty_set({d N+: $dvd(a, d), $dvd(b, d)})
-    have c set = {d N+: $dvd(a, d), $dvd(b, d)}
-    forall d c:
-        d $in N
+            $is_finite_set(common_divisors(a, b))
+            $is_nonempty_set(common_divisors(a, b))
+    common_divisors(a, b) = {d N+: $dvd(a, d), $dvd(b, d)}
+    have c power_set(N+) = {d N+: $dvd(a, d), $dvd(b, d)}
+    by extension:
+        ? c = common_divisors(a, b)
+        forall d c:
+            d $in common_divisors(a, b)
+        forall d common_divisors(a, b):
+            d $in c
+    claim:
+        ? forall d c:
+            d $in N
+        d $in N+
     by def c $subset N
     c $in power_set(N)
     claim:
@@ -78,12 +89,21 @@ thm common_divisor_set_is_finite_and_nonempty:
         witness exist k Z st {b = 1 * k} from b:
             b = 1 * b
         by def $dvd(b, 1)
-        release thm set_builder_member(1, {d N+: $dvd(a, d), $dvd(b, d)})
         1 $in c
-    $is_finite_set({d N+: $dvd(a, d), $dvd(b, d)})
-    $is_nonempty_set({d N+: $dvd(a, d), $dvd(b, d)})
+    $is_finite_set(common_divisors(a, b))
+    $is_nonempty_set(common_divisors(a, b))
 
-have fn gcd_from_finite_divisors(a, b Z: a != 0 or b != 0) N = finite_set_max({d N+: $dvd(a, d), $dvd(b, d)})
+thm maximum_common_divisor_is_natural:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            finite_set_max(common_divisors(a, b)) $in N
+    release thm common_divisor_set_is_finite_and_nonempty(a, b)
+    common_divisors(a, b) = {d N+: $dvd(a, d), $dvd(b, d)}
+    finite_set_max(common_divisors(a, b)) $in common_divisors(a, b)
+    finite_set_max(common_divisors(a, b)) $in N+
+
+have fn gcd_from_finite_divisors(a, b Z: a != 0 or b != 0) N = finite_set_max(common_divisors(a, b))
 
 thm gcd_from_finite_divisors_eq_native:
     ? forall a, b Z:
@@ -91,14 +111,15 @@ thm gcd_from_finite_divisors_eq_native:
         =>:
             gcd_from_finite_divisors(a, b) = gcd(a, b)
     release thm common_divisor_set_is_finite_and_nonempty(a, b)
-    by def {d N+: $dvd(a, d), $dvd(b, d)} $subset R
-    gcd_from_finite_divisors(a, b) = finite_set_max({d N+: $dvd(a, d), $dvd(b, d)})
-    finite_set_max({d N+: $dvd(a, d), $dvd(b, d)}) $in {d N+: $dvd(a, d), $dvd(b, d)}
+    common_divisors(a, b) = {d N+: $dvd(a, d), $dvd(b, d)}
+    by def common_divisors(a, b) $subset R
+    gcd_from_finite_divisors(a, b) = finite_set_max(common_divisors(a, b))
+    finite_set_max(common_divisors(a, b)) $in common_divisors(a, b)
     gcd_from_finite_divisors(a, b) <= gcd(a, b)
     gcd(a, b) $in N+
     a % gcd(a, b) = 0
     b % gcd(a, b) = 0
     by def $dvd(a, gcd(a, b))
     by def $dvd(b, gcd(a, b))
-    release thm set_builder_member(gcd(a, b), {d N+: $dvd(a, d), $dvd(b, d)})
-    gcd(a, b) <= finite_set_max({d N+: $dvd(a, d), $dvd(b, d)})
+    gcd(a, b) $in common_divisors(a, b)
+    gcd(a, b) <= finite_set_max(common_divisors(a, b))

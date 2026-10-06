@@ -314,9 +314,22 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         })
         .into();
-        let Some(lo_proof) = self.verify_trig_interval_bound(
+        let mut lo_proof = self.verify_trig_interval_bound(
             &lo, TrigIntervalBoundSide::Lower, verify_state.clone(),
-        )? else { return Ok(None); };
+        )?;
+        // The first quadrant is contained in arctan's principal interval.
+        // Keep the actual stronger 0<x fact instead of fabricating -pi/2<x.
+        // This fixed containment does not introduce general bound search.
+        if lo_proof.is_none() && lower.ir() == negative_half_pi().ir() {
+            let positive: Fact = LessFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: zero_obj(), right: value.clone(), line_file: fact.line_file.clone(),
+            }.into();
+            lo_proof = self.verify_trig_interval_bound(
+                &positive, TrigIntervalBoundSide::Lower, verify_state.clone(),
+            )?;
+        }
+        let Some(lo_proof) = lo_proof else { return Ok(None); };
         let Some(hi_proof) = self.verify_trig_interval_bound(
             &hi, TrigIntervalBoundSide::Upper, verify_state,
         )? else { return Ok(None); };

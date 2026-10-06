@@ -170,7 +170,7 @@ thm cantor:
                 not a $in f(a)
         by contra:
             ? not a $in f(a)
-            a $in {x X: not x $in f(x)}
+            a $in D
             impossible a $in f(a)
 
     claim:
@@ -187,6 +187,7 @@ thm cantor:
     witness exist E power_set(X) st {$has_no_preimage(X, f, E)} from D
 
 have fn singleton(n N) power_set(N) = {n}
+release thm cantor(N, singleton)
 obtain missing from exist S power_set(N) st {$has_no_preimage(N, singleton, S)}
 missing != singleton(0)
 ```

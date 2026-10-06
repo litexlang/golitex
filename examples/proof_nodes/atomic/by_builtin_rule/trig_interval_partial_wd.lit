@@ -1,0 +1,61 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/trig_interval_partial_wd.lit
+
+# Complete before source(s), historically rejected:
+# forall a,b R:
+#     -pi/2<a
+#     b<pi/2
+#     a<b
+#     =>:
+#         tan(a)<tan(b)
+#
+# forall a,b R:
+#     -pi/2<a
+#     b<pi/2
+#     a<=b
+#     =>:
+#         tan(a)<=tan(b)
+#
+# forall a,b R:
+#     0<a
+#     b<pi
+#     a<b
+#     =>:
+#         cot(b)<cot(a)
+#
+# forall a,b R:
+#     0<a
+#     b<pi
+#     a<=b
+#     =>:
+#         cot(b)<=cot(a)
+#
+# Before: the same four sources failed denominator well-definedness.
+# Now: the nonzero leaf consumes at most two actual known order edges.
+
+forall a,b R:
+    -pi/2<a
+    b<pi/2
+    a<b
+    =>:
+        tan(a)<tan(b)
+
+forall a,b R:
+    -pi/2<a
+    b<pi/2
+    a<=b
+    =>:
+        tan(a)<=tan(b)
+
+forall a,b R:
+    0<a
+    b<pi
+    a<b
+    =>:
+        cot(b)<cot(a)
+
+forall a,b R:
+    0<a
+    b<pi
+    a<=b
+    =>:
+        cot(b)<=cot(a)

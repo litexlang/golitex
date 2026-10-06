@@ -1,5 +1,10 @@
 # Local example migration repairs — 2026-10-02
 
+> Historical audit: these code fences preserve dated verifier observations,
+> including rejected inputs and excerpts that depend on their original context.
+> They are evidence, not current standalone tutorial examples. The maintained
+> executable language examples are in the Manual, README, and examples corpus.
+
 Follow-up status: [conversation issue recheck — 2026-10-03](conversation-issue-recheck-2026-10-03.md).
 This report retains the earlier repair checkpoints; the follow-up distinguishes
 new recoveries, checked source migrations, surviving gaps, and the current build limitation.
@@ -10,6 +15,7 @@ AST fields, Runtime/Env state contracts, or broad proof-search policy changed.
 
 ## Primary tracer and completed local repairs
 
+<!-- litex:skip-test -->
 ```litex
 let bad_max = finite_set_max({i})  # baseline accepted; now rejects
 let good_max = finite_set_max({1, 2})  # still accepts
@@ -23,6 +29,7 @@ Failed definitions do not publish a binding; empty and infinite sets still rejec
 
 The finite fold now checks the declared unary iterand domain and its predicates:
 
+<!-- litex:skip-test -->
 ```litex
 let bad_domain = finite_set_reduce({0, 1}, fn(x {2}) Z {x}, fn(a, b Z) Z {a + b}, 0)
 let bad_predicate = finite_set_reduce({0, 1}, fn(x Z: x > 0) Z {x}, fn(a, b Z) Z {a + b}, 0)
@@ -63,6 +70,7 @@ debt was stale. All 10 configs parse, but one project has a later WD issue below
 
 Qualified templates now use the existing AtomicName elaborator:
 
+<!-- litex:skip-test -->
 ```litex
 \local::copied<R> = R
 \Library::defs::copied<N> = N
@@ -127,6 +135,7 @@ nonzero, empty/nested cart controls and sqrt nonzero.
 
 ### 1. False order goal overflow: no longer reproduces after follow-up rebuild
 
+<!-- litex:skip-test -->
 ```litex
 0 > 0
 let bad = finite_set_reduce({0, 1}, fn(x Z: x > 0) Z {x}, fn(a, b Z) Z {a + b}, 0)
@@ -158,6 +167,7 @@ is not listed as a current failure or attributed to this task's repairs.
 
 ### 2. Qualified object WD and composition
 
+<!-- litex:skip-test -->
 ```litex
 gf::main::a + gf::main::a = gf::main2::b
 gf::main::pair[1] = 3
@@ -173,6 +183,7 @@ rendered-string alias or weakened domain would not close the identity contract.
 
 ### 3. Finite fold AC proof/evidence production
 
+<!-- litex:skip-test -->
 ```litex
 let r = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0)
 ```
@@ -182,6 +193,7 @@ contract requires commutativity and associativity. A local candidate generated
 and checked the two forall laws with existing proof types, but the verifier
 also rejected the legitimate addition associativity goal:
 
+<!-- litex:skip-test -->
 ```litex
 forall a, b, c Z:
     fn(x, y Z) Z {x + y}(fn(x, y Z) Z {x + y}(a, b), c) = fn(x, y Z) Z {x + y}(a, fn(x, y Z) Z {x + y}(b, c))
@@ -195,6 +207,7 @@ its separate noncommutative contract.
 
 The follow-up also confirms admission of a visibly order-sensitive operation:
 
+<!-- litex:skip-test -->
 ```litex
 let r = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {2*a + b}, 0)
 ```
@@ -207,6 +220,7 @@ order-dependent left-fold result.
 
 ### 4. Symbolic logarithm WD composition
 
+<!-- litex:skip-test -->
 ```litex
 have x N
 2^x $in R+
@@ -220,6 +234,7 @@ be traced before changing search policy. Cause is not yet established.
 
 ### 5. Real-bound theorem predicate ownership
 
+<!-- litex:skip-test -->
 ```litex
 release thm real_least_upper_bound_exists({0}, 1)
 ```
@@ -233,6 +248,7 @@ mathematical or proof contract.
 
 ### 6. Negated-existence route (K005)
 
+<!-- litex:skip-test -->
 ```litex
 forall x {0}:
     x != 1
@@ -247,6 +263,7 @@ silently added.
 
 ### 7. Struct alias construction/unfolding, plus an invalid older example
 
+<!-- litex:skip-test -->
 ```litex
 struct Triple<X set>:
     first X
@@ -271,6 +288,7 @@ in these concurrent replay controls. `let_template_struct_aliases` now returns
 its explicit failure in about 0.09 seconds; it no longer timed out in this run.
 `sqrt_quotient` and `sqrt(2) $in R*` now pass.
 
+<!-- litex:skip-test -->
 ```litex
 by contra:
     ? i != 0

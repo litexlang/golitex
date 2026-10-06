@@ -1,5 +1,10 @@
 # Statement semantics cross-check (2026-10-02)
 
+> Historical audit: these code fences preserve dated verifier observations,
+> including rejected inputs and excerpts that depend on their original context.
+> They are evidence, not current standalone tutorial examples. The maintained
+> executable language examples are in the Manual, README, and examples corpus.
+
 This is a focused review of the 50 reachable `Stmt` leaves, not a proof of soundness for every verifier rule. I compared the current [statement inventory](../../src/ast/stmt.rs), [Manual](../Manual.md), the [statement regression suite](../../examples/test_statements/README.md), and legacy commit `8ebce3f7a4a4c61250063c9eb9e69c9fb3cfa735` (its old `src/`, excluding `src/new_pipeline`). The working tree was changing during review. Runtime observations below use a copied release binary with SHA-256 `83aab093ead837bbe4710db5690d06c7ededac54937308fff1a30c207e3c3514`, invoked with `-strict -f` and checked for process status, JSON `success`, `session_error`, and per-statement outcomes. A subsequent edit requires a new replay.
 
 The [suite runner](../../examples/test_statements/run.py) exercised 361 checks over all 50 leaves with this binary: 360 matched their current expectations. The one mismatch, K004 (recursive call under addition), **now succeeds** although its gap record expects failure; that is a stale expectation after concurrent implementation work, not a new rejection. The other 11 gap reproductions matched their recorded failing behavior. The [issue index](../../examples/test_statements/bugs/README.md) has exact fixtures and controls for K001–K010, including both variants of K007 and K009.
@@ -15,6 +20,7 @@ binary checkpoint above and are retained as historical evidence.
 
 `by def` does **not** simply ask the general verifier to accept its target. [Its executor](../../src/execute/execute_by_stmt/exec_by_def_stmt.rs) calls `search_atomic_except_equality_fact_proof_by_definition` even if the fact is already known, and then stores the fact only after that route succeeds. The current binary accepts:
 
+<!-- litex:skip-test -->
 ```litex
 prop is_zero(x R):
     x = 0

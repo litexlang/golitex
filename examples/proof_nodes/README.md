@@ -968,4 +968,13 @@ Real trigonometric interval signs and monotonicity are demonstrated in
 formerly rejected source as comments, active current code and a focused command;
 the accompanying Rust suite executes nearest false and partial-WD boundaries.
 
+The remaining interval examples are maintained in
+`atomic/by_builtin_rule/trig_interval_partial_wd.lit` (four interval-derived
+tangent/cotangent WD consumers),
+`equal/by_builtin_rule/arctan_first_quadrant_composition.lit` (the actual
+stronger lower-bound source), and
+`equal/by_builtin_rule/trig_interval_quotient_authors.lit` (explicit quotient
+expansions and transported subtraction bounds). Focused tests preserve order
+citations, denominator guards, poles, incorrect formulas and failed-scope reuse.
+
 The factorial-as-product author tracer now reuses one checked identity-function object through induction, then verifies the original literal-function endpoint. Its induction result still needs explicit instantiation; the redundant echo after theorem release was removed. This preserves the current local alpha/equality policy and performs no global graph-endpoint scan. The relevant `common_obj_relations` consumer exercises that current author.

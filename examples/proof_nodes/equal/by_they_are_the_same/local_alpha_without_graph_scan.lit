@@ -10,7 +10,7 @@
 # Now: directly submitted binders and nested function arguments still compare.
 fn(x R) R = fn(y R) R
 have f fn(p fn(x R) R, q fn(y R) R) R
-f(fn(x R) R, fn(y R) R) = f(fn(u R) R, fn(v R) R)
+f(fn(x R) R{x}, fn(y R) R{y}) = f(fn(u R) R{u}, fn(v R) R{v})
 
 # Exact stored paths remain available without alpha discovery.
 have n R

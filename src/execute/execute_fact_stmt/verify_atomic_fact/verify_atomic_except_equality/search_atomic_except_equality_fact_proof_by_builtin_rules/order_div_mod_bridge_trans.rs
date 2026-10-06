@@ -177,7 +177,7 @@ impl Runtime {
 
     // Chained order through a middle term with at least one strict premise proves `a < c`.
     // Example: known `x <= y` and `y < z` prove `x < z`.
-    fn less_transitivity_proof(
+    pub(super) fn less_transitivity_proof(
         &self,
         fact: &LessFact,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {

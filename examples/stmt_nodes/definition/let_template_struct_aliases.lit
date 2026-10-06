@@ -25,7 +25,8 @@ chosen = (1, 2, 3)
 # `let` stores a transparent equality but does not create carrier evidence.
 # Introduce a typed object only when later mathematics needs struct fields.
 have chosen_struct &Triple<R> = chosen
-chosen_struct.first = 1
+release struct def chosen_struct
+chosen_struct.first = chosen_struct(1) = chosen(1) = (1, 2, 3)(1) = 1
 
 # These remain outside the current field-access boundary because neither let
 # name owns a direct struct carrier:
@@ -46,9 +47,12 @@ struct Space:
     scalars &ScalarOps
     dimension N
 
-thm callable_struct_field_alias:
-    ? forall space &Space, x, y R:
-        space.scalars.add(x, y) = space.scalars.add(x, y)
-    release struct def space.scalars
-    let scalar_add = space.scalars.add
-    scalar_add(x, y) = space.scalars.add(x, y)
+have fn add(x, y R) R = x + y
+have fn mul(x, y R) R = x * y
+have operations &ScalarOps = (add, mul)
+have space &Space = (operations, 2)
+release struct def space.scalars
+have x, y R
+let scalar_add = space.scalars.add
+have callable_add fn(a, b R) R = scalar_add
+callable_add(x, y) = space.scalars.add(x, y)

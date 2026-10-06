@@ -1,0 +1,17 @@
+# Custom predicate for IMO 1960 Problem 6, part (a).
+#
+# In the axial section of the cone, base_r and height are the half-base and
+# altitude of a right triangle, slant is its hypotenuse, and the inscribed
+# sphere becomes the incircle of radius r.  The two geometric section facts
+# are therefore Pythagoras and area = inradius * semiperimeter.
+# Crucially, the derived cone identity is NOT assumed here.
+prop cone_sphere_cylinder_part_a(r, base_r, height, slant, v1, v2, x R):
+    r > 0
+    base_r > r
+    height > 0
+    slant > 0
+    base_r = x * r
+    slant^2 = height^2 + base_r^2
+    base_r * height = r * (base_r + slant)
+    3 * v1 = base_r^2 * height
+    v2 = 2 * r^3

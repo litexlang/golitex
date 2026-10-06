@@ -1,11 +1,8 @@
-# Stmt: Definition.LetObjStmt transparent callable alias
-# Run: litex -f examples/stmt_nodes/definition/let_callable_alias.lit
-#
-# When: `let g = f` after `have fn f(...) = ...`, then apply `g(...)`.
-# After: `g` reduces to `f`; `g(1) = 2` verifies via the body of `f`.
-# Example: have fn f(x R) R = x + 1; let g = f; g(1) = 2
-
+# Stmt: Definition.LetObjStmt callable value with an explicit carrier
+# Gate: target/release/litex -strict -f examples/stmt_nodes/definition/let_callable_alias.lit
+# A let abbreviation records equality. A typed binding supplies the callable interface.
 have fn f(x R) R = x + 1
 let g = f
-g(1) = 2
-fn_range(g) = fn_range(f)
+have callable fn(x R) R = g
+callable(1) = f(1) = 2
+fn_range(callable) = fn_range(f)

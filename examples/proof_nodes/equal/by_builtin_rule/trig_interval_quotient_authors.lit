@@ -1,0 +1,206 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/trig_interval_quotient_authors.lit
+
+# Complete before source(s), historically rejected:
+# claim:
+#     ? forall x R:
+#         -pi/2<x
+#         x<pi/2
+#         =>:
+#             0<cos(x)
+#     cos(x)=sin(pi/2-x)
+#     0<pi/2-x
+#     (-pi)/2=pi/2-pi
+#     pi/2-pi<x
+#     x>pi/2-pi
+#     pi/2-x<pi/2-(pi/2-pi)
+#     pi/2-(pi/2-pi)=pi
+#     pi/2-x<pi
+#     0<sin(pi/2-x)
+#     0<cos(x)
+# 
+# claim:
+#     ? forall a,b R:
+#         -pi/2<a
+#         b<pi/2
+#         a<b
+#         cos(a)!=0
+#         cos(b)!=0
+#         =>:
+#             tan(a)<tan(b)
+#     a<pi/2
+#     -pi/2<b
+#     0<cos(a)
+#     0<cos(b)
+#     0<cos(a)*cos(b)
+#     0<b-a
+#     b-a<pi/2-a
+#     a>-pi/2
+#     pi/2-a<pi/2-(-pi/2)
+#     pi/2-(-pi/2)=pi
+#     b-a<pi
+#     0<sin(b-a)
+#     tan(b)-tan(a)=sin(b-a)/(cos(a)*cos(b))
+#     0<sin(b-a)/(cos(a)*cos(b))
+#     0<tan(b)-tan(a)
+#     tan(a)<tan(b)
+#
+# claim:
+#     ? forall a,b R:
+#         0<a
+#         b<pi
+#         a<b
+#         sin(a)!=0
+#         sin(b)!=0
+#         =>:
+#             cot(b)<cot(a)
+#     0<b
+#     a<pi
+#     0<sin(a)
+#     0<sin(b)
+#     0<sin(a)*sin(b)
+#     0<b-a
+#     a>0
+#     b-a<b-0
+#     b-0=b
+#     b-a<pi
+#     0<sin(b-a)
+#     cot(a)-cot(b)=sin(b-a)/(sin(a)*sin(b))
+#     0<sin(b-a)/(sin(a)*sin(b))
+#     0<cot(a)-cot(b)
+#     cot(b)<cot(a)
+#
+# claim:
+#     ? forall x R:
+#         -pi/2<x
+#         x<pi/2
+#         =>:
+#             0<cos(x)
+#     cos(x)=sin(pi/2-x)
+#     0<pi/2-x
+#     (-pi)/2=pi/2-pi
+#     pi/2-pi<x
+#     x>pi/2-pi
+#     pi/2-x<pi/2-(pi/2-pi)
+#     pi/2-(pi/2-pi)=pi
+#     pi/2-x<pi
+#     0<sin(pi/2-x)
+#     0<cos(x)
+# 
+# claim:
+#     ? forall a,b R:
+#         -pi/2<a
+#         b<pi/2
+#         a<b
+#         cos(a)!=0
+#         cos(b)!=0
+#         =>:
+#             tan(a)<tan(b)
+#     a<pi/2
+#     -pi/2<b
+#     0<cos(a)
+#     0<cos(b)
+#     0<cos(a)*cos(b)
+#     0<b-a
+#     b-a<pi/2-a
+#     a>-pi/2
+#     pi/2-a<pi/2-(-pi/2)
+#     pi/2-(-pi/2)=pi
+#     b-a<pi
+#     0<sin(b-a)
+#     tan(b)=sin(b)/cos(b)
+#     tan(a)=sin(a)/cos(a)
+#     tan(b)-tan(a)=sin(b)/cos(b)-sin(a)/cos(a)
+#     sin(b)/cos(b)-sin(a)/cos(a)=(sin(b)*cos(a)-sin(a)*cos(b))/(cos(b)*cos(a))
+#     sin(b-a)=sin(b)*cos(a)-cos(b)*sin(a)
+#     sin(b)*cos(a)-sin(a)*cos(b)=sin(b-a)
+#     cos(b)*cos(a)=cos(a)*cos(b)
+#     tan(b)-tan(a)=sin(b-a)/(cos(a)*cos(b))
+#     0<sin(b-a)/(cos(a)*cos(b))
+#     0<tan(b)-tan(a)
+#     tan(a)<tan(b)
+#
+# Before: the tangent proof stopped at the common-denominator identity; the first cotangent author omitted b-a<b.
+# Current explicit authors publish the quotient expansions and equality-transport endpoint.
+# Complete historical failed sources are retained in the migration proof journal.
+
+claim:
+    ? forall x R:
+        -pi/2<x
+        x<pi/2
+        =>:
+            0<cos(x)
+    cos(x)=sin(pi/2-x)
+    0<pi/2-x
+    (-pi)/2=pi/2-pi
+    pi/2-pi<x
+    x>pi/2-pi
+    pi/2-x<pi/2-(pi/2-pi)
+    pi/2-(pi/2-pi)=pi
+    pi/2-x<pi
+    0<sin(pi/2-x)
+    0<cos(x)
+
+claim:
+    ? forall a,b R:
+        -pi/2<a
+        b<pi/2
+        a<b
+        cos(a)!=0
+        cos(b)!=0
+        =>:
+            tan(a)<tan(b)
+    a<pi/2
+    -pi/2<b
+    0<cos(a)
+    0<cos(b)
+    0<cos(a)*cos(b)
+    0<b-a
+    b-a<pi/2-a
+    a>-pi/2
+    pi/2-a<pi/2-(-pi/2)
+    pi/2-(-pi/2)=pi
+    b-a<pi
+    0<sin(b-a)
+    tan(b)=sin(b)/cos(b)
+    tan(a)=sin(a)/cos(a)
+    tan(b)-tan(a)=sin(b)/cos(b)-sin(a)/cos(a)
+    sin(b)/cos(b)-sin(a)/cos(a)=(sin(b)*cos(a)-sin(a)*cos(b))/(cos(b)*cos(a))
+    sin(b-a)=sin(b)*cos(a)-cos(b)*sin(a)
+    sin(b)*cos(a)-sin(a)*cos(b)=sin(b-a)
+    cos(b)*cos(a)=cos(a)*cos(b)
+    tan(b)-tan(a)=sin(b-a)/(cos(a)*cos(b))
+    0<sin(b-a)/(cos(a)*cos(b))
+    0<tan(b)-tan(a)
+    tan(a)<tan(b)
+
+claim:
+    ? forall a,b R:
+        0<a
+        b<pi
+        a<b
+        sin(a)!=0
+        sin(b)!=0
+        =>:
+            cot(b)<cot(a)
+    0<b
+    a<pi
+    0<sin(a)
+    0<sin(b)
+    0<sin(a)*sin(b)
+    0<b-a
+    a>0
+    b-a<b-0
+    b-0=b
+    b-a<b
+    b-a<pi
+    0<sin(b-a)
+    cot(a)=cos(a)/sin(a)
+    cot(b)=cos(b)/sin(b)
+    cot(a)-cot(b)=cos(a)/sin(a)-cos(b)/sin(b)
+    cos(a)/sin(a)-cos(b)/sin(b)=(cos(a)*sin(b)-cos(b)*sin(a))/(sin(a)*sin(b))
+    sin(b-a)=sin(b)*cos(a)-cos(b)*sin(a)
+    cos(a)*sin(b)-cos(b)*sin(a)=sin(b-a)
+    cot(a)-cot(b)=sin(b-a)/(sin(a)*sin(b))
+    0<sin(b-a)/(sin(a)*sin(b))
+    0<cot(a)-cot(b)
+    cot(b)<cot(a)

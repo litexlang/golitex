@@ -1,6 +1,6 @@
 use super::by_builtin_strategy_result::RationalWithNonzeroPremisesStrategySingleStep;
 use crate::ast::fact::{EqualFact, NotEqualFact};
-use crate::ast::obj::{Number, Obj, Literal};
+use crate::ast::obj::{ArithmeticOperator, Number, Obj, Literal};
 use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::rational_expression::{
     algebraic_normalization_nonzero_requirements, objs_equal_by_rational_expression_evaluation,
@@ -18,8 +18,10 @@ impl Runtime {
         if !objs_equal_by_rational_expression_evaluation(&fact.left, &fact.right) {
             return Ok(None);
         }
-        let required_objects =
-            algebraic_normalization_nonzero_requirements(&fact.left, &fact.right);
+        let mut required_objects = Vec::new();
+        for denominator in algebraic_normalization_nonzero_requirements(&fact.left, &fact.right) {
+            collect_nonzero_factors(&denominator, &mut required_objects);
+        }
         if required_objects.is_empty() {
             // Zero-premise identities belong to Calculation::Rational.
             return Ok(None);
@@ -52,3 +54,20 @@ impl Runtime {
         }))
     }
 }
+
+// Nonzero scalar products are equivalent to nonzero factors. Descend only
+// through the denominator's strictly smaller Mul children; parent WD retains
+// nested domains and carriers. Do not re-enter a broader product strategy.
+// Example: b!=0,d!=0 suffice for the denominator b*d in a/b-c/d.
+fn collect_nonzero_factors(object: &Obj, factors: &mut Vec<Obj>) {
+    if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(product)) = object {
+        collect_nonzero_factors(&product.left, factors);
+        collect_nonzero_factors(&product.right, factors);
+    } else if !factors.iter().any(|factor| factor.ir() == object.ir()) {
+        factors.push(object.clone());
+    }
+}
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/trig_final_examples/tests.rs"]
+mod trig_final_examples_tests;

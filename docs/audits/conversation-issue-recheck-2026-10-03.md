@@ -1,5 +1,10 @@
 # Conversation issue recheck — 2026-10-03
 
+> Historical audit: these code fences preserve dated verifier observations,
+> including rejected inputs and excerpts that depend on their original context.
+> They are evidence, not current standalone tutorial examples. The maintained
+> executable language examples are in the Manual, README, and examples corpus.
+
 > Historical checkpoint. The later [current-source status update](conversation-issue-status-update-2026-10-03.md)
 > supersedes its present-tense status: release now builds, but only 81/99 owning Obj files and
 > 356/377 Stmt checks pass; imaginary contradiction remains unstable. The evidence below is retained.
@@ -92,6 +97,7 @@ Unchanged source fails WD at `a in C`, `is_tuple(pair)` or
 `is_cart(ProductSet)`. Explicit imported-definition release supplies a checked
 authoring route:
 
+<!-- litex:skip-test -->
 ```litex
 release obj def gf::main::a
 release obj def gf::main2::b
@@ -116,6 +122,7 @@ These four probes do not close every other qualified Obj gap automatically.
 Direct and positivity-only variants fail at the outer power's
 `log(2,2^x) in Z` requirement. This checked integer-value bridge passes:
 
+<!-- litex:skip-test -->
 ```litex
 have x N
 log(2, 2^x) = x
@@ -140,6 +147,7 @@ intermediate tuple equality.
 
 ### Imaginary-number contradiction is still unstable
 
+<!-- litex:skip-test -->
 ```litex
 by contra:
     ? i != 0
@@ -159,6 +167,7 @@ consistent fresh serial proofs and false-goal boundaries.
 
 ### Real-bound predicates are still undefined
 
+<!-- litex:skip-test -->
 ```litex
 release thm real_least_upper_bound_exists({0}, 1)
 release thm real_greatest_lower_bound_exists({0}, 0)
@@ -173,6 +182,7 @@ are not acceptance.
 
 ### Surjection-size and choice-definition consumers still reject
 
+<!-- litex:skip-test -->
 ```litex
 have A set = {1, 2}
 have B set = {1}
@@ -185,6 +195,7 @@ The unchanged size example now first fails at `by def`, before cardinality.
 Do not retain the old diagnosis that only the final WD failed. A corrected
 explicit claim/witness probe also failed; no successful repair is claimed.
 
+<!-- litex:skip-test -->
 ```litex
 have fn g_choice(alpha {1}) power_set({1}) = {1}
 have fn f_choice(alpha {1}) {1} = 1
@@ -204,6 +215,7 @@ source or an explicit migration before calling this solved.
 
 ### Struct aliases and tuple-backed field evidence
 
+<!-- litex:skip-test -->
 ```litex
 have chosen_struct &Triple<R> = chosen
 chosen_struct.first = 1
@@ -218,6 +230,7 @@ diagnosing**.
 The later single-field declaration in the same old fixture has a separate
 boundary:
 
+<!-- litex:skip-test -->
 ```litex
 struct ScalarOps:
     add fn(x, y R) R

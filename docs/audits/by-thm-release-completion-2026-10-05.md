@@ -1,5 +1,10 @@
 # Complete ordinary theorem-release spelling migration
 
+> Historical audit: these code fences preserve dated verifier observations,
+> including rejected inputs and excerpts that depend on their original context.
+> They are evidence, not current standalone tutorial examples. The maintained
+> executable language examples are in the Manual, README, and examples corpus.
+
 Recorded at 2026-10-05T21:29:43.967199+08:00. This completes the remaining current-authoring `.lit`
 spelling batch after the earlier documentation/examples/geometry migration.
 Only accepted bare theorem-call command tokens changed from `by` to `release`;

@@ -63,8 +63,8 @@ classes still mean more candidate comparisons. The
 [equality README](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md)
 shows the complete call and result structure.
 
-For example, `have p cart(R,R)` now lets `p = (p[1],p[2])` cite the
-Cartesian membership. With `have p cart(R,R) = (a,b)`, `p[1] = a` cites
+For example, `have p cart(R,R)` now lets `p = (p(1),p(2))` cite the
+Cartesian membership. With `have p cart(R,R) = (a,b)`, `p(1) = a` cites
 the stored equality. A tuple-valued function can likewise be projected after
 application WD and one checked body substitution. Known shape supplies tuple
 and index requirements without a user-written membership bridge. This route
@@ -538,12 +538,12 @@ route implicitly.
 
 For integers, the checker also recognizes the two exact singleton intervals:
 `n <= x < n + 1` closes `x = n`, and `n < x <= n + 1` closes
-`x = n + 1`. An exact known pointwise universal packages `$fn_eq(f, g)` only
-when the defined function carriers are alpha-equivalent.
-Once that global function-equality fact is stored, inference stores `f = g` in
-the ordinary equality class, so constructor congruence can also prove facts
-such as `power_set(f) = power_set(g)`. A mere pointwise forall on a proper
-subset of the domain does not trigger this global inference.
+`x = n + 1`. To prove equality of functions with alpha-equivalent complete
+carriers, use `by fn_extension` and establish the pointwise universal on the
+whole domain. The checked result stores ordinary equality `f = g`, which
+constructor congruence can reuse in facts such as `power_set(f) = power_set(g)`.
+Agreement on a proper subset alone does not prove global function equality.
+The former `$fn_eq` and `$fn_eq_in` predicates are removed.
 
 Function metadata has a narrower lookup contract than ordinary equality
 proving. Signatures, bodies, return carriers and finite coordinates use

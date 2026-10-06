@@ -15,6 +15,23 @@ use crate::tokenize::Tokenizer;
 const REFLEXIVE: &str = "thm reflexive:\n    ? forall x R:\n        x = x";
 
 #[test]
+fn named_enumeration_callbacks_keep_definition_and_bijection_obligations() {
+    let mut rt = runtime();
+    let source = include_str!("../../../../examples/stmt_nodes/release_and_expand/builtin_thm/named_enumeration_callbacks.lit");
+    let run = rt.run_litex_code(source).unwrap();
+    assert!(run.success && run.session_error.is_none());
+    let detail = project_stmt_detailed(run.statement_results.last().unwrap(), &rt).stringify();
+    assert!(detail.contains("cite_fact_id"), "named definitions need real citations: {detail}");
+
+    let mut rt = runtime();
+    let before = count_facts(&rt);
+    let source = include_str!("../../../../examples/negative/named_enumeration_callbacks/missing_bijection.lit");
+    let run = rt.run_litex_code(source).unwrap();
+    assert!(!run.success && run.session_error.is_none());
+    assert_eq!(count_facts(&rt), before, "a failed theorem must not publish its result");
+}
+
+#[test]
 fn run_examples_by_thm_strict_selection_tracer() {
     let mut rt = runtime();
     let run = rt.run_litex_code(include_str!("../../../../examples/stmt_nodes/by/by_thm_strict_selection.lit")).unwrap();

@@ -455,10 +455,21 @@ constants have bounded alternate spellings. Angle expressions are untouched.
 
 Tangent/cotangent WD remains separate and prior: the interval-order leaf cannot
 supply a fact after a parent partial-operation check has failed. Tests execute
-the original guarded goals, missing-WD cases, wrong/missing bound/order cases,
+the original guarded goals, interval-derived WD, wrong/missing bound/order cases,
 poles,13typed leaves/actual source IDs/ten languages and real source reuse.
 Dedicated `trig_interval_signs.lit`, `trig_interval_monotonicity.lit` and
 `trig_first_quadrant_sin_cos.lit` are collected by their include_str tests and
 strict release CLI gates.
+
+The principal nonzero leaves now also consume exactly two already known order
+edges. For `-pi/2<a`, `a<=b`, `b<pi/2`, both cosine nonzero obligations retain
+the actual `LessTransitivity` citations; no derived fact is published. Thus
+tangent/cotangent monotonicity can use interval premises without separately
+restating denominator guards. Poles and weak outer endpoints still reject.
+`ArctanTanRightInverse` also accepts the actual stronger `0<x` lower bound of
+the first quadrant. `RationalWithNonzeroPremises` consumes nonzero factors of
+multiplicative denominators by structural descent, so two-fraction differences
+reuse their actual denominator sources. The shared normalizer and search
+permissions are unchanged.
 
 The factorial-as-product author tracer now reuses one checked identity-function object through induction, then verifies the original literal-function endpoint. Its induction result still needs explicit instantiation; the redundant echo after theorem release was removed. This preserves the current local alpha/equality policy and performs no global graph-endpoint scan. The relevant `common_obj_relations` consumer exercises that current author.

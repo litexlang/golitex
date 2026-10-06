@@ -1,5 +1,10 @@
 # Conversation issue status update — 2026-10-03
 
+> Historical audit: these code fences preserve dated verifier observations,
+> including rejected inputs and excerpts that depend on their original context.
+> They are evidence, not current standalone tutorial examples. The maintained
+> executable language examples are in the Manual, README, and examples corpus.
+
 > Follow-up migration checkpoint: bounds certificate signatures, mapping
 > definition publication, checked surjective/choice proofs and the concrete
 > surjection-size example have newer evidence in
@@ -33,6 +38,7 @@
 
 ## 仍有效的修复与可用证明路径
 
+<!-- litex:skip-test -->
 ```litex
 0 > 0                         # 正常拒绝，无栈溢出
 1 > 0                         # 通过
@@ -49,6 +55,7 @@ K005 的现存显式枚举/反证文件在副本和真实工作区都通过。
 
 幂对数原文件仍失败，但相同数学目标的以下显式证明仍通过，无额外假设或 trust：
 
+<!-- litex:skip-test -->
 ```litex
 have x N
 log(2, 2^x) = x
@@ -57,6 +64,7 @@ log(2, 2^x) = x
 
 限定名原文件仍失败，加入以下定义释放后完整文件通过，无 trust：
 
+<!-- litex:skip-test -->
 ```litex
 release obj def gf::main::a
 release obj def gf::main2::b
@@ -74,6 +82,7 @@ gf::main::a + gf::main::a = gf::main2::b
 
 ### 反证结果不稳定
 
+<!-- litex:skip-test -->
 ```litex
 by contra:
     ? i != 0
@@ -87,6 +96,7 @@ by contra:
 
 ### 上下确界谓词注册/接线
 
+<!-- litex:skip-test -->
 ```litex
 release thm real_least_upper_bound_exists({0}, 1)
 release thm real_greatest_lower_bound_exists({0}, 0)
@@ -98,6 +108,7 @@ release thm real_greatest_lower_bound_exists({0}, 0)
 
 ### choice 与满射的定义证明组合
 
+<!-- litex:skip-test -->
 ```litex
 have fn g_choice(alpha {1}) power_set({1}) = {1}
 have fn f_choice(alpha {1}) {1} = 1
@@ -109,6 +120,7 @@ by def $is_choice_function_for({1}, power_set({1}), g_choice, f_choice)
 点态成员事实通过，by def 仍拒绝。choice axiom release 已通过不代表此 consumer 已修复。
 原接口仍是 g:I->S 与 f:I->family_union(S)。
 
+<!-- litex:skip-test -->
 ```litex
 have A set = {1, 2}
 have B set = {1}
@@ -123,6 +135,7 @@ by def $surjective(A, B, f)
 
 ### struct 别名与模板调用整链
 
+<!-- litex:skip-test -->
 ```litex
 let chosen = \triple<R>(1, 2, 3)
 chosen = (1, 2, 3)
@@ -137,6 +150,7 @@ chosen_struct.first = 1
 
 ### 合法无序加法 fold 被拒绝
 
+<!-- litex:skip-test -->
 ```litex
 let r = finite_set_reduce({1,2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0)
 ```
@@ -147,6 +161,7 @@ let r = finite_set_reduce({1,2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0)
 
 ### 递归与归纳的域/载体证明回归
 
+<!-- litex:skip-test -->
 ```litex
 have fn ind_count(n N) N by induc n from 0:
     case n = 0: 0

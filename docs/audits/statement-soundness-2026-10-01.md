@@ -1,5 +1,10 @@
 # Statement soundness audit: confirmed false proofs
 
+> Historical audit: these code fences preserve dated verifier observations,
+> including rejected inputs and excerpts that depend on their original context.
+> They are evidence, not current standalone tutorial examples. The maintained
+> executable language examples are in the Manual, README, and examples corpus.
+
 Status: **confirmed bugs repaired in the current working tree; previously generated proofs still need re-verification.** The observations and proposed behavior below describe the vulnerable baseline; the implemented repair and its verification are recorded in the after-state section.
 
 This report records observations from the vulnerable `0.9.200-beta` release CLI on 2026-10-01. Each `.lit` case was run alone with `target/release/litex -strict -f <absolute-case-path>`, in a directory without `litex.config`. The harness checked process exit status, top-level JSON `success`, `session_error`, and every `statement_results[*].success`. None of the false-proof fixtures contains `trust`, `axiom`, or `abstract_prop`. Source files were edited concurrently during the audit; the original replay is pinned by binary SHA-256 and source-file hashes in `tmp/2026-10-01/soundness-root-cause/baseline.json`. A second replay with binary SHA-256 `065a16389bdcd86cf0b2be3ba6935f0d1ae8cfa84da0d3b8b61da060d34779ec` confirmed the principal outcomes (`latest-binary-replay.json`).

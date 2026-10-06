@@ -1,11 +1,17 @@
 # Direct theorem selection acceptance — 2026-10-06
 
+> Historical audit: these code fences preserve dated verifier observations,
+> including rejected inputs and excerpts that depend on their original context.
+> They are evidence, not current standalone tutorial examples. The maintained
+> executable language examples are in the Manual, README, and examples corpus.
+
 The user required `by thm T(args) => fact` to select a directly returned
 conclusion and explicitly rejected combining `a = b` and `b = c` into `a = c`
 inside this command. The change is confined to selected theorem calls.
 
 ## Before and now
 
+<!-- litex:skip-test -->
 ```litex
 # Before (incorrectly accepted):
 # thm reflexive:

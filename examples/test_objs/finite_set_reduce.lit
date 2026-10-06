@@ -8,10 +8,12 @@ sketch:
 
 # P02: finite_set_reduce({2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 2
 sketch:
-    release thm finite_set_reduce_singleton(finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0), 2)
-    fn(x Z) Z{x}(2) = 2
-    fn(a,b Z) Z{a+b}(0,fn(x Z) Z{x}(2)) = 2
-    finite_set_reduce({2}, fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0) = fn(a,b Z) Z{a+b}(0,fn(x Z) Z{x}(2)) = 2
+    have fn identity(x Z) Z = x
+    have fn add(a, b Z) Z = a + b
+    release thm finite_set_reduce_singleton(finite_set_reduce({2}, identity, add, 0), 2)
+    identity(2) = 2
+    add(0, identity(2)) = add(0, 2) = 2
+    finite_set_reduce({2}, identity, add, 0) = add(0, identity(2)) = 2
 
 # P03: finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3
 sketch:
@@ -23,9 +25,11 @@ sketch:
 
 # P05: finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 10) = 13
 sketch:
+    have fn identity(x Z) Z = x
+    have fn add(a, b Z) Z = a + b
     claim:
-        ? finite_set_reduce({1,2},fn(x Z) Z{x},fn(a,b Z) Z{a+b},10) = 13
-        let reduced = finite_set_reduce({1,2},fn(x Z) Z{x},fn(a,b Z) Z{a+b},10)
+        ? finite_set_reduce({1, 2}, identity, add, 10) = 13
+        let reduced = finite_set_reduce({1, 2}, identity, add, 10)
         reduced = 13
 
 # P90: Nearest valid-domain control

@@ -1,7 +1,7 @@
 # Tracer: exact stored-source replay with nested unique-preimage conditions.
 # Before: two claims succeeded and stored the original forall, but its repeat
 # failed at search_proof. Nested forall conditions were compared by IR only.
-# forall X finite_set,n N+,f fn(x X)R,e1,e2 fn(k closed_range(1,n))X:
+# forall X finite_set,n N+,f fn(x X)R,e1,e2 fn(k closed_range(1,n))X,left_fn,right_fn fn(k closed_range(1,n))R:
 #     forall x X:
 #         exist! idx closed_range(1,n) st {e1(idx)=x}
 #     forall x X:
@@ -30,23 +30,27 @@ claim:
     by def $surjective(Y,X,g)
     by def $bijective(Y,X,g)
 claim:
-    ? forall X finite_set,n N+,f fn(x X)R,e1,e2 fn(k closed_range(1,n))X:
+    ? forall X finite_set,n N+,f fn(x X)R,e1,e2 fn(k closed_range(1,n))X,left_fn,right_fn fn(k closed_range(1,n))R:
         forall x X:
             exist! idx closed_range(1,n) st {e1(idx)=x}
         forall x X:
             exist! idx closed_range(1,n) st {e2(idx)=x}
+        left_fn = fn(idx closed_range(1,n))R{f(e1(idx))}
+        right_fn = fn(j closed_range(1,n))R{f(e2(j))}
         =>:
-            sum(1,n,fn(idx closed_range(1,n))R{f(e1(idx))})=sum(1,n,fn(j closed_range(1,n))R{f(e2(j))})
+            sum(1,n,left_fn)=sum(1,n,right_fn)
     $bijective(closed_range(1,n),X,e1)
     $bijective(closed_range(1,n),X,e2)
-    release thm sum_over_bijective_finite_set_enumerations(sum(1,n,fn(idx closed_range(1,n))R{f(e1(idx))}),sum(1,n,fn(j closed_range(1,n))R{f(e2(j))}))
-forall X finite_set,n N+,f fn(x X)R,e1,e2 fn(k closed_range(1,n))X:
+    by thm sum_over_bijective_finite_set_enumerations(sum(1,n,left_fn),sum(1,n,right_fn)) => sum(1,n,left_fn)=sum(1,n,right_fn)
+forall X finite_set,n N+,f fn(x X)R,e1,e2 fn(k closed_range(1,n))X,left_fn,right_fn fn(k closed_range(1,n))R:
     forall x X:
         exist! idx closed_range(1,n) st {e1(idx)=x}
     forall x X:
         exist! idx closed_range(1,n) st {e2(idx)=x}
+    left_fn = fn(idx closed_range(1,n))R{f(e1(idx))}
+    right_fn = fn(j closed_range(1,n))R{f(e2(j))}
     =>:
-        sum(1,n,fn(idx closed_range(1,n))R{f(e1(idx))})=sum(1,n,fn(j closed_range(1,n))R{f(e2(j))})
+        sum(1,n,left_fn)=sum(1,n,right_fn)
 # Boundary: changing unique existence, a complete domain, a guard or free identity
 # must not reuse this source. No search ceiling, state or AST shape is changed.
 # Gate: target/release/litex -strict -f examples/proof_nodes/forall/known_source_nested_unique.lit

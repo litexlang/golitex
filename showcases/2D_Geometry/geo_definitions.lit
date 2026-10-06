@@ -1,0 +1,201 @@
+# LitexGeo basics: definitions
+
+# Part 1: definitions
+
+# Points are real coordinate pairs.
+have points set = cart(R, R)
+
+# Vector from A to B.
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
+
+# Dot product.
+have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
+
+# 2D determinant (signed parallelogram area / cross product z-component).
+have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+
+# Squared Euclidean distance |ab|^2 (avoids square roots).
+have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
+
+# General form: the line ax + by + c = 0 (a, b not both zero).
+have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R): a * p(1) + b * p(2) + c = 0}
+
+# Two-point form: the unique line through distinct points a and b
+# (collinearity: det(vec(a, p), vec(a, b)) = 0).
+have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}
+
+# Cosine of angle pqr at q, without square roots:
+#   cos^2 = num^2 / den, where
+#   num = qp · qr,  den = |qp|^2 * |qr|^2.
+# Requires nonzero arms (p != q, r != q).
+have fn angle_cos_num(p, q, r cart(R, R): p != q, r != q) R = dot(vec(q, p), vec(q, r))
+
+# Product of the squared lengths of the two nonzero angle arms.
+have fn angle_cos_den(p, q, r cart(R, R): p != q, r != q) R = distance_sq(q, p) * distance_sq(q, r)
+
+# Circle with center o and positive radius r (as a set of points).
+# Radius is in R+ so negative radius is not a second name for the same circle.
+have fn circle(o cart(R, R), r R+) power_set(cart(R, R)) = {p cart(R, R): distance_sq(o, p) = r * r}
+
+# p lies on the closed segment between distinct points a and b.
+prop is_on_segment(p, a, b cart(R, R)):
+    a != b
+    exist t R st {0 <= t, t <= 1, p(1) = (1 - t) * a(1) + t * b(1), p(2) = (1 - t) * a(2) + t * b(2)}
+
+# p lies on the ray from a through distinct point b (t >= 0).
+prop is_on_ray(p, a, b cart(R, R)):
+    a != b
+    exist t R st {0 <= t, p(1) = a(1) + t * (b(1) - a(1)), p(2) = a(2) + t * (b(2) - a(2))}
+
+# Points p, q, r are collinear.
+prop is_collinear(p, q, r cart(R, R)):
+    det(vec(p, q), vec(p, r)) = 0
+
+# Segments ab and cd have equal length.
+prop are_segments_congruent(a, b, c, d cart(R, R)):
+    distance_sq(a, b) = distance_sq(c, d)
+
+# Angles pqr and uvw are congruent (same |cos|, same sign).
+prop are_angles_congruent(p, q, r, u, v, w cart(R, R)):
+    p != q
+    r != q
+    u != v
+    w != v
+    angle_cos_den(p, q, r) > 0
+    angle_cos_den(u, v, w) > 0
+    angle_cos_num(p, q, r)^2 * angle_cos_den(u, v, w) = angle_cos_num(u, v, w)^2 * angle_cos_den(p, q, r)
+    angle_cos_num(p, q, r) * angle_cos_num(u, v, w) >= 0
+
+# Angle pqr at q is a right angle.
+prop is_right_angle(p, q, r cart(R, R)):
+    p != q
+    r != q
+    dot(vec(q, p), vec(q, r)) = 0
+
+# Directed segments ab and cd are parallel.
+prop is_parallel(a, b, c, d cart(R, R)):
+    a != b
+    c != d
+    det(vec(a, b), vec(c, d)) = 0
+
+# Directed segments ab and cd are perpendicular.
+prop is_perpendicular(a, b, c, d cart(R, R)):
+    a != b
+    c != d
+    dot(vec(a, b), vec(c, d)) = 0
+
+# Set l is a line in the plane (equals some line(a, b, c)).
+prop is_line(l power_set(cart(R, R))):
+    exist a, b, c R st {a != 0 or b != 0, l = line(a, b, c)}
+
+# m is the midpoint of segment ab.
+prop is_midpoint(m, a, b cart(R, R)):
+    m(1) = (a(1) + b(1)) / 2
+    m(2) = (a(2) + b(2)) / 2
+
+# p lies on the affine line through a and b (any real parameter t).
+# Allows a = b (then only p = a); use is_on_line when a distinct line is required.
+prop is_affine_combination(p, a, b cart(R, R)):
+    exist t R st {p(1) = (1 - t) * a(1) + t * b(1), p(2) = (1 - t) * a(2) + t * b(2)}
+
+# g is the centroid of triangle abc.
+prop is_centroid(g, a, b, c cart(R, R)):
+    g(1) = (a(1) + b(1) + c(1)) / 3
+    g(2) = (a(2) + b(2) + c(2)) / 3
+
+# p lies on the line through distinct points a and b.
+prop is_on_line(p, a, b cart(R, R)):
+    a != b
+    p $in line_through_points(a, b)
+
+# p lies on the extension of segment ab beyond b (t > 1); a != b required.
+prop is_on_extension(p, a, b cart(R, R)):
+    a != b
+    exist t R st {t > 1, p(1) = (1 - t) * a(1) + t * b(1), p(2) = (1 - t) * a(2) + t * b(2)}
+
+# f is the foot of the perpendicular from p to line ab.
+prop is_foot(f, p, a, b cart(R, R)):
+    $is_on_line(f, a, b)
+    dot(vec(p, f), vec(a, b)) = 0
+
+# Ray bd bisects angle abc (requires nonzero arms via angle congruence).
+prop is_angle_bisector(a, b, c, d cart(R, R)):
+    $are_angles_congruent(a, b, d, d, b, c)
+
+# a, b, c form a non-degenerate triangle.
+prop is_triangle(a, b, c cart(R, R)):
+    det(vec(a, b), vec(a, c)) != 0
+
+# Triangle abc is isosceles with apex a (ab = ac), not the general "two sides equal".
+prop is_isosceles(a, b, c cart(R, R)):
+    $is_triangle(a, b, c)
+    $are_segments_congruent(a, b, a, c)
+
+# Triangle abc is equilateral.
+prop is_equilateral(a, b, c cart(R, R)):
+    $is_triangle(a, b, c)
+    $are_segments_congruent(a, b, b, c)
+    $are_segments_congruent(b, c, c, a)
+
+# Triangles pqr and uvw are congruent by SSS only (matching vertex order).
+prop are_triangles_congruent(p, q, r, u, v, w cart(R, R)):
+    $is_triangle(p, q, r)
+    $is_triangle(u, v, w)
+    $are_segments_congruent(p, q, u, v)
+    $are_segments_congruent(q, r, v, w)
+    $are_segments_congruent(r, p, w, u)
+
+# Triangles pqr and uvw are similar by AAA only (matching vertex order).
+prop are_triangles_similar(p, q, r, u, v, w cart(R, R)):
+    $is_triangle(p, q, r)
+    $is_triangle(u, v, w)
+    $are_angles_congruent(q, p, r, v, u, w)
+    $are_angles_congruent(p, q, r, u, v, w)
+    $are_angles_congruent(p, r, q, u, w, v)
+
+# Quadrilateral abcd is a parallelogram (opposite sides parallel).
+# Euclidean: this forces a parallelogram; a flat/collinear quad is still allowed.
+prop is_parallelogram(a, b, c, d cart(R, R)):
+    $is_parallel(a, b, d, c)
+    $is_parallel(a, d, b, c)
+
+# Quadrilateral abcd is a rectangle.
+prop is_rectangle(a, b, c, d cart(R, R)):
+    $is_parallelogram(a, b, c, d)
+    $is_right_angle(d, a, b)
+
+# Quadrilateral abcd is a rhombus.
+prop is_rhombus(a, b, c, d cart(R, R)):
+    $is_parallelogram(a, b, c, d)
+    $are_segments_congruent(a, b, b, c)
+
+# Quadrilateral abcd is a square.
+prop is_square(a, b, c, d cart(R, R)):
+    $is_rectangle(a, b, c, d)
+    $are_segments_congruent(a, b, b, c)
+
+# p lies on the circle with center o and positive radius r.
+prop is_on_circle(p, o cart(R, R), r R+):
+    distance_sq(o, p) = r * r
+
+# Points a, b, c, d lie on a common finite circle (equal distance to some center).
+# Four coincident points also satisfy this relation. Their radius is zero
+# when the chosen center is that same point.
+prop are_concyclic(a, b, c, d cart(R, R)):
+    exist o cart(R, R) st {distance_sq(o, a) = distance_sq(o, b), distance_sq(o, b) = distance_sq(o, c), distance_sq(o, c) = distance_sq(o, d)}
+
+# a and b are distinct endpoints of a diameter with center o (midpoint only;
+# does not assert they lie on a named circle).
+prop is_diameter_endpoints(a, b, o cart(R, R)):
+    a != b
+    $is_midpoint(o, a, b)
+
+# q is p rotated 90 degrees clockwise about c.
+prop rotated_90_cw(q, p, c cart(R, R)):
+    q(1) = c(1) + p(2) - c(2)
+    q(2) = c(2) - p(1) + c(1)
+
+# q is p rotated 90 degrees counterclockwise about c.
+prop rotated_90_ccw(q, p, c cart(R, R)):
+    q(1) = c(1) - p(2) + c(2)
+    q(2) = c(2) + p(1) - c(1)

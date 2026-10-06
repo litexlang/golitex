@@ -1,5 +1,10 @@
 # Examples migration rescan — 2026-10-02
 
+> Historical audit: these code fences preserve dated verifier observations,
+> including rejected inputs and excerpts that depend on their original context.
+> They are evidence, not current standalone tutorial examples. The maintained
+> executable language examples are in the Manual, README, and examples corpus.
+
 Follow-up repair checkpoint: [local fixes and current residuals](example-local-repairs-2026-10-02.md). The scan below is historical evidence.
 
 Latest conversation recheck: [2026-10-03 status and remaining issues](conversation-issue-recheck-2026-10-03.md).
@@ -55,10 +60,12 @@ failure as a matching check; that does not establish the requested capability.
 
 Executed reduced reproductions:
 
+<!-- litex:skip-test -->
 ```litex
 let s = finite_set_sum({1}, fn(x {2}) Z {x})
 ```
 
+<!-- litex:skip-test -->
 ```litex
 let s = finite_set_product({1}, fn(x {2}) Z {x})
 ```
@@ -78,6 +85,7 @@ including aliases and named functions, rather than weakening every caller.
 
 Executed reduced reproduction:
 
+<!-- litex:skip-test -->
 ```litex
 let r = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0)
 ```
@@ -99,10 +107,12 @@ contract and should not inherit this rejection.
 
 Executed reduced reproductions:
 
+<!-- litex:skip-test -->
 ```litex
 let n = finite_set_max({i})
 ```
 
+<!-- litex:skip-test -->
 ```litex
 let n = finite_set_min({i})
 ```
@@ -127,10 +137,12 @@ in Appendix A.
 
 Executed reduced reproductions:
 
+<!-- litex:skip-test -->
 ```litex
 cart({}, {1}) = {}
 ```
 
+<!-- litex:skip-test -->
 ```litex
 proj(cart(cart(R, Z), N), 1) = cart(R, Z)
 ```
@@ -143,6 +155,7 @@ membership still accept; **do not generalize this to all projection cases**.
 
 An alias tracer also fails internally:
 
+<!-- litex:skip-test -->
 ```litex
 let C = cart(R, Z)
 cart_dim(C) = 2
@@ -171,6 +184,7 @@ not establish a valid repair.
 
 The unchanged `module_manager/function_family_bindings/main.lit` contains:
 
+<!-- litex:skip-test -->
 ```litex
 release obj def Other::functions::step
 template<t R>:
@@ -191,6 +205,7 @@ Four public files exceeded a 20-second release-process deadline:
 `let_template_struct_aliases.lit`, and `mul_nested_fn_app_in_c.lit`.
 For example, the vector/nested-function files start with:
 
+<!-- litex:skip-test -->
 ```litex
 have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])
 have fn dot(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
@@ -218,6 +233,7 @@ rejection.
 
 Executed pair:
 
+<!-- litex:skip-test -->
 ```litex
 let A = fn(k {1, 2}) power_set(N) {{1}}
 let X = index_union({1, 2}, N, A)
@@ -226,6 +242,7 @@ let X = index_union({1, 2}, N, A)
 This fails at the required `A $in fn(k {1, 2}) power_set(N)` obligation. The
 following named-function control accepts:
 
+<!-- litex:skip-test -->
 ```litex
 have fn A(k {1, 2}) power_set(N) = {1}
 let X = index_union({1, 2}, N, A)
@@ -234,6 +251,7 @@ X = X
 
 The corresponding anonymous literal membership also rejects in search:
 
+<!-- litex:skip-test -->
 ```litex
 fn(k {1, 2}) power_set(N) {{1}} $in fn(j {1, 2}) power_set(N)
 ```
@@ -246,6 +264,7 @@ The latest predicate WD now explicitly verifies callable domains for
 `$injective`, `$surjective`, `$bijective`, and `$is_choice_function_for`.
 That contract strengthening exposes additional unconnected representations:
 
+<!-- litex:skip-test -->
 ```litex
 release axiom_of_choice: set {{1}}:
     forall A {{1}}:
@@ -257,6 +276,7 @@ still accepts alone. The generated existence/choice signature fails WD. Five
 Stmt checks and the public choice statement share this family of failures.
 The standalone definition-based choice predicate also regresses.
 
+<!-- litex:skip-test -->
 ```litex
 release thm finite_set_has_bijective_index({1, 2})
 ```
@@ -276,6 +296,7 @@ named, aliased and finite-sequence membership bridges separately.
 
 ### G. Named real bound theorems construct undeclared predicate certificates
 
+<!-- litex:skip-test -->
 ```litex
 release thm real_least_upper_bound_exists({0}, 1)
 ```
@@ -295,6 +316,7 @@ No `abstract_prop` or trust was inserted to bypass it.
 
 ### H. WD and mathematical inference still have additional independent gaps
 
+<!-- litex:skip-test -->
 ```litex
 have x N
 2^(log(2, 2^x)) = 2^x
@@ -307,6 +329,7 @@ power/log carrier and nonzero obligations before selecting the missing rule.
 
 The surjection-size example has the following established premises:
 
+<!-- litex:skip-test -->
 ```litex
 have A set = {1, 2}
 have B set = {1}
@@ -333,6 +356,7 @@ sufficient evidence to relax WD or restore an implicit route.
 
 ### I. Closed aggregates and negated existence still lack the requested routes
 
+<!-- litex:skip-test -->
 ```litex
 sum(1, 3, fn(x Z) Z {x}) = 6
 ```
@@ -345,6 +369,7 @@ only after its intended policy or named historical implementation is checked.
 
 K005 remains:
 
+<!-- litex:skip-test -->
 ```litex
 forall x {0}:
     x != 1
@@ -358,6 +383,7 @@ consumer rather than adding trust or weakening the claim.
 
 ### J. Identical fresh processes disagree on a contradiction proof
 
+<!-- litex:skip-test -->
 ```litex
 by contra:
     ? i != 0
@@ -409,6 +435,7 @@ and `-session`. Older skill recipes `-compact`, `-runner`, `-before`, and
 The following tested rejection is deliberate under the current indexed-family
 nonempty-domain contract:
 
+<!-- litex:skip-test -->
 ```litex
 have fn empty_family(empty_index {}) power_set(N) = {}
 index_union({}, N, empty_family) = {}
@@ -425,6 +452,7 @@ Their exact source and observed phase are listed separately.
 
 ## Findings no longer open on the later checkpoint
 
+<!-- litex:skip-test -->
 ```litex
 2.400 = 2.4
 ```
@@ -432,6 +460,7 @@ Their exact source and observed phase are listed separately.
 This now accepts; `2.400 != 2.4` correctly rejects. The earlier wrong admission
 is historical, not one of the five current bad negatives.
 
+<!-- litex:skip-test -->
 ```litex
 i != 0
 1 / i = -i
@@ -548,6 +577,7 @@ The intended outcome below comes from the audited Obj manifest. For desired posi
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have fn f(x R) R = x + 1
 f(f(1)) = 3
@@ -561,6 +591,7 @@ First failed statement: `f(f(1)) = 3`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `have_fn_equal`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have fn f(x R) fn(y R) R = fn(y R) R {x + y}
 f(2)(3) = 5
@@ -576,6 +607,7 @@ First failed statement: `have fn …`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 2^(-3) = 1 / 8
 ```
@@ -588,6 +620,7 @@ First failed statement: `2 ^ -3 = 1 / 8`. Full nested requirements are in the li
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 forall x R:
     abs(-x) = abs(x)
@@ -602,6 +635,7 @@ First failed statement: `forall x R:
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 min(1 / 3, 1 / 2) = 1 / 3
 ```
@@ -614,6 +648,7 @@ First failed statement: `min(1 / 3, 1 / 2) = 1 / 3`. Full nested requirements ar
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 max(1 / 3, 1 / 2) = 1 / 2
 ```
@@ -626,6 +661,7 @@ First failed statement: `max(1 / 3, 1 / 2) = 1 / 2`. Full nested requirements ar
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 sin(-pi / 2) = -1
 ```
@@ -638,6 +674,7 @@ First failed statement: `sin(-pi / 2) = -1`. Full nested requirements are in the
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 forall x R:
     sin(-x) = -sin(x)
@@ -652,6 +689,7 @@ First failed statement: `forall x R:
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 cos(-pi) = -1
 ```
@@ -664,6 +702,7 @@ First failed statement: `cos(-pi) = -1`. Full nested requirements are in the lin
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 forall x R:
     cos(-x) = cos(x)
@@ -678,6 +717,7 @@ First failed statement: `forall x R:
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 tan(pi) = 0
 ```
@@ -690,6 +730,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 tan(pi / 4) = 1
 ```
@@ -702,6 +743,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 tan(-pi / 4) = -1
 ```
@@ -714,6 +756,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 cot(pi / 4) = 1
 ```
@@ -726,6 +769,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 cot(-pi / 4) = -1
 ```
@@ -738,6 +782,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 arctan(1) = pi / 4
 ```
@@ -750,6 +795,7 @@ First failed statement: `arctan(1) = pi / 4`. Full nested requirements are in th
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 arctan(-1) = -pi / 4
 ```
@@ -762,6 +808,7 @@ First failed statement: `arctan(-1) = -pi / 4`. Full nested requirements are in 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 arccot(1) = pi / 4
 ```
@@ -774,6 +821,7 @@ First failed statement: `arccot(1) = pi / 4`. Full nested requirements are in th
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 arccot(-1) = 3 * pi / 4
 ```
@@ -786,6 +834,7 @@ First failed statement: `arccot(-1) = 3 * pi / 4`. Full nested requirements are 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 log(1 / 2, 8) = -3
 ```
@@ -798,6 +847,7 @@ First failed statement: `log (1 / 2, 8) = -3`. Full nested requirements are in t
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 log(e, e) = 1
 ```
@@ -810,6 +860,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 re(-2 - i) = -2
 ```
@@ -822,6 +873,7 @@ First failed statement: `re(-2 - i) = -2`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 re(i * i) = -1
 ```
@@ -834,6 +886,7 @@ First failed statement: `re(i * i) = -1`. Full nested requirements are in the li
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 img(-2 - i) = -1
 ```
@@ -846,6 +899,7 @@ First failed statement: `img(-2 - i) = -1`. Full nested requirements are in the 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 C_abs(3 + 4 * i) = 5
 ```
@@ -858,6 +912,7 @@ First failed statement: `C_abs(3 + 4 * i) = 5`. Full nested requirements are in 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 C_abs(-3) = 3
 ```
@@ -870,6 +925,7 @@ First failed statement: `C_abs(-3) = 3`. Full nested requirements are in the lin
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 C_abs(-i) = 1
 ```
@@ -882,6 +938,7 @@ First failed statement: `C_abs(-i) = 1`. Full nested requirements are in the lin
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 forall z C:
     C_abs(z) >= 0
@@ -896,6 +953,7 @@ First failed statement: `forall z C:
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 union({1}, {2}) = {1, 2}
 ```
@@ -908,6 +966,7 @@ First failed statement: `union({1}, {2}) = {1, 2}`. Full nested requirements are
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 intersect({1, 2}, {2, 3}) = {2}
 ```
@@ -920,6 +979,7 @@ First failed statement: `intersect({1, 2}, {2, 3}) = {2}`. Full nested requireme
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 set_minus({1, 2}, {2}) = {1}
 ```
@@ -932,6 +992,7 @@ First failed statement: `set_minus({1, 2}, {2}) = {1}`. Full nested requirements
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 family_union({{1}}) = {1}
 ```
@@ -944,6 +1005,7 @@ First failed statement: `family_union({{1}}) = {1}`. Full nested requirements ar
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 family_union({{1}, {2}}) = {1, 2}
 ```
@@ -956,6 +1018,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 1 $in family_union({{1}, {2}})
 ```
@@ -968,6 +1031,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let U = family_union({{}, {1, 2}})
 U = {1, 2}
@@ -981,6 +1045,7 @@ First failed statement: `U = {1, 2}`. Full nested requirements are in the linked
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 family_intersect({{1}}) = {1}
 ```
@@ -993,6 +1058,7 @@ First failed statement: `family_intersect({{1}}) = {1}`. Full nested requirement
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 family_intersect({{1, 2}, {2, 3}}) = {2}
 ```
@@ -1005,6 +1071,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 family_intersect({{1}, {}}) = {}
 ```
@@ -1017,6 +1084,7 @@ First failed statement: `family_intersect({{1}, {}}) = {}`. Full nested requirem
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `let`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let I = family_intersect({{1}, {2}})
 I = I
@@ -1032,6 +1100,7 @@ First failed statement: `let …`. Full nested requirements are in the linked ra
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 power_set(power_set({})) = {{}, {{}}}
 ```
@@ -1044,6 +1113,7 @@ First failed statement: `power_set(power_set({})) = {{}, {{}}}`. Full nested req
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `let`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let A = fn(k {1, 2}) power_set(N) {{1}}
 let X = index_union({1, 2}, N, A)
@@ -1060,6 +1130,7 @@ First failed statement: `let …`. Full nested requirements are in the linked ra
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have fn A(k {1}) power_set(N) = {k}
 index_union({1}, N, A) = {1}
@@ -1073,6 +1144,7 @@ First failed statement: `index_union({1}, N, A) = {1}`. Full nested requirements
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let A = fn(k {1}) power_set(N) {{1}}
 $is_set(index_union({1}, N, A))
@@ -1086,6 +1158,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `let`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let A = fn(k {1, 2}) power_set(N) {{1}}
 let X = index_intersect({1, 2}, N, A)
@@ -1102,6 +1175,7 @@ First failed statement: `let …`. Full nested requirements are in the linked ra
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have fn A(k {1}) power_set(N) = {k}
 index_intersect({1}, N, A) = {1}
@@ -1115,6 +1189,7 @@ First failed statement: `index_intersect({1}, N, A) = {1}`. Full nested requirem
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let A = fn(k {1}) power_set(N) {{1}}
 $is_set(index_intersect({1}, N, A))
@@ -1128,6 +1203,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `let`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let A = fn(k {1}) power_set(N) {{1}}
 let P = index_cart({1}, power_set(N), A)
@@ -1144,6 +1220,7 @@ First failed statement: `let …`. Full nested requirements are in the linked ra
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `let`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let A = fn(k {1, 2}) power_set(N) {{1, 2}}
 let P = index_cart({1, 2}, power_set(N), A)
@@ -1160,6 +1237,7 @@ First failed statement: `let …`. Full nested requirements are in the linked ra
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 {1, 2} = {2, 1}
 ```
@@ -1172,6 +1250,7 @@ First failed statement: `{1, 2} = {2, 1}`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 {1} $in {{1}, {2}}
 ```
@@ -1184,6 +1263,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 (1, 2) $in {(1, 2), (2, 1)}
 ```
@@ -1196,6 +1276,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 range(-2, 1) = {-2, -1, 0}
 ```
@@ -1208,6 +1289,7 @@ First failed statement: `range(-2, 1) = {-2, -1, 0}`. Full nested requirements a
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 not 3 $in range(1, 3)
 ```
@@ -1220,6 +1302,7 @@ First failed statement: `not 3 $in range(1, 3)`. Full nested requirements are in
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 closed_range(-1, 1) = {-1, 0, 1}
 ```
@@ -1232,6 +1315,7 @@ First failed statement: `closed_range(-1, 1) = {-1, 0, 1}`. Full nested requirem
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 fn(x closed_range(0, 1)) R {x} $in finite_seq(R, 2)
 ```
@@ -1244,6 +1328,7 @@ First failed statement: `fn (x closed_range(0, 1)) R{x} $in finite_seq(R, 2)`. F
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 fn(x N) N {x} $in seq(N)
 ```
@@ -1256,6 +1341,7 @@ First failed statement: `fn (x N) N{x} $in seq(N)`. Full nested requirements are
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 fn(x N) R {0} $in seq(R)
 ```
@@ -1268,6 +1354,7 @@ First failed statement: `fn (x N) R{0} $in seq(R)`. Full nested requirements are
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `mount_or_runtime`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 sketch:
     (1, 2) $in cart(R, Z)
@@ -1293,6 +1380,7 @@ Session error: `Runtime(InternalBug("inferred fact failed well-definedness check
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 cart({1}, {2}) = {(1, 2)}
 ```
@@ -1305,6 +1393,7 @@ First failed statement: `cart({1}, {2}) = {(1, 2)}`. Full nested requirements ar
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 ((1, 2), 3)[1][2] = 2
 ```
@@ -1317,6 +1406,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 (1, 2) != (2, 1)
 ```
@@ -1329,6 +1419,7 @@ First failed statement: `(1, 2) != (2, 1)`. Full nested requirements are in the 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `mount_or_runtime`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let C = cart(R, Z)
 cart_dim(C) = 2
@@ -1342,6 +1433,7 @@ Session error: `Runtime(InternalBug("inferred fact failed well-definedness check
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `mount_or_runtime`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 sketch:
     proj(cart(R, Z), 1) = R
@@ -1364,6 +1456,7 @@ Session error: `Runtime(InternalBug("inferred fact failed well-definedness check
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 ((1, 2), 3)[1][2] = 2
 ```
@@ -1376,6 +1469,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 (2 + 3, 4 * 2)[2] = 8
 ```
@@ -1388,6 +1482,7 @@ First failed statement: `(2 + 3, 4 * 2)[2] = 8`. Full nested requirements are in
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 fn(x R) R {x} $in fn(y R) R
 ```
@@ -1400,6 +1495,7 @@ First failed statement: `fn (x R) R{x} $in fn (y R) R`. Full nested requirements
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 fn(x, y R) R {x + y} $in fn(a, b R) R
 ```
@@ -1412,6 +1508,7 @@ First failed statement: `fn (x, y R) R{x + y} $in fn (a, b R) R`. Full nested re
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 fn(x R) R {x + 1} $in fn(y R) R
 ```
@@ -1424,6 +1521,7 @@ First failed statement: `fn (x R) R{x + 1} $in fn (y R) R`. Full nested requirem
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let y = 3
 fn(x R) R {x + y}(2) = 5
@@ -1437,6 +1535,7 @@ First failed statement: `fn (x R) R{x + y}(2) = 5`. Full nested requirements are
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 fn_range(fn(x R) R {x}) = R
 ```
@@ -1449,6 +1548,7 @@ First failed statement: `fn_range(fn (x R) R{x}) = R`. Full nested requirements 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 sum(1, 3, fn(x Z) Z {x}) = 6
 ```
@@ -1461,6 +1561,7 @@ First failed statement: `sum(1, 3, fn (x Z) Z{x}) = 6`. Full nested requirements
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 sum(1, 3, fn(x Z) Z {2}) = 6
 ```
@@ -1473,6 +1574,7 @@ First failed statement: `sum(1, 3, fn (x Z) Z{2}) = 6`. Full nested requirements
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 product(1, 3, fn(x Z) Z {x}) = 6
 ```
@@ -1485,6 +1587,7 @@ First failed statement: `product(1, 3, fn (x Z) Z{x}) = 6`. Full nested requirem
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 product(1, 3, fn(x Z) Z {2}) = 8
 ```
@@ -1497,6 +1600,7 @@ First failed statement: `product(1, 3, fn (x Z) Z{2}) = 8`. Full nested requirem
 
 Expected: **reject**; observed: **accept**; earliest reported phase: `success`; process exit: `0`.
 
+<!-- litex:skip-test -->
 ```litex
 let s = finite_set_sum({1}, fn(x {2}) Z {x})
 ```
@@ -1507,6 +1611,7 @@ let s = finite_set_sum({1}, fn(x {2}) Z {x})
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_sum({1, 2}, fn(x Z) Z {x}) = 3
 ```
@@ -1519,6 +1624,7 @@ First failed statement: `finite_set_sum({1, 2}, fn (x Z) Z{x}) = 3`. Full nested
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_sum({2, 1}, fn(x Z) Z {x}) = 3
 ```
@@ -1531,6 +1637,7 @@ First failed statement: `finite_set_sum({2, 1}, fn (x Z) Z{x}) = 3`. Full nested
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_sum(closed_range(3, 1), fn(x Z) Z {x}) = 0
 ```
@@ -1543,6 +1650,7 @@ First failed statement: `finite_set_sum(closed_range(3, 1), fn (x Z) Z{x}) = 0`.
 
 Expected: **reject**; observed: **accept**; earliest reported phase: `success`; process exit: `0`.
 
+<!-- litex:skip-test -->
 ```litex
 let s = finite_set_product({1}, fn(x {2}) Z {x})
 ```
@@ -1553,6 +1661,7 @@ let s = finite_set_product({1}, fn(x {2}) Z {x})
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_product({2, 3}, fn(x Z) Z {x}) = 6
 ```
@@ -1565,6 +1674,7 @@ First failed statement: `finite_set_product({2, 3}, fn (x Z) Z{x}) = 6`. Full ne
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_product({3, 2}, fn(x Z) Z {x}) = 6
 ```
@@ -1577,6 +1687,7 @@ First failed statement: `finite_set_product({3, 2}, fn (x Z) Z{x}) = 6`. Full ne
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_product({0, 2}, fn(x Z) Z {x}) = 0
 ```
@@ -1589,6 +1700,7 @@ First failed statement: `finite_set_product({0, 2}, fn (x Z) Z{x}) = 0`. Full ne
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 reduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 6
 ```
@@ -1601,6 +1713,7 @@ First failed statement: `reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 0) = 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 reduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0) = -6
 ```
@@ -1613,6 +1726,7 @@ First failed statement: `reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a - b}, 0) = 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 reduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 10) = 16
 ```
@@ -1625,6 +1739,7 @@ First failed statement: `reduce(1, 3, fn (x Z) Z{x}, fn (a, b Z) Z{a + b}, 10) =
 
 Expected: **reject**; observed: **accept**; earliest reported phase: `success`; process exit: `0`.
 
+<!-- litex:skip-test -->
 ```litex
 let r = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0)
 ```
@@ -1635,6 +1750,7 @@ let r = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a - b}, 0)
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_reduce({2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 2
 ```
@@ -1647,6 +1763,7 @@ First failed statement: `finite_set_reduce({2}, fn (x Z) Z{x}, fn (a, b Z) Z{a +
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3
 ```
@@ -1659,6 +1776,7 @@ First failed statement: `finite_set_reduce({1, 2}, fn (x Z) Z{x}, fn (a, b Z) Z{
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_reduce({2, 1}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 3
 ```
@@ -1671,6 +1789,7 @@ First failed statement: `finite_set_reduce({2, 1}, fn (x Z) Z{x}, fn (a, b Z) Z{
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 10) = 13
 ```
@@ -1683,6 +1802,7 @@ First failed statement: `finite_set_reduce({1, 2}, fn (x Z) Z{x}, fn (a, b Z) Z{
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_size({{1}, {2}}) = 2
 ```
@@ -1695,6 +1815,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **reject**; observed: **accept**; earliest reported phase: `success`; process exit: `0`.
 
+<!-- litex:skip-test -->
 ```litex
 let n = finite_set_max({i})
 ```
@@ -1705,6 +1826,7 @@ let n = finite_set_max({i})
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_max({1 / 3, 1 / 2}) = 1 / 2
 ```
@@ -1717,6 +1839,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **reject**; observed: **accept**; earliest reported phase: `success`; process exit: `0`.
 
+<!-- litex:skip-test -->
 ```litex
 let n = finite_set_min({i})
 ```
@@ -1727,6 +1850,7 @@ let n = finite_set_min({i})
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_min({1 / 3, 1 / 2}) = 1 / 3
 ```
@@ -1739,6 +1863,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 struct Point:
     x R
@@ -1755,6 +1880,7 @@ First failed statement: `p.x = 1`. Full nested requirements are in the linked ra
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 struct Pair<S set>:
     first S
@@ -1771,6 +1897,7 @@ First failed statement: `p.second = 2`. Full nested requirements are in the link
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 struct Point:
     x R
@@ -1788,6 +1915,7 @@ First failed statement: `p.x = 1`. Full nested requirements are in the linked ra
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 sqrt(2) $in R+
 ```
@@ -1800,6 +1928,7 @@ First failed statement: `sqrt (2) $in R+`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 sqrt(2) $in R*
 ```
@@ -1812,6 +1941,7 @@ First failed statement: `sqrt (2) $in R*`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have k R = 1
 tuple_dim(base::pair) = 2
@@ -1825,6 +1955,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have k R = 1
 tuple_dim(other::pair) = 3
@@ -1838,6 +1969,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have k R = 1
 tuple_dim(Values::base::pair) = 2
@@ -1851,6 +1983,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have k R = 1
 tuple_dim(Values::other::pair) = 3
@@ -1866,6 +1999,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 1 = 1
 ```
@@ -1886,6 +2020,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 have x R = 1
 ```
@@ -1908,6 +2043,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 A::chap2::x = 1
 have z R = 1
@@ -1931,6 +2067,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 A::chap3::z = 1
 ```
@@ -1953,6 +2090,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 have explicit_export_selection_witness R = 1
 
@@ -1978,6 +2116,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 A::chap3::z = 1
 
@@ -2002,6 +2141,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 have unlisted_sidecar_value R = 2
 ```
@@ -2024,6 +2164,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 1 = 1
 ```
@@ -2044,6 +2185,7 @@ a = "./a.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 1 = 1
 ```
@@ -2064,6 +2206,7 @@ a = "./a.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 1 = 1
 ```
@@ -2085,6 +2228,7 @@ b = "./b.lit"
 
 Expected: **reject**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 1 = 2
 ```
@@ -2106,6 +2250,7 @@ b = "./b.lit"
 
 Expected: **accept**; observed: **infrastructure_failure**; earliest reported phase: `launch_or_json`; process exit: `-6`.
 
+<!-- litex:skip-test -->
 ```litex
 release obj def Other::functions::step
 
@@ -2139,6 +2284,7 @@ fatal runtime error: stack overflow, aborting
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 gf::main::a + gf::main::a = gf::main2::b
 gf::main::pair[1] = 3
@@ -2165,6 +2311,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 prop above_zero(x R):
     x > 0
@@ -2191,6 +2338,7 @@ base = "./base.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 by def $Lib::base::above_zero(1)
 
@@ -2219,6 +2367,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 \prefix::copied<R> = R
 ```
@@ -2240,6 +2389,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 template<S set>:
     have copied set = S
@@ -2262,6 +2412,7 @@ main = "./main.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have A set = {1, 2}
 have B set = {1}
@@ -2280,6 +2431,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **infrastructure_failure**; earliest reported phase: `timeout`; process exit: `None`.
 
+<!-- litex:skip-test -->
 ```litex
 have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])
 have fn dot(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
@@ -2299,6 +2451,7 @@ No completed proof outcome within the 20-second process deadline. This does not 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `by_def`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have fn g_choice(alpha {1}) power_set({1}) = {1}
 have fn f_choice(alpha {1}) {1} = 1
@@ -2315,6 +2468,7 @@ First failed statement: `by def`. Full nested requirements are in the linked raw
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `mount_or_runtime`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have A set
 cart(A, {}) = {}
@@ -2328,6 +2482,7 @@ Session error: `Runtime(InternalBug("inferred fact failed well-definedness check
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `well_defined`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have x N
 2^(log(2, 2^x)) = 2^x
@@ -2341,6 +2496,7 @@ First failed statement: `<wd_failed>`. Full nested requirements are in the linke
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have a R+
 have b R+
@@ -2357,6 +2513,7 @@ First failed statement: `sqrt (b) $in R*`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **infrastructure_failure**; earliest reported phase: `timeout`; process exit: `None`.
 
+<!-- litex:skip-test -->
 ```litex
 have fn vec(a,b cart(R,R)) cart(R,R) = (b[1]-a[1],b[2]-a[2])
 have a,b cart(R,R)
@@ -2375,6 +2532,7 @@ No completed proof outcome within the 20-second process deadline. This does not 
 
 Expected: **accept**; observed: **infrastructure_failure**; earliest reported phase: `timeout`; process exit: `None`.
 
+<!-- litex:skip-test -->
 ```litex
 struct Triple<X set>:
     first X
@@ -2416,6 +2574,7 @@ No completed proof outcome within the 20-second process deadline. This does not 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `release_thm`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 release thm finite_set_has_bijective_index({1, 2})
 exist idx finite_seq({1, 2}, finite_set_size({1, 2})) st {$bijective(closed_range(1, finite_set_size({1, 2})), {1, 2}, idx)}
@@ -2429,6 +2588,7 @@ First failed statement: `release thm …`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `release_thm`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 release thm real_greatest_lower_bound_exists({0}, -1)
 exist L R st {$is_real_greatest_lower_bound({0}, L)}
@@ -2442,6 +2602,7 @@ First failed statement: `release thm …`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `release_thm`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 release thm real_greatest_lower_bound_exists({0}, -1)
 obtain L from exist L R st {$is_real_greatest_lower_bound({0}, L)}
@@ -2459,6 +2620,7 @@ First failed statement: `release thm …`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `release_thm`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 release thm real_least_upper_bound_exists({0}, 1)
 exist L R st {$is_real_least_upper_bound({0}, L)}
@@ -2472,6 +2634,7 @@ First failed statement: `release thm …`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `release_thm`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 release thm real_least_upper_bound_exists({0}, 1)
 obtain L from exist L R st {$is_real_least_upper_bound({0}, L)}
@@ -2489,6 +2652,7 @@ First failed statement: `release thm …`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `release_thm`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 release thm real_greatest_lower_bound_exists({0}, -1)
 obtain L from exist L R st {$is_real_greatest_lower_bound({0}, L)}
@@ -2506,6 +2670,7 @@ First failed statement: `release thm …`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `release_thm`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 release thm real_least_upper_bound_exists({0}, 1)
 obtain L from exist L R st {$is_real_least_upper_bound({0}, L)}
@@ -2523,6 +2688,7 @@ First failed statement: `release thm …`. Full nested requirements are in the l
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `claim`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 claim:
     ? forall F set:
@@ -2543,6 +2709,7 @@ First failed statement: `claim`. Full nested requirements are in the linked raw 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `mount_or_runtime`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have plane set = cart(R,R)
 have p plane
@@ -2564,6 +2731,7 @@ Session error: `Runtime(InternalBug("inferred fact failed well-definedness check
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `let`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let g = fn(alpha {1}) power_set(N) {{1}}
 let c = index_cart({1}, power_set(N), g)
@@ -2580,6 +2748,7 @@ First failed statement: `let …`. Full nested requirements are in the linked ra
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `let`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 let family = fn(k {1, 2}) power_set(N) {{1}}
 let u = index_union({1, 2}, N, family)
@@ -2598,6 +2767,7 @@ First failed statement: `let …`. Full nested requirements are in the linked ra
 
 Expected: **accept**; observed: **infrastructure_failure**; earliest reported phase: `timeout`; process exit: `None`.
 
+<!-- litex:skip-test -->
 ```litex
 have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])
 have fn dot(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
@@ -2619,6 +2789,7 @@ No completed proof outcome within the 20-second process deadline. This does not 
 
 [examples/test_statements/release_axiom_of_choice_stmt.lit](../../tmp/2026-10-02/examples-migration-rescan/latest-snapshot/examples/test_statements/release_axiom_of_choice_stmt.lit)
 
+<!-- litex:skip-test -->
 ```litex
 claim:
     ? forall F set:
@@ -2649,6 +2820,7 @@ Observed exit: `1`. Runner mismatches: success differs from expectation, exit co
 
 ### ReleaseAxiomOfChoiceStmt/conditional-family-choice
 
+<!-- litex:skip-test -->
 ```litex
 claim:
     ? forall F set:
@@ -2666,6 +2838,7 @@ Observed exit: `1`. Runner mismatches: success differs from expectation, exit co
 
 ### ReleaseAxiomOfChoiceStmt/renamed-family-choice
 
+<!-- litex:skip-test -->
 ```litex
 claim:
     ? forall ChoiceFamily set:
@@ -2683,6 +2856,7 @@ Observed exit: `1`. Runner mismatches: success differs from expectation, exit co
 
 ### ReleaseAxiomOfChoiceStmt/singleton-nonempty-family
 
+<!-- litex:skip-test -->
 ```litex
 release axiom_of_choice: set {{1}}:
     forall A {{1}}:
@@ -2696,6 +2870,7 @@ Observed exit: `1`. Runner mismatches: success differs from expectation, exit co
 
 [examples/test_statements/boundaries/strict-choice-allowed.lit](../../tmp/2026-10-02/examples-migration-rescan/latest-snapshot/examples/test_statements/boundaries/strict-choice-allowed.lit)
 
+<!-- litex:skip-test -->
 ```litex
 release axiom_of_choice: set {{1}}:
     forall A {{1}}:
@@ -2729,6 +2904,7 @@ These source files are not public acceptance fixtures; classify removed syntax o
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `parse`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 prop injective_fn(S, T set, phi fn(x S) T):
     forall x1, x2 S:
@@ -2968,6 +3144,7 @@ Session error: `Runtime(ParseError(RuntimeParseError { message: "inline `trust` 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `def_thm`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 prop injective_fn(S, T set, f fn(x S) T):
     forall x1, x2 S:
@@ -3180,6 +3357,7 @@ First failed statement: `thm`. Full nested requirements are in the linked raw JS
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `parse`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 claim:
     ? forall x {y R: y > 0}:
@@ -3283,6 +3461,7 @@ Session error: `Runtime(ParseError(RuntimeParseError { message: "inline `trust` 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 have a R = 1
 have pair cart(R, R) = (3, 4)
@@ -3306,6 +3485,7 @@ main2 = "main2.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `launch_config`; process exit: `2`.
 
+<!-- litex:skip-test -->
 ```litex
 have b R = 2
 have pair cart(R, R) = (8, 9)
@@ -3328,6 +3508,7 @@ main2 = "main2.lit"
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `parse`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 abstract_prop is_probe_integrable(f)
 trust have probe_integral fn(f fn(x R) R) R
@@ -3383,6 +3564,7 @@ Session error: `Runtime(ParseError(RuntimeParseError { message: "`$fn_eq` is rem
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `def_thm`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 thm empty_half_open_integer_interval_is_empty:
     ? forall:
@@ -3434,6 +3616,7 @@ First failed statement: `thm`. Full nested requirements are in the linked raw JS
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `parse`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 """
 Finite-set induction has an explicit empty case and a fresh-element insertion
@@ -3470,6 +3653,7 @@ Session error: `Runtime(ParseError(RuntimeParseError { message: "by induc: finit
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `parse`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 thm fn_eq_implies_equality_regression:
     ? forall f, g fn(n N) N:
@@ -3493,6 +3677,7 @@ Session error: `Runtime(ParseError(RuntimeParseError { message: "`$fn_eq` is rem
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `def_thm`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 thm positive_divisor_le_abs:
     ? forall d N+, a Z:
@@ -3597,6 +3782,7 @@ First failed statement: `thm`. Full nested requirements are in the linked raw JS
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `parse`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 have n N+ = 3
 
@@ -3708,6 +3894,7 @@ Session error: `Runtime(ParseError(RuntimeParseError { message: "undefined name 
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 sum(1, 2, fn(k Z) Z {k}) = sum(1, 2, fn(k Z) Z {k})
 product(1, 2, fn(k Z) Z {k}) = product(1, 2, fn(k Z) Z {k})
@@ -3725,6 +3912,7 @@ First failed statement: `finite_set_sum(closed_range(3, 1), fn (k Z) Z{0}) = 0`.
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 abstract_prop alpha_assumption(f)
 abstract_prop alpha_conclusion(f)
@@ -3760,6 +3948,7 @@ First failed statement: `$alpha_conclusion(fn (i1 R) R{i1 + 1})`. Full nested re
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `parse`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 thm named_restricted_return_set_supports_nested_function_use:
     ? forall U set, u U, P set:
@@ -3789,6 +3978,7 @@ Session error: `Runtime(ParseError(RuntimeParseError { message: "`$fn_eq` is rem
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 forall a, b N, n N+:
     a < b
@@ -3918,6 +4108,7 @@ First failed statement: `forall a, b, n N:
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `parse`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 + = +
 ```
@@ -3930,6 +4121,7 @@ Session error: `Runtime(ParseError(RuntimeParseError { message: "expected object
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `def_struct`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 struct ScalarSystem<s nonempty_set>:
     zero s
@@ -3955,6 +4147,7 @@ First failed statement: `struct …`. Full nested requirements are in the linked
 
 Expected: **accept**; observed: **reject**; earliest reported phase: `search_proof`; process exit: `1`.
 
+<!-- litex:skip-test -->
 ```litex
 arcsin(0) = 0
 arcsin(1) = pi / 2

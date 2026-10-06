@@ -1,0 +1,600 @@
+thm perpendicular_offset_square:
+    ? forall u,v,a,h,radius R:
+        u*a+v*h = 0
+        u^2+v^2 = radius^2
+        =>:
+            (-h*u+a*v)^2 = radius^2*(a^2+h^2)
+    (u*a+v*h)^2 = 0^2 = 0
+    (-h*u+a*v)^2 = (a^2+h^2)*(u^2+v^2)-(u*a+v*h)^2
+    (a^2+h^2)*(u^2+v^2)-(u*a+v*h)^2 = (a^2+h^2)*(u^2+v^2)-0 = (a^2+h^2)*(u^2+v^2) = (a^2+h^2)*radius^2 = radius^2*(a^2+h^2)
+
+thm left_side_tangent_identity:
+    ? forall x, y, a, h, radius, t R:
+        a > 0
+        h > 0
+        radius > 0
+        (-a * t - x) * (-a) + (h * (1 - t) - y) * (-h) = 0
+        (-a * t - x)^2 + (h * (1 - t) - y)^2 = radius^2
+        =>:
+            (a * (h - y) + h * x)^2 = radius^2 * (a^2 + h^2)
+    (-a*t-x)*a+(h*(1-t)-y)*h = -((-a*t-x)*(-a)+(h*(1-t)-y)*(-h)) = -0 = 0
+    by thm perpendicular_offset_square((-a*t-x),(h*(1-t)-y),a,h,radius)
+    a*(h-y)+h*x = -h*(-a*t-x)+a*(h*(1-t)-y)
+    (a*(h-y)+h*x)^2 = (-h*(-a*t-x)+a*(h*(1-t)-y))^2 = radius^2*(a^2+h^2)
+
+thm right_side_tangent_identity:
+    ? forall x, y, a, h, radius, t R:
+        a > 0
+        h > 0
+        radius > 0
+        (a * t - x) * a + (h * (1 - t) - y) * (-h) = 0
+        (a * t - x)^2 + (h * (1 - t) - y)^2 = radius^2
+        =>:
+            (a * (h - y) - h * x)^2 = radius^2 * (a^2 + h^2)
+    by thm perpendicular_offset_square((a*t-x),(h*(1-t)-y),a,-h,radius)
+    a*(h-y)-h*x = -(-h)*(a*t-x)+a*(h*(1-t)-y)
+    (a*(h-y)-h*x)^2 = (-(-h)*(a*t-x)+a*(h*(1-t)-y))^2 = radius^2*(a^2+(-h)^2) = radius^2*(a^2+h^2)
+
+thm base_tangent_identity:
+    ? forall x, y, a, radius, t R:
+        a > 0
+        radius > 0
+        (-a + 2 * a * t - x) * (2 * a) = 0
+        (-a + 2 * a * t - x)^2 + y^2 = radius^2
+        =>:
+            y^2 = radius^2
+    2 * a > 0
+    2 * a != 0
+    -a + 2 * a * t - x = 0
+    (-a + 2 * a * t - x)^2 = 0
+    radius^2 - y^2 = (-a + 2 * a * t - x)^2
+    radius^2 - y^2 = 0
+    radius^2 = y^2
+    y^2 = radius^2
+
+# Equal circumcircle equations determine the circumcenter and radius.
+
+thm canonical_circumcenter:
+    ? forall ox, oy, a, h, radius R:
+        a > 0
+        h > 0
+        radius > 0
+        ox^2 + (h - oy)^2 = radius^2
+        (-a - ox)^2 + oy^2 = radius^2
+        (a - ox)^2 + oy^2 = radius^2
+        =>:
+            ox = 0
+            2 * h * oy = h^2 - a^2
+            radius = h - oy
+    (-a - ox)^2 + oy^2 = (a - ox)^2 + oy^2
+    ((-a - ox)^2 + oy^2) - ((a - ox)^2 + oy^2) = 0
+    ((-a - ox)^2 + oy^2) - ((a - ox)^2 + oy^2) = 4 * a * ox
+    4 * a * ox = 0
+    4*a > 0
+    4 * a != 0
+    ox = 0
+    ox^2 = 0
+    radius^2 - (h - oy)^2 = ox^2
+    radius^2 - (h - oy)^2 = 0
+    radius^2 = (h - oy)^2
+    (h - oy)^2 = radius^2
+    a - ox = a
+    (a - ox)^2 = a^2
+    (a - ox)^2 + oy^2 = a^2 + oy^2
+    a^2 + oy^2 = (a - ox)^2 + oy^2
+    a^2 + oy^2 = radius^2
+    (h - oy)^2 = a^2 + oy^2
+    (h - oy)^2 - (a^2 + oy^2) = 0
+    (h - oy)^2 - (a^2 + oy^2) = h^2 - a^2 - 2 * h * oy
+    h^2 - a^2 - 2 * h * oy = 0
+    h^2 - a^2 = 2 * h * oy
+    2 * h * oy = h^2 - a^2
+    2 * h * (h - oy) - (h^2 + a^2) = h^2 - a^2 - 2 * h * oy
+    2 * h * (h - oy) - (h^2 + a^2) = 0
+    2 * h * (h - oy) = h^2 + a^2
+    h*h > 0
+    h*h = h^2
+    0 <= a^2
+    h^2+a^2 > 0
+    2 * h * (h - oy) > 0
+    2 * h > 0
+    2*h >= 0
+    by contra:
+        ? h-oy > 0
+        h-oy <= 0
+        (h-oy)*(2*h) <= 0*(2*h)
+        0*(2*h) = 0
+        (h-oy)*(2*h) <= 0
+        (h-oy)*(2*h) = 2*h*(h-oy)
+        2*h*(h-oy) <= 0
+        impossible 2*h*(h-oy) > 0
+    h-oy > 0
+    h - oy + radius > 0
+    (h - oy)^2 - radius^2 = 0
+    (h - oy)^2 - radius^2 = (h - oy - radius) * (h - oy + radius)
+    (h - oy - radius) * (h - oy + radius) = 0
+    h - oy + radius != 0
+    h - oy - radius = 0
+    radius = h - oy
+
+# Equal distances to the symmetric sides and the base determine the incenter.
+
+thm canonical_incenter:
+    ? forall ix, iy, a, h, radius R:
+        a > 0
+        h > 0
+        radius > 0
+        iy > 0
+        h - iy > 0
+        (a * (h - iy) + h * ix)^2 = radius^2 * (a^2 + h^2)
+        (a * (h - iy) - h * ix)^2 = radius^2 * (a^2 + h^2)
+        iy^2 = radius^2
+        =>:
+            ix = 0
+            iy = radius
+            a^2 * (h - radius)^2 = radius^2 * (a^2 + h^2)
+    (a * (h - iy) + h * ix)^2 = (a * (h - iy) - h * ix)^2
+    (a * (h - iy) + h * ix)^2 - (a * (h - iy) - h * ix)^2 = 0
+    (a * (h - iy) + h * ix)^2 - (a * (h - iy) - h * ix)^2 = 4 * a * h * ix * (h - iy)
+    4 * a * h * ix * (h - iy) = 0
+    4*a > 0
+    4*a*h > 0
+    4 * a * h * (h - iy) > 0
+    4 * a * h * (h - iy) != 0
+    (4 * a * h * (h - iy)) * ix = 4 * a * h * ix * (h - iy)
+    (4 * a * h * (h - iy)) * ix = 0
+    ix = 0
+    iy + radius > 0
+    iy^2 - radius^2 = 0
+    iy^2 - radius^2 = (iy - radius) * (iy + radius)
+    (iy - radius) * (iy + radius) = 0
+    iy + radius != 0
+    iy - radius = 0
+    iy = radius
+    h * ix = 0
+    h - iy = h - radius
+    a * (h - iy) = a * (h - radius)
+    a * (h - iy) + h * ix = a * (h - radius) + 0
+    a * (h - radius) + 0 = a * (h - radius)
+    a * (h - iy) + h * ix = a * (h - radius)
+    (a * (h - iy) + h * ix)^2 = (a * (h - radius))^2
+    (a * (h - radius))^2 = a^2 * (h - radius)^2
+    (a * (h - iy) + h * ix)^2 = a^2 * (h - radius)^2
+    a^2 * (h - radius)^2 = radius^2 * (a^2 + h^2)
+
+# Final elimination: the two independently derived radius relations imply Euler's identity.
+
+thm euler_elimination:
+    ? forall a, h, oy, radius, inradius, center_distance R:
+        a > 0
+        h > 0
+        radius > 0
+        inradius > 0
+        center_distance >= 0
+        2 * h * oy = h^2 - a^2
+        radius = h - oy
+        a^2 * (h - inradius)^2 = inradius^2 * (a^2 + h^2)
+        center_distance^2 = (oy - inradius)^2
+        =>:
+            center_distance^2 = radius * (radius - 2 * inradius)
+            radius * (radius - 2 * inradius) >= 0
+    2 * h * oy - (h^2 - a^2) = 0
+    2 * h * oy - (h^2 - a^2) = a^2 - (h^2 - 2 * h * oy)
+    a^2 - (h^2 - 2 * h * oy) = 0
+    a^2 = h^2 - 2 * h * oy
+    a^2 * (h - inradius)^2 - inradius^2 * (a^2 + h^2) = 0
+    a^2 * (h - inradius)^2 - inradius^2 * (a^2 + h^2) = (h^2 - 2 * h * oy) * (h - inradius)^2 - inradius^2 * ((h^2 - 2 * h * oy) + h^2)
+    (h^2 - 2 * h * oy) * (h - inradius)^2 - inradius^2 * ((h^2 - 2 * h * oy) + h^2) = (-1) * h^2 * ((oy - inradius)^2 - (h - oy) * ((h - oy) - 2 * inradius))
+    (-1) * h^2 * ((oy - inradius)^2 - (h - oy) * ((h - oy) - 2 * inradius)) = 0
+    (h - oy) * ((h - oy) - 2 * inradius) = radius * (radius - 2 * inradius)
+    (oy - inradius)^2 - (h - oy) * ((h - oy) - 2 * inradius) = (oy - inradius)^2 - radius * (radius - 2 * inradius)
+    (-1) * h^2 * ((oy - inradius)^2 - (h - oy) * ((h - oy) - 2 * inradius)) = (-1) * h^2 * ((oy - inradius)^2 - radius * (radius - 2 * inradius))
+    (-1) * h^2 * ((oy - inradius)^2 - radius * (radius - 2 * inradius)) = 0
+    (-1) * h^2 * ((oy - inradius)^2 - radius * (radius - 2 * inradius)) = (-1) * (h^2 * ((oy - inradius)^2 - radius * (radius - 2 * inradius)))
+    (-1) * (h^2 * ((oy - inradius)^2 - radius * (radius - 2 * inradius))) = 0
+    -1 != 0
+    h^2 * ((oy - inradius)^2 - radius * (radius - 2 * inradius)) = 0
+    h*h > 0
+    h*h = h^2
+    h^2 > 0
+    h^2 != 0
+    (oy - inradius)^2 - radius * (radius - 2 * inradius) = 0
+    (oy - inradius)^2 = radius * (radius - 2 * inradius)
+    center_distance^2 = radius * (radius - 2 * inradius)
+    center_distance^2 >= 0
+    radius * (radius - 2 * inradius) >= 0
+
+# Equal squares determine equal nonnegative quantities.
+
+thm nonnegative_square_root:
+    ? forall x, y R:
+        x >= 0
+        y >= 0
+        x^2 = y
+        =>:
+            x = sqrt(y)
+    0 <= x
+    0 <= y
+    sqrt(x^2) = x
+    sqrt(x^2) = sqrt(y)
+    x = sqrt(y)
+
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
+
+# Dot product.
+
+have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
+
+# 2D determinant (signed parallelogram area / cross product z-component).
+
+have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+
+# Squared Euclidean distance |ab|^2 (avoids square roots).
+
+have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
+
+# General form: the line ax + by + c = 0 (a, b not both zero).
+
+prop is_on_segment(p, a, b cart(R, R)):
+    a != b
+    exist t R st {0 <= t, t <= 1, p(1) = (1 - t) * a(1) + t * b(1), p(2) = (1 - t) * a(2) + t * b(2)}
+
+# p lies on the ray from a through distinct point b (t >= 0).
+
+prop are_segments_congruent(a, b, c, d cart(R, R)):
+    distance_sq(a, b) = distance_sq(c, d)
+
+# Angles pqr and uvw are congruent (same |cos|, same sign).
+
+prop is_perpendicular(a, b, c, d cart(R, R)):
+    a != b
+    c != d
+    dot(vec(a, b), vec(c, d)) = 0
+
+# Set l is a line in the plane (equals some line(a, b, c)).
+
+prop is_triangle(a, b, c cart(R, R)):
+    det(vec(a, b), vec(a, c)) != 0
+
+# Triangle abc is isosceles with apex a (ab = ac), not the general "two sides equal".
+
+prop is_isosceles(a, b, c cart(R, R)):
+    $is_triangle(a, b, c)
+    $are_segments_congruent(a, b, a, c)
+
+# Triangle abc is equilateral.
+
+prop is_on_circle(p, o cart(R, R), r R+):
+    distance_sq(o, p) = r * r
+
+# Points a, b, c, d lie on a common finite circle (equal distance to some center).
+# Four coincident points also satisfy this relation. Their radius is zero
+# when the chosen center is that same point.
+
+prop is_strictly_inside_triangle(p, a, b, c cart(R, R)):
+    exist u, v, w R st {u > 0, v > 0, w > 0, u + v + w = 1, p(1) = u * a(1) + v * b(1) + w * c(1), p(2) = u * a(2) + v * b(2) + w * c(2)}
+
+# A canonical isosceles triangle together with its circumcircle and incircle.
+# No formula for either center, either radius, or the center distance is assumed.
+
+prop is_isosceles_triangle_circle_configuration(point_a, point_b, point_c, center_o, center_i, touch_ab, touch_ac, touch_bc cart(R, R), half_base, altitude, circumradius, inradius, center_distance R):
+    half_base > 0
+    altitude > 0
+    circumradius > 0
+    inradius > 0
+    center_distance >= 0
+
+    point_a(1) = 0
+    point_a(2) = altitude
+    point_b(1) = -half_base
+    point_b(2) = 0
+    point_c(1) = half_base
+    point_c(2) = 0
+
+    $is_triangle(point_a, point_b, point_c)
+    $is_isosceles(point_a, point_b, point_c)
+
+    $is_on_circle(point_a, center_o, circumradius)
+    $is_on_circle(point_b, center_o, circumradius)
+    $is_on_circle(point_c, center_o, circumradius)
+
+    $is_strictly_inside_triangle(center_i, point_a, point_b, point_c)
+
+    $is_on_segment(touch_ab, point_a, point_b)
+    $is_on_circle(touch_ab, center_i, inradius)
+    $is_perpendicular(center_i, touch_ab, point_a, point_b)
+
+    $is_on_segment(touch_ac, point_a, point_c)
+    $is_on_circle(touch_ac, center_i, inradius)
+    $is_perpendicular(center_i, touch_ac, point_a, point_c)
+
+    $is_on_segment(touch_bc, point_b, point_c)
+    $is_on_circle(touch_bc, center_i, inradius)
+    $is_perpendicular(center_i, touch_bc, point_b, point_c)
+
+    center_distance^2 = distance_sq(center_o, center_i)
+
+thm vector_projections:
+    ? forall a,b cart(R,R):
+        vec(a,b)(1) = b(1)-a(1)
+        vec(a,b)(2) = b(2)-a(2)
+    vec(a,b) = (b(1)-a(1),b(2)-a(2))
+    vec(a,b)(1) = (b(1)-a(1),b(2)-a(2))(1) = b(1)-a(1)
+    vec(a,b)(2) = (b(1)-a(1),b(2)-a(2))(2) = b(2)-a(2)
+
+thm dot_coordinates:
+    ? forall a,b,c,d cart(R,R):
+        dot(vec(a,b),vec(c,d)) = (b(1)-a(1))*(d(1)-c(1))+(b(2)-a(2))*(d(2)-c(2))
+    by thm vector_projections(a,b)
+    by thm vector_projections(c,d)
+    dot(vec(a,b),vec(c,d)) = vec(a,b)(1)*vec(c,d)(1)+vec(a,b)(2)*vec(c,d)(2) = (b(1)-a(1))*(d(1)-c(1))+(b(2)-a(2))*(d(2)-c(2))
+
+thm distance_sq_coordinates:
+    ? forall a,b cart(R,R):
+        distance_sq(a,b) = (b(1)-a(1))^2+(b(2)-a(2))^2
+    by thm dot_coordinates(a,b,a,b)
+    distance_sq(a,b) = dot(vec(a,b),vec(a,b)) = (b(1)-a(1))*(b(1)-a(1))+(b(2)-a(2))*(b(2)-a(2)) = (b(1)-a(1))^2+(b(2)-a(2))^2
+
+thm perpendicular_coordinate_equation:
+    ? forall p, q, a, b cart(R, R):
+        $is_perpendicular(p, q, a, b)
+        =>:
+            (q(1) - p(1)) * (b(1) - a(1)) + (q(2) - p(2)) * (b(2) - a(2)) = 0
+    by def $is_perpendicular(p,q,a,b)
+    by thm dot_coordinates(p,q,a,b)
+    (q(1)-p(1))*(b(1)-a(1))+(q(2)-p(2))*(b(2)-a(2)) = dot(vec(p,q),vec(a,b)) = 0
+
+thm circle_coordinate_equation_5:
+    ? forall point, center cart(R,R), x,y R, radius R+:
+        point(1) = x
+        point(2) = y
+        $is_on_circle(point,center,radius)
+        =>:
+            (x-center(1))^2+(y-center(2))^2 = radius^2
+    by def $is_on_circle(point,center,radius)
+    by thm distance_sq_coordinates(center,point)
+    point(1)-center(1) = x-center(1)
+    point(2)-center(2) = y-center(2)
+    (point(1)-center(1))^2 = (x-center(1))^2
+    (point(2)-center(2))^2 = (y-center(2))^2
+    (x-center(1))^2+(y-center(2))^2 = (point(1)-center(1))^2+(point(2)-center(2))^2
+    (point(1)-center(1))^2+(point(2)-center(2))^2 = distance_sq(center,point)
+    distance_sq(center,point) = radius*radius
+    radius*radius = radius^2
+    (x-center(1))^2+(y-center(2))^2 = radius^2
+
+thm three_circles_circumcenter_5:
+    ? forall point_a,point_b,point_c,center_o cart(R,R), half_base,altitude,circumradius R+:
+        point_a(1) = 0
+        point_a(2) = altitude
+        point_b(1) = -half_base
+        point_b(2) = 0
+        point_c(1) = half_base
+        point_c(2) = 0
+        $is_on_circle(point_a,center_o,circumradius)
+        $is_on_circle(point_b,center_o,circumradius)
+        $is_on_circle(point_c,center_o,circumradius)
+        =>:
+            center_o(1) = 0
+            2*altitude*center_o(2) = altitude^2-half_base^2
+            circumradius = altitude-center_o(2)
+    by thm circle_coordinate_equation_5(point_a,center_o,0,altitude,circumradius)
+    by thm circle_coordinate_equation_5(point_b,center_o,-half_base,0,circumradius)
+    by thm circle_coordinate_equation_5(point_c,center_o,half_base,0,circumradius)
+    (0-center_o(1))^2 = center_o(1)^2
+    (0-center_o(2))^2 = center_o(2)^2
+    center_o(1)^2+(altitude-center_o(2))^2 = (0-center_o(1))^2+(altitude-center_o(2))^2
+    center_o(1)^2+(altitude-center_o(2))^2 = circumradius^2
+    (-half_base-center_o(1))^2+center_o(2)^2 = (-half_base-center_o(1))^2+(0-center_o(2))^2
+    (-half_base-center_o(1))^2+center_o(2)^2 = circumradius^2
+    (half_base-center_o(1))^2+center_o(2)^2 = (half_base-center_o(1))^2+(0-center_o(2))^2
+    (half_base-center_o(1))^2+center_o(2)^2 = circumradius^2
+    by thm canonical_circumcenter(center_o(1),center_o(2),half_base,altitude,circumradius)
+
+thm configuration_circumcenter_5:
+    ? forall point_a, point_b, point_c, center_o, center_i, touch_ab, touch_ac, touch_bc cart(R, R), half_base, altitude, circumradius, inradius, center_distance R:
+        $is_isosceles_triangle_circle_configuration(point_a, point_b, point_c, center_o, center_i, touch_ab, touch_ac, touch_bc, half_base, altitude, circumradius, inradius, center_distance)
+        =>:
+            center_o(1) = 0
+            2*altitude*center_o(2) = altitude^2-half_base^2
+            circumradius = altitude-center_o(2)
+    by def $is_isosceles_triangle_circle_configuration(point_a,point_b,point_c,center_o,center_i,touch_ab,touch_ac,touch_bc,half_base,altitude,circumradius,inradius,center_distance)
+    half_base $in R+
+    altitude $in R+
+    circumradius $in R+
+    by thm three_circles_circumcenter_5(point_a,point_b,point_c,center_o,half_base,altitude,circumradius)
+
+thm tangent_line_distance_5:
+    ? forall p,q,a,b cart(R,R), radius R+:
+        $is_on_segment(q,a,b)
+        $is_on_circle(q,p,radius)
+        $is_perpendicular(p,q,a,b)
+        =>:
+            ((b(1)-a(1))*(a(2)-p(2))-(b(2)-a(2))*(a(1)-p(1)))^2 = radius^2*((b(1)-a(1))^2+(b(2)-a(2))^2)
+    by def $is_on_segment(q,a,b)
+    obtain t from exist t R st {0<=t,t<=1,q(1)=(1-t)*a(1)+t*b(1),q(2)=(1-t)*a(2)+t*b(2)}
+    by thm perpendicular_coordinate_equation(p,q,a,b)
+    by def $is_on_circle(q,p,radius)
+    by thm distance_sq_coordinates(p,q)
+    (q(1)-p(1))^2+(q(2)-p(2))^2 = distance_sq(p,q) = radius*radius = radius^2
+    by thm perpendicular_offset_square(q(1)-p(1),q(2)-p(2),b(1)-a(1),b(2)-a(2),radius)
+    q(1)-a(1) = ((1-t)*a(1)+t*b(1))-a(1) = t*(b(1)-a(1))
+    q(2)-a(2) = ((1-t)*a(2)+t*b(2))-a(2) = t*(b(2)-a(2))
+    (b(1)-a(1))*(q(2)-a(2)) = (b(1)-a(1))*(t*(b(2)-a(2)))
+    (b(2)-a(2))*(q(1)-a(1)) = (b(2)-a(2))*(t*(b(1)-a(1)))
+    (b(1)-a(1))*(q(2)-a(2))-(b(2)-a(2))*(q(1)-a(1)) = (b(1)-a(1))*(t*(b(2)-a(2)))-(b(2)-a(2))*(t*(b(1)-a(1))) = 0
+    -(b(2)-a(2))*(q(1)-p(1))+(b(1)-a(1))*(q(2)-p(2)) = ((b(1)-a(1))*(q(2)-a(2))-(b(2)-a(2))*(q(1)-a(1)))+((b(1)-a(1))*(a(2)-p(2))-(b(2)-a(2))*(a(1)-p(1)))
+    ((b(1)-a(1))*(q(2)-a(2))-(b(2)-a(2))*(q(1)-a(1)))+((b(1)-a(1))*(a(2)-p(2))-(b(2)-a(2))*(a(1)-p(1))) = 0+((b(1)-a(1))*(a(2)-p(2))-(b(2)-a(2))*(a(1)-p(1)))
+    0+((b(1)-a(1))*(a(2)-p(2))-(b(2)-a(2))*(a(1)-p(1))) = (b(1)-a(1))*(a(2)-p(2))-(b(2)-a(2))*(a(1)-p(1))
+    -(b(2)-a(2))*(q(1)-p(1))+(b(1)-a(1))*(q(2)-p(2)) = (b(1)-a(1))*(a(2)-p(2))-(b(2)-a(2))*(a(1)-p(1))
+    (-(b(2)-a(2))*(q(1)-p(1))+(b(1)-a(1))*(q(2)-p(2)))^2 = ((b(1)-a(1))*(a(2)-p(2))-(b(2)-a(2))*(a(1)-p(1)))^2
+
+thm tangent_coordinate_distance_5:
+    ? forall p,q,a,b cart(R,R), ax,ay,bx,by R, radius R+:
+        a(1) = ax
+        a(2) = ay
+        b(1) = bx
+        b(2) = by
+        $is_on_segment(q,a,b)
+        $is_on_circle(q,p,radius)
+        $is_perpendicular(p,q,a,b)
+        =>:
+            ((bx-ax)*(ay-p(2))-(by-ay)*(ax-p(1)))^2 = radius^2*((bx-ax)^2+(by-ay)^2)
+    by thm tangent_line_distance_5(p,q,a,b,radius)
+    b(1)-a(1) = bx-a(1) = bx-ax
+    b(2)-a(2) = by-a(2) = by-ay
+    a(1)-p(1) = ax-p(1)
+    a(2)-p(2) = ay-p(2)
+    (b(1)-a(1))*(a(2)-p(2)) = (bx-ax)*(ay-p(2))
+    (b(2)-a(2))*(a(1)-p(1)) = (by-ay)*(ax-p(1))
+    (b(1)-a(1))*(a(2)-p(2))-(b(2)-a(2))*(a(1)-p(1)) = (bx-ax)*(ay-p(2))-(by-ay)*(ax-p(1))
+    ((b(1)-a(1))*(a(2)-p(2))-(b(2)-a(2))*(a(1)-p(1)))^2 = ((bx-ax)*(ay-p(2))-(by-ay)*(ax-p(1)))^2
+    (b(1)-a(1))^2 = (bx-ax)^2
+    (b(2)-a(2))^2 = (by-ay)^2
+    (b(1)-a(1))^2+(b(2)-a(2))^2 = (bx-ax)^2+(by-ay)^2
+    radius^2*((b(1)-a(1))^2+(b(2)-a(2))^2) = radius^2*((bx-ax)^2+(by-ay)^2)
+    ((bx-ax)*(ay-p(2))-(by-ay)*(ax-p(1)))^2 = radius^2*((bx-ax)^2+(by-ay)^2)
+
+thm interior_vertical_bounds_5:
+    ? forall p,a,b,c cart(R,R), altitude R+:
+        a(2) = altitude
+        b(2) = 0
+        c(2) = 0
+        $is_strictly_inside_triangle(p,a,b,c)
+        =>:
+            p(2) > 0
+            altitude-p(2) > 0
+    by def $is_strictly_inside_triangle(p,a,b,c)
+    obtain u,v,w from exist u,v,w R st {u>0,v>0,w>0,u+v+w=1,p(1)=u*a(1)+v*b(1)+w*c(1),p(2)=u*a(2)+v*b(2)+w*c(2)}
+    u*a(2) = u*altitude
+    v*b(2) = v*0
+    w*c(2) = w*0
+    u*a(2)+v*b(2)+w*c(2) = u*altitude+v*0+w*0
+    p(2) = u*altitude+v*0+w*0
+    u*altitude+v*0+w*0 = u*altitude
+    p(2) = u*altitude
+    altitude > 0
+    u*altitude > 0
+    p(2) > 0
+    v+w > 0
+    1-u = (u+v+w)-u
+    (u+v+w)-u = v+w
+    1-u = v+w
+    1-u > 0
+    altitude*(1-u) > 0
+    altitude-p(2) = altitude-u*altitude = altitude*(1-u)
+    altitude-p(2) > 0
+
+thm normalized_tangent_squares_5:
+    ? forall x,y R, a,h,radius R+:
+        ((-a-0)*(h-y)-(0-h)*(0-x))^2 = radius^2*((-a-0)^2+(0-h)^2)
+        ((a-0)*(h-y)-(0-h)*(0-x))^2 = radius^2*((a-0)^2+(0-h)^2)
+        ((a-(-a))*(0-y)-(0-0)*(-a-x))^2 = radius^2*((a-(-a))^2+(0-0)^2)
+        =>:
+            (a*(h-y)+h*x)^2 = radius^2*(a^2+h^2)
+            (a*(h-y)-h*x)^2 = radius^2*(a^2+h^2)
+            y^2 = radius^2
+    ((-a-0)*(h-y)-(0-h)*(0-x))^2 = (a*(h-y)+h*x)^2
+    (-a-0)^2+(0-h)^2 = a^2+h^2
+    radius^2*((-a-0)^2+(0-h)^2) = radius^2*(a^2+h^2)
+    (a*(h-y)+h*x)^2 = radius^2*(a^2+h^2)
+    ((a-0)*(h-y)-(0-h)*(0-x))^2 = (a*(h-y)-h*x)^2
+    (a-0)^2+(0-h)^2 = a^2+h^2
+    radius^2*((a-0)^2+(0-h)^2) = radius^2*(a^2+h^2)
+    (a*(h-y)-h*x)^2 = radius^2*(a^2+h^2)
+    ((a-(-a))*(0-y)-(0-0)*(-a-x))^2 = 4*a^2*y^2
+    (a-(-a))^2+(0-0)^2 = 4*a^2
+    radius^2*((a-(-a))^2+(0-0)^2) = radius^2*(4*a^2) = 4*a^2*radius^2
+    4*a^2*y^2 = 4*a^2*radius^2
+    (4*a^2)*(y^2-radius^2) = 4*a^2*y^2-4*a^2*radius^2 = 0
+    a > 0
+    a*a > 0
+    a*a = a^2
+    a^2 > 0
+    4*a^2 > 0
+    4*a^2 != 0
+    y^2-radius^2 = 0
+    y^2 = radius^2
+
+thm actual_incenter_5:
+    ? forall point_a,point_b,point_c,center_i,touch_ab,touch_ac,touch_bc cart(R,R), half_base,altitude,inradius R+:
+        point_a(1) = 0
+        point_a(2) = altitude
+        point_b(1) = -half_base
+        point_b(2) = 0
+        point_c(1) = half_base
+        point_c(2) = 0
+        $is_strictly_inside_triangle(center_i,point_a,point_b,point_c)
+        $is_on_segment(touch_ab,point_a,point_b)
+        $is_on_circle(touch_ab,center_i,inradius)
+        $is_perpendicular(center_i,touch_ab,point_a,point_b)
+        $is_on_segment(touch_ac,point_a,point_c)
+        $is_on_circle(touch_ac,center_i,inradius)
+        $is_perpendicular(center_i,touch_ac,point_a,point_c)
+        $is_on_segment(touch_bc,point_b,point_c)
+        $is_on_circle(touch_bc,center_i,inradius)
+        $is_perpendicular(center_i,touch_bc,point_b,point_c)
+        =>:
+            center_i(1) = 0
+            center_i(2) = inradius
+            half_base^2*(altitude-inradius)^2 = inradius^2*(half_base^2+altitude^2)
+    by thm interior_vertical_bounds_5(center_i,point_a,point_b,point_c,altitude)
+    by thm tangent_coordinate_distance_5(center_i,touch_ab,point_a,point_b,0,altitude,-half_base,0,inradius)
+    by thm tangent_coordinate_distance_5(center_i,touch_ac,point_a,point_c,0,altitude,half_base,0,inradius)
+    by thm tangent_coordinate_distance_5(center_i,touch_bc,point_b,point_c,-half_base,0,half_base,0,inradius)
+    by thm normalized_tangent_squares_5(center_i(1),center_i(2),half_base,altitude,inradius)
+    by thm canonical_incenter(center_i(1),center_i(2),half_base,altitude,inradius)
+
+thm configuration_incenter_5:
+    ? forall point_a, point_b, point_c, center_o, center_i, touch_ab, touch_ac, touch_bc cart(R, R), half_base, altitude, circumradius, inradius, center_distance R:
+        $is_isosceles_triangle_circle_configuration(point_a, point_b, point_c, center_o, center_i, touch_ab, touch_ac, touch_bc, half_base, altitude, circumradius, inradius, center_distance)
+        =>:
+            center_i(1) = 0
+            center_i(2) = inradius
+            half_base^2*(altitude-inradius)^2 = inradius^2*(half_base^2+altitude^2)
+    by def $is_isosceles_triangle_circle_configuration(point_a,point_b,point_c,center_o,center_i,touch_ab,touch_ac,touch_bc,half_base,altitude,circumradius,inradius,center_distance)
+    half_base $in R+
+    altitude $in R+
+    inradius $in R+
+    by thm actual_incenter_5(point_a,point_b,point_c,center_i,touch_ab,touch_ac,touch_bc,half_base,altitude,inradius)
+
+thm axial_center_distance_5:
+    ? forall center_o,center_i cart(R,R), radius,distance R:
+        center_o(1) = 0
+        center_i(1) = 0
+        center_i(2) = radius
+        distance^2 = distance_sq(center_o,center_i)
+        =>:
+            distance^2 = (center_o(2)-radius)^2
+    by thm distance_sq_coordinates(center_o,center_i)
+    center_i(1)-center_o(1) = 0-0 = 0
+    (center_i(1)-center_o(1))^2 = 0^2 = 0
+    center_i(2)-center_o(2) = radius-center_o(2)
+    (center_i(2)-center_o(2))^2 = (radius-center_o(2))^2 = (center_o(2)-radius)^2
+    (center_i(1)-center_o(1))^2+(center_i(2)-center_o(2))^2 = 0+(center_o(2)-radius)^2 = (center_o(2)-radius)^2
+    distance_sq(center_o,center_i) = (center_i(1)-center_o(1))^2+(center_i(2)-center_o(2))^2 = (center_o(2)-radius)^2
+    distance^2 = (center_o(2)-radius)^2
+
+thm problem_5_squared_distance:
+    ? forall point_a, point_b, point_c, center_o, center_i, touch_ab, touch_ac, touch_bc cart(R, R), half_base, altitude, circumradius, inradius, center_distance R:
+        $is_isosceles_triangle_circle_configuration(point_a, point_b, point_c, center_o, center_i, touch_ab, touch_ac, touch_bc, half_base, altitude, circumradius, inradius, center_distance)
+        =>:
+            center_distance^2 = circumradius*(circumradius-2*inradius)
+            0 <= circumradius*(circumradius-2*inradius)
+    by def $is_isosceles_triangle_circle_configuration(point_a,point_b,point_c,center_o,center_i,touch_ab,touch_ac,touch_bc,half_base,altitude,circumradius,inradius,center_distance)
+    by thm configuration_circumcenter_5(point_a,point_b,point_c,center_o,center_i,touch_ab,touch_ac,touch_bc,half_base,altitude,circumradius,inradius,center_distance)
+    by thm configuration_incenter_5(point_a,point_b,point_c,center_o,center_i,touch_ab,touch_ac,touch_bc,half_base,altitude,circumradius,inradius,center_distance)
+    by thm axial_center_distance_5(center_o,center_i,inradius,center_distance)
+    by thm euler_elimination(half_base,altitude,center_o(2),circumradius,inradius,center_distance)
+    0 <= circumradius*(circumradius-2*inradius)
+
+thm problem_5:
+    ? forall point_a, point_b, point_c, center_o, center_i, touch_ab, touch_ac, touch_bc cart(R, R), half_base, altitude, circumradius, inradius, center_distance R:
+        $is_isosceles_triangle_circle_configuration(point_a, point_b, point_c, center_o, center_i, touch_ab, touch_ac, touch_bc, half_base, altitude, circumradius, inradius, center_distance)
+        =>:
+            circumradius * (circumradius - 2 * inradius) >= 0
+            center_distance = sqrt(circumradius * (circumradius - 2 * inradius))
+    by thm problem_5_squared_distance(point_a,point_b,point_c,center_o,center_i,touch_ab,touch_ac,touch_bc,half_base,altitude,circumradius,inradius,center_distance)
+    by def $is_isosceles_triangle_circle_configuration(point_a,point_b,point_c,center_o,center_i,touch_ab,touch_ac,touch_bc,half_base,altitude,circumradius,inradius,center_distance)
+    circumradius*(circumradius-2*inradius) >= 0
+    by thm nonnegative_square_root(center_distance,circumradius*(circumradius-2*inradius))

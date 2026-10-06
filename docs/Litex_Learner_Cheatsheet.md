@@ -699,19 +699,15 @@ by cases:
 
 A <code>struct</code> creates a reusable carrier and field vocabulary:
 
-> **Migration example:** Current `src/` checking stops at `release_thm` (`release thm …`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 struct Point:
     x R
     y R
 
-release thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
-p.x = p[1]
-p.x = 1
-p.y = 2
+release struct def p
+p.x = p(1) = 1
+p.y = p(2) = 2
 ```
 
 Direct symbols introduced in a struct carrier can open one definition-owned

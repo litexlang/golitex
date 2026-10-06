@@ -1,5 +1,10 @@
 # Bare theorem calls use release thm
 
+> Historical audit: these code fences preserve dated verifier observations,
+> including rejected inputs and excerpts that depend on their original context.
+> They are evidence, not current standalone tutorial examples. The maintained
+> executable language examples are in the Manual, README, and examples corpus.
+
 Recorded on 2026-10-05. This is an equivalent-spelling migration of current
 documentation, examples and geometry sources. The parser compatibility alias
 remains available. No parser, verifier, AST, runtime, configuration, theorem

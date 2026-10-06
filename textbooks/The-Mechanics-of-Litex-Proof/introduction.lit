@@ -1,14 +1,55 @@
-# The Mechanics of Litex Proof
+# About This Project
 #
-# This textbook develops mathematical proofs in Litex, inspired by Heather
-# Macbeth's The Mechanics of Proof. It progresses from calculation to structured
-# proofs, logic, induction, number theory, functions, sets and relations.
+# Litex source:
+# Canonical module: scripts/The-Mechanics-of-Litex-Proof/textbook
 #
-# Each lesson states its mathematical assumptions, gives a proof idea and shows
-# the Litex facts and proof commands that establish the result. Supporting
-# results are proved in the chapters where they are introduced.
+# The Mechanics of Litex Proof is an ongoing Litex textbook motivated by
+# Heather Macbeth's The Mechanics of Proof and its Lean-based approach to
+# learning formal mathematics. This is an independent Litex case study, not an
+# official adaptation, a replacement for the original book, or a claim that
+# Litex reproduces Lean and Mathlib.
 #
-# When Litex already supplies a familiar concept, the book first introduces its
-# mathematical definition and simple examples, then uses the builtin object in
-# later calculations. Chapter6 explains the domains and sign conventions for
-# quotients, remainders and greatest common divisors.
+# Book conventions
+#
+# This is a Litex-first teaching book rather than a line-by-line translation of
+# its motivating source. Examples and topics are selected and reorganized to
+# teach Litex's fact-oriented proof style, and custom predicates sometimes
+# restate familiar mathematics deliberately so readers can practise defining
+# and reusing an interface. Builtin facts and checked source-local citation
+# theorems remain part of the checking environment; a successful example is
+# therefore not a claim that every mathematical foundation was reconstructed
+# inside its chapter.
+#
+# When the source asks for a definition already supplied by Litex, introduce
+# the mathematical definition and small examples, then state that later work
+# uses the builtin object. The native quotient/remainder and gcd domains and
+# zero/negative-value conventions are explained explicitly in Sections6.6–6.8.
+#
+# Pedagogical prose may suggest follow-up exercises without treating them as
+# source-coverage obligations. Executable lessons themselves are expected to
+# remain checked. If a future lesson requires an unfinished supporting result,
+# it must expose that result as an explicit trust, axiom, abstract-proposition,
+# or citation boundary rather than presenting it as verified. The executable
+# lessons use checked proofs and make their required domains explicit.
+#
+# Coverage and verification should not be confused: the chosen lessons are a
+# curriculum, not a claim to reproduce every topic or example in the motivating
+# book or in Mathlib.
+#
+# We often spell out reasoning that ordinary mathematical prose or the
+# motivating source can leave implicit, because those intermediate facts help
+# beginners see how a checked argument grows. If a supporting proof later proves
+# too distracting or requires infrastructure beyond a chapter's scope, its
+# boundary will remain deliberately visible under the convention above.
+#
+# The book progresses from calculation chains to reusable predicates, logical
+# structure, induction, number theory, functions, sets, and relations. These
+# examples make a direct comparison of proof interfaces possible: Lean commonly
+# organizes interaction through terms, tactics, and a large library, whereas
+# Litex asks the reader to write a sequence of mathematical facts and lets the
+# verifier explain how the current context supports them. This is a comparison
+# of design choices, not a claim that one system replaces the other.
+#
+# We hope readers learn practical proof patterns, become more precise about the
+# hidden steps in ordinary mathematics, and experience formal proof as the
+# gradual construction of a readable and reusable mathematical world.

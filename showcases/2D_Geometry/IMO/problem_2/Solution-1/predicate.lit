@@ -1,0 +1,14 @@
+# Custom Predicates for Problem 2
+# imo_official_1960_eng_6
+
+# The common factor pi is cancelled from both volumes. Thus v1 and v2
+# denote V1/pi and V2/pi; their ratio is unchanged.
+prop cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x R):
+    r > 0
+    base_r > r
+    height > 0
+    base_r = x * r
+    height * (base_r^2 - r^2) = 2 * base_r^2 * r
+    3 * v1 = base_r^2 * height
+    v2 = 2 * r^3
+    cos_theta * (height^2 + base_r^2) = height^2 - base_r^2

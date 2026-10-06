@@ -1,11 +1,17 @@
 # Builtin prop / theorem migration, 2026-10-03
 
+> Historical audit: these code fences preserve dated verifier observations,
+> including rejected inputs and excerpts that depend on their original context.
+> They are evidence, not current standalone tutorial examples. The maintained
+> executable language examples are in the Manual, README, and examples corpus.
+
 Task: make closed complex inequalities calculable, audit and restore legacy builtin predicates/theorems, and explain the template/struct field failures. Scope: the current `src/` implementation and `scripts/memorial_legacy_src/`, strict release examples and focused Rust evidence. This is a bounded migration audit, not a complete system scan.
 
 Machine evidence: [literal sources, session and gates](../../examples/proof_nodes/proof_journals/builtin-prop-thm-migration-2026-10-03.json). Drafts and raw compilation logs remain in `tmp/2026-10-03/builtin-prop-thm-migration/`. No trust was inserted and no AST/Env/Runtime shape or search permission was changed.
 
 ## Verified user-visible paths
 
+<!-- litex:skip-test -->
 ```litex
 i != 0
 release thm real_least_upper_bound_exists({0}, 1)
@@ -24,6 +30,7 @@ The direct inequality reports `by_closed_calculation` in ten fresh processes. Th
 
 ## Exact surjective and choice proofs
 
+<!-- litex:skip-test -->
 ```litex
 have fn identity(x R) R = x
 claim:
@@ -35,6 +42,7 @@ by def $surjective(R, R, identity)
 
 [Surjective definition tracer](../../examples/proof_nodes/atomic/by_definition/builtin_surjective.lit). A constant function on `R -> R` still cannot prove surjectivity or injectivity by definition without valid defining clauses. Publication consumers have separate [injective](../../examples/infer/atomic/injective_definition.lit) and [surjective](../../examples/infer/atomic/surjective_definition.lit) tracers.
 
+<!-- litex:skip-test -->
 ```litex
 have fn family(alpha {1}) power_set({1}) = {1}
 have fn choice(alpha {1}) {1} = 1
@@ -68,6 +76,7 @@ All **25** legacy theorem names are already present in the native current catalo
 
 Follow-up on 2026-10-04: the template/alias callable and tuple-value composition below is now repaired; the unchanged Triple prefix and direct field queries without an intermediate tuple assertion pass. See the [verified solution record](../../examples/proof_nodes/experience/problem_notes/template-alias-struct-tuple-2026-10-04.md). The failures described below retain the original 2026-10-03 checkpoint; one-field structs remain unsupported.
 
+<!-- litex:skip-test -->
 ```litex
 struct Triple<X set>:
     first X
@@ -81,6 +90,7 @@ This direct typed construction and field equality **pass**. General field projec
 
 The original [template alias example](../../examples/stmt_nodes/definition/let_template_struct_aliases.lit) contains:
 
+<!-- litex:skip-test -->
 ```litex
 let triple_R = \triple<R>
 let chosen = \triple<R>(1, 2, 3)
@@ -92,6 +102,7 @@ chosen_struct.first = 1
 
 In a separately run prefix that excludes the later single-field declarations, the first function application fails WD with `no matching function signature`; `chosen = (1,2,3)` and the final field equality also fail. The typed `have` itself succeeds. It supplies a direct struct view and structural projection bridges, but the earlier template/alias value chain still does not establish the specific tuple coordinates. Classification: wiring/composition and representation evidence, earliest observed owner callable WD; the exact migration/implementation root cause remains open. Next investigation: trace template specialization's FnSet registration and alias/value equality through the existing callable owner before changing field representation.
 
+<!-- litex:skip-test -->
 ```litex
 struct ScalarOps:
     add fn(x, y R) R
@@ -107,6 +118,7 @@ The initial focused Rust gates selected 52 core tests covering mapping publicati
 
 The extra symbolic finite-set cases are distinct from the restored concrete surjection example:
 
+<!-- litex:skip-test -->
 ```litex
 forall A, B set, F finite_set:
     A $subset B
