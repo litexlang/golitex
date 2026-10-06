@@ -383,17 +383,17 @@ sketch:
             claim:
                 ? forall p cart(union(A,B),Target):
                     p $in union(cart(A,Target),cart(B,Target))
-                p[1] $in union(A,B)
-                p[2] $in Target
+                p(1) $in union(A,B)
+                p(2) $in Target
                 by cases:
                     ? p $in union(cart(A,Target),cart(B,Target))
-                    case p[1] $in A:
-                        p=(p[1],p[2])
-                        (p[1],p[2]) $in cart(A,Target)
+                    case p(1) $in A:
+                        p=(p(1),p(2))
+                        (p(1),p(2)) $in cart(A,Target)
                         p $in cart(A,Target)
-                    case p[1] $in B:
-                        p=(p[1],p[2])
-                        (p[1],p[2]) $in cart(B,Target)
+                    case p(1) $in B:
+                        p=(p(1),p(2))
+                        (p(1),p(2)) $in cart(B,Target)
                         p $in cart(B,Target)
             claim:
                 ? forall p union(cart(A,Target),cart(B,Target)):
@@ -401,18 +401,18 @@ sketch:
                 by cases:
                     ? p $in cart(union(A,B),Target)
                     case p $in cart(A,Target):
-                        p[1] $in A
-                        p[1] $in union(A,B)
-                        p[2] $in Target
-                        p=(p[1],p[2])
-                        (p[1],p[2]) $in cart(union(A,B),Target)
+                        p(1) $in A
+                        p(1) $in union(A,B)
+                        p(2) $in Target
+                        p=(p(1),p(2))
+                        (p(1),p(2)) $in cart(union(A,B),Target)
                         p $in cart(union(A,B),Target)
                     case p $in cart(B,Target):
-                        p[1] $in B
-                        p[1] $in union(A,B)
-                        p[2] $in Target
-                        p=(p[1],p[2])
-                        (p[1],p[2]) $in cart(union(A,B),Target)
+                        p(1) $in B
+                        p(1) $in union(A,B)
+                        p(2) $in Target
+                        p=(p(1),p(2))
+                        (p(1),p(2)) $in cart(union(A,B),Target)
                         p $in cart(union(A,B),Target)
 
 
@@ -420,13 +420,13 @@ sketch:
 sketch:
     claim:
         ? forall p,q cart(R,Z):
-            p[1]=q[1]
-            p[2]=q[2]
+            p(1)=q(1)
+            p(2)=q(2)
             =>:
                 p=q
-        p=(p[1],p[2])
-        q=(q[1],q[2])
-        p=(p[1],p[2])=(q[1],q[2])=q
+        p=(p(1),p(2))
+        q=(q(1),q(2))
+        p=(p(1),p(2))=(q(1),q(2))=q
 
 
 # R03-order-orientation

@@ -599,14 +599,15 @@ pub struct Factorial {
 // Example: `2^3` (8).
 //
 // Domain is intentionally multi-branch (WD tries these in order):
-// - complex base + natural exponent: `base $in C`, `exponent $in N`
-//   (includes the convention `0^0 = 1`)
-// - nonzero complex base + integer exponent: `base $in C`, `base != 0`,
-//   `exponent $in Z`
+// - closed positive rational base + closed rational noninteger exponent
+// - real base + natural exponent (includes `0^0 = 1`)
+// - complex base + natural exponent
+// - nonzero complex base + integer exponent
+// - positive real base + real exponent
+// - nonnegative real base + positive real exponent
 //
-// Broader real/rational branches (e.g. positive real base with real exponent)
-// are documented in Manual / legacy routes; general `C^R` / `C^C` is out of
-// scope. Invalid examples: `i^(1/2)`, `0^(-1)`.
+// General `C^R` / `C^C` and negative bases with noninteger exponents remain
+// outside this domain. Invalid examples: `i^(1/2)`, `0^(-1)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Pow {
     pub base: Box<Obj>,

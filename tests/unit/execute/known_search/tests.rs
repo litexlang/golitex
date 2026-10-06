@@ -179,24 +179,25 @@ fn invalid_domain_wrong_return_and_missing_definition_are_rejected() {
 }
 
 #[test]
-fn exact_property_rows_stay_local_while_consumers_cite_alias_paths() {
+fn exact_property_rows_require_publication_before_signature_consumption() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn id(x R) R = x");
     exec_ok(&mut rt, "have a R = 1");
     exec_ok(&mut rt, "let alias = id");
+    exec_ok(&mut rt, "alias $in fn(x R) R");
     exec_ok(&mut rt, "alias(a) = alias(a)");
     let target = atomic(&mut rt, "alias(a) $in R");
     let AtomicFact::InFact(fact) = &target else { panic!("membership") };
     let crate::ast::obj::Obj::FnObj(application) = &fact.element else { panic!("application") };
     let crate::ast::obj::FnObjHead::Identifier(head) = application.head.as_ref() else { panic!("head") };
     let head = crate::ast::obj::Obj::Identifier(head.clone());
-    assert!(rt.known_special_properties_of(&head).iter().all(|property| property.function_signature().is_none()));
+    assert!(rt.known_special_properties_of(&head).iter().any(|property| property.function_signature().is_some()));
     let before = memory_sizes(&rt);
     let Some(super::search_atomic_except_equality_fact_proof_by_known_special_property::AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
         super::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof),
     )) = rt.search_atomic_except_equality_fact_proof_by_known_special_property(&target) else { panic!("checked alias source") };
-    assert!(!proof.function_equal.path.is_empty());
-    assert!(rt.known_special_properties_of(&head).iter().all(|property| property.function_signature().is_none()));
+    assert!(proof.function_equal.path.is_empty());
+    assert!(rt.known_special_properties_of(&head).iter().any(|property| property.function_signature().is_some()));
     assert_eq!(memory_sizes(&rt), before);
 }
 
@@ -330,6 +331,7 @@ fn cached_wd_from_an_equal_function_cannot_select_an_inapplicable_definition_sig
         "have f fn(x N) N",
         "have g fn(x R) R",
         "trust f = g",
+        "f $in fn(x R) R",
         "have a R",
         "f(a) = f(a)",
     ] {
@@ -364,7 +366,7 @@ fn scoped_definitions_expire_when_their_environment_is_popped() {
 #[test]
 fn known_codomain_alias_retains_its_selected_signature_and_equality_citations() {
     let mut rt = runtime();
-    for code in ["have fn id(x R) R = x", "let alias = id", "have a R"] {
+    for code in ["have fn id(x R) R = x", "let alias = id", "alias $in fn(x R) R", "have a R"] {
         exec_ok(&mut rt, code);
     }
     let target = atomic(&mut rt, "alias(a) $in R");
@@ -405,7 +407,7 @@ fn known_codomain_alias_retains_its_selected_signature_and_equality_citations() 
     let signature = crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(property.function_signature().unwrap()));
     assert!(rt.lookup_known_obj_equality(&signature, &expected.set).is_some());
     assert!(!proof.signature_uses.is_empty());
-    assert!(!proof.function_equal.path.is_empty());
+    assert!(proof.function_equal.path.is_empty());
     let stmt_result = exec_ok(&mut rt, "alias(a) $in R");
     let json = project_stmt_detailed(&stmt_result, &rt).stringify();
     assert!(json.contains("cite_signature_fact_id"), "{json}");
@@ -420,7 +422,7 @@ fn field_function_codomain_strategy_retains_signature_and_domain_evidence() {
     exec_ok(&mut rt, "struct Bundle:\n    f fn(x R) R\n    tag N");
     // The field's R-returning signature establishes WD, but only the equal
     // function's guarded signature can justify membership in N.
-    let Stmt::Fact(fact) = parse(&mut rt, "forall b &Bundle, narrow fn(x R: x > 0) N, a R:\n    b.f = narrow\n    a > 0\n    =>:\n        b.f(a) $in N") else {
+    let Stmt::Fact(fact) = parse(&mut rt, "forall b &Bundle, narrow fn(x R: x > 0) N, a R:\n    b.f = narrow\n    a > 0\n    =>:\n        b.f $in fn(x R: x > 0) N\n        b.f(a) $in N") else {
         panic!("forall fact")
     };
     let VerifyFactResult::ForallFact(result) = rt.verify_fact(&fact, VerifyState::top_level()).unwrap() else {
@@ -432,7 +434,7 @@ fn field_function_codomain_strategy_retains_signature_and_domain_evidence() {
     let crate::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactProof::ByLocalIntroduction(mut result) = result else {
         panic!("fresh forall must use local introduction");
     };
-    let VerifyFactResult::AtomicExceptEquality(conclusion) = result.proved_then_facts.remove(0).verify_result else {
+    let VerifyFactResult::AtomicExceptEquality(conclusion) = result.proved_then_facts.remove(1).verify_result else {
         panic!("membership")
     };
     let VerifyAtomicExceptEqualityFactResult::Success(conclusion) = *conclusion else {
@@ -445,7 +447,7 @@ fn field_function_codomain_strategy_retains_signature_and_domain_evidence() {
     };
     let signature = result.local_env.facts.facts_by_id.get(&proof.cite_signature_fact_id).unwrap();
     let signature_text = signature.readable_string();
-    assert!(signature_text.contains("narrow $in fn"), "{signature_text}");
+    assert!(signature_text.contains("b.f $in fn"), "{signature_text}");
     assert!(signature_text.contains(" > 0"), "{signature_text}");
     assert_eq!(proof.requirement_facts.len(), 2);
     assert_eq!(proof.proof_of_requirement_facts.len(), 2);

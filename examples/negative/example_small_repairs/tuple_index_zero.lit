@@ -1,2 +1,3 @@
-# This input must be rejected.
-eval (1, 2)[0]
+# Reject an out-of-domain ordinary call before evaluation.
+let pair = (1,2)
+eval pair(0)

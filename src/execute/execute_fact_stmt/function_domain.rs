@@ -7,7 +7,6 @@ use crate::ast::fact::{negate_atomic_fact, AtomicFact, EqualFact, ExistOrAndChai
 use crate::ast::obj::*;
 use crate::ast::param::*;
 use crate::exec_env::SpecialProperty;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::helper::set_bound_params_to_arg_map;
 use crate::instantiate::quantifier_free_fact_to_fact;
@@ -120,9 +119,7 @@ impl Runtime {
     ) -> RuntimeResult<Option<FunctionSpaceNonemptyProof>> {
         let key = carrier.ir();
         if !active.insert(key.clone()) { return Ok(None); }
-        let peers = equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(), carrier,
-        );
+        let peers = self.exact_property_object_values(carrier);
         let mut result = None;
         for (peer, path) in peers {
             let proof = if let Some(signature) = self.function_space_signature(&peer) {
@@ -176,9 +173,7 @@ impl Runtime {
     ) -> RuntimeResult<Option<FunctionDomainEmptyProof>> {
         for (index, group) in signature.set_bound_parameters.groups.iter().enumerate() {
             if group.params.is_empty() { continue; }
-            let peers = equivalence_class_members_with_paths_in_adjacency(
-                &self.visible_equivalence_class_adjacency(), &group.param_type,
-            );
+            let peers = self.exact_property_object_values(&group.param_type);
             for (carrier, path) in peers {
                 let evidence = match &carrier {
                     Obj::SetFormer(SetFormer::ListSet(set)) if set.list.is_empty() =>
@@ -487,8 +482,8 @@ impl Runtime {
                 let (next_selected, selected_carrier) = self.returned_function_signature(&selected_return)?;
                 let (next_alternative, alternative_carrier) = self.returned_function_signature(&alternative_return)?;
                 layer.return_carriers = Some(FunctionCallReturnCarriersProof {
-                    selected_equal: KnownEqualityPathProof::new(self.equivalence_class_path(&selected_return, &selected_carrier)?),
-                    alternative_equal: KnownEqualityPathProof::new(self.equivalence_class_path(&alternative_return, &alternative_carrier)?),
+                    selected_equal: KnownEqualityPathProof::new(self.exact_property_equality_path(&selected_return, &selected_carrier)?),
+                    alternative_equal: KnownEqualityPathProof::new(self.exact_property_equality_path(&alternative_return, &alternative_carrier)?),
                 });
                 selected = next_selected;
                 alternative = next_alternative;
@@ -503,32 +498,27 @@ impl Runtime {
     pub(crate) fn complete_function_domains(
         &mut self, function: &Obj, ctx: VerifyState,
     ) -> RuntimeResult<Vec<CompleteFunctionDomainProof>> {
-        let adjacency = self.visible_equivalence_class_adjacency();
-        let peers = equivalence_class_members_with_paths_in_adjacency(&adjacency, function);
         let mut domains: Vec<_> = self.finite_function_signatures(function).into_iter().map(|source| {
             CompleteFunctionDomainProof { signature: source.signature.clone(),
                 source: CompleteFunctionDomainSourceProof::FiniteFunction(Box::new(source)) }
         }).collect();
-        let mut seen_memberships = HashSet::new();
-        for (peer, path) in peers {
-            if let Obj::FnObj(application) = &peer {
+        for (value, path) in self.exact_property_object_values(function) {
+            if let Obj::FnObj(application) = &value {
                 domains.extend(self.complete_application_return_domains(application, &path, ctx)?);
             }
-            if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = &peer {
+            if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = &value {
                 domains.push(CompleteFunctionDomainProof {
                     signature: anon.body.clone(),
                     source: CompleteFunctionDomainSourceProof::AnonymousFunction {
-                        function: anon.clone(),
-                        subject_equal: KnownEqualityPathProof::new(path.clone()),
+                        function: anon.clone(), subject_equal: KnownEqualityPathProof::new(path.clone()),
                     },
                 });
             }
-            if let Obj::InstantiatedTemplateObj(instance) = &peer {
+            if let Obj::InstantiatedTemplateObj(instance) = &value {
                 if let Some(signature) = self.instantiated_template_function_signature(instance) {
-                    if let VerifyObjWellDefinedResult::Success(instance_wd) = self.verify_obj_well_definedness(&peer, ctx)? {
+                    if let VerifyObjWellDefinedResult::Success(instance_wd) = self.verify_obj_well_definedness(&value, ctx)? {
                         domains.push(CompleteFunctionDomainProof {
-                            signature,
-                            source: CompleteFunctionDomainSourceProof::TemplateDefinition {
+                            signature, source: CompleteFunctionDomainSourceProof::TemplateDefinition {
                                 instance: instance.clone(), instance_wd,
                                 subject_equal: KnownEqualityPathProof::new(path.clone()),
                             },
@@ -536,31 +526,22 @@ impl Runtime {
                     }
                 }
             }
-            let memberships: Vec<_> = self.execution_environments_stack.iter().rev()
-                .filter_map(|env| env.special_properties.get(&peer.ir()))
-                .flat_map(|properties| properties.iter())
-                .filter_map(|property| match property {
-                    SpecialProperty::Membership(fact) => Some(fact.clone()),
-                    _ => None,
-                }).collect();
-            for membership in memberships {
-                if !seen_memberships.insert(membership.fact_id) { continue; }
-                let Some(subject_path) = self.equivalence_class_path(function, &membership.element)
-                else { continue; };
-                let carriers = equivalence_class_members_with_paths_in_adjacency(
-                    &adjacency, &membership.set,
-                );
-                for (carrier, carrier_path) in carriers {
-                    let Some(signature) = self.function_space_signature(&carrier) else { continue; };
-                    domains.push(CompleteFunctionDomainProof {
-                        signature,
-                        source: CompleteFunctionDomainSourceProof::Membership {
-                            membership: membership.clone(),
-                            subject_equal: KnownEqualityPathProof::new(subject_path.clone()),
-                            carrier_equal: KnownEqualityPathProof::new(carrier_path),
-                        },
-                    });
-                }
+        }
+        // Do not read a neighbor's memberships: exact-subject properties are
+        // the authority for complete domains, including checked space aliases.
+        let mut seen_memberships = HashSet::new();
+        for property in self.known_special_properties_of(function) {
+            let SpecialProperty::Membership(membership) = property else { continue; };
+            if !seen_memberships.insert(membership.fact_id) { continue; }
+            for (carrier, carrier_path) in self.exact_property_object_values(&membership.set) {
+                let Some(signature) = self.function_space_signature(&carrier) else { continue; };
+                domains.push(CompleteFunctionDomainProof {
+                    signature, source: CompleteFunctionDomainSourceProof::Membership {
+                        membership: membership.clone(),
+                        subject_equal: KnownEqualityPathProof::new(vec![]),
+                        carrier_equal: KnownEqualityPathProof::new(carrier_path),
+                    },
+                });
             }
         }
         Ok(domains)
@@ -582,9 +563,7 @@ impl Runtime {
                 fn_set: function.body.clone(),
             }, vec![]));
         }
-        for (peer, function_path) in equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(), &head,
-        ) {
+        for (peer, function_path) in self.exact_property_object_values(&head) {
             let Obj::InstantiatedTemplateObj(instance) = &peer else { continue; };
             let Some(signature) = self.instantiated_template_function_signature(instance) else { continue; };
             let VerifyObjWellDefinedResult::Success(head_wd) = self.verify_obj_well_definedness(&peer, ctx)? else { continue; };
@@ -600,7 +579,7 @@ impl Runtime {
                 _ => None,
             };
             let Some(subject) = subject else { continue; };
-            let Some(function_path) = self.equivalence_class_path(&head, &subject) else { continue; };
+            let Some(function_path) = self.exact_property_equality_path(&head, &subject) else { continue; };
             signatures.push((signature.clone(), FnObjDomainFnSetEvidence::InFunctionSet {
                 fn_set: signature, fact_id,
                 function_equal: KnownEqualityPathProof::new(function_path),
@@ -611,9 +590,7 @@ impl Runtime {
             // Returning a function space gives an exact domain only after
             // this actual application satisfies the selected input/guards.
             let Some(return_space) = self.applied_fn_set_return_set(application, &signature) else { continue; };
-            let return_peers = equivalence_class_members_with_paths_in_adjacency(
-                &self.visible_equivalence_class_adjacency(), &return_space,
-            );
+            let return_peers = self.exact_property_object_values(&return_space);
             let Some((carrier, carrier_path)) = return_peers.into_iter().find(|(carrier, _)| {
                 matches!(carrier, Obj::FunctionSpace(FunctionSpace::FnSet(_))
                     | Obj::SetFormer(SetFormer::SeqSet(_) | SetFormer::FiniteSeqSet(_)))
@@ -663,9 +640,7 @@ impl Runtime {
     /// The caller's WD must retain carrier equality when unfolding an alias.
     /// This is not evidence that the carrier set itself is a function value.
     pub(crate) fn returned_function_signature(&mut self, space: &Obj) -> Option<(FnSet, Obj)> {
-        let peers = equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(), space,
-        );
+        let peers = self.exact_property_object_values(space);
         for (carrier, _) in peers {
             let signature = match &carrier {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => Some(function.body.clone()),

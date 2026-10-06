@@ -12,4 +12,5 @@ vec(a,b)(1) = b(1)-a(1)
 vec(a,b)(2) = b(2)-a(2)
 vec(a,b) = (vec(a,b)(1),vec(a,b)(2))
 let vector_alias = vec
+vector_alias = fn(c,d cart(R,R)) cart(R,R) {(d(1)-c(1),d(2)-c(2))}
 vector_alias(a,b)(1) = b(1)-a(1)

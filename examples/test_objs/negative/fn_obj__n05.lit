@@ -1,2 +1,3 @@
-# Must reject: fn_obj N05
+# Historical syntax rejection: object indexing with [] is retired.
+# The corresponding function-valued coordinate is not a false mathematical goal.
 (fn(x R) R {x}, 0)[1](2) = 2

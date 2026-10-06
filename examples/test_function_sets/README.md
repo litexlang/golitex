@@ -2,6 +2,8 @@
 
 > **统一收尾入口：** [src收尾总清单.md](../../plan/src收尾总清单.md)（2026-10-04）。活动事项及跨来源去重在总清单维护；本页保留专项代码、决定和历史验收。新增进展应同步对应总清单ID，不能用旧快照覆盖新证据。
 
+> **2026-10-06 当前契约：** 结构信息查找只消费声明和精确对象的 special_properties，不遍历等价类。正式套件 85/85 保持通过；T05 的原直写法现已接受，其余原片段仍独立观测。显式发布所需 body/签名/载体后再使用。[实现和最新门禁](experience/problem_notes/exact-property-structural-lookup-2026-10-06.md)。下方 2026-10-04 验收保留为历史。
+
 This standalone corpus checks function sets, template instantiation, callable
 struct fields, function-valued returns and template failure diagnostics.
 

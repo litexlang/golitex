@@ -26,6 +26,7 @@ p(1)=1/2
 p(2) $in Z
 
 let alias=p
+alias $in cart(R,Z)
 
 alias(2) $in Z
 

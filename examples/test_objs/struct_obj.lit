@@ -8,7 +8,7 @@ sketch:
         x R
         y R
     have p &Point = (1, 2)
-    p.x = p[1] = 1
+    p.x = p(1) = 1
 
 # P02: struct Pair<S set>:; first S; second S; have p &Pair<N> = (1, 2); p.second = 2
 sketch:
@@ -16,7 +16,7 @@ sketch:
         first S
         second S
     have p &Pair<N> = (1, 2)
-    p.second = p[2] = 2
+    p.second = p(2) = 2
 
 # P03: p.x $in R
 sketch:

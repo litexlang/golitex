@@ -1,0 +1,58 @@
+# Tracer: real power well-definedness.
+#
+# Before (rejected in power WD):
+# forall x R+:
+#     x^(1/2)=x^(1/2)
+# forall x R:
+#     exp(x)=e^x
+# Former behavior: symbolic exponents required an integer carrier.
+#
+# Now: positive-real/real and nonnegative-real/positive-real domains retain
+# their actual requirement proofs. Existing complex integer domains remain.
+# Boundary: negative/complex noninteger powers and zero negative powers reject.
+# 0^0=1 remains the natural-power convention. Exact calculation and identity
+# search retain their own domains; WD alone does not supply every power law.
+# Evidence: target/release/litex -strict -f examples/wd/pow_real_domains.lit
+# Rust: tests/unit/execute/exact_rational_powers/tests.rs
+
+sketch:
+    forall x R+:
+        x^(1/2)=x^(1/2)
+        x^(1/3)=x^(1/3)
+
+sketch:
+    forall x R:
+        exp(x)=e^x
+        e^x=exp(x)
+
+sketch:
+    forall a R+,t R:
+        a^t $in R
+
+sketch:
+    forall a R,t R+:
+        0<=a
+        =>:
+            a^t $in R
+
+sketch:
+    forall t R+:
+        0^t=0^t
+
+sketch:
+    0^0=1
+    0^(0/3)=1
+    0^3=0
+    (-2)^(-3)=-1/8
+    i^2=-1
+    8^(1/3)=2
+
+sketch:
+    have fn real_power(a R+,t R) R=a^t
+    real_power(2,1/2)=2^(1/2)
+
+sketch:
+    forall a R+,t R:
+        a!=1
+        =>:
+            log(a,a^t)=t

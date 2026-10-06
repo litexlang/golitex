@@ -126,6 +126,106 @@ fn existing_integer_power_domains_keep_their_behavior() {
 }
 
 #[test]
+fn real_power_wd_accepts_symbolic_positive_and_nonnegative_domains() {
+    for source in [
+        "forall a R+,t R:\n    a^t=a^t\n",
+        "forall a R+,t R:\n    a^t $in R\n",
+        "forall a R,t R+:\n    a>=0\n    =>:\n        a^t=a^t\n",
+        "forall a R,t R+:\n    0<=a\n    =>:\n        a^t $in R\n",
+        "forall x R+:\n    x^(1/2)=x^(1/2)\n",
+        "forall t R+:\n    0^t=0^t\n",
+        "forall a,t R:\n    a>0\n    =>:\n        a^t=a^t\n",
+        "forall a,t R:\n    0<a\n    =>:\n        a^t=a^t\n",
+        "forall x R:\n    exp(x)=e^x\n",
+        "have fn real_power(a R+,t R) R=a^t\nreal_power(2,1/2)=2^(1/2)\n",
+    ] {
+        check(source, true);
+    }
+}
+
+#[test]
+fn real_power_wd_retains_actual_domain_requirements() {
+    use crate::ast::fact::AtomicFact;
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
+        ArithmeticOperatorObjWellDefinedProofByDef, ObjWellDefinedProof,
+        ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
+    };
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::VerifyAtomicExceptEqualityFactResult;
+    use crate::execute::execute_fact_stmt::VerifyFactResult;
+    for (prefix, expected) in [
+        ("have a R+\nhave t R\n", vec!["a $in R+", "t $in R"]),
+        ("have a R=0\nhave t R+\n", vec!["a $in R", "0 <= a", "t $in R+"]),
+    ] {
+        let mut rt = runtime(OutputLanguage::English);
+        assert!(rt.run_litex_code(prefix).unwrap().success);
+        let tokens = Tokenizer::new().tokenize("a^t=a^t", rt.current_file.clone()).unwrap();
+        let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(goal))) = rt.parse(&tokens).unwrap().remove(0) else {
+            panic!("power equality")
+        };
+        let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+            proof: ObjWellDefinedProofByDef::ArithmeticOperator(
+                ArithmeticOperatorObjWellDefinedProofByDef::Pow(proof)), ..
+        }) = rt.verify_obj_well_definedness(&goal.left, VerifyState::top_level()).unwrap() else {
+            panic!("selected power WD proof")
+        };
+        assert_eq!(proof.child_obj_well_defined.len(), 2);
+        let actual: Vec<_> = proof.requirement_fact_verified.iter().map(|requirement| {
+            let VerifyFactResult::AtomicExceptEquality(result) = requirement else { panic!("atomic requirement") };
+            let VerifyAtomicExceptEqualityFactResult::Success(proved) = result.as_ref() else { panic!("proved requirement") };
+            proved.fact.readable_string()
+        }).collect();
+        assert_eq!(actual, expected);
+    }
+}
+
+#[test]
+fn real_power_wd_preserves_inherited_permissions() {
+    use crate::ast::fact::AtomicFact;
+    for (prefix, expected) in [("have a R+\nhave t R\n", true), ("have a,t R\n", false)] {
+        let mut rt = runtime(OutputLanguage::English);
+        assert!(rt.run_litex_code(prefix).unwrap().success);
+        let tokens = Tokenizer::new().tokenize("a^t=a^t", rt.current_file.clone()).unwrap();
+        let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(goal))) = rt.parse(&tokens).unwrap().remove(0) else {
+            panic!("power equality")
+        };
+        for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty, VerifyStateLevel::BuiltinRule] {
+            let proof = rt.verify_obj_well_definedness(&goal.left, VerifyState::new(level)).unwrap();
+            assert_eq!(!proof.is_failed(), expected, "{prefix}: {level:?}");
+        }
+    }
+}
+
+#[test]
+fn real_power_wd_rejects_missing_guards_and_illegal_domains() {
+    for source in [
+        "forall a,t R:\n    a^t=a^t\n",
+        "forall a R,t R+:\n    a^t=a^t\n",
+        "forall a,t R:\n    a>=0\n    =>:\n        a^t=a^t\n",
+        "forall a R+,t C:\n    a^t=a^t\n",
+        "(-8)^(1/3)=(-8)^(1/3)",
+        "i^(1/2)=i^(1/2)",
+        "0^(-1/3)=0^(-1/3)",
+        "0^(-1)=0^(-1)",
+        "2^i=2^i",
+        "(1/0)^(1/2)=(1/0)^(1/2)",
+        "8^(1/0)=8^(1/0)",
+        "0^0=0",
+    ] {
+        check(source, false);
+    }
+}
+
+#[test]
+fn real_power_wd_failed_binding_is_discarded() {
+    let mut rt = runtime(OutputLanguage::English);
+    let failed = rt.run_litex_code("have a,t R\nlet result=a^t").unwrap();
+    assert!(!failed.success && failed.session_error.is_none());
+    let reused = rt.run_litex_code("let result=2^(1/2)\nresult=result").unwrap();
+    assert!(reused.success && reused.session_error.is_none());
+    assert!(!rt.run_litex_code("result=0").unwrap().success);
+}
+
+#[test]
 fn eval_shares_exact_values_and_publishes_the_checked_equality() {
     for (source, expected) in [
         ("eval 8^(1/3)", "2"),
@@ -203,4 +303,9 @@ fn run_examples_closed_rational_power_calculation() {
         )),
         true,
     );
+}
+
+#[test]
+fn real_power_wd_preserves_maintained_tracer() {
+    check(include_str!("../../../../examples/wd/pow_real_domains.lit"), true);
 }

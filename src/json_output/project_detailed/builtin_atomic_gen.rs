@@ -1551,9 +1551,9 @@ pub(super) fn project_atomic_builtin_rule(
             ("rule", string("RealArithmeticConstructorClosure")),
             ("constructor_tree", project_real_arithmetic_constructor_tree(&p.constructor_tree, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealIntegerPower(p)) => object_for(runtime, vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealPower(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("InFact")),
-            ("rule", string("RealIntegerPower")),
+            ("rule", string("RealPower")),
             ("base_in_real_proof", project_verify_fact(&p.base_in_real_proof, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::FiniteSetMaxMember(p)) => object_for(runtime, vec![

@@ -925,7 +925,7 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             object_for(runtime, entries)
         },
         EqualitySearchProofByBuiltinRule::LnAsEulerLog(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("LnAsEulerLog"))]),
-        EqualitySearchProofByBuiltinRule::ExpAsEulerIntegerPower(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("ExpAsEulerIntegerPower"))]),
+        EqualitySearchProofByBuiltinRule::ExpAsEulerPower(_) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("ExpAsEulerPower"))]),
         EqualitySearchProofByBuiltinRule::EulerEqualsExpOne(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("EulerEqualsExpOne"))];
             let _ = p;

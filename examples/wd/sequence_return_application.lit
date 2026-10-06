@@ -21,6 +21,7 @@ finite_maker(7)(2) $in R
 have Base set=seq(R)
 
 have SequenceCarrier set=Base
+SequenceCarrier=seq(R)
 
 have fn sequence_maker(x R) SequenceCarrier=fn(k N+) R {x}
 

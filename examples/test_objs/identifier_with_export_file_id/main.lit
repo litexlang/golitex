@@ -1,3 +1,4 @@
+# Source-only migration: old dimension assertions retired; ordinary qualified values remain.
 # AST: Obj::Identifier::WithExportFileId
 # Run: target/release/litex -f examples/test_objs/identifier_with_export_file_id/main.lit
 
@@ -27,10 +28,13 @@ sketch:
 # P04: explicit checked proof; restored from identifier_with_export_file_id-P04
 sketch:
     release obj def base::pair
-    tuple_dim(base::pair) = 2
+    base::pair(1) = 1
+    base::pair(2) = 2
 
 
 # P05: explicit checked proof; restored from identifier_with_export_file_id-P05
 sketch:
     release obj def other::pair
-    tuple_dim(other::pair) = 3
+    other::pair(1) = 3
+    other::pair(2) = 4
+    other::pair(3) = 5

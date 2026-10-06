@@ -204,11 +204,11 @@ fn function_return_standard_superset_tracer_and_invalid_domains() {
 fn function_return_superset_alias_preserves_provenance() {
     use crate::ast::fact::AtomicFact;
     let mut rt = runtime();
-    assert!(rt.run_litex_code("have f fn(x R) R\nhave a R\nlet g = f").unwrap().success);
+    assert!(rt.run_litex_code("have f fn(x R) R\nhave a R\nlet g = f\ng $in fn(x R) R").unwrap().success);
     let Fact::AtomicFact(AtomicFact::InFact(goal)) = fact(&mut rt, "g(a) $in C") else { panic!("membership") };
     let proof = rt.known_fn_application_standard_superset(&goal).expect("alias superset");
     assert!(!proof.signature_returns.is_empty());
-    assert!(proof.signature_returns.iter().any(|s| !s.function_equal.path.is_empty()));
+    assert!(proof.signature_returns.iter().all(|s| s.function_equal.path.is_empty()));
     assert!(rt.run_litex_code("g(a) $in C").unwrap().success);
     for code in ["f(a,a) $in C"] {
         let Fact::AtomicFact(AtomicFact::InFact(goal)) = fact(&mut rt, code) else { panic!("membership") };

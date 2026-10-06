@@ -9,14 +9,14 @@ impl LnAsEulerLogProof {
         Self {}
     }
 }
-pub struct ExpAsEulerIntegerPowerProof {}
-impl ExpAsEulerIntegerPowerProof {
+pub struct ExpAsEulerPowerProof {}
+impl ExpAsEulerPowerProof {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-// ln(x)=log(e,x) for x in R+; exp(n)=e^n on the current integer power domain.
+// ln(x)=log(e,x) for x in R+; exp(x)=e^x for every real x on the checked positive-base power domain.
 // Parent equality WD checks both expressions, including log-base and power guards.
 // This leaf only checks the literal Euler base and the identical bound argument.
 pub(super) fn native_fixed_base(fact: &EqualFact) -> Option<EqualitySearchProofByBuiltinRule> {
@@ -38,8 +38,8 @@ pub(super) fn native_fixed_base(fact: &EqualFact) -> Option<EqualitySearchProofB
             ) if matches!(pow.base.as_ref(), Obj::Literal(Literal::EulerNumber(_)))
                 && exp.arg.ir() == pow.exponent.ir() =>
             {
-                return Some(EqualitySearchProofByBuiltinRule::ExpAsEulerIntegerPower(
-                    ExpAsEulerIntegerPowerProof::new(),
+                return Some(EqualitySearchProofByBuiltinRule::ExpAsEulerPower(
+                    ExpAsEulerPowerProof::new(),
                 ));
             }
             _ => {}

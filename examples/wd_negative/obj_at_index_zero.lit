@@ -1,5 +1,3 @@
-# WD negative: index 0 is not in N+.
-# Run: litex -f examples/wd_negative/obj_at_index_zero.lit
-# expect exit != 0
-
-let a = (1, 2)[0]
+# Reject a coordinate outside the complete one-based tuple domain.
+let pair = (1,2)
+let a = pair(0)

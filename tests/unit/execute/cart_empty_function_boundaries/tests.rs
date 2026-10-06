@@ -34,7 +34,7 @@ fn cart_empty_function_boundaries_preserve_zero_one_and_many_members() {
         "cart({})={}\n$is_finite_set(cart())\n$is_nonempty_set(cart())\nfinite_set_size(cart())=1",
         "finite_set_size(cart({1,2}))=finite_set_size({1,2})",
         "have fn f(k closed_range(1,2)) Z=0\nf $in cart(R,Z)\nf(2) $in Z",
-        "have Carrier set=cart(Z)\nhave p Carrier=tuple(7)\nlet alias=p\nalias(1)=7",
+        "have Carrier set=cart(Z)\nhave p Carrier=tuple(7)\nlet alias=p\nalias=tuple(7)\nalias(1)=7",
     ] {
         let mut rt = runtime(OutputLanguage::English);
         let run = rt.run_litex_code(code).unwrap();

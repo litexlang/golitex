@@ -11,7 +11,4 @@ claim:
         =>:
             finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R{f(x)})*f(a)
     a $in union(S,{a})
-    forall x S:
-        x $in union(S,{a})
-    release thm fn_set_member(f,fn(x S)R)
 # Boundary: omitted freshness, wrong callback/factor or unproved finiteness fail in Rust regressions.

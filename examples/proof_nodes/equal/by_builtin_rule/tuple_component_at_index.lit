@@ -1,6 +1,6 @@
-# Node: equal.ByBuiltinRule.TupleComponentAtIndex
-# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/tuple_component_at_index.lit
-
+# Ordinary coordinate call on the original ordered tuple.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/tuple_component_at_index.lit
 have a R
 have b R
-(a, b)[1] = a
+let pair = (a,b)
+pair(1) = a

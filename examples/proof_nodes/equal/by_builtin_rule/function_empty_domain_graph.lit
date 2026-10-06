@@ -50,6 +50,7 @@ fn_range(nested(0))={}
 have fn named_empty(k {}) R=0
 
 let alias=named_empty
+alias $in fn(k {}) R
 
 fn_range(alias)={}
 

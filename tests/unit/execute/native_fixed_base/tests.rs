@@ -110,11 +110,11 @@ fn legal_domains_directions_and_parent_wd() {
             assert!(contains_string(&json, "e != 1"));
         }
     }
-    for domain in ["Z", "N", "N+", "Z+", "Z*"] {
+    for domain in ["Z", "N", "N+", "Z+", "Z*", "R", "R+", "R-", "R*", "Q"] {
         for target in ["exp(n)=e^n", "e^n=exp(n)"] {
             let code = format!("e $in R+\n0<e\ne!=0\nforall n {domain}:\n    {target}\n");
             let json = check(&mut runtime(OutputLanguage::English), &code, true);
-            let leaf = find_rule(&json, "ExpAsEulerIntegerPower").unwrap();
+            let leaf = find_rule(&json, "ExpAsEulerPower").unwrap();
             assert_eq!(leaf.as_object().unwrap().keys_in_order().len(), 2);
         }
     }
@@ -129,7 +129,7 @@ fn wrong_base_arguments_and_illegal_domains_reject() {
         "e $in R+\n0<e\ne!=0\nforall m,n Z:\n    exp(n)=e^m\n",
         "1<e\ne!=1\nln(0)=log(e,0)\n",
         "1<e\ne!=1\nforall x R:\n    ln(x)=log(e,x)\n",
-        "e $in R+\n0<e\ne!=0\nforall x R:\n    exp(x)=e^x\n",
+        "forall x C:\n    exp(x)=e^x\n",
     ] {
         check(&mut runtime(OutputLanguage::English), code, false);
     }
@@ -144,9 +144,9 @@ fn two_actual_typed_leaves_own_ten_guarded_language_outputs() {
             "x in R+, both sides well-defined => ln(x)=log(e,x)",
         ),
         (
-            "e $in R+\n0<e\ne!=0\nforall n Z:\n    exp(n)=e^n\n",
-            "ExpAsEulerIntegerPower",
-            "n in Z, both sides well-defined => exp(n)=e^n",
+            "forall x R:\n    exp(x)=e^x\n",
+            "ExpAsEulerPower",
+            "x in R, both sides well-defined => exp(x)=e^x",
         ),
     ] {
         let mut rt = runtime(OutputLanguage::English);
@@ -213,4 +213,25 @@ fn inherited_ceiling_and_failure_publication() {
     check(&mut rt, code, true);
     check(&mut rt, bad, false);
     check(&mut rt, code, true);
+}
+
+#[test]
+fn real_power_carrier_leaf_uses_actual_wd_and_ten_language_outputs() {
+    let mut rt = runtime(OutputLanguage::English);
+    let run = rt.run_litex_code("forall a R+,t R:\n    a^t $in R\n").unwrap();
+    assert!(run.success && run.session_error.is_none());
+    let detailed = crate::json_output::project_run_detailed(&run, &rt, "eval", None);
+    let leaf = find_rule(&detailed, "RealPower").expect("real power carrier route");
+    assert!(leaf.as_object().unwrap().get("base_in_real_proof").is_some());
+    assert!(!contains_string(&detailed, "RealIntegerPower"));
+    for language in [
+        OutputLanguage::English, OutputLanguage::Chinese, OutputLanguage::ChineseTraditional,
+        OutputLanguage::French, OutputLanguage::Russian, OutputLanguage::Spanish,
+        OutputLanguage::Arabic, OutputLanguage::Japanese, OutputLanguage::Korean,
+        OutputLanguage::Vietnamese,
+    ] {
+        let text = actual_leaf_text(run.statement_results.last().unwrap(), language);
+        assert!(!text.rule_name.is_empty() && !text.message.is_empty());
+        assert!(!text.message.contains("integer exponent"));
+    }
 }

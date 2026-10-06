@@ -27,6 +27,8 @@ release thm fn_set_member(narrow, finite_seq(R,2))
 have F set = fn(k closed_range(1,2)) R
 
 have named F = narrow
+named = fn(k closed_range(1,2)) Z {0}
+named = fn(k closed_range(1,2)) Z {0}
 
 named(1)=0
 

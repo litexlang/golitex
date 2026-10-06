@@ -33,9 +33,11 @@ sketch:
 
 # P07: (1, 2) $in {(1, 2), (2, 1)}
 sketch:
+    let left = (1,2)
+    let right = (2,1)
     by contra:
         ? (1, 2) != (2, 1)
-        1 = (1, 2)[1] = (2, 1)[1] = 2
+        1 = left(1) = right(1) = 2
         impossible 1 = 2
     (1, 2) $in {(1, 2), (2, 1)}
 

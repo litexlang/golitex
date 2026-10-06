@@ -10,5 +10,6 @@ template<a R>:
     have box &Box = (fn(x R) R {x + a}, 0)
 \box<2> = (fn(x R) R {x + 2}, 0)
 have selected &Box = \box<2>
+selected = (fn(x R) R {x + 2}, 0)
 selected.op = fn(x R) R {x + 2}
 selected.op(3) = fn(x R) R {x + 2}(3) = 5

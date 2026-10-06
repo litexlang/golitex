@@ -1,14 +1,17 @@
-# Before: the full call timed out; literal projection carriers were unavailable.
-# Now: unfold the function, prove coordinates, then calculate tuple entries.
+# Add ordered coordinates, unfold once, and check the original literal result.
+# Literal values receive local names; no premise or kernel capability is added.
 # Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_strategy/add2_calculation_chain.lit
-have fn add2(u, v cart(R, R)) cart(R, R) = (u[1] + v[1], u[2] + v[2])
-(1,2)[1] = 1
-(1,2)[2] = 2
-(3,4)[1] = 3
-(3,4)[2] = 4
-add2((1,2),(3,4)) = ((1,2)[1] + (3,4)[1], (1,2)[2] + (3,4)[2])
-(1,2)[1] + (3,4)[1] = 1 + 3
-(1,2)[2] + (3,4)[2] = 2 + 4
-release thm tuple_equal_from_coordinates(((1,2)[1] + (3,4)[1], (1,2)[2] + (3,4)[2]), (1+3,2+4))
+have fn add2(u,v cart(R,R)) cart(R,R) = (u(1)+v(1),u(2)+v(2))
+have p cart(R,R) = (1,2)
+have q cart(R,R) = (3,4)
+p(1) = 1
+p(2) = 2
+q(1) = 3
+q(2) = 4
+add2(p,q) = (p(1)+q(1),p(2)+q(2))
+p(1)+q(1) = 1+3
+p(2)+q(2) = 2+4
+release thm tuple_equal_from_coordinates((p(1)+q(1),p(2)+q(2)),(1+3,2+4))
 (1+3,2+4) = (4,6)
-add2((1,2),(3,4)) = (1+3,2+4) = (4,6)
+add2(p,q) = (1+3,2+4) = (4,6)
+add2((1,2),(3,4)) = add2(p,q) = (4,6)

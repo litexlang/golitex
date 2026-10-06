@@ -846,7 +846,7 @@ inherited source-premise permissions are unchanged; no full replay claim.
 
 ## Legal fixed-base bridges
 
-[LnAsEulerLog](equal/by_builtin_rule/ln_as_euler_log.lit) and [ExpAsEulerIntegerPower](equal/by_builtin_rule/exp_as_euler_integer_power.lit) retain exact former failures as comments. Two pure typed identities keep all native/log/power guards in parent equality WD. The [author file](equal/by_builtin_rule/native_fixed_base_author_routes.lit) verifies five unchanged original targets and exact reuse: two aliases, two composite inverses and ln order through base-e log. Cold shortcuts, legal integer powers and unsettled real powers remain separate. [Source record](experience/problem_notes/fixed-base-bridge-repair-2026-10-05.md) links owner, language/Detailed and negative gates; no global search or domain expansion.
+[LnAsEulerLog](equal/by_builtin_rule/ln_as_euler_log.lit) and [ExpAsEulerPower](equal/by_builtin_rule/exp_as_euler_integer_power.lit) retain exact former failures as comments. Two pure typed identities keep all native/log/power guards in parent equality WD. The [author file](equal/by_builtin_rule/native_fixed_base_author_routes.lit) verifies five unchanged original targets and exact reuse: two aliases, two composite inverses and ln order through base-e log. The original fixed-base record covers integer powers. The subsequent [real-power WD extension](../wd/pow_real_domains.lit) also checks `exp(x)=e^x` for real x; individual shortcut coverage remains separate. [Source record](experience/problem_notes/fixed-base-bridge-repair-2026-10-05.md) links owner, language/Detailed and negative gates; no global search or domain expansion.
 
 
 ## Elementary object definitions
@@ -900,3 +900,11 @@ The accompanying guard-domain controls retain that lemma while removing or
 reversing the required guard and still reject the false conclusion.
 
 The guarded-empty tracer also constructs named functions with an empty return carrier and an independently proved empty input domain. Literal closed_range(1,0), guarded constant bodies and guarded parameter bodies share the same return-bound contract. It checks their empty graph and zero-length membership; body WD remains mandatory. Nearby negatives reject false standalone body membership, every application outside the empty domain, nonempty/missing-guard return violations, and division by zero.
+
+
+## Valid-base logarithm algebra
+
+[Product](equal/by_builtin_rule/log_product_valid_base.lit), [quotient](equal/by_builtin_rule/log_quotient_valid_base.lit), [reciprocal](equal/by_builtin_rule/log_reciprocal_valid_base.lit) and [integer argument power](equal/by_builtin_rule/log_arg_power_valid_base.lit) preserve the old exact below-one failures as comments and check positive nonunit bases. The [acceptance note](experience/problem_notes/log-algebra-valid-base-acceptance-2026-10-06.md) records real three-route guard proofs, named mandatory argument evidence, ten-language output, false/domain controls and stored-forall citations. Reverse-written positivity under integer-power log WD remains a separate pending case.
+
+
+The [fresh finite-product insertion tracer](equal/by_builtin_rule/finite_product_fresh_insertion.lit) keeps the source function on its complete union domain and uses an actual union-member proof for the inserted argument. It no longer asks that source to inhabit the smaller function domain. [Branch audit evidence](experience/problem_notes/finite-product-branches-2026-10-06.md) covers member-removal multiplication including zero factors and keeps the unresolved division goal distinct from false/domain controls.

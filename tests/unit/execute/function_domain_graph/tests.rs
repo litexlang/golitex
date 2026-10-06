@@ -26,13 +26,13 @@ fn function_graph_empty_images_and_nonempty_spaces_follow_complete_domains() {
         "fn_range(fn(k {}) R {0})={}",
         "fn_range(fn(k closed_range(1,0)) R {0})={}",
         "fn_range(fn(k range(1,1)) R {0})={}",
-        "have fn empty_fn(k {}) R=0\nfn_range(empty_fn)={}\nlet alias=empty_fn\nfn_range(alias)={}",
+        "have fn empty_fn(k {}) R=0\nfn_range(empty_fn)={}\nlet alias=empty_fn\nalias $in fn(k {}) R\nfn_range(alias)={}",
         "have Carrier set={}\nhave f fn(k Carrier) R\nfn_range(f)={}",
         "$is_nonempty_set(fn(k {}) {})\nhave f fn(k {}) {}\nf $in fn(k {}) R\nfn_range(f)={}",
         "$is_nonempty_set(finite_seq({},0))\nhave f finite_seq({},0)\nfn_range(f)={}",
         "have f fn(x R) fn(y R) R\nf(0)(0) $in R",
         "have f fn(x R) fn(k {}) {}\nfn_range(f(0))={}",
-        "have ReturnedCarrier set=fn(k {}) {}\nhave ReturnedAlias set=ReturnedCarrier\nhave f fn(x R) ReturnedAlias\nfn_range(f(0))={}",
+        "have ReturnedCarrier set=fn(k {}) {}\nhave ReturnedAlias set=ReturnedCarrier\nReturnedAlias=fn(k {}) {}\nhave f fn(x R) ReturnedAlias\nfn_range(f(0))={}",
         "have Scalar set=R\nhave f fn(x R) Scalar\nf(0) $in R",
         "have CartReturns set=cart(R,Z)\nhave f fn(x R) CartReturns\nf(0)(2) $in Z",
         "have EmptyReturns set=finite_seq({},0)\nhave f fn(x R) EmptyReturns\nfn_range(f(0))={}",
@@ -71,7 +71,7 @@ fn function_graph_false_nonempty_images_and_empty_carrier_declarations_do_not_co
         ("1=1", "$is_nonempty_set(fn(k R: k>0,k<0) R {0})"),
         ("1=1", "fn_range(fn(k R: k>0,k<0) R {0})={0}"),
         ("1=1", "fn_range(fn(k R) R {0})={}"),
-        ("have fn empty_fn(k {}) R=0\nlet alias=empty_fn", "fn_range(alias)={0}"),
+        ("have fn empty_fn(k {}) R=0\nlet alias=empty_fn\nalias $in fn(k {}) R", "fn_range(alias)={0}"),
         ("1=1", "have impossible fn(k R) {}"),
         ("1=1", "have impossible fn(k {}) R {0}"),
         ("1=1", "$is_nonempty_set(fn(x R,y {}) R {0})"),
@@ -112,7 +112,7 @@ fn function_graph_domain_sources_and_witnesses_survive_all_output_languages() {
         assert!(!result.is_failed());
         let detailed = project_stmt_detailed(&result, &rt).stringify();
         assert!(detailed.contains("checked_domain_argument_witness"), "missing actual input: {detailed}");
-        assert!(rt.run_litex_code("have ReturnedCarrier set=fn(k {}) {}\nhave ReturnedAlias set=ReturnedCarrier").unwrap().success);
+        assert!(rt.run_litex_code("have ReturnedCarrier set=fn(k {}) {}\nhave ReturnedAlias set=ReturnedCarrier\nReturnedAlias=fn(k {}) {}").unwrap().success);
         let result = execute(&mut rt, "have outer fn(x R) ReturnedAlias");
         assert!(!result.is_failed());
         let detailed = project_stmt_detailed(&result, &rt).stringify();

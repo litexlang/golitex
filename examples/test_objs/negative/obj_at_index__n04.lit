@@ -1,2 +1,3 @@
-# Must reject: obj_at_index N04
-let x = 1[1]
+# Reject calling a scalar value; the original 1[1] syntax is retired.
+have scalar R = 1
+let x = scalar(1)

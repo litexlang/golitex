@@ -8,8 +8,8 @@ sketch:
         x R
         y R
     have p &Point = (1, 2)
-    p.x = p[1] = 1
-    p.y = p[2] = 2
+    p.x = p(1) = 1
+    p.y = p(2) = 2
 
 # P02: p.point.y = p.point.y
 sketch:

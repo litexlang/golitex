@@ -3,7 +3,6 @@ use crate::ast::obj::{FnObjHead, Obj, StandardSet, StructAndFieldAccessObj};
 use crate::runtime::{FactId, Runtime};
 use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use super::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::standard_set_is_subset_eq;
 
 pub struct FnApplicationInStandardSupersetProof {
@@ -38,9 +37,7 @@ impl Runtime {
         // Native template/field declarations can supply WD without a stored
         // membership. Their existing producers retain that declaration evidence;
         // this stored-signature leaf must not ignore such an alternative.
-        for (peer, _) in equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(), &head,
-        ) {
+        for (peer, _) in self.exact_property_object_values(&head) {
             if matches!(peer, Obj::InstantiatedTemplateObj(_) | Obj::StructAndFieldAccessObj(_)) {
                 return None;
             }
@@ -59,7 +56,7 @@ impl Runtime {
                 _ => return None,
             };
             let subject = source_fact.function_subject()?;
-            let path = self.equivalence_class_path(&head, subject)?;
+            let path = self.exact_property_equality_path(&head, subject)?;
             strict_inclusion |= source != *target;
             signature_returns.push(SignatureStandardReturnProof {
                 cite_signature_fact_id: id,

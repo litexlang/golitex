@@ -17,7 +17,6 @@ use crate::store_fact_and_infer::{
     StoreFactAndInferResult,
 };
 use std::collections::HashMap;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 
 impl Runtime {
@@ -46,8 +45,8 @@ impl Runtime {
 }
 
 impl Runtime {
-    // A checked membership transports through the carrier's equality graph.
-    // Example: A=finite_seq(R,2), B=A, f in B => f in finite_seq(R,2).
+    // A checked membership uses the carrier's exact indexed definition.
+    // Example: A=finite_seq(R,2), f in A => f in finite_seq(R,2).
     // Literal sequence inference then derives its exact FnSet. A set alias
     // without a member does not construct a callable function.
     fn infer_in_fact_equal_fn_set_expand(
@@ -62,9 +61,7 @@ impl Runtime {
             return Ok(None);
         }
         let mut transports = Vec::new();
-        let peers = equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(), &in_fact.set,
-        );
+        let peers = self.exact_property_object_values(&in_fact.set);
         for (peer, path) in peers {
             if !matches!(&peer, Obj::FunctionSpace(FunctionSpace::FnSet(_))
                 | Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_))) {

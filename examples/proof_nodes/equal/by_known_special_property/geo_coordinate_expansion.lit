@@ -1,74 +1,80 @@
 # Geo coordinate expansion after the search-level migration.
 # Before (same theorem targets, without the coordinate bridge below):
-# dot((u[1]+v[1],u[2]+v[2]),w) = (u[1]+v[1])*w[1]+(u[2]+v[2])*w[2]
+# dot((u(1)+v(1),u(2)+v(2)),w) = (u(1)+v(1))*w(1)+(u(2)+v(2))*w(2)
 # The substituted literal projections were not available at the residual ceiling.
 # Now: expose the two projections, then use the existing coordinate formula.
 # Boundary: this does not grant SP to Direct or bypass projection WD.
 # Run: target/release/litex -strict -f examples/proof_nodes/equal/by_known_special_property/geo_coordinate_expansion.lit
 
-have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
 
-have fn dot(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
+have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
 
-have fn det(u, v cart(R, R)) R = u[1] * v[2] - u[2] * v[1]
+have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
 
 thm det_coordinate_formula:
     ? forall u, v cart(R, R):
-        det(u, v) = u[1] * v[2] - u[2] * v[1]
+        det(u, v) = u(1) * v(2) - u(2) * v(1)
 
 thm dot_coordinate_formula:
     ? forall u, v cart(R, R):
-        dot(u, v) = u[1] * v[1] + u[2] * v[2]
+        dot(u, v) = u(1) * v(1) + u(2) * v(2)
 
 thm dot_add_left:
     ? forall u, v, w cart(R, R):
-        dot((u[1] + v[1], u[2] + v[2]), w) = dot(u, w) + dot(v, w)
-    (u[1]+v[1],u[2]+v[2])[1] = u[1]+v[1]
-    (u[1]+v[1],u[2]+v[2])[2] = u[2]+v[2]
-    release thm dot_coordinate_formula((u[1]+v[1],u[2]+v[2]),w)
-    dot(u,w) = u[1]*w[1]+u[2]*w[2]
-    dot(v,w) = v[1]*w[1]+v[2]*w[2]
-    dot((u[1]+v[1],u[2]+v[2]),w) = (u[1]+v[1])*w[1]+(u[2]+v[2])*w[2] = (u[1]*w[1]+u[2]*w[2])+(v[1]*w[1]+v[2]*w[2]) = dot(u,w)+dot(v,w)
+        dot((u(1) + v(1), u(2) + v(2)), w) = dot(u, w) + dot(v, w)
+    have total cart(R,R) = (u(1)+v(1),u(2)+v(2))
+    total(1) = u(1)+v(1)
+    total(2) = u(2)+v(2)
+    release thm dot_coordinate_formula(total,w)
+    dot((u(1)+v(1),u(2)+v(2)),w) = dot(total,w)
+    dot(u,w) = u(1)*w(1)+u(2)*w(2)
+    dot(v,w) = v(1)*w(1)+v(2)*w(2)
+    dot((u(1)+v(1),u(2)+v(2)),w) = (u(1)+v(1))*w(1)+(u(2)+v(2))*w(2) = (u(1)*w(1)+u(2)*w(2))+(v(1)*w(1)+v(2)*w(2)) = dot(u,w)+dot(v,w)
 
 thm dot_add_right:
     ? forall u, v, w cart(R, R):
-        dot(u, (v[1] + w[1], v[2] + w[2])) = dot(u, v) + dot(u, w)
-    (v[1]+w[1],v[2]+w[2])[1] = v[1]+w[1]
-    (v[1]+w[1],v[2]+w[2])[2] = v[2]+w[2]
-    release thm dot_coordinate_formula(u,(v[1]+w[1],v[2]+w[2]))
-    dot(u,v) = u[1]*v[1]+u[2]*v[2]
-    dot(u,w) = u[1]*w[1]+u[2]*w[2]
-    dot(u,(v[1]+w[1],v[2]+w[2])) = u[1]*(v[1]+w[1])+u[2]*(v[2]+w[2]) = (u[1]*v[1]+u[2]*v[2])+(u[1]*w[1]+u[2]*w[2]) = dot(u,v)+dot(u,w)
+        dot(u, (v(1) + w(1), v(2) + w(2))) = dot(u, v) + dot(u, w)
+    have total cart(R,R) = (v(1)+w(1),v(2)+w(2))
+    total(1) = v(1)+w(1)
+    total(2) = v(2)+w(2)
+    release thm dot_coordinate_formula(u,total)
+    dot(u,(v(1)+w(1),v(2)+w(2))) = dot(u,total)
+    dot(u,v) = u(1)*v(1)+u(2)*v(2)
+    dot(u,w) = u(1)*w(1)+u(2)*w(2)
+    dot(u,(v(1)+w(1),v(2)+w(2))) = u(1)*(v(1)+w(1))+u(2)*(v(2)+w(2)) = (u(1)*v(1)+u(2)*v(2))+(u(1)*w(1)+u(2)*w(2)) = dot(u,v)+dot(u,w)
 
 thm collinear_det_expand:
     ? forall p, q, r cart(R, R):
-        det(vec(p, q), vec(p, r)) = (q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1])
-    vec(p,q)[1] = q[1]-p[1]
-    vec(p,q)[2] = q[2]-p[2]
-    vec(p,r)[1] = r[1]-p[1]
-    vec(p,r)[2] = r[2]-p[2]
-    det(vec(p, q), vec(p, r)) = vec(p, q)[1] * vec(p, r)[2] - vec(p, q)[2] * vec(p, r)[1] = (q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1])
+        det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+    vec(p,q)(1) = q(1)-p(1)
+    vec(p,q)(2) = q(2)-p(2)
+    vec(p,r)(1) = r(1)-p(1)
+    vec(p,r)(2) = r(2)-p(2)
+    det(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
 
 thm perpendicular_dot_expand:
     ? forall a, b, c, d cart(R, R):
-        dot(vec(a, b), vec(c, d)) = (b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])
-    vec(a,b)[1] = b[1]-a[1]
-    vec(a,b)[2] = b[2]-a[2]
-    vec(c,d)[1] = d[1]-c[1]
-    vec(c,d)[2] = d[2]-c[2]
-    dot(vec(a, b), vec(c, d)) = vec(a, b)[1] * vec(c, d)[1] + vec(a, b)[2] * vec(c, d)[2] = (b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])
+        dot(vec(a, b), vec(c, d)) = (b(1) - a(1)) * (d(1) - c(1)) + (b(2) - a(2)) * (d(2) - c(2))
+    vec(a,b)(1) = b(1)-a(1)
+    vec(a,b)(2) = b(2)-a(2)
+    vec(c,d)(1) = d(1)-c(1)
+    vec(c,d)(2) = d(2)-c(2)
+    dot(vec(a, b), vec(c, d)) = vec(a, b)(1) * vec(c, d)(1) + vec(a, b)(2) * vec(c, d)(2) = (b(1) - a(1)) * (d(1) - c(1)) + (b(2) - a(2)) * (d(2) - c(2))
 
 # Build the multiplied and subtracted terms before lifting their known equalities.
 thm dot_bilinear_expand:
     ? forall u, v cart(R, R):
-        dot((v[1] - u[1], v[2] - u[2]), (v[1] - u[1], v[2] - u[2])) = dot(v, v) - 2 * dot(u, v) + dot(u, u)
-    (v[1]-u[1],v[2]-u[2])[1] = v[1]-u[1]
-    (v[1]-u[1],v[2]-u[2])[2] = v[2]-u[2]
-    release thm dot_coordinate_formula((v[1]-u[1],v[2]-u[2]),(v[1]-u[1],v[2]-u[2]))
+        dot((v(1) - u(1), v(2) - u(2)), (v(1) - u(1), v(2) - u(2))) = dot(v, v) - 2 * dot(u, v) + dot(u, u)
+    have difference cart(R,R) = (v(1)-u(1),v(2)-u(2))
+    difference(1) = v(1)-u(1)
+    difference(2) = v(2)-u(2)
+    release thm dot_coordinate_formula(difference,difference)
+    dot((v(1)-u(1),v(2)-u(2)),(v(1)-u(1),v(2)-u(2))) = dot(difference,difference)
     release thm dot_coordinate_formula(v,v)
     release thm dot_coordinate_formula(u,u)
     release thm dot_coordinate_formula(u,v)
-    2*dot(u,v) = 2*(u[1]*v[1]+u[2]*v[2])
-    dot(v,v)-2*dot(u,v) = (v[1]*v[1]+v[2]*v[2])-2*(u[1]*v[1]+u[2]*v[2])
-    dot((v[1]-u[1],v[2]-u[2]),(v[1]-u[1],v[2]-u[2])) = (v[1]-u[1])*(v[1]-u[1])+(v[2]-u[2])*(v[2]-u[2]) = (v[1]*v[1]+v[2]*v[2])-2*(u[1]*v[1]+u[2]*v[2])+(u[1]*u[1]+u[2]*u[2]) = dot(v,v)-2*dot(u,v)+dot(u,u)
+    2*dot(u,v) = 2*(u(1)*v(1)+u(2)*v(2))
+    dot(v,v)-2*dot(u,v) = (v(1)*v(1)+v(2)*v(2))-2*(u(1)*v(1)+u(2)*v(2))
+    dot((v(1)-u(1),v(2)-u(2)),(v(1)-u(1),v(2)-u(2))) = (v(1)-u(1))*(v(1)-u(1))+(v(2)-u(2))*(v(2)-u(2)) = (v(1)*v(1)+v(2)*v(2))-2*(u(1)*v(1)+u(2)*v(2))+(u(1)*u(1)+u(2)*u(2)) = dot(v,v)-2*dot(u,v)+dot(u,u)
 

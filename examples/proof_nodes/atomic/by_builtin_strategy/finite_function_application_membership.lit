@@ -13,6 +13,7 @@ have Carrier set = cart(R,Z)
 have p Carrier = (1,2)
 
 have q Carrier = p
+q = (1,2)
 
 q(1) = 1
 

@@ -14,7 +14,6 @@ use crate::ast::obj::{
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::exec_env::SpecialProperty;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::runtime::runtime_ids::FactId;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -126,9 +125,7 @@ impl Runtime {
         }
         // An equality alias retains the checked template's callable contract.
         // Instance WD still checks template parameters and guards before use.
-        for (candidate, path) in equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(), &head_obj,
-        ) {
+        for (candidate, path) in self.exact_property_object_values(&head_obj) {
             let Obj::InstantiatedTemplateObj(instance) = &candidate else { continue; };
             let head_wd = self.verify_obj_well_definedness(&candidate, verify_state)?;
             if head_wd.is_failed() {
@@ -204,7 +201,7 @@ impl Runtime {
                 _ => continue,
             };
             let Some(subject) = source.function_subject() else { continue; };
-            let Some(path) = self.equivalence_class_path(&head_obj, subject) else { continue; };
+            let Some(path) = self.exact_property_equality_path(&head_obj, subject) else { continue; };
             match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
                 Ok(stages) => {
                     let (child_obj_well_defined, requirement_fact_verified) =
@@ -467,36 +464,21 @@ impl Runtime {
         }
     }
 
-    // Visible InFunctionSet rows for `obj` and its equality-class neighbors.
+    // Exact-object signatures only. Equality-neighbor signatures must be
+    // explicitly published on this object before a structural reader uses them.
     pub(crate) fn collect_in_function_set_candidates(&self, obj: &Obj) -> Vec<(FnSet, FactId)> {
-        let mut keys = self.equivalence_class_keys(obj);
-        let self_ir = obj.ir();
-        if !keys.iter().any(|k| k == &self_ir) {
-            keys.push(self_ir);
-        }
         let mut out = Vec::new();
-        for env in self.execution_environments_stack.iter().rev() {
-            for key in &keys {
-                let Some(props) = env.special_properties.get(key) else {
+        for prop in self.known_special_properties_of(obj) {
+            // Equality to a function space constructs a set alias, not a function.
+            if let SpecialProperty::Equality(fact) = &prop {
+                if !matches!(&fact.left, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)))
+                    && !matches!(&fact.right, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))) {
                     continue;
-                };
-                for prop in props {
-                    // A space alias C=fn(...)S identifies a set. It does not
-                    // construct a function with that signature. Function
-                    // equality to an anonymous function remains callable.
-                    if let crate::exec_env::SpecialProperty::Equality(fact) = prop {
-                        if !matches!(&fact.left, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)))
-                            && !matches!(&fact.right, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))) {
-                            continue;
-                        }
-                    }
-                    if let Some(signature) = prop.function_signature() {
-                        let candidate = (signature, prop.fact_id());
-                        if !out.contains(&candidate) {
-                            out.push(candidate);
-                        }
-                    }
                 }
+            }
+            if let Some(signature) = prop.function_signature() {
+                let candidate = (signature, prop.fact_id());
+                if !out.contains(&candidate) { out.push(candidate); }
             }
         }
         out

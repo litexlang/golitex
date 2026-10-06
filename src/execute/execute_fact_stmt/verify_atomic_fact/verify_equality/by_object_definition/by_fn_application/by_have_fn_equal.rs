@@ -1,7 +1,7 @@
 //! Equality by object definition: unfold `f(args)` when `f = fn(...) { body }` is known.
 //!
 //! Mathematical property:
-//!   A stored equality path `f = ... = AnonymousFn` supplies the body,
+//!   A directly indexed equality `f = AnonymousFn` supplies the body,
 //!   regardless of how `f` was introduced; then `f(args) = subst(body)`.
 //!
 //! Example:
@@ -12,7 +12,6 @@
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::{FnObj, FnObjHead, FunctionSpace, Obj};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -82,12 +81,9 @@ impl Runtime {
             FnObjHead::Identifier(head) => Obj::Identifier(head.clone()),
             _ => return Ok(None),
         };
-        // Stored equalities transport the function body, independently of how
-        // the head was introduced. Example: g=f and f=anon justify g(4)=5.
-        let members = equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(),
-            &head_obj,
-        );
+        // An exact indexed equality supplies the body, independently of how
+        // the head was introduced. Publish g=anon before using g(4).
+        let members = self.exact_property_object_values(&head_obj);
         for (candidate, path) in members {
             let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = &candidate else {
                 continue;

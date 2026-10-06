@@ -11,6 +11,7 @@
 have ReturnedCarrier set=fn(k {}) {}
 
 have ReturnedAlias set=ReturnedCarrier
+ReturnedAlias=fn(k {}) {}
 
 have f fn(x R) ReturnedAlias
 
