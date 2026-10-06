@@ -74,12 +74,28 @@ in the journal.
 
 ## Validation receipts
 
-Final gates and source/binary receipts are pending the last rebuild. Earlier
-successful gates already checked the unchanged nine original relation statements,
-all three log guard alternatives and factorial theorem reuse in one persistent
-session: 23 accepted frames and 18 correctly rejected controls. Ten initial
-strict files passed and eleven independent CLI negatives rejected. The final
-pass also includes the adjacent reciprocal spelling repair above.
+The final `cargo build --release --offline --lib --bin litex` passed on a stable
+source snapshot. Its CLI SHA-256 is
+`886b650d2b044954d862b17a0e5981828e4e5c8408b9b0c64228d168f3d4f6b9`.
+
+- 25 distinct focused Rust tests pass: six new-family checks, six existing log
+  checks after the fixture/matcher correction, two output contract checks and
+  eleven adjacent factorial/lcm checks. The final new/log/output gates each
+  had stable source fingerprints.
+- Eleven durable files pass `-strict -f`, exit `0` and top-level `success: true`.
+- Twelve independent CLI false/illegal controls reject, exit `1` and top-level
+  `success: false`. The CLI binary remained identical throughout these gates.
+- The final persistent session on that binary accepts all eleven files and
+  rejects three additional selected controls; all fourteen frames match their
+  expected result, and the session closes with exit `0`.
+- An earlier session checked all nine original statements, all log-base guard
+  combinations and theorem reuse: 23 accepted frames and 18 rejected controls.
+
+After frozen acceptance, four shared membership/rewrite/WD source files changed.
+Their exact manifest is retained in `record-end` in the journal. Every Rust file
+touched by this task still matches the accepted release snapshot. The receipts
+certify the fixed executable and scoped tests; they do not certify the later
+whole working tree or unrelated ongoing changes.
 
 The [journal](../../proof_journals/common-obj-relations-2026-10-05.json) preserves
 all baseline, failed variant and accepted session sources with raw output, all

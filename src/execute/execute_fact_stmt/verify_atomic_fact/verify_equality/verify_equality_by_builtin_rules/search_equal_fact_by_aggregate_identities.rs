@@ -298,29 +298,11 @@ impl Runtime {
         let mut callbacks = Vec::new();
         if matches!(aggregate.domain, AggregationDomain::FiniteSet(..)) {
             for part in &parts {
-                if crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(aggregate.func, part.func) {
-                    callbacks.push(FinitePartitionCallbackAgreementProof::SameFunction(FinitePartitionSameFunctionProof {}));
-                    continue;
-                }
                 let AggregationDomain::FiniteSet(domain) = part.domain else { return Ok(None); };
-                if super::helper::finite_restriction_matches(part.func, domain, aggregate.func) {
-                    callbacks.push(FinitePartitionCallbackAgreementProof::LiteralRestriction(FinitePartitionLiteralRestrictionProof {}));
-                    continue;
-                }
-                // Preserve the sufficient whole-function equality route (e.g.
-                // a stored callable alias), without requiring it for restrictions.
-                let same_function = equality(self, aggregate.func.clone(), part.func.clone(), fact);
-                let equality = self.verify_builtin_rule_premise(&same_function, *state)?;
-                if !equality.is_failed() {
-                    callbacks.push(FinitePartitionCallbackAgreementProof::EqualFunctions(FinitePartitionEqualFunctionsProof { equality }));
-                    continue;
-                }
-                let Some(proof) = self.aggregate_pointwise_proof(part.domain, fact, state, |rt, index, expansions| {
-                    let Some(left) = function_at(rt, aggregate.func, index, expansions)? else { return Ok(None); };
-                    let Some(right) = function_at(rt, part.func, index, expansions)? else { return Ok(None); };
-                    Ok(Some((left, right)))
-                })? else { return Ok(None); };
-                callbacks.push(FinitePartitionCallbackAgreementProof::Pointwise(proof));
+                let Some(proof) = self.finite_aggregate_callback_agreement(
+                    aggregate.func, part.func, domain, fact, state,
+                )? else { return Ok(None); };
+                callbacks.push(proof);
             }
         }
         Ok(Some(match (aggregate.domain, aggregate.product) {
@@ -373,12 +355,8 @@ impl Runtime {
                 }.into();
                 let same_set = equality(self, set.clone(), base_set.clone(), fact);
                 let Some(premises) = self.aggregate_identity_premises(vec![fresh, same_set], state)? else { continue; };
-                let Some(pointwise) = self.aggregate_pointwise_proof(
-                    AggregationDomain::FiniteSet(set), fact, state, |rt, index, expansions| {
-                        let Some(left) = function_at(rt, aggregate.func, index, expansions)? else { return Ok(None); };
-                        let Some(right) = function_at(rt, base.func, index, expansions)? else { return Ok(None); };
-                        Ok(Some((left, right)))
-                    },
+                let Some(pointwise) = self.finite_aggregate_callback_agreement(
+                    aggregate.func, base.func, base_set, fact, state,
                 )? else { continue; };
                 let mut factor_expansions = Vec::new();
                 let Some(value) = function_at(self, aggregate.func, element, &mut factor_expansions)? else { continue; };
@@ -408,18 +386,17 @@ impl Runtime {
         for (base_obj, factor) in [(&*mul.left, &*mul.right), (&*mul.right, &*mul.left)] {
             let Some(base) = aggregate_view(base_obj) else { continue; };
             if !base.product { continue; }
-            let AggregationDomain::FiniteSet(Obj::SetOperator(SetOperator::SetMinus(minus))) = base.domain else { continue; };
+            let AggregationDomain::FiniteSet(base_set) = base.domain else { continue; };
+            let Obj::SetOperator(SetOperator::SetMinus(minus)) = base_set else { continue; };
             let Obj::SetFormer(SetFormer::ListSet(list)) = &*minus.right else { continue; };
             if list.list.len() != 1 { continue; }
             let element = &*list.list[0];
             let member: Fact = InFact { fact_id: self.global_ids.allocate_fact_id(), element: element.clone(), set: set.clone(), line_file: fact.line_file.clone() }.into();
             let same_set = equality(self, set.clone(), *minus.left.clone(), fact);
             let Some(premises) = self.aggregate_identity_premises(vec![member, same_set], state)? else { continue; };
-            let Some(pointwise) = self.aggregate_pointwise_proof(base.domain, fact, state, |rt, index, expansions| {
-                let Some(a) = function_at(rt, aggregate.func, index, expansions)? else { return Ok(None); };
-                let Some(b) = function_at(rt, base.func, index, expansions)? else { return Ok(None); };
-                Ok(Some((a, b)))
-            })? else { continue; };
+            let Some(pointwise) = self.finite_aggregate_callback_agreement(
+                aggregate.func, base.func, base_set, fact, state,
+            )? else { continue; };
             let mut factor_expansions = Vec::new();
             let Some(value) = function_at(self, aggregate.func, element, &mut factor_expansions)? else { continue; };
             let goal = equality(self, value, factor.clone(), fact);
@@ -430,6 +407,36 @@ impl Runtime {
             )));
         }
         Ok(None)
+    }
+
+    // Every finite aggregate consumes its callback only on the aggregate set.
+    // Parent equality WD checks the actual domains; a literal restriction is
+    // agreement on this set, never a smaller-domain membership of the source.
+    fn finite_aggregate_callback_agreement(
+        &mut self,
+        source: &Obj,
+        restricted: &Obj,
+        domain: &Obj,
+        fact: &EqualFact,
+        state: &VerifyState,
+    ) -> RuntimeResult<Option<FinitePartitionCallbackAgreementProof>> {
+        if crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(source, restricted) {
+            return Ok(Some(FinitePartitionCallbackAgreementProof::SameFunction(FinitePartitionSameFunctionProof {})));
+        }
+        if super::helper::finite_restriction_matches(restricted, domain, source) {
+            return Ok(Some(FinitePartitionCallbackAgreementProof::LiteralRestriction(FinitePartitionLiteralRestrictionProof {})));
+        }
+        // Keep the checked whole-function equality route for actual aliases.
+        let same_function = equality(self, source.clone(), restricted.clone(), fact);
+        let equality = self.verify_builtin_rule_premise(&same_function, *state)?;
+        if !equality.is_failed() {
+            return Ok(Some(FinitePartitionCallbackAgreementProof::EqualFunctions(FinitePartitionEqualFunctionsProof { equality })));
+        }
+        Ok(self.aggregate_pointwise_proof(AggregationDomain::FiniteSet(domain), fact, state, |rt, index, expansions| {
+            let Some(left) = function_at(rt, source, index, expansions)? else { return Ok(None); };
+            let Some(right) = function_at(rt, restricted, index, expansions)? else { return Ok(None); };
+            Ok(Some((left, right)))
+        })?.map(FinitePartitionCallbackAgreementProof::Pointwise))
     }
 
     fn aggregate_linearity_identity(

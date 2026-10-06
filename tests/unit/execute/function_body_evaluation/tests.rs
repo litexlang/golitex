@@ -12,6 +12,56 @@ fn runtime() -> Runtime {
 }
 
 #[test]
+fn function_value_parameter_applications_keep_checked_body_evidence() {
+    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+        "/examples/proof_nodes/equal/by_object_definition/by_fn_application/function_value_parameter_application.lit"));
+    let mut rt = runtime();
+    let run = rt.run_litex_code(source).unwrap();
+    assert!(run.success && run.session_error.is_none(), "{}",
+        crate::json_output::emit_run_detailed(&run, &rt, "test", None));
+    assert_eq!(run.statement_results.len(), 8);
+    for index in [2, 6] {
+        let detailed = crate::json_output::project_stmt_detailed(&run.statement_results[index], &rt);
+        assert!(field_rec(&detailed, "expanded_body").is_some());
+        assert!(field_rec(&detailed, "function_body").is_some());
+    }
+}
+
+#[test]
+fn function_value_parameter_rejections_preserve_the_prefix_and_publish_nothing() {
+    for (source, phase) in [
+        (include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/examples/negative/exact_function_domains/function_parameter_missing_inner_guard.lit")), "well_defined"),
+        (include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/examples/negative/exact_function_domains/function_parameter_wrong_complete_length.lit")), "well_defined"),
+        (include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/examples/negative/exact_function_domains/function_parameter_wrong_call_groups.lit")), "well_defined"),
+        (include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/examples/negative/exact_function_domains/function_parameter_wrong_coordinate_value.lit")), "search_proof"),
+    ] {
+        let (prefix, target) = source.trim_end().rsplit_once('\n').unwrap();
+        let mut rt = runtime();
+        let setup = rt.run_litex_code(prefix).unwrap();
+        assert!(setup.success && setup.session_error.is_none(), "{prefix}");
+        let before: usize = rt.execution_environments_stack.iter()
+            .map(|env| env.facts.facts_by_id.len()).sum();
+        let run = rt.run_litex_code(target).unwrap();
+        assert!(!run.success && run.session_error.is_none(), "{target}");
+        assert_eq!(run.statement_results.len(), 1);
+        let result = crate::json_output::project_stmt_normal(&run.statement_results[0], &rt);
+        let fields = result.as_object().unwrap();
+        assert_eq!(fields.get("why_failed").unwrap().as_object().unwrap()
+            .get("phase").unwrap().as_str().unwrap(), phase);
+        assert!(fields.get("stores").unwrap().as_array().unwrap().is_empty());
+        assert!(fields.get("infers").unwrap().as_array().unwrap().is_empty());
+        let after: usize = rt.execution_environments_stack.iter()
+            .map(|env| env.facts.facts_by_id.len()).sum();
+        assert_eq!(before, after, "failed application published facts: {target}");
+        assert!(rt.run_litex_code("1=1").unwrap().success);
+    }
+}
+
+#[test]
 fn curried_beta_value_preserves_both_application_carriers_and_evidence() {
     let mut rt = runtime();
     let source = "have fn add(x R) fn(y R) R = fn(y R) R {x+y}\nadd(2) $in fn(y R) R\nadd(2)(3) $in R\nadd(2)(3)=5\n";

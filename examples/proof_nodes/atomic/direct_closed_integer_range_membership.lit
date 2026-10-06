@@ -1,0 +1,19 @@
+# Tracer: exact closed integer range membership at Direct permission.
+# Before: the returned finite-sequence function
+# have f finite_seq(fn(k {}) {},2)
+# fn_range(f(2))={}
+# passed WD but lost the closed index obligation in lower-permission proof reading.
+# Now closed integer endpoints and values give a finite calculation certificate.
+# Boundary: closed range includes its end; half-open range excludes its end;
+# fractional/out-of-range values are rejected by real Runtime tests.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/atomic/direct_closed_integer_range_membership.lit
+
+2 $in closed_range(1,2)
+
+2 $in range(1,3)
+
+not 2 $in range(1,2)
+
+not 1.5 $in closed_range(1,2)
+
+not 2 $in closed_range(3,1)

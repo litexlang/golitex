@@ -297,12 +297,21 @@ pub enum ExecReleaseThmStmtResult {
     Failed(ExecReleaseThmStmtFailed),
 }
 
+// Native theorem domain stage retains every checked peer before conclusions.
+pub enum BuiltinFunctionDomainProof {
+    Membership(crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof),
+    TupleEquality {
+        left: crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof,
+        right: crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof,
+    },
+}
+
 // Stage order: type_proofs → complete domain → dom_proofs → WD → store.
 pub struct ExecReleaseThmStmtSuccess {
     pub thm_name: String,
     pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
-    pub function_domain: Option<crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof>,
+    pub function_domain: Option<BuiltinFunctionDomainProof>,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub conclusions_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
@@ -364,7 +373,7 @@ pub struct ExecByThmStmtSuccess {
     pub thm_name: String,
     pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
-    pub function_domain: Option<crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof>,
+    pub function_domain: Option<BuiltinFunctionDomainProof>,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub conclusions_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
     pub selected_proof: VerifyFactResult,

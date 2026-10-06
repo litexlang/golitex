@@ -402,11 +402,14 @@ impl Runtime {
         if let Some(proof) = self.search_cart_nonempty_from_all_factors_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartNonemptyFromAllFactors(proof)));
         }
+        if let Some(proof) = self.search_function_space_nonempty_from_empty_domain_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionSpaceNonemptyFromEmptyDomain(proof)));
+        }
         if let Some(proof) = self.search_fn_set_nonempty_from_codomain_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnSetNonemptyFromCodomain(proof)));
         }
-        if let Some(proof) = self.search_anonymous_fn_nonempty_from_codomain_strategy(fact, ctx)? {
-            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AnonymousFnNonemptyFromCodomain(proof)));
+        if let Some(proof) = self.search_function_graph_nonempty_from_domain_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionGraphNonemptyFromDomain(proof)));
         }
         if let Some(proof) = self.search_finite_seq_set_nonempty_from_codomain_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSeqSetNonemptyFromCodomain(proof)));

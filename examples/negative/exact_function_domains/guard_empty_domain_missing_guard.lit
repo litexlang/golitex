@@ -1,0 +1,7 @@
+# Keep the proved exclusion premise; removing or reversing guards must not prove emptiness.
+forall k R:
+    k<0
+    =>:
+        not k>0
+
+fn(k R:k>0) R {0}={}

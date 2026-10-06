@@ -1,0 +1,3 @@
+have fn maker(seed R) fn(x,y R) R = fn(x,y R) R {seed+x+y}
+have fn apply_pair(f fn(x,y R) R,x,y R) R = f(x,y)
+apply_pair(maker(1),2,3) = maker(1)(2)(3)

@@ -6,7 +6,10 @@ use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Output, Stdio};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
 
 struct FixtureDir(PathBuf);
 
@@ -17,8 +20,9 @@ impl FixtureDir {
             .unwrap()
             .as_nanos();
         let path = std::env::temp_dir().join(format!(
-            "litex-cli-feedback-{}-{unique}",
-            std::process::id()
+            "litex-cli-feedback-{}-{unique}-{}",
+            std::process::id(),
+            NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed)
         ));
         fs::create_dir(&path).unwrap();
         Self(path)

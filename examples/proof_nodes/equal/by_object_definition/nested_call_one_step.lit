@@ -12,10 +12,10 @@ have x R
 outer(inner(x)) = inner(x)*inner(x)
 
 # The geo caller needs the same step with tuple-valued arguments.
-have fn vec(a,b cart(R,R)) cart(R,R) = (b[1]-a[1],b[2]-a[2])
-have fn dot(u,v cart(R,R)) R = u[1]*v[1]+u[2]*v[2]
+have fn vec(a,b cart(R,R)) cart(R,R) = (b(1)-a(1),b(2)-a(2))
+have fn dot(u,v cart(R,R)) R = u(1)*v(1)+u(2)*v(2)
 have a,b cart(R,R)
-dot(vec(a,b),vec(a,b)) = vec(a,b)[1]*vec(a,b)[1]+vec(a,b)[2]*vec(a,b)[2]
+dot(vec(a,b),vec(a,b)) = vec(a,b)(1)*vec(a,b)(1)+vec(a,b)(2)*vec(a,b)(2)
 # Boundary: wrong values, invalid nested arguments and missing body guards reject.
 # Evidence: target/release/litex -strict -f examples/proof_nodes/equal/by_object_definition/nested_call_one_step.lit
 # Rust: tests/unit/execute/function_body_evaluation/tests.rs

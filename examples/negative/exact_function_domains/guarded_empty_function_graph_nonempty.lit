@@ -1,0 +1,4 @@
+# Expected: successful declaration prefix, then search_proof rejection.
+# A return upper bound or constant body cannot witness an input.
+have fn no_inputs(k R: k>0,k<0) R=0
+$is_nonempty_set(no_inputs)

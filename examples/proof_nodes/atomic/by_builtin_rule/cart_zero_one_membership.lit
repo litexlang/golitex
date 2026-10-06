@@ -1,0 +1,35 @@
+# Tracer: zero/one Cartesian members use the same exact-domain rule as n members.
+# Before on ABI6 binary 94cf70a5c6089a680b71e424d1209a718c0fa5ef22560de5f552814febe21c7f:
+# tuple(7) $in cart(Z)
+# cart expected at least two arguments; old default membership used shape/dimension.
+# Now complete domains and coordinate conditions are proved and retained.
+# Boundary: wrong length/carrier and coordinate 2 of a singleton are real negatives.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/cart_zero_one_membership.lit
+
+() $in cart()
+
+release thm cart_member_from_coordinates((),cart())
+
+tuple(7) $in cart(Z)
+
+release thm cart_member_from_coordinates(tuple(7),cart(Z))
+
+have p cart(Z)=tuple(7)
+
+p(1)=7
+
+p(1) $in Z
+
+p $in finite_seq(R,1)
+
+have Carrier set=cart(Z)
+
+have q Carrier=p
+
+q(1)=7
+
+have empty_member cart()
+
+fn_range(empty_member)={}
+
+empty_member={}

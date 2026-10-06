@@ -12,6 +12,93 @@ fn signature(signature: &crate::ast::obj::FnSet) -> JsonValue {
     string(Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone())).readable_string())
 }
 
+pub(super) fn project_domain_empty(proof: &FunctionDomainEmptyProof, rt: &Runtime) -> JsonValue {
+    match proof {
+        FunctionDomainEmptyProof::ParameterCarrier(proof) => project_empty_parameter_carrier(proof, rt),
+        FunctionDomainEmptyProof::GuardExclusion(proof) => object_for(rt, vec![
+            ("type", string("checked_guard_input_exclusion")),
+            ("source_signature", signature(&proof.signature)),
+            ("excluded_guard_index", string(proof.excluded_guard_index.to_string())),
+            ("guard_exclusion", project_verify_fact(&proof.exclusion, rt)),
+        ]),
+    }
+}
+
+fn project_empty_parameter_carrier(proof: &FunctionDomainEmptyCarrierProof, rt: &Runtime) -> JsonValue {
+    let evidence = match &proof.evidence {
+        FunctionDomainEmptyCarrierEvidence::EmptyList => object_for(rt, vec![("type", string("empty_literal_carrier"))]),
+        FunctionDomainEmptyCarrierEvidence::EmptyIntegerRange => object_for(rt, vec![("type", string("empty_integer_range_carrier"))]),
+        FunctionDomainEmptyCarrierEvidence::CheckedEquality(result) => project_verify_fact(result, rt),
+    };
+    object_for(rt, vec![
+        ("source_signature", signature(&proof.signature)),
+        ("parameter_group_index", string(proof.parameter_group_index.to_string())),
+        ("empty_carrier", string(proof.empty_carrier.readable_string())),
+        ("carrier_equal", project_known_equality_path(&proof.carrier_equal, rt)),
+        ("source", evidence),
+    ])
+}
+
+pub(super) fn project_domain_nonempty(proof: &FunctionDomainNonemptyProof, rt: &Runtime) -> JsonValue {
+    let evidence = match &proof.evidence {
+        FunctionDomainNonemptyEvidence::ParameterCarriers(proofs) => object_for(rt, vec![
+            ("type", string("nonempty_parameter_product")),
+            ("proof_of_requirement_facts", super::store::project_verify_facts(proofs, rt)),
+        ]),
+        FunctionDomainNonemptyEvidence::ArgumentWitness { arguments, memberships, guards } => object_for(rt, vec![
+            ("type", string("checked_domain_argument_witness")),
+            ("arguments", JsonValue::Array(arguments.iter().map(|arg| string(arg.readable_string())).collect())),
+            ("proof_of_requirement_facts", JsonValue::Array(memberships.iter().map(|proof| match proof {
+                FunctionDomainArgumentMembershipProof::Verified(proof) => project_verify_fact(proof, rt),
+                FunctionDomainArgumentMembershipProof::IntegerRangeStart { integer, endpoint_order } => object_for(rt, vec![
+                    ("type", string("integer_range_start_witness")),
+                    ("proof_of_requirement_facts", JsonValue::Array(vec![project_verify_fact(integer, rt), project_verify_fact(endpoint_order, rt)])),
+                ]),
+            }).collect())),
+            ("domain_comparison", super::store::project_verify_facts(guards, rt)),
+        ]),
+        FunctionDomainNonemptyEvidence::ExistingWitness(proof) => project_verify_fact(proof, rt),
+    };
+    object_for(rt, vec![("source_signature", signature(&proof.signature)), ("source", evidence)])
+}
+
+pub(super) fn project_function_space_nonempty(proof: &FunctionSpaceNonemptyProof, rt: &Runtime) -> JsonValue {
+    match proof {
+        FunctionSpaceNonemptyProof::BaseSet(proof) => project_verify_fact(proof, rt),
+        FunctionSpaceNonemptyProof::EmptyDomain(proof) => project_domain_empty(proof, rt),
+        FunctionSpaceNonemptyProof::CarrierTransport { carrier, carrier_equal, nonempty } => object_for(rt, vec![
+            ("type", string("checked_nonempty_return_carrier_transport")),
+            ("return_space", string(carrier.readable_string())),
+            ("carrier_equal", project_known_equality_path(carrier_equal, rt)),
+            ("source", project_function_space_nonempty(nonempty, rt)),
+        ]),
+        FunctionSpaceNonemptyProof::FiniteCartesianProduct { cart, factors_nonempty } => object_for(rt, vec![
+            ("type", string("finite_cartesian_product_exists")),
+            ("return_space", string(Obj::ProductShape(crate::ast::obj::ProductShape::Cart(cart.clone())).readable_string())),
+            ("proof_of_requirement_facts", JsonValue::Array(factors_nonempty.iter().map(|proof| project_function_space_nonempty(proof, rt)).collect())),
+        ]),
+        FunctionSpaceNonemptyProof::ConstantFunction { signature: space, return_nonempty } => object_for(rt, vec![
+            ("type", string("constant_function_exists")), ("source_signature", signature(space)),
+            ("source", project_function_space_nonempty(return_nonempty, rt)),
+        ]),
+    }
+}
+
+pub(super) fn project_call_domains_alpha_match(proof: &FunctionCallDomainsAlphaMatchProof, rt: &Runtime) -> JsonValue {
+    JsonValue::Array(proof.layers.iter().map(|layer| {
+        let mut fields = vec![
+            ("type", string("domain_alpha_equivalent")),
+            ("source_signature", signature(&layer.selected)),
+            ("target_signature", signature(&layer.alternative)),
+        ];
+        if let Some(carriers) = &layer.return_carriers {
+            fields.push(("left_path", project_known_equality_path(&carriers.selected_equal, rt)));
+            fields.push(("right_path", project_known_equality_path(&carriers.alternative_equal, rt)));
+        }
+        object_for(rt, fields)
+    }).collect())
+}
+
 pub(super) fn project_source(proof: &CompleteFunctionDomainProof, rt: &Runtime) -> JsonValue {
     let source = match &proof.source {
         CompleteFunctionDomainSourceProof::FiniteFunction(source) => project_finite_function_source(source, rt),

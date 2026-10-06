@@ -141,7 +141,6 @@ pub enum EqualitySearchProofByBuiltinRule {
     GcdCommonDivisor(super::by_gcd_lcm_universal_divisibility::GcdCommonDivisorProof),
     LcmCommonMultiple(super::by_gcd_lcm_universal_divisibility::LcmCommonMultipleProof),
     FactorialDivisibility(super::by_factorial_divisibility::FactorialDivisibilityProof),
-    CartReconstruction(super::by_cart_reconstruction::CartReconstructionProof),
     FiniteSetProductReindex(super::by_finite_set_product_reindex::FiniteSetProductReindexProof),
     FiniteSetReduceReindex(super::by_finite_set_reduce_reindex::FiniteSetReduceReindexProof),
 
@@ -326,6 +325,9 @@ pub enum EqualitySearchProofByBuiltinRule {
     UnionOverIntersectDistributive(UnionOverIntersectDistributiveBuiltinRuleProof),
     SetMinusChainToUnion(SetMinusChainToUnionBuiltinRuleProof),
     FnRangeOfConstantAnonymousFn(FnRangeOfConstantAnonymousFnBuiltinRuleProof),
+    FnRangeOfEmptyDomain(super::by_function_domain_image::FnRangeOfEmptyDomainBuiltinRuleProof),
+    EmptyFunctionGraph(super::by_empty_function_graph::EmptyFunctionGraphBuiltinRuleProof),
+    EmptyDomainFunctionSpaceSingleton(super::by_empty_function_graph::EmptyDomainFunctionSpaceSingletonBuiltinRuleProof),
     SeqEqualsFnOnNPos(SeqEqualsFnOnNPosBuiltinRuleProof),
     FiniteSeqEqualsFnOnOneBasedDomain(FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof),
     IndexUnionEmptyIndex(IndexUnionEmptyIndexBuiltinRuleProof),

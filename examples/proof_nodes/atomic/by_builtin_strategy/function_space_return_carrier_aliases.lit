@@ -1,0 +1,37 @@
+# Tracer: constructive return-space existence follows checked carrier aliases.
+# Before on ABI6 binary 59c56489b2f7222f0d221cdf74134fb8501c3ab7b71888ca31530b822ec5205f:
+# have ReturnedCarrier set=fn(k {}) {}
+# have f fn(x R) ReturnedCarrier
+# The second declaration failed its actual nonempty-carrier obligation.
+# Now retain checked carrier equality and the finite constructive proof.
+# Boundary: cyclic carrier equations cannot create their own inhabitants;
+# empty nested return spaces and calling a carrier set remain negatives.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_strategy/function_space_return_carrier_aliases.lit
+
+have ReturnedCarrier set=fn(k {}) {}
+
+have ReturnedAlias set=ReturnedCarrier
+
+have f fn(x R) ReturnedAlias
+
+fn_range(f(0))={}
+
+have Scalar set=R
+
+have scalar_fn fn(x R) Scalar
+
+scalar_fn(0) $in R
+
+have CartReturns set=cart(R,Z)
+
+have cart_fn fn(x R) CartReturns
+
+cart_fn(0)(1) $in R
+
+cart_fn(0)(2) $in Z
+
+have EmptyReturns set=finite_seq({},0)
+
+have finite_fn fn(x R) EmptyReturns
+
+fn_range(finite_fn(0))={}

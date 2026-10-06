@@ -4,7 +4,7 @@
 //! Does not re-check `e $in &Struct`; callers must already have that membership.
 //!
 //! A struct must have at least two fields (parse-enforced). Release always uses
-//! the tuple representation: bridges `e.f_i = e[i]`, cart membership, laws.
+//! the finite-function representation: bridges `e.f_i = e(i)`, cart membership, laws.
 //!
 //! Example (auto-open on bind):
 //!   forall G &Group<s>:
@@ -13,11 +13,10 @@
 
 use std::collections::HashMap;
 
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, IsTupleFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
-    Cart, FieldAccess, Literal, Number, Obj, ObjAtIndex, ProductShape, StructAndFieldAccessObj,
-    StructObj, TupleDim,
+    Cart, FieldAccess, Obj, ProductShape, StructAndFieldAccessObj, StructObj,
 };
 use crate::ast::param::{ParamType, TypedParameterList};
 use crate::ast::stmt::DefStructStmt;
@@ -83,30 +82,19 @@ impl Runtime {
             }
         }
 
+        let mut coordinates = Vec::with_capacity(def.fields.len());
+        for index in 0..def.fields.len() {
+            match crate::execute::execute_fact_stmt::finite_function::finite_function_coordinate(obj, index) {
+                Ok(coordinate) => coordinates.push(coordinate),
+                Err(reason) => return Ok(failed_release(obj, struct_obj, reason)),
+            }
+        }
+
         let mut store_and_infer = Vec::new();
 
         let cart = Obj::ProductShape(ProductShape::Cart(Cart {
             args: field_types.iter().cloned().map(Box::new).collect(),
         }));
-        let is_tuple = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            set: obj.clone(),
-            line_file: None,
-        }));
-        store_and_infer.push(self.store_fact_and_infer(&is_tuple, verify_state)?);
-
-        let tuple_dim = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: Obj::ProductShape(ProductShape::TupleDim(TupleDim {
-                arg: Box::new(obj.clone()),
-            })),
-            right: Obj::Literal(Literal::Number(Number {
-                normalized_value: def.fields.len().to_string(),
-            })),
-            line_file: None,
-        }));
-        store_and_infer.push(self.store_fact_and_infer(&tuple_dim, verify_state)?);
-
         let cart_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: self.global_ids.allocate_fact_id(),
             element: obj.clone(),
@@ -115,18 +103,12 @@ impl Runtime {
         }));
         store_and_infer.push(self.store_fact_and_infer(&cart_membership, verify_state)?);
 
-        for (index, field) in def.fields.iter().enumerate() {
+        for (field, coordinate) in def.fields.iter().zip(coordinates) {
             let field_value = field_access_obj(obj, &field.binding.name);
-            let projection = Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex {
-                obj: Box::new(obj.clone()),
-                index: Box::new(Obj::Literal(Literal::Number(Number {
-                    normalized_value: (index + 1).to_string(),
-                }))),
-            }));
             let bridge = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),
                 left: field_value,
-                right: projection,
+                right: coordinate,
                 line_file: None,
             }));
             store_and_infer.push(self.store_fact_and_infer(&bridge, verify_state)?);

@@ -1,0 +1,7 @@
+# Negative control: finite product missing finiteness
+# Setup must pass; final target rejects at well_defined without stores/infers.
+have S set
+have a R
+have f fn(x union(S,{a})) R
+a $in union(S,{a})
+finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R{f(x)})*f(a)

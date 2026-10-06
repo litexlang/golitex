@@ -11,7 +11,6 @@ use super::obj_well_defined_proof_by_def::*;
 use crate::ast::fact::{AtomicFact, InFact, QuantifierFreeFact};
 use crate::ast::obj::{AnonymousFn, FnSet, FunctionSpace, Obj, SetBuilder, SetFormer};
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, VerifyFactWellDefinedResult,
 };
@@ -219,7 +218,7 @@ impl Runtime {
                 Vec<FactWellDefinedProof>,
                 Box<ObjWellDefinedProof>,
                 Box<ObjWellDefinedProof>,
-                VerifyFactResult,
+                AnonymousFnBodyInReturnSetProof,
             ),
             FailToVerifyAnonymousFnObjWellDefined,
         >,
@@ -257,6 +256,11 @@ impl Runtime {
                     }));
                 }
             };
+
+        // Check absence before introducing this function's own binders and
+        // assuming its guards. Those assumptions cannot certify themselves.
+        // This prerequisite is retained only in the later vacuous-return route.
+        let empty_complete_domain = self.verify_function_domain_empty(&value.body, verify_state)?;
 
         let typed = set_bound_parameters_to_typed_parameter_list(&value.body.set_bound_parameters);
         self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
@@ -304,26 +308,34 @@ impl Runtime {
                 }
             };
 
-        let membership_fact = AtomicFact::InFact(InFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            element: value.equal_to.as_ref().clone(),
-            set: value.body.ret_set.as_ref().clone(),
-            line_file: None,
-        });
-        let body_in_ret_set = self.verify_required_atomic_fact(
-            membership_fact,
-            verify_state,
-            "anonymous function body must belong to the return set".to_string(),
-        )?;
-        if body_in_ret_set.is_failed() {
-            return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::BodyInRetSet {
-                param_type_well_defined,
-                dom_fact_well_defined,
-                ret_set_well_defined,
-                body_well_defined,
-                failed: body_in_ret_set,
-            }));
-        }
+        let body_in_ret_set = if let Some(domain_empty) = empty_complete_domain {
+            // Header, return carrier and body WD above remain mandatory.
+            // Do not generate or store the standalone body membership: there
+            // are no complete input assignments at which it is required.
+            AnonymousFnBodyInReturnSetProof::EmptyCompleteDomain(domain_empty)
+        } else {
+            let membership_fact = AtomicFact::InFact(InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: value.equal_to.as_ref().clone(),
+                set: value.body.ret_set.as_ref().clone(),
+                line_file: None,
+            });
+            let body_in_ret_set = self.verify_required_atomic_fact(
+                membership_fact,
+                verify_state,
+                "anonymous function body must belong to the return set".to_string(),
+            )?;
+            if body_in_ret_set.is_failed() {
+                return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::BodyInRetSet {
+                    param_type_well_defined,
+                    dom_fact_well_defined,
+                    ret_set_well_defined,
+                    body_well_defined,
+                    failed: body_in_ret_set,
+                }));
+            }
+            AnonymousFnBodyInReturnSetProof::CheckedMembership(body_in_ret_set)
+        };
 
         Ok(Ok((
             param_type_well_defined,

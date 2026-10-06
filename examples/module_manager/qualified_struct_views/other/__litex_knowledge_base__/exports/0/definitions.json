@@ -1,0 +1,46 @@
+{
+  "kind": "definition_memory",
+  "identifiers": [],
+  "predicate_definitions": [],
+  "abstract_predicate_definitions": [],
+  "structure_definitions": [
+    {
+      "kind": "def_struct",
+      "name": "Pair",
+      "param_def_with_dom": null,
+      "fields": [
+        {
+          "binding": {
+            "id": 10,
+            "name": "first"
+          },
+          "field_type": {
+            "tag": "StandardSet",
+            "set": "Z"
+          }
+        },
+        {
+          "binding": {
+            "id": 11,
+            "name": "second"
+          },
+          "field_type": {
+            "tag": "StandardSet",
+            "set": "Z"
+          }
+        }
+      ],
+      "equivalent_facts": [],
+      "line_file": {
+        "line": 1,
+        "origin": {
+          "tag": "ImportedExport",
+          "global_mod_id": 1,
+          "export_file_id": 0
+        }
+      }
+    }
+  ],
+  "theorem_definitions": [],
+  "axiom_definitions": []
+}

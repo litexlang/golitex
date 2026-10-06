@@ -84,9 +84,12 @@ pub struct UnionOverIntersectDistributiveBuiltinRuleProof {}
 //   set_minus(set_minus(A, B), C) = set_minus(A, union(B, C)).
 pub struct SetMinusChainToUnionBuiltinRuleProof {}
 
-// Builtin FnRangeOfConstantAnonymousFn: fn_range(fn(...){c}) = {c} when body ignores params.
+// A constant body has singleton image only on an inhabited effective domain.
 // Example: fn_range(fn(x R) R {1}) = {1}.
-pub struct FnRangeOfConstantAnonymousFnBuiltinRuleProof {}
+pub struct FnRangeOfConstantAnonymousFnBuiltinRuleProof {
+    pub source: crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
+    pub domain_nonempty: crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyProof,
+}
 
 // Builtin SeqEqualsFnOnNPos: seq(S) = fn(x N+) S.
 pub struct SeqEqualsFnOnNPosBuiltinRuleProof {}
@@ -231,7 +234,7 @@ impl Runtime {
                     ),
                 ));
             }
-            if let Some(p) = self.try_fn_range_of_constant(left, right)? {
+            if let Some(p) = self.try_fn_range_of_constant(left, right, verify_state)? {
                 return Ok(Some(
                     EqualityIdentitiesWave13BuiltinRuleProof::FnRangeOfConstantAnonymousFn(p),
                 ));
@@ -319,6 +322,7 @@ impl Runtime {
         &mut self,
         left: &Obj,
         right: &Obj,
+        verify_state: VerifyState,
     ) -> RuntimeResult<Option<FnRangeOfConstantAnonymousFnBuiltinRuleProof>> {
         let Obj::FunctionSpace(FunctionSpace::FnRange(FnRange { function })) = left else {
             return Ok(None);
@@ -329,41 +333,15 @@ impl Runtime {
         if list.len() != 1 {
             return Ok(None);
         }
-        let body = match function.as_ref() {
-            Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => {
-                if !anonymous_fn_body_is_closed_literal(af) {
-                    return Ok(None);
-                }
-                af.equal_to.as_ref().clone()
-            }
-            Obj::Identifier(id) => {
-                let Some(af) = self.anonymous_fn_from_named_have_fn(id) else {
-                    return Ok(None);
-                };
-                if !anonymous_fn_body_is_closed_literal(&af) {
-                    return Ok(None);
-                }
-                af.equal_to.as_ref().clone()
-            }
-            _ => return Ok(None),
-        };
-        if list[0].ir() != body.ir() {
-            return Ok(None);
+        for source in self.complete_function_domains(function, verify_state)? {
+            let crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::AnonymousFunction {
+                function: af, ..
+            } = &source.source else { continue; };
+            if !anonymous_fn_body_is_closed_literal(af) || list[0].ir() != af.equal_to.ir() { continue; }
+            let Some(domain_nonempty) = self.verify_function_domain_nonempty(&source.signature, verify_state)? else { continue; };
+            return Ok(Some(FnRangeOfConstantAnonymousFnBuiltinRuleProof { source, domain_nonempty }));
         }
-        Ok(Some(FnRangeOfConstantAnonymousFnBuiltinRuleProof {}))
-    }
-
-    fn anonymous_fn_from_named_have_fn(
-        &self,
-        head: &crate::ast::obj::IdentifierObj,
-    ) -> Option<AnonymousFn> {
-        use crate::exec_env::StoredIdentifierDefinition;
-        let StoredIdentifierDefinition::HaveFnEqual((_, stmt)) =
-            self.stored_identifier_definition_visible(head)?
-        else {
-            return None;
-        };
-        Some(stmt.equal_to_anonymous_fn.clone())
+        Ok(None)
     }
 }
 

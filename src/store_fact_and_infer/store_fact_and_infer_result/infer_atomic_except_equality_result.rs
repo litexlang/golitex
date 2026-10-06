@@ -27,7 +27,7 @@ pub enum InferAtomicExceptEqualityResult {
     // `x $in set_minus(A, B)` → `x $in A`, `not x $in B` (+ optional `x != a`).
     InFactSetMinusSplit(InferInFactSetMinusSplitResult),
     // `x $in cart(A, B, …)` → tuple shape + coordinate memberships.
-    InFactCartProjection(InferInFactCartProjectionResult),
+    InFactCartCoordinates(InferInFactCartCoordinatesResult),
     // `x $in range(a, b)` → `x $in Z`, bounds (+ optional singleton eq).
     InFactRange(InferInFactRangeResult),
     // `x $in closed_range(a, b)` → `x $in Z`, bounds (+ optional singleton eq).
@@ -54,8 +54,6 @@ pub enum InferAtomicExceptEqualityResult {
     InFactIndexIntersect(InferInFactIndexIntersectResult),
     // `f $in index_cart(I, S, g)` → FnSet membership + `$is_choice_function_for`.
     InFactIndexCart(InferInFactIndexCartResult),
-    // `$is_cart(C)` → `cart_dim(C) >= 2`.
-    IsCartDimensionLowerBound(InferIsCartDimensionLowerBoundResult),
     // `A $subset B` → `forall x A: x $in B`.
     SubsetElementwiseMembership(InferSubsetElementwiseMembershipResult),
     // Stored A subset B + available finite B => finite A.
@@ -168,7 +166,7 @@ pub struct InferInFactSetMinusSplitResult {
     pub derived: Vec<StoreFactAndInferResult>,
 }
 
-pub struct InferInFactCartProjectionResult {
+pub struct InferInFactCartCoordinatesResult {
     pub derived: Vec<StoreFactAndInferResult>,
 }
 
@@ -228,10 +226,6 @@ pub struct InferInFactIndexIntersectResult {
 
 pub struct InferInFactIndexCartResult {
     pub derived: Vec<StoreFactAndInferResult>,
-}
-
-pub struct InferIsCartDimensionLowerBoundResult {
-    pub derived: Box<StoreFactAndInferResult>,
 }
 
 pub struct InferStrictLowerBoundPositiveResult {
@@ -304,7 +298,7 @@ impl InferAtomicExceptEqualityResult {
                 }
                 ids
             }
-            Self::InFactCartProjection(r) => {
+            Self::InFactCartCoordinates(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
                     ids.extend(d.stored_fact_ids());
@@ -384,7 +378,6 @@ impl InferAtomicExceptEqualityResult {
                 }
                 ids
             }
-            Self::IsCartDimensionLowerBound(r) => r.derived.stored_fact_ids(),
             Self::SubsetElementwiseMembership(r) => r.derived.stored_fact_ids(),
             Self::SubsetFiniteUpperBound(r) => r.derived.stored_fact_ids(),
             Self::StrictLowerBoundPositive(r) => r.derived.stored_fact_ids(),

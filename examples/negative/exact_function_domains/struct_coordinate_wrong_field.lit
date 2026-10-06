@@ -1,0 +1,8 @@
+# Boundary: correct setup followed by an invalid coordinate, call, guard or equality.
+# Gate: litex -strict -f examples/negative/exact_function_domains/struct_coordinate_wrong_field.lit
+
+struct Pair:
+    first R
+    second Z
+have p &Pair=(1/2,2)
+p.first=p(2)

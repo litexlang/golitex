@@ -21,6 +21,24 @@ Litex source stays the same across natural languages. Batch Normal JSON carries
 a language selection from `-lang` (default `en`); Chinese output localizes
 field names and proof explanations, including `"语言": "zh"`. See [`docs/cli.md`](cli.md).
 
+## Why recommend one spelling when another is supported?
+
+Support describes the language contract; a recommendation helps readers write
+consistent source. For new code, prefer `release thm name(args)` over the
+supported bare `by thm` alias, an indented `forall` over an inline universal,
+and English/ASCII source such as `forall`, `R`, and `$in` over documented
+Unicode aliases. The alternatives remain accepted. Indentation exposes the
+premise/conclusion boundary; canonical spellings match diagnostic output and
+are easy to type and search.
+
+`by thm name(args) => fact` has a distinct purpose: selecting one atomic
+consequence. Keep it when that is the intended context effect. The
+[learner guide](Litex_Learner_Cheatsheet.md#supported-syntax-and-recommended-writing)
+shows both supported and recommended forms, and its
+[common sticking points](Litex_Learner_Cheatsheet.md#common-places-to-get-stuck)
+explain fact lists versus proof commands, definitions versus instances,
+domains, scopes, and witnesses with small examples.
+
 ## How does equality reuse known equal objects?
 
 After well-definedness, equality first checks exact IR or structural alpha
@@ -937,14 +955,14 @@ p.y = 2
 Read this as a named set-builder over `cart(R, R)`:
 
 ```text
-&FirstQuadrant = { p in cart(R, R) | p[1] > 0 and p[2] > 0 }
+&FirstQuadrant = { p in cart(R, R) | p(1) > 0 and p(2) > 0 }
 ```
 
 Here the field name `x` labels index `1`, and `y` labels index `2`. Because
 `p` was defined directly in `&FirstQuadrant`, `p.x` is its first component
 and `p.y` is its second component. This direct `p &FirstQuadrant` binding is
 the only automatic property-release case: it opens one struct layer and stores
-the tuple shape, dimension, field/index bridges, field carriers, and laws.
+Cartesian membership, ordinary field/coordinate bridges, field carriers, and laws.
 
 For any other definition-owned struct expression, write
 `release struct def expression`. The statement first verifies that exact expression
@@ -954,8 +972,9 @@ if `make_outer(t)` returns `&Outer` and `Outer.inner` is defined as `&Inner`,
 then `release struct def make_outer(t).inner` opens `Inner`, not `Outer` and not any
 struct below `Inner`.
 
-For a multi-field value `e`, opening stores `$is_tuple(e)`, its `tuple_dim`,
-Cartesian membership, and equations such as `e.x = e[1]`. These tuple/struct
+For a multi-field value `e`, opening stores exact Cartesian membership and
+equations such as `e.x = e(1)`, together with field carriers and laws. It stores
+no tuple shape or dimension fact. These tuple/struct
 bridge facts are not stored anywhere else, except that the struct-membership
 verifier may use the tuple representation internally while checking membership.
 

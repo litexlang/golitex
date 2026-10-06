@@ -1,0 +1,5 @@
+# Exact cart definition / complete tuple extensionality negative.
+# Positive partners: cart_function_set_definition and tuple_exact_function_extensionality.
+# Expected failure: premise; all setup must succeed.
+have last_pair cart({1},{2})
+release thm tuple_equal_from_coordinates(last_pair,(1,3))

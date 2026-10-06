@@ -242,7 +242,9 @@ fn wd_evidence_and_detailed_json_keep_mandatory_return_and_argument_type_proofs(
     else {
         panic!("anonymous function WD evidence");
     };
-    assert!(!proof.body_in_ret_set.is_failed());
+    let crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnBodyInReturnSetProof::CheckedMembership(return_proof) = &proof.body_in_ret_set
+        else { panic!("nonempty integer domain must retain a checked return membership"); };
+    assert!(!return_proof.is_failed());
     let json =
         crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
     assert!(json.contains("body_in_ret_set"), "{json}");

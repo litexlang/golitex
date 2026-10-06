@@ -2,7 +2,6 @@
 use super::helper::*;
 use crate::ast::fact::*;
 use crate::ast::obj::*;
-use crate::ast::param::*;
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
@@ -65,38 +64,15 @@ pub(super) fn prepare_membership(rt: &mut Runtime, id: BuiltinTheoremId, args: &
             let choice: AtomicFact = IsChoiceFunctionForFact { fact_id: rt.global_ids.allocate_fact_id(), index: cart.index_set.as_ref().clone(), set: cart.family_set.as_ref().clone(), family: cart.family_fn.as_ref().clone(), choice: a.clone(), line_file: None }.into();
             vec![atomic_in(rt, a, fn_set).into(), choice.into()]
         }
-        TupleEqualFromCoordinates => tuple_requirements(rt, a, b),
+        TupleEqualFromCoordinates => {
+            let domain = match rt.tuple_equality_domain(&a, &b)? {
+                Ok(domain) => domain, Err(message) => return Ok(Err(message)),
+            };
+            match rt.tuple_coordinate_equality_requirements(&a, &b, &domain) {
+                Ok(requirements) => requirements, Err(message) => return Ok(Err(message)),
+            }
+        },
         _ => unreachable!(),
     };
     Ok(Ok((requirements, vec![conclusion.into()])))
-}
-
-fn tuple_dim(obj: Obj) -> Obj { Obj::ProductShape(ProductShape::TupleDim(TupleDim { arg: Box::new(obj) })) }
-fn at(obj: Obj, index: Obj) -> Obj { Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex { obj: Box::new(obj), index: Box::new(index) })) }
-fn tuple_requirements(rt: &mut Runtime, a: Obj, b: Obj) -> Vec<Fact> {
-    let left: AtomicFact = IsTupleFact { fact_id: rt.global_ids.allocate_fact_id(), set: a.clone(), line_file: None }.into();
-    let right: AtomicFact = IsTupleFact { fact_id: rt.global_ids.allocate_fact_id(), set: b.clone(), line_file: None }.into();
-    let dimension = tuple_dim(a.clone());
-    let mut requirements = vec![left.into(), right.into(), equal(rt, dimension.clone(), tuple_dim(b.clone())).into(), le(rt, number("1"), dimension.clone()).into()];
-    // A literal tuple fixes the finite coordinate obligations. Dimension
-    // equality above still checks the other tuple's complete shape.
-    if let (Obj::ProductShape(ProductShape::Tuple(left)), Obj::ProductShape(ProductShape::Tuple(right))) = (&a, &b) {
-        for (left, right) in left.args.iter().zip(&right.args) {
-            requirements.push(equal(rt, left.as_ref().clone(), right.as_ref().clone()).into());
-        }
-    } else if let Obj::ProductShape(ProductShape::Tuple(left)) = &a {
-        for (index, component) in left.args.iter().enumerate() {
-            requirements.push(equal(rt, component.as_ref().clone(), at(b.clone(), number(&(index + 1).to_string()))).into());
-        }
-    } else if let Obj::ProductShape(ProductShape::Tuple(right)) = &b {
-        for (index, component) in right.args.iter().enumerate() {
-            requirements.push(equal(rt, at(a.clone(), number(&(index + 1).to_string())), component.as_ref().clone()).into());
-        }
-    } else {
-        let i = rt.fresh_internal_param();
-        let bound = le(rt, identifier(&i), dimension).into();
-        let body = equal(rt, at(a, identifier(&i)), at(b, identifier(&i)));
-        requirements.push(forall(rt, i, Obj::StandardSet(StandardSet::NPos), vec![bound], vec![body]));
-    }
-    requirements
 }

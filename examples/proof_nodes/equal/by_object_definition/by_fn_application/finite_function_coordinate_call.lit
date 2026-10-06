@@ -1,0 +1,21 @@
+# Tracer: a checked finite-function coordinate can be called again.
+#
+# Before (old tuple projection):
+# have fn next(x R) R=x+1
+# have operations cart(fn(x R) R,Z)=(next,7)
+# operations[1](2)=3
+# Former representation required tuple/index evidence instead of ordinary calls.
+#
+# Now: coordinate beta preserves the remaining application and its checked domain.
+# Inner 0 is legal for next; it is not a coordinate index.
+# Boundary: scalar coordinates cannot be called, and inner guards remain mandatory.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/equal/by_object_definition/by_fn_application/finite_function_coordinate_call.lit
+
+have fn next(x R) R=x+1
+
+have operations cart(fn(x R) R,Z)=(next,7)
+
+operations(1)(2)=3
+
+operations(1)(0)=1
+

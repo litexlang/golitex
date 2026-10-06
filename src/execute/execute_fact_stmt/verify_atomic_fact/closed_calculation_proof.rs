@@ -65,7 +65,15 @@ pub enum ClosedScalarValue {
     },
 }
 
-pub struct ClosedMembershipCalculationProof {
-    pub value: ClosedScalarValue,
-    pub set: StandardSet,
+pub enum ClosedMembershipCalculationProof {
+    StandardSet {
+        value: ClosedScalarValue,
+        set: StandardSet,
+    },
+    IntegerRange {
+        value: ClosedScalarValue,
+        set: Obj,
+        start: ClosedScalarValue,
+        end: ClosedScalarValue,
+    },
 }

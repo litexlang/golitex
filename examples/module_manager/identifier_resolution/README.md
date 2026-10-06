@@ -16,4 +16,11 @@ cases: an unrelated local definition cannot prove `base::k = 1` or validate
 undeclared `base::ghost`. Imported function signatures are explicitly
 published to the caller with `release obj def` before applications.
 
+The tuple containing `base::k` and `Values::base::k` has exact domain
+`closed_range(1,2)`. The caller releases the two declarations' type facts,
+checks `pair $in finite_seq(R,2)`, then reads `pair(1)` and `pair(2)` from their
+respective exports. Rust controls reject a third position, a different length
+and an equality between the two coordinates. Local and qualified forms of
+the same compound application retain one canonical key.
+
 No trust, axioms, or abstract predicates are used.

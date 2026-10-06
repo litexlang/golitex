@@ -1,0 +1,20 @@
+# Tracer: every empty-domain function space contains exactly the empty graph.
+# Before on ABI6 binary 94cf70a5c6089a680b71e424d1209a718c0fa5ef22560de5f552814febe21c7f:
+# cart()={()}
+# finite_seq({},0)={()}
+# cart() failed parsing; the finite-sequence singleton equality failed search.
+# Now the exact domain and unique empty graph determine each singleton space.
+# Boundary: cart()={} and nonempty-domain singleton claims remain negatives.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/empty_domain_function_space_singleton.lit
+
+cart()={()}
+
+cart()={{}}
+
+finite_seq({},0)={()}
+
+finite_seq(R,0)={{}}
+
+fn(k {}) R={()}
+
+fn(k {}) {}={{}}

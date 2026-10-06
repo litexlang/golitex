@@ -10,7 +10,7 @@
 have n N
 ((n+1)+1)+1 $in N
 have a,b cart(R,R)
-0 <= (b[1]-a[1])^2
+0 <= (b(1)-a(1))^2
 have x,y R
 0 <= (floor(x)-floor(y))^2
 have t R

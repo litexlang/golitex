@@ -1,0 +1,3 @@
+have fn wide(x R) finite_seq(R,3) = (x,2,3)
+have fn first(p cart(R,Z)) R = p(1)
+first(wide(7)) = wide(7)(1)

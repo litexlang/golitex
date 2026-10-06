@@ -1,0 +1,58 @@
+# Tracer: the complete domain includes every guard.
+# Before: these TRUE goals missed at search_proof despite the actual exclusion lemma.
+# fn(k R:k>0,k<0) R {0}={}
+# fn_range(fn(k R:k>0,k<0) R {0})={}
+# fn(k R:k>0,k<0) {} = {()}
+# Now: the shared domain owner checks the typed exclusion forall under inherited
+# permissions. Empty graph, image and space consumers retain the same certificate.
+# Domain assumptions remain local; return bounds do not create input assignments.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/guarded_empty_function_domain.lit
+
+forall k R:
+    k<0
+    =>:
+        not k>0
+
+fn(k R:k>0,k<0) R {0}={}
+
+fn_range(fn(k R:k>0,k<0) R {0})={}
+
+fn(k R:k>0,k<0) {} = {()}
+
+$is_nonempty_set(fn(k R:k>0,k<0) {})
+
+have f fn(k R:k>0,k<0) {}
+
+f={}
+
+fn_range(f)={}
+
+()={}
+
+f=()
+
+f $in finite_seq(R,0)
+
+# Before v9, this TRUE constructor failed at the false standalone 0 in {}.
+# Now its independently checked empty input domain makes only the return bound
+# vacuous; header/guard/return/body WD and all failed-statement rollback remain.
+
+have fn empty_body(k R:k>0,k<0) {}=0
+
+empty_body={}
+
+fn_range(empty_body)={}
+
+empty_body=()
+
+empty_body $in finite_seq({},0)
+
+have fn literal_empty(k closed_range(1,0)) {}=0
+
+literal_empty=()
+
+literal_empty $in finite_seq(R,0)
+
+have fn empty_parameter(k R:k>0,k<0) {}=k
+
+empty_parameter={}

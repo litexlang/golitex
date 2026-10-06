@@ -1,0 +1,4 @@
+# Syntax retirement control; polarity does not revive the old builtin.
+# The member declaration must succeed before the explicit parser diagnostic.
+have p cart(R,R)=(1,2)
+not $is_tuple(p)

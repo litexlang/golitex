@@ -77,6 +77,7 @@ fn exact_function_sequence_alias_controls_reject_wrong_domains_calls_and_publica
         ("have fn mk(x R) finite_seq(R,2)=(x,x)", "mk(7)(3) $in R"),
         ("have fn mk(x R: x>0) finite_seq(R,2)=(x,x)", "mk(0)(2) $in R"),
         ("have fn mk(x R) R=x", "mk(7)(1) $in R"),
+        ("have Base set=finite_seq({},2)\nhave Carrier set=Base", "have f Carrier"),
     ] {
         let mut rt = runtime();
         let run = rt.run_litex_code(setup).unwrap();
@@ -85,5 +86,27 @@ fn exact_function_sequence_alias_controls_reject_wrong_domains_calls_and_publica
         let before = fact_count(&rt);
         assert!(execute(&mut rt, target).is_failed(), "false target: {setup}\n{target}");
         assert_eq!(fact_count(&rt), before, "failed target published facts: {target}");
+    }
+}
+
+#[test]
+fn exact_function_same_call_domain_evidence_preserves_stronger_returns_and_guards() {
+    let mut rt = runtime();
+    assert!(rt.run_litex_code("have f finite_seq(Z,2)\nlet alias=f\nalias $in finite_seq(R,2)").unwrap().success);
+    let result = execute(&mut rt, "alias(2) $in Z");
+    assert!(!result.is_failed());
+    let detailed = project_stmt_detailed(&result, &rt).stringify();
+    assert!(detailed.contains("same_call_domains"), "missing actual domain agreement: {detailed}");
+    assert!(detailed.contains("domain_alpha_equivalent"));
+    assert!(detailed.contains("cite_signature_fact_id"));
+
+    for source in [
+        "forall broad fn(k R) R, narrow fn(k R: k>0) Z:\n    broad=narrow\n    broad(0)=broad(0)\n    =>:\n        broad(0) $in Z",
+        "forall broad fn(x R) fn(k R) R, narrow fn(x R) fn(k R: k>0) Z:\n    broad=narrow\n    broad(1)(0)=broad(1)(0)\n    =>:\n        broad(1)(0) $in Z",
+    ] {
+        let mut rt = runtime();
+        let before = fact_count(&rt);
+        assert!(execute(&mut rt, source).is_failed(), "cached WD erased guard: {source}");
+        assert_eq!(fact_count(&rt), before);
     }
 }

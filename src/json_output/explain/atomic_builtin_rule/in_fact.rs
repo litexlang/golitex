@@ -1755,75 +1755,35 @@ impl ListSetElementMembershipBuiltinRuleProof {
 
 impl CartMembershipBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Cart Membership",
-            "A tuple belongs to the Cartesian product when each coordinate belongs to its corresponding factor",
-        )
+        text("Cart Membership", "The complete domain matches the finite coordinate domain and every coordinate belongs to its factor")
     }
-
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "笛卡尔积成员",
-            "各分量成员推出笛卡尔积成员",
-        )
+        text("笛卡尔积成员", "完整定义域等于有限坐标域，且每个坐标属于对应因子")
     }
-
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "笛卡兒積成員",
-            "分量成員推出 `e $in cart(A1,…,An)`（n≥2）",
-        )
+        text("笛卡兒積成員", "完整定義域等於有限座標域，且每個座標屬於對應因子")
     }
-
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Appartenance au produit cartésien",
-            "`e $in cart(A1,…,An)` (n≥2) depuis l'appartenance des coordonnées",
-        )
+        text("Appartenance au produit cartésien", "Le domaine complet est le domaine fini des coordonnées et chaque coordonnée appartient à son facteur")
     }
-
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Принадлежность декартову произведению",
-            "`e $in cart(A1,…,An)` (n≥2) из принадлежности координат",
-        )
+        text("Принадлежность декартову произведению", "Полная область равна конечной области координат, и каждая координата принадлежит своему множителю")
     }
-
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Pertenencia a producto cartesiano",
-            "`e $in cart(A1,…,An)` (n≥2) desde pertenencia de coordenadas",
-        )
+        text("Pertenencia a producto cartesiano", "El dominio completo es el dominio finito de coordenadas y cada coordenada pertenece a su factor")
     }
-
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "انتماء لحاصل الضرب الديكارتي",
-            "`e $in cart(A1,…,An)` (n≥2) من انتماء الإحداثيات",
-        )
+        text("انتماء لحاصل الضرب الديكارتي", "المجال الكامل يساوي مجال الإحداثيات المنتهي وكل إحداثي ينتمي إلى عامله")
     }
-
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "直積への所属",
-            "成分の所属から `e $in cart(A1,…,An)`（n≥2）",
-        )
+        text("直積への所属", "完全な定義域が有限の座標域と一致し、各座標が対応する因子に属します")
     }
-
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "데카르트 곱 소속",
-            "좌표 소속으로 `e $in cart(A1,…,An)`(n≥2)",
-        )
+        text("데카르트 곱 소속", "전체 정의역이 유한 좌표 정의역과 일치하고 각 좌표가 해당 인자에 속합니다")
     }
-
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Thuộc tích Descartes",
-            "`e $in cart(A1,…,An)` (n≥2) từ sự thuộc về của tọa độ",
-        )
+        text("Thuộc tích Descartes", "Miền đầy đủ bằng miền tọa độ hữu hạn và mỗi tọa độ thuộc thừa số tương ứng")
     }
-
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
             OutputLanguage::English => self.rule_name_and_message_en(),

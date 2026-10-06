@@ -1,0 +1,4 @@
+# Exact cart definition / complete tuple extensionality negative.
+# Positive partners: cart_function_set_definition and tuple_exact_function_extensionality.
+# Expected failure: search_proof; all setup must succeed.
+cart(R,Z) = {p finite_seq(union(R,Z),2): p(1) $in R}

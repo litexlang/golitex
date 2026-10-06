@@ -31,11 +31,11 @@ store_fact_and_infer/
     infer_not_forall_fact.rs
     infer_forall_fact*.rs    # NoInfer (intentional)
     infer_atomic_fact/
-      infer_equal_fact/      # cart/tuple shape, positive-real power
+      infer_equal_fact/      # positive-real power and checked transports
       infer_atomic_except_equality/
         expand_definition.rs     # NormalAtomic param types + iff
         membership_*.rs          # InFact by set former / ops
-        subset.rs / superset.rs / is_cart.rs
+        subset.rs / superset.rs
   store_fact_and_infer_result/
     # one result type family per dispatcher / rule group
 ```
@@ -51,7 +51,8 @@ store_fact_and_infer/
 
 **EqualFact**
 
-- Cart/tuple shape (`$is_cart` / dim)
+- Cartesian and tuple equalities remain ordinary checked equalities; they do
+  not publish shape predicates or construction dimensions.
 - Literal `u − v = 0` → `u = v` is **verify-time**
   `EqualFromKnownDifferenceZero` (not infer)
 - Positive-real power membership transport  
@@ -67,6 +68,13 @@ checked. No global permission, state, result shape or user-goal search changes.
 Tracer: `examples/infer/equal/nonzero_real_square.lit`.
 
 **Other atomics**
+
+- Exact Cartesian membership publishes each ordinary coordinate's factor
+  membership, including zero and one factors. It does not publish
+  `$is_tuple`, `tuple_dim`, or indexed-object facts. Struct release uses the
+  same coordinate builder for field equalities while preserving field laws.
+  Tracers: `examples/infer/atomic/cart_exact_function_coordinates.lit` and
+  `examples/stmt_nodes/definition/struct_function_coordinate_bridges.lit`.
 
 - NormalAtomic: param-type projection + one-layer def expand
   (Obj domains in the prop signature are instantiated by call-site args;

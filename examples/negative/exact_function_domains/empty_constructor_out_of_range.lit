@@ -1,0 +1,10 @@
+# An empty COMPLETE input domain makes only the return bound vacuous.
+# This neighboring false return or undefined body must still reject.
+forall k R:
+    k<0
+    =>:
+        not k>0
+
+have fn empty_body(k R:k>0,k<0) {}=0
+
+empty_body(1)=0

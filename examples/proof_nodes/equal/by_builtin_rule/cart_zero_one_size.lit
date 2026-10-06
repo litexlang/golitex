@@ -1,0 +1,15 @@
+# Tracer: Cartesian cardinality uses the empty product and the one-factor product.
+# Before on ABI6 binary 94cf70a5c6089a680b71e424d1209a718c0fa5ef22560de5f552814febe21c7f:
+# finite_set_size(cart())=1
+# cart expected at least two arguments.
+# Now zero factors give cardinality one; a single factor retains its cardinality.
+# Boundary: finiteness is still required for every supplied factor.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/cart_zero_one_size.lit
+
+$is_finite_set(cart())
+
+$is_nonempty_set(cart())
+
+finite_set_size(cart())=1
+
+finite_set_size(cart({1,2}))=finite_set_size({1,2})

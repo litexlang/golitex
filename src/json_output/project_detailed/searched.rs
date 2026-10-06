@@ -188,6 +188,12 @@ fn project_object_definition(
         by_template::EqualitySearchProofByTemplateObjectDefinition,
     };
     match proof {
+        EqualitySearchProofByObjectDefinition::CartesianDefinition(p) => object_for(runtime, vec![
+            ("type", string("by_object_definition")),
+            ("kind", string("cart_function_set_definition")),
+            ("expanded_definition", string(p.expanded_definition.readable_string())),
+            ("definition_match", project_they_are_the_same(&p.definition_match, runtime)),
+        ]),
         EqualitySearchProofByObjectDefinition::ByIdentifier(inner) => match inner {
             EqualitySearchProofByIdentifierObjectDefinition::HaveObjEqual(p) => object_for(runtime, vec![
                 ("type", string("by_object_definition")),

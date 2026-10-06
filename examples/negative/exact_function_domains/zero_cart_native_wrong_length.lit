@@ -1,0 +1,3 @@
+# Exact-domain boundary: successful setup, then the final statement must reject.
+let p=tuple(7)
+release thm cart_member_from_coordinates(p,cart())

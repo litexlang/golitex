@@ -24,6 +24,15 @@ Companion packages:
 These decisions are fixed for the current MVP. Change them only with an
 explicit contract bump (`KB_ABI`) and docs update.
 
+Compatibility revision 7 rechecks products carrying retired tuple shape/index
+inferences and struct bridges. Revision 6 rechecked the old function-graph rules:
+an empty-domain function cannot have nonempty graph or singleton constant
+image. Revision 5 already invalidated weak function-space membership and
+Cartesian construction dimensions. This revision changes no codecs or live
+state layouts. The existing ABI miss rebuilds from unchanged source bytes;
+the `run_project_cross_mod_release_thm_and_by_def` gate checks old revisions
+2, 5 and 6, cold rebuilding, and a subsequent cache hit under revision 7.
+
 ### 1. Role
 
 | | |

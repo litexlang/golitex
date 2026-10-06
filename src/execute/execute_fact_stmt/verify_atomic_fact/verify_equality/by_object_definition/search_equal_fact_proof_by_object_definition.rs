@@ -6,7 +6,7 @@
 //! - Instantiated template (obj or fn head) → template body unfolds
 
 use crate::ast::fact::EqualFact;
-use crate::ast::obj::{FnObjHead, Obj, StructAndFieldAccessObj};
+use crate::ast::obj::{FnObjHead, Obj, ProductShape, StructAndFieldAccessObj};
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -66,6 +66,8 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByObjectDefinition>> {
         match def_side {
+            Obj::ProductShape(ProductShape::Cart(cart)) => Ok(self.cartesian_definition(cart, other_side)
+                .map(EqualitySearchProofByObjectDefinition::CartesianDefinition)),
             Obj::Identifier(_) => self.search_object_definition_for_identifier(
                 def_side,
                 other_side,

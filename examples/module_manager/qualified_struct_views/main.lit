@@ -3,16 +3,24 @@
 # have item &Lib::facts::Pair=(1,2)
 # item.first=item.first
 have item &Lib::facts::Pair=(1/2,3/2)
+# The field bridge is item.first=item(1); check its finite coordinate value
+# before the original field assertion. Keep every original assertion below.
+item(1)=1/2
 item.first=1/2
+item(2)=3/2
 item.second=3/2
 (1/2,3/2) $in &Lib::facts::Pair
 have own &local::Pair=(1,2)
+own(1)=1
 own.first=1
 have whole &Other::facts::Pair=(1,2)
+whole(2)=2
 whole.second=2
 have tagged &Lib::facts::Tagged<R> =(1/2,0)
+tagged(1)=1/2
 tagged.value=1/2
 have flat &Lib:::Tagged<R> = (3/2,0)
+flat(1)=3/2
 flat.value=3/2
 have fn make(x R)&Lib::facts::Pair=(x,x+1)
 make(2) $in &Lib::facts::Pair

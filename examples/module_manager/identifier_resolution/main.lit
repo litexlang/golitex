@@ -18,7 +18,11 @@ Values::base::shift(3) = 5
 main::k = 1
 shift(3) = 4
 let pair = (base::k, Values::base::k)
-tuple_dim(pair) = 2
+release obj def base::k
+release obj def Values::base::k
+pair $in finite_seq(R,2)
+pair(1) = base::k
+pair(2) = Values::base::k
 # Boundary: base::k = 1 and undeclared base::ghost must be rejected.
 # Evidence: target/release/litex -strict -f examples/module_manager/identifier_resolution/main.lit
 # Negative regressions: tests/unit/execute/identifier_resolution/tests.rs

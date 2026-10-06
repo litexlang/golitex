@@ -16,7 +16,6 @@ const TRACERS: &[(&str,&str)] = &[
     (include_str!("../../../../examples/proof_nodes/atomic/by_builtin_rule/complex_triangle.lit"),"ComplexTriangle"),
     (include_str!("../../../../examples/proof_nodes/atomic/by_builtin_rule/complex_reverse_triangle.lit"),"ComplexReverseTriangle"),
     (include_str!("../../../../examples/proof_nodes/atomic/by_builtin_rule/lcm_common_multiple_bound.lit"),"LcmCommonMultipleBound"),
-    (include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/cart_reconstruction.lit"),"CartReconstruction"),
     (include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/range_size.lit"),"RangeSize"),
     (include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/closed_range_size.lit"),"ClosedRangeSize"),
 ];
@@ -31,12 +30,15 @@ const LEG19: &str = "forall z,w C:\n    C_abs(z+w)<=C_abs(z)+C_abs(w)\n";
 const LEG20: &str = "forall z,w C:\n    abs(C_abs(z)-C_abs(w))<=C_abs(z-w)\n";
 const LEG23: &str =
     "forall a,b Z*,m N+:\n    m%abs(a)=0\n    m%abs(b)=0\n    =>:\n        lcm(a,b)<=m\n";
-const LEG31: &str = "forall A,B,K set:\n    $is_cart(K)\n    cart_dim(K)=2\n    proj(K,1)=A\n    proj(K,2)=B\n    =>:\n        K=cart(A,B)\n";
+const LEG31: &str = include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/cart_reconstruction.lit");
+const CART_DEFINITION: &str = include_str!("../../../../examples/proof_nodes/equal/by_object_definition/cart_function_set_definition.lit");
 const LEG33: &str = "forall a,b N:\n    a<=b\n    =>:\n        finite_set_size(range(a,b))=b-a\n";
 
 #[test]
 fn run_examples_thirteen_builtin_rules_tracers() {
-    assert_eq!(TRACERS.len(), 15);
+    // The original Cartesian capability remains tested on its new definition
+    // route; it is no longer a constructor-shape builtin leaf.
+    assert_eq!(TRACERS.len() + 1, 15);
     for (code, rule) in TRACERS {
         let json = check(code, true);
         assert!(
@@ -45,6 +47,9 @@ fn run_examples_thirteen_builtin_rules_tracers() {
             json.stringify_pretty()
         );
     }
+    let reconstruction=check(LEG31,true);
+    assert!(reconstruction.stringify().contains("cart_function_set_definition"));
+    check(CART_DEFINITION,true);
 }
 
 #[test]
@@ -208,8 +213,8 @@ fn previous_eight_families_boundaries() {
         LEG23.replace("    m%abs(a)=0\n", ""),
         LEG23.replace("    m%abs(b)=0\n", ""),
         LEG23.replace("lcm(a,b)<=m", "lcm(a,b)<m"),
-        LEG31.replace("    proj(K,1)=A\n", ""),
-        LEG31.replace("    proj(K,2)=B\n", ""),
+        LEG31.replace("p(1) $in A, ", ""),
+        LEG31.replace(", p(2) $in B", ""),
         LEG31.replace("K=cart(A,B)", "K=cart(A,A)"),
         LEG33.replace("    a<=b\n    =>:\n", ""),
         LEG33.replace("=b-a", "=b-a+1"),
@@ -241,6 +246,10 @@ fn failed_rules_do_not_publish_assumptions() {
             .unwrap()
             .success
     );
+    let missing_coordinate=LEG31.replace(", p(2) $in B", "");
+    assert!(!rt.run_litex_code(&missing_coordinate).unwrap().success);
+    assert!(rt.run_litex_code(LEG31).unwrap().success);
+    assert!(!rt.run_litex_code(&missing_coordinate).unwrap().success);
     assert!(rt.run_litex_code(LEG14).unwrap().success);
     assert!(
         !rt.run_litex_code(&LEG14.replace("    intersect(A,B)={}\n    =>:\n", ""))
@@ -325,9 +334,40 @@ fn all_leafs_permission_language_and_scope_consumers() {
 }
 
 #[test]
+fn cart_definition_obeys_definition_permissions_and_preserves_scope() {
+    use crate::ast::fact::{AtomicFact, ExistOrAndChainAtomicFact, Fact};
+    use crate::ast::stmt::Stmt;
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByObjectDefinition;
+    use crate::execute::execute_fact_stmt::{VerifyState,VerifyStateLevel};
+    use crate::tokenize::Tokenizer;
+    let mut rt=runtime(OutputLanguage::English);
+    let tokens=Tokenizer::new().tokenize(CART_DEFINITION,rt.current_file.clone()).unwrap();
+    let statements=rt.parse(&tokens).unwrap();
+    let Stmt::Fact(Fact::ForallFact(definition))=&statements[0] else {panic!("forall")};
+    let (_,local_env)=rt.run_in_local_env_and_take_env(|rt| {
+        assert!(rt.introduce_typed_parameters(&definition.typed_parameters,VerifyState::top_level())?.is_ok());
+        let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(equal))=&definition.then_facts[0] else {panic!("equality")};
+        assert!(!rt.verify_equal_fact_well_definedness(equal,VerifyState::top_level())?.is_failed());
+        let before=rt.execution_environments_stack.iter().map(|env| (env.facts.facts_by_id.len(),env.well_defined_objects.object_to_wd_id.len())).collect::<Vec<_>>();
+        for level in [VerifyStateLevel::Direct,VerifyStateLevel::KnownSpecialProperty,VerifyStateLevel::BuiltinRule,VerifyStateLevel::Strategy] {
+            assert!(rt.search_equal_fact_proof(equal,VerifyState::new(level))?.is_none(),"definition bypassed {level:?}");
+        }
+        let Some(EqualFactSearchedProof::ByObjectDefinition(EqualitySearchProofByObjectDefinition::CartesianDefinition(_)))=
+            rt.search_equal_fact_proof(equal,VerifyState::new(VerifyStateLevel::DefinitionAndForall))?
+            else {panic!("complete Cartesian definition proof")};
+        let after=rt.execution_environments_stack.iter().map(|env| (env.facts.facts_by_id.len(),env.well_defined_objects.object_to_wd_id.len())).collect::<Vec<_>>();
+        assert_eq!(before,after,"definition search published facts or WD cache");
+        Ok(())
+    }).unwrap();
+    assert_eq!(rt.execution_environments_stack.len(),1);
+    drop(local_env);
+}
+
+#[test]
 fn normal_and_detailed_producer_consumers() {
     for lang in languages() {
-        for (source, _) in TRACERS {
+        for source in TRACERS.iter().map(|(source,_)| *source).chain([LEG31,CART_DEFINITION]) {
             let mut rt = runtime(lang);
             let run = rt.run_litex_code(source).unwrap();
             assert!(run.success, "{source}");
@@ -364,6 +404,8 @@ fn check(code: &str, expected: bool) -> JsonValue {
     let run = rt.run_litex_code(code).unwrap();
     let output = emit_run_detailed(&run, &rt, "eval", None);
     assert_eq!(run.success, expected, "{code}\n{output}");
+    assert!(run.session_error.is_none(),"unexpected parse/session error: {code}\n{output}");
+    assert!(!run.statement_results.is_empty(),"empty capability check: {code}");
     JsonValue::parse(&output).unwrap()
 }
 fn find_rule(value: &JsonValue, rule: &str) -> Option<JsonValue> {

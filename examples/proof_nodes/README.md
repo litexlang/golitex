@@ -63,6 +63,31 @@ short/empty domains, guards, extensionality, callable-set confusion and
 publication boundaries. These tracers do not certify the still-pending new
 tuple/cart syntax or its complete property matrix.
 
+[Function-value parameter applications](equal/by_object_definition/by_fn_application/function_value_parameter_application.lit)
+retain the argument groups of a returned function when substituting it into
+another checked body. The exact `first(mk(7)) = mk(7)(1)` step and a two-input
+returned function verify. Wrong groups, complete lengths, inner guards and
+coordinate values have executable negative partners. The vec/dot consumers
+retain their original symbolic body expansions and stored theorem use.
+
+[Function graphs and empty domains](equal/by_builtin_rule/function_empty_domain_graph.lit)
+distinguish a function value's empty graph/image from a nonempty space of
+empty-domain functions. Constant singleton images retain an actual input and
+its guards; FnRange WD retains complete-domain sources, including returned
+functions. The dedicated `function_graph` gate checks aliases, nested spaces,
+ten output languages, false graph/image claims and failed publication. Three
+executable graph controls are in the negative manifest. This does not certify
+cart 0/1 syntax or the full remaining property matrix.
+
+[Return-space carrier aliases](atomic/by_builtin_strategy/function_space_return_carrier_aliases.lit)
+retain checked equality paths and constructive nested FnSet/cart existence.
+[Nested sequence spaces](atomic/by_builtin_strategy/nested_sequence_space_nonempty.lit)
+use those witnesses for seq/finite_seq, followed by real returned-function
+images. [Closed integer index calculation](atomic/direct_closed_integer_range_membership.lit)
+keeps finite-sequence input evidence available at Direct permission. Cyclic
+carrier equations, empty nested return spaces and a returned function at an
+out-of-range outer index have separate executable negative controls.
+
 [One-based sequences](equal/by_builtin_rule/sequence_one_based.lit) cover
 `seq(S) = fn(n N+) S`, finite indices 1 through n, and the empty sequence.
 [Struct existential laws](exist/by_known_forall/struct_existential_law.lit)
@@ -548,6 +573,11 @@ Pointwise congruence cites an exact stored whole forall, with its binder
 renaming and optional interval domain. Translation preserves index order;
 first-step recurrence preserves operation argument order; member removal
 requires actual membership and a checked restriction of the callback.
+The updated [exact restriction tracer](equal/by_builtin_rule/finite_product_exact_restrictions.lit)
+keeps the larger source domain, checks actual anonymous restrictions, and covers
+fresh insertion, reversed factor order, member removal and a zero removed factor.
+The exact-domain negative manifest pairs false freshness, callback/factor changes,
+missing finiteness/guard coverage and the retired false short-domain membership.
 Focused domain, permission and output checks live in
 `tests/unit/execute/legacy_final_capabilities/tests.rs`, with before/after
 receipts in `proof_journals/legacy-final-capability-repairs.json`.
@@ -634,7 +664,9 @@ The [stored function return superset](atomic/by_known_special_property/function_
 
 ## Local finite constructors and arithmetic rules (2026-10-05)
 
-The thirteen-rule acceptance suite collects fifteen independent leaves. Each
+The thirteen-rule acceptance suite retains its fifteen original capabilities:
+fourteen builtin leaves and Cartesian reconstruction on the complete
+set-definition route. Each
 tracer retains the formerly rejected input in comments and its active strict
 acceptance, with separately executed rejection controls in
 `tests/unit/execute/thirteen_builtin_rules/tests.rs` and `finite_set_reindex`.
@@ -651,7 +683,7 @@ acceptance, with separately executed rejection controls in
 - [ComplexTriangle](atomic/by_builtin_rule/complex_triangle.lit)
 - [ComplexReverseTriangle](atomic/by_builtin_rule/complex_reverse_triangle.lit)
 - [LcmCommonMultipleBound](atomic/by_builtin_rule/lcm_common_multiple_bound.lit)
-- [CartReconstruction](equal/by_builtin_rule/cart_reconstruction.lit)
+- [Cartesian reconstruction from a complete definition](equal/by_builtin_rule/cart_reconstruction.lit)
 - [RangeSize](equal/by_builtin_rule/range_size.lit)
 - [ClosedRangeSize](equal/by_builtin_rule/closed_range_size.lit)
 
@@ -662,6 +694,20 @@ with scoped pointwise evidence when needed. Finite indexed union retains both
 index finiteness and the exact stored universal fibre certificate with source
 IDs and alpha renamings. No wider premise search or new runtime state is used.
 The targeted collector requires exit0, root success true and no session error.
+
+[Complete Cartesian definitions](equal/by_object_definition/cart_function_set_definition.lit)
+uses the ordinary object-definition owner for exact finite domains and every
+factor clause. The reconstruction proof exposes this definition explicitly;
+a bare reconstruction fact can succeed with an earlier stored theorem and
+still fail in a cold standalone file. Coordinate images alone do not determine
+an ordinary Cartesian set. The paired exact-domain negative manifest rejects
+missing coordinates, changed order/length, infinite domains and diagonal sets.
+
+[Tuple extensionality on complete domains](../stmt_nodes/release_and_expand/tuple_exact_function_extensionality.lit)
+checks empty/singleton values, symbolic lengths, different return upper bounds
+and set-valued coordinates through native release and selected `by thm` calls.
+Wrong lengths, omitted coordinates and an infinite source domain have separate
+negative controls; failed releases publish no target equality.
 
 Nested modulus integer-multiple reduction has a dedicated
 [tracer](equal/by_builtin_rule/nested_mod_integer_multiple.lit) and
@@ -827,3 +873,30 @@ carrier/publication gates.
 ## Log unit-interval order
 
 [Strict](atomic/by_builtin_rule/log_strict_decreasing_unit_interval.lit) and [weak](atomic/by_builtin_rule/log_weak_decreasing_unit_interval.lit) tracers preserve original former cold failures as comments and now check same-base order reversal under 0<a<1 and positive real arguments. Strict is old-positive convenience; weak nearby originals also failed legacy. Each typed leaf retains four actual guards and the reversed argument comparison, including real opposite-written source citations. [Source record](experience/problem_notes/log-unit-interval-order-repair-2026-10-05.md) links L3 gates, shared exp/ln regression, explicit strong-to-weak author and still-pending nested-ln WD. Existing increasing routes and inherited ceilings are retained.
+
+
+## Zero/one Cartesian functions and empty graph identity
+
+[Empty function graph identity](equal/by_builtin_rule/empty_function_graph_identity.lit)
+retains complete-domain sources for empty literal, named, aliased and flat
+multi-input function graphs.
+[Empty-domain function space singleton](equal/by_builtin_rule/empty_domain_function_space_singleton.lit)
+checks zero cart and empty-domain FnSet/finite_seq spaces with arbitrary return
+bounds, including the empty return carrier.
+[Zero/one cart membership](atomic/by_builtin_rule/cart_zero_one_membership.lit)
+checks default/native membership and stored one-coordinate application.
+[Zero/one cart size](equal/by_builtin_rule/cart_zero_one_size.lit)
+checks the empty product cardinality one and a single factor's cardinality.
+Their negative manifest partners reject wrong lengths, out-of-range calls,
+cart()={} and a nonempty outer curried graph equated to the empty graph.
+These tracers do not certify general object application heads, full cart
+definition release, retired AST deletion or the complete migration matrix.
+
+[guarded_empty_function_domain.lit](equal/by_builtin_rule/guarded_empty_function_domain.lit)
+checks a real guard-exclusion lemma before sharing the resulting absence of
+complete inputs across graph, image and function-space equalities. Ordinary
+empty-graph equality then transports the member to `finite_seq(R,0)`.
+The accompanying guard-domain controls retain that lemma while removing or
+reversing the required guard and still reject the false conclusion.
+
+The guarded-empty tracer also constructs named functions with an empty return carrier and an independently proved empty input domain. Literal closed_range(1,0), guarded constant bodies and guarded parameter bodies share the same return-bound contract. It checks their empty graph and zero-length membership; body WD remains mandatory. Nearby negatives reject false standalone body membership, every application outside the empty domain, nonempty/missing-guard return violations, and division by zero.

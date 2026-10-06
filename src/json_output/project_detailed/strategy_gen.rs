@@ -454,6 +454,7 @@ pub(super) fn project_atomic_builtin_strategy(
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("CartMembership")),
+            ("function_domain", super::function_domain::project_function_domain(&p.domain, runtime)),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionMembershipFromLeft(p) => object_for(runtime, vec![
@@ -615,22 +616,31 @@ pub(super) fn project_atomic_builtin_strategy(
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnSetNonemptyFromCodomain(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FnSetNonemptyFromCodomain")),
-            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+            ("source_signature", string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.signature.clone())).readable_string())),
+            ("source", super::function_domain::project_function_space_nonempty(&p.codomain_nonempty, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AnonymousFnNonemptyFromCodomain(p) => object_for(runtime, vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionGraphNonemptyFromDomain(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
-            ("strategy", string("AnonymousFnNonemptyFromCodomain")),
-            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+            ("strategy", string("FunctionGraphNonemptyFromDomain")),
+            ("source", super::function_domain::project_source(&p.source, runtime)),
+            ("domain_comparison", super::function_domain::project_domain_nonempty(&p.domain_nonempty, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionSpaceNonemptyFromEmptyDomain(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")),
+            ("strategy", string("FunctionSpaceNonemptyFromEmptyDomain")),
+            ("domain_comparison", super::function_domain::project_domain_empty(&p.domain_empty, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSeqSetNonemptyFromCodomain(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FiniteSeqSetNonemptyFromCodomain")),
-            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+            ("source_signature", string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.signature.clone())).readable_string())),
+            ("source", super::function_domain::project_function_space_nonempty(&p.codomain_nonempty, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SeqSetNonemptyFromCodomain(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SeqSetNonemptyFromCodomain")),
-            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+            ("source_signature", string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.signature.clone())).readable_string())),
+            ("source", super::function_domain::project_function_space_nonempty(&p.codomain_nonempty, runtime)),
         ]),
     }
 }

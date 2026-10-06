@@ -79,9 +79,13 @@ fn exact_function_domain_acceptance_files_keep_successful_prefixes_and_failure_p
         let run = rt.run_litex_code(&source).unwrap();
         assert!(!run.success, "negative fixture accepted: {file}");
         if phase == "retired_syntax" {
-            assert_eq!(run.statement_results.len(), 2, "{file}");
+            let expected_count = case.get("expected_prefix_count")
+                .map(|value| value.as_u64().unwrap() as usize).unwrap_or(2);
+            let expected_diagnostic = case.get("expected_diagnostic")
+                .map(|value| value.as_str().unwrap()).unwrap_or("cart_dim is removed");
+            assert_eq!(run.statement_results.len(), expected_count, "{file}");
             assert!(run.statement_results.iter().all(|stmt| !stmt.is_failed()), "{file}");
-            assert!(format!("{:?}", run.session_error).contains("cart_dim is removed"), "{file}");
+            assert!(format!("{:?}", run.session_error).contains(expected_diagnostic), "{file}");
             continue;
         }
         assert!(run.session_error.is_none(), "unexpected parse/exec failure: {file}");
@@ -99,6 +103,16 @@ fn exact_function_domain_acceptance_files_keep_successful_prefixes_and_failure_p
                 .get("phase").unwrap().as_str().unwrap();
         }
         assert_eq!(actual_phase, phase, "wrong failure boundary: {file}");
+        if let Some(stage) = case.get("expected_constructor_stage") {
+            // Follow the constructor's exact WD stage, rather than matching a
+            // recursive child premise that happens to have the same label.
+            let mut constructor_failure = failure;
+            for _ in 0..4 {
+                constructor_failure = constructor_failure.get("failure").unwrap().as_object().unwrap();
+            }
+            assert_eq!(constructor_failure.get("phase").unwrap().as_str().unwrap(),
+                stage.as_str().unwrap(), "wrong constructor obligation: {file}");
+        }
     }
     for file in [
         "examples/stmt_nodes/release_and_expand/builtin_thm/fn_set_member.lit",
@@ -106,6 +120,40 @@ fn exact_function_domain_acceptance_files_keep_successful_prefixes_and_failure_p
         "examples/proof_nodes/atomic/by_builtin_strategy/finite_function_application_membership.lit",
         "examples/proof_nodes/forall/empty_parameter_domain.lit",
         "examples/proof_nodes/equal/by_object_definition/by_fn_application/both_function_bodies.lit",
+        "examples/infer/atomic/in_sequence_space_alias_expand.lit",
+        "examples/wd/sequence_return_application.lit",
+        "examples/infer/atomic/in_equal_fn_set_expand.lit",
+        "examples/infer/atomic/in_finite_seq_expand.lit",
+        "examples/proof_nodes/equal/by_builtin_rule/function_empty_domain_graph.lit",
+        "examples/proof_nodes/atomic/by_builtin_strategy/function_space_return_carrier_aliases.lit",
+        "examples/proof_nodes/atomic/by_builtin_strategy/nested_sequence_space_nonempty.lit",
+        "examples/proof_nodes/atomic/direct_closed_integer_range_membership.lit",
+        "examples/proof_nodes/equal/by_builtin_rule/empty_function_graph_identity.lit",
+        "examples/proof_nodes/equal/by_builtin_rule/empty_domain_function_space_singleton.lit",
+        "examples/proof_nodes/atomic/by_builtin_rule/cart_zero_one_membership.lit",
+        "examples/proof_nodes/equal/by_builtin_rule/cart_zero_one_size.lit",
+        "examples/infer/atomic/cart_exact_function_coordinates.lit",
+        "examples/infer/atomic/in_cart_projection.lit",
+        "examples/stmt_nodes/definition/struct_function_coordinate_bridges.lit",
+        "examples/proof_nodes/equal/by_object_definition/by_fn_application/finite_function_coordinate_call.lit",
+        "examples/proof_nodes/atomic/by_known_special_property/function_return_standard_superset.lit",
+        "examples/proof_nodes/equal/by_builtin_rule/finite_product_exact_restrictions.lit",
+        "examples/proof_nodes/equal/by_object_definition/cart_function_set_definition.lit",
+        "examples/proof_nodes/equal/by_builtin_rule/guarded_empty_function_domain.lit",
+        "examples/proof_nodes/equal/by_known_special_property/tuple_reconstruction.lit",
+        "examples/proof_nodes/equal/by_known_special_property/tuple_projection.lit",
+        "examples/proof_nodes/equal/by_known_special_property/fn_tuple_projection.lit",
+        "examples/wd/known_function_cart_projection.lit",
+        "examples/proof_nodes/atomic/by_known_special_property/homogeneous_cart_coordinate.lit",
+        "examples/proof_nodes/atomic/by_known_special_property/known_cart_index_upper_bound.lit",
+        "examples/proof_nodes/equal/by_builtin_rule/cart_reconstruction.lit",
+        "examples/stmt_nodes/release_and_expand/literal_tuple_extensionality.lit",
+        "examples/stmt_nodes/release_and_expand/tuple_exact_function_extensionality.lit",
+        "examples/proof_nodes/atomic/direct_structural_membership.lit",
+        "examples/proof_nodes/equal/by_known_special_property/fn_tuple_carrier_after_equality.lit",
+        "examples/proof_nodes/equal/by_object_definition/nested_call_one_step.lit",
+        "examples/proof_nodes/equal/by_equivalence_class/stored_equality_before_builtin.lit",
+        "examples/proof_nodes/equal/by_object_definition/by_fn_application/function_value_parameter_application.lit",
     ] {
         let source = std::fs::read_to_string(root.join(file)).unwrap();
         let mut rt = runtime();
@@ -330,25 +378,64 @@ fn intersection_contracts_reject_missing_fibers_empty_family_and_bad_shapes() {
 }
 
 #[test]
-fn literal_tuple_extensionality_checks_all_coordinates_and_dimension() {
+fn literal_tuple_extensionality_checks_all_coordinates_and_complete_domains() {
     for code in [
         "have a cart({1}, {2})\nrelease thm tuple_equal_from_coordinates(a, (1, 2))",
         "have a cart({1}, {2})\nrelease thm tuple_equal_from_coordinates((1, 2), a)",
         "have a cart({1}, {2}, {3})\nrelease thm tuple_equal_from_coordinates(a, (1, 2, 3))",
+        "release thm tuple_equal_from_coordinates((),())",
+        "have a cart({7})\nby thm tuple_equal_from_coordinates(a,tuple(7)) => a=tuple(7)",
+        "have a cart({R},{Z})\nrelease thm tuple_equal_from_coordinates(a,(R,Z))",
+        "have a cart({R},{Z})\nby thm tuple_equal_from_coordinates((R,Z),a) => (R,Z)=a",
     ] {
         let mut rt = runtime();
         let result = rt.run_litex_code(code).unwrap();
         assert!(result.success && result.session_error.is_none(), "{code}\n{}", crate::json_output::emit_run_detailed(&result, &rt, "test", None));
+        use crate::execute::execute_by_stmt::{BuiltinFunctionDomainProof,ExecByStmtResult,ExecByThmStmtResult};
+        let last=result.statement_results.last().unwrap();
+        let domains=match last {
+            ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(ExecReleaseThmStmtResult::Success(proof))) => &proof.function_domain,
+            ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) => &proof.function_domain,
+            _ => panic!("native tuple theorem result"),
+        };
+        assert!(matches!(domains,Some(BuiltinFunctionDomainProof::TupleEquality{..})),"both complete-domain proofs must survive execution");
+        let detailed=project_stmt_detailed(last,&rt).stringify();
+        assert!(detailed.contains("tuple_exact_domains"),"{detailed}");
     }
-    for code in [
-        "have a cart({1}, {2})\nrelease thm tuple_equal_from_coordinates(a, (1, 3))",
-        "have a cart({1}, {2}, {3})\nrelease thm tuple_equal_from_coordinates(a, (1, 2))",
-        "have a cart({1}, {2}, {3})\nrelease thm tuple_equal_from_coordinates(a, (1, 2, 4))",
-        "have a cart({1}, {2})\nrelease thm tuple_equal_from_coordinates((1, 3), a)",
+    for (setup, negative) in [
+        ("have a cart({1},{2})", "release thm tuple_equal_from_coordinates(a,(1,3))"),
+        ("have a cart({1},{2},{3})", "release thm tuple_equal_from_coordinates(a,(1,2))"),
+        ("have a cart({1},{2},{3})", "release thm tuple_equal_from_coordinates(a,(1,2,4))"),
+        ("have a cart({1},{2})", "release thm tuple_equal_from_coordinates((1,3),a)"),
+        ("have a cart({1},{2},{3})", "by thm tuple_equal_from_coordinates(a,(1,2)) => a=(1,2)"),
+        ("let a=()", "release thm tuple_equal_from_coordinates(a,tuple(0))"),
+        ("have fn z(k N+)R=0\nhave fn z2(k closed_range(1,2))R=z(k)", "release thm tuple_equal_from_coordinates(z,z2)"),
+        ("have f,g cart({0},R)\nf(1)=g(1)", "release thm tuple_equal_from_coordinates(f,g)"),
     ] {
         let mut rt = runtime();
-        let result = rt.run_litex_code(code).unwrap();
-        assert!(!result.success && result.session_error.is_none(), "false tuple equality: {code}");
+        let prefix = rt.run_litex_code(setup).unwrap();
+        assert!(prefix.success && prefix.session_error.is_none(), "{setup}");
+        let before=count_facts(&rt);
+        assert!(execute(&mut rt,negative).is_failed(), "false tuple equality: {setup}\n{negative}");
+        assert_eq!(count_facts(&rt),before,"failed extensionality published facts: {negative}");
+    }
+}
+
+#[test]
+fn native_tuple_exact_domain_output_keeps_release_and_selected_proofs_in_ten_languages() {
+    let source=include_str!("../../../../examples/stmt_nodes/release_and_expand/tuple_exact_function_extensionality.lit");
+    for language in [OutputLanguage::English,OutputLanguage::Chinese,OutputLanguage::ChineseTraditional,OutputLanguage::French,OutputLanguage::Russian,OutputLanguage::Spanish,OutputLanguage::Arabic,OutputLanguage::Japanese,OutputLanguage::Korean,OutputLanguage::Vietnamese] {
+        let mut rt=Runtime::new(LaunchCommand::Eval {code:String::new(),session:false,strict:true,language});
+        let run=rt.run_litex_code(source).unwrap();
+        assert!(run.success && run.session_error.is_none(),"{language:?}");
+        for index in [0,2,5,7,8] {
+            let stmt=&run.statement_results[index];
+            let normal=project_stmt_normal(stmt,&rt).stringify();
+            let detailed=project_stmt_detailed(stmt,&rt).stringify();
+            crate::knowledge_base::JsonValue::parse(&normal).unwrap();
+            crate::knowledge_base::JsonValue::parse(&detailed).unwrap();
+            assert!(detailed.contains("tuple_exact_domains"),"{language:?} stmt{index}: {detailed}");
+        }
     }
 }
 

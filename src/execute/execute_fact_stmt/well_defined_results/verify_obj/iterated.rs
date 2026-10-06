@@ -1,17 +1,17 @@
 //! Iterated / range / sequence object WD.
 //! Sum/Product: Z endpoints, start<=end, iterand return ⊆ C, light domain coverage.
 //! Reduce: Z endpoints, homogeneous binary op, seed ∈ carrier, iterand ret = carrier.
-//! ObjAtIndex + Range/ClosedRange + FiniteSeqSet/SeqSet as before.
+//! Range/ClosedRange and accurate FiniteSeqSet/SeqSet contracts.
 
 use super::helper::set_bound_parameter_count;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::ast::fact::{
-    AtomicFact, Fact, ForallFact, ExistOrAndChainAtomicFact, InFact, IsTupleFact, LessEqualFact, SubsetFact,
+    AtomicFact, Fact, ForallFact, ExistOrAndChainAtomicFact, InFact, LessEqualFact, SubsetFact,
 };
 use crate::ast::obj::{
-    ClosedRange, FiniteSeqSet, FiniteSetReduce, FnSet, FunctionSpace, Obj, ObjAtIndex, Product,
+    ClosedRange, FiniteSeqSet, FiniteSetReduce, FnSet, FunctionSpace, Obj, Product,
     ProductOfFiniteSet, ProductShape, Range, Reduce, SeqSet, SetFormer, StandardSet, Sum,
-    SumOfFiniteSet, TupleDim,
+    SumOfFiniteSet,
 };
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList, SetBoundParameterGroup, SetBoundParameterList};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -289,52 +289,6 @@ impl Runtime {
             format!("seq_set: argument {} is not a set", value.set.ir()),
         )?;
         Ok(self.with_requirements(proof, vec![req]))
-    }
-
-    // t[i]: children, then `i $in N+`, `$is_tuple(t)`, `i <= tuple_dim(t)`.
-    // Example: `(1, 2)[1]` is WD; `(1, 2)[0]` fails `0 $in N+`; `(1, 2)[3]` fails bound.
-    pub(super) fn verify_obj_at_index_obj_well_definedness_by_def(
-        &mut self,
-        value: &ObjAtIndex,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        let proof = self.verify_binary_obj_well_definedness_by_def(
-            value.obj.as_ref(),
-            value.index.as_ref(),
-            verify_state.clone(),
-        )?;
-        let mut reqs = Vec::new();
-        reqs.push(self.require_obj_in_standard_set(
-            value.index.as_ref(),
-            StandardSet::NPos,
-            verify_state.clone(),
-            format!("index {} is not a positive integer", value.index.ir()),
-        )?);
-        let is_tuple = AtomicFact::IsTupleFact(IsTupleFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            set: value.obj.as_ref().clone(),
-            line_file: None,
-        });
-        reqs.push(self.verify_required_atomic_fact(
-            is_tuple,
-            verify_state.clone(),
-            format!("index target {} is not a tuple", value.obj.ir()),
-        )?);
-        let tuple_dim: Obj = Obj::ProductShape(ProductShape::TupleDim(TupleDim {
-            arg: value.obj.clone(),
-        }));
-        let bounded = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: value.index.as_ref().clone(),
-            right: tuple_dim.clone(),
-            line_file: None,
-        });
-        reqs.push(self.verify_required_atomic_fact(
-            bounded,
-            verify_state,
-            format!("{} <= {} is unknown", value.index.ir(), tuple_dim.ir()),
-        )?);
-        Ok(self.with_requirements(proof, reqs))
     }
 
     fn verify_range_iteration_obj_well_definedness_by_def(

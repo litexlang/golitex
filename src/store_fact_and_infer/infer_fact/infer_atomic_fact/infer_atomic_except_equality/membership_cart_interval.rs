@@ -1,21 +1,22 @@
 use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, InFact, IsTupleFact, LessEqualFact, LessFact,
+    AtomicFact, EqualFact, Fact, InFact, LessEqualFact, LessFact,
 };
 use crate::ast::obj::{
     IntervalObj, Literal, Number, Obj, OneSideInfinityIntervalObj, ProductShape, SetFormer,
-    StandardSet, TupleDim,
+    StandardSet,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferInFactCartProjectionResult,
+    InferAtomicExceptEqualityResult, InferInFactCartCoordinatesResult,
     InferInFactClosedRangeResult, InferInFactOneSideRealIntervalResult, InferInFactRangeResult,
     InferInFactRealIntervalResult, StoreFactAndInferResult,
 };
 
 impl Runtime {
     // When: `x $in cart` / `range` / `closed_range` / real interval / one-side interval.
-    // Infers: tuple shape + coordinates; integer/real bounds (+ singleton eq when applicable).
-    // Example: `u $in cart(R, Q)` ⇒ `$is_tuple(u)`, `tuple_dim(u)=2`, `u[1]$in R`, `u[2]$in Q`.
+    // Infers: ordinary coordinate applications; integer/real interval bounds.
+    // Example: `u $in cart(R, Q)` ⇒ `u(1)$in R`, `u(2)$in Q`.
+    // The stored member already certifies the complete domain I_n.
     pub(super) fn infer_in_fact_cart_interval_rules(
         &mut self,
         in_fact: &InFact,
@@ -44,79 +45,33 @@ impl Runtime {
     fn infer_in_fact_cart(
         &mut self,
         in_fact: &InFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::ProductShape(ProductShape::Cart(cart)) = &in_fact.set else {
             return Ok(None);
         };
-        if cart.args.len() < 2 {
-            return Ok(None);
-        }
-        let lf = in_fact.line_file.clone();
-        let n = cart.args.len();
-        let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
-
-        let is_tuple_id = self.global_ids.allocate_fact_id();
-        if let Some(ok) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(
-            AtomicFact::IsTupleFact(IsTupleFact {
-                fact_id: is_tuple_id,
-                set: in_fact.element.clone(),
-                line_file: lf.clone(),
-            }),
-        ), verify_state)? {
-            derived.push(ok);
-        }
-
-        let dim_eq_id = self.global_ids.allocate_fact_id();
-        if let Some(ok) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(
-            AtomicFact::EqualFact(EqualFact {
-                fact_id: dim_eq_id,
-                left: Obj::ProductShape(ProductShape::TupleDim(TupleDim {
-                    arg: Box::new(in_fact.element.clone()),
-                })),
-                right: Obj::Literal(Literal::Number(Number {
-                    normalized_value: n.to_string(),
-                })),
-                line_file: lf.clone(),
-            }),
-        ), verify_state)? {
-            derived.push(ok);
-        }
-
+        let mut derived = Vec::new();
         for (index, factor) in cart.args.iter().enumerate() {
-            let projected = match &in_fact.element {
-                Obj::ProductShape(ProductShape::Tuple(tuple)) if tuple.args.len() == n => {
-                    tuple.args[index].as_ref().clone()
-                }
-                _ => Obj::ProductShape(ProductShape::ObjAtIndex(
-                    crate::ast::obj::ObjAtIndex {
-                        obj: Box::new(in_fact.element.clone()),
-                        index: Box::new(Obj::Literal(Literal::Number(Number {
-                            normalized_value: (index + 1).to_string(),
-                        }))),
-                    },
-                )),
+            let Ok(coordinate) = crate::execute::execute_fact_stmt::finite_function::finite_function_coordinate(
+                &in_fact.element, index,
+            ) else {
+                return Ok(None);
             };
-            let in_id = self.global_ids.allocate_fact_id();
-            if let Some(ok) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(
-                AtomicFact::InFact(InFact {
-                    fact_id: in_id,
-                    element: projected,
-                    set: factor.as_ref().clone(),
-                    line_file: lf.clone(),
-                }),
-            ), verify_state)? {
-                derived.push(ok);
+            let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: coordinate,
+                set: factor.as_ref().clone(),
+                line_file: in_fact.line_file.clone(),
+            }));
+            if let Some(stored) = self.try_store_inferred_fact_and_infer(&membership, verify_state)? {
+                derived.push(stored);
             }
         }
-
-        if derived.is_empty() {
-            return Ok(None);
-        }
-        Ok(Some(
-            InferAtomicExceptEqualityResult::InFactCartProjection(InferInFactCartProjectionResult {
-                derived,
-            }),
-        ))
+        // The zero-coordinate case has no consequences, but remains a valid
+        // exact-domain membership. No shape, dimension or old index is added.
+        Ok(Some(InferAtomicExceptEqualityResult::InFactCartCoordinates(
+            InferInFactCartCoordinatesResult { derived },
+        )))
     }
 
     fn infer_in_fact_range(

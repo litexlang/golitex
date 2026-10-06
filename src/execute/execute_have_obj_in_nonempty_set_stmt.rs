@@ -1,5 +1,4 @@
 use crate::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
-use crate::ast::obj::{Obj, FunctionSpace};
 use crate::ast::param::{ParamType, TypedParameterList};
 use crate::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
 use crate::execute::exec_stmt_result::{
@@ -120,11 +119,10 @@ impl Runtime {
                 ParamType::NonemptySet(_) => ParamTypeFactCheckResult::NonemptySet,
                 ParamType::FiniteSet(_) => ParamTypeFactCheckResult::FiniteSet,
                 ParamType::Obj(param_set) => {
-                    let nonempty_set = nonempty_check_set_for_param_obj(param_set);
                     let fact_id = self.global_ids.allocate_fact_id();
                     let fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
                         fact_id,
-                        set: nonempty_set,
+                        set: param_set.clone(),
                         line_file: None,
                     }));
                     let verify_result = self.verify_fact(&fact, verify_state.clone())?;
@@ -139,14 +137,6 @@ impl Runtime {
             out.push(check);
         }
         Ok(Ok(out))
-    }
-}
-
-fn nonempty_check_set_for_param_obj(param_set: &Obj) -> Obj {
-    match param_set {
-        Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => fn_set.ret_set.as_ref().clone(),
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => anon.body.ret_set.as_ref().clone(),
-        _ => param_set.clone(),
     }
 }
 

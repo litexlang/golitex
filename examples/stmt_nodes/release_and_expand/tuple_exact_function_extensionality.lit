@@ -1,0 +1,35 @@
+# Tracer: tuple coordinate equality proves both complete domains first.
+# Before: release thm tuple_equal_from_coordinates(a,(1,2)) required
+# tuple_dim(a)=tuple_dim((1,2)) and old index coordinates, then failed after
+# the old shape publishers were removed.
+# Now: empty, singleton, fixed and symbolic finite domains use real domain
+# evidence for BOTH objects and all coordinates; return bounds may differ.
+# Boundary: wrong length, last value or incomplete pointwise equality rejects.
+# Evidence: current release -strict -f this file; builtin_thm::tests.
+
+release thm tuple_equal_from_coordinates((),())
+
+have one cart({7})
+
+release thm tuple_equal_from_coordinates(one,tuple(7))
+
+claim:
+    ? forall a cart({1},{2}):
+        a=(1,2)
+    release thm tuple_equal_from_coordinates(a,(1,2))
+
+claim:
+    ? forall n N,S,T set,f finite_seq(S,n),g finite_seq(T,n):
+        forall k closed_range(1,n):
+            f(k)=g(k)
+        =>:
+            f=g
+    release thm tuple_equal_from_coordinates(f,g)
+
+by thm tuple_equal_from_coordinates(one,tuple(7)) => one=tuple(7)
+
+have set_pair cart({R},{Z})
+
+release thm tuple_equal_from_coordinates(set_pair,(R,Z))
+
+by thm tuple_equal_from_coordinates((R,Z),set_pair) => (R,Z)=set_pair

@@ -18,6 +18,67 @@ fn test_runtime() -> Runtime {
 }
 
 #[test]
+fn inst_function_value_parameter_composes_returned_application_groups() {
+    use crate::ast::obj::FnObj;
+    use crate::ast::stmt::{DefinitionStmt, Stmt};
+
+    let mut rt = test_runtime();
+    let code = "have fn vec(A,B cart(R,R)) cart(R,R) = (B(1)-A(1),B(2)-A(2))\n\
+have fn dot(u,v cart(R,R)) R = u(1)*v(1)+u(2)*v(2)\n\
+have a,b cart(R,R)\n\
+dot(vec(a,b),vec(a,b)) = vec(a,b)(1)*vec(a,b)(1)+vec(a,b)(2)*vec(a,b)(2)\n";
+    let tokens = Tokenizer::new().tokenize(code, rt.current_file.clone()).unwrap();
+    let stmts = rt.parse(&tokens).unwrap();
+    let Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(dot)) = &stmts[1] else {
+        panic!("dot definition");
+    };
+    let Stmt::Fact(crate::ast::fact::Fact::AtomicFact(AtomicFact::EqualFact(goal))) = &stmts[3] else {
+        panic!("dot expansion equality");
+    };
+    let Obj::FnObj(FnObj { body, .. }) = &goal.left else { panic!("dot call"); };
+    let subst = dot.equal_to_anonymous_fn.body.set_bound_parameters.groups.iter()
+        .flat_map(|group| &group.params)
+        .zip(&body[0])
+        .map(|(param, arg)| (param.id, arg.as_ref().clone()))
+        .collect();
+    let actual = rt.inst_obj(&dot.equal_to_anonymous_fn.equal_to, &subst).unwrap();
+    assert_eq!(actual, goal.right);
+}
+
+#[test]
+fn inst_returned_application_preserves_simultaneous_substitution_and_argument_groups() {
+    use crate::ast::obj::FnObjHead;
+    use crate::ast::stmt::Stmt;
+
+    let mut rt = test_runtime();
+    let code = "have F fn(seed R) fn(x,y R) R\n\
+have p fn(x,y R) R\n\
+have a R\n\
+p(a,2) = F(a)(7,2)\n";
+    let tokens = Tokenizer::new().tokenize(code, rt.current_file.clone()).unwrap();
+    let stmts = rt.parse(&tokens).unwrap();
+    let Stmt::Fact(crate::ast::fact::Fact::AtomicFact(AtomicFact::EqualFact(goal))) = &stmts[3] else {
+        panic!("application equality");
+    };
+    let Obj::FnObj(original) = &goal.left else { panic!("original call"); };
+    let FnObjHead::Identifier(IdentifierObj::Plain { id: p_id, .. }) = original.head.as_ref() else {
+        panic!("function parameter");
+    };
+    let Obj::Identifier(IdentifierObj::Plain { id: a_id, .. }) = original.body[0][0].as_ref() else {
+        panic!("argument parameter");
+    };
+    let Obj::FnObj(expected) = &goal.right else { panic!("composed call"); };
+    let mut replacement = expected.clone();
+    replacement.body.truncate(1);
+    let subst = HashMap::from([
+        (*p_id, Obj::FnObj(replacement)),
+        (*a_id, expected.body[1][0].as_ref().clone()),
+    ]);
+    let actual = rt.inst_obj(&goal.left, &subst).unwrap();
+    assert_eq!(actual, goal.right);
+}
+
+#[test]
 fn inst_equality_replaces_plain_identifier() {
     let mut runtime = test_runtime();
     let x_id = runtime.global_ids.allocate_identifier_id();

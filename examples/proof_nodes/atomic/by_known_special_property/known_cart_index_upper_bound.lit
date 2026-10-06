@@ -3,7 +3,7 @@
 have n N+ = 3
 have c set = cart(R,R,R)
 forall p c, j closed_range(1,n):
-    p[j] $in R
+    p(j) $in R
 have fn vec(x R) cart(R,R) = (x,x)
 forall x R, j closed_range(1,2):
-    vec(x)[j] $in R
+    vec(x)(j) $in R

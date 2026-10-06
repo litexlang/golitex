@@ -1,0 +1,3 @@
+# Exact-domain boundary: successful setup, then the final statement must reject.
+have empty_member cart()
+empty_member(1)=0

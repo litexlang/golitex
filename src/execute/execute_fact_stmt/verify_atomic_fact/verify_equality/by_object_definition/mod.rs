@@ -1,3 +1,4 @@
+pub mod cart_definition;
 pub mod by_fn_application;
 pub mod by_identifier;
 pub mod by_template;

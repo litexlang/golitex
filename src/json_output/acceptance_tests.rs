@@ -649,9 +649,10 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         EqualitySearchProofByBuiltinRule::SetMinusChainToUnion(
             SetMinusChainToUnionBuiltinRuleProof {},
         ),
-        EqualitySearchProofByBuiltinRule::FnRangeOfConstantAnonymousFn(
-            FnRangeOfConstantAnonymousFnBuiltinRuleProof {},
-        ),
+        actual_function_domain_fixture("fn_range(fn(k R) R {0})={0}"),
+        actual_function_domain_fixture("fn_range(fn(k {}) R {0})={}"),
+        actual_function_domain_fixture("()={}"),
+        actual_function_domain_fixture("cart()={()}"),
         EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos(SeqEqualsFnOnNPosBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnOneBasedDomain(
             FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof {},
@@ -711,7 +712,7 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
 fn acceptance_equality_builtin_all_variants_bilingual() {
     let rules = all_equality_rules();
     // Four identity leaves moved to TheyAreTheSame; indexed lookup is now a class proof.
-    assert_eq!(rules.len(), 190);
+    assert_eq!(rules.len(), 193);
     for (index, rule) in rules.iter().enumerate() {
         let context = format!("equality variant {index}");
         let en = rule.rule_name_and_message(OutputLanguage::English);
@@ -1454,5 +1455,19 @@ fn actual_log_algebra_fixture(code: &str) -> EqualitySearchProofByBuiltinRule {
     let VerifyFactResult::Equality(proof) = proof.proved_then_facts.pop().unwrap().verify_result else { panic!("actual equality") };
     let VerifyEqualityResult::Success(proof) = *proof else { panic!("equality success") };
     let EqualFactSearchedProof::ByBuiltinRule(rule) = proof.searched_proof else { panic!("actual builtin") };
+    rule
+}
+
+fn actual_function_domain_fixture(code: &str) -> EqualitySearchProofByBuiltinRule {
+    use crate::execute::{ExecFactStmtResult, ExecStmtResult};
+    use crate::execute::execute_fact_stmt::VerifyFactResult;
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{EqualFactSearchedProof, VerifyEqualityResult};
+    let mut runtime = runtime_en();
+    let mut run = runtime.run_litex_code(code).unwrap();
+    assert!(run.success && run.session_error.is_none(), "{code}");
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = run.statement_results.pop().unwrap() else { panic!("actual function-domain fact") };
+    let VerifyFactResult::Equality(proof) = statement.verify_result else { panic!("actual equality") };
+    let VerifyEqualityResult::Success(proof) = *proof else { panic!("actual equality success") };
+    let EqualFactSearchedProof::ByBuiltinRule(rule) = proof.searched_proof else { panic!("actual function-domain builtin") };
     rule
 }

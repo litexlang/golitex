@@ -10,9 +10,6 @@ impl Runtime {
         equal_fact: &EqualFact,
      verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferEqualityResult>> {
         let mut rules = Vec::new();
-        if let Some(shape) = self.infer_equal_fact_cart_tuple_shape(equal_fact, verify_state)? {
-            rules.push(InferEqualityResult::CartTupleShape(shape));
-        }
         if let Some(pow) = self.infer_equal_fact_positive_real_power(equal_fact, verify_state)? {
             rules.push(InferEqualityResult::PositiveRealPower(pow));
         }

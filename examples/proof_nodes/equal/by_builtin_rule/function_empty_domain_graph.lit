@@ -1,0 +1,56 @@
+# Tracer: complete-domain evidence for function graphs and spaces.
+# Before on binary 98b5656c3fd7cefbfb01aa571b94023f5cb7ff3542f67011ebe1735b626130d3:
+# $is_nonempty_set(fn(k {}) R {0})
+# fn_range(fn(k {}) R {0})={0}
+# Both false statements were accepted; empty image={} was not proved.
+# Now: image emptiness consumes the checked complete domain. Nonempty
+# graphs and singleton constant images retain actual inputs and guards.
+# Empty-domain function spaces contain the empty function even with empty
+# return carriers. Nonempty function spaces can contain returned functions.
+# Boundary: empty graph nonemptiness and singleton-image claims are real
+# negatives in examples/negative/exact_function_domains/manifest.json.
+# Gate actually used: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/function_empty_domain_graph.lit
+
+fn_range(fn(k {}) R {0})={}
+
+fn_range(fn(k closed_range(1,0)) R {0})={}
+
+$is_nonempty_set(fn(k {}) {})
+
+have empty_fn fn(k {}) {}
+
+fn_range(empty_fn)={}
+
+$is_nonempty_set(finite_seq({},0))
+
+have empty_seq finite_seq({},0)
+
+fn_range(empty_seq)={}
+
+fn_range(fn(k R) R {0})={0}
+
+$is_nonempty_set(fn(k R) R {0})
+
+witness exist k R st {k>0} from 2
+
+fn_range(fn(k R: k>0) R {0})={0}
+
+$is_nonempty_set(fn(k R: k>0) R {0})
+
+have Carrier set={}
+
+have abstract_empty fn(k Carrier) R
+
+fn_range(abstract_empty)={}
+
+have nested fn(x R) fn(k {}) {}
+
+fn_range(nested(0))={}
+
+have fn named_empty(k {}) R=0
+
+let alias=named_empty
+
+fn_range(alias)={}
+
+fn_range(fn(k closed_range(1,2)) R {0})={0}

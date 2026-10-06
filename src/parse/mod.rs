@@ -39,4 +39,8 @@ mod function_signature_scope_tests;
 #[path = "../../tests/unit/parse/reserved_object_bindings.rs"]
 mod reserved_object_binding_tests;
 
+#[cfg(test)]
+#[path = "../../tests/unit/parse/retired_product_syntax.rs"]
+mod retired_product_syntax_tests;
+
 pub use statements::prop_registration_shape;

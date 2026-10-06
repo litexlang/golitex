@@ -1,9 +1,16 @@
-# Infer: InFact.EqualFnSetExpand (+ store InFunctionSet)
-# When: store `f $in A` with `A = fn(...)`.
-# Infers: `f $in fn(...)` and registers callable signature.
-# Run: litex -f examples/infer/atomic/in_equal_fn_set_expand.lit
+# Infer: InFact.EqualFnSetExpand
+# Legacy source used a function-space set as a callable value:
+# let A = fn(x R) R
+# have f set = A
+# have a R = 1
+# f(a) $in R
+# New semantics require an actual member f in A.
+# Gate: target/release/litex -strict -f examples/infer/atomic/in_equal_fn_set_expand.lit
 
-let A = fn(x R) R
-have f set = A
-have a R = 1
+let A=fn(x R) R
+
+have f A
+
+have a R=1
+
 f(a) $in R

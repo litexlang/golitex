@@ -155,9 +155,24 @@ pub fn exec_by_thm_stmt(
 fn verify_prepared_function_domain(
     runtime: &mut Runtime, theorem: &str,
     builtin: &Option<super::result::BuiltinThmApplication>,
-) -> RuntimeResult<Result<Option<crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof>, ExecReleaseThmStmtFailed>> {
+) -> RuntimeResult<Result<Option<super::result::BuiltinFunctionDomainProof>, ExecReleaseThmStmtFailed>> {
     let Some(application) = builtin else { return Ok(Ok(None)); };
     use crate::builtin_theorem::BuiltinTheoremId;
+    if application.theorem == BuiltinTheoremId::TupleEqualFromCoordinates {
+        let target = match runtime.tuple_equality_domain(&application.arguments[0], &application.arguments[1])? {
+            Ok(target) => target,
+            Err(message) => return Ok(Err(ExecReleaseThmStmtFailed::BuiltinShape { theorem: application.theorem, message })),
+        };
+        let left = match runtime.verify_complete_function_domain(&application.arguments[0], &target, super::helper::proof_verify_state())? {
+            Ok(proof) => proof,
+            Err(result) => return Ok(Err(ExecReleaseThmStmtFailed::FunctionDomain { theorem: theorem.to_string(), result })),
+        };
+        let right = match runtime.verify_complete_function_domain(&application.arguments[1], &target, super::helper::proof_verify_state())? {
+            Ok(proof) => proof,
+            Err(result) => return Ok(Err(ExecReleaseThmStmtFailed::FunctionDomain { theorem: theorem.to_string(), result })),
+        };
+        return Ok(Ok(Some(super::result::BuiltinFunctionDomainProof::TupleEquality { left, right })));
+    }
     if !matches!(application.theorem, BuiltinTheoremId::FunctionSetMember | BuiltinTheoremId::CartesianMemberFromCoordinates) {
         return Ok(Ok(None));
     }
@@ -175,7 +190,7 @@ fn verify_prepared_function_domain(
     Ok(match runtime.verify_complete_function_domain(
         &application.arguments[0], &target, super::helper::proof_verify_state(),
     )? {
-        Ok(proof) => Ok(Some(proof)),
+        Ok(proof) => Ok(Some(super::result::BuiltinFunctionDomainProof::Membership(proof))),
         Err(result) => Err(ExecReleaseThmStmtFailed::FunctionDomain {
             theorem: theorem.to_string(), result,
         }),

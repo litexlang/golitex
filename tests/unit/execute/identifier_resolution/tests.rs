@@ -62,10 +62,10 @@ fn qualified_lookup_supports_the_live_export_and_compound_objects() {
     let mut rt = mounted_runtime();
     assert_success(
         &mut rt,
-        "have k R = 1\nmain::k = 1\nlet pair = (base::k, Values::base::k)\ntuple_dim(pair) = 2\n",
+        "have k R = 1\nmain::k = 1\nlet pair = (base::k, Values::base::k)\nrelease obj def base::k\nrelease obj def Values::base::k\npair $in finite_seq(R,2)\npair(1)=base::k\npair(2)=Values::base::k\n",
     );
     let tokens = Tokenizer::new()
-        .tokenize("k = k\nmain::k = main::k", rt.current_file.clone())
+        .tokenize("k = k\nmain::k = main::k\npair(1)=pair(1)\nmain::pair(1)=main::pair(1)", rt.current_file.clone())
         .unwrap();
     let stmts = rt.parse(&tokens).unwrap();
     let objects: Vec<_> = stmts
@@ -78,6 +78,14 @@ fn qualified_lookup_supports_the_live_export_and_compound_objects() {
         })
         .collect();
     assert_eq!(objects[0], objects[1], "same canonical object key");
+    assert_eq!(objects[2], objects[3], "same canonical compound application key");
+    for code in [
+        "release thm fn_set_member(pair, finite_seq(R,3))",
+        "pair(3)=Values::base::k",
+        "pair(1)=Values::base::k",
+    ] {
+        assert_rejected(&mut rt, code);
+    }
 }
 
 #[test]

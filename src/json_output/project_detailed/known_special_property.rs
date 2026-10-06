@@ -2,6 +2,7 @@ use super::searched::project_equal_searched;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::{
     AtomicExceptEqualityFactSearchProofByKnownSpecialProperty,
     InFactSearchProofByKnownSpecialProperty,
+    SignatureCodomainUseProof,
 };
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
@@ -118,23 +119,9 @@ pub(super) fn project_known_special_property(
         ) => (
             "FnApplicationInCodomain",
             p.cite_property_fact_id,
-            p.signature_return_matches
+            p.signature_uses
                 .iter()
-                .map(|p| {
-                    object_for(
-                        runtime,
-                        vec![
-                            (
-                                "cite_signature_fact_id",
-                                string(p.cite_signature_fact_id.to_string()),
-                            ),
-                            (
-                                "return_set_match",
-                                project_equal_searched(&p.return_set_match, runtime),
-                            ),
-                        ],
-                    )
-                })
+                .map(|p| project_signature_codomain_use(p, runtime))
                 .collect(),
         ),
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
@@ -172,5 +159,27 @@ pub(super) fn project_known_special_property(
     if let Some(fact) = runtime.fact_by_id_in_stack(id) {
         fields.push(("cite", string(fact.readable_string())));
     }
+    if let AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof)) = proof {
+        fields.push(("function_equal", super::searched::project_known_equality_path(&proof.function_equal, runtime)));
+    }
+    if let AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInFnRange(proof)) = proof {
+        fields.push(("function_equal", super::searched::project_known_equality_path(&proof.function_equal, runtime)));
+    }
     object_for(runtime, fields)
+}
+
+pub(super) fn project_signature_codomain_use(proof: &SignatureCodomainUseProof, runtime: &Runtime) -> JsonValue {
+    match proof {
+        SignatureCodomainUseProof::ReturnSetMatch(proof) => object_for(runtime, vec![
+            ("type", string("return_set_match")),
+            ("cite_signature_fact_id", string(proof.cite_signature_fact_id.to_string())),
+            ("return_set_match", project_equal_searched(&proof.return_set_match, runtime)),
+        ]),
+        SignatureCodomainUseProof::SameCallDomains { cite_signature_fact_id, function_equal, domains } => object_for(runtime, vec![
+            ("type", string("same_call_domains")),
+            ("cite_signature_fact_id", string(cite_signature_fact_id.to_string())),
+            ("function_equal", super::searched::project_known_equality_path(function_equal, runtime)),
+            ("domain_comparison", super::function_domain::project_call_domains_alpha_match(domains, runtime)),
+        ]),
+    }
 }

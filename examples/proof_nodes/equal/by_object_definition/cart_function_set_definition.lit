@@ -1,0 +1,27 @@
+# Tracer: cart is a complete exact-domain function set.
+# Before: the ordinary full set definition below missed proof search; the
+# retired reconstruction rule instead used is_cart/cart_dim/proj.
+# Now: object-definition proof retains the generated accurate carrier and
+# every coordinate condition; complete definition alpha matching is checked.
+# Boundary: wrong length, a missing coordinate, wrong factor order, and an
+# infinite-domain comprehension must not certify this Cartesian set.
+# Evidence: current release -strict -f this file; thirteen_builtin_rules.
+
+forall A,B set:
+    cart(A,B) = {p finite_seq(union(A,B),2): p(1) $in A, p(2) $in B}
+
+forall A set:
+    cart(A) = {p finite_seq(A,1): p(1) $in A}
+
+cart() = finite_seq({},0)
+
+forall A,B,T set:
+    cart(A,B,T) = {p finite_seq(union(union(A,B),T),3): p(1) $in A, p(2) $in B, p(3) $in T}
+
+have D set = {p finite_seq(union(R,Z),2): p(1) $in R, p(2) $in Z}
+
+D=cart(R,Z)
+
+have value D = (1,2)
+
+value(2) $in Z

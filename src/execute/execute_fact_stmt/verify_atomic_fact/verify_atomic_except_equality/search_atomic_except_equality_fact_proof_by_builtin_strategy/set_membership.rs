@@ -100,21 +100,14 @@ impl Runtime {
         ctx: VerifyState,
     ) -> RuntimeResult<Option<CartMembershipStrategySingleStep>> {
         let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::ProductShape(ProductShape::Cart(cart)) = &inf.set else { return Ok(None); };
-        let Obj::ProductShape(ProductShape::Tuple(tuple)) = &inf.element else { return Ok(None); };
-        if tuple.args.len() < 2 || tuple.args.len() != cart.args.len() {
-            return Ok(None);
-        }
-        let mut requirements = Vec::new();
-        for (element, set) in tuple.args.iter().zip(cart.args.iter()) {
-            requirements.push(self.strategy_in_fact(
-                element.as_ref().clone(),
-                set.as_ref().clone(),
-                inf.line_file.clone(),
-            ));
-        }
+        let Some(cart) = self.cart_definition_for_set(&inf.set) else { return Ok(None); };
+        let target = self.cart_function_signature(&cart);
+        let Ok(domain) = self.verify_complete_function_domain(&inf.element, &target, ctx)?
+        else { return Ok(None); };
+        let Ok(requirements) = self.cart_coordinate_membership_requirements(&inf.element, &inf.set)
+        else { return Ok(None); };
         finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            CartMembershipStrategySingleStep { requirement_facts, proof_of_requirement_facts }
+            CartMembershipStrategySingleStep { domain, requirement_facts, proof_of_requirement_facts }
         })
     }
 

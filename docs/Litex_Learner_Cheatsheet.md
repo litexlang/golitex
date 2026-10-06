@@ -210,6 +210,53 @@ have t R = 2
 The canonical forms are <code>-(t^2)</code>, <code>(-t)^2</code>, and
 <code>t^(-1)</code>. Do not rely on a reader remembering parser precedence.
 
+### Supported syntax and recommended writing
+
+Litex accepts several spellings of the same operation. A recommendation helps
+readers recognize the proof's structure; it does not make the alternative
+invalid. Use these defaults in new proofs and ordinary tutorial examples:
+
+| Supported spelling | Recommended writing | Why |
+|---|---|---|
+| Bare `by thm name(args)` | `release thm name(args)` | Makes releasing all instantiated conclusions explicit. |
+| `forall x R: x > 0 => x != 0` | An indented `forall` block | Separates assumptions from conclusions and leaves room for more facts. |
+| Documented Unicode aliases, such as `∀ x ℝ` and `x ∈ ℝ` | `forall x R` and `x $in R` | Matches canonical output and is easy to type, search, and copy. |
+
+For example, this supported inline fact:
+
+```litex
+forall x R: x > 0 => x != 0
+```
+
+is usually clearer as:
+
+```litex
+forall x R:
+    x > 0
+    =>:
+        x != 0
+```
+
+Keep `by thm name(args) => fact` when selecting one atomic consequence.
+Replacing it with `release thm` would change which conclusions enter the
+context. Neither spelling proves missing premises for you. See the
+[theorem-call contract](Manual.md#named-interfaces-thm-axiom-release-thm-and-by-thm---fact).
+
+Other useful defaults are about making the mathematical move visible:
+
+| Situation | Prefer | Reason or boundary |
+|---|---|---|
+| No assumptions in a universal | Conclusions directly under `forall x R:` | Universal iff requires its own left-side block. |
+| Concrete definition folding | `by def $P(args)` | Add a proof body for a real intermediate derivation. |
+| A witness whose body already checks | `witness exist x R st {x = 2} from 2` | Add a body for reasoning or a useful teaching step. |
+| A theorem result already released | Continue with the next mathematical step | Retain an explicit consequence when it helps the reader follow that step. |
+| Negative powers | `-(x^2)`, `(-x)^2`, `x^(-1)` | Parentheses expose the intended expression. |
+
+The [Unicode alias reference](Manual.md#unicode-mathematical-input-aliases-preview)
+lists supported symbols. In particular, `×` means Cartesian product;
+write `*` for numerical multiplication. `⊂` means proper subset, while `⊆`
+means non-strict subset.
+
 ## 5. Definitions create vocabulary
 
 ### Functions
@@ -378,13 +425,13 @@ Name a result when it has a real second consumer:
 thm add_zero_right:
     ? forall x R:
         x + 0 = x
-    x + 0 = x
 
 release thm add_zero_right(2)
-2 + 0 = 2
+(2 + 0) + 1 = 3
 ```
 
-Root-<code>forall</code> theorem calls require parentheses. A named ordinary
+Root-<code>forall</code> theorem calls require parentheses, including `name()`
+for a parameterless universal. A named ordinary
 theorem fact uses its bare name. Do not repeat an identical theorem result as an
 extra echo.
 
@@ -492,6 +539,76 @@ For a run containing a soft-failed statement, top-level <code>success</code> is
 <code>statement_results</code> with <code>success: false</code>. Read
 <code>why_failed</code> rather than treating the envelope alone as the
 mathematical explanation.
+
+### Common places to get stuck
+
+**A universal fact is not a command block.** Its body lists facts. When the
+proof needs a theorem call, a witness, or another proof action, use a local
+claim. This rejected shape puts a command in the fact list:
+
+```text
+forall x R:
+    witness exist y R st {y = x} from x
+```
+
+The proof command belongs beside the claim's goal, where the goal binder `x`
+is already active:
+
+```litex
+claim:
+    ? forall x R:
+        exist y R st {y = x}
+    witness exist y R st {y = x} from x
+```
+
+**A definition does not prove an instance.** Declaring a predicate gives its
+meaning. To establish a particular instance, prove the defining condition:
+
+```litex
+prop is_positive(x R):
+    x > 0
+
+2 > 0
+by def $is_positive(2)
+```
+
+If later code needs to apply a value as `f(x)`, use a function declaration
+such as `have fn f(x R) R = x + 1`. A `prop` supplies a property interface.
+
+**Check the expression's domain before its value.** This rejected example
+does not establish that the divisor is nonzero:
+
+```text
+forall x R:
+    x / x = 1
+```
+
+For the theorem about nonzero reals, put the justified condition in the
+statement:
+
+```litex
+forall x R:
+    x != 0
+    =>:
+        x / x = 1
+```
+
+The same principle applies to a function's argument domain and a sequence's
+index bounds. Adding `x != 0` changes the theorem's domain; it is appropriate
+only when that is the intended mathematical statement.
+
+| Symptom | What to check |
+|---|---|
+| `x` is unknown after `forall x R:` | The binder is local. Introduce a separate object with `have` if later code needs one. |
+| A local witness disappears after `claim` | The claim exports its goal; local names stay in its proof scope. |
+| `obtain` fails | Establish the existential source first, or supply a witness when proving existence. |
+| `exist!` fails despite a valid witness | Unique existence also requires a proof of uniqueness. |
+| A nested `forall` is rejected | Put universal conclusion parameters in one header; for a quantified existential/set-builder condition, define a concrete `prop`. |
+| A theorem call spelling fails | Root `forall` uses `name(args)`/`name()`; an ordinary theorem fact uses `name`. Selection uses `by thm ... => atomic_fact`. |
+
+Read the first reported phase before changing the proof. A search miss means
+the current route did not establish the fact. `trust` assumes it and leaves
+visible proof debt; it does not repair that route.
 
 ### Three high-value repair patterns
 
@@ -681,9 +798,9 @@ the [CLI boundary](cli.md#lean-compiler-boundary).
 - Prefer the phase acceptance tree under [examples/](../examples/)
   (`proof_nodes/`, `stmt_nodes/`, `wd/`, `module_manager/`, …).
 
-For new code, write `release thm name(args)` whenever the call has no `=>`
-selection. Bare `by thm name(args)` remains accepted for source compatibility;
-the recommended spelling is `release thm`.
+For writing defaults and supported alternatives, keep the
+[recommendation table](#supported-syntax-and-recommended-writing) beside the
+language reference.
 
 The learner's central habit is simple: write the next mathematical fact, read
 the verifier's evidence, and let only accepted context drive the next line.
@@ -692,7 +809,10 @@ the verifier's evidence, and let only accepted context drive the next line.
 ### Native named builtins and complex calculation
 
 ```litex
-forall x R: x > 0 => x > 0
+forall x R:
+    x > 0
+    =>:
+        x > 0
 release thm set_builder_member(1, {x R: x > 0})
 release thm subset_of_finite_set_is_finite({1}, {1, 2})
 i * i = -1

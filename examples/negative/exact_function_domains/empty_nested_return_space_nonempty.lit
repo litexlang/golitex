@@ -1,0 +1,5 @@
+# Boundary: the inner nonempty-domain function space with empty return set is empty.
+# A sequence cannot take even one value in that empty space.
+1=1
+
+$is_nonempty_set(seq(fn(k R) {}))

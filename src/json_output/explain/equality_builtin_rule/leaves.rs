@@ -11245,69 +11245,69 @@ impl FnRangeOfConstantAnonymousFnBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         text(
             "range of constant fn",
-            "Range of a constant anonymous function is a singleton",
+            "A constant function with nonempty complete domain has singleton image",
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text(
             "常值函数值域",
-            "常值匿名函数的值域是单点集",
+            "完整定义域非空的常值函数，其像是单点集",
         )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         text(
             "常數函數值域",
-            "常數匿名函數的值域為單元素集合",
+            "完整定義域非空的常值函數，其像為單元素集合",
         )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         text(
             "Image d'une fonction constante",
-            "L'image d'une fonction anonyme constante est un singleton",
+            "Une fonction constante de domaine complet non vide a une image singleton",
         )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         text(
             "Область значений постоянной функции",
-            "Область значений постоянной анонимной функции является одноэлементным множеством",
+            "Образ постоянной функции с непустой полной областью определения является одноэлементным множеством",
         )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         text(
             "Rango de función constante",
-            "El rango de una función anónima constante es un conjunto unitario",
+            "La imagen de una función constante con dominio completo no vacío es un conjunto unitario",
         )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         text(
             "مدى دالة ثابتة",
-            "مدى الدالة المجهولة الثابتة مجموعة أحادية",
+            "صورة الدالة الثابتة ذات مجال التعريف الكامل غير الفارغ مجموعة أحادية",
         )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         text(
             "定数関数の値域",
-            "定数の無名関数の値域は一要素集合です",
+            "完全な定義域が空でない定数関数の像は一要素集合です",
         )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         text(
             "상수 함수의 치역",
-            "상수 익명 함수의 치역은 한 원소 집합입니다",
+            "전체 정의역이 비어 있지 않은 상수 함수의 상은 한 원소 집합입니다",
         )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         text(
             "Miền giá trị hàm hằng",
-            "Miền giá trị hàm ẩn danh hằng là tập đơn phần tử",
+            "Hàm hằng có miền xác định đầy đủ không rỗng có ảnh gồm một phần tử",
         )
     }
 
@@ -14361,6 +14361,147 @@ impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ver
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             }
 
+    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_name_and_message_en(),
+            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_name_and_message_fr(),
+            OutputLanguage::Russian => self.rule_name_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_name_and_message_es(),
+            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
+            OutputLanguage::Korean => self.rule_name_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
+        }
+    }
+}
+
+impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_function_domain_image::FnRangeOfEmptyDomainBuiltinRuleProof {
+    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
+        text("image of empty-domain function", "A function with an empty complete domain has empty image")
+    }
+    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
+        text("空域函数的像", "完整定义域为空的函数，其像为空集")
+    }
+    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
+        text("空域函數的像", "完整定義域為空的函數，其像為空集")
+    }
+    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
+        text("Image sur un domaine vide", "Une fonction dont le domaine complet est vide a une image vide")
+    }
+    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
+        text("Образ функции на пустой области", "Функция с пустой полной областью определения имеет пустой образ")
+    }
+    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
+        text("Imagen de una función de dominio vacío", "Una función con dominio completo vacío tiene imagen vacía")
+    }
+    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
+        text("صورة دالة ذات مجال فارغ", "الدالة ذات مجال التعريف الكامل الفارغ صورتها فارغة")
+    }
+    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
+        text("空の定義域を持つ関数の像", "完全な定義域が空の関数の像は空集合です")
+    }
+    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
+        text("정의역이 빈 함수의 상", "전체 정의역이 빈 함수의 상은 공집합입니다")
+    }
+    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
+        text("Ảnh của hàm có miền rỗng", "Hàm có miền xác định đầy đủ rỗng có ảnh rỗng")
+    }
+    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_name_and_message_en(),
+            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_name_and_message_fr(),
+            OutputLanguage::Russian => self.rule_name_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_name_and_message_es(),
+            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
+            OutputLanguage::Korean => self.rule_name_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
+        }
+    }
+}
+
+impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_empty_function_graph::EmptyFunctionGraphBuiltinRuleProof {
+    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
+        text("Empty function graph", "A function with an empty complete domain is the empty graph")
+    }
+    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
+        text("空函数图", "完整定义域为空的函数等于空函数图")
+    }
+    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
+        text("空函數圖", "完整定義域為空的函數等於空函數圖")
+    }
+    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
+        text("Graphe de fonction vide", "Une fonction dont le domaine complet est vide est le graphe vide")
+    }
+    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
+        text("Пустой график функции", "Функция с пустой полной областью определения имеет пустой график")
+    }
+    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
+        text("Grafo de función vacío", "Una función con dominio completo vacío es el grafo vacío")
+    }
+    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
+        text("رسم دالة فارغ", "الدالة ذات مجال التعريف الكامل الفارغ هي الرسم الفارغ")
+    }
+    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
+        text("空の関数グラフ", "完全な定義域が空の関数は空のグラフです")
+    }
+    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
+        text("빈 함수 그래프", "전체 정의역이 빈 함수는 빈 그래프입니다")
+    }
+    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
+        text("Đồ thị hàm rỗng", "Hàm có miền xác định đầy đủ rỗng là đồ thị rỗng")
+    }
+    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_name_and_message_en(),
+            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_name_and_message_fr(),
+            OutputLanguage::Russian => self.rule_name_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_name_and_message_es(),
+            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
+            OutputLanguage::Korean => self.rule_name_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
+        }
+    }
+}
+
+impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_empty_function_graph::EmptyDomainFunctionSpaceSingletonBuiltinRuleProof {
+    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
+        text("Singleton empty-domain function space", "An empty-domain function space contains exactly the empty function")
+    }
+    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
+        text("空域函数空间的单例", "完整定义域为空的函数空间恰好包含一个空函数")
+    }
+    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
+        text("空域函數空間的單例", "完整定義域為空的函數空間恰好包含一個空函數")
+    }
+    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
+        text("Espace de fonctions sur un domaine vide", "Un espace de fonctions sur un domaine vide contient exactement la fonction vide")
+    }
+    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
+        text("Одноэлементное пространство функций", "Пространство функций на пустой области содержит только пустую функцию")
+    }
+    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
+        text("Espacio de funciones de dominio vacío", "Un espacio de funciones de dominio vacío contiene exactamente la función vacía")
+    }
+    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
+        text("فضاء دوال ذي مجال فارغ", "فضاء الدوال ذي المجال الفارغ يحتوي على الدالة الفارغة وحدها")
+    }
+    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
+        text("空の定義域上の関数空間", "空の定義域上の関数空間は空関数だけを含みます")
+    }
+    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
+        text("빈 정의역의 함수 공간", "빈 정의역의 함수 공간은 빈 함수 하나만 포함합니다")
+    }
+    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
+        text("Không gian hàm trên miền rỗng", "Không gian hàm trên miền rỗng chỉ chứa hàm rỗng")
+    }
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
             OutputLanguage::English => self.rule_name_and_message_en(),

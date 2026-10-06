@@ -89,13 +89,13 @@ pub struct FinitePartitionEqualFunctionsProof {
 }
 pub struct FiniteSetProductFreshInsertionProof {
     pub premises: Vec<VerifyFactResult>,
-    pub pointwise: AggregatePointwiseProof,
+    pub pointwise: FinitePartitionCallbackAgreementProof,
     pub factor_expansions: Vec<AnonFnApplicationBodyProof>,
     pub factor_equal: VerifyFactResult,
 }
 pub struct FiniteSetProductMemberRemovalProof {
     pub premises: Vec<VerifyFactResult>,
-    pub pointwise: AggregatePointwiseProof,
+    pub pointwise: FinitePartitionCallbackAgreementProof,
     pub factor_expansions: Vec<AnonFnApplicationBodyProof>,
     pub factor_equal: VerifyFactResult,
 }

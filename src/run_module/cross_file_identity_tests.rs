@@ -27,6 +27,48 @@ fn project_in_mode(root: &Path, strict: bool) -> RunRepoResult {
 }
 
 #[test]
+fn guarded_empty_domains_and_exact_lengths_survive_real_cached_imports() {
+    let root=temp_dir("guarded_complete_domains");
+    write(&root.join("litex.config"),"[import]\nLib=\"./library\"\n[export]\nmain=\"./main.lit\"\n");
+    write(&root.join("library/litex.config"),"[export]\nfacts=\"./facts.lit\"\n");
+    write(&root.join("library/facts.lit"),
+        "forall k R:\n    k<0\n    =>:\n        not k>0\nhave fn outside(i1 N+) R=0\nhave fn guarded_zero(k R:k>0,k<0) R=0\nguarded_zero={}\n");
+    // Imported definitions use the existing explicit publication route.
+    // An unnamed local proof is not silently exported as a caller premise.
+    let valid="release obj def Lib::facts::guarded_zero\nrelease obj def Lib::facts::outside\nforall k R:\n    k<0\n    =>:\n        not k>0\nLib::facts::guarded_zero={}\nfn_range(Lib::facts::guarded_zero)={}\n()={}\nLib::facts::guarded_zero=()\nLib::facts::guarded_zero $in finite_seq(R,0)\n";
+    write(&root.join("main.lit"),valid);
+    let cold=project_with_cache(&root);
+    assert!(cold.run.success && cold.run.session_error.is_none());
+    assert_eq!(cold.files.len(),2,"first run must verify the library and caller");
+    assert!(root.join("library/__litex_knowledge_base__/manifest.json").is_file());
+    let warm=project_with_cache(&root);
+    assert!(warm.run.success && warm.run.session_error.is_none());
+    assert_eq!(warm.files.len(),1,"the imported guarded signatures must actually come from cache");
+    assert!(warm.files[0].run.statement_results.iter().all(|s| !s.is_failed()));
+    let strict=project(&root);
+    assert!(strict.run.success && strict.run.session_error.is_none());
+    assert_eq!(strict.files.len(),2,"strict mode must verify source despite a warm cache");
+    for tail in [
+        "release thm fn_set_member(Lib::facts::outside,finite_seq(R,2))",
+        "release thm fn_set_member(Lib::facts::outside,fn(k closed_range(1,2)) R)",
+        "release thm fn_set_member(Lib::facts::guarded_zero,finite_seq(R,1))",
+    ] {
+        write(&root.join("main.lit"),&format!("{valid}\n{tail}\n"));
+        let failed=project_with_cache(&root);
+        assert!(!failed.run.success,"cached import accepted wrong complete domain: {tail}");
+        assert_eq!(failed.files.len(),1,"negative caller must reuse the actual library cache");
+        let results=&failed.files[0].run.statement_results;
+        let (target,prefix)=results.split_last().unwrap();
+        assert_eq!(prefix.len(),8);
+        assert!(prefix.iter().all(|s| !s.is_failed()),"prefix failed before negative target: {tail}");
+        assert!(target.is_failed(),"negative target was not rejected: {tail}");
+    }
+    write(&root.join("main.lit"),valid);
+    assert!(project_with_cache(&root).run.success,"failed caller must not contaminate the reusable library");
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
 fn undefined_local_predicate_goal_cannot_be_exported_and_captured_by_the_caller() {
     let root = temp_dir("predicate_goal_preflight");
     write(&root.join("litex.config"), "[import]\nOther = \"./library\"\n[export]\nmain = \"./main.lit\"\n");

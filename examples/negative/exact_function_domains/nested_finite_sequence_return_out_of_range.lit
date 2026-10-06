@@ -1,0 +1,4 @@
+# Boundary: nested empty functions are values, but the outer sequence has exactly two inputs.
+have f finite_seq(fn(k {}) {},2)
+
+fn_range(f(3))={}

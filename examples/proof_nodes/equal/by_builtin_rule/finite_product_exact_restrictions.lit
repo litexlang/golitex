@@ -1,0 +1,30 @@
+# Tracer: finite products consume real restrictions without narrowing their source.
+# Before: release thm fn_set_member(f,fn(x S)R) wrongly changed f's complete domain.
+# Now: the anonymous restriction has complete domain S; the source retains its domain.
+# The callback certificate uses the actual literal restriction and parent WD.
+# Boundary: false freshness, wrong callbacks/factors, and missing finite/guard obligations reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/finite_product_exact_restrictions.lit
+
+claim:
+    ? forall S finite_set, a R, f fn(x union(S,{a})) R:
+        not a $in S
+        =>:
+            finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R{f(x)})*f(a)
+    a $in union(S,{a})
+    release thm fn_set_member(fn(x S)R{f(x)},fn(x S)R)
+
+claim:
+    ? forall S finite_set, a R, f fn(x union({a},S)) R:
+        not a $in S
+        =>:
+            f(a)*finite_set_product(S,fn(y S)R{f(y)}) = finite_set_product(union({a},S),f)
+    a $in union({a},S)
+    release thm fn_set_member(fn(y S)R{f(y)},fn(y S)R)
+
+forall S finite_set, a S, f fn(x S) R:
+    finite_set_product(S,f) = finite_set_product(set_minus(S,{a}),fn(y set_minus(S,{a}))R{f(y)})*f(a)
+
+forall S finite_set, a S, f fn(x S) R:
+    f(a)=0
+    =>:
+        finite_set_product(S,f) = finite_set_product(set_minus(S,{a}),fn(y set_minus(S,{a}))R{f(y)})*0
