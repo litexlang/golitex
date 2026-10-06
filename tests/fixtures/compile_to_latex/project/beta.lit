@@ -1,0 +1,2 @@
+alpha::a = 2
+dep_a::base::x = dep_b::base::x

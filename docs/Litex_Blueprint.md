@@ -448,12 +448,30 @@ This source does not name a rule. The goal `0 <= x + y` can be expressed as the 
 
 The current CLI Normal output labels the whole `forall` statement `compound_fact` and stores that universal fact. This top-level summary does not expand each internal rule check.
 
+For the fixed identity `tan(x)*cot(x)=1`, equality WD first checks real `x`
+and the actual `sin(x)!=0` and `cos(x)!=0` evidence. The identity leaf then
+matches the same angle without another premise search. Detailed output keeps
+both the `TanCotProduct` leaf and the enclosing WD citations. The analogous
+`TanSquareReciprocalCosine` leaf needs `cos(x)!=0`. These are bounded fixed
+laws; they do not restore a general trigonometric normalizer. The
+[product tracer](../examples/proof_nodes/equal/by_builtin_rule/tan_cot_product.lit)
+records the before/after behavior.
+
+The fixed interval checker accepts four literal forms of the negative half-pi
+endpoint and both comparison directions, keeping the actually checked source
+fact. Closed numeric equality substitution uses a single scalar-tree pass:
+whole known values win before children, and a rebuilt parent may use its
+known value. It cites the chosen equalities and keeps the residual verifier's
+permissions; table iteration order does not choose which original subterms
+remain visible. The [numeric tracer](../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit)
+checks this behavior without changing search stages or persistent state.
+
 </details>
 
 <details>
 <summary><strong>Example 2: how Lean and Litex reuse a universal fact</strong></summary>
 
-**User-supplied universal facts.** A proved `forall` fact enters the context; when a same-shaped goal appears, Litex matches parameters and checks the instantiated premises.
+**User-supplied universal facts.** A proved `forall` fact enters the context; when a same-shaped goal appears, Litex matches parameters and checks the instantiated premises. Whole-source replay also renames bound variables inside nested `forall` premises and `exist!` witness carriers. It preserves complete carriers, conditions and free owners, then checks WD under the caller's existing permissions. This is a structural comparison, without opening another search route. The [nested-source tracer](../examples/proof_nodes/forall/known_source_nested_unique.lit) records the actual stored-fact citation.
 
 The second mathematical fact is: if a real `a > 10`, then there exists a positive real strictly less than `a`. The earlier universal fact can then be used directly for a concrete `a`.
 

@@ -32,7 +32,7 @@ fn main() {
 }
 
 fn run_launch() {
-    // Binary entry: argv -> LaunchCommand -> run_command.
+    // Route parse-only conversion before the ordinary execution commands.
     let args = std::env::args_os()
         .skip(1)
         .enumerate()
@@ -48,6 +48,15 @@ fn run_launch() {
             })
         })
         .collect::<Vec<_>>();
+    if let Some((json, success)) = litex::compile_to_latex::run_latex_args(&args) {
+        if let Err(error) = litex::run::output::write_stdout(format_args!("{}\n", json)) {
+            report_error(None, &error);
+        }
+        if !success {
+            process::exit(1);
+        }
+        return;
+    }
     let command = match parse_launch_command(&args) {
         Ok(command) => command,
         Err(error) => report_error(None, &error),

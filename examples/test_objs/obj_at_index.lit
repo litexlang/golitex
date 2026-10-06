@@ -1,23 +1,29 @@
 # Former index cases now exercise ordinary function calls on the same tuple values.
 # Gate: target/release/litex -strict -f examples/test_objs/obj_at_index.lit
+# P01: select the first coordinate.
 sketch:
     let pair = (1,2)
     pair(1) = 1
+# P02: select the second coordinate.
 sketch:
     let pair = (1,2)
     pair(2) = 2
+# P03: select the third coordinate of the triple.
 sketch:
     let triple = (1,2,3)
     triple(3) = 3
+# P04: select a nested tuple coordinate through the checked inner value.
 sketch:
     have outer cart(cart(R,R),R) = ((1,2),3)
     outer(1) = (1,2)
     have inner cart(R,R) = outer(1)
     inner = outer(1) = (1,2)
     inner(2) = 2
+# P05: call the original named tuple value.
 sketch:
     let t = (1,2)
     t(1) = 1
+# P06: evaluate the original coordinate expression.
 sketch:
     let pair = (2+3,4*2)
     pair(2) = 4*2 = 8

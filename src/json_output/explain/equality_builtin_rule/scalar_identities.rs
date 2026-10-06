@@ -183,6 +183,8 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::TanCotProduct(_) => ("Tangent-cotangent product", "For real x with sin(x) and cos(x) nonzero: tan(x)*cot(x)=1"),
+            Self::TanSquareReciprocalCosine(_) => ("Tangent square identity", "For real x with cos(x) nonzero: 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("Cosine double angle", "For checked real x: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
             Self::SinPiReflection(_) => ("Sine reflection about pi/2", "For checked real x: sin(pi-x)=sin(x)"),
             Self::CosPiReflection(_) => ("Cosine reflection about pi/2", "For checked real x: cos(pi-x)=-cos(x)"),
@@ -202,6 +204,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::TanCotProduct(_) => ("正切余切乘积", "实数 x 的 sin(x)、cos(x) 非零时：tan(x)*cot(x)=1"),
+            Self::TanSquareReciprocalCosine(_) => ("正切平方恒等式", "实数 x 的 cos(x) 非零时：1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("余弦倍角公式", "经验证的实数 x 满足：cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
             Self::SinPiReflection(_) => ("正弦的 pi 反射", "经验证的实数 x 满足：sin(pi-x)=sin(x)"),
             Self::CosPiReflection(_) => ("余弦的 pi 反射", "经验证的实数 x 满足：cos(pi-x)=-cos(x)"),
@@ -221,6 +225,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::TanCotProduct(_) => ("正切餘切乘積", "實數 x 的 sin(x)、cos(x) 非零時：tan(x)*cot(x)=1"),
+            Self::TanSquareReciprocalCosine(_) => ("正切平方恆等式", "實數 x 的 cos(x) 非零時：1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("餘弦倍角公式", "經驗證的實數 x 滿足：cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
             Self::SinPiReflection(_) => ("正弦的 pi 反射", "經驗證的實數 x 滿足：sin(pi-x)=sin(x)"),
             Self::CosPiReflection(_) => ("餘弦的 pi 反射", "經驗證的實數 x 滿足：cos(pi-x)=-cos(x)"),
@@ -240,6 +246,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::TanCotProduct(_) => ("Produit tangente-cotangente", "Pour x réel, sin(x) et cos(x) non nuls : tan(x)*cot(x)=1"),
+            Self::TanSquareReciprocalCosine(_) => ("Identité du carré de la tangente", "Pour x réel avec cos(x) non nul : 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("Angle double du cosinus", "Pour x réel vérifié : cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
             Self::SinPiReflection(_) => ("Réflexion du sinus en pi/2", "Pour x réel vérifié : sin(pi-x)=sin(x)"),
             Self::CosPiReflection(_) => ("Réflexion du cosinus en pi/2", "Pour x réel vérifié : cos(pi-x)=-cos(x)"),
@@ -259,6 +267,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::TanCotProduct(_) => ("Произведение тангенса и котангенса", "Для вещественного x при ненулевых sin(x) и cos(x): tan(x)*cot(x)=1"),
+            Self::TanSquareReciprocalCosine(_) => ("Квадрат тангенса", "Для вещественного x при ненулевом cos(x): 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("Двойной угол косинуса", "Для проверенного вещественного x: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
             Self::SinPiReflection(_) => ("Отражение синуса относительно pi/2", "Для проверенного вещественного x: sin(pi-x)=sin(x)"),
             Self::CosPiReflection(_) => ("Отражение косинуса относительно pi/2", "Для проверенного вещественного x: cos(pi-x)=-cos(x)"),
@@ -278,6 +288,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::TanCotProduct(_) => ("Producto tangente-cotangente", "Para x real con sin(x) y cos(x) distintos de cero: tan(x)*cot(x)=1"),
+            Self::TanSquareReciprocalCosine(_) => ("Identidad del cuadrado de la tangente", "Para x real con cos(x) distinto de cero: 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("Ángulo doble del coseno", "Para x real comprobado: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
             Self::SinPiReflection(_) => ("Reflexión del seno respecto a pi/2", "Para x real comprobado: sin(pi-x)=sin(x)"),
             Self::CosPiReflection(_) => ("Reflexión del coseno respecto a pi/2", "Para x real comprobado: cos(pi-x)=-cos(x)"),
@@ -297,6 +309,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::TanCotProduct(_) => ("حاصل ضرب الظل وظل التمام", "للعدد الحقيقي x عندما sin(x) وcos(x) غير صفريين: tan(x)*cot(x)=1"),
+            Self::TanSquareReciprocalCosine(_) => ("متطابقة مربع الظل", "للعدد الحقيقي x عندما cos(x) غير صفري: 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("الزاوية المضاعفة لجيب التمام", "للعدد الحقيقي x المتحقق منه: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
             Self::SinPiReflection(_) => ("انعكاس الجيب حول pi/2", "للعدد الحقيقي x المتحقق منه: sin(pi-x)=sin(x)"),
             Self::CosPiReflection(_) => ("انعكاس جيب التمام حول pi/2", "للعدد الحقيقي x المتحقق منه: cos(pi-x)=-cos(x)"),
@@ -316,6 +330,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::TanCotProduct(_) => ("正接と余接の積", "実数 x で sin(x) と cos(x) が非零なら tan(x)*cot(x)=1"),
+            Self::TanSquareReciprocalCosine(_) => ("正接の平方恒等式", "実数 x で cos(x) が非零なら 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("余弦の倍角公式", "検証済みの実数 x について: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
             Self::SinPiReflection(_) => ("pi/2 に関する正弦の反転", "検証済みの実数 x について: sin(pi-x)=sin(x)"),
             Self::CosPiReflection(_) => ("pi/2 に関する余弦の反転", "検証済みの実数 x について: cos(pi-x)=-cos(x)"),
@@ -335,6 +351,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::TanCotProduct(_) => ("탄젠트와 코탄젠트의 곱", "실수 x에서 sin(x), cos(x)가 0이 아니면 tan(x)*cot(x)=1"),
+            Self::TanSquareReciprocalCosine(_) => ("탄젠트 제곱 항등식", "실수 x에서 cos(x)가 0이 아니면 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("코사인 배각 공식", "검증된 실수 x에 대해: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
             Self::SinPiReflection(_) => ("pi/2에 대한 사인 반사", "검증된 실수 x에 대해: sin(pi-x)=sin(x)"),
             Self::CosPiReflection(_) => ("pi/2에 대한 코사인 반사", "검증된 실수 x에 대해: cos(pi-x)=-cos(x)"),
@@ -354,6 +372,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::TanCotProduct(_) => ("Tích tang và côtang", "Với x thực, sin(x) và cos(x) khác 0: tan(x)*cot(x)=1"),
+            Self::TanSquareReciprocalCosine(_) => ("Đẳng thức bình phương tang", "Với x thực, cos(x) khác 0: 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("Góc kép của cos", "Với x thực đã kiểm tra: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
             Self::SinPiReflection(_) => ("Phản xạ sin qua pi/2", "Với x thực đã kiểm tra: sin(pi-x)=sin(x)"),
             Self::CosPiReflection(_) => ("Phản xạ cos qua pi/2", "Với x thực đã kiểm tra: cos(pi-x)=-cos(x)"),

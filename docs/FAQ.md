@@ -1808,6 +1808,11 @@ an ordinary `exist` source and a source whose premise was dropped.
 The [nested-function source tracer](../examples/proof_nodes/forall/known_exist_nested_function_alpha.lit)
 also checks renamed bound variables inside an existential function carrier.
 Domains, return carriers, guards and free identities must remain the same.
+The [nested unique-source tracer](../examples/proof_nodes/forall/known_source_nested_unique.lit)
+also repeats a proved forall with nested universal preconditions and
+`exist!` witnesses over a dependent closed range. This is structural
+source reuse; it still checks WD at the current permissions and rejects
+changing uniqueness, either map condition or a complete input domain.
 
 ### Can decimal aliases, complex reciprocals and finite aggregates be checked directly?
 
@@ -1864,6 +1869,72 @@ the nonnegative root. `eval C_abs(1+i)` displays `sqrt(2)` and stores
 `C_abs(1+i)=sqrt(2)`. Detailed output records the period's integer evidence or the modulus's
 coordinates and squared value. See the [period tracer](../examples/proof_nodes/equal/by_builtin_rule/periodic_trig_exact_values.lit)
 and [modulus tracer](../examples/proof_nodes/equal/by_builtin_rule/numeric_complex_modulus.lit).
+
+### Can tangent and cotangent quotient identities verify directly?
+
+These two fixed identities verify with the partial-operation conditions:
+
+```litex
+forall x R:
+    sin(x)!=0
+    cos(x)!=0
+    =>:
+        tan(x)*cot(x)=1
+
+forall x R:
+    cos(x)!=0
+    =>:
+        1+tan(x)^2=1/cos(x)^2
+```
+
+Reversing the equality or the product/sum order is supported; a square may
+also be written as repeated multiplication. Removing a nonzero condition,
+using a pole or substituting a different angle still rejects. The fixed laws
+do not provide a general trigonometric expansion procedure. See the
+[product tracer](../examples/proof_nodes/equal/by_builtin_rule/tan_cot_product.lit)
+and [square tracer](../examples/proof_nodes/equal/by_builtin_rule/tan_square_reciprocal_cosine.lit).
+
+### Can equivalent written principal bounds be used directly?
+
+The fixed inverse, sine-order and nonzero interval consumers recognize four
+literal lower-endpoint forms: `(-pi)/2`, `-(pi/2)`, `0-pi/2` and
+`(-1)*(pi/2)`. Both comparison directions are supported:
+
+```litex
+forall y R:
+    -(pi/2)<=y
+    y<=pi/2
+    =>:
+        arcsin(sin(y))=y
+```
+
+The actual condition and its citation remain in the proof. Open intervals
+remain open for tangent and cosine nonzero; broader or missing bounds still
+reject. See the [acceptance example](../examples/proof_nodes/equal/by_builtin_rule/arcsin_principal_bound_spellings.lit).
+
+### Why should stored whole numeric values precede their arguments?
+
+When both `a=0` and `cos(a)=1` are available, replacing the argument first can
+hide the whole cosine equality. Numeric substitution matches the original
+whole term first, then visits its children and checks a rebuilt parent. This
+keeps the result independent of the numeric table's row order:
+
+```litex
+claim:
+    ? forall a,b R:
+        a=0
+        b=pi
+        =>:
+            cos(b)<cos(a)
+    cos(a)=cos(0)=1
+    cos(b)=cos(pi)=-1
+    cos(b)<cos(a)
+```
+
+The selected equalities are cited, and the rewritten comparison is verified
+with the existing rewrite permission consumed. The
+[tracer](../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit)
+and focused tests also cover equality and `eval` consumers.
 
 ### Can rational exponents compute exact rational values?
 

@@ -1,0 +1,20 @@
+# Tracer: TanSquareReciprocalCosine with real inputs and the original partial-operation guards.
+# Before: legacy accepted; current equality search rejected this exact source.
+# forall x R:
+#     cos(x)!=0
+#     =>:
+#         1+tan(x)^2=1/cos(x)^2
+# Now: fixed identity leaf after complete parent WD; no premise search or fuel reset.
+forall x R:
+    cos(x)!=0
+    =>:
+        1+tan(x)^2=1/cos(x)^2
+
+forall x R:
+    cos(x)!=0
+    =>:
+        1/(cos(x)*cos(x))=tan(x)*tan(x)+1
+
+# Boundary: omitted nonzero guards, poles, wrong signs or differing angles reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/tan_square_reciprocal_cosine.lit
+# Tests: cargo test --release --offline --lib trig_quotient_relations_tests

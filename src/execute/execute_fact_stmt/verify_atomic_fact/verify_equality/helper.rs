@@ -221,107 +221,126 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
 // Owned by ClosedNumericEqualSubstitution only — not a global resolve_obj,
 // and not a general known-equality congruence rewrite.
 pub(crate) fn replace_obj_matching_ir(obj: &Obj, from_ir: &ObjIR, to: &Obj) -> Obj {
-    if &obj.ir() == from_ir {
-        return to.clone();
+    replace_scalar_subterms(obj, &mut |part, rebuilt| {
+        (!rebuilt && &part.ir() == from_ir).then(|| to.clone())
+    })
+}
+
+// Preserve the existing scalar constructor boundary. A whole-term match wins
+// before children are visited, and an inserted replacement is not traversed.
+// The callback can also match a parent rebuilt from changed children. Replaced
+// values are not traversed. This is one structural pass, not a rewrite loop.
+pub(crate) fn replace_scalar_subterms(
+    obj: &Obj,
+    replacement: &mut impl FnMut(&Obj, bool) -> Option<Obj>,
+) -> Obj {
+    if let Some(value) = replacement(obj, false) {
+        return value;
     }
-    match obj {
+    let rebuilt = match obj {
         Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
-            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
-            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+            left: Box::new(replace_scalar_subterms(&a.left, replacement)),
+            right: Box::new(replace_scalar_subterms(&a.right, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
-            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
-            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+            left: Box::new(replace_scalar_subterms(&a.left, replacement)),
+            right: Box::new(replace_scalar_subterms(&a.right, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
-            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+            left: Box::new(replace_scalar_subterms(&a.left, replacement)),
+            right: Box::new(replace_scalar_subterms(&a.right, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Div(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
-            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
-            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+            left: Box::new(replace_scalar_subterms(&a.left, replacement)),
+            right: Box::new(replace_scalar_subterms(&a.right, replacement)),
         })),
         Obj::IntegerOperator(IntegerOperator::Mod(a)) => Obj::IntegerOperator(IntegerOperator::Mod(Mod {
-            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
-            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+            left: Box::new(replace_scalar_subterms(&a.left, replacement)),
+            right: Box::new(replace_scalar_subterms(&a.right, replacement)),
         })),
         Obj::IntegerOperator(IntegerOperator::Quot(a)) => Obj::IntegerOperator(IntegerOperator::Quot(Quot {
-            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
-            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+            left: Box::new(replace_scalar_subterms(&a.left, replacement)),
+            right: Box::new(replace_scalar_subterms(&a.right, replacement)),
         })),
         Obj::IntegerOperator(IntegerOperator::Gcd(a)) => Obj::IntegerOperator(IntegerOperator::Gcd(Gcd {
-            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
-            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+            left: Box::new(replace_scalar_subterms(&a.left, replacement)),
+            right: Box::new(replace_scalar_subterms(&a.right, replacement)),
         })),
         Obj::IntegerOperator(IntegerOperator::Lcm(a)) => Obj::IntegerOperator(IntegerOperator::Lcm(Lcm {
-            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
-            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+            left: Box::new(replace_scalar_subterms(&a.left, replacement)),
+            right: Box::new(replace_scalar_subterms(&a.right, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Min(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Min(Min {
-            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
-            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+            left: Box::new(replace_scalar_subterms(&a.left, replacement)),
+            right: Box::new(replace_scalar_subterms(&a.right, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Max(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Max(Max {
-            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
-            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+            left: Box::new(replace_scalar_subterms(&a.left, replacement)),
+            right: Box::new(replace_scalar_subterms(&a.right, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Pow(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
-            base: Box::new(replace_obj_matching_ir(&a.base, from_ir, to)),
-            exponent: Box::new(replace_obj_matching_ir(&a.exponent, from_ir, to)),
+            base: Box::new(replace_scalar_subterms(&a.base, replacement)),
+            exponent: Box::new(replace_scalar_subterms(&a.exponent, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Abs(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Floor(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Floor(Floor {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Ceil(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Ceil(Ceil {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::ExpLogOperator(ExpLogOperator::Exp(a)) => Obj::ExpLogOperator(ExpLogOperator::Exp(Exp {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::ExpLogOperator(ExpLogOperator::Ln(a)) => Obj::ExpLogOperator(ExpLogOperator::Ln(Ln {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Sign(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Sign(Sign {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::IntegerOperator(IntegerOperator::Factorial(a)) => Obj::IntegerOperator(IntegerOperator::Factorial(Factorial {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)) => Obj::ExpLogOperator(ExpLogOperator::Sqrt(Sqrt {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::TrigOperator(TrigOperator::Sin(a)) => Obj::TrigOperator(TrigOperator::Sin(Sin {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::TrigOperator(TrigOperator::Cos(a)) => Obj::TrigOperator(TrigOperator::Cos(Cos {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::TrigOperator(TrigOperator::Tan(a)) => Obj::TrigOperator(TrigOperator::Tan(Tan {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::TrigOperator(TrigOperator::Cot(a)) => Obj::TrigOperator(TrigOperator::Cot(Cot {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::TrigOperator(TrigOperator::Arcsin(a)) => Obj::TrigOperator(TrigOperator::Arcsin(Arcsin {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::TrigOperator(TrigOperator::Arccos(a)) => Obj::TrigOperator(TrigOperator::Arccos(Arccos {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::TrigOperator(TrigOperator::Arctan(a)) => Obj::TrigOperator(TrigOperator::Arctan(Arctan {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         Obj::TrigOperator(TrigOperator::Arccot(a)) => Obj::TrigOperator(TrigOperator::Arccot(Arccot {
-            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+            arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
         })),
         _ => obj.clone(),
+    };
+    if rebuilt.ir() != obj.ir() {
+        if let Some(value) = replacement(&rebuilt, true) {
+            return value;
+        }
     }
+    rebuilt
 }
 
 fn fn_obj_corresponding_arg_pairs(left: &FnObj, right: &FnObj) -> Option<Vec<(Obj, Obj)>> {

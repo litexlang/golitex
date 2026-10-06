@@ -7,9 +7,11 @@ The tuple, cart, identifier, list-set and struct-field files selected in the
 have fresh strict file receipts. Nested values are selected into a checked
 local name when the direct chained-call form lacks usable evidence.
 The old tuple/cart dimension, shape and construction-projection interfaces
-are retired. Their dedicated historical fixtures await collector retirement;
-they are not current must-pass language examples. This source-only batch does
-not change Rust, rebuild the verifier or certify the entire Obj corpus.
+are retired. Their dedicated positive files have been removed and their old
+source retained in the journal. The Python collector records the three retired
+families explicitly and still runs their syntax-rejection fixtures. This batch
+updates example metadata and the collector, without changing Rust, rebuilding
+the verifier or certifying the entire Obj corpus.
 
 The [2026-10-05 cross-Obj relation audit](obj_relations_audit_2026-10-05.md)
 checks 81 representative interactions and partitions the recorded 99-object
@@ -29,8 +31,11 @@ checks. The remaining LEG35/36 trigonometric cases keep their existing owners.
 
 [符号聚合三项的最新复核](experience/problem_notes/symbolic_aggregate_status_2026-10-04.md)：原十个短式现有 7 个直接通过，3 个已有显式作者证明；五个相关完整文件通过。第4–6项已从活动纠错段落移除，短搜索边界和原始回执保留。
 
-This directory tests the terminal variants reachable from `Obj` in
-`src/ast/obj.rs`. Each variant has a dedicated, nonempty positive `.lit` file.
+This directory inventories the terminal variants reachable from `Obj` in
+`src/ast/obj.rs`. Active families have dedicated, nonempty positive `.lit`
+files; explicitly retired interfaces retain rejection fixtures and have no
+positive file. Retained Rust AST declarations do not make those interfaces
+available in the language.
 Function-head variants and the `FnSetSpace` helper enum are audited as well.
 This is an object corpus; statement and fact inventories remain in the existing
 `stmt_nodes` and `proof_nodes` suites.
@@ -68,7 +73,7 @@ not make this complete corpus green; consult the dated source/binary receipts.
 
 The [explicit set-proof follow-up](experience/problem_notes/remaining_set_proof_repairs_2026-10-03.md) closes 17 more gaps with contra, extension, carrier proofs and definition release. That round left **644 positive cases, 295 negatives and 5 remaining gaps**; its strict focused gate covers 11 owning files and 28 rejection fixtures.
 
-The [five-set follow-up](experience/problem_notes/five_set_gap_followup_2026-10-03.md) closes the last five recorded gaps. The current audited inventory has **665 positive cases, 309 negatives and 0 recorded gaps**. Concurrent unrelated additions contribute to these totals; this round closes five cases and adds five negatives. Its focused gates do not certify the full corpus.
+The [five-set follow-up](experience/problem_notes/five_set_gap_followup_2026-10-03.md) closes the last five recorded gaps. That dated inventory had **665 positive cases, 309 negatives and 0 recorded gaps**; the current source inventory is listed in coverage.md. Concurrent unrelated additions contribute to these totals; this round closes five cases and adds five negatives. Its focused gates do not certify the full corpus.
 
 ## Run
 

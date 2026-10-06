@@ -54,6 +54,10 @@ fn print_help_message() -> RuntimeResult<Vec<String>> {
         format!("{} -extractc <code>", bin),
         format!("{} -extractc -f <file>", bin),
         format!("{} -extractc -r <repository>", bin),
+        format!("{} -latex -e <code>", bin),
+        format!("{} -latex -f <file>", bin),
+        format!("{} -latex -document -lang zh -f <file>", bin),
+        format!("{} -latex -r <repository>", bin),
         format!("{} -lang zh -e <code>", bin),
         format!("{} -strict -e <code>", bin),
         format!("{} -f <file> -session", bin),
@@ -65,6 +69,7 @@ fn print_help_message() -> RuntimeResult<Vec<String>> {
         "-strict forbids `trust` / `trust have` / user `axiom`; abstract predicate declarations and named foundation releases are allowed.".to_string(),
         "-lang en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi selects JSON output language (default en; English language names also accepted).".to_string(),
         "-extractpython / -extractc emit verified numeric/algo fragments as Python or C.".to_string(),
+        "-latex converts parsed source to a LaTeX artifact; -lang selects mathematical prose in all ten languages. Add -document for a complete XeLaTeX document. It does not execute or verify source.".to_string(),
     ];
     write_stdout(format_args!("{}\n\nUsage:\n", LITEX))?;
     for entry in &usage {

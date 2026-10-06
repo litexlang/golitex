@@ -867,3 +867,21 @@ leaf and describes real arguments in all ten languages. Former
 `RealIntegerPower` and `ExpAsEulerIntegerPower` rule names are superseded; this
 changes those rule labels without changing their evidence field shapes. See
 [acceptance](../../examples/wd/experience/problem_notes/pow-real-domains-2026-10-06.md).
+
+
+Whole-forall replay compares nested universal conditions recursively, while keeping existential polarity, complete carriers and free identities exact. Detailed retains the existing `well_defined`, `cite_fact_id` and outer `parameter_renamings`; no new result label or schema is introduced. Ten-language executed tests check the actual source citation in [the nested unique-source tracer](../../examples/proof_nodes/forall/known_source_nested_unique.lit). A structural match still obeys the caller's WD ceiling.
+
+`TanCotProduct` and `TanSquareReciprocalCosine` each own a typed identity
+certificate and project their actual `angle`. The pure shape leaves do not
+manufacture premise children: the enclosing equality `well_defined` retains
+real-argument and sine/cosine nonzero proofs, including the actual local
+FactId citations. Both leaves own ten localized explanations. Executed
+Runtime fixtures check the leaves and successful stored-forall reuse; the
+[product](../../examples/proof_nodes/equal/by_builtin_rule/tan_cot_product.lit)
+and [square](../../examples/proof_nodes/equal/by_builtin_rule/tan_square_reciprocal_cosine.lit)
+tracers retain their partial-operation guards.
+
+
+Fixed trigonometric interval consumers retain the actual written Less/Greater or weak bound result and its source citation for (-pi)/2, -(pi/2), 0-pi/2 and (-1)*(pi/2). Inverse requirement order remains lower then upper; sine-order and raw nonzero evidence keep their existing named fields. There is no new result label or schema.
+
+ClosedNumericEqualSubstitution matches whole original scalar terms before children and can match rebuilt parents in that same structural pass. Equality, atomic and eval consumers retain the selected actual equality IDs, rewritten subject and checked residual/evaluation. The exact single-key replacement interface preserves its original-only behavior. See [numeric priority acceptance](../../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit).

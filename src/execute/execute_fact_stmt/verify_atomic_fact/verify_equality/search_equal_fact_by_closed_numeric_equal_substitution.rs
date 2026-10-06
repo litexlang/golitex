@@ -1,5 +1,5 @@
 use super::by_builtin_rewrite_result::ClosedNumericEqualSubstitutionBuiltinRewriteProof;
-use super::helper::replace_obj_matching_ir;
+use super::helper::replace_scalar_subterms;
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::Obj;
 use crate::exec_env::known_fact_memory::ObjIR;
@@ -25,20 +25,14 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ClosedNumericEqualSubstitutionBuiltinRewriteProof>> {
         let entries = self.visible_closed_numeric_equal_entries();
-        let mut rewritten_left = fact.left.clone();
-        let mut rewritten_right = fact.right.clone();
-        let mut cited_equal_fact_ids = Vec::new();
-
-        for (from_ir, closed, fact_id) in &entries {
-            let closed_obj = closed.to_obj();
-            let next_left = replace_obj_matching_ir(&rewritten_left, from_ir, &closed_obj);
-            let next_right = replace_obj_matching_ir(&rewritten_right, from_ir, &closed_obj);
-            if next_left.ir() == rewritten_left.ir() && next_right.ir() == rewritten_right.ir() {
-                continue;
+        let (rewritten_left, mut cited_equal_fact_ids) =
+            rewrite_closed_numeric_subterms(&fact.left, &entries);
+        let (rewritten_right, right_citations) =
+            rewrite_closed_numeric_subterms(&fact.right, &entries);
+        for id in right_citations {
+            if !cited_equal_fact_ids.contains(&id) {
+                cited_equal_fact_ids.push(id);
             }
-            rewritten_left = next_left;
-            rewritten_right = next_right;
-            cited_equal_fact_ids.push(*fact_id);
         }
 
         if cited_equal_fact_ids.is_empty() {
@@ -94,17 +88,37 @@ impl Runtime {
         obj: &Obj,
     ) -> (Obj, Vec<FactId>) {
         let entries = self.visible_closed_numeric_equal_entries();
-        let mut rewritten = obj.clone();
-        let mut cited = Vec::new();
-        for (from_ir, closed, fact_id) in &entries {
-            let closed_obj = closed.to_obj();
-            let next = replace_obj_matching_ir(&rewritten, from_ir, &closed_obj);
-            if next.ir() == rewritten.ir() {
-                continue;
-            }
-            rewritten = next;
-            cited.push(*fact_id);
-        }
-        (rewritten, cited)
+        rewrite_closed_numeric_subterms(obj, &entries)
     }
 }
+
+// Apply the closed numeric index simultaneously to original scalar subterms.
+// Prefer a stored numeral when one exists; rows for one key retain their
+// existing visibility order. Every selected equality is cited. In particular,
+// with a=0 and cos(a)=1, replace the whole cos(a), not its argument first.
+pub(crate) fn rewrite_closed_numeric_subterms(
+    obj: &Obj,
+    entries: &[(ObjIR, ClosedNumericExpr, FactId)],
+) -> (Obj, Vec<FactId>) {
+    let mut cited = Vec::new();
+    let rewritten = replace_scalar_subterms(obj, &mut |part, _| {
+        let ir = part.ir();
+        let selected = entries.iter().find(|(from, value, _)| {
+            from == &ir && matches!(value, ClosedNumericExpr::Number(_))
+        }).or_else(|| entries.iter().find(|(from, _, _)| from == &ir));
+        let (_, value, id) = selected?;
+        let value = value.to_obj();
+        if value.ir() == ir {
+            return None;
+        }
+        if !cited.contains(id) {
+            cited.push(*id);
+        }
+        Some(value)
+    });
+    (rewritten, cited)
+}
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/closed_numeric_subterm_priority/tests.rs"]
+mod closed_numeric_subterm_priority_tests;

@@ -31,3 +31,11 @@ Verification status (2026-10-05): the complete, byte-identical showcase copy
 passed strict file verification (227/227). Both its candidate module and the
 actual module at this public directory passed on the same release binary.
 See the [acceptance note](../experience/problem_notes/plane-geometry-replacement-acceptance-2026-10-05.md).
+
+Tuple/cart migration status (2026-10-06): the dated verification above used the
+old coordinate syntax. The new source-only draft has 176/227 items accepted in
+source order; `vertical_angles_equal` remains unverified after interactive
+timeouts, and the full draft run reached a 1200-second process limit without
+results. This public `main.lit` has not been replaced. Its new-syntax migration
+is incomplete; no trust or Rust repair was added in this batch. See the
+[migration evidence](../../../examples/proof_nodes/experience/problem_notes/tuple-cart-source-only-migration-2026-10-06.md).

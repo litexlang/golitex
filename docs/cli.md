@@ -435,3 +435,18 @@ litex -r examples/module_manager/repo
 litex -strict -f examples/tmp.lit
 litex -session -f examples/tmp.lit
 ```
+
+## LaTeX conversion (preview)
+
+`litex -latex -lang zh -e '1 = 1'` compiles parsed source into a LaTeX
+artifact. `-f <file>` selects a standalone file or the registered project prefix
+through that file; `-r <project>` converts root exports in manifest order.
+Dependency manifests supply names; dependency source is not executed or emitted.
+
+Use `-latex -document` for a complete XeLaTeX article, or omit `-document` for
+a fragment. All ten `-lang` choices select complete mathematical prose templates.
+The JSON keys stay stable across locales; `content` contains LaTeX, `success`
+reports conversion, and `verified` is always false. On failure `content` is null
+and the process exits 1. Conversion does not execute or verify source; `-strict`
+and `-session` are rejected. See the [compiler guide](../src/compile_to_latex/README.md)
+for saving `.tex`, the font/package requirements, API and coverage.

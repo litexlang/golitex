@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_by_closed_numeric_equal_substitution::rewrite_closed_numeric_subterms;
 use super::helper::atomic_fact_with_args;
 use crate::ast::fact::{
     AtomicFact, Fact, GreaterEqualFact, GreaterFact, LessEqualFact, LessFact,
@@ -153,30 +154,16 @@ impl Runtime {
             return Ok(None);
         }
         let entries = self.visible_closed_numeric_equal_entries();
-        let mut rewritten_args: Vec<Obj> = atomic_fact_args_ref(fact)
-            .into_iter()
-            .cloned()
-            .collect();
+        let mut rewritten_args = Vec::new();
         let mut cited_equal_fact_ids = Vec::new();
-
-        for (from_ir, closed, fact_id) in &entries {
-            let closed_obj = closed.to_obj();
-            let mut changed = false;
-            let next_args: Vec<Obj> = rewritten_args
-                .iter()
-                .map(|arg| {
-                    let next = replace_obj_matching_ir(arg, from_ir, &closed_obj);
-                    if next.ir() != arg.ir() {
-                        changed = true;
-                    }
-                    next
-                })
-                .collect();
-            if !changed {
-                continue;
+        for arg in atomic_fact_args_ref(fact) {
+            let (rewritten, citations) = rewrite_closed_numeric_subterms(arg, &entries);
+            rewritten_args.push(rewritten);
+            for id in citations {
+                if !cited_equal_fact_ids.contains(&id) {
+                    cited_equal_fact_ids.push(id);
+                }
             }
-            rewritten_args = next_args;
-            cited_equal_fact_ids.push(*fact_id);
         }
 
         if cited_equal_fact_ids.is_empty() {

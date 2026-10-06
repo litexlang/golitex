@@ -1,4 +1,0 @@
-# Obj WD: cart_dim(S) requires $is_cart(S)
-# Run: litex -f examples/proof_nodes/obj_wd/cart_dim.lit
-
-let d = cart_dim(cart(R, R))

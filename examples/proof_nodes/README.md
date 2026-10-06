@@ -338,10 +338,10 @@ empty-from-not-nonempty; power_set cardinality — see `union_empty_*.lit`,
 `intersect_union_distributive.lit`, `set_minus_*_de_morgan.lit`,
 `intersect_set_minus_self_empty.lit`).
 Equality BuiltinRule identities (Stage B wave 11):
-union absorption / set-minus recovery; empty from size 0; cart proj /
-tuple index; finite-set size set-minus/union; closed_range singleton;
+union absorption / set-minus recovery; empty from size 0; tuple coordinate
+calls; finite-set size set-minus/union; closed_range singleton;
 sum/product single-term; reduce↔sum bridges; pow-of-log inverse — see
-`union_absorption_from_subset.lit`, `cart_proj_factor.lit`,
+`union_absorption_from_subset.lit`,
 `tuple_component_at_index.lit`, `finite_set_size_*.lit`,
 `sum_single_term.lit`, `reduce_add_zero_equals_sum.lit`,
 `pow_of_log_inverse.lit`, etc.
@@ -442,7 +442,7 @@ exist/        ByBuiltinRule (real-line, equality-from-membership, nonempty-membe
 forall/       introduce → assume → then
 forall_iff/   both directions
 not_forall/   via derived counterexample exist
-obj_wd/       FnSet / AnonymousFn / SetBuilder binder WD; cart_dim / proj / ObjAtIndex
+obj_wd/       FnSet / AnonymousFn / SetBuilder binder WD; ordinary coordinate calls
 ```
 
 ## Run all
@@ -507,13 +507,16 @@ examples explicitly establish the literal type facts first. The add2 chain keeps
 its intermediate coordinate expression. A direct `add2(...)= (4,6)` without
 that step is still not proved automatically. None of these examples uses trust.
 
-Checked return-carrier/signature leaves have dedicated tracers:
-`atomic/by_builtin_rule/cart_dimension_in_natural.lit`,
-`atomic/by_builtin_rule/tuple_dimension_in_natural.lit`, and
-`atomic/by_builtin_rule/anonymous_function_declared_signature.lit`. Their
+The checked anonymous-function signature leaf has a dedicated tracer:
+`atomic/by_builtin_rule/anonymous_function_declared_signature.lit`. Its
 argument/body WD must already succeed; they do not drop domain conditions or
 rename free definition owners. Focused positive and negative contracts run
 with `cargo test --release predicate_domain`.
+
+The former tuple/cart dimension, shape-predicate and constructor-factor
+projection tracers were retired on 2026-10-06 at the maintainer's direction.
+Their source snapshots and the retained syntax-rejection evidence are in the
+[source migration journal](../../plan/迁移的plan/proof_journals/tuple-cart-source-only-migration-2026-10-06.json).
 
 ## Example small repairs (2026-10-02)
 
@@ -908,3 +911,21 @@ The guarded-empty tracer also constructs named functions with an empty return ca
 
 
 The [fresh finite-product insertion tracer](equal/by_builtin_rule/finite_product_fresh_insertion.lit) keeps the source function on its complete union domain and uses an actual union-member proof for the inserted argument. It no longer asks that source to inhabit the smaller function domain. [Branch audit evidence](experience/problem_notes/finite-product-branches-2026-10-06.md) covers member-removal multiplication including zero factors and keeps the unresolved division goal distinct from false/domain controls.
+
+
+## Whole-source replay with nested unique conditions
+
+[The nested unique-source tracer](forall/known_source_nested_unique.lit) proves a unique-preimage bijection, checks the native two-enumeration sum theorem, stores the exact forall and repeats it. Replay renames nested universal/witness binders while keeping complete carriers, conditions, existential polarity and free identities. [Acceptance evidence](experience/problem_notes/unique-enumerator-source-reuse-2026-10-06.md) preserves Direct WD rejection, actual source FactId and false/missing-coverage controls.
+
+[Tangent/cotangent product](equal/by_builtin_rule/tan_cot_product.lit) and
+[tangent square](equal/by_builtin_rule/tan_square_reciprocal_cosine.lit)
+restore two fixed quotient identities after complete equality WD. Their own
+typed leaves retain the angle, while parent WD retains the nonzero guard
+citations. The focused `trig_quotient_relations_tests` exercise both equality
+directions, product/sum order, repeated-multiplication squares, ten languages,
+failure isolation and stored-forall reuse. Missing guards, poles, wrong signs,
+different angles and complex inputs still reject. See the
+[acceptance note](experience/problem_notes/trig-quotient-relations-2026-10-06.md).
+
+
+[Principal-bound spellings](equal/by_builtin_rule/arcsin_principal_bound_spellings.lit) and [their nonzero/WD consumer](atomic/by_builtin_rule/cos_nonzero_principal_bound_spellings.lit) preserve original actual bound citations at inherited permissions. [Whole numeric subterm priority](atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit) verifies a formerly intermittent cosine-endpoint comparison. Focused tests exercise all row permutations, rebuilt parents, the preserved single-key wrapper, ten languages, equality/eval, false conclusions and actual source reuse. See [acceptance](experience/problem_notes/trig-order-nonzero-2026-10-06.md).

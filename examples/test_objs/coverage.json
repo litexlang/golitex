@@ -1776,7 +1776,6 @@
         "P02",
         "P03",
         "P05",
-        "P06",
         "P04"
       ],
       "negative_cases": [
@@ -1813,7 +1812,6 @@
       "positive_cases": [
         "P01",
         "P02",
-        "P03",
         "P04",
         "P05",
         "P06"
@@ -1835,14 +1833,9 @@
       "ast_paths": [
         "Obj::ProductShape::CartDim"
       ],
-      "positive_file": "cart_dim.lit",
+      "positive_file": null,
       "helper_paths": [],
-      "positive_cases": [
-        "P01",
-        "P02",
-        "P03",
-        "P04"
-      ],
+      "positive_cases": [],
       "negative_cases": [
         {
           "id": "N01",
@@ -1853,21 +1846,18 @@
           "file": "negative/cart_dim__n02.lit"
         }
       ],
-      "gaps": []
+      "gaps": [],
+      "retired": true,
+      "retired_reason": "User removed tuple/cart dimension and constructor-factor projection interfaces; retain syntax-rejection fixtures, not positive obligations."
     },
     {
       "name": "tuple_dim",
       "ast_paths": [
         "Obj::ProductShape::TupleDim"
       ],
-      "positive_file": "tuple_dim.lit",
+      "positive_file": null,
       "helper_paths": [],
-      "positive_cases": [
-        "P01",
-        "P02",
-        "P03",
-        "P04"
-      ],
+      "positive_cases": [],
       "negative_cases": [
         {
           "id": "N01",
@@ -1878,21 +1868,18 @@
           "file": "negative/tuple_dim__n02.lit"
         }
       ],
-      "gaps": []
+      "gaps": [],
+      "retired": true,
+      "retired_reason": "User removed tuple/cart dimension and constructor-factor projection interfaces; retain syntax-rejection fixtures, not positive obligations."
     },
     {
       "name": "proj",
       "ast_paths": [
         "Obj::ProductShape::Proj"
       ],
-      "positive_file": "proj.lit",
+      "positive_file": null,
       "helper_paths": [],
-      "positive_cases": [
-        "P01",
-        "P02",
-        "P03",
-        "P04"
-      ],
+      "positive_cases": [],
       "negative_cases": [
         {
           "id": "N01",
@@ -1911,7 +1898,9 @@
           "file": "negative/proj__n04.lit"
         }
       ],
-      "gaps": []
+      "gaps": [],
+      "retired": true,
+      "retired_reason": "User removed tuple/cart dimension and constructor-factor projection interfaces; retain syntax-rejection fixtures, not positive obligations."
     },
     {
       "name": "obj_at_index",

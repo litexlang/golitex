@@ -1,0 +1,32 @@
+# Tracer: actual written principal pi bounds.
+# Before: legacy accepted; current search rejected the exact source.
+# forall x R:
+#     -(pi/2)<x
+#     x<pi/2
+#     =>:
+#         cos(x)!=0
+# Now: same fact, checked at inherited permissions, with actual bound citations.
+forall x R:
+    -(pi/2)<x
+    x<pi/2
+    =>:
+        cos(x)!=0
+
+forall x R:
+    x>(-1)*(pi/2)
+    pi/2>x
+    =>:
+        cos(x)!=0
+
+forall a,b R:
+    -(pi/2)<=a
+    b<=pi/2
+    a<b
+    =>:
+        sin(a)<sin(b)
+
+# Boundary: wrong/missing bounds, closed tangent poles and free-angle mismatches reject.
+# No arbitrary expression normalization, search reset or fact publication by the helper.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/cos_nonzero_principal_bound_spellings.lit
+# Tests: cargo test --release --offline --lib trig_interval_bound_spellings_tests
+# Owner: src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/not_equal.rs

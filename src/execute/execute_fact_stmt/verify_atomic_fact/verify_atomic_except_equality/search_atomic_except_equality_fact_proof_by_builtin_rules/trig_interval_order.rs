@@ -1,4 +1,5 @@
 //! Strict sine order on its standard intervals.
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::verify_trig_interval_bound::TrigIntervalBoundSide;
 use super::less::LessFactSearchProofByBuiltinRule;
 use crate::ast::fact::{Fact, LessEqualFact, LessFact};
 use crate::ast::obj::{Obj, TrigOperator};
@@ -69,10 +70,9 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         }
         .into();
-        let left_lower_bound = self.verify_builtin_rule_premise(&lower, state)?;
-        if left_lower_bound.is_failed() {
-            return Ok(None);
-        }
+        let Some(left_lower_bound) = self.verify_trig_interval_bound(
+            &lower, TrigIntervalBoundSide::Lower, state,
+        )? else { return Ok(None); };
         let upper: Fact = LessEqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: *b.arg.clone(),
@@ -80,10 +80,9 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         }
         .into();
-        let right_upper_bound = self.verify_builtin_rule_premise(&upper, state)?;
-        if right_upper_bound.is_failed() {
-            return Ok(None);
-        }
+        let Some(right_upper_bound) = self.verify_trig_interval_bound(
+            &upper, TrigIntervalBoundSide::Upper, state,
+        )? else { return Ok(None); };
         let order: Fact = LessFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: *a.arg.clone(),
