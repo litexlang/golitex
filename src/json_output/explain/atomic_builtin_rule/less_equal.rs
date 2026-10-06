@@ -72,6 +72,10 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_en(),
+            Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_en(),
+            Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_en(),
+            Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_en(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_en(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_en(),
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_en(),
@@ -162,6 +166,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_zh(),
+            Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_zh(),
+            Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_zh(),
+            Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_zh(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh(),
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh(),
@@ -258,6 +266,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_zh_hant(),
+            Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_zh_hant(),
+            Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_zh_hant(),
+            Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_zh_hant(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
@@ -354,6 +366,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_fr(),
+            Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_fr(),
+            Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_fr(),
+            Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_fr(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_fr(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_fr(),
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_fr(),
@@ -444,6 +460,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ru(),
+            Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_ru(),
+            Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ru(),
+            Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_ru(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ru(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ru(),
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ru(),
@@ -534,6 +554,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_es(),
+            Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_es(),
+            Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_es(),
+            Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_es(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_es(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_es(),
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_es(),
@@ -624,6 +648,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ar(),
+            Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_ar(),
+            Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ar(),
+            Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_ar(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ar(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ar(),
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ar(),
@@ -720,6 +748,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ja(),
+            Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_ja(),
+            Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ja(),
+            Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_ja(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ja(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ja(),
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ja(),
@@ -816,6 +848,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ko(),
+            Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_ko(),
+            Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ko(),
+            Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_ko(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ko(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ko(),
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ko(),
@@ -912,6 +948,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_vi(),
+            Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_vi(),
+            Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_vi(),
+            Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_vi(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_vi(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_vi(),
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_vi(),

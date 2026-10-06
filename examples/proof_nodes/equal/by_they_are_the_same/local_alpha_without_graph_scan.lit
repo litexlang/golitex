@@ -1,0 +1,26 @@
+# Tracer: local structural alpha without whole-graph discovery.
+# Before: Direct could find an implicit alpha bridge between stored classes.
+# let a = fn(x R) R
+# let b = a
+# let c = fn(y R) R
+# let d = c
+# b = d
+# Former Direct lookup: alpha_paths; current Direct lookup: not found.
+# The executable Rust boundary checks that miss without changing stored facts.
+# Now: directly submitted binders and nested function arguments still compare.
+fn(x R) R = fn(y R) R
+have f fn(p fn(x R) R, q fn(y R) R) R
+f(fn(x R) R, fn(y R) R) = f(fn(u R) R, fn(v R) R)
+
+# Exact stored paths remain available without alpha discovery.
+have n R
+let m = n
+let k = m
+k = n
+
+# Explicit theorem selection compares only this theorem's returned endpoints.
+thm alpha_identity:
+    ? fn(x R) R {x} = fn(y R) R {y}
+by thm alpha_identity => fn(u R) R {u} = fn(v R) R {v}
+# Boundary: a changed free identifier, carrier or body is not alpha renaming.
+# Evidence: equality_search tests; release litex -compact -isolated -runner -f this file.

@@ -12,6 +12,10 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    SinWeakIncreasingOnClosedHalfPi(super::trig_additional_interval_order::SinWeakIncreasingOnClosedHalfPiProof),
+    CosWeakDecreasingOnClosedPi(super::trig_additional_interval_order::CosWeakDecreasingOnClosedPiProof),
+    TanWeakIncreasingOnOpenHalfPi(super::trig_additional_interval_order::TanWeakIncreasingOnOpenHalfPiProof),
+    CotWeakDecreasingOnOpenPi(super::trig_additional_interval_order::CotWeakDecreasingOnOpenPiProof),
     MulLeftNonpositiveReversesWeakLessEqual(super::order_negative_common_factor::MulLeftNonpositiveReversesWeakLessEqualProof),
     MulRightNonpositiveReversesWeakLessEqual(super::order_negative_common_factor::MulRightNonpositiveReversesWeakLessEqualProof),
     MulLeftRightNonpositiveReversesWeakLessEqual(super::order_negative_common_factor::MulLeftRightNonpositiveReversesWeakLessEqualProof),
@@ -581,6 +585,7 @@ impl Runtime {
             return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FactorialMonotone(proof)));
         }
         if let Some(proof)=self.search_exp_ln_weak_order(fact,verify_state)? { return Ok(Some(proof)); }
+        if let Some(proof) = self.search_additional_trig_less_equal(fact, verify_state)? { return Ok(Some(proof)); }
         Ok(None)
     }
 }

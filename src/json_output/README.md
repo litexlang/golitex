@@ -45,6 +45,16 @@ includes `unfold_equal_proofs`; order duality includes `alternate_fact` and
 equality citation and residual `$prime(16+1)` calculation. This is a projection
 of existing evidence; see `atomic/by_builtin_rewrite/closed_numeric_prime.lit`.
 
+Selected theorem calls retain a direct citation to a returned atomic conclusion
+under Detailed `selected_proof`: equality uses `by_equivalence_class` /
+`alpha_endpoints`; other atoms use `by_known_atomic`. The cited conclusion
+belongs to the call's retained local environment. Selection does not use
+ordinary target search, even for an already known or calculable target.
+Normal and Detailed selection mismatches report `phase: "selected_fact"`,
+`reason: "not_returned"`, the actual goal and `returned_conclusions`.
+See `examples/stmt_nodes/by/by_thm_strict_selection.lit` and the citation,
+rollback and ten-language gates in `tests/unit/execute/by_thm_selection/`.
+
 Detailed predicate registrations identify `property` (`reflexive`, `symmetric`,
 or `transitive`) and retain the existing `prop` and checked `forall_proof`.
 Rejected registrations expose the actual shape, missing-definition, arity,
@@ -609,7 +619,10 @@ canonical radical objects). Radical equality/disequality uses
 `sqrt(12)+sqrt(27)=5*sqrt(3)` retains `5 * sqrt (3)` on both sides;
 order retains `left_normal`, `right_normal`, and the actual `comparison`;
 membership retains `value` and `set`. Calculation carries no fabricated FactId.
-Existing stored citations and identity/alpha paths keep their existing labels.
+Existing stored citations and pairwise structural alpha keep their labels.
+Ordinary Direct lookup no longer searches graph-wide alpha endpoints/paths.
+Explicit selected-theorem endpoint comparisons can still emit `alpha_endpoints`;
+the existing `alpha_paths` representation remains readable.
 The Direct entry result also distinguishes `NotFound`, which is not a proof.
 
 
@@ -910,3 +923,12 @@ fact as stronger evidence; it never manufactures a canonical premise. The
 single-citation summary is empty for these two-source rules; both citations
 remain in their children. Sixteen actual typed leaves execute across ten
 languages. See [strict order](../../examples/proof_nodes/atomic/by_builtin_rule/negative_common_factor_order.lit).
+
+
+The additional trigonometric interval builtin leaves project actual
+`lower_bound` and `upper_bound` verify results, and `argument_order` for
+monotonicity. Their rule-specific variants keep the chosen comparison direction
+and strictness instead of relabeling a strict source as a weak premise. Parent
+WD remains a separate result; tangent/cotangent nonzero citations appear there.
+The source/citation and Normal/Detailed/ten-language producer contract is
+`trig_additional_interval_order_tests`.

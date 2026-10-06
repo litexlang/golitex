@@ -383,6 +383,7 @@ pub struct ExecByThmStmtSuccess {
 
 pub enum ExecByThmStmtFailed {
     Release(ExecReleaseThmStmtFailed),
+    NotReturned { theorem: String, fact: Fact, conclusions: Vec<Fact> },
     Selected { theorem: String, fact: Fact, result: VerifyFactResult },
     Store { theorem: String, message: String },
 }

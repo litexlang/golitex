@@ -31,6 +31,15 @@ use crate::json_output::explain::text::text;
 impl LessFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_en(),
+            Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_en(),
+            Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_en(),
+            Self::CotNegativeOnOpenUpperHalfPi(p) => p.rule_name_and_message_en(),
+            Self::SinPositiveOnFirstQuadrant(p) => p.rule_name_and_message_en(),
+            Self::CosPositiveOnFirstQuadrant(p) => p.rule_name_and_message_en(),
+            Self::CosStrictDecreasingOnClosedPi(p) => p.rule_name_and_message_en(),
+            Self::TanStrictIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_en(),
+            Self::CotStrictDecreasingOnOpenPi(p) => p.rule_name_and_message_en(),
             Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_en(),
             Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_en(),
             Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_en(),
@@ -96,6 +105,15 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_zh(),
+            Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_zh(),
+            Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_zh(),
+            Self::CotNegativeOnOpenUpperHalfPi(p) => p.rule_name_and_message_zh(),
+            Self::SinPositiveOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
+            Self::CosPositiveOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
+            Self::CosStrictDecreasingOnClosedPi(p) => p.rule_name_and_message_zh(),
+            Self::TanStrictIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_zh(),
+            Self::CotStrictDecreasingOnOpenPi(p) => p.rule_name_and_message_zh(),
             Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_zh(),
             Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_zh(),
             Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_zh(),
@@ -161,6 +179,15 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_zh_hant(),
+            Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_zh_hant(),
+            Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_zh_hant(),
+            Self::CotNegativeOnOpenUpperHalfPi(p) => p.rule_name_and_message_zh_hant(),
+            Self::SinPositiveOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
+            Self::CosPositiveOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
+            Self::CosStrictDecreasingOnClosedPi(p) => p.rule_name_and_message_zh_hant(),
+            Self::TanStrictIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_zh_hant(),
+            Self::CotStrictDecreasingOnOpenPi(p) => p.rule_name_and_message_zh_hant(),
             Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_zh_hant(),
             Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_zh_hant(),
             Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_zh_hant(),
@@ -226,6 +253,15 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_fr(),
+            Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_fr(),
+            Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_fr(),
+            Self::CotNegativeOnOpenUpperHalfPi(p) => p.rule_name_and_message_fr(),
+            Self::SinPositiveOnFirstQuadrant(p) => p.rule_name_and_message_fr(),
+            Self::CosPositiveOnFirstQuadrant(p) => p.rule_name_and_message_fr(),
+            Self::CosStrictDecreasingOnClosedPi(p) => p.rule_name_and_message_fr(),
+            Self::TanStrictIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_fr(),
+            Self::CotStrictDecreasingOnOpenPi(p) => p.rule_name_and_message_fr(),
             Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_fr(),
             Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_fr(),
             Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_fr(),
@@ -291,6 +327,15 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_ru(),
+            Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_ru(),
+            Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_ru(),
+            Self::CotNegativeOnOpenUpperHalfPi(p) => p.rule_name_and_message_ru(),
+            Self::SinPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ru(),
+            Self::CosPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ru(),
+            Self::CosStrictDecreasingOnClosedPi(p) => p.rule_name_and_message_ru(),
+            Self::TanStrictIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ru(),
+            Self::CotStrictDecreasingOnOpenPi(p) => p.rule_name_and_message_ru(),
             Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ru(),
             Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ru(),
             Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ru(),
@@ -356,6 +401,15 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_es(),
+            Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_es(),
+            Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_es(),
+            Self::CotNegativeOnOpenUpperHalfPi(p) => p.rule_name_and_message_es(),
+            Self::SinPositiveOnFirstQuadrant(p) => p.rule_name_and_message_es(),
+            Self::CosPositiveOnFirstQuadrant(p) => p.rule_name_and_message_es(),
+            Self::CosStrictDecreasingOnClosedPi(p) => p.rule_name_and_message_es(),
+            Self::TanStrictIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_es(),
+            Self::CotStrictDecreasingOnOpenPi(p) => p.rule_name_and_message_es(),
             Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_es(),
             Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_es(),
             Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_es(),
@@ -421,6 +475,15 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_ar(),
+            Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_ar(),
+            Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_ar(),
+            Self::CotNegativeOnOpenUpperHalfPi(p) => p.rule_name_and_message_ar(),
+            Self::SinPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
+            Self::CosPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
+            Self::CosStrictDecreasingOnClosedPi(p) => p.rule_name_and_message_ar(),
+            Self::TanStrictIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ar(),
+            Self::CotStrictDecreasingOnOpenPi(p) => p.rule_name_and_message_ar(),
             Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ar(),
             Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ar(),
             Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ar(),
@@ -486,6 +549,15 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_ja(),
+            Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_ja(),
+            Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_ja(),
+            Self::CotNegativeOnOpenUpperHalfPi(p) => p.rule_name_and_message_ja(),
+            Self::SinPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
+            Self::CosPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
+            Self::CosStrictDecreasingOnClosedPi(p) => p.rule_name_and_message_ja(),
+            Self::TanStrictIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ja(),
+            Self::CotStrictDecreasingOnOpenPi(p) => p.rule_name_and_message_ja(),
             Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ja(),
             Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ja(),
             Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ja(),
@@ -551,6 +623,15 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_ko(),
+            Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_ko(),
+            Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_ko(),
+            Self::CotNegativeOnOpenUpperHalfPi(p) => p.rule_name_and_message_ko(),
+            Self::SinPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
+            Self::CosPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
+            Self::CosStrictDecreasingOnClosedPi(p) => p.rule_name_and_message_ko(),
+            Self::TanStrictIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ko(),
+            Self::CotStrictDecreasingOnOpenPi(p) => p.rule_name_and_message_ko(),
             Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ko(),
             Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ko(),
             Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ko(),
@@ -616,6 +697,15 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_vi(),
+            Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_vi(),
+            Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_vi(),
+            Self::CotNegativeOnOpenUpperHalfPi(p) => p.rule_name_and_message_vi(),
+            Self::SinPositiveOnFirstQuadrant(p) => p.rule_name_and_message_vi(),
+            Self::CosPositiveOnFirstQuadrant(p) => p.rule_name_and_message_vi(),
+            Self::CosStrictDecreasingOnClosedPi(p) => p.rule_name_and_message_vi(),
+            Self::TanStrictIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_vi(),
+            Self::CotStrictDecreasingOnOpenPi(p) => p.rule_name_and_message_vi(),
             Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_vi(),
             Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_vi(),
             Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_vi(),

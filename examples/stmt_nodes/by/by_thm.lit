@@ -8,4 +8,4 @@ thm zero_sides:
     x + 0 = x
     0 + x = x
 
-by thm zero_sides(2) => 2 + 0 = 0 + 2
+by thm zero_sides(2) => 2 + 0 = 2

@@ -62,6 +62,13 @@ pub(super) fn project_parent_checked_function_body(
             ("function_body", project_parent_checked_function_body(receiver_function_body, runtime)),
             ("function", string(Obj::FunctionSpace(crate::ast::obj::FunctionSpace::AnonymousFn(returned_function.clone())).readable_string())),
         ]),
+        ParentCheckedBetaFunctionBody::ReturnedKnownFunctionApplication { receiver_well_defined, receiver_function_body, application_well_defined, application_function_body } => object_for(runtime, vec![
+            ("type", string("returned_known_function_application")),
+            ("receiver_well_defined", super::wd::project_obj_wd_proof(receiver_well_defined, runtime)),
+            ("receiver_function_body", project_parent_checked_function_body(receiver_function_body, runtime)),
+            ("application_well_defined", super::wd::project_obj_wd_proof(application_well_defined, runtime)),
+            ("application_function_body", project_parent_checked_function_body(application_function_body, runtime)),
+        ]),
         ParentCheckedBetaFunctionBody::AnonymousLiteral => object_for(runtime, vec![("type", string("anonymous_literal"))]),
         ParentCheckedBetaFunctionBody::KnownAnonymousFunction { function, function_equal, checked_domain } => object_for(runtime, vec![
             ("type", string("known_anonymous_function")),

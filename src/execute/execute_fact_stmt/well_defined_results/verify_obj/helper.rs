@@ -68,18 +68,32 @@ impl Runtime {
             self.verify_obj_well_definedness(prefix, verify_state)?
         else { return Ok(None); };
         if let Some((_, value)) = self.parent_checked_beta_body(prefix, &prefix_wd, verify_state)? {
-            let signature = match &value {
-                Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => Some(function.body.clone()),
+            let (signatures, intrinsic) = match &value {
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => (vec![function.body.clone()], true),
                 Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(_)) =>
-                    self.finite_function_signatures(&value).into_iter().next().map(|proof| proof.signature),
-                _ => None,
+                    (self.finite_function_signatures(&value).into_iter().map(|proof| proof.signature).collect(), true),
+                _ => (self.collect_in_function_set_candidates(&value).into_iter().map(|(signature,_)| signature).collect(), false),
             };
-            if let Some(signature) = signature {
+            for signature in signatures {
                 let equality = crate::ast::fact::EqualFact {
-                    fact_id: self.global_ids.allocate_fact_id(), left: prefix.clone(), right: value,
+                    fact_id: self.global_ids.allocate_fact_id(), left: prefix.clone(), right: value.clone(),
                     line_file: None,
                 };
-                let proof = self.verify_equal_fact(&equality, verify_state)?;
+                let goal = if intrinsic {
+                    crate::ast::fact::Fact::from(equality)
+                } else {
+                    // An identifier/field/template needs its real complete
+                    // membership as well as the coordinate equality. Retain
+                    // both certificates, rather than just copying a signature.
+                    let member = crate::ast::fact::InFact {
+                        fact_id: self.global_ids.allocate_fact_id(), element: value.clone(),
+                        set: Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone())), line_file: None,
+                    };
+                    crate::ast::fact::Fact::AndFact(crate::ast::fact::AndFact {
+                        fact_id: self.global_ids.allocate_fact_id(), facts: vec![equality.into(),member.into()], line_file: None,
+                    })
+                };
+                let proof = self.verify_fact(&goal, verify_state)?;
                 if !proof.is_failed() {
                     return Ok(Some(CheckedFunctionPrefixSignatureProof { signature, source: proof }));
                 }

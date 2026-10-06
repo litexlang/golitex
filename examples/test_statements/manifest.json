@@ -2904,6 +2904,26 @@
           }
         },
         {
+          "name": "unrelated-true-target",
+          "file": "negative/by_thm_stmt/unrelated-true-target.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [true, false],
+            "failed_phase": ["by_thm"]
+          }
+        },
+        {
+          "name": "combined-theorem-results",
+          "file": "negative/by_thm_stmt/combined-theorem-results.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [true, false],
+            "failed_phase": ["by_thm"]
+          }
+        },
+        {
           "name": "wrong-selected-argument-type",
           "file": "negative/by_thm_stmt/wrong-selected-argument-type.lit",
           "strict": true,

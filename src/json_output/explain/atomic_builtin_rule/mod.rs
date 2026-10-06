@@ -529,3 +529,5 @@ mod trig_first_quadrant;
 mod order_negative_common_factor;
 
 mod signed_difference;
+
+mod trig_additional_interval_order;

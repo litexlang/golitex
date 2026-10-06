@@ -35,6 +35,12 @@ pub(in crate::json_output) fn project_release_thm_failure(failed: &ExecReleaseTh
 pub(in crate::json_output) fn project_by_thm_failure(failed: &ExecByThmStmtFailed, rt: &Runtime) -> JsonValue {
     match failed {
         ExecByThmStmtFailed::Release(failed) => project_release_thm_failure(failed, rt),
+        ExecByThmStmtFailed::NotReturned { theorem, fact, conclusions } => object_for(rt, vec![
+            ("phase", string("selected_fact")), ("reason", string("not_returned")),
+            ("thm_name", string(theorem.clone())), ("goal", string(fact.readable_string())),
+            ("returned_conclusions", JsonValue::Array(conclusions.iter().map(|f| string(f.readable_string())).collect())),
+            ("message", string("Selected fact must match a directly returned atomic conclusion; independent verification and combining conclusions are not allowed")),
+        ]),
         ExecByThmStmtFailed::Selected { theorem, fact, result } => object_for(rt, vec![("phase", string("selected_fact")), ("thm_name", string(theorem.clone())), ("goal", string(fact.readable_string())), ("result", project_verify_fact(result, rt))]),
         ExecByThmStmtFailed::Store { theorem, message } => object_for(rt, vec![("phase", string("store")), ("thm_name", string(theorem.clone())), ("message", string(message.clone()))]),
     }

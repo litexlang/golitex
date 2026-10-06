@@ -166,17 +166,6 @@ pub(super) fn structural_view(object: &Obj) -> (Token, Vec<Obj>) {
     (Token::Node(constructor, children.len()), children)
 }
 
-pub(super) fn contains_binder(object: &Obj) -> bool {
-    if matches!(
-        object,
-        Obj::FunctionSpace(FunctionSpace::FnSet(_) | FunctionSpace::AnonymousFn(_))
-            | Obj::SetFormer(SetFormer::SetBuilder(_))
-    ) {
-        return true;
-    }
-    structural_children(object).iter().any(contains_binder)
-}
-
 fn structural_children(object: &Obj) -> Vec<Obj> {
     if let Obj::FnObj(value) = object {
         let Some(last) = value.body.last() else {

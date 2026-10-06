@@ -8,7 +8,6 @@ use crate::ast::fact::{EqualFact, ForallConclusionLocation};
 use crate::ast::obj::Obj;
 use crate::exec_env::{ForallConclusionCite, ObjIR};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::EquivalenceClassAdjacency;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal;
 use crate::runtime::{FactId, IdentifierId};
 use std::collections::{HashMap, HashSet, VecDeque};
 
@@ -264,26 +263,8 @@ impl<'a> EqualityIndexQuery<'a> {
             if !seen.insert(current.clone()) {
                 continue;
             }
-            // A reached binder peer can alpha-anchor another known class.
-            // This covers Direct's finite alpha-endpoint/alpha-path evidence.
-            if helper::contains_binder(&value) {
-                let mut anchored = HashSet::new();
-                for adjacency in &self.adjacencies {
-                    for edges in adjacency.values() {
-                        for (_, fact) in edges {
-                            for stored in [&fact.left, &fact.right] {
-                                let stored_key = stored.ir();
-                                if !seen.contains(&stored_key)
-                                    && anchored.insert(stored_key.clone())
-                                    && compound_objs_alpha_equal(&value, stored)
-                                {
-                                    queue.push_back((stored_key, stored.clone()));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            // Follow only stored IR edges. Pairwise binder comparison belongs
+            // to the authoritative matcher, not whole-graph alias discovery.
             if current != key {
                 out.push(value);
             }

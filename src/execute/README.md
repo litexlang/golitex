@@ -299,7 +299,12 @@ current AST constructors and verification owners. Pure name/arity metadata
 lives in `builtin_theorem.rs` so parsing can reject reserved-name rebinding
 without depending on execution. `exec_by_thm_stmt.rs` verifies parameter
 types, premises and every conclusion's WD before publication; `by thm`
-stores only its verified selected fact. No legacy runtime is called.
+stores only a directly returned selected atomic conclusion, including explicit
+conjunction or adjacent-chain components. Selection uses pure structural/alpha
+matching and pins the proof citation to that returned component; it does not
+run ordinary target search or select inferred facts. A mismatch reports the
+actual returned conclusions and rolls back the statement. No legacy runtime
+is called.
 
 Complex identities containing the actual imaginary-unit AST node enter
 `search_equal_fact_by_calculation.rs`. Symbolic denominator obligations
@@ -431,3 +436,29 @@ Imported definitions retain the existing `release obj def` publication boundary.
 Anonymous-function construction checks complete-domain absence before introducing its own binders or assuming its guards. Header, guard, return-carrier and body WD still run. The return-bound stage retains either CheckedMembership or EmptyCompleteDomain evidence; an empty domain never publishes a standalone false body membership. The guarded-empty tracer covers named empty-return constructors and the negative manifest preserves nonempty return and undefined-body failures.
 
 Retired product operators fail at the object-WD entry before known WD memory is consulted. Their legacy by-definition WD producers have been removed. Legacy shape fact payloads fail at the predicate-signature stage before stored-fact/domain reuse; this keeps internal or stale payloads from bypassing parser retirement while their AST deletion awaits concrete approval. Ordinary coordinate beta, reconstruction and homogeneous carrier readers consume the actual member/equality/domain source and retain generic-call fallthrough.
+
+
+## Additional trigonometric interval leaves (2026-10-06)
+
+`trig_additional_interval_order` owns13 independent sign/monotonicity proof
+types: eleven remaining legacy interval properties and two fixed first-quadrant
+sine/cosine conveniences. Sign pipelines retain lower then upper
+`VerifyFactResult`; monotonic pipelines additionally retain argument order.
+Existing sine and first-quadrant tangent/cotangent handlers stay first, and
+Greater/GreaterEqual use their existing dual strategy. The new leaves receive
+the builtin dispatcher's already reduced premise state; each candidate calls
+`verify_builtin_rule_premise` with that same state. There is no state reset,
+global search change or implicit fact publication. Weak requests try canonical
+then converse weak facts before the corresponding strict facts, preserving the
+actual strict child if selected. Only the fixed negative-π and negative-half-π
+constants have bounded alternate spellings. Angle expressions are untouched.
+
+Tangent/cotangent WD remains separate and prior: the interval-order leaf cannot
+supply a fact after a parent partial-operation check has failed. Tests execute
+the original guarded goals, missing-WD cases, wrong/missing bound/order cases,
+poles,13typed leaves/actual source IDs/ten languages and real source reuse.
+Dedicated `trig_interval_signs.lit`, `trig_interval_monotonicity.lit` and
+`trig_first_quadrant_sin_cos.lit` are collected by their include_str tests and
+strict release CLI gates.
+
+The factorial-as-product author tracer now reuses one checked identity-function object through induction, then verifies the original literal-function endpoint. Its induction result still needs explicit instantiation; the redundant echo after theorem release was removed. This preserves the current local alpha/equality policy and performs no global graph-endpoint scan. The relevant `common_obj_relations` consumer exercises that current author.

@@ -201,6 +201,7 @@ checked by the focused `forall_exist_instantiation_tests` regressions.
 | Function sets differ only by bound parameter names | [FnSet alpha identity](equal/by_they_are_the_same/by_fn_set_alpha_equal.lit) |
 | Anonymous functions rename both the parameter and its uses in the body | [AnonymousFn alpha identity](equal/by_they_are_the_same/by_anonymous_fn_alpha_equal.lit) |
 | Set builders rename the bound parameter in the condition | [SetBuilder alpha identity](equal/by_they_are_the_same/by_set_builder_alpha_equal.lit) |
+| Local and nested alpha comparison remain; Direct does not discover graph alpha bridges (new tracer unrun at user request) | [Local alpha without graph scan](equal/by_they_are_the_same/local_alpha_without_graph_scan.lit) |
 
 The peer examples deliberately leave their bridge unasserted before the goal:
 the missing equality must be proved during the class search. The result is
@@ -958,3 +959,13 @@ zero-minus and literal-minus-one spellings are in
 `atomic/by_builtin_rule/negated_sign_order.lit`. Both retain the former bare
 source as comments and are executed by `signed_difference_order_tests` as well
 as their strict release CLI gates.
+
+
+Real trigonometric interval signs and monotonicity are demonstrated in
+`atomic/by_builtin_rule/trig_interval_signs.lit`,
+`atomic/by_builtin_rule/trig_interval_monotonicity.lit` and
+`atomic/by_builtin_rule/trig_first_quadrant_sin_cos.lit`. Each preserves the
+formerly rejected source as comments, active current code and a focused command;
+the accompanying Rust suite executes nearest false and partial-WD boundaries.
+
+The factorial-as-product author tracer now reuses one checked identity-function object through induction, then verifies the original literal-function endpoint. Its induction result still needs explicit instantiation; the redundant echo after theorem release was removed. This preserves the current local alpha/equality policy and performs no global graph-endpoint scan. The relevant `common_obj_relations` consumer exercises that current author.

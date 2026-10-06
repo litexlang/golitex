@@ -113,10 +113,8 @@ impl Runtime {
                 KnownEqualityPathProof::new(path).into(),
             ));
         }
-        // Alpha-renaming existing endpoints remains a finite citation lookup;
-        // this does not compare peers by proving new bridge facts.
-        super::super::verify_equality::search_equal_fact_proof_by_equivalence_class::search_alpha_endpoints(
-            &adjacency, &comparison,
-        ).map(EqualFactSearchedProof::ByEquivalenceClass)
+        // Direct compares the submitted pair and follows exact stored paths.
+        // It does not scan unrelated graph endpoints for an alpha bridge.
+        None
     }
 }

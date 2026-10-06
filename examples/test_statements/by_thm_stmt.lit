@@ -7,7 +7,7 @@ thm select_sides:
     ? forall x R:
         x + 0 = x
         0 + x = x
-by thm select_sides(2) => 2 + 0 = 0 + 2
+by thm select_sides(2) => 2 + 0 = 2
 
 # case: selected-positive-result
 thm select_nonzero:

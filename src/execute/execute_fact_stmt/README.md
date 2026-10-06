@@ -198,8 +198,10 @@ are projected into `by_exist`. Matching is shared
 same-shape compounds (`FnObj`, arithmetic, `FieldAccess`, …) via
 `ByStructure` child proofs (legacy-aligned); otherwise instantiate the
 pattern under the subst so far and prove `pattern_after_subst = goal` by
-truth-only equality search at `VerifyStateLevel::Direct` (identity/alpha,
-stored paths and closed calculation; certificate type `StrictEqualArgProof`). Nested param occurrences inside compound objs are
+truth-only equality search at `VerifyStateLevel::Direct` (identity/pairwise
+structural alpha, exact stored paths and closed calculation; certificate type
+`StrictEqualArgProof`). Direct does not scan the graph for alpha-equivalent
+endpoints. Nested param occurrences inside compound objs are
 bound during that structural recursion. Exist apply also instantiates the
 conclusion and alpha-compares to the goal before instantiation requirements.
 
@@ -210,7 +212,7 @@ the target's WD is already established.
 
 | Target stage | Premise ceiling |
 |---|---|
-| Direct (0): identity/alpha, stored facts/paths, closed calculation and structural membership | No new search |
+| Direct (0): identity/pairwise structural alpha, stored facts/exact paths, closed calculation and structural membership | No new search |
 | KnownSpecialProperty (1) | Direct (0) |
 | BuiltinRule (2) | KnownSpecialProperty (1) |
 | Strategy (3), including new peer bridges | BuiltinRule (2) |
@@ -220,7 +222,8 @@ the target's WD is already established.
 Family dispatch preserves permissions. Rule admission derives the premise
 state once; recursive WD and inference receive that state rather than creating
 a new root. Constructor congruence may traverse a finite syntax tree with a
-fixed leaf ceiling. Stored alpha paths do not start peer searches.
+fixed leaf ceiling. Exact stored paths do not start peer searches; graph-wide
+alpha endpoint/path discovery is removed from Direct and forall alias lookup.
 
 Exploratory WD returns evidence without recording reusable WD objects. The
 existing accepted-fact commit records checked atomic subjects in the current

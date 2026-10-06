@@ -20,6 +20,15 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    CosPositiveOnOpenHalfPi(super::trig_additional_interval_order::CosPositiveOnOpenHalfPiProof),
+    SinNegativeOnOpenNegativePi(super::trig_additional_interval_order::SinNegativeOnOpenNegativePiProof),
+    TanNegativeOnOpenNegativeHalfPi(super::trig_additional_interval_order::TanNegativeOnOpenNegativeHalfPiProof),
+    CotNegativeOnOpenUpperHalfPi(super::trig_additional_interval_order::CotNegativeOnOpenUpperHalfPiProof),
+    SinPositiveOnFirstQuadrant(super::trig_additional_interval_order::SinPositiveOnFirstQuadrantProof),
+    CosPositiveOnFirstQuadrant(super::trig_additional_interval_order::CosPositiveOnFirstQuadrantProof),
+    CosStrictDecreasingOnClosedPi(super::trig_additional_interval_order::CosStrictDecreasingOnClosedPiProof),
+    TanStrictIncreasingOnOpenHalfPi(super::trig_additional_interval_order::TanStrictIncreasingOnOpenHalfPiProof),
+    CotStrictDecreasingOnOpenPi(super::trig_additional_interval_order::CotStrictDecreasingOnOpenPiProof),
     MulLeftNegativeReversesStrictLess(super::order_negative_common_factor::MulLeftNegativeReversesStrictLessProof),
     MulRightNegativeReversesStrictLess(super::order_negative_common_factor::MulRightNegativeReversesStrictLessProof),
     MulLeftRightNegativeReversesStrictLess(super::order_negative_common_factor::MulLeftRightNegativeReversesStrictLessProof),
@@ -581,6 +590,7 @@ impl Runtime {
         if let Some(proof) = self.search_sin_interval_order(fact, verify_state)? {
             return Ok(Some(proof));
         }
+        if let Some(proof) = self.search_additional_trig_less(fact, verify_state)? { return Ok(Some(proof)); }
         if let Some(proof) = self.search_factorial_strict_order(fact, verify_state)? {
             return Ok(Some(LessFactSearchProofByBuiltinRule::FactorialStrictMonotone(proof)));
         }
