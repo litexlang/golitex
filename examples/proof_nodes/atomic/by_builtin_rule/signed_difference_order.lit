@@ -1,0 +1,29 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/signed_difference_order.lit
+# Before: rejected at proof search, despite the real operands and saved negative difference.
+# forall a, b R:
+#     a-b<0
+#     =>:
+#         a<b
+# Now: the same source verifies; the builtin cites the actual saved comparison.
+forall a, b R:
+    a-b<0
+    =>:
+        a<b
+
+forall a, b R:
+    0>=a-b
+    =>:
+        a<=b
+
+forall a, b R:
+    b>a
+    =>:
+        a-b<0
+        a-b<=0
+
+forall a, b R:
+    b-a>0
+    =>:
+        a<=b
+
+# Boundary: a-b<=0 cannot prove a<b; checked as an executable Rust negative control.

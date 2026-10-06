@@ -1,0 +1,2046 @@
+{
+  "status": "verified against recorded existing release; current-source build blocked by concurrent CLI work",
+  "date": "2026-10-06",
+  "canonical_document": "docs/Manual.md",
+  "user_intent": "Document even-power nonnegativity, carefully guarded power monotonicity and familiar inequalities such as a^2+b^2>=2ab in the mathematics lookup.",
+  "scope": {
+    "impact": "L0 documentation/math examples",
+    "changed": [
+      "docs/Manual.md",
+      "docs/audits/manual-power-catalog-2026-10-06.json"
+    ],
+    "unchanged_by_this_task": [
+      "Rust/kernel/AST/Env/Runtime",
+      "old mathematical goals/domains",
+      "native IDs",
+      "Reference relocation notice"
+    ],
+    "skipped": [
+      "full Rust tests",
+      "whole-repository docs/examples",
+      "Lean/textbooks"
+    ],
+    "draft_area": "tmp/2026-10-06/manual-power-catalog/"
+  },
+  "baseline": {
+    "lines": 11077,
+    "sha256": "8db409025ec260b263885a8323e3ab839c0eec894ad46fa13f4314821986926f",
+    "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e"
+  },
+  "publication": {
+    "new_sections": [
+      "R15 power signs and two kinds of monotonicity",
+      "R16 common real inequalities at a glance"
+    ],
+    "math_lookup_routes_added": 4,
+    "common_estimate_rows": 14,
+    "native_ids_preserved": 166,
+    "existing_code_fences_preserved": 327,
+    "power_owner_link": "O27 -> R15",
+    "late_power_table": "Mathematical directions now distinguish themselves from certified proof coverage."
+  },
+  "mathematical_contracts": {
+    "even_natural": "Real x, natural n: x^(2*n)=(x^n)^2>=0, including zero base and n=0 under 0^0=1.",
+    "even_integer_strict": "Nonzero real x, integer n: expose x^n!=0 then x^(2*n)=(x^n)^2>0. Includes negative exponents.",
+    "odd_negative": "Real x<0, natural n: explicit nonzero bridge and even-part factorization give x^(2*n+1)<0.",
+    "base_order": "Nonnegative ordered bases and a positive natural exponent give a^n<=b^n. Even powers do not preserve signed order on the whole real line.",
+    "exponent_order": "Positive base >=1 and integer m<=n give weak growth; >1 and m<n give strict growth. Base=1 is constant. A positive base <=1 gives integer-exponent decay.",
+    "range_bounds": "For a>=1 and positive natural n, a<=a^n. For a in [0,1] and positive natural n, 0<=a^n<=a.",
+    "real_exponents": "Positive-base real powers have checked WD/positivity; general real-exponent order is a true mathematical law but not certified by the accepted integer-order packages here."
+  },
+  "proof_derivation": [
+    "Parity -> power-of-power identity -> square sign",
+    "Integer exponent growth -> natural power >=1 by induction -> nonnegative exponent gap -> multiplication by positive power",
+    "Integer exponent decay -> natural power <=1 by induction -> the same nonnegative gap -> positive multiplication",
+    "Strict growth -> positive gap -> power bounded below by base >1",
+    "Common estimates -> existing square/product proof owners, preserving each domain"
+  ],
+  "minimality": {
+    "kept": [
+      "Nonzeroness of x^n before strict even-power comparison",
+      "Nonzero base and nonzero power bridges in negative odd-power factorization",
+      "Nonnegative/positive exponent gap before applying natural-power results"
+    ],
+    "removed_by_checked_joint_controls": [
+      "Inverse-product cascade for strict even integer powers",
+      "Repeated gap carrier assertions",
+      "Separate one-bound in strict exponent growth",
+      "Separate step sign in unit-interval induction",
+      "Separate even-power sign and identity in odd negative proof"
+    ]
+  },
+  "unpromoted_attempts": [
+    "General real-exponent order cold goals and log/exp or log-inverse sketches",
+    "General positive-real-exponent base order",
+    "Standalone negative-integer base-order sketch",
+    "Cubic monotonicity and Bernoulli proof sketches",
+    "A power-zero recovery sketch including exponent zero"
+  ],
+  "source_review": {
+    "manifest_sha256": {
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_power_laws.rs": "d0957a3ffbc0ab601405aaa4819333ec7b83db57d2a285ee2eec7bea979eb7e0",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_elementary_arithmetic.rs": "b919712d2901f431a083a9bbc0e3b9d38b88659fb818c99c326d715278fbe759",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave2.rs": "0bd411b91133a6591d128970c3a7607130c8335779ebfd1d4f70c56b992804a6",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_power_sqrt_log.rs": "a2a088d24298f1c62d3b2fd7a6f9042ad26cda51477fe52ff356cc4b833bff36",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/less_equal.rs": "52079b231bed15cc4046f9ebc3877c7c4a42571065aa12147809f4e7978eed1a",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/less.rs": "baa93a72cf58d5a2c3923d9f76c4b87d811089520d439dc39cacb6970e06d7f9",
+      "src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs": "01bbd010ebf8c0f1c7b10c8098d8136b0d8a5aba67f3b1cf6c9a0200a261edcb",
+      "src/execute/execute_by_stmt/exec_by_induc_stmt.rs": "ba754cc22575a6ec0d94aef2019db1bd3e32d429f89a906d562813627f7d3dff",
+      "docs/cli.md": "310a1774de4a9298a4da77f118e87af066acf056f7db4c9954b457572e3960d2"
+    },
+    "note": "These hashes describe inspected workspace files, not an assertion that later concurrent source edits built. Each executable attempt records its own release binary hash."
+  },
+  "release": {
+    "version": "Litex 0.9.200-beta",
+    "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+    "build_attempt": {
+      "command": "cargo build --release",
+      "exit_code": 101,
+      "errors": [
+        "error[E0599]: no variant named `Extract` found for enum `LaunchCommand`",
+        "error[E0599]: no variant named `Extract` found for enum `LaunchCommand`",
+        "error[E0599]: no variant named `Extract` found for enum `LaunchCommand`",
+        "error[E0599]: no variant named `Extract` found for enum `LaunchCommand`",
+        "error: could not compile `litex-lang` (lib) due to 4 previous errors; 198 warnings emitted"
+      ],
+      "log_tail": "_output/project_detailed/equality_builtin_gen.rs:1173:17\n     |\n1173 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"PythagoreanIdentity\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nFor more information about this error, try `rustc --explain E0599`.\nwarning: `litex-lang` (lib) generated 198 warnings\nerror: could not compile `litex-lang` (lib) due to 4 previous errors; 198 warnings emitted\n"
+    },
+    "limitation": {
+      "reason": "Current Runtime still matches removed LaunchCommand::Extract; the concurrent LaunchCommand enum exposes ExtractExecutableCode and CompileToLatex.",
+      "owner": "src/runtime/runtime.rs:58",
+      "action": "No unrelated Runtime/CLI repair performed. Verified snippets use the exact existing release hash."
+    }
+  },
+  "persistent_repl": {
+    "command": "target/release/litex -strict",
+    "tracer": "even_natural",
+    "reply": "success",
+    "closed_normally": true,
+    "fresh_batch_checks": "The same parity source and all published fences were independently run in clean contexts."
+  },
+  "attempt_count": 70,
+  "attempts": [
+    {
+      "name": "even_natural",
+      "category": "checked route",
+      "source": "claim:\n    ? forall x R, n N:\n        x^(2*n) >= 0\n    x^(2*n) = (x^n)^2 >= 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "even_integer_nonzero",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall x R*, n Z:\n        x^(2*n) > 0\n    x^(2*n) = (x^n)^2 > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall x R*, n Z:\n        x ^ (2 * n) > 0\n    x ^ (2 * n) = x ^ n ^ 2 > 0",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 0,
+          "failed_fact": "x ^ (2 * n) = x ^ n ^ 2 > 0",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 1
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "positive_real_power",
+      "category": "checked route",
+      "source": "forall a R+, t R:\n    a^t > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "literal_even",
+      "category": "true mathematical route or goal not established",
+      "source": "forall x R:\n    x^0 = 1\n    x^2 >= 0\n    x^4 >= 0\n    x^6 >= 0\n    x^8 >= 0\nforall x R*:\n    x^(-2) > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 1,
+          "statement": "forall x R*:\n    x ^ -2 > 0",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "odd_negative",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x^(2*n+1) < 0\n    x != 0\n    x^n != 0\n    0 < (x^n)^2\n    x^(2*n+1) = (x^n)^2*x < (x^n)^2*0 = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x ^ (2 * n + 1) < 0\n    x != 0\n    x ^ n != 0\n    0 < x ^ n ^ 2\n    x ^ (2 * n + 1) = x ^ n ^ 2 * x < x ^ n ^ 2 * 0 = 0",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 3,
+          "failed_fact": "x ^ (2 * n + 1) = x ^ n ^ 2 * x < x ^ n ^ 2 * 0 = 0",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 0
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "successor_growth",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall a R, n N:\n        1 <= a\n        =>:\n            a^n <= a^(n+1)\n    a^(n+1) = a^n*a^1 = a^n*a >= a^n*1 = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall a R, n N:\n        1 <= a\n        =>:\n            a ^ n <= a ^ (n + 1)\n    a ^ (n + 1) = a ^ n * a ^ 1 = a ^ n * a >= a ^ n * 1 = a ^ n",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 0,
+          "failed_fact": "a ^ (n + 1) = a ^ n * a ^ 1 = a ^ n * a >= a ^ n * 1 = a ^ n",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 2
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "successor_strict_growth",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R+, n Z:\n        1 < a\n        =>:\n            a^n < a^(n+1)\n    a^(n+1) = a^n*a^1 = a^n*a > a^n*1 = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "successor_decay",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R+, n Z:\n        a < 1\n        =>:\n            a^(n+1) < a^n\n    a^(n+1) = a^n*a^1 = a^n*a < a^n*1 = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "one_constant",
+      "category": "checked route",
+      "source": "forall t R:\n    1^t = 1\n0^0 = 1\nforall n N+:\n    0^n = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "exponent_real_growth_cold",
+      "category": "true mathematical route or goal not established",
+      "source": "forall a, u, v R:\n    1 <= a\n    u <= v\n    =>:\n        a^u <= a^v\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall a, u, v R:\n    1 <= a\n    u <= v\n    =>:\n        a ^ u <= a ^ v",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "exponent_real_decay_cold",
+      "category": "true mathematical route or goal not established",
+      "source": "forall a R+, u, v R:\n    a < 1\n    u <= v\n    =>:\n        a^v <= a^u\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall a R+, u, v R:\n    a < 1\n    u <= v\n    =>:\n        a ^ v <= a ^ u",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "natural_power_ge_one",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "base_natural_monotone",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall a, b R, n N+:\n        0 <= a\n        a <= b\n        =>:\n            a^n <= b^n\n    by induc n from 1:\n        ? a^n <= b^n\n        ? from n = 1:\n            a^n = a^1 = a <= b = b^1 = b^n\n        ? induc:\n            0 <= b^n\n            a^(n+1) = a^n*a^1 = a^n*a <= b^n*a <= b^n*b = b^n*b^1 = b^(n+1)\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall a, b R, n N+:\n        0 <= a\n        a <= b\n        =>:\n            a ^ n <= b ^ n\n    by induc n from 1:\n        ? a ^ n <= b ^ n\n        ? from n = 1:\n            a ^ n = a ^ 1 = a <= b = b ^ 1 = b ^ n\n        ? induc:\n            0 <= b ^ n\n            a ^ (n + 1) = a ^ n * a ^ 1 = a ^ n * a <= b ^ n * a <= b ^ n * b = b ^ n * b ^ 1 = b ^ (n + 1)",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 0,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "base_monotone_cold",
+      "category": "checked route",
+      "source": "forall a, b R, n N+:\n    0 <= a\n    a <= b\n    =>:\n        a^n <= b^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "base_real_positive_exp_cold",
+      "category": "true mathematical route or goal not established",
+      "source": "forall a, b R+, p R+:\n    a <= b\n    =>:\n        a^p <= b^p\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall a, b R+, p R+:\n    a <= b\n    =>:\n        a ^ p <= b ^ p",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "base_negative_integer_cold",
+      "category": "true mathematical route or goal not established",
+      "source": "forall a, b R+, n N+:\n    a <= b\n    =>:\n        b^(-n) <= a^(-n)\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall a, b R+, n N+:\n    a <= b\n    =>:\n        b ^ -n <= a ^ -n",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "cube_monotone_cold",
+      "category": "true mathematical route or goal not established",
+      "source": "forall a, b R:\n    a <= b\n    =>:\n        a^3 <= b^3\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall a, b R:\n    a <= b\n    =>:\n        a ^ 3 <= b ^ 3",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "bounds_above_one_cold",
+      "category": "true mathematical route or goal not established",
+      "source": "forall a R+, n N+:\n    1 <= a\n    =>:\n        a <= a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall a R+, n N+:\n    1 <= a\n    =>:\n        a <= a ^ n",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "bounds_unit_interval_cold",
+      "category": "true mathematical route or goal not established",
+      "source": "forall a R, n N+:\n    0 <= a\n    a <= 1\n    =>:\n        0 <= a^n\n        a^n <= a\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall a R, n N+:\n    0 <= a\n    a <= 1\n    =>:\n        0 <= a ^ n\n        a ^ n <= a",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_strict_at_one",
+      "category": "domain/sign/strictness rejection control",
+      "source": "forall a, u, v R:\n    1 <= a\n    u < v\n    =>:\n        a^u < a^v\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall a, u, v R:\n    1 <= a\n    u < v\n    =>:\n        a ^ u < a ^ v",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_noninteger_even",
+      "category": "domain/sign/strictness rejection control",
+      "source": "forall x R:\n    x^(2*(1/4)) >= 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall x R:\n    x ^ (2 * 1 / 4) >= 0",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_negative_zero",
+      "category": "domain/sign/strictness rejection control",
+      "source": "0^(-2) >= 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "0 ^ -2 >= 0",
+          "phase": "well_defined",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_odd_all_nonnegative",
+      "category": "domain/sign/strictness rejection control",
+      "source": "forall x R:\n    x^3 >= 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall x R:\n    x ^ 3 >= 0",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_base_square_all_real",
+      "category": "domain/sign/strictness rejection control",
+      "source": "forall a, b R:\n    a <= b\n    =>:\n        a^2 <= b^2\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall a, b R:\n    a <= b\n    =>:\n        a ^ 2 <= b ^ 2",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "numeric_controls",
+      "category": "checked route",
+      "source": "1^2 = 1^3\n(1/2)^3 < (1/2)^2\n(-2)^2 > (-1)^2\n(-2)^3 < (-1)^3\n(-2)^4 > (-2)^2\n(-2)^(-2) > 0\n(-1)^2 > (-1)^3\n0^0 = 1\n0^2 = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "even_integer_weak",
+      "category": "checked route",
+      "source": "claim:\n    ? forall x R*, n Z:\n        x^(2*n) >= 0\n    x^(2*n) = (x^n)^2 >= 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "even_natural_strict",
+      "category": "checked route",
+      "source": "claim:\n    ? forall x R*, n N:\n        x^(2*n) > 0\n    x^n != 0\n    x^(2*n) = (x^n)^2 > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "even_integer_strict_inverse",
+      "category": "checked route",
+      "source": "claim:\n    ? forall x R*, n Z:\n        x^(2*n) > 0\n    x^n*x^(-n) = x^(n+(-n)) = x^0 = 1\n    x^n*x^(-n) != 0\n    x^n != 0\n    x^(2*n) = (x^n)^2 > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "odd_negative_bridged",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x^(2*n+1) < 0\n    x^n != 0\n    0 < (x^n)^2\n    x^(2*n) = (x^n)^2\n    x^(2*n+1) = x^(2*n)*x^1 = x^(2*n)*x = (x^n)^2*x < (x^n)^2*0 = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x ^ (2 * n + 1) < 0\n    x ^ n != 0\n    0 < x ^ n ^ 2\n    x ^ (2 * n) = x ^ n ^ 2\n    x ^ (2 * n + 1) = x ^ (2 * n) * x ^ 1 = x ^ (2 * n) * x = x ^ n ^ 2 * x < x ^ n ^ 2 * 0 = 0",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 0,
+          "failed_fact": "x ^ n != 0",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "successor_growth_positive_carrier",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R+, n Z:\n        1 <= a\n        =>:\n            a^n <= a^(n+1)\n    a^(n+1) = a^n*a^1 = a^n*a >= a^n*1 = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "base_real_square",
+      "category": "checked route",
+      "source": "forall a, b R:\n    0 <= a\n    a <= b\n    =>:\n        a^2 <= b^2\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "growth_all_integer",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    n-m $in N\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "bound_unit_natural",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R, n N+:\n        0 <= a\n        a <= 1\n        =>:\n            0 <= a^n\n            a^n <= a\n    by induc n from 1:\n        ? a^n <= a\n        ? from n = 1:\n            a^n = a^1 = a\n        ? induc:\n            0 <= a^n\n            a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= a\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "literal_negative_via_inverse",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall x R*:\n        x^(-2) > 0\n    x^2 != 0\n    0 < x^2\n    x^(-2) = 1/(x^2) > 0/(x^2) = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall x R*:\n        x ^ -2 > 0\n    x ^ 2 != 0\n    0 < x ^ 2\n    x ^ -2 = 1 / x ^ 2 > 0 / x ^ 2 = 0",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 2,
+          "failed_fact": "x ^ -2 = 1 / x ^ 2 > 0 / x ^ 2 = 0",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 0
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "real_wd_only",
+      "category": "checked route",
+      "source": "forall a R+, t R:\n    a^t $in R\n    a^t > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "growth_package",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    n-m $in N\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    1 <= n-m\n    n-m $in N+\n    a <= a^(n-m)\n    1 < a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 3,
+          "statement": "claim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a ^ m < a ^ n\n    1 <= n - m\n    n - m $in N+\n    a <= a ^ (n - m)\n    1 < a ^ (n - m)\n    a ^ m = a ^ m * 1 < a ^ m * a ^ (n - m) = a ^ (m + (n - m)) = a ^ n",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "n - m $in N+",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "decay_package",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R+, n N:\n        a <= 1\n        =>:\n            a^n <= 1\n    by induc n from 0:\n        ? a^n <= 1\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= 1\nclaim:\n    ? forall a R+, m, n Z:\n        a <= 1\n        m <= n\n        =>:\n            a^n <= a^m\n    0 <= n-m\n    n-m $in N\n    a^(n-m) <= 1\n    a^n = a^(m+(n-m)) = a^m*a^(n-m) <= a^m*1 = a^m\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "odd_negative_explicit_nonzero",
+      "category": "checked route",
+      "source": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x^(2*n+1) < 0\n    x != 0\n    x^n != 0\n    0 < (x^n)^2\n    x^(2*n) = (x^n)^2\n    x^(2*n+1) = x^(2*n)*x^1 = x^(2*n)*x = (x^n)^2*x < (x^n)^2*0 = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "negative_even_via_integer_certificate",
+      "category": "checked route",
+      "source": "claim:\n    ? forall x R*, n Z:\n        x^(2*n) > 0\n    x^n*x^(-n) = x^(n+(-n)) = x^0 = 1\n    x^n*x^(-n) != 0\n    x^n != 0\n    x^(2*n) = (x^n)^2 > 0\nclaim:\n    ? forall x R*:\n        x^(-2) > 0\n    x^(-2) = x^(2*(-1)) > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "even_natural_zero_case",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall x R, n N:\n        x^(2*n) = 0\n        =>:\n            x = 0\n    (x^n)^2 = x^(2*n) = 0\n    x^n = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall x R, n N:\n        x ^ (2 * n) = 0\n        =>:\n            x = 0\n    x ^ n ^ 2 = x ^ (2 * n) = 0\n    x ^ n = 0",
+          "phase": "claim",
+          "inner_phase": "conclusion",
+          "step_index": null,
+          "failed_fact": "x = 0",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "growth_package_guarded_strict",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    n-m $in N\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    1 <= n-m\n    n-m $in Z\n    0 < n-m\n    n-m $in N+\n    a <= a^(n-m)\n    1 < a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "positive_power_zero",
+      "category": "checked route",
+      "source": "forall x R, n N+:\n    x^n = 0\n    =>:\n        x = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "bernoulli",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall x R, n N:\n        -1 <= x\n        =>:\n            1+n*x <= (1+x)^n\n    by induc n from 0:\n        ? 1+n*x <= (1+x)^n\n        ? from n = 0:\n            1+n*x = 1 = (1+x)^0 = (1+x)^n\n        ? induc:\n            1+x >= 1+(-1) = 0\n            0 <= n*x^2\n            (1+x)^(n+1) = (1+x)^n*(1+x)^1 = (1+x)^n*(1+x) >= (1+n*x)*(1+x) = 1+(n+1)*x+n*x^2 >= 1+(n+1)*x\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall x R, n N:\n        -1 <= x\n        =>:\n            1 + n * x <= (1 + x) ^ n\n    by induc n from 0:\n        ? 1 + n * x <= (1 + x) ^ n\n        ? from n = 0:\n            1 + n * x = 1 = (1 + x) ^ 0 = (1 + x) ^ n\n        ? induc:\n            1 + x >= 1 + -1 = 0\n            0 <= n * x ^ 2\n            (1 + x) ^ (n + 1) = (1 + x) ^ n * (1 + x) ^ 1 = (1 + x) ^ n * (1 + x) >= (1 + n * x) * (1 + x) = 1 + (n + 1) * x + n * x ^ 2 >= 1 + (n + 1) * x",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 0,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "cube_monotone_certificate",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall a, b R:\n        a <= b\n        =>:\n            a^3 <= b^3\n    0 <= b-a\n    0 <= 3*b^2/4\n    a^2+a*b+b^2 = (a+b/2)^2+3*b^2/4 >= 0\n    b^3-a^3 = (b-a)*(a^2+a*b+b^2) >= 0\n    0 <= b^3-a^3\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall a, b R:\n        a <= b\n        =>:\n            a ^ 3 <= b ^ 3\n    0 <= b - a\n    0 <= 3 * b ^ 2 / 4\n    a ^ 2 + a * b + b ^ 2 = (a + b / 2) ^ 2 + 3 * b ^ 2 / 4 >= 0\n    b ^ 3 - a ^ 3 = (b - a) * (a ^ 2 + a * b + b ^ 2) >= 0\n    0 <= b ^ 3 - a ^ 3",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "0 <= 3 * b ^ 2 / 4",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "even_natural_nonzero_direct",
+      "category": "checked route",
+      "source": "claim:\n    ? forall x R*, n N:\n        x^(2*n) > 0\n    x^n != 0\n    x^(2*n) = (x^n)^2 > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "literal_even_positive_only",
+      "category": "checked route",
+      "source": "forall x R:\n    x^0 = 1\n    x^2 >= 0\n    x^4 >= 0\n    x^6 >= 0\n    x^8 >= 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "real_order_log_exp_route",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall a R+, u, v R:\n        1 <= a\n        u <= v\n        =>:\n            a^u <= a^v\n    ln(a) >= ln(1) = 0\n    ln(a^u) = u*ln(a)\n    ln(a^v) = v*ln(a)\n    a^u = exp(ln(a^u)) = exp(u*ln(a)) <= exp(v*ln(a)) = exp(ln(a^v)) = a^v\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall a R+, u, v R:\n        1 <= a\n        u <= v\n        =>:\n            a ^ u <= a ^ v\n    ln(a) >= ln(1) = 0\n    ln(a ^ u) = u * ln(a)\n    ln(a ^ v) = v * ln(a)\n    a ^ u = exp(ln(a ^ u)) = exp(u * ln(a)) <= exp(v * ln(a)) = exp(ln(a ^ v)) = a ^ v",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "ln(a ^ u) = u * ln(a)",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "even_natural_cold",
+      "category": "true mathematical route or goal not established",
+      "source": "forall x R, n N:\n    x^(2*n) >= 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "forall x R, n N:\n    x ^ (2 * n) >= 0",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "even_nat_strict_delete_nonzero",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall x R*, n N:\n        x^(2*n) > 0\n    x^(2*n) = (x^n)^2 > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall x R*, n N:\n        x ^ (2 * n) > 0\n    x ^ (2 * n) = x ^ n ^ 2 > 0",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 0,
+          "failed_fact": "x ^ (2 * n) = x ^ n ^ 2 > 0",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 1
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "even_int_delete_product_nonzero",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall x R*, n Z:\n        x^(2*n) > 0\n    x^n*x^(-n) = x^(n+(-n)) = x^0 = 1\n    x^n != 0\n    x^(2*n) = (x^n)^2 > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "even_int_delete_component_nonzero",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall x R*, n Z:\n        x^(2*n) > 0\n    x^n*x^(-n) = x^(n+(-n)) = x^0 = 1\n    x^n*x^(-n) != 0\n    x^(2*n) = (x^n)^2 > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall x R*, n Z:\n        x ^ (2 * n) > 0\n    x ^ n * x ^ -n = x ^ (n + -n) = x ^ 0 = 1\n    x ^ n * x ^ -n != 0\n    x ^ (2 * n) = x ^ n ^ 2 > 0",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 2,
+          "failed_fact": "x ^ (2 * n) = x ^ n ^ 2 > 0",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 1
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "even_int_delete_inverse",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall x R*, n Z:\n        x^(2*n) > 0\n    x^n*x^(-n) != 0\n    x^n != 0\n    x^(2*n) = (x^n)^2 > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "growth_delete_diff_natural",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    1 <= n-m\n    n-m $in Z\n    0 < n-m\n    n-m $in N+\n    a <= a^(n-m)\n    1 < a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "growth_strict_delete_integer",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    n-m $in N\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    1 <= n-m\n    0 < n-m\n    n-m $in N+\n    a <= a^(n-m)\n    1 < a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "growth_strict_delete_discrete_bound",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    n-m $in N\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    n-m $in Z\n    0 < n-m\n    n-m $in N+\n    a <= a^(n-m)\n    1 < a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "growth_strict_delete_positive_difference",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    n-m $in N\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    1 <= n-m\n    n-m $in Z\n    n-m $in N+\n    a <= a^(n-m)\n    1 < a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 3,
+          "statement": "claim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a ^ m < a ^ n\n    1 <= n - m\n    n - m $in Z\n    n - m $in N+\n    a <= a ^ (n - m)\n    1 < a ^ (n - m)\n    a ^ m = a ^ m * 1 < a ^ m * a ^ (n - m) = a ^ (m + (n - m)) = a ^ n",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 2,
+          "failed_fact": "n - m $in N+",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "growth_strict_delete_nat_positive",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    n-m $in N\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    1 <= n-m\n    n-m $in Z\n    0 < n-m\n    a <= a^(n-m)\n    1 < a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "growth_strict_delete_intermediate_base_bound",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    n-m $in N\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    1 <= n-m\n    n-m $in Z\n    0 < n-m\n    n-m $in N+\n    1 < a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 3,
+          "statement": "claim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a ^ m < a ^ n\n    1 <= n - m\n    n - m $in Z\n    0 < n - m\n    n - m $in N+\n    1 < a ^ (n - m)\n    a ^ m = a ^ m * 1 < a ^ m * a ^ (n - m) = a ^ (m + (n - m)) = a ^ n",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 4,
+          "failed_fact": "1 < a ^ (n - m)",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "growth_strict_delete_intermediate_one_bound",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    n-m $in N\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    1 <= n-m\n    n-m $in Z\n    0 < n-m\n    n-m $in N+\n    a <= a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "decay_delete_diff_natural",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, n N:\n        a <= 1\n        =>:\n            a^n <= 1\n    by induc n from 0:\n        ? a^n <= 1\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= 1\nclaim:\n    ? forall a R+, m, n Z:\n        a <= 1\n        m <= n\n        =>:\n            a^n <= a^m\n    0 <= n-m\n    a^(n-m) <= 1\n    a^n = a^(m+(n-m)) = a^m*a^(n-m) <= a^m*1 = a^m\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "unit_delete_sign",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R, n N+:\n        0 <= a\n        a <= 1\n        =>:\n            a^n <= a\n    by induc n from 1:\n        ? a^n <= a\n        ? from n = 1:\n            a^n = a^1 = a\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= a\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "odd_delete_component_nonzero",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x^(2*n+1) < 0\n    x != 0\n    0 < (x^n)^2\n    x^(2*n) = (x^n)^2\n    x^(2*n+1) = x^(2*n)*x^1 = x^(2*n)*x = (x^n)^2*x < (x^n)^2*0 = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x ^ (2 * n + 1) < 0\n    x != 0\n    0 < x ^ n ^ 2\n    x ^ (2 * n) = x ^ n ^ 2\n    x ^ (2 * n + 1) = x ^ (2 * n) * x ^ 1 = x ^ (2 * n) * x = x ^ n ^ 2 * x < x ^ n ^ 2 * 0 = 0",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "0 < x ^ n ^ 2",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "odd_delete_even_positive",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x^(2*n+1) < 0\n    x != 0\n    x^n != 0\n    x^(2*n) = (x^n)^2\n    x^(2*n+1) = x^(2*n)*x^1 = x^(2*n)*x = (x^n)^2*x < (x^n)^2*0 = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "odd_delete_power_identity",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x^(2*n+1) < 0\n    x != 0\n    x^n != 0\n    0 < (x^n)^2\n    x^(2*n+1) = x^(2*n)*x^1 = x^(2*n)*x = (x^n)^2*x < (x^n)^2*0 = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "even_integer_min",
+      "category": "checked route",
+      "source": "claim:\n    ? forall x R*, n Z:\n        x^(2*n) > 0\n    x^n != 0\n    x^(2*n) = (x^n)^2 > 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "growth_package_min",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    0 < n-m\n    a <= a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "decay_package_min",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R+, n N:\n        a <= 1\n        =>:\n            a^n <= 1\n    by induc n from 0:\n        ? a^n <= 1\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= 1\nclaim:\n    ? forall a R+, m, n Z:\n        a <= 1\n        m <= n\n        =>:\n            a^n <= a^m\n    0 <= n-m\n    a^(n-m) <= 1\n    a^n = a^(m+(n-m)) = a^m*a^(n-m) <= a^m*1 = a^m\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "unit_bound_min",
+      "category": "checked route",
+      "source": "claim:\n    ? forall a R, n N+:\n        0 <= a\n        a <= 1\n        =>:\n            a^n <= a\n    by induc n from 1:\n        ? a^n <= a\n        ? from n = 1:\n            a^n = a^1 = a\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= a\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "odd_negative_min",
+      "category": "checked route",
+      "source": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x^(2*n+1) < 0\n    x != 0\n    x^n != 0\n    x^(2*n+1) = x^(2*n)*x^1 = x^(2*n)*x = (x^n)^2*x < (x^n)^2*0 = 0\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "real_order_log_inverse_contra",
+      "category": "true mathematical route or goal not established",
+      "source": "claim:\n    ? forall a R+, u, v R:\n        1 < a\n        u <= v\n        =>:\n            a^u <= a^v\n    by contra:\n        ? a^u <= a^v\n        a^v < a^u\n        log(a,a^u) = u\n        log(a,a^v) = v\n        v = log(a,a^v) < log(a,a^u) = u\n        impossible u <= v\n",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement_index": 0,
+          "statement": "claim:\n    ? forall a R+, u, v R:\n        1 < a\n        u <= v\n        =>:\n            a ^ u <= a ^ v\n    by contra:\n        ? a ^ u <= a ^ v\n        a ^ v < a ^ u\n        log (a, a ^ u) = u\n        log (a, a ^ v) = v\n        v = log (a, a ^ v) < log (a, a ^ u) = u\n        impossible u <= v",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 0,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    }
+  ],
+  "manual_gate": {
+    "document_sha256": "f1a73850ef0283e65f6d3ca3a9791fce1c18560916485695625989e19f43fe6d",
+    "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+    "binary_unchanged_during_gate": true,
+    "results": [
+      {
+        "name": "document_00",
+        "source": "claim:\n    ? forall x R, n N:\n        x^(2*n) >= 0\n    x^(2*n) = (x^n)^2 >= 0\nclaim:\n    ? forall x R*, n Z:\n        x^(2*n) > 0\n    x^n != 0\n    x^(2*n) = (x^n)^2 > 0",
+        "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-power-catalog/document_00.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall x R, n N:\n        x ^ (2 * n) >= 0\n    x ^ (2 * n) = x ^ n ^ 2 >= 0",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall x R, n N:\n    x ^ (2 * n) >= 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall x R*, n Z:\n        x ^ (2 * n) > 0\n    x ^ n != 0\n    x ^ (2 * n) = x ^ n ^ 2 > 0",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall x R*, n Z:\n    x ^ (2 * n) > 0"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8310,
+        "mode": "strict_positive",
+        "gate": true
+      },
+      {
+        "name": "document_01",
+        "source": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x^(2*n+1) < 0\n    x != 0\n    x^n != 0\n    x^(2*n+1) = x^(2*n)*x^1 = x^(2*n)*x = (x^n)^2*x < (x^n)^2*0 = 0",
+        "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-power-catalog/document_01.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall x R, n N:\n        x < 0\n        =>:\n            x ^ (2 * n + 1) < 0\n    x != 0\n    x ^ n != 0\n    x ^ (2 * n + 1) = x ^ (2 * n) * x ^ 1 = x ^ (2 * n) * x = x ^ n ^ 2 * x < x ^ n ^ 2 * 0 = 0",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall x R, n N:\n    x < 0\n    =>:\n        x ^ (2 * n + 1) < 0"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8331,
+        "mode": "strict_positive",
+        "gate": true
+      },
+      {
+        "name": "document_02",
+        "source": "forall x R:\n    x^0 = 1\nforall t R:\n    1^t = 1\n0^0 = 1\nforall n N+:\n    0^n = 0\nforall a R+, t R:\n    a^t $in R\n    a^t > 0\nforall x R, n N+:\n    x^n = 0\n    =>:\n        x = 0",
+        "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-power-catalog/document_02.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall x R:\n    x ^ 0 = 1",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall x R:\n    x ^ 0 = 1"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall t R:\n    1 ^ t = 1",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall t R:\n    1 ^ t = 1"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "0 ^ 0 = 1",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "0 ^ 0 = 1"
+              ],
+              "infers": [
+                "1 $in R+",
+                "0 < 1",
+                "0 <= 1",
+                "1 $in N",
+                "0 <= 1",
+                "1 != 0"
+              ]
+            },
+            {
+              "success": true,
+              "statement": "forall n N+:\n    0 ^ n = 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall n N+:\n    0 ^ n = 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall a R+, t R:\n    a ^ t $in R\n    a ^ t > 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a R+, t R:\n    a ^ t $in R\n    a ^ t > 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall x R, n N+:\n    x ^ n = 0\n    =>:\n        x = 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall x R, n N+:\n    x ^ n = 0\n    =>:\n        x = 0"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8346,
+        "mode": "strict_positive",
+        "gate": true
+      },
+      {
+        "name": "document_03",
+        "source": "forall a, b R, n N+:\n    0 <= a\n    a <= b\n    =>:\n        a^n <= b^n",
+        "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-power-catalog/document_03.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b R, n N+:\n    0 <= a\n    a <= b\n    =>:\n        a ^ n <= b ^ n",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b R, n N+:\n    0 <= a\n    a <= b\n    =>:\n        a ^ n <= b ^ n"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8373,
+        "mode": "strict_positive",
+        "gate": true
+      },
+      {
+        "name": "document_04",
+        "source": "claim:\n    ? forall a R, n N+:\n        0 <= a\n        a <= 1\n        =>:\n            0 <= a^n\n            a^n <= a\n    by induc n from 1:\n        ? a^n <= a\n        ? from n = 1:\n            a^n = a^1 = a\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= a",
+        "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-power-catalog/document_04.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R, n N+:\n        0 <= a\n        a <= 1\n        =>:\n            0 <= a ^ n\n            a ^ n <= a\n    by induc n from 1:\n        ? a ^ n <= a\n        ? from n = 1:\n            a ^ n = a ^ 1 = a\n        ? induc:\n            a ^ (n + 1) = a ^ n * a ^ 1 = a ^ n * a <= a ^ n * 1 = a ^ n <= a",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R, n N+:\n    0 <= a\n    a <= 1\n    =>:\n        0 <= a ^ n\n        a ^ n <= a"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8388,
+        "mode": "strict_positive",
+        "gate": true
+      },
+      {
+        "name": "document_05",
+        "source": "claim:\n    ? forall a R+, n Z:\n        1 <= a\n        =>:\n            a^n <= a^(n+1)\n    a^(n+1) = a^n*a^1 = a^n*a >= a^n*1 = a^n\nclaim:\n    ? forall a R+, n Z:\n        1 < a\n        =>:\n            a^n < a^(n+1)\n    a^(n+1) = a^n*a^1 = a^n*a > a^n*1 = a^n\nclaim:\n    ? forall a R+, n Z:\n        a < 1\n        =>:\n            a^(n+1) < a^n\n    a^(n+1) = a^n*a^1 = a^n*a < a^n*1 = a^n",
+        "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-power-catalog/document_05.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R+, n Z:\n        1 <= a\n        =>:\n            a ^ n <= a ^ (n + 1)\n    a ^ (n + 1) = a ^ n * a ^ 1 = a ^ n * a >= a ^ n * 1 = a ^ n",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R+, n Z:\n    1 <= a\n    =>:\n        a ^ n <= a ^ (n + 1)"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R+, n Z:\n        1 < a\n        =>:\n            a ^ n < a ^ (n + 1)\n    a ^ (n + 1) = a ^ n * a ^ 1 = a ^ n * a > a ^ n * 1 = a ^ n",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R+, n Z:\n    1 < a\n    =>:\n        a ^ n < a ^ (n + 1)"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R+, n Z:\n        a < 1\n        =>:\n            a ^ (n + 1) < a ^ n\n    a ^ (n + 1) = a ^ n * a ^ 1 = a ^ n * a < a ^ n * 1 = a ^ n",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R+, n Z:\n    a < 1\n    =>:\n        a ^ (n + 1) < a ^ n"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8410,
+        "mode": "strict_positive",
+        "gate": true
+      },
+      {
+        "name": "document_06",
+        "source": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a^n\n    by induc n from 0:\n        ? 1 <= a^n\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1\nclaim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a^m <= a^n\n    0 <= n-m\n    1 <= a^(n-m)\n    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n\nclaim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a^n\n    a = a^1 <= a^n\nclaim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a^m < a^n\n    0 < n-m\n    a <= a^(n-m)\n    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n",
+        "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-power-catalog/document_06.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R+, n N:\n        1 <= a\n        =>:\n            1 <= a ^ n\n    by induc n from 0:\n        ? 1 <= a ^ n\n        ? from n = 0:\n            a ^ n = a ^ 0 = 1\n        ? induc:\n            a ^ (n + 1) = a ^ n * a ^ 1 = a ^ n * a >= 1 * a = a >= 1",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R+, n N:\n    1 <= a\n    =>:\n        1 <= a ^ n"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R+, m, n Z:\n        1 <= a\n        m <= n\n        =>:\n            a ^ m <= a ^ n\n    0 <= n - m\n    1 <= a ^ (n - m)\n    a ^ m = a ^ m * 1 <= a ^ m * a ^ (n - m) = a ^ (m + (n - m)) = a ^ n",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R+, m, n Z:\n    1 <= a\n    m <= n\n    =>:\n        a ^ m <= a ^ n"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R+, n N+:\n        1 <= a\n        =>:\n            a <= a ^ n\n    a = a ^ 1 <= a ^ n",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R+, n N+:\n    1 <= a\n    =>:\n        a <= a ^ n"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R+, m, n Z:\n        1 < a\n        m < n\n        =>:\n            a ^ m < a ^ n\n    0 < n - m\n    a <= a ^ (n - m)\n    a ^ m = a ^ m * 1 < a ^ m * a ^ (n - m) = a ^ (m + (n - m)) = a ^ n",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R+, m, n Z:\n    1 < a\n    m < n\n    =>:\n        a ^ m < a ^ n"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8443,
+        "mode": "strict_positive",
+        "gate": true
+      },
+      {
+        "name": "document_07",
+        "source": "claim:\n    ? forall a R+, n N:\n        a <= 1\n        =>:\n            a^n <= 1\n    by induc n from 0:\n        ? a^n <= 1\n        ? from n = 0:\n            a^n = a^0 = 1\n        ? induc:\n            a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= 1\nclaim:\n    ? forall a R+, m, n Z:\n        a <= 1\n        m <= n\n        =>:\n            a^n <= a^m\n    0 <= n-m\n    a^(n-m) <= 1\n    a^n = a^(m+(n-m)) = a^m*a^(n-m) <= a^m*1 = a^m",
+        "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-power-catalog/document_07.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R+, n N:\n        a <= 1\n        =>:\n            a ^ n <= 1\n    by induc n from 0:\n        ? a ^ n <= 1\n        ? from n = 0:\n            a ^ n = a ^ 0 = 1\n        ? induc:\n            a ^ (n + 1) = a ^ n * a ^ 1 = a ^ n * a <= a ^ n * 1 = a ^ n <= 1",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R+, n N:\n    a <= 1\n    =>:\n        a ^ n <= 1"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R+, m, n Z:\n        a <= 1\n        m <= n\n        =>:\n            a ^ n <= a ^ m\n    0 <= n - m\n    a ^ (n - m) <= 1\n    a ^ n = a ^ (m + (n - m)) = a ^ m * a ^ (n - m) <= a ^ m * 1 = a ^ m",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R+, m, n Z:\n    a <= 1\n    m <= n\n    =>:\n        a ^ n <= a ^ m"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8485,
+        "mode": "strict_positive",
+        "gate": true
+      },
+      {
+        "name": "document_08",
+        "source": "forall a, u, v R:\n    1 <= a\n    u <= v\n    =>:\n        a^u <= a^v",
+        "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+        "exit_code": 1,
+        "output": {
+          "kind": "run",
+          "success": false,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-power-catalog/document_08.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": false,
+              "statement": "forall a, u, v R:\n    1 <= a\n    u <= v\n    =>:\n        a ^ u <= a ^ v",
+              "why_failed": {
+                "phase": "search_proof",
+                "goal": "forall a, u, v R:\n    1 <= a\n    u <= v\n    =>:\n        a ^ u <= a ^ v"
+              },
+              "stores": [],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8515,
+        "mode": "observed_true_goal_search_miss",
+        "gate": true
+      },
+      {
+        "name": "document_09",
+        "source": "1^2 = 1^3\n(1/2)^3 < (1/2)^2\n(-2)^2 > (-1)^2\n(-2)^3 < (-1)^3\n(-2)^4 > (-2)^2\n(-2)^(-2) > 0\n(-1)^2 > (-1)^3\n0^0 = 1\n0^2 = 0",
+        "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-power-catalog/document_09.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "1 ^ 2 = 1 ^ 3",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "1 ^ 2 = 1 ^ 3"
+              ],
+              "infers": [
+                "1 ^ 3 $in R+",
+                "0 < 1 ^ 3",
+                "0 <= 1 ^ 3",
+                "1 ^ 3 $in N",
+                "0 <= 1 ^ 3",
+                "1 ^ 3 != 0",
+                "1 ^ 2 $in R+",
+                "0 < 1 ^ 2",
+                "0 <= 1 ^ 2",
+                "1 ^ 2 $in N",
+                "0 <= 1 ^ 2",
+                "1 ^ 2 != 0"
+              ]
+            },
+            {
+              "success": true,
+              "statement": "(1 / 2) ^ 3 < (1 / 2) ^ 2",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "(1 / 2) ^ 3 < (1 / 2) ^ 2"
+              ],
+              "infers": [
+                "0 < (1 / 2) ^ 2"
+              ]
+            },
+            {
+              "success": true,
+              "statement": "-2 ^ 2 > -1 ^ 2",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "-2 ^ 2 > -1 ^ 2"
+              ],
+              "infers": [
+                "0 < -2 ^ 2"
+              ]
+            },
+            {
+              "success": true,
+              "statement": "-2 ^ 3 < -1 ^ 3",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "-2 ^ 3 < -1 ^ 3"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "-2 ^ 4 > -2 ^ 2",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "-2 ^ 4 > -2 ^ 2"
+              ],
+              "infers": [
+                "0 < -2 ^ 4"
+              ]
+            },
+            {
+              "success": true,
+              "statement": "-2 ^ -2 > 0",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "-2 ^ -2 > 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "-1 ^ 2 > -1 ^ 3",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "-1 ^ 2 > -1 ^ 3"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "0 ^ 0 = 1",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "0 ^ 0 = 1"
+              ],
+              "infers": [
+                "1 $in R+",
+                "0 < 1",
+                "0 <= 1",
+                "1 $in N",
+                "0 <= 1",
+                "1 != 0"
+              ]
+            },
+            {
+              "success": true,
+              "statement": "0 ^ 2 = 0",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "0 ^ 2 = 0"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8526,
+        "mode": "strict_positive",
+        "gate": true
+      }
+    ],
+    "preservation": {
+      "before_lines": 11077,
+      "after_lines": 11397,
+      "original_fences": 327,
+      "new_fences": 337,
+      "missing_fences": [],
+      "missing_anchors": [],
+      "native_ids": 166,
+      "missing_native_ids": [],
+      "local_anchor_links": 828,
+      "missing_local_links": []
+    }
+  },
+  "static_checks": {
+    "relative_file_links_missing": [],
+    "git_diff_check": "passed",
+    "original_content_preservation": {
+      "before_lines": 11077,
+      "after_lines": 11397,
+      "original_fences": 327,
+      "new_fences": 337,
+      "missing_fences": [],
+      "missing_anchors": [],
+      "native_ids": 166,
+      "missing_native_ids": [],
+      "local_anchor_links": 828,
+      "missing_local_links": []
+    }
+  },
+  "workspace_hygiene": {
+    "draft_cleanup": "completed",
+    "task_draft_files_removed": 183,
+    "completed_sop_removal": "completed",
+    "current_build_limitation": "Retained in release.build_attempt and release.limitation; Runtime/CLI repair outside this task."
+  }
+}

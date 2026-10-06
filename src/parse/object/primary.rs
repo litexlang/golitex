@@ -65,7 +65,7 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     }
     if token == LEFT_BRACKET {
         return Err(tb.parse_error(
-            "`[...]` finite-sequence list literals are not supported; use index postfix `obj[i]`",
+            "`[...]` finite-sequence list literals are not supported; use tuple literals and ordinary calls `t(i)`",
         ));
     }
     if token == FN {
@@ -97,17 +97,7 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
 }
 
 pub(super) fn fn_obj_head_from_obj(obj: Obj) -> Option<FnObjHead> {
-    match obj {
-        Obj::Identifier(id) => Some(FnObjHead::Identifier(id)),
-        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(v)) => {
-            Some(FnObjHead::FieldAccess(v))
-        }
-        Obj::InstantiatedTemplateObj(v) => Some(FnObjHead::InstantiatedTemplateObj(v)),
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(a)) => {
-            Some(FnObjHead::AnonymousFnLiteral(Box::new(a)))
-        }
-        _ => None,
-    }
+    Some(FnObjHead::from_obj(obj))
 }
 
 pub fn is_simple_name(s: &str) -> bool {

@@ -333,15 +333,23 @@ to own all WD evidence. See `execute_fact_stmt/README.md` and the maintained
 
 `FnApplicationInStandardSuperset` is a read-only KnownSpecialProperty leaf for stored function signatures after application WD. It checks all fully applied standard return carriers against the intrinsic numeric inclusion relation, preserving each exact-object signature FactId and direct equality certificate. It never searches domain premises or changes the WD cache. Nonstandard carriers and intrinsic template/field alternatives conservatively retain their existing producers. The dedicated tracer is `examples/proof_nodes/atomic/by_known_special_property/function_return_standard_superset.lit`.
 
-The existing `LessFromPosDifference` builtin leaf consumes a saved `0 < b - a`
-or `b - a > 0` after the enclosing comparison has checked real operands. It tries
-at most two fixed known-premise lookups, in that order, and retains the selected
-premise proof and FactId. It cannot enter another search stage, generate a bound,
-or mutate facts or WD memory. Greater goals retain the existing order-dual
-rewrite. The tracer is
-`examples/proof_nodes/atomic/by_builtin_rule/greater_from_positive_difference.lit`;
-the focused `positive_difference_order` tests cover both spellings, strictness,
-direction, domain and local-scope rejection.
+The positive/nonnegative saved-difference bridges and four complementary
+negative/nonpositive bridges consume only read-only known premises after the
+parent verifies real operands. Ordinary subtraction tries one shape; a literal
+zero minuend also tries unary minus and multiplication by literal minus one on
+either side. Each strict order query tries two orientations; each weak query
+tries the two weak orientations before the two stronger strict orientations.
+The returned `AtomicExceptEqualityFactKnownProof` keeps the actual comparison
+and citation, so consuming a strict bound for a weak conclusion does not
+manufacture a weak source fact. No recursive premise search or fact/WD
+publication occurs. Existing positive routes precede new negative routes;
+Greater/GreaterEqual retain their structural order-dual strategy and permission
+ceilings. All four new rules own dedicated success structs and Normal/Detailed
+projections. The tracers are `signed_difference_order.lit` and
+`negated_sign_order.lit` under `examples/proof_nodes/atomic/by_builtin_rule`;
+`signed_difference_order_tests` check source IDs, languages, scope and false
+boundaries. The earlier `positive_difference_order` tests retain prior-route
+coverage.
 
 ## Local finite aggregation and constructor proofs (2026-10-05)
 

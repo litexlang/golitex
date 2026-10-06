@@ -8,7 +8,8 @@ pub enum RunCommandOutcome {
     RunFile(RunFileResult),
     RunEval(RunEvalResult),
     RunRepo(RunRepoResult),
-    Extract(ExtractResult),
+    ExtractExecutableCode(ExtractExecutableCodeResult),
+    CompileToLatex(CompileToLatexResult),
     /// Interactive REPL: prints each step; no accumulated payload.
     RunRepl,
     Help(HelpResult),
@@ -74,7 +75,13 @@ pub struct VersionResult {
     pub version: String,
 }
 
-pub struct ExtractResult {
+pub struct ExtractExecutableCodeResult {
+    pub json: String,
+    pub success: bool,
+}
+
+/// Parse-only LaTeX artifact; success is conversion, not verification.
+pub struct CompileToLatexResult {
     pub json: String,
     pub success: bool,
 }
@@ -225,7 +232,17 @@ impl VersionResult {
     }
 }
 
-impl ExtractResult {
+impl ExtractExecutableCodeResult {
+    pub fn new(json: String, success: bool) -> Self {
+        Self { json, success }
+    }
+
+    pub fn process_failed(&self) -> bool {
+        !self.success
+    }
+}
+
+impl CompileToLatexResult {
     pub fn new(json: String, success: bool) -> Self {
         Self { json, success }
     }
@@ -241,7 +258,8 @@ impl RunCommandOutcome {
             Self::RunFile(r) => r.process_failed(),
             Self::RunEval(r) => r.process_failed(),
             Self::RunRepo(r) => r.process_failed(),
-            Self::Extract(r) => r.process_failed(),
+            Self::ExtractExecutableCode(r) => r.process_failed(),
+            Self::CompileToLatex(r) => r.process_failed(),
             Self::RunRepl | Self::Help(_) | Self::Version(_) => false,
         }
     }
@@ -251,7 +269,8 @@ impl RunCommandOutcome {
             Self::RunFile(r) => r.run.normal_json.as_deref(),
             Self::RunEval(r) => r.run.normal_json.as_deref(),
             Self::RunRepo(r) => r.run.normal_json.as_deref(),
-            Self::Extract(r) => Some(r.json.as_str()),
+            Self::ExtractExecutableCode(r) => Some(r.json.as_str()),
+            Self::CompileToLatex(r) => Some(r.json.as_str()),
             Self::RunRepl | Self::Help(_) | Self::Version(_) => None,
         }
     }

@@ -14,6 +14,12 @@ verify Litex statements
 
 ## CLI
 
+The launch parser produces `LaunchCommand::ExtractExecutableCode { target,
+input: ExtractInput, language }`; `run_extract_executable_code` returns an
+`ExtractExecutableCodeResult`. LaTeX has its own `CompileToLatex` command,
+`LatexInput`, runner and result, because it renders parsed mathematics without
+the verification and executable-subset selection used here.
+
 ```sh
 litex -extractpython 'have a R = 1'
 litex -extractpython -f example.lit

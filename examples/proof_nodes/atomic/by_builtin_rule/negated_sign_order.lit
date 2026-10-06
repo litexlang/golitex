@@ -1,0 +1,31 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/negated_sign_order.lit
+# Before: direct bare sign transport rejected; an explicit multiply-by-minus-one proof was checkable.
+# forall u R:
+#     -u<0
+#     =>:
+#         u>0
+# Now: the fixed negative spellings reuse the same saved difference/order laws.
+forall u R:
+    -u<0
+    =>:
+        u>0
+
+forall u R:
+    (-1)*u>=0
+    =>:
+        u<=0
+
+forall u R:
+    0>=u*(-1)
+    =>:
+        u>=0
+
+forall u R:
+    0<u
+    =>:
+        -u<0
+        (0-u)<0
+        (-1)*u<0
+        u*(-1)<0
+
+# Boundary: -u>=0 cannot prove u<0; checked as an executable Rust negative control.

@@ -13,7 +13,7 @@ Exact evaluation with checked source-to-result equality publication.
    - plain-Identifier `FnObj` with stored algo → case dispatch → eval return
    - anonymous/named function equations → IdentifierId substitution → eval body
    - finite range/set sums and products → enumerate → checked applications → exact fold
-   - checked literal finite sizes/extrema and tuple dimensions/projections → exact value
+   - checked literal finite sizes/extrema and finite-function coordinate calls → exact value
 4. Verify every executed algorithm's defining equation at its normalized arguments.
 5. Check the generated equality's WD and publish it through `store_fact_and_infer`.
    `exec_stmt` commits the fact only on success; proof-local eval stays local.
@@ -36,7 +36,7 @@ does not enlarge implicit equality search permissions.
 |---|---|
 | `exec_eval_stmt.rs` | `exec_stmt` entry + tests |
 | `evaluate_obj.rs` | recursive tree walk |
-| `evaluate_finite_objects.rs` | checked literal cardinality/extrema and tuple dimension/projection |
+| `evaluate_finite_objects.rs` | checked literal cardinality/extrema and tuple values |
 | `evaluate_closed_numeric.rs` | closed-numeric simplify leaf |
 | `evaluate_aggregate.rs` | bounded range/set enumeration, application and fold |
 | `aggregate_evaluation_result.rs` | separate Sum/Product/set success evidence and term traces |
@@ -56,17 +56,25 @@ laws: `examples/proof_nodes/equal/by_builtin_rule/aggregate_calculation.lit` and
 
 ## Literal finite objects (example small repairs)
 
-`eval finite_set_size({1,2,3})`, `eval tuple_dim((1,2,3))` and
-`eval (1,2,3)[2]` use their source WD evidence before computing.
-Finite extrema require a nonempty finite real set; literal fractions are
-compared exactly by the sign of a normalized rational difference. Indexing
-remains one-based. Empty extrema, nonreal elements and invalid indices reject.
-Successful eval stores the source-to-result equality. Symbolic aliases and nested tuple WD
-continue to use their existing proof interfaces; this change does not add an
-arbitrary-object enumeration mechanism.
+`eval finite_set_size({1,2,3})` uses source WD before computing. Finite
+extrema require a nonempty finite real set; literal fractions are compared
+exactly by the sign of a normalized rational difference. Empty extrema and
+nonreal elements reject.
 
-Acceptance: `examples/example_small_repairs.lit`; paired controls:
-`examples/negative/example_small_repairs/`.
+Finite tuples use ordinary one-based function application. After
+`let p=(1,2,3)`, `eval p(2)` computes `2` and publishes `p(2)=2` without an
+earlier coordinate assertion. After
+`have outer cart(cart(R,R),R)=((1,2),3)`, `eval outer(1)(2)` follows the
+checked coordinate beta steps. `let literal_outer=((1,2),3)` likewise
+supports `eval literal_outer(1)(2)` through its checked prefix value. Each step retains its actual value/member
+source and application WD in `function_evaluations`; aggregates consuming this
+evaluator retain the same evidence. A carrier alone does not determine a
+value: `have unknown cart(R,R); eval unknown(1)` declines evaluation.
+Out-of-domain calls and scalar continuation fail WD before publication.
+
+Acceptance: `examples/stmt_nodes/command/eval_finite_function_coordinate.lit`;
+`examples/proof_nodes/equal/by_object_definition/by_fn_application/nested_tuple_coordinate_call.lit`.
+Retired `tuple_dim` and bracket indexing remain rejected.
 
 
 ## Exact signed powers and numeric complex modulus

@@ -279,6 +279,7 @@ impl Runtime {
         prefix: &FnObj,
     ) -> RuntimeResult<Vec<(AnonymousFn, FunctionBodySourceProof)>> {
         let head = match prefix.head.as_ref() {
+            FnObjHead::Object(obj) => obj.as_ref().clone(),
             FnObjHead::Identifier(v) => Obj::Identifier(v.clone()),
             FnObjHead::AnonymousFnLiteral(v) => {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(v.as_ref().clone()))

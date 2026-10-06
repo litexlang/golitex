@@ -1,0 +1,2679 @@
+{
+  "status": "verified_against_successful_initial_release; later concurrent-source rebuild unavailable",
+  "date": "2026-10-06",
+  "canonical_document": "docs/Manual.md",
+  "user_intent": "Add useful, detailed multiplication/square builtin laws and proof compositions to the mathematics-first Manual, with exact signs, domains, equality cases and checked examples.",
+  "scope": {
+    "impact": "L0 documentation and mathematical examples",
+    "changed": [
+      "docs/Manual.md",
+      "docs/audits/manual-square-product-2026-10-06.json"
+    ],
+    "unchanged_by_this_task": [
+      "Rust/kernel/AST/Env/Runtime",
+      "existing native entry IDs",
+      "old Manual examples",
+      "Reference relocation notice"
+    ],
+    "skipped": [
+      "all Rust tests",
+      "whole-repository examples/docs",
+      "textbooks/Lean"
+    ],
+    "draft_area": "tmp/2026-10-06/manual-square-product/"
+  },
+  "baseline": {
+    "sha256": "1b764cb8ae07012317b641ca861262e0ea841853bef9d8f22e5f469080a9b32e",
+    "lines": 10633
+  },
+  "forward_derivation": [
+    "Real ordered-field signs and nonzero conditions",
+    "Sign-preserving/reversing products, cancellation and factorwise bounds",
+    "Squares as magnitudes, root domains and zero/equality cases",
+    "Nonnegative polynomial/rational certificates for weighted and Cauchy bounds",
+    "Positive-denominator comparisons and completed quadratic lower bounds"
+  ],
+  "publication": {
+    "recipes": [
+      "R11 product signs, zero factors, cancellation and two varying factors",
+      "R12 squares, absolute values, root domains, zero/positive cases",
+      "R13 squared-sum/product bounds, weighted Young, two-dimensional Cauchy and equality cases",
+      "R14 clearing positive denominators and a general positive quadratic"
+    ],
+    "math_lookup_routes_added": 6,
+    "strict_positive_fences": 15,
+    "native_inventory_unchanged": 166,
+    "boundary_examples": "Zero cancellation, unsigned square reflection, signed factorwise multiplication, selecting an unspecified zero factor, invalid negative weight and square-root sign."
+  },
+  "distinction": {
+    "native_direct": "Native sign/nonzero/zero-product and square/absolute-value identities are exercised as bare universal facts. Weak two-factor monotonicity and square-to-magnitude order also verify directly.",
+    "composed": "Cancellation, strict two-factor comparison, signed square reflection, weighted estimates, Cauchy certificates and denominator changes have explicit short proof routes. They are not new public builtin predicates or automatic tactics.",
+    "limits": "No general finite Cauchy theorem or nonlinear optimization search is claimed. Failed optional AM-GM, absolute-product Young and reciprocal sketches were not promoted as checked examples."
+  },
+  "deletion_findings": {
+    "native_bypasses": [
+      "Zero-product elimination with a known nonzero factor",
+      "Weak two-factor monotonicity",
+      "Two nonpositive factors give nonnegative product",
+      "Square comparison gives magnitude comparison"
+    ],
+    "required": [
+      "Both Cauchy certificate lines",
+      "Both explicit square-domain facts plus root chain for signed square reflection"
+    ],
+    "removed": [
+      "Separate square sign before weighted certificate",
+      "Separate square sign before positive quadratic product",
+      "Separate absolute-square identities before reverse magnitude-order chain"
+    ]
+  },
+  "source_review": {
+    "native_rule_owners": {
+      "AbsProduct/AbsSquare": "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave2.rs",
+      "SqrtOfSquareEqualsAbs": "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave4.rs",
+      "ZeroProductCancel": "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave7.rs",
+      "SquareSumComponentZero": "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave8.rs",
+      "square/sign/nonzero families": [
+        "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_power_sqrt_log.rs",
+        "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/not_equal.rs"
+      ],
+      "monotone multiplication": [
+        "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_abs_algebra.rs",
+        "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/less.rs"
+      ],
+      "positive denominator bridge": "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_stage_a_remainder.rs"
+    },
+    "workspace_snapshot_sha256": {
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave2.rs": "0bd411b91133a6591d128970c3a7607130c8335779ebfd1d4f70c56b992804a6",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave4.rs": "d8a5a1d37b0897dd2a08f4b40cc9801614140be1addda5d51bd3e914103e9d52",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave7.rs": "c4be5790b944711f326d76efebd41236b8f4eb44039321c8437e7d9fe18b49bf",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave8.rs": "93eafbc4bd1ea8198de07be480258cf575f67153d0e65076d18a9656344b9790",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/search_equal_fact_by_calculation.rs": "b1c08a3d687f3a8f7822b8aa8e89267d132e623ad3afa8cc88f892eb1e0f99d5",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equal_from_known_difference_zero.rs": "7231a7d824bbf807dad44915307664f3b88a70b74342ae8678e9ee9b728f35b4",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/less_equal.rs": "46e9736c5bfb959b3d7a430d02002f520dffadaf08e592a5b0beb63142f10636",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/less.rs": "7e68e1757a203df45083f1fd857729d6c056d05e095716775397bff87df20cd6",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/greater.rs": "8bea0a58800011313ffac24e4bef51f44b90c87228656838990efc67e3b7d2ef",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/greater_equal.rs": "03fc4fcbfafff97d4955f6b9c43bdd3502bc601482897e8635356a9fa1aa97e3",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/not_equal.rs": "b76b844d68da9a00e53d43e10e97440c151366dbb78466889e60d47e7f64469a",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_abs_algebra.rs": "a41872aa209a225289969c3ae763e5c454a9fb3b099bdbc2d7880a971bac5dce",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_power_sqrt_log.rs": "a2a088d24298f1c62d3b2fd7a6f9042ad26cda51477fe52ff356cc4b833bff36",
+      "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_stage_a_remainder.rs": "e249d44c34566b0e84de39394ce23a9b17367156be761fcd333a3dc0d207704c"
+    },
+    "note": "Source hashes describe the inspected workspace snapshot. Executable evidence is tied to the recorded release binary, not assumed identical to later concurrent source edits."
+  },
+  "release": {
+    "version": "Litex 0.9.200-beta",
+    "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+    "initial_binary_snapshot": {
+      "sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e"
+    },
+    "builds": [
+      {
+        "log": "build.log",
+        "command": "cargo build --release",
+        "exit_code": 0,
+        "log_tail": "rison.rs:69:8\n   |\n69 | pub fn normalized_decimal_string_is_even_integer(number_value: &str) -> bool {\n   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `number_from_normalized` is never used\n  --> src/rational_expression/helper.rs:12:8\n   |\n12 | pub fn number_from_normalized(normalized_value: String) -> Number {\n   |        ^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: `litex-lang` (lib) generated 223 warnings (run `cargo fix --lib -p litex-lang` to apply 198 suggestions)\n    Finished `release` profile [optimized] target(s) in 0.09s\n",
+        "errors": []
+      },
+      {
+        "log": "build-final.log",
+        "command": "cargo build --release",
+        "exit_code": 101,
+        "log_tail": "iable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1173:17\n     |\n1173 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"PythagoreanIdentity\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nFor more information about this error, try `rustc --explain E0599`.\nwarning: `litex-lang` (lib) generated 198 warnings\nerror: could not compile `litex-lang` (lib) due to 4 previous errors; 198 warnings emitted\n",
+        "errors": [
+          "error[E0599]: no variant named `Extract` found for enum `LaunchCommand`",
+          "error[E0599]: no variant named `Extract` found for enum `LaunchCommand`",
+          "error[E0599]: no variant named `Extract` found for enum `LaunchCommand`",
+          "error[E0599]: no variant named `Extract` found for enum `LaunchCommand`",
+          "error: could not compile `litex-lang` (lib) due to 4 previous errors; 198 warnings emitted"
+        ]
+      }
+    ],
+    "later_workspace_rebuild_passed": false
+  },
+  "concurrent_build_boundary": {
+    "error": "Runtime matches removed LaunchCommand::Extract while LaunchCommand defines ExtractExecutableCode and CompileToLatex.",
+    "old_owner": "src/runtime/runtime.rs:58",
+    "changed_enum": "src/launch_command.rs:132",
+    "scope": "Other in-progress source work; no Runtime or CLI changes made by this documentation task. The initial release build succeeded before proof checks."
+  },
+  "persistent_repl": {
+    "command": "target/release/litex -strict",
+    "tracer": "cauchy_two",
+    "reply": "success",
+    "fresh_batch_gate": "cauchy_two and final published Cauchy fence independently passed"
+  },
+  "attempt_count": 97,
+  "attempts": [
+    {
+      "name": "cauchy_two",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, c, d R:\n        (a*c+b*d)^2 <= (a^2+b^2)*(c^2+d^2)\n    (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2 = (a*d-b*c)^2 >= 0\n    0 <= (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "negative_product",
+      "category": "strict checked route",
+      "source": "forall a, b R:\n    a < 0\n    b < 0\n    =>:\n        a*b > 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "opposite_product",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b R:\n    a >= 0\n    b <= 0\n    =>:\n        a*b <= 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b R:\n    a >= 0\n    b <= 0\n    =>:\n        a * b <= 0",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "strict_opposite_product",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b R:\n    a > 0\n    b < 0\n    =>:\n        a*b < 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b R:\n    a > 0\n    b < 0\n    =>:\n        a * b < 0",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "product_nonzero",
+      "category": "strict checked route",
+      "source": "forall a, b R:\n    a != 0\n    b != 0\n    =>:\n        a*b != 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "positive_product",
+      "category": "strict checked route",
+      "source": "forall a, b R:\n    a > 0\n    b > 0\n    =>:\n        a*b > 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "product_component_bound",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, c, d R:\n        0 <= a\n        a <= b\n        0 <= c\n        c <= d\n        =>:\n            a*c <= b*d\n    a*c <= b*c <= b*d\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "strict_product_component_bound",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, c, d R:\n        0 <= a\n        a < b\n        0 < c\n        c <= d\n        =>:\n            a*c < b*d\n    a*c < b*c <= b*d\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "cancel_positive",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, k R:\n        k > 0\n        a*k <= b*k\n        =>:\n            a <= b\n    a = (a*k)/k <= (b*k)/k = b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "cancel_negative",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, k R:\n        k < 0\n        a*k <= b*k\n        =>:\n            a >= b\n    a = (a*k)/k >= (b*k)/k = b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "cancel_equality",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, k R:\n        k != 0\n        a*k = b*k\n        =>:\n            a = b\n    a = (a*k)/k = (b*k)/k = b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "zero_product_nonzero_factor",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        a*b = 0\n        b != 0\n        =>:\n            a = 0\n    a = (a*b)/b = 0/b = 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_zero",
+      "category": "strict checked route",
+      "source": "forall x R:\n    x^2 = 0\n    =>:\n        x = 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_sum_positive",
+      "category": "strict checked route",
+      "source": "forall x, y R:\n    x != 0\n    =>:\n        x^2+y^2 > 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_abs",
+      "category": "strict checked route",
+      "source": "forall x R:\n    abs(x)^2 = x^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "sqrt_square_abs",
+      "category": "strict checked route",
+      "source": "forall x R:\n    sqrt(x^2) = abs(x)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "abs_product",
+      "category": "strict checked route",
+      "source": "forall x, y R:\n    abs(x*y) = abs(x)*abs(y)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "abs_square",
+      "category": "strict checked route",
+      "source": "forall x R:\n    abs(x^2) = x^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_reflection",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a^2 <= b^2\n        =>:\n            a <= b\n    a = sqrt(a^2) <= sqrt(b^2) = b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a ^ 2 <= b ^ 2\n        =>:\n            a <= b\n    a = sqrt (a ^ 2) <= sqrt (b ^ 2) = b",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 0,
+          "failed_fact": "a = sqrt (a ^ 2) <= sqrt (b ^ 2) = b",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 1
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "sqrt_positive_identities",
+      "category": "strict checked route",
+      "source": "forall x R:\n    0 <= x\n    =>:\n        sqrt(x^2) = x\n        sqrt(x)^2 = x\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "sum_square_bound",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        (a+b)^2 <= 2*(a^2+b^2)\n    2*(a^2+b^2)-(a+b)^2 = (a-b)^2 >= 0\n    0 <= 2*(a^2+b^2)-(a+b)^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "four_product_bound",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        4*a*b <= (a+b)^2\n    (a+b)^2-4*a*b = (a-b)^2 >= 0\n    0 <= (a+b)^2-4*a*b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "weighted_young",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, t R:\n        0 < t\n        =>:\n            2*a*b <= t*a^2+b^2/t\n    (t*a-b)^2 >= 0\n    t*a^2+b^2/t-2*a*b = (t*a-b)^2/t >= 0\n    0 <= t*a^2+b^2/t-2*a*b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "quadratic_lower",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b, c, x R:\n        0 < a\n        =>:\n            a*x^2+b*x+c >= c-b^2/(4*a)\n    a*(x+b/(2*a))^2 >= 0\n    a*x^2+b*x+c = a*(x+b/(2*a))^2+(c-b^2/(4*a)) >= 0+(c-b^2/(4*a)) = c-b^2/(4*a)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b, c, x R:\n        0 < a\n        =>:\n            a * x ^ 2 + b * x + c >= c - b ^ 2 / (4 * a)\n    a * (x + b / (2 * a)) ^ 2 >= 0\n    a * x ^ 2 + b * x + c = a * (x + b / (2 * a)) ^ 2 + (c - b ^ 2 / (4 * a)) >= 0 + (c - b ^ 2 / (4 * a)) = c - b ^ 2 / (4 * a)",
+          "phase": "claim",
+          "inner_phase": "goal_wd",
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": "well_defined",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "absolute_young",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        2*abs(a*b) <= a^2+b^2\n    abs(a)^2 = a^2\n    abs(b)^2 = b^2\n    a^2+b^2-2*abs(a*b) = (abs(a)-abs(b))^2 >= 0\n    0 <= a^2+b^2-2*abs(a*b)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        2 * abs (a * b) <= a ^ 2 + b ^ 2\n    abs (a) ^ 2 = a ^ 2\n    abs (b) ^ 2 = b ^ 2\n    (a ^ 2 + b ^ 2) - 2 * abs (a * b) = (abs (a) - abs (b)) ^ 2 >= 0\n    0 <= (a ^ 2 + b ^ 2) - 2 * abs (a * b)",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 2,
+          "failed_fact": "(a ^ 2 + b ^ 2) - 2 * abs (a * b) = (abs (a) - abs (b)) ^ 2 >= 0",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 0
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "positive_reciprocal",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b R:\n    0 < a\n    a <= b\n    =>:\n        1/b <= 1/a\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b R:\n    0 < a\n    a <= b\n    =>:\n        1 / b <= 1 / a",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "cross_multiply",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, c, d R:\n        0 < b\n        0 < d\n        a/b <= c/d\n        =>:\n            a*d <= c*b\n    (a/b)*b <= (c/d)*b\n    a*d = ((a/b)*b)*d <= ((c/d)*b)*d = c*b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "amgm",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        =>:\n            sqrt(a*b) <= (a+b)/2\n    (a+b)^2-4*a*b = (a-b)^2 >= 0\n    0 <= (a+b)^2-4*a*b\n    4*a*b <= (a+b)^2\n    sqrt(a*b) = sqrt(4*a*b)/2 <= sqrt((a+b)^2)/2 = (a+b)/2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        =>:\n            sqrt (a * b) <= (a + b) / 2\n    (a + b) ^ 2 - 4 * a * b = (a - b) ^ 2 >= 0\n    0 <= (a + b) ^ 2 - 4 * a * b\n    4 * a * b <= (a + b) ^ 2\n    sqrt (a * b) = sqrt (4 * a * b) / 2 <= sqrt ((a + b) ^ 2) / 2 = (a + b) / 2",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 3,
+          "failed_fact": "sqrt (a * b) = sqrt (4 * a * b) / 2 <= sqrt ((a + b) ^ 2) / 2 = (a + b) / 2",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 0
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_cancel_zero",
+      "category": "false sign/zero/square rejection control",
+      "source": "forall a, b, k R:\n    k >= 0\n    a*k <= b*k\n    =>:\n        a <= b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b, k R:\n    k >= 0\n    a * k <= b * k\n    =>:\n        a <= b",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_reflect_unsigned_square",
+      "category": "false sign/zero/square rejection control",
+      "source": "forall a, b R:\n    a^2 <= b^2\n    =>:\n        a <= b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b R:\n    a ^ 2 <= b ^ 2\n    =>:\n        a <= b",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_sqrt_square",
+      "category": "false sign/zero/square rejection control",
+      "source": "forall x R:\n    sqrt(x^2) = x\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall x R:\n    sqrt (x ^ 2) = x",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_product_component",
+      "category": "false sign/zero/square rejection control",
+      "source": "forall a, b, c, d R:\n    a <= b\n    c <= d\n    =>:\n        a*c <= b*d\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b, c, d R:\n    a <= b\n    c <= d\n    =>:\n        a * c <= b * d",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_product_zero_equality",
+      "category": "false sign/zero/square rejection control",
+      "source": "forall a, b R:\n    a*b = 0\n    =>:\n        a = 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b R:\n    a * b = 0\n    =>:\n        a = 0",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_square_injective",
+      "category": "false sign/zero/square rejection control",
+      "source": "forall a, b R:\n    a^2 = b^2\n    =>:\n        a = b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b R:\n    a ^ 2 = b ^ 2\n    =>:\n        a = b",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "boundary_weight_negative",
+      "category": "false sign/zero/square rejection control",
+      "source": "forall a, b, t R:\n    t < 0\n    =>:\n        2*a*b <= t*a^2+b^2/t\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b, t R:\n    t < 0\n    =>:\n        2 * a * b <= t * a ^ 2 + b ^ 2 / t",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "numerical_controls",
+      "category": "strict checked route",
+      "source": "2*0 = 1*0\nnot 2 <= 1\n(-2)^2 = 2^2\nnot -2 = 2\nsqrt((-2)^2) = 2\nnot sqrt((-2)^2) = -2\n-2 <= -1\n-3 <= -2\n(-2)*(-3) > (-1)*(-2)\n1*0 = 0\nnot 1 = 0\nnot 2*1*0 <= (-1)*1^2+0^2/(-1)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "opposite_product_chain",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        b <= 0\n        =>:\n            a*b <= 0\n    a*b <= a*0 = 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "strict_opposite_product_chain",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        0 < a\n        b < 0\n        =>:\n            a*b < 0\n    a*b < a*0 = 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "weak_negative_product_chain",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        a <= 0\n        b <= 0\n        =>:\n            0 <= a*b\n    0 <= 0-a\n    0 <= 0-b\n    a*b = (0-a)*(0-b) >= 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_reflection_staged",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a^2 <= b^2\n        =>:\n            a <= b\n    sqrt(a^2) = a\n    sqrt(b^2) = b\n    sqrt(a^2) <= sqrt(b^2)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a ^ 2 <= b ^ 2\n        =>:\n            a <= b\n    sqrt (a ^ 2) = a\n    sqrt (b ^ 2) = b\n    sqrt (a ^ 2) <= sqrt (b ^ 2)",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 2,
+          "failed_fact": "sqrt (a ^ 2) <= sqrt (b ^ 2)",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "square_reflection_via_sum",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a^2 <= b^2\n        =>:\n            a <= b\n    0 <= a^2\n    0 <= b^2\n    a = sqrt(a^2) <= sqrt(b^2) = b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "quadratic_lower_staged",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b, c, x R:\n        0 < a\n        =>:\n            a*x^2+b*x+c >= c-b^2/(4*a)\n    0 < 2*a\n    0 < 4*a\n    (x+b/(2*a))^2 >= 0\n    a*(x+b/(2*a))^2 >= 0\n    a*x^2+b*x+c = a*(x+b/(2*a))^2+(c-b^2/(4*a)) >= 0+(c-b^2/(4*a)) = c-b^2/(4*a)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b, c, x R:\n        0 < a\n        =>:\n            a * x ^ 2 + b * x + c >= c - b ^ 2 / (4 * a)\n    0 < 2 * a\n    0 < 4 * a\n    (x + b / (2 * a)) ^ 2 >= 0\n    a * (x + b / (2 * a)) ^ 2 >= 0\n    a * x ^ 2 + b * x + c = a * (x + b / (2 * a)) ^ 2 + (c - b ^ 2 / (4 * a)) >= 0 + (c - b ^ 2 / (4 * a)) = c - b ^ 2 / (4 * a)",
+          "phase": "claim",
+          "inner_phase": "goal_wd",
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": "well_defined",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "absolute_young_staged",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        2*abs(a*b) <= a^2+b^2\n    abs(a)^2 = a^2\n    abs(b)^2 = b^2\n    abs(a*b) = abs(a)*abs(b)\n    a^2+b^2-2*abs(a*b) = (abs(a)-abs(b))^2 >= 0\n    0 <= a^2+b^2-2*abs(a*b)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        2 * abs (a * b) <= a ^ 2 + b ^ 2\n    abs (a) ^ 2 = a ^ 2\n    abs (b) ^ 2 = b ^ 2\n    abs (a * b) = abs (a) * abs (b)\n    (a ^ 2 + b ^ 2) - 2 * abs (a * b) = (abs (a) - abs (b)) ^ 2 >= 0\n    0 <= (a ^ 2 + b ^ 2) - 2 * abs (a * b)",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 3,
+          "failed_fact": "(a ^ 2 + b ^ 2) - 2 * abs (a * b) = (abs (a) - abs (b)) ^ 2 >= 0",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 0
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "positive_reciprocal_chain",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        0 < a\n        a <= b\n        =>:\n            1/b <= 1/a\n    0 < b\n    a/(a*b) <= b/(a*b)\n    1/b = a/(a*b) <= b/(a*b) = 1/a\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        0 < a\n        a <= b\n        =>:\n            1 / b <= 1 / a\n    0 < b\n    a / (a * b) <= b / (a * b)\n    1 / b = a / (a * b) <= b / (a * b) = 1 / a",
+          "phase": "claim",
+          "inner_phase": "goal_wd",
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": "well_defined",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "square_sum_zero",
+      "category": "strict checked route",
+      "source": "forall a, b R:\n    a^2+b^2 = 0\n    =>:\n        a = 0\n        b = 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "zero_product_or",
+      "category": "strict checked route",
+      "source": "forall a, b R:\n    a*b = 0\n    =>:\n        a = 0 or b = 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "abs_order_from_square",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        a^2 <= b^2\n        =>:\n            abs(a) <= abs(b)\n    0 <= a^2\n    0 <= b^2\n    abs(a) = sqrt(a^2) <= sqrt(b^2) = abs(b)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_order_from_abs",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        abs(a) <= abs(b)\n        =>:\n            a^2 <= b^2\n    abs(a)^2 = a^2\n    abs(b)^2 = b^2\n    a^2 = abs(a)^2 <= abs(b)^2 = b^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "amgm_staged",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        =>:\n            sqrt(a*b) <= (a+b)/2\n    0 <= a+b\n    0 <= a*b\n    (a+b)^2-4*a*b = (a-b)^2 >= 0\n    0 <= (a+b)^2-4*a*b\n    4*a*b <= (a+b)^2\n    sqrt(a*b) = sqrt(4*a*b)/2 <= sqrt((a+b)^2)/2 = (a+b)/2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        =>:\n            sqrt (a * b) <= (a + b) / 2\n    0 <= a + b\n    0 <= a * b\n    (a + b) ^ 2 - 4 * a * b = (a - b) ^ 2 >= 0\n    0 <= (a + b) ^ 2 - 4 * a * b\n    4 * a * b <= (a + b) ^ 2\n    sqrt (a * b) = sqrt (4 * a * b) / 2 <= sqrt ((a + b) ^ 2) / 2 = (a + b) / 2",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 5,
+          "failed_fact": "sqrt (a * b) = sqrt (4 * a * b) / 2 <= sqrt ((a + b) ^ 2) / 2 = (a + b) / 2",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 0
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "quadratic_positive_carrier",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a R+, b, c, x R:\n        a*x^2+b*x+c >= c-b^2/(4*a)\n    a*(x+b/(2*a))^2 >= 0\n    a*x^2+b*x+c = a*(x+b/(2*a))^2+(c-b^2/(4*a)) >= 0+(c-b^2/(4*a)) = c-b^2/(4*a)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a R+, b, c, x R:\n        a * x ^ 2 + b * x + c >= c - b ^ 2 / (4 * a)\n    a * (x + b / (2 * a)) ^ 2 >= 0\n    a * x ^ 2 + b * x + c = a * (x + b / (2 * a)) ^ 2 + (c - b ^ 2 / (4 * a)) >= 0 + (c - b ^ 2 / (4 * a)) = c - b ^ 2 / (4 * a)",
+          "phase": "claim",
+          "inner_phase": "goal_wd",
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": "well_defined",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "absolute_young_chain",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        2*abs(a*b) <= a^2+b^2\n    abs(a)^2-2*abs(a)*abs(b)+abs(b)^2 = (abs(a)-abs(b))^2 >= 0\n    abs(a)^2+abs(b)^2 = (abs(a)^2-2*abs(a)*abs(b)+abs(b)^2)+2*abs(a)*abs(b) >= 0+2*abs(a)*abs(b) = 2*abs(a*b)\n    a^2+b^2 = abs(a)^2+abs(b)^2 >= 2*abs(a*b)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        2 * abs (a * b) <= a ^ 2 + b ^ 2\n    abs (a) ^ 2 - 2 * abs (a) * abs (b) + abs (b) ^ 2 = (abs (a) - abs (b)) ^ 2 >= 0\n    abs (a) ^ 2 + abs (b) ^ 2 = abs (a) ^ 2 - 2 * abs (a) * abs (b) + abs (b) ^ 2 + 2 * abs (a) * abs (b) >= 0 + 2 * abs (a) * abs (b) = 2 * abs (a * b)\n    a ^ 2 + b ^ 2 = abs (a) ^ 2 + abs (b) ^ 2 >= 2 * abs (a * b)",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "abs (a) ^ 2 + abs (b) ^ 2 = abs (a) ^ 2 - 2 * abs (a) * abs (b) + abs (b) ^ 2 + 2 * abs (a) * abs (b) >= 0 + 2 * abs (a) * abs (b) = 2 * abs (a * b)",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 2
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "positive_reciprocal_difference",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R+:\n        a <= b\n        =>:\n            1/b <= 1/a\n    0 <= b-a\n    1/a-1/b = (b-a)/(a*b) >= 0\n    0 <= 1/a-1/b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R+:\n        a <= b\n        =>:\n            1 / b <= 1 / a\n    0 <= b - a\n    1 / a - 1 / b = (b - a) / (a * b) >= 0\n    0 <= 1 / a - 1 / b",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "1 / a - 1 / b = (b - a) / (a * b) >= 0",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 0
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "amgm_product_expand",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        =>:\n            sqrt(a*b) <= (a+b)/2\n    0 <= a+b\n    0 <= a*b\n    (a+b)^2-4*a*b = (a-b)^2 >= 0\n    0 <= (a+b)^2-4*a*b\n    4*a*b <= (a+b)^2\n    sqrt(4*a*b) = sqrt(4)*sqrt(a*b) = 2*sqrt(a*b)\n    sqrt(a*b) = sqrt(4*a*b)/2 <= sqrt((a+b)^2)/2 = (a+b)/2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        =>:\n            sqrt (a * b) <= (a + b) / 2\n    0 <= a + b\n    0 <= a * b\n    (a + b) ^ 2 - 4 * a * b = (a - b) ^ 2 >= 0\n    0 <= (a + b) ^ 2 - 4 * a * b\n    4 * a * b <= (a + b) ^ 2\n    sqrt (4 * a * b) = sqrt (4) * sqrt (a * b) = 2 * sqrt (a * b)\n    sqrt (a * b) = sqrt (4 * a * b) / 2 <= sqrt ((a + b) ^ 2) / 2 = (a + b) / 2",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 5,
+          "failed_fact": "sqrt (4 * a * b) = sqrt (4) * sqrt (a * b) = 2 * sqrt (a * b)",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 0
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "sqrt_square_failure_repaired",
+      "category": "strict checked route",
+      "source": "forall x R:\n    sqrt(x^2) = abs(x)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "absolute_young_exposed_product",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        2*abs(a*b) <= a^2+b^2\n    abs(a*b) = abs(a)*abs(b)\n    abs(a)^2-2*abs(a)*abs(b)+abs(b)^2 = (abs(a)-abs(b))^2 >= 0\n    abs(a)^2+abs(b)^2 = (abs(a)^2-2*abs(a)*abs(b)+abs(b)^2)+2*abs(a)*abs(b) >= 0+2*abs(a)*abs(b) = 2*abs(a*b)\n    a^2+b^2 = abs(a)^2+abs(b)^2 >= 2*abs(a*b)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        2 * abs (a * b) <= a ^ 2 + b ^ 2\n    abs (a * b) = abs (a) * abs (b)\n    abs (a) ^ 2 - 2 * abs (a) * abs (b) + abs (b) ^ 2 = (abs (a) - abs (b)) ^ 2 >= 0\n    abs (a) ^ 2 + abs (b) ^ 2 = abs (a) ^ 2 - 2 * abs (a) * abs (b) + abs (b) ^ 2 + 2 * abs (a) * abs (b) >= 0 + 2 * abs (a) * abs (b) = 2 * abs (a * b)\n    a ^ 2 + b ^ 2 = abs (a) ^ 2 + abs (b) ^ 2 >= 2 * abs (a * b)",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 2,
+          "failed_fact": "abs (a) ^ 2 + abs (b) ^ 2 = abs (a) ^ 2 - 2 * abs (a) * abs (b) + abs (b) ^ 2 + 2 * abs (a) * abs (b) >= 0 + 2 * abs (a) * abs (b) = 2 * abs (a * b)",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 2
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "quadratic_reassociated",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a R+, b, c, x R:\n        a*x^2+b*x+c >= c-(b^2/a)/4\n    (x+(b/a)/2)^2 >= 0\n    a*(x+(b/a)/2)^2 >= 0\n    a*x^2+b*x+c = a*(x+(b/a)/2)^2+(c-(b^2/a)/4) >= 0+(c-(b^2/a)/4) = c-(b^2/a)/4\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "amgm_reassociated",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        =>:\n            sqrt(a*b) <= (a+b)/2\n    0 <= a+b\n    0 <= a*b\n    (a+b)^2-4*a*b = (a-b)^2 >= 0\n    0 <= (a+b)^2-4*a*b\n    4*(a*b) <= (a+b)^2\n    sqrt(4*(a*b)) = sqrt(4)*sqrt(a*b) = 2*sqrt(a*b)\n    sqrt(a*b) = sqrt(4*(a*b))/2 <= sqrt((a+b)^2)/2 = (a+b)/2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        =>:\n            sqrt (a * b) <= (a + b) / 2\n    0 <= a + b\n    0 <= a * b\n    (a + b) ^ 2 - 4 * a * b = (a - b) ^ 2 >= 0\n    0 <= (a + b) ^ 2 - 4 * a * b\n    4 * a * b <= (a + b) ^ 2\n    sqrt (4 * a * b) = sqrt (4) * sqrt (a * b) = 2 * sqrt (a * b)\n    sqrt (a * b) = sqrt (4 * a * b) / 2 <= sqrt ((a + b) ^ 2) / 2 = (a + b) / 2",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 6,
+          "failed_fact": "sqrt (a * b) = sqrt (4 * a * b) / 2 <= sqrt ((a + b) ^ 2) / 2 = (a + b) / 2",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 0
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "reciprocal_original_products",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "claim:\n    ? forall a, b R+:\n        a <= b\n        =>:\n            1/b <= 1/a\n    a/(a*b) <= b/(a*b)\n    (a*b)*(1/b) = a\n    (a*b)*(1/a) = b\n    1/b = a/(a*b) <= b/(a*b) = 1/a\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R+:\n        a <= b\n        =>:\n            1 / b <= 1 / a\n    a / (a * b) <= b / (a * b)\n    a * b * 1 / b = a\n    a * b * 1 / a = b\n    1 / b = a / (a * b) <= b / (a * b) = 1 / a",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 0,
+          "failed_fact": "<well_defined_not_proven>",
+          "failed_step_phase": "well_defined",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "cauchy_two_cold",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b, c, d R:\n    (a*c+b*d)^2 <= (a^2+b^2)*(c^2+d^2)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b, c, d R:\n    (a * c + b * d) ^ 2 <= (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2)",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "cancel_positive_cold",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b, k R:\n    k > 0\n    a*k <= b*k\n    =>:\n        a <= b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b, k R:\n    k > 0\n    a * k <= b * k\n    =>:\n        a <= b",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "cancel_negative_cold",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b, k R:\n    k < 0\n    a*k <= b*k\n    =>:\n        a >= b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b, k R:\n    k < 0\n    a * k <= b * k\n    =>:\n        a >= b",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "cancel_equality_cold",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b, k R:\n    k != 0\n    a*k = b*k\n    =>:\n        a = b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b, k R:\n    k != 0\n    a * k = b * k\n    =>:\n        a = b",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "zero_product_nonzero_factor_cold",
+      "category": "strict checked route",
+      "source": "forall a, b R:\n    a*b = 0\n    b != 0\n    =>:\n        a = 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "product_component_bound_cold",
+      "category": "strict checked route",
+      "source": "forall a, b, c, d R:\n    0 <= a\n    a <= b\n    0 <= c\n    c <= d\n    =>:\n        a*c <= b*d\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "strict_product_component_bound_cold",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b, c, d R:\n    0 <= a\n    a < b\n    0 < c\n    c <= d\n    =>:\n        a*c < b*d\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b, c, d R:\n    0 <= a\n    a < b\n    0 < c\n    c <= d\n    =>:\n        a * c < b * d",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "weighted_young_cold",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b, t R:\n    0 < t\n    =>:\n        2*a*b <= t*a^2+b^2/t\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b, t R:\n    0 < t\n    =>:\n        2 * a * b <= t * a ^ 2 + b ^ 2 / t",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "quadratic_reassociated_cold",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a R+, b, c, x R:\n    a*x^2+b*x+c >= c-(b^2/a)/4\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a R+, b, c, x R:\n    a * x ^ 2 + b * x + c >= c - b ^ 2 / a / 4",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "square_reflection_via_sum_cold",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b R:\n    0 <= a\n    0 <= b\n    a^2 <= b^2\n    =>:\n        a <= b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b R:\n    0 <= a\n    0 <= b\n    a ^ 2 <= b ^ 2\n    =>:\n        a <= b",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "abs_order_from_square_cold",
+      "category": "strict checked route",
+      "source": "forall a, b R:\n    a^2 <= b^2\n    =>:\n        abs(a) <= abs(b)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_order_from_abs_cold",
+      "category": "true mathematical route/search-or-WD boundary",
+      "source": "forall a, b R:\n    abs(a) <= abs(b)\n    =>:\n        a^2 <= b^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "forall a, b R:\n    abs (a) <= abs (b)\n    =>:\n        a ^ 2 <= b ^ 2",
+          "phase": "search_proof",
+          "inner_phase": null,
+          "step_index": null,
+          "failed_fact": null,
+          "failed_step_phase": null,
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "weak_negative_product_chain_cold",
+      "category": "strict checked route",
+      "source": "forall a, b R:\n    a <= 0\n    b <= 0\n    =>:\n        0 <= a*b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "weighted_young_delete_0",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b, t R:\n        0 < t\n        =>:\n            2*a*b <= t*a^2+b^2/t\n    t*a^2+b^2/t-2*a*b = (t*a-b)^2/t >= 0\n    0 <= t*a^2+b^2/t-2*a*b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "weighted_young_delete_1",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b, t R:\n        0 < t\n        =>:\n            2*a*b <= t*a^2+b^2/t\n    (t*a-b)^2 >= 0\n    0 <= t*a^2+b^2/t-2*a*b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b, t R:\n        0 < t\n        =>:\n            2 * a * b <= t * a ^ 2 + b ^ 2 / t\n    (t * a - b) ^ 2 >= 0\n    0 <= (t * a ^ 2 + b ^ 2 / t) - 2 * a * b",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "0 <= (t * a ^ 2 + b ^ 2 / t) - 2 * a * b",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "weighted_young_delete_2",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b, t R:\n        0 < t\n        =>:\n            2*a*b <= t*a^2+b^2/t\n    (t*a-b)^2 >= 0\n    t*a^2+b^2/t-2*a*b = (t*a-b)^2/t >= 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b, t R:\n        0 < t\n        =>:\n            2 * a * b <= t * a ^ 2 + b ^ 2 / t\n    (t * a - b) ^ 2 >= 0\n    (t * a ^ 2 + b ^ 2 / t) - 2 * a * b = (t * a - b) ^ 2 / t >= 0",
+          "phase": "claim",
+          "inner_phase": "conclusion",
+          "step_index": null,
+          "failed_fact": "2 * a * b <= t * a ^ 2 + b ^ 2 / t",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "quadratic_reassociated_delete_0",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, b, c, x R:\n        a*x^2+b*x+c >= c-(b^2/a)/4\n    a*(x+(b/a)/2)^2 >= 0\n    a*x^2+b*x+c = a*(x+(b/a)/2)^2+(c-(b^2/a)/4) >= 0+(c-(b^2/a)/4) = c-(b^2/a)/4\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "quadratic_reassociated_delete_1",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, b, c, x R:\n        a*x^2+b*x+c >= c-(b^2/a)/4\n    (x+(b/a)/2)^2 >= 0\n    a*x^2+b*x+c = a*(x+(b/a)/2)^2+(c-(b^2/a)/4) >= 0+(c-(b^2/a)/4) = c-(b^2/a)/4\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a R+, b, c, x R:\n        a * x ^ 2 + b * x + c >= c - b ^ 2 / a / 4\n    (x + b / a / 2) ^ 2 >= 0\n    a * x ^ 2 + b * x + c = a * (x + b / a / 2) ^ 2 + (c - b ^ 2 / a / 4) >= 0 + (c - b ^ 2 / a / 4) = c - b ^ 2 / a / 4",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "a * x ^ 2 + b * x + c = a * (x + b / a / 2) ^ 2 + (c - b ^ 2 / a / 4) >= 0 + (c - b ^ 2 / a / 4) = c - b ^ 2 / a / 4",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 1
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "quadratic_reassociated_delete_2",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a R+, b, c, x R:\n        a*x^2+b*x+c >= c-(b^2/a)/4\n    (x+(b/a)/2)^2 >= 0\n    a*(x+(b/a)/2)^2 >= 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a R+, b, c, x R:\n        a * x ^ 2 + b * x + c >= c - b ^ 2 / a / 4\n    (x + b / a / 2) ^ 2 >= 0\n    a * (x + b / a / 2) ^ 2 >= 0",
+          "phase": "claim",
+          "inner_phase": "conclusion",
+          "step_index": null,
+          "failed_fact": "a * x ^ 2 + b * x + c >= c - b ^ 2 / a / 4",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "square_reflection_via_sum_delete_0",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a^2 <= b^2\n        =>:\n            a <= b\n    0 <= b^2\n    a = sqrt(a^2) <= sqrt(b^2) = b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a ^ 2 <= b ^ 2\n        =>:\n            a <= b\n    0 <= b ^ 2\n    a = sqrt (a ^ 2) <= sqrt (b ^ 2) = b",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "a = sqrt (a ^ 2) <= sqrt (b ^ 2) = b",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 1
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "square_reflection_via_sum_delete_1",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a^2 <= b^2\n        =>:\n            a <= b\n    0 <= a^2\n    a = sqrt(a^2) <= sqrt(b^2) = b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a ^ 2 <= b ^ 2\n        =>:\n            a <= b\n    0 <= a ^ 2\n    a = sqrt (a ^ 2) <= sqrt (b ^ 2) = b",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "a = sqrt (a ^ 2) <= sqrt (b ^ 2) = b",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 1
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "square_reflection_via_sum_delete_2",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a^2 <= b^2\n        =>:\n            a <= b\n    0 <= a^2\n    0 <= b^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a ^ 2 <= b ^ 2\n        =>:\n            a <= b\n    0 <= a ^ 2\n    0 <= b ^ 2",
+          "phase": "claim",
+          "inner_phase": "conclusion",
+          "step_index": null,
+          "failed_fact": "a <= b",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "abs_order_from_square_delete_0",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        a^2 <= b^2\n        =>:\n            abs(a) <= abs(b)\n    0 <= b^2\n    abs(a) = sqrt(a^2) <= sqrt(b^2) = abs(b)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        a ^ 2 <= b ^ 2\n        =>:\n            abs (a) <= abs (b)\n    0 <= b ^ 2\n    abs (a) = sqrt (a ^ 2) <= sqrt (b ^ 2) = abs (b)",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "abs (a) = sqrt (a ^ 2) <= sqrt (b ^ 2) = abs (b)",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 1
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "abs_order_from_square_delete_1",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        a^2 <= b^2\n        =>:\n            abs(a) <= abs(b)\n    0 <= a^2\n    abs(a) = sqrt(a^2) <= sqrt(b^2) = abs(b)\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        a ^ 2 <= b ^ 2\n        =>:\n            abs (a) <= abs (b)\n    0 <= a ^ 2\n    abs (a) = sqrt (a ^ 2) <= sqrt (b ^ 2) = abs (b)",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 1,
+          "failed_fact": "abs (a) = sqrt (a ^ 2) <= sqrt (b ^ 2) = abs (b)",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": 1
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "abs_order_from_square_delete_2",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        a^2 <= b^2\n        =>:\n            abs(a) <= abs(b)\n    0 <= a^2\n    0 <= b^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_order_from_abs_delete_0",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        abs(a) <= abs(b)\n        =>:\n            a^2 <= b^2\n    abs(b)^2 = b^2\n    a^2 = abs(a)^2 <= abs(b)^2 = b^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_order_from_abs_delete_1",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        abs(a) <= abs(b)\n        =>:\n            a^2 <= b^2\n    abs(a)^2 = a^2\n    a^2 = abs(a)^2 <= abs(b)^2 = b^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_order_from_abs_delete_2",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        abs(a) <= abs(b)\n        =>:\n            a^2 <= b^2\n    abs(a)^2 = a^2\n    abs(b)^2 = b^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b R:\n        abs (a) <= abs (b)\n        =>:\n            a ^ 2 <= b ^ 2\n    abs (a) ^ 2 = a ^ 2\n    abs (b) ^ 2 = b ^ 2",
+          "phase": "claim",
+          "inner_phase": "conclusion",
+          "step_index": null,
+          "failed_fact": "a ^ 2 <= b ^ 2",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "weak_negative_product_chain_delete_0",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        a <= 0\n        b <= 0\n        =>:\n            0 <= a*b\n    0 <= 0-b\n    a*b = (0-a)*(0-b) >= 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "weak_negative_product_chain_delete_1",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        a <= 0\n        b <= 0\n        =>:\n            0 <= a*b\n    0 <= 0-a\n    a*b = (0-a)*(0-b) >= 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "weak_negative_product_chain_delete_2",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b R:\n        a <= 0\n        b <= 0\n        =>:\n            0 <= a*b\n    0 <= 0-a\n    0 <= 0-b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "cauchy_two_delete_0",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b, c, d R:\n        (a*c+b*d)^2 <= (a^2+b^2)*(c^2+d^2)\n    0 <= (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b, c, d R:\n        (a * c + b * d) ^ 2 <= (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2)\n    0 <= (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2) - (a * c + b * d) ^ 2",
+          "phase": "claim",
+          "inner_phase": "proof_body",
+          "step_index": 0,
+          "failed_fact": "0 <= (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2) - (a * c + b * d) ^ 2",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "cauchy_two_delete_1",
+      "category": "deletion control",
+      "source": "claim:\n    ? forall a, b, c, d R:\n        (a*c+b*d)^2 <= (a^2+b^2)*(c^2+d^2)\n    (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2 = (a*d-b*c)^2 >= 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "session_error": null,
+      "failures": [
+        {
+          "statement": "claim:\n    ? forall a, b, c, d R:\n        (a * c + b * d) ^ 2 <= (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2)\n    (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2) - (a * c + b * d) ^ 2 = (a * d - b * c) ^ 2 >= 0",
+          "phase": "claim",
+          "inner_phase": "conclusion",
+          "step_index": null,
+          "failed_fact": "(a * c + b * d) ^ 2 <= (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2)",
+          "failed_step_phase": "search_proof",
+          "adjacent_index": null
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "square_order_from_abs_min",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        abs(a) <= abs(b)\n        =>:\n            a^2 <= b^2\n    a^2 = abs(a)^2 <= abs(b)^2 = b^2\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "weighted_young_min",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, t R:\n        0 < t\n        =>:\n            2*a*b <= t*a^2+b^2/t\n    t*a^2+b^2/t-2*a*b = (t*a-b)^2/t >= 0\n    0 <= t*a^2+b^2/t-2*a*b\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "quadratic_min",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a R+, b, c, x R:\n        a*x^2+b*x+c >= c-(b^2/a)/4\n    a*(x+(b/a)/2)^2 >= 0\n    a*x^2+b*x+c = a*(x+(b/a)/2)^2+(c-(b^2/a)/4) >= 0+(c-(b^2/a)/4) = c-(b^2/a)/4\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "cauchy_equality",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, c, d R:\n        (a*c+b*d)^2 = (a^2+b^2)*(c^2+d^2)\n        =>:\n            a*d = b*c\n    (a*d-b*c)^2 = (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2 = 0\n    a*d-b*c = 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "square_bound_equality",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b R:\n        a^2+b^2 = 2*a*b\n        =>:\n            a = b\n    (a-b)^2 = a^2+b^2-2*a*b = 0\n    a-b = 0\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    },
+    {
+      "name": "cross_multiply_back",
+      "category": "strict checked route",
+      "source": "claim:\n    ? forall a, b, c, d R:\n        0 < b\n        0 < d\n        a*d <= c*b\n        =>:\n            a/b <= c/d\n    0 < b*d\n    a/b = (a*d)/(b*d) <= (c*b)/(b*d) = c/d\n",
+      "command": "target/release/litex -strict -f <standalone task draft>",
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "failures": [],
+      "stderr": ""
+    }
+  ],
+  "manual_gate": {
+    "document_sha256": "f30dab5cc4adca4114efb661f6bd38d3853d87ddc4bc0c0acc898dbfcaba0138",
+    "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+    "binary_unchanged_during_gate": true,
+    "results": [
+      {
+        "name": "document_00",
+        "source": "forall a, b R:\n    a <= 0\n    b <= 0\n    =>:\n        0 <= a*b\nforall a, b R:\n    a > 0\n    b > 0\n    =>:\n        a*b > 0\nforall a, b R:\n    a < 0\n    b < 0\n    =>:\n        a*b > 0\nforall a, b R:\n    a != 0\n    b != 0\n    =>:\n        a*b != 0\nforall a, b R:\n    a*b = 0\n    =>:\n        a = 0 or b = 0\nforall a, b R:\n    a*b = 0\n    b != 0\n    =>:\n        a = 0",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_00.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b R:\n    a <= 0\n    b <= 0\n    =>:\n        0 <= a * b",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b R:\n    a <= 0\n    b <= 0\n    =>:\n        0 <= a * b"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall a, b R:\n    a > 0\n    b > 0\n    =>:\n        a * b > 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b R:\n    a > 0\n    b > 0\n    =>:\n        a * b > 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall a, b R:\n    a < 0\n    b < 0\n    =>:\n        a * b > 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b R:\n    a < 0\n    b < 0\n    =>:\n        a * b > 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall a, b R:\n    a != 0\n    b != 0\n    =>:\n        a * b != 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b R:\n    a != 0\n    b != 0\n    =>:\n        a * b != 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall a, b R:\n    a * b = 0\n    =>:\n        a = 0 or b = 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b R:\n    a * b = 0\n    =>:\n        a = 0 or b = 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall a, b R:\n    a * b = 0\n    b != 0\n    =>:\n        a = 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b R:\n    a * b = 0\n    b != 0\n    =>:\n        a = 0"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 7867,
+        "gate": true
+      },
+      {
+        "name": "document_01",
+        "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        b <= 0\n        =>:\n            a*b <= 0\n    a*b <= a*0 = 0\nclaim:\n    ? forall a, b R:\n        0 < a\n        b < 0\n        =>:\n            a*b < 0\n    a*b < a*0 = 0",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_01.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        b <= 0\n        =>:\n            a * b <= 0\n    a * b <= a * 0 = 0",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b R:\n    0 <= a\n    b <= 0\n    =>:\n        a * b <= 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b R:\n        0 < a\n        b < 0\n        =>:\n            a * b < 0\n    a * b < a * 0 = 0",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b R:\n    0 < a\n    b < 0\n    =>:\n        a * b < 0"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 7903,
+        "gate": true
+      },
+      {
+        "name": "document_02",
+        "source": "claim:\n    ? forall a, b, k R:\n        k > 0\n        a*k <= b*k\n        =>:\n            a <= b\n    a = (a*k)/k <= (b*k)/k = b\nclaim:\n    ? forall a, b, k R:\n        k < 0\n        a*k <= b*k\n        =>:\n            a >= b\n    a = (a*k)/k >= (b*k)/k = b\nclaim:\n    ? forall a, b, k R:\n        k != 0\n        a*k = b*k\n        =>:\n            a = b\n    a = (a*k)/k = (b*k)/k = b",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_02.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b, k R:\n        k > 0\n        a * k <= b * k\n        =>:\n            a <= b\n    a = a * k / k <= b * k / k = b",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b, k R:\n    k > 0\n    a * k <= b * k\n    =>:\n        a <= b"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b, k R:\n        k < 0\n        a * k <= b * k\n        =>:\n            a >= b\n    a = a * k / k >= b * k / k = b",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b, k R:\n    k < 0\n    a * k <= b * k\n    =>:\n        a >= b"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b, k R:\n        k != 0\n        a * k = b * k\n        =>:\n            a = b\n    a = a * k / k = b * k / k = b",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b, k R:\n    k != 0\n    a * k = b * k\n    =>:\n        a = b"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 7923,
+        "gate": true
+      },
+      {
+        "name": "document_03",
+        "source": "forall a, b, c, d R:\n    0 <= a\n    a <= b\n    0 <= c\n    c <= d\n    =>:\n        a*c <= b*d\nclaim:\n    ? forall a, b, c, d R:\n        0 <= a\n        a < b\n        0 < c\n        c <= d\n        =>:\n            a*c < b*d\n    a*c < b*c <= b*d",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_03.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b, c, d R:\n    0 <= a\n    a <= b\n    0 <= c\n    c <= d\n    =>:\n        a * c <= b * d",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b, c, d R:\n    0 <= a\n    a <= b\n    0 <= c\n    c <= d\n    =>:\n        a * c <= b * d"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b, c, d R:\n        0 <= a\n        a < b\n        0 < c\n        c <= d\n        =>:\n            a * c < b * d\n    a * c < b * c <= b * d",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b, c, d R:\n    0 <= a\n    a < b\n    0 < c\n    c <= d\n    =>:\n        a * c < b * d"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 7957,
+        "gate": true
+      },
+      {
+        "name": "document_04",
+        "source": "forall x R:\n    abs(x)^2 = x^2\n    sqrt(x^2) = abs(x)\n    abs(x^2) = x^2\nforall x, y R:\n    abs(x*y) = abs(x)*abs(y)\nforall x R:\n    0 <= x\n    =>:\n        sqrt(x^2) = x\n        sqrt(x)^2 = x",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_04.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall x R:\n    abs (x) ^ 2 = x ^ 2\n    sqrt (x ^ 2) = abs (x)\n    abs (x ^ 2) = x ^ 2",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall x R:\n    abs (x) ^ 2 = x ^ 2\n    sqrt (x ^ 2) = abs (x)\n    abs (x ^ 2) = x ^ 2"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall x, y R:\n    abs (x * y) = abs (x) * abs (y)",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall x, y R:\n    abs (x * y) = abs (x) * abs (y)"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall x R:\n    0 <= x\n    =>:\n        sqrt (x ^ 2) = x\n        sqrt (x) ^ 2 = x",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall x R:\n    0 <= x\n    =>:\n        sqrt (x ^ 2) = x\n        sqrt (x) ^ 2 = x"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8003,
+        "gate": true
+      },
+      {
+        "name": "document_05",
+        "source": "forall a, b R:\n    a^2 <= b^2\n    =>:\n        abs(a) <= abs(b)\nclaim:\n    ? forall a, b R:\n        abs(a) <= abs(b)\n        =>:\n            a^2 <= b^2\n    a^2 = abs(a)^2 <= abs(b)^2 = b^2",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_05.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b R:\n    a ^ 2 <= b ^ 2\n    =>:\n        abs (a) <= abs (b)",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b R:\n    a ^ 2 <= b ^ 2\n    =>:\n        abs (a) <= abs (b)"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b R:\n        abs (a) <= abs (b)\n        =>:\n            a ^ 2 <= b ^ 2\n    a ^ 2 = abs (a) ^ 2 <= abs (b) ^ 2 = b ^ 2",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b R:\n    abs (a) <= abs (b)\n    =>:\n        a ^ 2 <= b ^ 2"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8021,
+        "gate": true
+      },
+      {
+        "name": "document_06",
+        "source": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a^2 <= b^2\n        =>:\n            a <= b\n    0 <= a^2\n    0 <= b^2\n    a = sqrt(a^2) <= sqrt(b^2) = b",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_06.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b R:\n        0 <= a\n        0 <= b\n        a ^ 2 <= b ^ 2\n        =>:\n            a <= b\n    0 <= a ^ 2\n    0 <= b ^ 2\n    a = sqrt (a ^ 2) <= sqrt (b ^ 2) = b",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b R:\n    0 <= a\n    0 <= b\n    a ^ 2 <= b ^ 2\n    =>:\n        a <= b"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8037,
+        "gate": true
+      },
+      {
+        "name": "document_07",
+        "source": "forall x R:\n    x^2 = 0\n    =>:\n        x = 0\nforall x, y R:\n    x != 0\n    =>:\n        x^2+y^2 > 0\nforall a, b R:\n    a^2+b^2 = 0\n    =>:\n        a = 0\n        b = 0",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_07.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall x R:\n    x ^ 2 = 0\n    =>:\n        x = 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall x R:\n    x ^ 2 = 0\n    =>:\n        x = 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall x, y R:\n    x != 0\n    =>:\n        x ^ 2 + y ^ 2 > 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall x, y R:\n    x != 0\n    =>:\n        x ^ 2 + y ^ 2 > 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "forall a, b R:\n    a ^ 2 + b ^ 2 = 0\n    =>:\n        a = 0\n        b = 0",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b R:\n    a ^ 2 + b ^ 2 = 0\n    =>:\n        a = 0\n        b = 0"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8061,
+        "gate": true
+      },
+      {
+        "name": "document_08",
+        "source": "claim:\n    ? forall a, b R:\n        4*a*b <= (a+b)^2\n    (a+b)^2-4*a*b = (a-b)^2 >= 0\n    0 <= (a+b)^2-4*a*b\nclaim:\n    ? forall a, b R:\n        (a+b)^2 <= 2*(a^2+b^2)\n    2*(a^2+b^2)-(a+b)^2 = (a-b)^2 >= 0\n    0 <= 2*(a^2+b^2)-(a+b)^2",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_08.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b R:\n        4 * a * b <= (a + b) ^ 2\n    (a + b) ^ 2 - 4 * a * b = (a - b) ^ 2 >= 0\n    0 <= (a + b) ^ 2 - 4 * a * b",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b R:\n    4 * a * b <= (a + b) ^ 2"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b R:\n        (a + b) ^ 2 <= 2 * (a ^ 2 + b ^ 2)\n    2 * (a ^ 2 + b ^ 2) - (a + b) ^ 2 = (a - b) ^ 2 >= 0\n    0 <= 2 * (a ^ 2 + b ^ 2) - (a + b) ^ 2",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b R:\n    (a + b) ^ 2 <= 2 * (a ^ 2 + b ^ 2)"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8099,
+        "gate": true
+      },
+      {
+        "name": "document_09",
+        "source": "claim:\n    ? forall a, b, t R:\n        0 < t\n        =>:\n            2*a*b <= t*a^2+b^2/t\n    t*a^2+b^2/t-2*a*b = (t*a-b)^2/t >= 0\n    0 <= t*a^2+b^2/t-2*a*b",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_09.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b, t R:\n        0 < t\n        =>:\n            2 * a * b <= t * a ^ 2 + b ^ 2 / t\n    (t * a ^ 2 + b ^ 2 / t) - 2 * a * b = (t * a - b) ^ 2 / t >= 0\n    0 <= (t * a ^ 2 + b ^ 2 / t) - 2 * a * b",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b, t R:\n    0 < t\n    =>:\n        2 * a * b <= t * a ^ 2 + b ^ 2 / t"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8116,
+        "gate": true
+      },
+      {
+        "name": "document_10",
+        "source": "claim:\n    ? forall a, b, c, d R:\n        (a*c+b*d)^2 <= (a^2+b^2)*(c^2+d^2)\n    (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2 = (a*d-b*c)^2 >= 0\n    0 <= (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_10.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b, c, d R:\n        (a * c + b * d) ^ 2 <= (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2)\n    (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2) - (a * c + b * d) ^ 2 = (a * d - b * c) ^ 2 >= 0\n    0 <= (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2) - (a * c + b * d) ^ 2",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b, c, d R:\n    (a * c + b * d) ^ 2 <= (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2)"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8134,
+        "gate": true
+      },
+      {
+        "name": "document_11",
+        "source": "claim:\n    ? forall a, b R:\n        a^2+b^2 = 2*a*b\n        =>:\n            a = b\n    (a-b)^2 = a^2+b^2-2*a*b = 0\n    a-b = 0\nclaim:\n    ? forall a, b, c, d R:\n        (a*c+b*d)^2 = (a^2+b^2)*(c^2+d^2)\n        =>:\n            a*d = b*c\n    (a*d-b*c)^2 = (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2 = 0\n    a*d-b*c = 0",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_11.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b R:\n        a ^ 2 + b ^ 2 = 2 * a * b\n        =>:\n            a = b\n    (a - b) ^ 2 = (a ^ 2 + b ^ 2) - 2 * a * b = 0\n    a - b = 0",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b R:\n    a ^ 2 + b ^ 2 = 2 * a * b\n    =>:\n        a = b"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b, c, d R:\n        (a * c + b * d) ^ 2 = (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2)\n        =>:\n            a * d = b * c\n    (a * d - b * c) ^ 2 = (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2) - (a * c + b * d) ^ 2 = 0\n    a * d - b * c = 0",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b, c, d R:\n    (a * c + b * d) ^ 2 = (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2)\n    =>:\n        a * d = b * c"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8153,
+        "gate": true
+      },
+      {
+        "name": "document_12",
+        "source": "claim:\n    ? forall a, b, c, d R:\n        0 < b\n        0 < d\n        a/b <= c/d\n        =>:\n            a*d <= c*b\n    (a/b)*b <= (c/d)*b\n    a*d = ((a/b)*b)*d <= ((c/d)*b)*d = c*b\nclaim:\n    ? forall a, b, c, d R:\n        0 < b\n        0 < d\n        a*d <= c*b\n        =>:\n            a/b <= c/d\n    0 < b*d\n    a/b = (a*d)/(b*d) <= (c*b)/(b*d) = c/d",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_12.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b, c, d R:\n        0 < b\n        0 < d\n        a / b <= c / d\n        =>:\n            a * d <= c * b\n    a / b * b <= c / d * b\n    a * d = a / b * b * d <= c / d * b * d = c * b",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b, c, d R:\n    0 < b\n    0 < d\n    a / b <= c / d\n    =>:\n        a * d <= c * b"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a, b, c, d R:\n        0 < b\n        0 < d\n        a * d <= c * b\n        =>:\n            a / b <= c / d\n    0 < b * d\n    a / b = a * d / (b * d) <= c * b / (b * d) = c / d",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a, b, c, d R:\n    0 < b\n    0 < d\n    a * d <= c * b\n    =>:\n        a / b <= c / d"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8184,
+        "gate": true
+      },
+      {
+        "name": "document_13",
+        "source": "claim:\n    ? forall a R+, b, c, x R:\n        a*x^2+b*x+c >= c-(b^2/a)/4\n    a*(x+(b/a)/2)^2 >= 0\n    a*x^2+b*x+c = a*(x+(b/a)/2)^2+(c-(b^2/a)/4) >= 0+(c-(b^2/a)/4) = c-(b^2/a)/4",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_13.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "claim:\n    ? forall a R+, b, c, x R:\n        a * x ^ 2 + b * x + c >= c - b ^ 2 / a / 4\n    a * (x + b / a / 2) ^ 2 >= 0\n    a * x ^ 2 + b * x + c = a * (x + b / a / 2) ^ 2 + (c - b ^ 2 / a / 4) >= 0 + (c - b ^ 2 / a / 4) = c - b ^ 2 / a / 4",
+              "proof_method": {
+                "type": "proof_block",
+                "rule_name": "Claim",
+                "message": "Prove a claim block and store its conclusions"
+              },
+              "stores": [
+                "forall a R+, b, c, x R:\n    a * x ^ 2 + b * x + c >= c - b ^ 2 / a / 4"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8220,
+        "gate": true
+      },
+      {
+        "name": "document_14",
+        "source": "2*0 = 1*0\nnot 2 <= 1\n(-2)^2 = 2^2\nnot -2 = 2\nsqrt((-2)^2) = 2\nnot sqrt((-2)^2) = -2\n-2 <= -1\n-3 <= -2\n(-2)*(-3) > (-1)*(-2)\n1*0 = 0\nnot 1 = 0\nnot 2*1*0 <= (-1)*1^2+0^2/(-1)",
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-06/manual-square-product/document_14.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "2 * 0 = 1 * 0",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "2 * 0 = 1 * 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "not 2 <= 1",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "not 2 <= 1"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "-2 ^ 2 = 2 ^ 2",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "-2 ^ 2 = 2 ^ 2"
+              ],
+              "infers": [
+                "2 ^ 2 $in R+",
+                "0 < 2 ^ 2",
+                "0 <= 2 ^ 2",
+                "2 ^ 2 $in N",
+                "0 <= 2 ^ 2",
+                "2 ^ 2 != 0",
+                "-2 ^ 2 $in R+",
+                "0 < -2 ^ 2",
+                "0 <= -2 ^ 2",
+                "-2 ^ 2 $in N",
+                "0 <= -2 ^ 2",
+                "-2 ^ 2 != 0"
+              ]
+            },
+            {
+              "success": true,
+              "statement": "-2 != 2",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "-2 != 2"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "sqrt (-2 ^ 2) = 2",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "sqrt (-2 ^ 2) = 2"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "sqrt (-2 ^ 2) != -2",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "sqrt (-2 ^ 2) != -2"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "-2 <= -1",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "-2 <= -1"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "-3 <= -2",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "-3 <= -2"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "-2 * -3 > -1 * -2",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "-2 * -3 > -1 * -2"
+              ],
+              "infers": [
+                "0 < -2 * -3"
+              ]
+            },
+            {
+              "success": true,
+              "statement": "1 * 0 = 0",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "1 * 0 = 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "1 != 0",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "1 != 0"
+              ],
+              "infers": []
+            },
+            {
+              "success": true,
+              "statement": "not 2 * 1 * 0 <= -1 * 1 ^ 2 + 0 ^ 2 / -1",
+              "proof_method": {
+                "type": "by_closed_calculation",
+                "rule_name": "Closed calculation",
+                "message": "Exact evaluation of closed expressions without proof search"
+              },
+              "stores": [
+                "not 2 * 1 * 0 <= -1 * 1 ^ 2 + 0 ^ 2 / -1"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": "",
+        "line": 8244,
+        "gate": true
+      }
+    ],
+    "preservation": {
+      "original_fences": 312,
+      "new_fences": 327,
+      "missing_fences": [],
+      "missing_anchors": [],
+      "original_native_ids": 166,
+      "missing_native_ids": [],
+      "local_anchor_links": 803,
+      "missing_local_links": []
+    }
+  },
+  "static_checks": {
+    "relative_file_links_missing": [],
+    "git_diff_check": "passed",
+    "original_content_preservation": {
+      "original_fences": 312,
+      "new_fences": 327,
+      "missing_fences": [],
+      "missing_anchors": [],
+      "original_native_ids": 166,
+      "missing_native_ids": [],
+      "local_anchor_links": 803,
+      "missing_local_links": []
+    }
+  },
+  "workspace_hygiene": {
+    "draft_cleanup": "completed",
+    "task_draft_files_removed": 246,
+    "completed_sop_removal": "completed",
+    "later_source_build_issue": "Transferred to concurrent_build_boundary; no unrelated CLI/Runtime repair performed."
+  }
+}

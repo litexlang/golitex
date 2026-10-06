@@ -234,8 +234,6 @@ fn intrinsic_codomain(element: &Obj) -> Option<(StandardSet, IntrinsicCodomain)>
             ComplexOperator::ImaginaryPart(_) => (R, K::ImaginaryPart),
             ComplexOperator::ComplexAbs(_) => (R, K::ComplexAbs),
         },
-        Obj::ProductShape(ProductShape::TupleDim(_)) => (N, K::TupleDim),
-        Obj::ProductShape(ProductShape::CartDim(_)) => (N, K::CartDim),
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(_)) => (N, K::FiniteSetSize),
         // Object WD already proves finite, nonempty and contained in R.
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(_)) => (R, K::FiniteSetMax),

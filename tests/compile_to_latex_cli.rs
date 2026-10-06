@@ -57,8 +57,51 @@ fn false_facts_convert_but_invalid_syntax_fails() {
     let map = json.as_object().unwrap();
     assert_eq!(map.get("content"), Some(&JsonValue::Null));
     assert_eq!(map.get("language"), Some(&JsonValue::String("zh".into())));
-    let (ok, _) = convert(&["-latex", "-session", "-e", "1 = 1"]);
-    assert!(!ok);
+}
+
+#[test]
+fn invalid_latex_launches_use_the_common_argument_error_path() {
+    for args in [
+        vec!["-latex", "-session", "-e", "1 = 1"],
+        vec!["-latex", "-strict", "-e", "1 = 1"],
+        vec!["-latex", "--latex", "-e", "1 = 1"],
+        vec!["-latex", "-document", "--document", "-e", "1 = 1"],
+        vec!["-latex", "-extractc", "have a R = 1"],
+        vec!["-extractpython", "have a R = 1", "-latex"],
+        vec!["-latex", "-f"],
+        vec!["-latex", "-e", "1 = 1", "-extra"],
+        vec!["-document", "-e", "1 = 1"],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+            .args(&args)
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(2), "{args:?}: {output:?}");
+        assert!(output.stdout.is_empty(), "{args:?}: {output:?}");
+        assert!(!output.stderr.is_empty(), "{args:?}");
+    }
+}
+
+#[test]
+fn option_looking_source_operands_reach_their_selected_parser() {
+    for flag in ["-latex", "--latex", "-document", "--document"] {
+        let (ok, json) = convert(&["-latex", "-e", flag]);
+        assert!(!ok, "{flag}: {json:?}");
+        assert_eq!(
+            json.as_object().unwrap().get("target"),
+            Some(&JsonValue::String("eval".into()))
+        );
+        let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+            .args(["-e", flag])
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(1), "{flag}: {output:?}");
+        let ordinary = JsonValue::parse(std::str::from_utf8(&output.stdout).unwrap()).unwrap();
+        assert_eq!(
+            ordinary.as_object().unwrap().get("kind"),
+            Some(&JsonValue::String("run".into()))
+        );
+    }
 }
 #[test]
 fn project_order_names_and_file_prefix_are_parse_only() {

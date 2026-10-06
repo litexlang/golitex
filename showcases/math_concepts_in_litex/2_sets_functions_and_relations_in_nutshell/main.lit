@@ -65,7 +65,7 @@ have fn successor_on_first(x R: x $in first_set) second_set = x + 1
 have successor_as_value fn(x R: x $in first_set) second_set = fn(input R: input $in first_set) second_set {input + 1}
 
 # A binary relation on N, represented as a set of ordered pairs.
-have successor_graph power_set(cart(N, N)) = {pair cart(N, N): pair[2] = pair[1] + 1}
+have successor_graph power_set(cart(N, N)) = {pair cart(N, N): pair(2) = pair(1) + 1}
 
 # Third presentation: prove that the relation y = x + 1 has exactly one output
 # for each input, then let `have fn by exist!` select the callable function.
@@ -93,10 +93,10 @@ thm selected_successor_lies_on_graph:
         (x, successor_from_unique_output(x)) $in successor_graph
     successor_from_unique_output(x) = x + 1
     (x, successor_from_unique_output(x)) $in cart(N, N)
-    (x, successor_from_unique_output(x))[2] = successor_from_unique_output(x)
-    (x, successor_from_unique_output(x))[1] = x
-    (x, successor_from_unique_output(x))[2] = (x, successor_from_unique_output(x))[1] + 1
-    (x, successor_from_unique_output(x)) $in {pair cart(N, N): pair[2] = pair[1] + 1}
+    (x, successor_from_unique_output(x))(2) = successor_from_unique_output(x)
+    (x, successor_from_unique_output(x))(1) = x
+    (x, successor_from_unique_output(x))(2) = (x, successor_from_unique_output(x))(1) + 1
+    (x, successor_from_unique_output(x)) $in {pair cart(N, N): pair(2) = pair(1) + 1}
     (x, successor_from_unique_output(x)) $in successor_graph
 
 # Prove the finite domain lies in N before comparing with the total successor.

@@ -76,13 +76,12 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
     ReduceEmptyBuiltinRuleProof, SumEmptyRangeBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::{
-    CartProjFactorBuiltinRuleProof, ClosedRangeSingletonListSetBuiltinRuleProof,
+    ClosedRangeSingletonListSetBuiltinRuleProof,
     EmptySetFromSizeZeroBuiltinRuleProof, FiniteSetReduceAddZeroEqualsSumBuiltinRuleProof,
     FiniteSetSizeSetMinusBuiltinRuleProof, FiniteSetSizeUnionBuiltinRuleProof,
     PowOfLogInverseBuiltinRuleProof, ProductSingleTermBuiltinRuleProof,
     ReduceAddZeroEqualsSumBuiltinRuleProof, SetMinusRecoversSubsetBuiltinRuleProof,
-    SumSingleTermBuiltinRuleProof, TupleComponentAtIndexBuiltinRuleProof,
-    UnionAbsorptionFromSubsetBuiltinRuleProof
+    SumSingleTermBuiltinRuleProof, UnionAbsorptionFromSubsetBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::{
     ComplexAbsOfImaginaryUnitBuiltinRuleProof, FiniteSetProductListExpansionBuiltinRuleProof,
@@ -539,10 +538,7 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
                 proof_of_requirement_facts: Vec::new(),
             },
         ),
-        EqualitySearchProofByBuiltinRule::CartProjFactor(CartProjFactorBuiltinRuleProof {}),
-        EqualitySearchProofByBuiltinRule::TupleComponentAtIndex(
-            TupleComponentAtIndexBuiltinRuleProof {},
-        ),
+
         EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(
             FiniteSetSizeSetMinusBuiltinRuleProof {},
         ),
@@ -712,7 +708,7 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
 fn acceptance_equality_builtin_all_variants_bilingual() {
     let rules = all_equality_rules();
     // Four identity leaves moved to TheyAreTheSame; indexed lookup is now a class proof.
-    assert_eq!(rules.len(), 193);
+    assert_eq!(rules.len(), 191);
     for (index, rule) in rules.iter().enumerate() {
         let context = format!("equality variant {index}");
         let en = rule.rule_name_and_message(OutputLanguage::English);
@@ -1158,12 +1154,8 @@ fn acceptance_previously_stubbed_atomic_families_bilingual() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::{
         IsFiniteSetFactSearchProofByBuiltinRule, ListSetFiniteBuiltinRuleProof,
     };
-    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_cart::{
-        CartConstructorBuiltinRuleProof, IsCartFactSearchProofByBuiltinRule,
-    };
-    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_tuple::{
-        IsTupleFactSearchProofByBuiltinRule, TupleLiteralBuiltinRuleProof,
-    };
+
+
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::{
         SubsetFactSearchProofByBuiltinRule, SubsetReflexivityBuiltinRuleProof,
     };
@@ -1244,12 +1236,7 @@ fn acceptance_previously_stubbed_atomic_families_bilingual() {
                 ClosedNumericMembershipBuiltinRuleProof {},
             ),
         ),
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsCartFact(
-            IsCartFactSearchProofByBuiltinRule::CartConstructor(CartConstructorBuiltinRuleProof {}),
-        ),
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsTupleFact(
-            IsTupleFactSearchProofByBuiltinRule::TupleLiteral(TupleLiteralBuiltinRuleProof {}),
-        ),
+
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(
             SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(
                 SubsetReflexivityBuiltinRuleProof {},

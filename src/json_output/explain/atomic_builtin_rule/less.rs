@@ -8,7 +8,8 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     ArctanPrincipalUpperBoundBuiltinRuleProof, ClosedNumericComparisonBuiltinRuleProof,
     DivByGtOneLessSelfBuiltinRuleProof, DivMonotoneStrictSameNegDivisorBuiltinRuleProof,
     DivMonotoneStrictSamePosDivisorBuiltinRuleProof, EvenPowPositiveFromNonzeroBuiltinRuleProof,
-    LessFromPosDifferenceBuiltinRuleProof, LessTransitivityBuiltinRuleProof,
+    LessFromPosDifferenceBuiltinRuleProof,
+ LessTransitivityBuiltinRuleProof,
     LogNegativeFromBaseGtOneArgInUnitIntervalBuiltinRuleProof,
     LogOrderPreservingStrictBuiltinRuleProof, LogPositiveFromBaseAndArgGtOneBuiltinRuleProof,
     ModRemainderStrictUpperBoundBuiltinRuleProof, MulLeftPositiveMonotoneStrictBuiltinRuleProof,
@@ -30,6 +31,12 @@ use crate::json_output::explain::text::text;
 impl LessFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_en(),
+            Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_en(),
+            Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_en(),
+            Self::MulRightLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_en(),
+            Self::TanPositiveOnFirstQuadrant(p) => p.rule_name_and_message_en(),
+            Self::CotPositiveOnFirstQuadrant(p) => p.rule_name_and_message_en(),
             Self::FloorStrictUpperBound(p) => p.rule_name_and_message_en(),
             Self::CeilStrictLowerBound(p) => p.rule_name_and_message_en(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_en(),
@@ -66,6 +73,9 @@ impl LessFactSearchProofByBuiltinRule {
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_en(),
             Self::LessTransitivity(p) => p.rule_name_and_message_en(),
             Self::LessFromPosDifference(p) => p.rule_name_and_message_en(),
+            Self::LessFromNegativeDifference(p) => p.rule_name_and_message_en(),
+            Self::NegativeDifferenceFromLess(p) => p.rule_name_and_message_en(),
+
             Self::PosDifferenceFromLess(p) => p.rule_name_and_message_en(),
             Self::ModRemainderStrictUpperBound(p) => p.rule_name_and_message_en(),
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_en(),
@@ -86,6 +96,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_zh(),
+            Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_zh(),
+            Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_zh(),
+            Self::MulRightLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_zh(),
+            Self::TanPositiveOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
+            Self::CotPositiveOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
             Self::FloorStrictUpperBound(p) => p.rule_name_and_message_zh(),
             Self::CeilStrictLowerBound(p) => p.rule_name_and_message_zh(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_zh(),
@@ -122,6 +138,9 @@ impl LessFactSearchProofByBuiltinRule {
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_zh(),
             Self::LessTransitivity(p) => p.rule_name_and_message_zh(),
             Self::LessFromPosDifference(p) => p.rule_name_and_message_zh(),
+            Self::LessFromNegativeDifference(p) => p.rule_name_and_message_zh(),
+            Self::NegativeDifferenceFromLess(p) => p.rule_name_and_message_zh(),
+
             Self::PosDifferenceFromLess(p) => p.rule_name_and_message_zh(),
             Self::ModRemainderStrictUpperBound(p) => p.rule_name_and_message_zh(),
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_zh(),
@@ -142,6 +161,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulRightLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_zh_hant(),
+            Self::TanPositiveOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
+            Self::CotPositiveOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
             Self::FloorStrictUpperBound(p) => p.rule_name_and_message_zh_hant(),
             Self::CeilStrictLowerBound(p) => p.rule_name_and_message_zh_hant(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_zh_hant(),
@@ -178,6 +203,9 @@ impl LessFactSearchProofByBuiltinRule {
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_zh_hant(),
             Self::LessTransitivity(p) => p.rule_name_and_message_zh_hant(),
             Self::LessFromPosDifference(p) => p.rule_name_and_message_zh_hant(),
+            Self::LessFromNegativeDifference(p) => p.rule_name_and_message_zh_hant(),
+            Self::NegativeDifferenceFromLess(p) => p.rule_name_and_message_zh_hant(),
+
             Self::PosDifferenceFromLess(p) => p.rule_name_and_message_zh_hant(),
             Self::ModRemainderStrictUpperBound(p) => p.rule_name_and_message_zh_hant(),
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_zh_hant(),
@@ -198,6 +226,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_fr(),
+            Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_fr(),
+            Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_fr(),
+            Self::MulRightLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_fr(),
+            Self::TanPositiveOnFirstQuadrant(p) => p.rule_name_and_message_fr(),
+            Self::CotPositiveOnFirstQuadrant(p) => p.rule_name_and_message_fr(),
             Self::FloorStrictUpperBound(p) => p.rule_name_and_message_fr(),
             Self::CeilStrictLowerBound(p) => p.rule_name_and_message_fr(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_fr(),
@@ -234,6 +268,9 @@ impl LessFactSearchProofByBuiltinRule {
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_fr(),
             Self::LessTransitivity(p) => p.rule_name_and_message_fr(),
             Self::LessFromPosDifference(p) => p.rule_name_and_message_fr(),
+            Self::LessFromNegativeDifference(p) => p.rule_name_and_message_fr(),
+            Self::NegativeDifferenceFromLess(p) => p.rule_name_and_message_fr(),
+
             Self::PosDifferenceFromLess(p) => p.rule_name_and_message_fr(),
             Self::ModRemainderStrictUpperBound(p) => p.rule_name_and_message_fr(),
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_fr(),
@@ -254,6 +291,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ru(),
+            Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ru(),
+            Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ru(),
+            Self::MulRightLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ru(),
+            Self::TanPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ru(),
+            Self::CotPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ru(),
             Self::FloorStrictUpperBound(p) => p.rule_name_and_message_ru(),
             Self::CeilStrictLowerBound(p) => p.rule_name_and_message_ru(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_ru(),
@@ -290,6 +333,9 @@ impl LessFactSearchProofByBuiltinRule {
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_ru(),
             Self::LessTransitivity(p) => p.rule_name_and_message_ru(),
             Self::LessFromPosDifference(p) => p.rule_name_and_message_ru(),
+            Self::LessFromNegativeDifference(p) => p.rule_name_and_message_ru(),
+            Self::NegativeDifferenceFromLess(p) => p.rule_name_and_message_ru(),
+
             Self::PosDifferenceFromLess(p) => p.rule_name_and_message_ru(),
             Self::ModRemainderStrictUpperBound(p) => p.rule_name_and_message_ru(),
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_ru(),
@@ -310,6 +356,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_es(),
+            Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_es(),
+            Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_es(),
+            Self::MulRightLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_es(),
+            Self::TanPositiveOnFirstQuadrant(p) => p.rule_name_and_message_es(),
+            Self::CotPositiveOnFirstQuadrant(p) => p.rule_name_and_message_es(),
             Self::FloorStrictUpperBound(p) => p.rule_name_and_message_es(),
             Self::CeilStrictLowerBound(p) => p.rule_name_and_message_es(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_es(),
@@ -346,6 +398,9 @@ impl LessFactSearchProofByBuiltinRule {
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_es(),
             Self::LessTransitivity(p) => p.rule_name_and_message_es(),
             Self::LessFromPosDifference(p) => p.rule_name_and_message_es(),
+            Self::LessFromNegativeDifference(p) => p.rule_name_and_message_es(),
+            Self::NegativeDifferenceFromLess(p) => p.rule_name_and_message_es(),
+
             Self::PosDifferenceFromLess(p) => p.rule_name_and_message_es(),
             Self::ModRemainderStrictUpperBound(p) => p.rule_name_and_message_es(),
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_es(),
@@ -366,6 +421,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ar(),
+            Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ar(),
+            Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ar(),
+            Self::MulRightLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ar(),
+            Self::TanPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
+            Self::CotPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
             Self::FloorStrictUpperBound(p) => p.rule_name_and_message_ar(),
             Self::CeilStrictLowerBound(p) => p.rule_name_and_message_ar(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_ar(),
@@ -402,6 +463,9 @@ impl LessFactSearchProofByBuiltinRule {
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_ar(),
             Self::LessTransitivity(p) => p.rule_name_and_message_ar(),
             Self::LessFromPosDifference(p) => p.rule_name_and_message_ar(),
+            Self::LessFromNegativeDifference(p) => p.rule_name_and_message_ar(),
+            Self::NegativeDifferenceFromLess(p) => p.rule_name_and_message_ar(),
+
             Self::PosDifferenceFromLess(p) => p.rule_name_and_message_ar(),
             Self::ModRemainderStrictUpperBound(p) => p.rule_name_and_message_ar(),
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_ar(),
@@ -422,6 +486,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ja(),
+            Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ja(),
+            Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ja(),
+            Self::MulRightLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ja(),
+            Self::TanPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
+            Self::CotPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
             Self::FloorStrictUpperBound(p) => p.rule_name_and_message_ja(),
             Self::CeilStrictLowerBound(p) => p.rule_name_and_message_ja(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_ja(),
@@ -458,6 +528,9 @@ impl LessFactSearchProofByBuiltinRule {
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_ja(),
             Self::LessTransitivity(p) => p.rule_name_and_message_ja(),
             Self::LessFromPosDifference(p) => p.rule_name_and_message_ja(),
+            Self::LessFromNegativeDifference(p) => p.rule_name_and_message_ja(),
+            Self::NegativeDifferenceFromLess(p) => p.rule_name_and_message_ja(),
+
             Self::PosDifferenceFromLess(p) => p.rule_name_and_message_ja(),
             Self::ModRemainderStrictUpperBound(p) => p.rule_name_and_message_ja(),
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_ja(),
@@ -478,6 +551,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ko(),
+            Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ko(),
+            Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_ko(),
+            Self::MulRightLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_ko(),
+            Self::TanPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
+            Self::CotPositiveOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
             Self::FloorStrictUpperBound(p) => p.rule_name_and_message_ko(),
             Self::CeilStrictLowerBound(p) => p.rule_name_and_message_ko(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_ko(),
@@ -514,6 +593,9 @@ impl LessFactSearchProofByBuiltinRule {
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_ko(),
             Self::LessTransitivity(p) => p.rule_name_and_message_ko(),
             Self::LessFromPosDifference(p) => p.rule_name_and_message_ko(),
+            Self::LessFromNegativeDifference(p) => p.rule_name_and_message_ko(),
+            Self::NegativeDifferenceFromLess(p) => p.rule_name_and_message_ko(),
+
             Self::PosDifferenceFromLess(p) => p.rule_name_and_message_ko(),
             Self::ModRemainderStrictUpperBound(p) => p.rule_name_and_message_ko(),
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_ko(),
@@ -534,6 +616,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_vi(),
+            Self::MulRightNegativeReversesStrictLess(p) => p.rule_name_and_message_vi(),
+            Self::MulLeftRightNegativeReversesStrictLess(p) => p.rule_name_and_message_vi(),
+            Self::MulRightLeftNegativeReversesStrictLess(p) => p.rule_name_and_message_vi(),
+            Self::TanPositiveOnFirstQuadrant(p) => p.rule_name_and_message_vi(),
+            Self::CotPositiveOnFirstQuadrant(p) => p.rule_name_and_message_vi(),
             Self::FloorStrictUpperBound(p) => p.rule_name_and_message_vi(),
             Self::CeilStrictLowerBound(p) => p.rule_name_and_message_vi(),
             Self::ExpStrictMonotone(p) => p.rule_name_and_message_vi(),
@@ -570,6 +658,9 @@ impl LessFactSearchProofByBuiltinRule {
             Self::LogNegativeFromBaseGtOneArgInUnitInterval(p) => p.rule_name_and_message_vi(),
             Self::LessTransitivity(p) => p.rule_name_and_message_vi(),
             Self::LessFromPosDifference(p) => p.rule_name_and_message_vi(),
+            Self::LessFromNegativeDifference(p) => p.rule_name_and_message_vi(),
+            Self::NegativeDifferenceFromLess(p) => p.rule_name_and_message_vi(),
+
             Self::PosDifferenceFromLess(p) => p.rule_name_and_message_vi(),
             Self::ModRemainderStrictUpperBound(p) => p.rule_name_and_message_vi(),
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_vi(),
@@ -605,12 +696,19 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::MulLeftNegativeReversesStrictLess(_) => None,
+            Self::MulRightNegativeReversesStrictLess(_) => None,
+            Self::MulLeftRightNegativeReversesStrictLess(_) => None,
+            Self::MulRightLeftNegativeReversesStrictLess(_) => None,
             Self::FloorStrictUpperBound(_) => None,
             Self::CeilStrictLowerBound(_) => None,
             Self::FromKnownGreater(p) => p.premise_proof.cite_fact_id(),
             Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),
             Self::LessTransitivity(_) => None,
             Self::LessFromPosDifference(p) => p.premise_proof.cite_fact_id(),
+            Self::LessFromNegativeDifference(p) => p.premise_proof.cite_fact_id(),
+            Self::NegativeDifferenceFromLess(p) => p.premise_proof.cite_fact_id(),
+
             Self::PosDifferenceFromLess(p) => p.premise_proof.cite_fact_id(),
             Self::NumericLowerBoundWeakenLt(p) => Some(p.cite_fact_id),
             Self::NumericUpperBoundWeakenLt(p) => Some(p.cite_fact_id),

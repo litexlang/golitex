@@ -564,6 +564,15 @@ fn project_release(r: &ExecReleaseAndExpandStmtResult, runtime: &Runtime) -> Jso
                 failed(runtime, "release obj …", "release_obj")
             }
         },
+        ExecReleaseAndExpandStmtResult::CartDef(x) => match x {
+            crate::execute::execute_release_cart_def_stmt::ExecReleaseCartDefStmtResult::Success(s) => {
+                let (stores, infers) = flatten_store_nodes(runtime, std::slice::from_ref(&s.store_and_infer));
+                success_parts(runtime, s.statement.readable_string(), "release_cart_def", stores, infers)
+            }
+            crate::execute::execute_release_cart_def_stmt::ExecReleaseCartDefStmtResult::Failed(_) => failed_with_details(
+                runtime, "release cart def …", "release_cart_def", super::project_detailed::project_release_cart_def(x, runtime),
+            ),
+        },
         ExecReleaseAndExpandStmtResult::ExpandRange(x) => {
             if x.is_failed() {
                 failed(runtime, "expand range …", "expand_range")

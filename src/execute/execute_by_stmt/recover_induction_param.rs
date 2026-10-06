@@ -91,6 +91,7 @@ fn induction_bound_from_obj(
         Obj::ComplexOperator(ComplexOperator::ComplexAbs(a)) => vec![&a.arg],
         Obj::FnObj(f) => {
             let head = match f.head.as_ref() {
+                FnObjHead::Object(obj) => induction_bound_from_obj(name, obj),
                 FnObjHead::Identifier(IdentifierObj::Plain { id, name: found }) => {
                     (found == name).then(|| crate::ast::names::BoundName::new(*id, found.clone()))
                 }
@@ -143,10 +144,6 @@ fn induction_bound_from_obj(
         Obj::FunctionSpace(FunctionSpace::FnRange(a)) => vec![&a.function],
         Obj::ProductShape(ProductShape::Cart(a)) => a.args.iter().map(|o| o.as_ref()).collect(),
         Obj::ProductShape(ProductShape::Tuple(a)) => a.args.iter().map(|o| o.as_ref()).collect(),
-        Obj::ProductShape(ProductShape::CartDim(a)) => vec![&a.set],
-        Obj::ProductShape(ProductShape::Proj(a)) => vec![&a.set, &a.dim],
-        Obj::ProductShape(ProductShape::TupleDim(a)) => vec![&a.arg],
-        Obj::ProductShape(ProductShape::ObjAtIndex(a)) => vec![&a.obj, &a.index],
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(a)) => vec![&a.set],
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(a)) => vec![&a.set],
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(a)) => vec![&a.set],
@@ -254,6 +251,9 @@ fn induction_bound_from_stmt(name: &str, stmt: &Stmt) -> Option<crate::ast::name
                 }
             }
             ReleaseAndExpandStmt::ReleaseStructDefStmt(s) => objs.push(&s.obj),
+            ReleaseAndExpandStmt::ReleaseCartDefStmt(s) => {
+                return induction_bound_from_obj(name, &crate::ast::obj::Obj::ProductShape(crate::ast::obj::ProductShape::Cart(s.cart.clone())));
+            }
             ReleaseAndExpandStmt::ReleaseObjDefStmt(s) => {
                 return induction_bound_from_obj(
                     name,

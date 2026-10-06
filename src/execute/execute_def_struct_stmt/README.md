@@ -35,13 +35,13 @@ the AST definition). Callers / other modules must own them:
 |-----|----------|--------|
 | `struct Name(...)` paren params | parse | Rejected; Manual wants `<…>` only. |
 | Lean / JSON tracers for `ReleaseStructDef` | stmt result / compiler | Exec result type exists; Lean replay still deferred. |
-| Non-literal `$in cart(...)` when `$is_tuple` / `tuple_dim` are unknown | `CartMembership` non-literal branch | Literal `(a,b) $in cart(A,B)` works; symbolic `e $in cart(...)` needs known tuple shape/dim. |
+| Symbolic Cartesian membership without a complete domain certificate | function-domain comparison and `cart_member_from_coordinates` | Coordinate values alone do not establish the function's complete domain. |
 
 ## Wired elsewhere (not this module)
 
 - `release struct def e` → `exec_release_struct_def_stmt` (carrier resolve → prove membership → `release_one_struct_layer`), matched from `exec_stmt`.
 - Opaque `$in &Struct` → `InFactSearchProofByBuiltinRule::StructObjMembership` (literal tuple field carriers + `<=>:` laws; does not store bridges).
-- `$in cart(...)` → `InFactSearchProofByBuiltinRule::CartMembership` (literal tuple coordinates; or `$is_tuple` + `tuple_dim` + coordinates).
+- `$in cart(...)` → literal coordinate checks or the ordinary exact finite-function definition. `release thm cart_member_from_coordinates(e, cart(A,B))` checks the complete domain and each coordinate carrier. Removed shape predicates and dimension operators play no role.
 
 ## What this module deliberately does **not** do
 

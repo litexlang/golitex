@@ -3660,6 +3660,61 @@
           }
         }
       ]
+    },
+    {
+      "leaf": "ReleaseCartDefStmt",
+      "ast_path": [
+        "ReleaseAndExpand",
+        "ReleaseCartDefStmt"
+      ],
+      "payload": "ReleaseCartDefStmt",
+      "file": "release_cart_def_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "complete-cart-definition",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "undefined-factor",
+          "file": "negative/release_cart_def_stmt/undefined-factor.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "release_cart_def"
+            ]
+          }
+        },
+        {
+          "name": "non-constructor",
+          "file": "negative/release_cart_def_stmt/non-constructor.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "expects a cart(...) constructor"
+          }
+        },
+        {
+          "name": "trailing-body",
+          "file": "negative/release_cart_def_stmt/trailing-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "release cart def expects one cart(...)"
+          }
+        }
+      ]
     }
   ],
   "template_bodies": [
@@ -3809,12 +3864,13 @@
     },
     {
       "leaf": "LetObjStmt",
-      "name": "resolved-K001-callable-alias-direct",
+      "name": "resolved-K001-callable-alias-published-body",
       "file": "bugs/let_obj_stmt/K001-callable-alias-direct/repro.lit",
       "strict": true,
       "expect": {
         "success": true,
         "statement_success": [
+          true,
           true,
           true,
           true

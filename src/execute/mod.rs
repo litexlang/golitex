@@ -29,6 +29,7 @@ mod execute_have_obj_in_nonempty_set_stmt;
 mod execute_let_stmt;
 mod execute_release_struct_def_stmt;
 pub mod execute_release_obj_def_stmt;
+pub mod execute_release_cart_def_stmt;
 pub mod execute_unsafe_stmt;
 pub mod execute_witness_stmt;
 mod introduce_typed_parameters;
@@ -232,3 +233,7 @@ mod closed_exact_elementary_calculation;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/exact_rational_powers/tests.rs"]
 mod exact_rational_powers;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/tuple_cart_object_calls/tests.rs"]
+mod tuple_cart_object_call_tests;

@@ -1,0 +1,3 @@
+# Boundary: the last statement must fail WD after a successful declaration.
+let p=(1,2,3)
+eval p(4)

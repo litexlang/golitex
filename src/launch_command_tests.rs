@@ -1,4 +1,4 @@
-use crate::launch_command::{parse_launch_command, LaunchCommand, OutputLanguage};
+use crate::launch_command::{parse_launch_command, LatexInput, LaunchCommand, OutputLanguage};
 use std::path::PathBuf;
 
 fn args(parts: &[&str]) -> Vec<String> {
@@ -185,7 +185,7 @@ fn parses_extract_commands() {
 
     assert_eq!(
         parse_launch_command(&args(&["-extractpython", "have a R = 1"])).unwrap(),
-        LaunchCommand::Extract {
+        LaunchCommand::ExtractExecutableCode {
             target: CodeExtractionTarget::Python,
             input: ExtractInput::Code("have a R = 1".to_string()),
             language: OutputLanguage::English,
@@ -193,7 +193,7 @@ fn parses_extract_commands() {
     );
     assert_eq!(
         parse_launch_command(&args(&["-extractc", "-f", "main.lit"])).unwrap(),
-        LaunchCommand::Extract {
+        LaunchCommand::ExtractExecutableCode {
             target: CodeExtractionTarget::C,
             input: ExtractInput::File(PathBuf::from("main.lit")),
             language: OutputLanguage::English,
@@ -201,7 +201,7 @@ fn parses_extract_commands() {
     );
     assert_eq!(
         parse_launch_command(&args(&["-extractpython", "-r", "project"])).unwrap(),
-        LaunchCommand::Extract {
+        LaunchCommand::ExtractExecutableCode {
             target: CodeExtractionTarget::Python,
             input: ExtractInput::Repository(PathBuf::from("project")),
             language: OutputLanguage::English,
@@ -224,7 +224,7 @@ fn dash_leading_extraction_source_is_not_an_option() {
             ] {
                 assert_eq!(
                     parse_launch_command(&args(&parts)).unwrap(),
-                    LaunchCommand::Extract {
+                    LaunchCommand::ExtractExecutableCode {
                         target,
                         input: ExtractInput::Code(code.to_string()),
                         language: OutputLanguage::Chinese,
@@ -277,7 +277,7 @@ fn file_and_repository_operands_can_spell_options() {
             ] {
                 assert_eq!(
                     parse_launch_command(&args(&[flag, mode, path, "-lang", "zh"])).unwrap(),
-                    LaunchCommand::Extract {
+                    LaunchCommand::ExtractExecutableCode {
                         target,
                         input,
                         language: OutputLanguage::Chinese,
@@ -324,4 +324,109 @@ fn parses_all_output_languages_and_preserves_source() {
     }
     assert!(OutputLanguage::parse_token("zh-unknown").is_err());
     assert!(OutputLanguage::parse_token("").is_err());
+}
+
+#[test]
+fn latex_is_a_separate_command_for_every_input_and_locale() {
+    for language in OutputLanguage::ALL {
+        for (flag, value, input) in [
+            ("-e", "1 = 2", LatexInput::Code("1 = 2".into())),
+            (
+                "-f",
+                "identity.lit",
+                LatexInput::File("identity.lit".into()),
+            ),
+            ("-r", "project", LatexInput::Repository("project".into())),
+        ] {
+            for document in [false, true] {
+                let mut parts = vec![flag, value, "-lang", language.as_str(), "--latex"];
+                if document {
+                    parts.push("--document");
+                }
+                let command = parse_launch_command(&args(&parts)).unwrap();
+                assert_eq!(command.output_language(), language);
+                assert!(!command.is_strict());
+                assert_eq!(
+                    command,
+                    LaunchCommand::CompileToLatex {
+                        input: input.clone(),
+                        language,
+                        document,
+                    }
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn latex_options_do_not_capture_source_or_path_operands() {
+    use crate::launch_command::{CodeExtractionTarget, ExtractInput};
+    for value in [
+        "-latex",
+        "--latex",
+        "-document",
+        "--document",
+        "-strict",
+        "-lang",
+    ] {
+        assert_eq!(
+            parse_launch_command(&args(&["-e", value])).unwrap(),
+            LaunchCommand::Eval {
+                code: value.into(),
+                session: false,
+                strict: false,
+                language: OutputLanguage::English,
+            }
+        );
+        for (flag, input) in [
+            ("-e", LatexInput::Code(value.into())),
+            ("-f", LatexInput::File(value.into())),
+            ("-r", LatexInput::Repository(value.into())),
+        ] {
+            assert_eq!(
+                parse_launch_command(&args(&["-latex", flag, value])).unwrap(),
+                LaunchCommand::CompileToLatex {
+                    input,
+                    language: OutputLanguage::English,
+                    document: false
+                }
+            );
+        }
+        for (flag, target) in [
+            ("-extractc", CodeExtractionTarget::C),
+            ("-extractpython", CodeExtractionTarget::Python),
+        ] {
+            assert_eq!(
+                parse_launch_command(&args(&[flag, value])).unwrap(),
+                LaunchCommand::ExtractExecutableCode {
+                    target,
+                    input: ExtractInput::Code(value.into()),
+                    language: OutputLanguage::English,
+                }
+            );
+        }
+    }
+}
+
+#[test]
+fn latex_rejects_incompatible_modes_duplicates_and_missing_inputs() {
+    for parts in [
+        vec!["-latex"],
+        vec!["-latex", "-e"],
+        vec!["-latex", "-f", ""],
+        vec!["-latex", "-r", ""],
+        vec!["-latex", "-e", "1 = 1", "-session"],
+        vec!["-latex", "-e", "1 = 1", "-strict"],
+        vec!["-latex", "--latex", "-e", "1 = 1"],
+        vec!["-latex", "-document", "--document", "-e", "1 = 1"],
+        vec!["-latex", "-extractc", "1 = 1"],
+        vec!["-extractpython", "1 = 1", "-latex"],
+        vec!["-latex", "-e", "1 = 1", "-f", "identity.lit"],
+        vec!["-latex", "-help"],
+        vec!["-latex", "-version"],
+        vec!["-document", "-e", "1 = 1"],
+    ] {
+        assert!(parse_launch_command(&args(&parts)).is_err(), "{parts:?}");
+    }
 }

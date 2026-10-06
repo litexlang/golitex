@@ -12,9 +12,9 @@ use crate::execute::execute_fact_stmt::known_tuple::{literal_positive_usize, Kno
 
 pub enum AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
     InFact(InFactSearchProofByKnownSpecialProperty),
-    IsTuple(TupleIsTupleKnownProof),
-    TupleIndexBound(TupleIndexBoundKnownProof),
-    TupleIndexUpperBound(TupleIndexUpperBoundKnownProof),
+
+
+
 }
 
 impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
@@ -40,9 +40,6 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
             }
             Self::InFact(InFactSearchProofByKnownSpecialProperty::TupleCoordinate(p)) => p.shape.cite_fact_id(),
             Self::InFact(InFactSearchProofByKnownSpecialProperty::HomogeneousTupleCoordinate(p)) => p.shape.cite_fact_id(),
-            Self::IsTuple(p) => p.shape.cite_fact_id(),
-            Self::TupleIndexBound(p) => p.shape.cite_fact_id(),
-            Self::TupleIndexUpperBound(p) => p.shape.cite_fact_id(),
         }
     }
 }
@@ -112,19 +109,6 @@ pub struct FieldInDeclaredSetProof {
     pub set_match: EqualFactSearchedProof,
 }
 
-pub struct TupleIsTupleKnownProof {
-    pub shape: KnownTupleShapeProof,
-}
-
-pub struct TupleIndexBoundKnownProof {
-    pub index: usize,
-    pub shape: KnownTupleShapeProof,
-}
-
-pub struct TupleIndexUpperBoundKnownProof {
-    pub shape: KnownTupleShapeProof,
-    pub source_bound: AtomicExceptEqualityFactKnownProof,
-}
 
 pub struct TupleCoordinateKnownProof {
     pub index: usize,
@@ -132,7 +116,7 @@ pub struct TupleCoordinateKnownProof {
     pub carrier_equal: Box<EqualFactSearchedProof>,
 }
 
-// ObjAtIndex WD supplies the index positivity and upper bound. Every factor
+// Ordinary call WD supplies the index positivity and upper bound. Every factor
 // must match the target using only stored equality; no new premise search.
 pub struct HomogeneousTupleCoordinateKnownProof {
     pub shape: KnownTupleShapeProof,
@@ -183,33 +167,9 @@ impl Runtime {
             AtomicFact::InFact(fact) => self
                 .search_in_fact_proof_by_known_special_property(fact)
                 .map(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact),
-            AtomicFact::IsTupleFact(fact) => self.lookup_known_tuple_shape(&fact.set)
-                .map(|shape| AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::IsTuple(
-                    TupleIsTupleKnownProof { shape })),
-            AtomicFact::LessEqualFact(fact) => {
-                let Obj::ProductShape(ProductShape::TupleDim(dim)) = &fact.right else { return None };
-                let shape = self.lookup_known_tuple_shape(dim.arg.as_ref())?;
-                if let Some(index) = literal_positive_usize(&fact.left) {
-                    return (index <= shape.dimension()).then_some(
-                        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::TupleIndexBound(
-                            TupleIndexBoundKnownProof { index, shape }));
-                }
-                // A stored upper bound transports through the known tuple dimension.
-                // No forall instantiation or new order search is permitted here.
-                let bound = AtomicFact::LessEqualFact(LessEqualFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    left: fact.left.clone(),
-                    right: Obj::Literal(Literal::Number(Number {
-                        normalized_value: shape.dimension().to_string(),
-                    })),
-                    line_file: fact.line_file.clone(),
-                });
-                let source_bound = self.lookup_known_atomic_premise(bound)?;
-                Some(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::TupleIndexUpperBound(
-                    TupleIndexUpperBoundKnownProof { shape, source_bound }))
-            }
             AtomicFact::NormalAtomicFact(_)
             | AtomicFact::NotNormalAtomicFact(_)
+            | AtomicFact::LessEqualFact(_)
             | AtomicFact::LessFact(_)
             | AtomicFact::GreaterFact(_)
             | AtomicFact::GreaterEqualFact(_)
@@ -225,9 +185,7 @@ impl Runtime {
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
             | AtomicFact::NotInFact(_)
-            | AtomicFact::IsCartFact(_)
-            | AtomicFact::NotIsCartFact(_)
-            | AtomicFact::NotIsTupleFact(_)
+
             | AtomicFact::SubsetFact(_)
             | AtomicFact::SupersetFact(_)
             | AtomicFact::NotSubsetFact(_)
@@ -392,6 +350,7 @@ impl Runtime {
             }
         }
         let head = match application.head.as_ref() {
+            FnObjHead::Object(obj) => obj.as_ref().clone(),
             FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
             FnObjHead::InstantiatedTemplateObj(inst) => Obj::InstantiatedTemplateObj(inst.clone()),
             FnObjHead::FieldAccess(access) => {

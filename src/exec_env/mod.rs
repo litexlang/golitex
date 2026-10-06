@@ -1,6 +1,7 @@
 pub mod exec_env;
 pub mod exist_shaped_fact_index_key;
 pub mod forall_conclusion_index_key;
+pub mod forall_equality_index;
 pub mod known_fact_memory;
 pub mod known_forall_conclusion_memory;
 // Temp child → merge on Success / discard on Failed. See merge_exec_env.rs.

@@ -20,9 +20,22 @@ pub fn emit_command_error(
         LaunchCommand::Eval { .. } => ("eval", None),
         LaunchCommand::File { path, .. } => ("file", Some(path)),
         LaunchCommand::Repository { path, .. } => ("repo", Some(path)),
-        LaunchCommand::Extract { target, input, language } => {
-            return Some(crate::run::run_extract::extract_command_error_json(
-                target, input, *language, error,
+        LaunchCommand::ExtractExecutableCode {
+            target,
+            input,
+            language,
+        } => {
+            return Some(
+                crate::run::run_extract_executable_code::extract_command_error_json(
+                    target, input, *language, error,
+                ),
+            );
+        }
+        LaunchCommand::CompileToLatex {
+            input, language, ..
+        } => {
+            return Some(crate::run::run_compile_to_latex::latex_command_error_json(
+                input, *language, error,
             ));
         }
         _ => return None,

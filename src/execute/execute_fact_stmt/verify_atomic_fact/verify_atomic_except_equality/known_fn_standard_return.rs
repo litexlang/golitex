@@ -28,6 +28,7 @@ impl Runtime {
         let Obj::StandardSet(target) = &fact.set else { return None; };
         let Obj::FnObj(application) = &fact.element else { return None; };
         let head = match application.head.as_ref() {
+            FnObjHead::Object(obj) => obj.as_ref().clone(),
             FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
             FnObjHead::InstantiatedTemplateObj(instance) => Obj::InstantiatedTemplateObj(instance.clone()),
             FnObjHead::FieldAccess(access) => Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access.clone())),

@@ -86,18 +86,7 @@ impl Runtime {
         value: &FnObj,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
-        let head_obj = match value.head.as_ref() {
-            FnObjHead::Identifier(head_id) => Obj::Identifier(head_id.clone()),
-            FnObjHead::InstantiatedTemplateObj(inst) => {
-                Obj::InstantiatedTemplateObj(inst.clone())
-            }
-            _ => {
-                return Err(crate::runtime::RuntimeError::InternalBug(
-                    "verify_in_function_set_headed_fn_obj expects Identifier or InstantiatedTemplateObj head"
-                        .to_string(),
-                ));
-            }
-        };
+        let head_obj = fn_obj_head_as_obj(value.head.as_ref());
         let root = Obj::FnObj(value.clone());
         if value.body.is_empty() {
             return Ok(VerifyObjWellDefinedResult::Failed {
@@ -436,6 +425,7 @@ impl Runtime {
                 | FnObjHead::Identifier(_)
                 | FnObjHead::InstantiatedTemplateObj(_)
                 | FnObjHead::FieldAccess(_)
+                | FnObjHead::Object(_)
         ) {
             return Ok(ObjWellDefinedByDefCommonStages::leaf());
         }
@@ -452,6 +442,7 @@ impl Runtime {
 
     fn collect_fn_obj_head_child_objs<'a>(&self, head: &'a FnObjHead, children: &mut Vec<&'a Obj>) {
         match head {
+            FnObjHead::Object(obj) => children.push(obj),
             FnObjHead::Identifier(_) | FnObjHead::AnonymousFnLiteral(_) => {}
             FnObjHead::FieldAccess(access) => {
                 children.push(access.obj.as_ref());
@@ -608,7 +599,7 @@ impl Runtime {
                     let Some(checked) = self.verify_stored_prefix_function_signature(
                         &Obj::FnObj(prefix), verify_state,
                     )? else { return Ok(Err(proof)); };
-                    proof.requirement_fact_verified.push(checked.membership);
+                    proof.requirement_fact_verified.push(checked.source);
                     space = checked.signature;
                     continue;
                 };

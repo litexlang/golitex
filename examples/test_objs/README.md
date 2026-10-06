@@ -1,17 +1,13 @@
 # Obj regression corpus
 
-The 2026-10-06 tuple/cart source migration uses ordinary calls such as
-`pair(1)`, checked coordinate types and explicit intermediate equalities.
-The tuple, cart, identifier, list-set and struct-field files selected in the
-[source-only migration journal](../../plan/迁移的plan/proof_journals/tuple-cart-source-only-migration-2026-10-06.json)
-have fresh strict file receipts. Nested values are selected into a checked
-local name when the direct chained-call form lacks usable evidence.
-The old tuple/cart dimension, shape and construction-projection interfaces
-are retired. Their dedicated positive files have been removed and their old
-source retained in the journal. The Python collector records the three retired
-families explicitly and still runs their syntax-rejection fixtures. This batch
-updates example metadata and the collector, without changing Rust, rebuilding
-the verifier or certifying the entire Obj corpus.
+The current tuple/cart contract uses ordinary calls, including literal and nested
+heads: `(1,2)(1)=1`, `((1,2),3)(1)(2)=2`, and direct coordinate `eval`.
+The four retired AST shapes and four shape predicates have been deleted.
+Their negative fixtures remain as four explicit tombstone interface families.
+The six original index-positive goals now belong to FnObj P10–P15; P16–P21
+cover the Object head. Current inventory: 95 terminal Obj declarations and
+95 dedicated positive files. Inventory counts are separate from behavior gates;
+actual receipts are in the [migration journal](../../plan/迁移的plan/proof_journals/tuple-cart-local-sprint-2026-10-06.json).
 
 The [2026-10-05 cross-Obj relation audit](obj_relations_audit_2026-10-05.md)
 checks 81 representative interactions and partitions the recorded 99-object

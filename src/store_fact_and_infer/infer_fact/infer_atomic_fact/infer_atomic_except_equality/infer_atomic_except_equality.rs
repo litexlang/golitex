@@ -21,7 +21,6 @@ impl Runtime {
             AtomicFact::InFact(in_fact) => {
                 rules.extend(self.infer_in_fact_rules(in_fact, verify_state)?);
             }
-            AtomicFact::IsCartFact(_) => {}
             AtomicFact::SubsetFact(subset) => {
                 if let Some(r) = self.infer_subset_finite_upper_bound(subset, verify_state)? {
                     rules.push(InferAtomicExceptEqualityResult::SubsetFiniteUpperBound(r));
@@ -108,7 +107,7 @@ impl Runtime {
             AtomicFact::IsSetFact(_)
             | AtomicFact::IsNonemptySetFact(_)
             | AtomicFact::IsFiniteSetFact(_)
-            | AtomicFact::IsTupleFact(_)
+
             | AtomicFact::NotNormalAtomicFact(_)
             | AtomicFact::NotEqualFact(_)
             | AtomicFact::NotLessFact(_)
@@ -119,8 +118,8 @@ impl Runtime {
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
             | AtomicFact::NotInFact(_)
-            | AtomicFact::NotIsCartFact(_)
-            | AtomicFact::NotIsTupleFact(_)
+
+
             | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
             | AtomicFact::NotProperSubsetFact(_)

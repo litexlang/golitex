@@ -32,7 +32,7 @@ pub fn extract_code_from_source(
     target: CodeExtractionTarget,
 ) -> RuntimeResult<String> {
     let normalized = source_code.replace('\r', "");
-    let command = LaunchCommand::Extract {
+    let command = LaunchCommand::ExtractExecutableCode {
         target,
         input: ExtractInput::Code(normalized.clone()),
         language: OutputLanguage::English,
@@ -48,7 +48,7 @@ pub fn extract_code_from_file(
     let resolved_path = resolve_file_path(file_path)?;
     let source = read_source(resolved_path.as_path())?;
     let selected_source = select_marked_source(source.as_str(), resolved_path.as_path())?;
-    let command = LaunchCommand::Extract {
+    let command = LaunchCommand::ExtractExecutableCode {
         target,
         input: ExtractInput::File(resolved_path.clone()),
         language: OutputLanguage::English,
@@ -81,7 +81,7 @@ pub fn extract_code_from_repository(
     let std_root = resolve_std_root(Some(&root));
     let root_config = load_config(&root, &std_root)?;
 
-    let command = LaunchCommand::Extract {
+    let command = LaunchCommand::ExtractExecutableCode {
         target,
         input: ExtractInput::Repository(root.clone()),
         language: OutputLanguage::English,

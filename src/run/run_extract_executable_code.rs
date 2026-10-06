@@ -4,13 +4,15 @@ use crate::extract_executable_code::{
 };
 use crate::knowledge_base::JsonValue;
 use crate::launch_command::{CodeExtractionTarget, ExtractInput, LaunchCommand, OutputLanguage};
-use crate::run::run_command_outcome::ExtractResult;
+use crate::run::run_command_outcome::ExtractExecutableCodeResult;
 use crate::runtime::{RuntimeError, RuntimeResult};
 
 /// `-extractpython` / `-extractc`: verify then emit extracted code artifact JSON.
-pub fn run_extract(command: LaunchCommand) -> RuntimeResult<ExtractResult> {
-    let LaunchCommand::Extract { target, input, .. } = &command else {
-        panic!("run_extract expects LaunchCommand::Extract");
+pub fn run_extract_executable_code(
+    command: LaunchCommand,
+) -> RuntimeResult<ExtractExecutableCodeResult> {
+    let LaunchCommand::ExtractExecutableCode { target, input, .. } = &command else {
+        panic!("run_extract_executable_code expects LaunchCommand::ExtractExecutableCode");
     };
 
     let (content, path, exec_target) = match input {
@@ -47,7 +49,7 @@ pub fn run_extract(command: LaunchCommand) -> RuntimeResult<ExtractResult> {
         Some(&content),
         None,
     );
-    Ok(ExtractResult::new(json, true))
+    Ok(ExtractExecutableCodeResult::new(json, true))
 }
 
 fn render_extracted_artifact(

@@ -8,7 +8,7 @@ use crate::ast::fact::{
 use crate::ast::obj::{
     Add, AnonymousFn, ArithmeticOperator, Cart, ClosedRange, ExpLogOperator, FiniteSetReduce,
     FiniteSetSize, FiniteSetStat, FnObj, FnObjHead, FunctionSpace, Intersect, IteratedOperator,
-    ListSet, Literal, Log, Number, Obj, ObjAtIndex, Pow, Product, ProductShape, Proj, Reduce,
+    ListSet, Literal, Log, Number, Obj, Pow, Product, ProductShape, Reduce,
     SetFormer, SetMinus, SetOperator, Sub, Sum, SumOfFiniteSet, Tuple, Union,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::anonymous_fns_alpha_equal;
@@ -35,13 +35,6 @@ pub struct EmptySetFromSizeZeroBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-// Builtin CartProjFactor: proj(cart(A1,...,An), k) = Ak for literal positive k.
-// Example: have A set; have B set; proj(cart(A, B), 1) = A.
-pub struct CartProjFactorBuiltinRuleProof {}
-
-// Builtin TupleComponentAtIndex: (a1,...,an)[k] = ak for literal positive k.
-// Example: have a R; have b R; (a, b)[1] = a.
-pub struct TupleComponentAtIndexBuiltinRuleProof {}
 
 // Builtin FiniteSetSizeSetMinus:
 //   finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B)).
@@ -94,8 +87,8 @@ pub enum EqualityIdentitiesWave11BuiltinRuleProof {
     UnionAbsorptionFromSubset(UnionAbsorptionFromSubsetBuiltinRuleProof),
     SetMinusRecoversSubset(SetMinusRecoversSubsetBuiltinRuleProof),
     EmptySetFromSizeZero(EmptySetFromSizeZeroBuiltinRuleProof),
-    CartProjFactor(CartProjFactorBuiltinRuleProof),
-    TupleComponentAtIndex(TupleComponentAtIndexBuiltinRuleProof),
+
+
     FiniteSetSizeSetMinus(FiniteSetSizeSetMinusBuiltinRuleProof),
     FiniteSetSizeUnion(FiniteSetSizeUnionBuiltinRuleProof),
     ClosedRangeSingletonListSet(ClosedRangeSingletonListSetBuiltinRuleProof),
@@ -114,18 +107,8 @@ impl Runtime {
     ) -> RuntimeResult<Option<EqualityIdentitiesWave11BuiltinRuleProof>> {
         let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
-            if cart_proj_factor_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave11BuiltinRuleProof::CartProjFactor(
-                    CartProjFactorBuiltinRuleProof {},
-                )));
-            }
-            if tuple_component_at_index_shape(left, right) {
-                return Ok(Some(
-                    EqualityIdentitiesWave11BuiltinRuleProof::TupleComponentAtIndex(
-                        TupleComponentAtIndexBuiltinRuleProof {},
-                    ),
-                ));
-            }
+
+
             if finite_set_size_set_minus_shape(left, right) {
                 return Ok(Some(
                     EqualityIdentitiesWave11BuiltinRuleProof::FiniteSetSizeSetMinus(
@@ -510,37 +493,6 @@ fn apply_fn_one_arg(f: &Obj, arg: Obj) -> Option<Obj> {
     }
 }
 
-fn cart_proj_factor_shape(proj_side: &Obj, factor: &Obj) -> bool {
-    let Obj::ProductShape(ProductShape::Proj(Proj { set, dim })) = proj_side else {
-        return false;
-    };
-    let Obj::ProductShape(ProductShape::Cart(Cart { args })) = set.as_ref() else {
-        return false;
-    };
-    let Some(k) = literal_positive_usize(dim.as_ref()) else {
-        return false;
-    };
-    let Some(arg) = args.get(k - 1) else {
-        return false;
-    };
-    arg.ir() == factor.ir()
-}
-
-fn tuple_component_at_index_shape(index_side: &Obj, component: &Obj) -> bool {
-    let Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex { obj, index })) = index_side else {
-        return false;
-    };
-    let Obj::ProductShape(ProductShape::Tuple(Tuple { args })) = obj.as_ref() else {
-        return false;
-    };
-    let Some(k) = literal_positive_usize(index.as_ref()) else {
-        return false;
-    };
-    let Some(arg) = args.get(k - 1) else {
-        return false;
-    };
-    arg.ir() == component.ir()
-}
 
 fn finite_set_size_set_minus_shape(size_side: &Obj, sub_side: &Obj) -> bool {
     let Some(set_minus_set) = match_finite_set_size(size_side) else {

@@ -78,20 +78,6 @@ pub(super) fn project_known_special_property(
             ("declared_set", string(p.declared_set.readable_string())),
             ("set_match", project_equal_searched(&p.set_match, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::IsTuple(p) => {
-            return super::known_tuple::project_atomic_tuple_shape("IsTuple", &p.shape, None, runtime);
-        }
-        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::TupleIndexUpperBound(p) => {
-            return object_for(runtime, vec![
-                ("type", string("by_known_special_property")),
-                ("rule", string("TupleIndexUpperBound")),
-                ("shape", super::known_tuple::project_shape(&p.shape, runtime)),
-                ("source_bound", super::searched::project_known_premise(&p.source_bound, runtime)),
-            ]);
-        }
-        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::TupleIndexBound(p) => {
-            return super::known_tuple::project_atomic_tuple_shape("TupleIndexBound", &p.shape, Some(p.index), runtime);
-        }
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
             InFactSearchProofByKnownSpecialProperty::HomogeneousTupleCoordinate(p),
         ) => {

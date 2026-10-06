@@ -1,0 +1,2730 @@
+{
+  "schema_version": 1,
+  "at_utc": "2026-10-06T09:27:46.410717+00:00",
+  "scope": "Geo runtime diagnosis for chat 01a10a25-f085-78d2-a566-88a553161a7b; no verifier, proof, or controller repair performed.",
+  "thread_title": "梳理 tuple 和 cart 迁移方案",
+  "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+  "method": "Replay exact accepted source-order blocks through one persistent strict release REPL per environment, using normalized frame terminators. Each frame waits for the next prompt. CPU statistics are reaped child user+system time, not whole-machine load.",
+  "limits": [
+    "One run per context; concurrent work may affect wall time.",
+    "Sequential REPL replay is not a cold -f benchmark: proof results are discarded per frame rather than retained in one batch envelope.",
+    "OS process inventory and stack sampling were denied by the sandbox; exact function-level CPU attribution is unverified.",
+    "The full 227-item geometry migration and canonical file/module gates belong to the referenced chat and are outside this diagnosis."
+  ],
+  "manifest": {
+    "litex-frozen": {
+      "origin": "tmp/2026-10-05/tuple-cart-exact-functions/geometry-sprint-2026-10-06/litex-frozen",
+      "sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e"
+    },
+    "prefix176.lit": {
+      "origin": "tmp/2026-10-05/tuple-cart-exact-functions/source-only-2026-10-06/geometry-prefix176.lit",
+      "sha256": "ce6a7c13d4dac9f99e5a590d8e21449e061a19dc7973c5454217d2c1b35b907f"
+    },
+    "dependency51.lit": {
+      "origin": "tmp/2026-10-05/tuple-cart-exact-functions/geometry-sprint-2026-10-06/vertical-dependency-prefix.lit",
+      "sha256": "484e27131b17b43b46bae0d13cc9bedbadad1b6e9480185384097cb32417f290"
+    },
+    "scalar2.lit": {
+      "origin": "tmp/2026-10-05/tuple-cart-exact-functions/geometry-sprint-2026-10-06/vertical-scalar-prefix.lit",
+      "sha256": "4b508c249e4d770d6d1c777a1a082a3c29546e63e50265e39d4f33f7113ad85a"
+    },
+    "scalar-helper.lit": {
+      "origin": "tmp/2026-10-05/tuple-cart-exact-functions/geometry-sprint-2026-10-06/vertical-scalar-helper-probe.lit",
+      "sha256": "99acf5ccf46b005d305700fcf45e8c37a3857622651285216a106ccb792a78a5"
+    },
+    "cost35.lit": {
+      "origin": "tmp/2026-10-05/tuple-cart-exact-functions/geometry-sprint-2026-10-06/vertical-cost-prefix-35.lit",
+      "sha256": "665c5952cd68635dbd86f6f09bbedbeaea96a3e1d0dd3195cfbfe75eae66e627"
+    },
+    "cost45.lit": {
+      "origin": "tmp/2026-10-05/tuple-cart-exact-functions/geometry-sprint-2026-10-06/vertical-cost-prefix-45.lit",
+      "sha256": "22ae02f4b925bf62690b9a57dbaa46780b382f14a72e93533a44c90f18d7a702"
+    },
+    "vertical-optimized.lit": {
+      "origin": "tmp/2026-10-05/tuple-cart-exact-functions/geometry-sprint-2026-10-06/vertical-private-scalar-probe.lit",
+      "sha256": "2d83aed02a7764fbade801ccabdba042eefdf4d374651528f2f7ca55cb3ba348"
+    }
+  },
+  "summary": {
+    "empty": {
+      "startup_seconds": 1.8586652919184417,
+      "prefix_seconds": 0,
+      "prefix_items": 0,
+      "wall_seconds": 1.9685285829473287,
+      "cpu_seconds": 0.194313,
+      "cpu_fraction_of_wall": 0.09870976814015567,
+      "max_rss_bytes": 4849664,
+      "diagnostic_timings": {}
+    },
+    "scalar": {
+      "startup_seconds": 0.1956191249191761,
+      "prefix_seconds": 0.13002116605639458,
+      "prefix_items": 2,
+      "wall_seconds": 1.33165391581133,
+      "cpu_seconds": 1.2160330000000001,
+      "cpu_fraction_of_wall": 0.9131749515106662,
+      "max_rss_bytes": 19136512,
+      "diagnostic_timings": {
+        "scalar-helper.lit": 0.898845458868891
+      }
+    },
+    "dependency": {
+      "startup_seconds": 0.19404795789159834,
+      "prefix_seconds": 25.391626624856144,
+      "prefix_items": 51,
+      "wall_seconds": 102.36349570797756,
+      "cpu_seconds": 99.437213,
+      "cpu_fraction_of_wall": 0.9714128294687624,
+      "max_rss_bytes": 30900224,
+      "diagnostic_timings": {
+        "cost35.lit": 31.971042125020176,
+        "vertical-optimized.lit": 44.65873808297329
+      }
+    },
+    "full": {
+      "startup_seconds": 0.19354479084722698,
+      "prefix_seconds": 446.8361436643172,
+      "prefix_items": 176,
+      "wall_seconds": 537.0854996249545,
+      "cpu_seconds": 526.357529,
+      "cpu_fraction_of_wall": 0.9800255813414329,
+      "max_rss_bytes": 70451200,
+      "diagnostic_timings": {
+        "scalar-helper.lit": 7.011044082930312,
+        "cost35.lit": 39.47350512514822,
+        "vertical-optimized.lit": 43.23315858305432
+      }
+    }
+  },
+  "same_input_context_comparison": {
+    "cost35.lit": {
+      "dependency51_seconds": 31.971042125020176,
+      "full176_seconds": 39.47350512514822,
+      "full_over_dependency_ratio": 1.2346643243842435
+    },
+    "vertical-optimized.lit": {
+      "dependency51_seconds": 44.65873808297329,
+      "full176_seconds": 43.23315858305432,
+      "full_over_dependency_ratio": 0.9680783747791905
+    }
+  },
+  "same_input_scalar_comparison": {
+    "source": "scalar-helper.lit",
+    "scalar2_seconds": 0.898845458868891,
+    "full176_seconds": 7.011044082930312,
+    "full_over_scalar_ratio": 7.800055074821231
+  },
+  "prefix_hotspots": [
+    {
+      "label": "155: thm collinear_implies_midpoint_distance:",
+      "seconds": 30.854175666114315
+    },
+    {
+      "label": "156: thm isosceles_implies_equal_projections:",
+      "seconds": 26.252966000000015
+    },
+    {
+      "label": "105: thm asa_angle_equations_bridge:",
+      "seconds": 25.83200754201971
+    },
+    {
+      "label": "127: thm concyclic_det_criterion_implies_concyclic:",
+      "seconds": 23.64623491698876
+    },
+    {
+      "label": "128: thm concyclic_det_criterion:",
+      "seconds": 20.17030299990438
+    },
+    {
+      "label": "86: thm collinear_equidistant_implies_midpoint:",
+      "seconds": 13.697854625061154
+    },
+    {
+      "label": "139: thm similar_triangles_ratio:",
+      "seconds": 10.659410167019814
+    },
+    {
+      "label": "154: thm power_of_point_difference:",
+      "seconds": 10.411604583030567
+    },
+    {
+      "label": "121: thm cramer_third_circle_equation:",
+      "seconds": 9.82667133398354
+    },
+    {
+      "label": "70: thm cosine_law:",
+      "seconds": 9.68270904198289
+    },
+    {
+      "label": "141: thm similar_triangles_det:",
+      "seconds": 9.457526582991704
+    },
+    {
+      "label": "98: thm thales_converse:",
+      "seconds": 8.45711658289656
+    },
+    {
+      "label": "153: thm equidistant_dot_half:",
+      "seconds": 8.304006458027288
+    },
+    {
+      "label": "152: thm distance_expansion_identity:",
+      "seconds": 8.046273665968329
+    },
+    {
+      "label": "97: thm thales_theorem:",
+      "seconds": 7.598790540825576
+    }
+  ],
+  "prefix_distribution": {
+    "over_10_seconds": 8,
+    "top_10_seconds": 181.03393687610514,
+    "top_10_fraction": 0.4051461356539361
+  },
+  "historical_thread_measurements": {
+    "source": "plan/迁移的plan/proof_journals/geometry-tuple-call-sprint-2026-10-06.json",
+    "cold_prefix176_seconds": 467.46348545886576,
+    "attempts": [
+      {
+        "label": "cost-prefix35-in-original176-context",
+        "elapsed_seconds": 77.56731620803475,
+        "accepted": true
+      },
+      {
+        "label": "cost-prefix45-through-square-product-equality",
+        "elapsed_seconds": 446.84988183295354,
+        "accepted": true
+      },
+      {
+        "label": "original-vertical-target-private-scalar-lemma",
+        "elapsed_seconds": 86.60113974986598,
+        "accepted": true
+      },
+      {
+        "label": "commit-original-vertical-target-private-scalar-lemma",
+        "elapsed_seconds": 121.41116558411159,
+        "accepted": true
+      }
+    ],
+    "controller_restart_reason": "prefix entered REPL successfully, but old controller expected an early JSON envelope and cannot accept frames; deliberate controller repair and replay",
+    "latest_accepted_prefix_at_report": 186
+  },
+  "observed_findings": [
+    "Measured slow verification consumes roughly one core; the responsive REPL and advancing source order provide no evidence of a deadlock in these runs.",
+    "Replaying the geometry prefix performs theorem verification; repeated cold prefix loads cost several minutes.",
+    "The same scalar helper is 7.8x slower in full176 than scalar2; geometric cost35 is 1.23x slower in full176 than dependency51, while the optimized full vertical proof is slightly faster (43.23s versus 44.66s). Context cost is route-dependent; candidate scanning is not proved to dominate every geometric proof.",
+    "The original controller restarted after expecting the JSON envelope before the REPL prompt. That error was already corrected in the other chat; current framing controls all pass.",
+    "The other chat verifies identical mathematical bodies in sketch and commit frames. Historical optimized vertical-angle probe+commit consumed 86.60+121.41 seconds; sketch does not commit the theorem, so both frames execute it."
+  ],
+  "source_based_hypotheses": [
+    {
+      "owner": "src/execute/execute_fact_stmt/verify_atomic_fact/search_proof_by_known_forall_fact.rs",
+      "confidence": "High confidence about code behavior; unmeasured contribution to total CPU.",
+      "current_code": "out.extend(env.facts.known_forall_conclusions.equal_conclusions.iter().cloned());\nfor cite in candidates { self.try_apply_forall_conclusion_cite(goal, &cite, verify_state.clone())?; }",
+      "behavior": "Equality goals enumerate all visible forall equality conclusions, then clone and match candidate facts. More unrelated equal-conclusion theorems can increase failed candidate work.",
+      "next_step": "Instrument candidate counts and phase times before selecting a structural prefilter/index optimization. Preserve matching semantics, evidence, and state permissions."
+    },
+    {
+      "owner": "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/search_equal_fact_proof_by_equivalence_class.rs",
+      "confidence": "Source inspection only; no measured percentage.",
+      "current_code": "let adjacency = self.visible_equivalence_class_adjacency();\nlet both = (1..left.len()).flat_map(|i| (1..right.len()).map(move |j| (i, j)));",
+      "behavior": "Equality peer search rebuilds a visible graph snapshot, enumerates endpoint-class pairs and verifies bridge WD. Long chains with many equivalent geometric expressions can grow this work.",
+      "next_step": "Measure graph rebuild count, peer pair count and WD time on the unchanged vertical square-product control."
+    }
+  ],
+  "priorities": [
+    "Reuse the existing persistent session; avoid restarting and replaying the entire geometry prefix during theorem iteration.",
+    "Continue using the already-verified local scalar lemma for the vertical square/sign argument; no change to its public premises or target.",
+    "Measure known-forall candidate scans and equality peer/WD work before changing the verifier. Any Env/Runtime storage or lifecycle change remains subject to the repository authorization boundary.",
+    "A later workflow change can reduce duplicate sketch+commit verification, but must preserve the requested transactional proof protocol and accepted-source recording."
+  ],
+  "source_fingerprints": {
+    "src/execute/execute_fact_stmt/verify_atomic_fact/search_proof_by_known_forall_fact.rs": "a51edae7845ce5d4da21acf66b0f8fd8a9fcd5acdf52da4cf5c9f6a3c0fa4a1d",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/search_equal_fact_proof_by_equivalence_class.rs": "5b57c6998d811796d74b1e832a86180647fe700e459ec76556fba3bed347a3c1",
+    "src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs": "2ee1683b3903d5a81207dd3f5708af5cb61979324d220e3441c8382248a4b107",
+    "src/execute/execute_proof_block_stmt/exec_sketch_stmt.rs": "2b3b81ed92fb47d15d8946b76ccee8c0585cfce65da2497d6947cdfec72008bc",
+    "src/run/run_repl.rs": "fc412474a115c7d988680e024d2c812e54f5b20768b393688b6ea0b73c8e31f2"
+  },
+  "receipts": {
+    "empty": {
+      "mode": "empty",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "source": null,
+      "rows": [
+        {
+          "label": "framing-positive",
+          "kind": "control",
+          "elapsed_seconds": 0.001605417113751173,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a98c0d9587abdd82041c45216fc06e9d379bf95609a9fb7d1d6eff8e9b9756b4",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "framing-negative",
+          "kind": "control",
+          "elapsed_seconds": 0.0012907080817967653,
+          "complete": true,
+          "success": false,
+          "source_sha256": "76eab40a07b66fee630652ecbf08c9ef775f033b966e93bc0bdf60cfa088e778",
+          "output_tail": "{\r\n  \"kind\": \"run\",\r\n  \"success\": false,\r\n  \"target\": \"repl\",\r\n  \"path\": null,\r\n  \"detail\": \"normal\",\r\n  \"language\": \"en\",\r\n  \"statement_results\": [\r\n    {\r\n      \"success\": false,\r\n      \"statement\": \"0 = 1\",\r\n      \"why_failed\": {\r\n        \"phase\": \"search_proof\",\r\n        \"goal\": \"0 = 1\"\r\n      },\r\n      \"stores\": [],\r\n      \"infers\": []\r\n    }\r\n  ],\r\n  \"session_error\": null\r\n}\r\n"
+        },
+        {
+          "label": "framing-after-negative",
+          "kind": "control",
+          "elapsed_seconds": 0.00024645798839628696,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a98c0d9587abdd82041c45216fc06e9d379bf95609a9fb7d1d6eff8e9b9756b4",
+          "output_tail": "success\r\n"
+        }
+      ],
+      "closed": true,
+      "notes": [
+        "Sequential persistent REPL replay, not a cold -f timer.",
+        "Unchanged accepted source; diagnostic controls do not establish theorem acceptance."
+      ],
+      "startup_seconds": 1.8586652919184417,
+      "pid": 58495,
+      "prefix_seconds": 0,
+      "prefix_complete": true,
+      "wall_seconds": 1.9685285829473287,
+      "cpu_user_seconds": 0.13638,
+      "cpu_system_seconds": 0.057933,
+      "max_rss_bytes": 4849664,
+      "exitstatus": 0,
+      "signalstatus": null
+    },
+    "scalar": {
+      "mode": "scalar",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "source": "scalar2.lit",
+      "rows": [
+        {
+          "label": "1: thm vertical_angles_square_core:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.09198700007982552,
+          "complete": true,
+          "success": true,
+          "source_sha256": "35022fe7520a9019c5871a4a82b3e55111b8f66794106b8afb8a6c97a0f4fa1f",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "2: thm vertical_angles_sign_core:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.038034165976569057,
+          "complete": true,
+          "success": true,
+          "source_sha256": "be3a877f4bd86fe24620d276b4fdc6f64b805de724a4826cc4ef0779dca5fefc",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "framing-positive",
+          "kind": "control",
+          "elapsed_seconds": 0.00024383282288908958,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a98c0d9587abdd82041c45216fc06e9d379bf95609a9fb7d1d6eff8e9b9756b4",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "framing-negative",
+          "kind": "control",
+          "elapsed_seconds": 0.0005248747766017914,
+          "complete": true,
+          "success": false,
+          "source_sha256": "76eab40a07b66fee630652ecbf08c9ef775f033b966e93bc0bdf60cfa088e778",
+          "output_tail": "{\r\n  \"kind\": \"run\",\r\n  \"success\": false,\r\n  \"target\": \"repl\",\r\n  \"path\": null,\r\n  \"detail\": \"normal\",\r\n  \"language\": \"en\",\r\n  \"statement_results\": [\r\n    {\r\n      \"success\": false,\r\n      \"statement\": \"0 = 1\",\r\n      \"why_failed\": {\r\n        \"phase\": \"search_proof\",\r\n        \"goal\": \"0 = 1\"\r\n      },\r\n      \"stores\": [],\r\n      \"infers\": []\r\n    }\r\n  ],\r\n  \"session_error\": null\r\n}\r\n"
+        },
+        {
+          "label": "framing-after-negative",
+          "kind": "control",
+          "elapsed_seconds": 0.0002235418651252985,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a98c0d9587abdd82041c45216fc06e9d379bf95609a9fb7d1d6eff8e9b9756b4",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "scalar-helper.lit",
+          "kind": "diagnostic",
+          "elapsed_seconds": 0.898845458868891,
+          "complete": true,
+          "success": true,
+          "source_sha256": "99acf5ccf46b005d305700fcf45e8c37a3857622651285216a106ccb792a78a5",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        }
+      ],
+      "closed": true,
+      "notes": [
+        "Sequential persistent REPL replay, not a cold -f timer.",
+        "Unchanged accepted source; diagnostic controls do not establish theorem acceptance."
+      ],
+      "startup_seconds": 0.1956191249191761,
+      "pid": 58580,
+      "prefix_seconds": 0.13002116605639458,
+      "prefix_complete": true,
+      "wall_seconds": 1.33165391581133,
+      "cpu_user_seconds": 1.147396,
+      "cpu_system_seconds": 0.068637,
+      "max_rss_bytes": 19136512,
+      "exitstatus": 0,
+      "signalstatus": null
+    },
+    "dependency": {
+      "mode": "dependency",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "source": "dependency51.lit",
+      "rows": [
+        {
+          "label": "1: have points set = cart(R, R)",
+          "kind": "prefix",
+          "elapsed_seconds": 0.000541584100574255,
+          "complete": true,
+          "success": true,
+          "source_sha256": "7dc3a924f27838a6f088942d8d25ea262d93a3f59b4170c5cbc1da5767e50ee8",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "2: have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))",
+          "kind": "prefix",
+          "elapsed_seconds": 0.008079875027760863,
+          "complete": true,
+          "success": true,
+          "source_sha256": "2b5f08d47c0d5f021ec1dcb4db2d8224403ecce63b78dc4673e07dbc94865da5",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "3: have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)",
+          "kind": "prefix",
+          "elapsed_seconds": 0.01315091596916318,
+          "complete": true,
+          "success": true,
+          "source_sha256": "efbbe59367afbd0168c4e2388a4ac020a0710ee793c613a6aeebfe65aa460356",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "4: have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)",
+          "kind": "prefix",
+          "elapsed_seconds": 0.017990417080000043,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a3c5a89cb456cb510351431470f5121fbb669b4e3ea2cda66db7f68cb4b20f7d",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "5: have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))",
+          "kind": "prefix",
+          "elapsed_seconds": 0.018668666016310453,
+          "complete": true,
+          "success": true,
+          "source_sha256": "5a38a06f21f069aa71991e3160d9897736ab4e2742b8b7624496cec039547e4f",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "6: have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R): a * p(1) + b * p(2) + c = 0}",
+          "kind": "prefix",
+          "elapsed_seconds": 0.0883804161567241,
+          "complete": true,
+          "success": true,
+          "source_sha256": "4fd8231ab33121e585d2d3b9240b3aada99074c643b98492bfee0cbe78a51555",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "7: have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}",
+          "kind": "prefix",
+          "elapsed_seconds": 0.08028679108247161,
+          "complete": true,
+          "success": true,
+          "source_sha256": "9f64a2422ef92a561e5e3408e108d47a5ce6427c4ad6faac91f1d7c16725be0b",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "8: have fn angle_cos_num(p, q, r cart(R, R): p != q, r != q) R = dot(vec(q, p), vec(q, r))",
+          "kind": "prefix",
+          "elapsed_seconds": 0.2079909578897059,
+          "complete": true,
+          "success": true,
+          "source_sha256": "3d8b0ea8e54a03089e74d216314792e610034a8c1b794905be351cf6286afe9d",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "9: have fn angle_cos_den(p, q, r cart(R, R): p != q, r != q) R = distance_sq(q, p) * distance_sq(q, r)",
+          "kind": "prefix",
+          "elapsed_seconds": 0.27069245814345777,
+          "complete": true,
+          "success": true,
+          "source_sha256": "9ed590113c2adb9fd3f393d2b2d09bb1cc4d9a1dcbbb5f513e9ea3ff768843c1",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "10: have fn circle(o cart(R, R), r R+) power_set(cart(R, R)) = {p cart(R, R): distance_sq(o, p) = r * r}",
+          "kind": "prefix",
+          "elapsed_seconds": 0.1253948339726776,
+          "complete": true,
+          "success": true,
+          "source_sha256": "60680c18aba4fbeaea1a6e8b13cc37dddc5e7a7e0162972d389eff309f1202d9",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "11: prop is_on_segment(p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.10731683392077684,
+          "complete": true,
+          "success": true,
+          "source_sha256": "c44eb3d14e26463b339b25781d57f62639ab36e7ab50c8513c40ad1a66f18fdc",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "12: prop is_on_ray(p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.09449220797978342,
+          "complete": true,
+          "success": true,
+          "source_sha256": "46414fb6e77d150e40bed4ec559dfaa0fe278ade96dc5b824c36f0374e8b814a",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "13: prop is_collinear(p, q, r cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.027014875086024404,
+          "complete": true,
+          "success": true,
+          "source_sha256": "735c0973e64bfa144a7a8abe772e1ce6e0805d1026be46ac8635c92b105eb6b2",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "14: prop are_segments_congruent(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.028597958153113723,
+          "complete": true,
+          "success": true,
+          "source_sha256": "12f5f4404faa02a676e7f8c3f2b74ef8af4eb0c839110d51f41e508c0ba81d14",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "15: prop are_angles_congruent(p, q, r, u, v, w cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.3578553330153227,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a97a7277b354f43b475f5358d90b318d03d44814c2b157fa5925b8a11e877504",
+          "output_tail": "... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "16: prop is_right_angle(p, q, r cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.028106499928981066,
+          "complete": true,
+          "success": true,
+          "source_sha256": "0226ad8a4acb8b08961935f69ae1bfc2188a161d445da7261fb7307c47c79694",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "17: prop is_parallel(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.03612754214555025,
+          "complete": true,
+          "success": true,
+          "source_sha256": "f53abd1d2dfe33b24cf5ae2f14238593fbf5f193aa6b3366cbb36e24aff51ca5",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "18: prop is_perpendicular(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.03529912489466369,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a526bcd32485b434433f843106584be96ccf3d62e30ab2ada2f85bc8683bf0ed",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "19: prop is_line(l power_set(cart(R, R))):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.06702166609466076,
+          "complete": true,
+          "success": true,
+          "source_sha256": "6443c5abf44d0cda83a4a380e30e63d73b8ba56a4a29eb8c0f6c0ffafbf3fc5c",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "20: prop is_midpoint(m, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.045363124925643206,
+          "complete": true,
+          "success": true,
+          "source_sha256": "ce6d7ff6adc677a91e93d4f591676827942f959f1d50215bd00842196b705996",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "21: prop is_affine_combination(p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.09423191612586379,
+          "complete": true,
+          "success": true,
+          "source_sha256": "76a6804272356fb03b620ffd2824bd6e5691cb1b958c3010f849dc41b4a55977",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "22: prop is_centroid(g, a, b, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.0993692078627646,
+          "complete": true,
+          "success": true,
+          "source_sha256": "3fcc6ac5ab7eff9a96ed1d576133894cc90a91aaabd71d158eb7014eee5cb6fb",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "23: prop is_on_line(p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.020871874876320362,
+          "complete": true,
+          "success": true,
+          "source_sha256": "d2d0037de733acd109ebb1a7f82d1dc9a50cb1abb997d46d98d01099731dd74f",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "24: prop is_on_extension(p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.09749533305875957,
+          "complete": true,
+          "success": true,
+          "source_sha256": "f3a444cde445a8abb5bd21fcb6a854d9fc554646da028df5fbff258520efd5da",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "25: prop is_foot(f, p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.040485332952812314,
+          "complete": true,
+          "success": true,
+          "source_sha256": "d1374417514e4faa6a2cfeca3f62439a76ae37781b45809036ed42e65df67054",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "26: prop is_angle_bisector(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.4220118329394609,
+          "complete": true,
+          "success": true,
+          "source_sha256": "578a59b6a3f7bd393652a625cfae69779bbb9857784a8d3c6fb595b52d533ba4",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "27: prop is_triangle(a, b, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.027673833072185516,
+          "complete": true,
+          "success": true,
+          "source_sha256": "6a6500369672f40753541e02fbdf0155ed0dc5b6b8828384bd82eea96d1d85a9",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "28: prop is_isosceles(a, b, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.032982375007122755,
+          "complete": true,
+          "success": true,
+          "source_sha256": "d9b24550cd066a10e03369b46ac94a3caa5e5dfb34fa50111c779fc9c8307772",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "29: prop is_equilateral(a, b, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.03665891685523093,
+          "complete": true,
+          "success": true,
+          "source_sha256": "90be627bd790513bf59b84b691d1c65536fba8c32af0e7563ebb7bd1bb0f7c67",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "30: prop are_triangles_congruent(p, q, r, u, v, w cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.08554566698148847,
+          "complete": true,
+          "success": true,
+          "source_sha256": "f8567e213934edda218a0dcd304295e88c76bc71763c7596e2c0313ba69e5b23",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "31: prop are_triangles_similar(p, q, r, u, v, w cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 2.086754082934931,
+          "complete": true,
+          "success": true,
+          "source_sha256": "e2b6803d83c50be99e420b1bb62f709321fb891c72eef7fd86572640d0acfacc",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "32: prop is_parallelogram(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.058078667148947716,
+          "complete": true,
+          "success": true,
+          "source_sha256": "93811b5ab7cd290c119fcdfba5e161b0ef9ea3982457976a1a7a468021355a1e",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "33: prop is_rectangle(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.08941995911300182,
+          "complete": true,
+          "success": true,
+          "source_sha256": "dd45ac5f8ae53f9b11e54232e971dd309847747ecb5add09223683dc7229b9e7",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "34: prop is_rhombus(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.06857158313505352,
+          "complete": true,
+          "success": true,
+          "source_sha256": "606bf363f3c06d496af60fea401573a5e1419dd53b2216cce254416dc5300a96",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "35: prop is_square(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.1037423750385642,
+          "complete": true,
+          "success": true,
+          "source_sha256": "39e665bee3de174c3d7cb27c61bc26197333a5c2511d1582b973fc3cb4c6be93",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "36: prop is_on_circle(p, o cart(R, R), r R+):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.028272584080696106,
+          "complete": true,
+          "success": true,
+          "source_sha256": "39a579a0a14be20801250f66b39d6038f88f5bab4a76a1b209c60558ec04e07c",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "37: prop are_concyclic(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.03584495815448463,
+          "complete": true,
+          "success": true,
+          "source_sha256": "6ebf9e701b510a1e1e9003d6fe97d6d9464ea5b16c993232cd499fdc6bba8b62",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "38: prop is_diameter_endpoints(a, b, o cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.04829600010998547,
+          "complete": true,
+          "success": true,
+          "source_sha256": "4ca600391437a9280e7a88c839f78f9dfc82f62ba2ba12525c8f6a4575bc2159",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "39: prop rotated_90_cw(q, p, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.045374167151749134,
+          "complete": true,
+          "success": true,
+          "source_sha256": "7ccc30cdff447bc4073d2316447fd9b913712fbe0b7f07c2229584353b17c768",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "40: prop rotated_90_ccw(q, p, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.04494525003246963,
+          "complete": true,
+          "success": true,
+          "source_sha256": "46315009f162cf3e1082088f80d2f9eb0db35d4b70f7ea9da5d43afedabfc371",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "41: thm distance_sq_coordinate_formula:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.656295208958909,
+          "complete": true,
+          "success": true,
+          "source_sha256": "b3163d7333808e225f933fc4ffcac54236c334427973c4f61697fd3673189691",
+          "output_tail": "... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "42: thm distance_sq_nonnegative:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.27690354199148715,
+          "complete": true,
+          "success": true,
+          "source_sha256": "69e2288dc93278ecdbc27bb9bba4b0f255dffaef95c8cac32181f13d5ced8a33",
+          "output_tail": "... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "43: thm distance_sq_symmetric:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.28859741683118045,
+          "complete": true,
+          "success": true,
+          "source_sha256": "9c27f71dc981ff9008d440d9d5967bd4f9ec1babfb53744dc0ee2627f38a86aa",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "44: thm perpendicular_dot_expand:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.3924044999293983,
+          "complete": true,
+          "success": true,
+          "source_sha256": "435a61314d1b8341fb130445d4a624ea730fab137f562f3c27590a561cf0ae36",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "45: thm distance_sq_positive_of_ne:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.354974834015593,
+          "complete": true,
+          "success": true,
+          "source_sha256": "3bbe7bf9a7155166c9c96ae4442678379cdbf3c7f4b6000b2778fd322af0a88b",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "46: thm affine_combination_distance_sq:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.8466261660214514,
+          "complete": true,
+          "success": true,
+          "source_sha256": "10d652f978c107c4ed9fdaaa23c52cee23183bc7489fdf483c12437285c8b738",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "47: thm vertical_angles_square_core:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.21119441697374,
+          "complete": true,
+          "success": true,
+          "source_sha256": "35022fe7520a9019c5871a4a82b3e55111b8f66794106b8afb8a6c97a0f4fa1f",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "48: thm vertical_angles_sign_core:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.8374102080706507,
+          "complete": true,
+          "success": true,
+          "source_sha256": "be3a877f4bd86fe24620d276b4fdc6f64b805de724a4826cc4ef0779dca5fefc",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "49: thm affine_dot_backward:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.4227359578944743,
+          "complete": true,
+          "success": true,
+          "source_sha256": "f05fd52a8110fe968a8251ad69749ff1e7c278ec0051950dd9e61d35b2a274d3",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "50: thm affine_dot_forward:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.7427694590296596,
+          "complete": true,
+          "success": true,
+          "source_sha256": "ea12746672ef9ca5af66ce8ffc92f41b808059eea121b387fd0774fdfcd21bc9",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "51: thm affine_distance_from_parameter:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.1367169169243425,
+          "complete": true,
+          "success": true,
+          "source_sha256": "75cf50a9d4cc25391b4ed80e9a2de8e74dca79a9e14c012b456e1399a89bc60c",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "framing-positive",
+          "kind": "control",
+          "elapsed_seconds": 0.00022950000129640102,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a98c0d9587abdd82041c45216fc06e9d379bf95609a9fb7d1d6eff8e9b9756b4",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "framing-negative",
+          "kind": "control",
+          "elapsed_seconds": 0.0030357909854501486,
+          "complete": true,
+          "success": false,
+          "source_sha256": "76eab40a07b66fee630652ecbf08c9ef775f033b966e93bc0bdf60cfa088e778",
+          "output_tail": "{\r\n  \"kind\": \"run\",\r\n  \"success\": false,\r\n  \"target\": \"repl\",\r\n  \"path\": null,\r\n  \"detail\": \"normal\",\r\n  \"language\": \"en\",\r\n  \"statement_results\": [\r\n    {\r\n      \"success\": false,\r\n      \"statement\": \"0 = 1\",\r\n      \"why_failed\": {\r\n        \"phase\": \"search_proof\",\r\n        \"goal\": \"0 = 1\"\r\n      },\r\n      \"stores\": [],\r\n      \"infers\": []\r\n    }\r\n  ],\r\n  \"session_error\": null\r\n}\r\n"
+        },
+        {
+          "label": "framing-after-negative",
+          "kind": "control",
+          "elapsed_seconds": 0.00022312509827315807,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a98c0d9587abdd82041c45216fc06e9d379bf95609a9fb7d1d6eff8e9b9756b4",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "cost35.lit",
+          "kind": "diagnostic",
+          "elapsed_seconds": 31.971042125020176,
+          "complete": true,
+          "success": true,
+          "source_sha256": "665c5952cd68635dbd86f6f09bbedbeaea96a3e1d0dd3195cfbfe75eae66e627",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "vertical-optimized.lit",
+          "kind": "diagnostic",
+          "elapsed_seconds": 44.65873808297329,
+          "complete": true,
+          "success": true,
+          "source_sha256": "2d83aed02a7764fbade801ccabdba042eefdf4d374651528f2f7ca55cb3ba348",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        }
+      ],
+      "closed": true,
+      "notes": [
+        "Sequential persistent REPL replay, not a cold -f timer.",
+        "Unchanged accepted source; diagnostic controls do not establish theorem acceptance."
+      ],
+      "startup_seconds": 0.19404795789159834,
+      "pid": 58626,
+      "prefix_seconds": 25.391626624856144,
+      "prefix_complete": true,
+      "wall_seconds": 102.36349570797756,
+      "cpu_user_seconds": 98.375189,
+      "cpu_system_seconds": 1.062024,
+      "max_rss_bytes": 30900224,
+      "exitstatus": 0,
+      "signalstatus": null
+    },
+    "full": {
+      "mode": "full",
+      "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+      "source": "prefix176.lit",
+      "rows": [
+        {
+          "label": "1: have points set = cart(R, R)",
+          "kind": "prefix",
+          "elapsed_seconds": 0.0005621251184493303,
+          "complete": true,
+          "success": true,
+          "source_sha256": "7dc3a924f27838a6f088942d8d25ea262d93a3f59b4170c5cbc1da5767e50ee8",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "2: have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))",
+          "kind": "prefix",
+          "elapsed_seconds": 0.008549500023946166,
+          "complete": true,
+          "success": true,
+          "source_sha256": "2b5f08d47c0d5f021ec1dcb4db2d8224403ecce63b78dc4673e07dbc94865da5",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "3: have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)",
+          "kind": "prefix",
+          "elapsed_seconds": 0.013018541969358921,
+          "complete": true,
+          "success": true,
+          "source_sha256": "efbbe59367afbd0168c4e2388a4ac020a0710ee793c613a6aeebfe65aa460356",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "4: have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)",
+          "kind": "prefix",
+          "elapsed_seconds": 0.018061749869957566,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a3c5a89cb456cb510351431470f5121fbb669b4e3ea2cda66db7f68cb4b20f7d",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "5: have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))",
+          "kind": "prefix",
+          "elapsed_seconds": 0.01888054213486612,
+          "complete": true,
+          "success": true,
+          "source_sha256": "5a38a06f21f069aa71991e3160d9897736ab4e2742b8b7624496cec039547e4f",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "6: have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R): a * p(1) + b * p(2) + c = 0}",
+          "kind": "prefix",
+          "elapsed_seconds": 0.08810724993236363,
+          "complete": true,
+          "success": true,
+          "source_sha256": "4fd8231ab33121e585d2d3b9240b3aada99074c643b98492bfee0cbe78a51555",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "7: have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}",
+          "kind": "prefix",
+          "elapsed_seconds": 0.05715120816603303,
+          "complete": true,
+          "success": true,
+          "source_sha256": "9f64a2422ef92a561e5e3408e108d47a5ce6427c4ad6faac91f1d7c16725be0b",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "8: have fn angle_cos_num(p, q, r cart(R, R): p != q, r != q) R = dot(vec(q, p), vec(q, r))",
+          "kind": "prefix",
+          "elapsed_seconds": 0.07533533405512571,
+          "complete": true,
+          "success": true,
+          "source_sha256": "3d8b0ea8e54a03089e74d216314792e610034a8c1b794905be351cf6286afe9d",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "9: have fn angle_cos_den(p, q, r cart(R, R): p != q, r != q) R = distance_sq(q, p) * distance_sq(q, r)",
+          "kind": "prefix",
+          "elapsed_seconds": 0.13376166694797575,
+          "complete": true,
+          "success": true,
+          "source_sha256": "9ed590113c2adb9fd3f393d2b2d09bb1cc4d9a1dcbbb5f513e9ea3ff768843c1",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "10: have fn circle(o cart(R, R), r R+) power_set(cart(R, R)) = {p cart(R, R): distance_sq(o, p) = r * r}",
+          "kind": "prefix",
+          "elapsed_seconds": 0.07221920811571181,
+          "complete": true,
+          "success": true,
+          "source_sha256": "60680c18aba4fbeaea1a6e8b13cc37dddc5e7a7e0162972d389eff309f1202d9",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "11: prop is_on_segment(p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.10639349999837577,
+          "complete": true,
+          "success": true,
+          "source_sha256": "c44eb3d14e26463b339b25781d57f62639ab36e7ab50c8513c40ad1a66f18fdc",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "12: prop is_on_ray(p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.09489783411845565,
+          "complete": true,
+          "success": true,
+          "source_sha256": "46414fb6e77d150e40bed4ec559dfaa0fe278ade96dc5b824c36f0374e8b814a",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "13: prop is_collinear(p, q, r cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.027750165900215507,
+          "complete": true,
+          "success": true,
+          "source_sha256": "735c0973e64bfa144a7a8abe772e1ce6e0805d1026be46ac8635c92b105eb6b2",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "14: prop are_segments_congruent(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.027780083008110523,
+          "complete": true,
+          "success": true,
+          "source_sha256": "12f5f4404faa02a676e7f8c3f2b74ef8af4eb0c839110d51f41e508c0ba81d14",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "15: prop are_angles_congruent(p, q, r, u, v, w cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.36061391700059175,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a97a7277b354f43b475f5358d90b318d03d44814c2b157fa5925b8a11e877504",
+          "output_tail": "... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "16: prop is_right_angle(p, q, r cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.028089000144973397,
+          "complete": true,
+          "success": true,
+          "source_sha256": "0226ad8a4acb8b08961935f69ae1bfc2188a161d445da7261fb7307c47c79694",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "17: prop is_parallel(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.036278124898672104,
+          "complete": true,
+          "success": true,
+          "source_sha256": "f53abd1d2dfe33b24cf5ae2f14238593fbf5f193aa6b3366cbb36e24aff51ca5",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "18: prop is_perpendicular(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.03706816607154906,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a526bcd32485b434433f843106584be96ccf3d62e30ab2ada2f85bc8683bf0ed",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "19: prop is_line(l power_set(cart(R, R))):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.06661391700617969,
+          "complete": true,
+          "success": true,
+          "source_sha256": "6443c5abf44d0cda83a4a380e30e63d73b8ba56a4a29eb8c0f6c0ffafbf3fc5c",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "20: prop is_midpoint(m, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.04393162508495152,
+          "complete": true,
+          "success": true,
+          "source_sha256": "ce6d7ff6adc677a91e93d4f591676827942f959f1d50215bd00842196b705996",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "21: prop is_affine_combination(p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.09327204199507833,
+          "complete": true,
+          "success": true,
+          "source_sha256": "76a6804272356fb03b620ffd2824bd6e5691cb1b958c3010f849dc41b4a55977",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "22: prop is_centroid(g, a, b, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.09718858287669718,
+          "complete": true,
+          "success": true,
+          "source_sha256": "3fcc6ac5ab7eff9a96ed1d576133894cc90a91aaabd71d158eb7014eee5cb6fb",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "23: prop is_on_line(p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.02143970807082951,
+          "complete": true,
+          "success": true,
+          "source_sha256": "d2d0037de733acd109ebb1a7f82d1dc9a50cb1abb997d46d98d01099731dd74f",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "24: prop is_on_extension(p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.0988351667765528,
+          "complete": true,
+          "success": true,
+          "source_sha256": "f3a444cde445a8abb5bd21fcb6a854d9fc554646da028df5fbff258520efd5da",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "25: prop is_foot(f, p, a, b cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.04100954090245068,
+          "complete": true,
+          "success": true,
+          "source_sha256": "d1374417514e4faa6a2cfeca3f62439a76ae37781b45809036ed42e65df67054",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "26: prop is_angle_bisector(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.41434504091739655,
+          "complete": true,
+          "success": true,
+          "source_sha256": "578a59b6a3f7bd393652a625cfae69779bbb9857784a8d3c6fb595b52d533ba4",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "27: prop is_triangle(a, b, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.02813895815052092,
+          "complete": true,
+          "success": true,
+          "source_sha256": "6a6500369672f40753541e02fbdf0155ed0dc5b6b8828384bd82eea96d1d85a9",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "28: prop is_isosceles(a, b, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.03211454185657203,
+          "complete": true,
+          "success": true,
+          "source_sha256": "d9b24550cd066a10e03369b46ac94a3caa5e5dfb34fa50111c779fc9c8307772",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "29: prop is_equilateral(a, b, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.03587416699156165,
+          "complete": true,
+          "success": true,
+          "source_sha256": "90be627bd790513bf59b84b691d1c65536fba8c32af0e7563ebb7bd1bb0f7c67",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "30: prop are_triangles_congruent(p, q, r, u, v, w cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.08621320896781981,
+          "complete": true,
+          "success": true,
+          "source_sha256": "f8567e213934edda218a0dcd304295e88c76bc71763c7596e2c0313ba69e5b23",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "31: prop are_triangles_similar(p, q, r, u, v, w cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 2.067721958970651,
+          "complete": true,
+          "success": true,
+          "source_sha256": "e2b6803d83c50be99e420b1bb62f709321fb891c72eef7fd86572640d0acfacc",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "32: prop is_parallelogram(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.05894399993121624,
+          "complete": true,
+          "success": true,
+          "source_sha256": "93811b5ab7cd290c119fcdfba5e161b0ef9ea3982457976a1a7a468021355a1e",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "33: prop is_rectangle(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.09072033409029245,
+          "complete": true,
+          "success": true,
+          "source_sha256": "dd45ac5f8ae53f9b11e54232e971dd309847747ecb5add09223683dc7229b9e7",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "34: prop is_rhombus(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.09848316595889628,
+          "complete": true,
+          "success": true,
+          "source_sha256": "606bf363f3c06d496af60fea401573a5e1419dd53b2216cce254416dc5300a96",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "35: prop is_square(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.5757234168704599,
+          "complete": true,
+          "success": true,
+          "source_sha256": "39e665bee3de174c3d7cb27c61bc26197333a5c2511d1582b973fc3cb4c6be93",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "36: prop is_on_circle(p, o cart(R, R), r R+):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.03166633378714323,
+          "complete": true,
+          "success": true,
+          "source_sha256": "39a579a0a14be20801250f66b39d6038f88f5bab4a76a1b209c60558ec04e07c",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "37: prop are_concyclic(a, b, c, d cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.041843832936137915,
+          "complete": true,
+          "success": true,
+          "source_sha256": "6ebf9e701b510a1e1e9003d6fe97d6d9464ea5b16c993232cd499fdc6bba8b62",
+          "output_tail": "... ... success\r\n"
+        },
+        {
+          "label": "38: prop is_diameter_endpoints(a, b, o cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.05193375004455447,
+          "complete": true,
+          "success": true,
+          "source_sha256": "4ca600391437a9280e7a88c839f78f9dfc82f62ba2ba12525c8f6a4575bc2159",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "39: prop rotated_90_cw(q, p, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.04545612493529916,
+          "complete": true,
+          "success": true,
+          "source_sha256": "7ccc30cdff447bc4073d2316447fd9b913712fbe0b7f07c2229584353b17c768",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "40: prop rotated_90_ccw(q, p, c cart(R, R)):",
+          "kind": "prefix",
+          "elapsed_seconds": 0.0534662080463022,
+          "complete": true,
+          "success": true,
+          "source_sha256": "46315009f162cf3e1082088f80d2f9eb0db35d4b70f7ea9da5d43afedabfc371",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "41: thm addition_cancel:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.04917066707275808,
+          "complete": true,
+          "success": true,
+          "source_sha256": "bb72fed038e576ceeda9be1206257fabd55b5e6ea87fd1979696ccba0384e305",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "42: thm subtraction_cancel:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.04892783402465284,
+          "complete": true,
+          "success": true,
+          "source_sha256": "7c9d352a9cf995cc210cffcdc0670ee6664ac486ebbe479ad6702b4fe1fd7bea",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "43: thm cancel_subtraction_in_sum:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.19167216587811708,
+          "complete": true,
+          "success": true,
+          "source_sha256": "083f5490f54aac8efa982d5829c6edafc5d3d7c921f2e5724539800ae1018049",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "44: thm multiply_both_sides:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.01898437482304871,
+          "complete": true,
+          "success": true,
+          "source_sha256": "2556514bee64fb7b5b7404ae883dd3d9f68d4742e9a18e1e4afc183995dd8bf1",
+          "output_tail": "... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "45: thm divide_both_sides:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.05911216698586941,
+          "complete": true,
+          "success": true,
+          "source_sha256": "b85e562137182cf6057636a4a85894434060e742bdb5d6d8b042ddfcfa9ac41e",
+          "output_tail": "... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "46: thm add_equalities:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.021000458160415292,
+          "complete": true,
+          "success": true,
+          "source_sha256": "245179eac232931a198602c0f33d8524c34584513adedf40f8d15ebda8fcf36e",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "47: thm subtract_equalities:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.019860417116433382,
+          "complete": true,
+          "success": true,
+          "source_sha256": "762e52f6668c46e6bc33a85a0036ae0996ab429261760c6d7034cecf994e2859",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "48: thm distance_sq_coordinate_formula:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.588008082937449,
+          "complete": true,
+          "success": true,
+          "source_sha256": "b3163d7333808e225f933fc4ffcac54236c334427973c4f61697fd3673189691",
+          "output_tail": "... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "49: thm distance_sq_nonnegative:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.2785939590539783,
+          "complete": true,
+          "success": true,
+          "source_sha256": "69e2288dc93278ecdbc27bb9bba4b0f255dffaef95c8cac32181f13d5ced8a33",
+          "output_tail": "... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "50: thm distance_sq_symmetric:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.2898132079280913,
+          "complete": true,
+          "success": true,
+          "source_sha256": "9c27f71dc981ff9008d440d9d5967bd4f9ec1babfb53744dc0ee2627f38a86aa",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "51: thm vec_coordinate_formula:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.05964333284646273,
+          "complete": true,
+          "success": true,
+          "source_sha256": "5928f80d7d0edd9993b45fd343b6cd98ad624e3d5b213dba706fc54fbeaba1e5",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "52: thm dot_coordinate_formula:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.1387205000501126,
+          "complete": true,
+          "success": true,
+          "source_sha256": "5ec111e4c5a7b2ca5e10b382125a06278f9d60dee63e5444bfdbaf837e4ba58e",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "53: thm det_coordinate_formula:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.19174062507227063,
+          "complete": true,
+          "success": true,
+          "source_sha256": "fbc1d7a4a75554493607e2f20f8b52ea58e0fecad15b8982a5a7e7f9f72493ff",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "54: thm dot_symmetric:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.29892366705462337,
+          "complete": true,
+          "success": true,
+          "source_sha256": "da793763483ca6bb2d7e72a2b245cfc4bb0e20303fa7ebcdf7723d870368e0ce",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "55: thm dot_commutative:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.16222154116258025,
+          "complete": true,
+          "success": true,
+          "source_sha256": "3f1a0563c8d8e2ebe20f2f02f68feabbcb1c67cac69db171b0c19afd2f971f46",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "56: thm dot_add_left:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.9181991249788553,
+          "complete": true,
+          "success": true,
+          "source_sha256": "dcd22f4876908c2d404d7b2096bf148acc00b7094cabf9778babcf36b61c4166",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "57: thm dot_add_right:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.9139725000131875,
+          "complete": true,
+          "success": true,
+          "source_sha256": "2a2063267c39b22b2d4c9ac7e4b2a7e78f24cf6f3837f57fc8e2c1901fe5998f",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "58: thm dot_square_sum:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.176469791913405,
+          "complete": true,
+          "success": true,
+          "source_sha256": "8771d230d99fa3b23e3b94634eb985af4b5f2a1d8c23afd67e8f64843de652a7",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "59: thm det_antisymmetric:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.3171304580755532,
+          "complete": true,
+          "success": true,
+          "source_sha256": "0645cb88fd3cf511a9d97b0c3abed274e1f96c91c6e01c015ef323a67ba592f0",
+          "output_tail": "... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "60: thm segments_congruent_reflexive:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.039592166896909475,
+          "complete": true,
+          "success": true,
+          "source_sha256": "0cf52ab6e1a1e7309536f45da93c786f89353dde84e2426d4defd106164b2df5",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "61: thm collinear_det_expand:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.345467875013128,
+          "complete": true,
+          "success": true,
+          "source_sha256": "47990d18bd45587a0c6ac1ee90f427943c5fe1cc95e3f114ac747f26e87cf2dc",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "62: thm perpendicular_dot_expand:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.3502050831448287,
+          "complete": true,
+          "success": true,
+          "source_sha256": "435a61314d1b8341fb130445d4a624ea730fab137f562f3c27590a561cf0ae36",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "63: thm segments_congruent_symmetric:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.08395387488417327,
+          "complete": true,
+          "success": true,
+          "source_sha256": "0897ffec9c0062732aec441b66480d3457e594222639af6fb4e897ae0e8a63fc",
+          "output_tail": "... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "64: thm segments_congruent_transitive:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.13129966612905264,
+          "complete": true,
+          "success": true,
+          "source_sha256": "c596b83ef672fa229b6399608d49ec44dba60363558a897b085bfdd2fb60e917",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "65: thm collinear_symmetric:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.6859743751119822,
+          "complete": true,
+          "success": true,
+          "source_sha256": "213c486830e162817af997769b72b693306a2aad4d457d5fe4186d4024b5db1c",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "66: thm vec_add_path_x:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.1333626250270754,
+          "complete": true,
+          "success": true,
+          "source_sha256": "89f70e04e57c7948c7c6d7ab7eb01d38b89f1c3aea3c2fa04de8fb729cb92947",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "67: thm vec_add_path_y:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.1333695410285145,
+          "complete": true,
+          "success": true,
+          "source_sha256": "60495d7bd5d1a38055b52dea7007f5d9100f46834d3e441f856c3b7d18348ff3",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "68: thm vec_dot_self_is_distance:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.5136308749206364,
+          "complete": true,
+          "success": true,
+          "source_sha256": "f8e675dfd8313e244f628ac528f925c9566b38852de879cfa7fa9f701e7e51bb",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "69: thm solve_cosine_for_dot:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.21751304110512137,
+          "complete": true,
+          "success": true,
+          "source_sha256": "5dd5b0ac9481d0150f662dd0c39ea3cc560e700d5e0ced6f720fee914f169d5f",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "70: thm cosine_law:",
+          "kind": "prefix",
+          "elapsed_seconds": 9.68270904198289,
+          "complete": true,
+          "success": true,
+          "source_sha256": "631bc02a5f2590400a6faa3dc123e0fc899355ef9d9c73d49ccbba593001dc80",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "71: thm dot_from_cosine_law:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.1061354579869658,
+          "complete": true,
+          "success": true,
+          "source_sha256": "27d6b4b388d4f1fdec2de561d1cae6d8188a4d9ae1ae9dbfdc5e993cf66868b1",
+          "output_tail": "... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "72: thm midpoint_equidistant:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.8204422080889344,
+          "complete": true,
+          "success": true,
+          "source_sha256": "adeae5cca8ed5bf18facb4c25e4d715e85088f102c341a51a2c8c0f5a8ee6f3d",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "73: thm midpoint_half_distance:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.211909667123109,
+          "complete": true,
+          "success": true,
+          "source_sha256": "073f69d4e181e5f40feddef8c7f3bbb1a8cecd5c578664c02f0817e794f12326",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "74: thm collinear_midpoint:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.9806014171335846,
+          "complete": true,
+          "success": true,
+          "source_sha256": "e1f5736a89d251a2faf7e708325a41e6e04340f61c9411a460b9a4cbfcff70f8",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "75: thm vec_add:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.49020508280955255,
+          "complete": true,
+          "success": true,
+          "source_sha256": "c6394a9ae96c2b7bd171c45d8c7c9777009ce2fe2238de3e05dc029c090410f0",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "76: thm vec_neg:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.05961787514388561,
+          "complete": true,
+          "success": true,
+          "source_sha256": "e4999374a619430dae58c8760185c5d8b52a917ef6143f0959655304109b56aa",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "77: thm dot_bilinear_expand:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.4018888329155743,
+          "complete": true,
+          "success": true,
+          "source_sha256": "ad05cfdab132b5f3f7d9b2567787a8cfe5d0ea7d42d0e42f6f2462e076abf26f",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "78: thm distance_equality_to_dot:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.886071499902755,
+          "complete": true,
+          "success": true,
+          "source_sha256": "93e3ebf8248872b396ec05d2f0f843f8840901023a68aec7bdbf972cb3101cd2",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "79: thm point_difference_norm_pos:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.8753481670282781,
+          "complete": true,
+          "success": true,
+          "source_sha256": "025975272e49480c14f8c4140e4fd7e2ac04fb94b4768baeaf388135945c306d",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "80: thm zero_factor_law:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.009562375023961067,
+          "complete": true,
+          "success": true,
+          "source_sha256": "db50094ddde5cfdd56c656972e3a9e5445250c87fc6d5adf3857e232e85fa4c6",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "81: thm dot_det_eliminate:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.769287709146738,
+          "complete": true,
+          "success": true,
+          "source_sha256": "3a3b3ae7a7c9cd6dce7ea2575e6249b7e398512d9230fc5204a36ec90088d821",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "82: thm collinear_to_standard_det:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.261469582794234,
+          "complete": true,
+          "success": true,
+          "source_sha256": "81e2c86049181f87c2e4218873a2d85903b73c1f868b415dd08ee287b845a1b0",
+          "output_tail": "... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "83: thm difference_of_squares:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.07894891710020602,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a63e02a7f4eb4480048321c96b353e83e8677eb67c8f28cfc9b2f63fff989828",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "84: thm rearrange_sum:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.14686687500216067,
+          "complete": true,
+          "success": true,
+          "source_sha256": "4e2217210e0a73f61c5e4c937a9222a3ce8b995daa3969cf73d6a40e26a1767d",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "85: thm one_dimensional_midpoint:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.887525666039437,
+          "complete": true,
+          "success": true,
+          "source_sha256": "526c7a0a0cac8581d3a3df8457039014aaa606bfb42247136029ad770afa79a0",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "86: thm collinear_equidistant_implies_midpoint:",
+          "kind": "prefix",
+          "elapsed_seconds": 13.697854625061154,
+          "complete": true,
+          "success": true,
+          "source_sha256": "dd25a6e6c6f96b3de2c27c203f23d7d2c885227ce1a214d9da03fea18b537516",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "87: thm dot_neg_left:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.2914112501312047,
+          "complete": true,
+          "success": true,
+          "source_sha256": "d938ff9dbc7ddb7902b48a5569ef5e0c96685091c37ce9fc6fc2261ac8b31a27",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "88: thm det_neg_left:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.7247102081310004,
+          "complete": true,
+          "success": true,
+          "source_sha256": "58439d9cbf63d209481117d33203558416673a0d49085e0ea713348017414208",
+          "output_tail": "... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "89: thm apollonius_theorem:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.7788830420468003,
+          "complete": true,
+          "success": true,
+          "source_sha256": "93db5b3ae95cd36024362d65dba2d0626d06ea4687a0b462dcbf13c6b7301967",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "90: thm distance_sq_translate:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.4497115830890834,
+          "complete": true,
+          "success": true,
+          "source_sha256": "7ec314acec2e58b77e630c822a69e12d9af0ee59daeeb07de80df5e4138419ca",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "91: thm parallelogram_diagonals:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.7863867501728237,
+          "complete": true,
+          "success": true,
+          "source_sha256": "4d29930b9158b934348c22f6f4974abd6dfc549d385d1e7079e8eae0fc76b593",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "92: thm det_change_base:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.007981749949977,
+          "complete": true,
+          "success": true,
+          "source_sha256": "b804115de4905137a3058b85e0bff743579813773e29b287a5f9fcc713c85e83",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "93: thm dot_change_base:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.985613290918991,
+          "complete": true,
+          "success": true,
+          "source_sha256": "b5ede75e6ff9f477c5e1ddedd4cdf38bcdd0a1a930b375f2f126c2ff5918118b",
+          "output_tail": "... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "94: thm collinear_third:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.2881203331053257,
+          "complete": true,
+          "success": true,
+          "source_sha256": "0596b658e85247b444b679c4277e1b2f0f330adee0cc586658e6f16dd8653042",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "95: thm parallelogram_sides:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.2522518329788,
+          "complete": true,
+          "success": true,
+          "source_sha256": "56d2cdd7703ebaf30cd4fa0af9cac66b335d199ae2bb00c8058edd0b63ba2909",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "96: thm circumcenter_equidistant:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.08543229103088379,
+          "complete": true,
+          "success": true,
+          "source_sha256": "17b686764d117ff8f34553732428e505a4306c14f8759f5282187145c335aa2e",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "97: thm thales_theorem:",
+          "kind": "prefix",
+          "elapsed_seconds": 7.598790540825576,
+          "complete": true,
+          "success": true,
+          "source_sha256": "c2ec0d9bcf6f037984e4ef6a7855712499d37b3a8b8bf856a39e3eccd817ae6a",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "98: thm thales_converse:",
+          "kind": "prefix",
+          "elapsed_seconds": 8.45711658289656,
+          "complete": true,
+          "success": true,
+          "source_sha256": "888226cd0bb4247bd4fee79c8570eb6991a8d0e305dafc9dc8ac4ee2342fd511",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "99: thm sas_third_side:",
+          "kind": "prefix",
+          "elapsed_seconds": 6.295636374969035,
+          "complete": true,
+          "success": true,
+          "source_sha256": "81f312a521e8dfa16c7cbabc9a84f342dd31e34d95d7ed7aa764da0505a23bff",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "100: thm sas_congruence:",
+          "kind": "prefix",
+          "elapsed_seconds": 5.70074037509039,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a4e4968794d5fa5bf3d767ccd80f936730cd8e6f58ca2e9286fb6dfc5b47fbd0",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "101: thm sss_congruence:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.3020837500225753,
+          "complete": true,
+          "success": true,
+          "source_sha256": "fd52a9a92e9963cae960f7c89f58cf1a7bfd786c670d330302f5fc5a79de33e0",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "102: thm distance_sq_positive_of_ne:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.3452553749084473,
+          "complete": true,
+          "success": true,
+          "source_sha256": "3bbe7bf9a7155166c9c96ae4442678379cdbf3c7f4b6000b2778fd322af0a88b",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "103: thm twice_dot_from_distances_direct:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.5348173331003636,
+          "complete": true,
+          "success": true,
+          "source_sha256": "05ab6434608bf1bebdb21926b370a57387f120ad93d9f41ffffb5dfe039253fe",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "104: thm asa_scalar_core:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.1651117079891264,
+          "complete": true,
+          "success": true,
+          "source_sha256": "41afb151b486e96defad5bcd4c013f6b0862b61782621e6727128cb366ae4b9d",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "105: thm asa_angle_equations_bridge:",
+          "kind": "prefix",
+          "elapsed_seconds": 25.83200754201971,
+          "complete": true,
+          "success": true,
+          "source_sha256": "4e422c107c3288f044b4d0bfa11207da3e6326b8a7ac8f03249ffd39b5b5f197",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "106: thm asa_congruence:",
+          "kind": "prefix",
+          "elapsed_seconds": 7.398368916939944,
+          "complete": true,
+          "success": true,
+          "source_sha256": "b55155dd9ff391b38baa35e4f20324e944dc3c2e407f4da1f51a79c5403d4e79",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "107: thm perpendicular_symmetric:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.1744927500840276,
+          "complete": true,
+          "success": true,
+          "source_sha256": "94c80ca364e3d3e8013db5a09a0a7fa3e7fbc8034db54445acaa1ba6f563fb3b",
+          "output_tail": "... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "108: thm parallel_symmetric:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.2201894170138985,
+          "complete": true,
+          "success": true,
+          "source_sha256": "be650fb34ba897a9cf6cc488a97d7cc08885da4823e86b24e31ab88f43ca78a6",
+          "output_tail": "... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "109: thm sss_dot_equal:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.43428512499667704,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a60c21f10019cf80422a0fd98eff7937dda39c423c1dbba5c190ff65721f0383",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "110: thm isosceles_base_dot:",
+          "kind": "prefix",
+          "elapsed_seconds": 4.5656025828793645,
+          "complete": true,
+          "success": true,
+          "source_sha256": "700635a45c33e813860205871ad6c598e2b3c458c0b3f2f61036a44f56af337b",
+          "output_tail": "... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "111: thm pythagorean_theorem:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.27385920798406,
+          "complete": true,
+          "success": true,
+          "source_sha256": "3d8d155424b8ca2d9598bc3fc05417f03482e95c3ad9cce11d821f0854d423d6",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "112: thm stewart_theorem:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.0287554999813437,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a908d1ca2b8c64fcb4522ea5f21c8b2a8696eb5149d5670ab716a1dd46d4b7a5",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "113: thm centroid_distance:",
+          "kind": "prefix",
+          "elapsed_seconds": 6.808456041151658,
+          "complete": true,
+          "success": true,
+          "source_sha256": "1b05a86f3a81ec47bf0a3db9d7540ebc958b1e948acf092ff62eb82f55d3dcf9",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "114: thm triangle_area_det:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.5044358330778778,
+          "complete": true,
+          "success": true,
+          "source_sha256": "fd8fc488041c59cee6fb37c9739582915da4f61b61a1583cda7c1229cdf641b9",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "115: thm det_bilinear_right:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.7885630410164595,
+          "complete": true,
+          "success": true,
+          "source_sha256": "5af3272d2b5ebacb360dd61faa32fd0e80e8c406972a7a866f11bdc242308640",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "116: thm div_mul_cancel_probe:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.05056095798499882,
+          "complete": true,
+          "success": true,
+          "source_sha256": "e79e911453af5a878975e5d2fcf5f58fcfc7767079a390141cb0b8993e97fc44",
+          "output_tail": "... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "117: thm cramer_first_circle_equation:",
+          "kind": "prefix",
+          "elapsed_seconds": 6.594283625017852,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a1e5c1df63660d96174953381b0fe89d692f493f4504f7f9894341df9ffd92e7",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "118: thm cramer_second_circle_equation:",
+          "kind": "prefix",
+          "elapsed_seconds": 6.594724375056103,
+          "complete": true,
+          "success": true,
+          "source_sha256": "59539af2e61e4adba0b307c994bf3bf7baf61c69dc53dc9b73d2119a80b67bdb",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "119: thm zero_sum_rearrange:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.057201874908059835,
+          "complete": true,
+          "success": true,
+          "source_sha256": "ec4e3ad3acd05c782a130b1a401ce72ad0ee9f8f3a1e4b0d5887fbc645dc030c",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "120: thm sub_add_cancel:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.030085209058597684,
+          "complete": true,
+          "success": true,
+          "source_sha256": "10c8665570428714167fbe6737dbbefef481d07e3173fc63a32dea10fde87925",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "121: thm cramer_third_circle_equation:",
+          "kind": "prefix",
+          "elapsed_seconds": 9.82667133398354,
+          "complete": true,
+          "success": true,
+          "source_sha256": "e48a8dd5dda13c90e0f64ec4baac54a9015a09ef708a566a95c81404cf8dcffd",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "122: thm circle_equation_gives_equal_distance:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.3200143750291318,
+          "complete": true,
+          "success": true,
+          "source_sha256": "ba090b273adcda87242524b6ffcf20196e0ac275683a8e8cb9a62ee349c391d1",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "123: thm translated_difference_square:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.3244847080204636,
+          "complete": true,
+          "success": true,
+          "source_sha256": "643fb14e7c2f4670d5a43a1a65402435de60d70b576cbff62041f5f02dd59de9",
+          "output_tail": "... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "124: thm center_offset_square:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.08690116601064801,
+          "complete": true,
+          "success": true,
+          "source_sha256": "e77d48028a30016adc45ed5039d00522473dd270ab2fc685319f0211a7edc8a4",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "125: thm common_center_implies_concyclic:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.16075799986720085,
+          "complete": true,
+          "success": true,
+          "source_sha256": "c5e7b1eeae36c2924335c8062307ead0d856aad3ef79b4b37e0c2fb6683344df",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "126: thm translated_circle_equation_gives_distance:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.217555249808356,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a5bfd2cf03d024212d7db9e4a82e2ce80bb32d3b897d2cafb2eeb0853ae7c18a",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "127: thm concyclic_det_criterion_implies_concyclic:",
+          "kind": "prefix",
+          "elapsed_seconds": 23.64623491698876,
+          "complete": true,
+          "success": true,
+          "source_sha256": "caf6535c98ec896232c1b607b28a3355837695c3c053c1ead18f0f66675b80d7",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "128: thm concyclic_det_criterion:",
+          "kind": "prefix",
+          "elapsed_seconds": 20.17030299990438,
+          "complete": true,
+          "success": true,
+          "source_sha256": "efec9603a3d2d20af27b6542b9e893afa084dde009acdec010d5709d933e4c45",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "129: thm dot_bilinear_right:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.4170732090715319,
+          "complete": true,
+          "success": true,
+          "source_sha256": "0ab243eb4e36b8d2ff5a7cb8ec3f6de280e98541e3c811d86cbf844264ae741a",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "130: thm dot_scale_right:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.4973294578958303,
+          "complete": true,
+          "success": true,
+          "source_sha256": "e63ca626c9183dc47aa78890770d3bd2ceb4a3502c35e5b2019b7a5ed8da1ea9",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "131: thm det_scale_right:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.7406099999789149,
+          "complete": true,
+          "success": true,
+          "source_sha256": "e4b97643e2c2771680dd59a670d56974e98bad6b63d3d717484cfafcbe9ba2cb",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "132: thm perpendicular_from_parallel:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.3153371249791235,
+          "complete": true,
+          "success": true,
+          "source_sha256": "bcb517c16a80091843e81a54d808f06165559ff7fb9fb25cbc91e21496682d5f",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "133: thm median_length:",
+          "kind": "prefix",
+          "elapsed_seconds": 4.239255791995674,
+          "complete": true,
+          "success": true,
+          "source_sha256": "b005619beedf3a5c8ea0c9dd145194807945f929e9ebfcb71b333dda34d1e58a",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "134: thm reflection_distance:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.1044628750532866,
+          "complete": true,
+          "success": true,
+          "source_sha256": "7c1aad274b4331d990be6959b8cc535f627bc740eb96a7d4de4e85457e5093b9",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "135: thm foot_perp_parametric:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.0428230001125485,
+          "complete": true,
+          "success": true,
+          "source_sha256": "c1834f78203da4f6bf422f5a950596917038bf7b954c53b69fb8c903c562c433",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "136: thm affine_combination_distance_sq:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.8405814170837402,
+          "complete": true,
+          "success": true,
+          "source_sha256": "10d652f978c107c4ed9fdaaa23c52cee23183bc7489fdf483c12437285c8b738",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "137: thm midpoint_segment_ratio:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.0018470420036465,
+          "complete": true,
+          "success": true,
+          "source_sha256": "c62feefb2f0bb76e3294fe75269522e9c3b96171adbba21515c461b6955aa579",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "138: thm inner_product_distance_identity:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.160937499953434,
+          "complete": true,
+          "success": true,
+          "source_sha256": "1e1c66a7a61d693c02a40eb553911560bba565453c4d5631861806ac426acc54",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "139: thm similar_triangles_ratio:",
+          "kind": "prefix",
+          "elapsed_seconds": 10.659410167019814,
+          "complete": true,
+          "success": true,
+          "source_sha256": "66366a0f7b8f1a13990e6d8be04ea068c5668e366b5c57da9b926c64337057f6",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "140: thm similar_triangles_dot:",
+          "kind": "prefix",
+          "elapsed_seconds": 4.924317416967824,
+          "complete": true,
+          "success": true,
+          "source_sha256": "2c3a6b9187a75bd9cbf6a1b09b6ce89a8a7d9e6c0c619859ccffdd2a6f750e9e",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "141: thm similar_triangles_det:",
+          "kind": "prefix",
+          "elapsed_seconds": 9.457526582991704,
+          "complete": true,
+          "success": true,
+          "source_sha256": "39f4f972405f600531352be4c8a033c809c4f831b30c08cee72d74afcdd069f2",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "142: thm angle_equality_cross_ratio:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.5712757089640945,
+          "complete": true,
+          "success": true,
+          "source_sha256": "6cd96f67123d48f35ba4fc068332d4359d42a3afcfdb7e4a4f5950074d5a1b59",
+          "output_tail": "... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "143: thm dot_squared_plus_det_squared:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.024961416842416,
+          "complete": true,
+          "success": true,
+          "source_sha256": "4364afd88b0da0a68f71cb0e020bb50f94e4845df4bcbec2654c054287912946",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "144: thm rotation_preserves_distance:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.458171125035733,
+          "complete": true,
+          "success": true,
+          "source_sha256": "516571d49fdbe6a8317979e227a2300e9f78950c9a1c13577540daf2ac2aec12",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "145: thm rotation_preserves_dot:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.821654667146504,
+          "complete": true,
+          "success": true,
+          "source_sha256": "fcb6764892e291ca48a7087336e4afb10bff88a3ac5d5aaa88c5a843206cd27c",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "146: thm rotation_preserves_det:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.1537343338131905,
+          "complete": true,
+          "success": true,
+          "source_sha256": "b6b4d8264b0b5bb24fb175cc926439820c7c2fe9aff4d3f3d29a9cb4b8f92be0",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "147: thm nine_point_center:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.555284250061959,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a40694077e18f82a4bfc1ae3121167fc857c7e6ce1161ba9d0e95defae6dfa6e",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "148: thm right_angle_implies_distance_relation:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.0386625421233475,
+          "complete": true,
+          "success": true,
+          "source_sha256": "0fe783662baae1f51954d8b496c1821906e4bec1e8acad85fda9daf11b70945e",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "149: thm angle_in_semicircle_coordinate:",
+          "kind": "prefix",
+          "elapsed_seconds": 5.395992834120989,
+          "complete": true,
+          "success": true,
+          "source_sha256": "4bbb1ec43740ff3ea5acf3601cf97c63fec74fa6a9e75944d2dfe08f60249fd5",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "150: thm equidistant_perp_bisector:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.0083558331243694,
+          "complete": true,
+          "success": true,
+          "source_sha256": "7ace36b29e10fafcdc39cf8c0c4aca89beb1f850ee691e925e1e067396f61095",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "151: thm parallelogram_diagonal_sum:",
+          "kind": "prefix",
+          "elapsed_seconds": 6.525129874935374,
+          "complete": true,
+          "success": true,
+          "source_sha256": "cc2d94d45e7d651708cb9368c46dbe1d86e6b5fb603f85ebd81fc11706270e24",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "152: thm distance_expansion_identity:",
+          "kind": "prefix",
+          "elapsed_seconds": 8.046273665968329,
+          "complete": true,
+          "success": true,
+          "source_sha256": "bb128e4b7d83f7e1b5cd5345f5670d2af3ab91e0a0407e6b9e88e48e99dde6e8",
+          "output_tail": "... ... ... success\r\n"
+        },
+        {
+          "label": "153: thm equidistant_dot_half:",
+          "kind": "prefix",
+          "elapsed_seconds": 8.304006458027288,
+          "complete": true,
+          "success": true,
+          "source_sha256": "9c539f88c0f05354aa8e4b98b5a2ffe125b286110028f8585ab2603fc71980ab",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "154: thm power_of_point_difference:",
+          "kind": "prefix",
+          "elapsed_seconds": 10.411604583030567,
+          "complete": true,
+          "success": true,
+          "source_sha256": "572137f447f8bf60d39f4b3d80ee6e42edf3a73b96c687009e10408a450989ba",
+          "output_tail": "... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "155: thm collinear_implies_midpoint_distance:",
+          "kind": "prefix",
+          "elapsed_seconds": 30.854175666114315,
+          "complete": true,
+          "success": true,
+          "source_sha256": "7271f95562075b3638125490cc7ddee12830be34cf20a7769ffc12f1a2c77a97",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "156: thm isosceles_implies_equal_projections:",
+          "kind": "prefix",
+          "elapsed_seconds": 26.252966000000015,
+          "complete": true,
+          "success": true,
+          "source_sha256": "ad74eaf2cfd1abb609b25c81905b2f91ebebfb253b24992265e523559357702e",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "157: thm equidistant_implies_perp_bisector_dot:",
+          "kind": "prefix",
+          "elapsed_seconds": 6.987532792147249,
+          "complete": true,
+          "success": true,
+          "source_sha256": "e09a9fdff63e0423f3c8639f69b29294acdf463c0386a5855567c2bbd660dadf",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "158: thm parallel_implies_det_zero:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.5368717501405627,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a41d344b2a7efba96ea552c11ca25a373b9c7a1948fb233feb990e67c3f76be4",
+          "output_tail": "... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "159: thm orthocenter_third_altitude:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.2799431669991463,
+          "complete": true,
+          "success": true,
+          "source_sha256": "258e472cc20b1f9bf26358f79791d2a74a50017408596088122c322fa1b03d8c",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "160: thm circumcenter_equidistant_triple:",
+          "kind": "prefix",
+          "elapsed_seconds": 4.2920171248260885,
+          "complete": true,
+          "success": true,
+          "source_sha256": "f50471e5b83dc1386ff3c037453d3676b0f1d42d0ed1a802aa237965eabdcc45",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "161: thm parallelogram_midpoint_diagonals:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.8699746250640601,
+          "complete": true,
+          "success": true,
+          "source_sha256": "b75908db48fad67edecc786487ff91c790bde86624070800b30d61da4b8cc616",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "162: thm reflection_equidistant:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.0487654588650912,
+          "complete": true,
+          "success": true,
+          "source_sha256": "10e283411885d151e7ceb21933573d2d08de9aab99e5f2896dec4fe7e6179ce7",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "163: thm concyclic_fourth_point:",
+          "kind": "prefix",
+          "elapsed_seconds": 5.814624582882971,
+          "complete": true,
+          "success": true,
+          "source_sha256": "77003be29f7c59c3e80976c827486de4ddf3c642074cf34ec33607a5a79d642a",
+          "output_tail": "... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "164: thm perp_dot_zero_coordinate:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.3947071670554578,
+          "complete": true,
+          "success": true,
+          "source_sha256": "3b97e656134d81f98ea878aa1b4d7630be305048100bbe271edbf8af25a2ac25",
+          "output_tail": "... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "165: thm perpendicular_implies_distance_sum:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.476879458175972,
+          "complete": true,
+          "success": true,
+          "source_sha256": "da1ad2846ee81b57b4080d6519cf0262c9479c1e7caebd6d5d016178c883186e",
+          "output_tail": "... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "166: thm collinear_symmetric_prop:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.1233248331118375,
+          "complete": true,
+          "success": true,
+          "source_sha256": "79dad78ed0f98853d621420c5ba0dc2207e67e660030b1b76366b54f91906b4a",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "167: thm segments_congruent_from_distance_sq:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.08663700008764863,
+          "complete": true,
+          "success": true,
+          "source_sha256": "5ec02374cecdeef06a55e05e71eced5ec7bd48d252c56c1c9a6df0f0bc8357f6",
+          "output_tail": "... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "168: thm collinear_third_prop:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.12109470902942121,
+          "complete": true,
+          "success": true,
+          "source_sha256": "359c70e7655886c1a569e1f9c1a828e6984156380e1a050a2bb5ee2167da7c79",
+          "output_tail": "... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "169: thm double_midpoint_equal_sides:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.7940799170173705,
+          "complete": true,
+          "success": true,
+          "source_sha256": "c9cc46b9f611a6cf1603d6382a41971e2bd33771d5cf4b1c5dfd8891a29b646d",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "170: thm midpoint_coordinate_formula:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.15525608300231397,
+          "complete": true,
+          "success": true,
+          "source_sha256": "c93cf24b0a7a0af03b6596ce8ab392d300bcdde6a692af04de377e4ac5f35888",
+          "output_tail": "... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "171: thm vertical_angles_square_core:",
+          "kind": "prefix",
+          "elapsed_seconds": 2.2123839580453932,
+          "complete": true,
+          "success": true,
+          "source_sha256": "35022fe7520a9019c5871a4a82b3e55111b8f66794106b8afb8a6c97a0f4fa1f",
+          "output_tail": "... ... ... ... success\r\n"
+        },
+        {
+          "label": "172: thm vertical_angles_sign_core:",
+          "kind": "prefix",
+          "elapsed_seconds": 0.9593837910797447,
+          "complete": true,
+          "success": true,
+          "source_sha256": "be3a877f4bd86fe24620d276b4fdc6f64b805de724a4826cc4ef0779dca5fefc",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "173: thm dot_two_scale:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.0769388750195503,
+          "complete": true,
+          "success": true,
+          "source_sha256": "5395e14d460551665d75fea350ca6f30c963fe2e798f2ea3b286dc6b4c7e8b3b",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "174: thm affine_dot_backward:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.5748867499642074,
+          "complete": true,
+          "success": true,
+          "source_sha256": "f05fd52a8110fe968a8251ad69749ff1e7c278ec0051950dd9e61d35b2a274d3",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "175: thm affine_dot_forward:",
+          "kind": "prefix",
+          "elapsed_seconds": 3.7752128748688847,
+          "complete": true,
+          "success": true,
+          "source_sha256": "ea12746672ef9ca5af66ce8ffc92f41b808059eea121b387fd0774fdfcd21bc9",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "176: thm affine_distance_from_parameter:",
+          "kind": "prefix",
+          "elapsed_seconds": 1.1505865410435945,
+          "complete": true,
+          "success": true,
+          "source_sha256": "75cf50a9d4cc25391b4ed80e9a2de8e74dca79a9e14c012b456e1399a89bc60c",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "framing-positive",
+          "kind": "control",
+          "elapsed_seconds": 0.00029495893977582455,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a98c0d9587abdd82041c45216fc06e9d379bf95609a9fb7d1d6eff8e9b9756b4",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "framing-negative",
+          "kind": "control",
+          "elapsed_seconds": 0.058920125011354685,
+          "complete": true,
+          "success": false,
+          "source_sha256": "76eab40a07b66fee630652ecbf08c9ef775f033b966e93bc0bdf60cfa088e778",
+          "output_tail": "{\r\n  \"kind\": \"run\",\r\n  \"success\": false,\r\n  \"target\": \"repl\",\r\n  \"path\": null,\r\n  \"detail\": \"normal\",\r\n  \"language\": \"en\",\r\n  \"statement_results\": [\r\n    {\r\n      \"success\": false,\r\n      \"statement\": \"0 = 1\",\r\n      \"why_failed\": {\r\n        \"phase\": \"search_proof\",\r\n        \"goal\": \"0 = 1\"\r\n      },\r\n      \"stores\": [],\r\n      \"infers\": []\r\n    }\r\n  ],\r\n  \"session_error\": null\r\n}\r\n"
+        },
+        {
+          "label": "framing-after-negative",
+          "kind": "control",
+          "elapsed_seconds": 0.0002900839317589998,
+          "complete": true,
+          "success": true,
+          "source_sha256": "a98c0d9587abdd82041c45216fc06e9d379bf95609a9fb7d1d6eff8e9b9756b4",
+          "output_tail": "success\r\n"
+        },
+        {
+          "label": "scalar-helper.lit",
+          "kind": "diagnostic",
+          "elapsed_seconds": 7.011044082930312,
+          "complete": true,
+          "success": true,
+          "source_sha256": "99acf5ccf46b005d305700fcf45e8c37a3857622651285216a106ccb792a78a5",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "cost35.lit",
+          "kind": "diagnostic",
+          "elapsed_seconds": 39.47350512514822,
+          "complete": true,
+          "success": true,
+          "source_sha256": "665c5952cd68635dbd86f6f09bbedbeaea96a3e1d0dd3195cfbfe75eae66e627",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        },
+        {
+          "label": "vertical-optimized.lit",
+          "kind": "diagnostic",
+          "elapsed_seconds": 43.23315858305432,
+          "complete": true,
+          "success": true,
+          "source_sha256": "2d83aed02a7764fbade801ccabdba042eefdf4d374651528f2f7ca55cb3ba348",
+          "output_tail": "... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... success\r\n"
+        }
+      ],
+      "closed": true,
+      "notes": [
+        "Sequential persistent REPL replay, not a cold -f timer.",
+        "Unchanged accepted source; diagnostic controls do not establish theorem acceptance."
+      ],
+      "startup_seconds": 0.19354479084722698,
+      "pid": 64968,
+      "prefix_seconds": 446.8361436643172,
+      "prefix_complete": true,
+      "wall_seconds": 537.0854996249545,
+      "cpu_user_seconds": 524.736989,
+      "cpu_system_seconds": 1.6205399999999999,
+      "max_rss_bytes": 70451200,
+      "exitstatus": 0,
+      "signalstatus": null
+    }
+  },
+  "task_mutations": [
+    "tmp/2026-10-06/geo-performance-diagnosis",
+    "docs/audits/geo-performance-2026-10-06.json"
+  ],
+  "no_rust_build_or_source_edit": true,
+  "all_owned_children_closed": true,
+  "forall_equality_design_baseline": {
+    "plan": "plan/forall-equality-structured-matching-2026-10-06.md",
+    "rows": [
+      {
+        "name": "forall-equality-basic",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-basic.lit",
+        "sha256": "c6f11e367c279c57166417382ed20c2c662faa1cba2a4f958067d0c84ff165a3",
+        "expected": true,
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "seconds": 0.042415249859914184,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-basic-output.json"
+      },
+      {
+        "name": "forall-equality-false",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-false.lit",
+        "sha256": "30162aa4b21692897cffd8ebe4d0adcf40f349cb0622d72483e1c11338ca31e9",
+        "expected": false,
+        "exit": 1,
+        "success": false,
+        "session_error": null,
+        "seconds": 0.012457999866455793,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-false-output.json"
+      },
+      {
+        "name": "forall-equality-param-head",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-param-head.lit",
+        "sha256": "a43c91abb993b77595068667a662ad7bfd3994679d1b18b4264046e6763971d3",
+        "expected": true,
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "seconds": 0.009473958984017372,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-param-head-output.json"
+      },
+      {
+        "name": "forall-equality-rigid-fn-alias",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rigid-fn-alias.lit",
+        "sha256": "c18eedaa1e1ac71b224f8fb628b0ab40c1d11eafe636cf32ed73cd87f18b3784",
+        "expected": null,
+        "exit": 1,
+        "success": false,
+        "session_error": null,
+        "seconds": 0.014758041128516197,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rigid-fn-alias-output.json"
+      },
+      {
+        "name": "forall-equality-curried-head",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-curried-head.lit",
+        "sha256": "81d781e215a1ccab2e29696c2c1cf462ccf2cd93918e5df4ed8ced6e646b4f7b",
+        "expected": true,
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "seconds": 0.006978790974244475,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-curried-head-output.json"
+      },
+      {
+        "name": "forall-equality-rigid-fn-alias-explicit",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rigid-fn-alias-explicit.lit",
+        "sha256": "b5ef97937e02549e29118f3884191555d7535eade47912e0cba33c0966ae3d34",
+        "expected": true,
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "seconds": 0.02574183396063745,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rigid-fn-alias-explicit-output.json"
+      },
+      {
+        "name": "forall-equality-wrong-head",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-wrong-head.lit",
+        "sha256": "544f9ad9a2d3b5fa5c81e12cd585baf12bdc5b33257d71f92d95f8c00507dfc5",
+        "expected": false,
+        "exit": 1,
+        "success": false,
+        "session_error": null,
+        "seconds": 0.019989583175629377,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-wrong-head-output.json"
+      },
+      {
+        "name": "forall-equality-known-head-alias",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-known-head-alias.lit",
+        "sha256": "78c20a613ecfbbb66e3f8c14fd8fa552f49b22da8bea4697a7888708897059f6",
+        "expected": true,
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "seconds": 0.004778207978233695,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-known-head-alias-output.json"
+      },
+      {
+        "name": "forall-equality-rebound-negative",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rebound-negative.lit",
+        "sha256": "df2e1e7d761147cd45ad19fa8b5dc5fb19c9652331418279aa95faf1b5594310",
+        "expected": false,
+        "exit": 1,
+        "success": false,
+        "session_error": null,
+        "seconds": 0.004270999925211072,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rebound-negative-output.json"
+      },
+      {
+        "name": "forall-equality-rebound-positive",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rebound-positive.lit",
+        "sha256": "5a03a09fb272fc7b5d5385ce0313993b8d4bb37b4bf242dc3b849fc5c877ba4f",
+        "expected": true,
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "seconds": 0.0044235000386834145,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rebound-positive-output.json"
+      },
+      {
+        "name": "forall-equality-carrier-negative",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-carrier-negative.lit",
+        "sha256": "7a8aaa3a3c4de07573fbddac37d4d80aee5ee7cc245885e86312780084403586",
+        "expected": false,
+        "exit": 1,
+        "success": false,
+        "session_error": null,
+        "seconds": 0.004043499939143658,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-carrier-negative-output.json"
+      },
+      {
+        "name": "forall-equality-rigid-numeric",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rigid-numeric.lit",
+        "sha256": "ddecd9db86100a555b778004ac906504974ab003511d1794d5d88bbf6d0b5b24",
+        "expected": true,
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "seconds": 0.0040539579931646585,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rigid-numeric-output.json"
+      },
+      {
+        "name": "forall-equality-rigid-congruence-1",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rigid-congruence-1.lit",
+        "sha256": "264492669098fceb95e80a5198d56ae407275db93676471a747cc6035c12dd07",
+        "expected": true,
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "seconds": 0.02499220916070044,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rigid-congruence-1-output.json"
+      },
+      {
+        "name": "forall-equality-rigid-congruence-2",
+        "source": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rigid-congruence-2.lit",
+        "sha256": "98cfe132b965496cd638a8cb2c0499a71b9db024880e13ffbdd0fe55b9c1d35a",
+        "expected": true,
+        "exit": 0,
+        "success": true,
+        "session_error": null,
+        "seconds": 0.014531708089634776,
+        "output": "tmp/2026-10-06/geo-performance-diagnosis/forall-equality-rigid-congruence-2-output.json"
+      }
+    ],
+    "positive_accept": 9,
+    "negative_reject": 4,
+    "requested_route_currently_rejected": 1,
+    "implemented": false
+  }
+}

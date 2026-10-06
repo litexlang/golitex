@@ -57,6 +57,7 @@ fn direct_result_distinguishes_calculation_citation_and_miss() {
 fn direct_calculation_covers_polarities_and_fails_closed() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::calculate_closed_atomic_fact::calculate_closed_atomic_fact;
     let mut rt = runtime();
+    exec_ok(&mut rt, "have p cart(R,R)");
     for code in [
         "1+1=2", "1/3+1/3=2/3", "1/3 != 1/2",
         "1/3<1/2", "1/2>1/3", "1/3<=1/3", "1/3>=1/3",
@@ -70,13 +71,13 @@ fn direct_calculation_covers_polarities_and_fails_closed() {
     for code in [
         "1+1=3", "1/3>1/2", "not 1/3<1/2", "1/3 $in Z", "not 1 $in R",
         "i < 1", "i = 0", "1/0=1/0", "1/0 $in R", "not 1/0 $in R",
-        "(1,2)(3)=(1,2)(3)", "2^1000 = 3",
+        "p(3)=p(3)", "2^1000 = 3",
         "1/340282366920938463463374607431768211456 = 2/680564733841876926926749214863536422912",
     ] {
         let Fact::AtomicFact(goal) = fact(&mut rt, code) else { panic!("atomic") };
         assert!(calculate_closed_atomic_fact(&goal).is_none(), "{code}");
     }
-    for code in ["1/0=1/0", "(1,2)(3)=(1,2)(3)", "1+1=3", "i<1"] {
+    for code in ["1/0=1/0", "p(3)=p(3)", "1+1=3", "i<1"] {
         assert!(verify(&mut rt, code, VerifyState::new(VerifyStateLevel::Direct)).is_failed(), "{code}");
         let stmt = parse(&mut rt, code);
         let before = memory_sizes(&rt);
@@ -91,7 +92,7 @@ fn direct_never_uses_symbolic_normalization_definitions_or_known_value_substitut
     let mut rt = runtime();
     exec_ok(&mut rt, "have a R = 2");
     exec_ok(&mut rt, "have fn f(x R) R = x+1");
-    for code in ["a+1=3", "a+0=a", "f(1)=2", "tuple_dim((a,a))=2", "finite_set_size({a})=1"] {
+    for code in ["a+1=3", "a+0=a", "f(1)=2", "(a,a)=(2,2)", "finite_set_size({a})=1"] {
         let Fact::AtomicFact(goal) = fact(&mut rt, code) else { panic!("atomic") };
         assert!(matches!(rt.search_atomic_fact_proof_directly(&goal), D::NotFound), "{code}");
     }
@@ -232,8 +233,9 @@ fn stored_paths_remain_available_at_level_zero_and_keep_wd() {
     exec_ok(&mut rt, "have a R = 1");
     exec_ok(&mut rt, "have b R = a");
     exec_ok(&mut rt, "have c R = b");
+    exec_ok(&mut rt, "have p cart(R,R)");
     assert!(!verify(&mut rt, "c=1", VerifyState::new(Direct)).is_failed());
-    for bad in ["1/0=1/0", "(1,2)(3)=(1,2)(3)", "1+1=3"] {
+    for bad in ["1/0=1/0", "p(3)=p(3)", "1+1=3"] {
         assert!(
             verify(&mut rt, bad, VerifyState::top_level()).is_failed(),
             "{bad}"
@@ -325,4 +327,16 @@ fn memory_sizes(rt: &Runtime) -> Vec<(usize, usize)> {
             )
         })
         .collect()
+}
+
+// Literal heads parse, but equality identity still requires valid domains.
+#[test]
+fn literal_object_heads_check_wd_while_retired_dimension_syntax_rejects_at_parse() {
+    let run=runtime().run_litex_code("(1,2)(3)=(1,2)(3)").unwrap();
+    assert!(!run.success && run.session_error.is_none());
+    assert_eq!(run.statement_results.len(),1);
+    assert!(run.statement_results[0].is_failed());
+    let run=runtime().run_litex_code("tuple_dim((1,2))=2").unwrap();
+    assert!(!run.success && run.session_error.is_some());
+    assert!(run.statement_results.is_empty());
 }

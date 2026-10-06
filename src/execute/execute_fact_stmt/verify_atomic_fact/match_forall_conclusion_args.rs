@@ -28,6 +28,17 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::{HashMap, HashSet};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::EquivalenceClassAdjacency;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::calculate_closed_atomic_fact::calculate_closed_atomic_fact;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::closed_calculation_proof::ClosedCalculationProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
+
+// Scoped to a read-only matching phase; never survives requirement searches.
+#[derive(Default)]
+pub(crate) struct ForallMatchEqualityContext {
+    adjacency: Option<EquivalenceClassAdjacency>,
+    misses: HashSet<(crate::exec_env::ObjIR, crate::exec_env::ObjIR)>,
+}
 
 impl Runtime {
     // Soft miss → Ok(None). Nested equal / rebound use VerifyState all flags false.
@@ -71,13 +82,38 @@ impl Runtime {
         pattern_args: &[&Obj],
         goal_args: &[&Obj],
         ordered_param_ids: &[IdentifierId],
-    ) -> RuntimeResult<Option<(HashMap<IdentifierId, Obj>, Vec<ForallConclusionArgMatchProof>)>>
-    {
+    ) -> RuntimeResult<
+        Option<(
+            HashMap<IdentifierId, Obj>,
+            Vec<ForallConclusionArgMatchProof>,
+        )>,
+    > {
+        self.match_forall_conclusion_args_with_equality(
+            pattern_args,
+            goal_args,
+            ordered_param_ids,
+            &mut ForallMatchEqualityContext::default(),
+        )
+    }
+
+    pub(crate) fn match_forall_conclusion_args_with_equality(
+        &mut self,
+        pattern_args: &[&Obj],
+        goal_args: &[&Obj],
+        ordered_param_ids: &[IdentifierId],
+        equality: &mut ForallMatchEqualityContext,
+    ) -> RuntimeResult<
+        Option<(
+            HashMap<IdentifierId, Obj>,
+            Vec<ForallConclusionArgMatchProof>,
+        )>,
+    > {
         if pattern_args.len() != goal_args.len() {
             return Ok(None);
         }
         let param_set: HashSet<IdentifierId> = ordered_param_ids.iter().copied().collect();
-        let equality_state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct);
+        let equality_state =
+            VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct);
 
         let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
         let mut arg_match_proofs = Vec::with_capacity(pattern_args.len());
@@ -89,6 +125,7 @@ impl Runtime {
                 &param_set,
                 &mut subst,
                 equality_state.clone(),
+                equality,
             )?
             else {
                 return Ok(None);
@@ -108,17 +145,41 @@ impl Runtime {
         subst: &mut HashMap<IdentifierId, Obj>,
         ordered_param_ids: &[IdentifierId],
     ) -> RuntimeResult<bool> {
+        self.complete_forall_subst_with_equality(
+            forall,
+            subst,
+            ordered_param_ids,
+            &mut ForallMatchEqualityContext::default(),
+        )
+    }
+
+    pub(crate) fn complete_forall_subst_with_equality(
+        &mut self,
+        forall: &ForallFact,
+        subst: &mut HashMap<IdentifierId, Obj>,
+        ordered_param_ids: &[IdentifierId],
+        equality: &mut ForallMatchEqualityContext,
+    ) -> RuntimeResult<bool> {
+        if ordered_param_ids.iter().all(|id| subst.contains_key(id)) {
+            return Ok(true);
+        }
         let param_set: HashSet<IdentifierId> = ordered_param_ids.iter().copied().collect();
-        let equality_state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct);
+        let equality_state =
+            VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct);
 
         // Binder types are implicit premises too. Recover hidden parameters
         // only from the type of an already matched object (for example K and
         // field from space : VectorSpace<K, field, V>), never by choosing an
         // arbitrary object to fill a missing theorem argument.
-        let parameters: Vec<Obj> = forall.typed_parameters.groups.iter()
+        let parameters: Vec<Obj> = forall
+            .typed_parameters
+            .groups
+            .iter()
             .flat_map(|group| &group.params)
-            .map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p))).collect();
-        let type_facts = self.type_facts_for_typed_arguments(&forall.typed_parameters, &parameters)
+            .map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p)))
+            .collect();
+        let type_facts = self
+            .type_facts_for_typed_arguments(&forall.typed_parameters, &parameters)
             .map_err(crate::runtime::RuntimeError::InternalBug)?;
 
         let mut guard = 0;
@@ -128,11 +189,15 @@ impl Runtime {
                 return Ok(false);
             }
             let mut progress = false;
-            let anchored_types = type_facts.iter().filter(|fact| {
-                matches!(fact, Fact::AtomicFact(AtomicFact::InFact(in_fact))
+            let anchored_types = type_facts
+                .iter()
+                .filter(|fact| {
+                    matches!(fact, Fact::AtomicFact(AtomicFact::InFact(in_fact))
                     if matches!(&in_fact.element, Obj::Identifier(IdentifierObj::Plain {id, ..})
                         if subst.contains_key(id)))
-            }).cloned().collect::<Vec<_>>();
+                })
+                .cloned()
+                .collect::<Vec<_>>();
             for dom in forall.dom_facts.iter().chain(anchored_types.iter()) {
                 let Fact::AtomicFact(pattern_atomic) = dom else {
                     continue;
@@ -154,6 +219,7 @@ impl Runtime {
                                 &param_set,
                                 &mut trial,
                                 equality_state.clone(),
+                                equality,
                             )?
                             .is_none()
                         {
@@ -179,10 +245,18 @@ impl Runtime {
     }
 
     fn visible_known_atomics_matching_prop(&self, pattern: &AtomicFact) -> Vec<AtomicFact> {
-        let key = (pattern.prop_name(), atomic_fact_has_positive_polarity(pattern));
+        let key = (
+            pattern.prop_name(),
+            atomic_fact_has_positive_polarity(pattern),
+        );
         let mut out = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
-            if let Some(entries) = env.facts.known_atomic_except_equality_facts.by_prop.get(&key) {
+            if let Some(entries) = env
+                .facts
+                .known_atomic_except_equality_facts
+                .by_prop
+                .get(&key)
+            {
                 out.extend(entries.iter().cloned());
             }
         }
@@ -194,17 +268,34 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         equality_state: VerifyState,
+        equality: &mut ForallMatchEqualityContext,
     ) -> RuntimeResult<Option<StrictEqualWithFact>> {
+        debug_assert_eq!(
+            equality_state.level(),
+            crate::execute::execute_fact_stmt::VerifyStateLevel::Direct
+        );
+        let key = (left.ir(), right.ir());
         let equal_fact = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: left.clone(),
             right: right.clone(),
             line_file: None,
         };
-        let Some(searched) = self.search_equal_fact_proof(&equal_fact, equality_state)? else {
+        if equality.misses.contains(&key) {
             return Ok(None);
-        };
-        let Some(equal_proof) = strict_equal_arg_proof_from_searched(searched) else {
+        }
+        let searched = self
+            .lookup_known_obj_equality_with_graph(left, right, &mut equality.adjacency)
+            .or_else(
+                || match calculate_closed_atomic_fact(&equal_fact.clone().into()) {
+                    Some(ClosedCalculationProof::Equality(proof)) => {
+                        Some(EqualFactSearchedProof::ByClosedCalculation(proof))
+                    }
+                    _ => None,
+                },
+            );
+        let Some(equal_proof) = searched.and_then(strict_equal_arg_proof_from_searched) else {
+            equality.misses.insert(key);
             return Ok(None);
         };
         Ok(Some(StrictEqualWithFact {
@@ -221,7 +312,24 @@ impl Runtime {
         param_set: &HashSet<IdentifierId>,
         subst: &mut HashMap<IdentifierId, Obj>,
         equality_state: VerifyState,
+        equality: &mut ForallMatchEqualityContext,
     ) -> RuntimeResult<Option<ForallConclusionArgMatchProof>> {
+        // Rigid relative to this forall: consume whole-value equality first.
+        // On a miss the existing constructor descent retains Direct-only leaves.
+        let mut free = HashSet::new();
+        crate::instantiate::collect_free_plain_ids(pattern, &HashSet::new(), &mut free);
+        if free.is_disjoint(param_set) {
+            if let Some(equal) =
+                self.prove_objs_equal_strict(pattern, goal, equality_state, equality)?
+            {
+                return Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
+                    pattern: pattern.clone(),
+                    pattern_after_subst: pattern.clone(),
+                    goal_arg: goal.clone(),
+                    equal,
+                }));
+            }
+        }
         match try_bind_forall_param(pattern, goal, param_set, subst) {
             ForallParamBindResult::Bound { param_id } => {
                 return Ok(Some(ForallConclusionArgMatchProof::BoundParam {
@@ -230,12 +338,13 @@ impl Runtime {
                     goal_arg: goal.clone(),
                 }));
             }
-            ForallParamBindResult::NeedEqual {
-                param_id,
-                previous,
-            } => {
-                let Some(equal) =
-                    self.prove_objs_equal_strict(&previous, goal, equality_state.clone())?
+            ForallParamBindResult::NeedEqual { param_id, previous } => {
+                let Some(equal) = self.prove_objs_equal_strict(
+                    &previous,
+                    goal,
+                    equality_state.clone(),
+                    equality,
+                )?
                 else {
                     return Ok(None);
                 };
@@ -249,9 +358,20 @@ impl Runtime {
             ForallParamBindResult::NotAParam => {}
         }
 
-        if let (Obj::SetFormer(SetFormer::SetBuilder(left)), Obj::SetFormer(SetFormer::SetBuilder(right))) = (pattern, goal) {
+        if let (
+            Obj::SetFormer(SetFormer::SetBuilder(left)),
+            Obj::SetFormer(SetFormer::SetBuilder(right)),
+        ) = (pattern, goal)
+        {
             let mut trial = subst.clone();
-            if !self.match_set_builder_free_parameters(left, right, param_set, &mut trial, equality_state.clone())? {
+            if !self.match_set_builder_free_parameters(
+                left,
+                right,
+                param_set,
+                &mut trial,
+                equality_state.clone(),
+                equality,
+            )? {
                 return Ok(None);
             }
             let pattern_after_subst = match self.inst_obj(pattern, &trial) {
@@ -261,18 +381,34 @@ impl Runtime {
             // Argument pairing proposes a substitution only. The complete
             // builder (carrier, polarity, connectives, free owners and bound
             // occurrences) must still match under the existing alpha proof.
-            let Some(equal) = self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state)? else {
+            let Some(equal) =
+                self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state, equality)?
+            else {
                 return Ok(None);
             };
             *subst = trial;
             return Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
-                pattern: pattern.clone(), pattern_after_subst, goal_arg: goal.clone(), equal,
+                pattern: pattern.clone(),
+                pattern_after_subst,
+                goal_arg: goal.clone(),
+                equal,
             }));
         }
 
-        if let (Obj::FunctionSpace(FunctionSpace::AnonymousFn(left)), Obj::FunctionSpace(FunctionSpace::AnonymousFn(right))) = (pattern, goal) {
+        if let (
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(left)),
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(right)),
+        ) = (pattern, goal)
+        {
             let mut trial = subst.clone();
-            if !self.match_anonymous_fn_free_parameters(left, right, param_set, &mut trial, equality_state)? {
+            if !self.match_anonymous_fn_free_parameters(
+                left,
+                right,
+                param_set,
+                &mut trial,
+                equality_state,
+                equality,
+            )? {
                 return Ok(None);
             }
             let Ok(pattern_after_subst) = self.inst_obj(pattern, &trial) else {
@@ -280,12 +416,17 @@ impl Runtime {
             };
             // Child pairing proposes free arguments only. The full signature,
             // guard syntax and body must still pass the existing strict equality.
-            let Some(equal) = self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state)? else {
+            let Some(equal) =
+                self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state, equality)?
+            else {
                 return Ok(None);
             };
             *subst = trial;
             return Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
-                pattern: pattern.clone(), pattern_after_subst, goal_arg: goal.clone(), equal,
+                pattern: pattern.clone(),
+                pattern_after_subst,
+                goal_arg: goal.clone(),
+                equal,
             }));
         }
 
@@ -295,28 +436,47 @@ impl Runtime {
         // Example: `\member<S> $in S` matches `\member<R> $in R` via S = R.
         let pairs = match (pattern, goal) {
             (Obj::InstantiatedTemplateObj(left), Obj::InstantiatedTemplateObj(right))
-                if left.template_name == right.template_name && left.args.len() == right.args.len() =>
+                if left.template_name == right.template_name
+                    && left.args.len() == right.args.len() =>
             {
-                Some(left.args.iter().cloned().zip(right.args.iter().cloned()).collect())
+                Some(
+                    left.args
+                        .iter()
+                        .cloned()
+                        .zip(right.args.iter().cloned())
+                        .collect(),
+                )
             }
             _ => corresponding_arg_pairs(pattern, goal),
         };
         if let Some(pairs) = pairs {
             if !pairs.is_empty() {
-                let mut child_matches = Vec::with_capacity(pairs.len());
-                for (child_pattern, child_goal) in &pairs {
+                // Function prefix first; retain the legacy certificate slot order.
+                let mut order: Vec<_> = (0..pairs.len()).collect();
+                if matches!(pattern, Obj::FnObj(_)) {
+                    order.rotate_right(1);
+                }
+                let mut slots: Vec<Option<ForallConclusionArgMatchProof>> =
+                    (0..pairs.len()).map(|_| None).collect();
+                for index in order {
+                    let (child_pattern, child_goal) = &pairs[index];
                     let Some(child) = self.match_forall_one_arg(
                         child_pattern,
                         child_goal,
                         param_set,
                         subst,
-                        equality_state.clone(),
+                        equality_state,
+                        equality,
                     )?
                     else {
                         return Ok(None);
                     };
-                    child_matches.push(child);
+                    slots[index] = Some(child);
                 }
+                let child_matches = slots
+                    .into_iter()
+                    .map(|slot| slot.expect("all structure children matched"))
+                    .collect();
                 return Ok(Some(ForallConclusionArgMatchProof::ByStructure {
                     pattern: pattern.clone(),
                     goal_arg: goal.clone(),
@@ -330,7 +490,7 @@ impl Runtime {
             Err(_) => return Ok(None),
         };
         let Some(equal) =
-            self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state)?
+            self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state, equality)?
         else {
             return Ok(None);
         };
@@ -352,11 +512,22 @@ impl Runtime {
         param_set: &HashSet<IdentifierId>,
         subst: &mut HashMap<IdentifierId, Obj>,
         equality_state: VerifyState,
+        equality: &mut ForallMatchEqualityContext,
     ) -> RuntimeResult<bool> {
         if pattern.facts.len() != goal.facts.len() {
             return Ok(false);
         }
-        if self.match_forall_one_arg(&pattern.param_set, &goal.param_set, param_set, subst, equality_state.clone())?.is_none() {
+        if self
+            .match_forall_one_arg(
+                &pattern.param_set,
+                &goal.param_set,
+                param_set,
+                subst,
+                equality_state.clone(),
+                equality,
+            )?
+            .is_none()
+        {
             return Ok(false);
         }
         let rename = HashMap::from([(
@@ -370,9 +541,21 @@ impl Runtime {
             };
             let left_args = quantifier_free_fact_args_ref(&left);
             let right_args = quantifier_free_fact_args_ref(right);
-            if left_args.len() != right_args.len() { return Ok(false); }
+            if left_args.len() != right_args.len() {
+                return Ok(false);
+            }
             for (left_arg, right_arg) in left_args.into_iter().zip(right_args) {
-                if self.match_forall_one_arg(left_arg, right_arg, param_set, subst, equality_state.clone())?.is_none() {
+                if self
+                    .match_forall_one_arg(
+                        left_arg,
+                        right_arg,
+                        param_set,
+                        subst,
+                        equality_state.clone(),
+                        equality,
+                    )?
+                    .is_none()
+                {
                     return Ok(false);
                 }
             }
@@ -380,7 +563,9 @@ impl Runtime {
         for value in subst.values() {
             let mut free = HashSet::new();
             crate::instantiate::collect_free_plain_ids(value, &HashSet::new(), &mut free);
-            if free.contains(&goal.param_binding.id) { return Ok(false); }
+            if free.contains(&goal.param_binding.id) {
+                return Ok(false);
+            }
         }
         Ok(true)
     }
@@ -392,33 +577,59 @@ impl Runtime {
         param_set: &HashSet<IdentifierId>,
         subst: &mut HashMap<IdentifierId, Obj>,
         equality_state: VerifyState,
+        equality: &mut ForallMatchEqualityContext,
     ) -> RuntimeResult<bool> {
         let left_groups = &pattern.body.set_bound_parameters.groups;
         let right_groups = &goal.body.set_bound_parameters.groups;
         if left_groups.len() != right_groups.len()
-            || pattern.body.dom_facts.len() != goal.body.dom_facts.len() {
+            || pattern.body.dom_facts.len() != goal.body.dom_facts.len()
+        {
             return Ok(false);
         }
         let mut rename = HashMap::new();
         let mut local_ids = HashSet::new();
         for (left, right) in left_groups.iter().zip(right_groups) {
-            if left.params.len() != right.params.len() { return Ok(false); }
-            let Ok(domain) = self.inst_obj(left.param_type.as_ref(), &rename) else { return Ok(false) };
-            if self.match_forall_one_arg(&domain, &right.param_type, param_set, subst, equality_state)?.is_none() {
+            if left.params.len() != right.params.len() {
+                return Ok(false);
+            }
+            let Ok(domain) = self.inst_obj(left.param_type.as_ref(), &rename) else {
+                return Ok(false);
+            };
+            if self
+                .match_forall_one_arg(
+                    &domain,
+                    &right.param_type,
+                    param_set,
+                    subst,
+                    equality_state,
+                    equality,
+                )?
+                .is_none()
+            {
                 return Ok(false);
             }
             for (left, right) in left.params.iter().zip(&right.params) {
-                rename.insert(left.id, Obj::Identifier(IdentifierObj::from_bound_name(right)));
+                rename.insert(
+                    left.id,
+                    Obj::Identifier(IdentifierObj::from_bound_name(right)),
+                );
                 local_ids.insert(right.id);
             }
         }
         for (left, right) in pattern.body.dom_facts.iter().zip(&goal.body.dom_facts) {
-            let Ok(left) = self.inst_quantifier_free_fact(left, &rename) else { return Ok(false) };
+            let Ok(left) = self.inst_quantifier_free_fact(left, &rename) else {
+                return Ok(false);
+            };
             let left_args = quantifier_free_fact_args_ref(&left);
             let right_args = quantifier_free_fact_args_ref(right);
-            if left_args.len() != right_args.len() { return Ok(false); }
+            if left_args.len() != right_args.len() {
+                return Ok(false);
+            }
             for (left, right) in left_args.into_iter().zip(right_args) {
-                if self.match_forall_one_arg(left, right, param_set, subst, equality_state)?.is_none() {
+                if self
+                    .match_forall_one_arg(left, right, param_set, subst, equality_state, equality)?
+                    .is_none()
+                {
                     return Ok(false);
                 }
             }
@@ -427,15 +638,22 @@ impl Runtime {
             (pattern.body.ret_set.as_ref(), goal.body.ret_set.as_ref()),
             (pattern.equal_to.as_ref(), goal.equal_to.as_ref()),
         ] {
-            let Ok(left) = self.inst_obj(left, &rename) else { return Ok(false) };
-            if self.match_forall_one_arg(&left, right, param_set, subst, equality_state)?.is_none() {
+            let Ok(left) = self.inst_obj(left, &rename) else {
+                return Ok(false);
+            };
+            if self
+                .match_forall_one_arg(&left, right, param_set, subst, equality_state, equality)?
+                .is_none()
+            {
                 return Ok(false);
             }
         }
         for value in subst.values() {
             let mut free = HashSet::new();
             crate::instantiate::collect_free_plain_ids(value, &HashSet::new(), &mut free);
-            if !free.is_disjoint(&local_ids) { return Ok(false); }
+            if !free.is_disjoint(&local_ids) {
+                return Ok(false);
+            }
         }
         Ok(true)
     }

@@ -13,6 +13,10 @@ use crate::execute::execute_fact_stmt::VerifyFactResult;
 
 // Builtin rules for `a >= b`.
 pub enum GreaterEqualFactSearchProofByBuiltinRule {
+    MulLeftNonpositiveReversesWeakGreaterEqual(super::order_negative_common_factor::MulLeftNonpositiveReversesWeakGreaterEqualProof),
+    MulRightNonpositiveReversesWeakGreaterEqual(super::order_negative_common_factor::MulRightNonpositiveReversesWeakGreaterEqualProof),
+    MulLeftRightNonpositiveReversesWeakGreaterEqual(super::order_negative_common_factor::MulLeftRightNonpositiveReversesWeakGreaterEqualProof),
+    MulRightLeftNonpositiveReversesWeakGreaterEqual(super::order_negative_common_factor::MulRightLeftNonpositiveReversesWeakGreaterEqualProof),
     SumOfNonnegatives(GreaterEqualSumOfNonnegativesBuiltinRuleProof),
     ClosedSubtractionBound(GreaterEqualClosedSubtractionBoundBuiltinRuleProof),
     ComplexModulusNonnegative,
@@ -199,6 +203,10 @@ impl Runtime {
 
         if let Some(proof) = self.search_closed_subtraction_weak_bound(&fact.left, &fact.right, true) {
             return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(GreaterEqualClosedSubtractionBoundBuiltinRuleProof { bound: proof })));
+        }
+
+        if let Some(proof) = self.search_negative_common_factor_greater_equal(fact, verify_state)? {
+            return Ok(Some(proof));
         }
 
         // B1 — closed numeric

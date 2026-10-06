@@ -1,0 +1,13 @@
+# Tracer: a tuple coordinate can return a checked anonymous function.
+# Before: the parser accepted this source, but WD stopped at the second call.
+# (fn(x R) R {x},0)(1)(2)=2
+# Now: verify the shorter receiver's actual returned value and complete domain.
+# Boundary: scalar coordinates, guards, wrong carrier/arity and false values reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_object_definition/by_fn_application/function_valued_tuple_call.lit
+
+(fn(x R) R {x},0)(1)(2)=2
+(fn(x,y R) R {x+y},0)(1)(2,3)=5
+let functions=(fn(x R: x!=0) R {1/x},0)
+functions(1)(2)=1/2
+eval (fn(x R) R {x+1},0)(1)(2)
+(fn(x R) R {x+1},0)(1)(2)=3

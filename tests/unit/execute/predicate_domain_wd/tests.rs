@@ -164,26 +164,17 @@ fn predicate_domain_wd_valid_domains_and_prior_carrier_facts_succeed() {
 }
 
 #[test]
-fn predicate_domain_wd_dimension_codomain_requires_a_valid_shape() {
-    let mut rt = runtime();
-    let run = rt
-        .run_litex_code("have A set\ncart_dim(A) $in N\n")
-        .unwrap();
-    assert!(run.session_error.is_none());
-    assert!(!run.success);
-    let mut rt = runtime();
-    assert!(!rt.run_litex_code("tuple_dim(0) $in N\n").unwrap().success);
-    let mut rt = runtime();
-    let run = rt
-        .run_litex_code("have A set = cart(R, R)\ncart_dim(A) $in N\ncart_dim(A) >= 2\n")
-        .unwrap();
-    assert!(run.success, "{:?}", run.session_error);
-    // Shape is checked from a real Cartesian definition. Inferred N membership
-    // may now be cited directly; an earlier builtin label is not its contract.
-    assert!(rt.run_litex_code("cart_dim(A) = 2").unwrap().success);
-    for wrong in ["cart_dim(A) = 0", "cart_dim(A) = 1", "0 = 1"] {
-        assert!(!rt.run_litex_code(wrong).unwrap().success, "{wrong}");
+fn retired_dimension_interfaces_reject_and_current_coordinate_carriers_remain_usable() {
+    for source in ["cart_dim(A) $in N", "tuple_dim(0) $in N", "cart_dim(A)=2"] {
+        let mut rt=runtime();
+        assert!(rt.run_litex_code("have A set=cart(R,R)").unwrap().success);
+        let result=rt.run_litex_code(source).unwrap();
+        assert!(!result.success && result.session_error.is_some(), "{source}");
+        assert!(result.statement_results.is_empty());
     }
+    let mut rt=runtime();
+    assert!(rt.run_litex_code("have p cart(R,R)\np(1) $in R\np(2) $in R").unwrap().success);
+    for wrong in ["p(3) $in R", "0=1"] { assert!(!rt.run_litex_code(wrong).unwrap().success); }
 }
 
 #[test]

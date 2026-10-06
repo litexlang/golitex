@@ -43,7 +43,8 @@
         "FnObjHead::Identifier",
         "FnObjHead::AnonymousFnLiteral",
         "FnObjHead::FieldAccess",
-        "FnObjHead::InstantiatedTemplateObj"
+        "FnObjHead::InstantiatedTemplateObj",
+        "FnObjHead::Object"
       ],
       "positive_cases": [
         "P01",
@@ -54,7 +55,19 @@
         "P06",
         "P07",
         "P08",
-        "P09"
+        "P09",
+        "P10",
+        "P11",
+        "P12",
+        "P13",
+        "P14",
+        "P15",
+        "P16",
+        "P17",
+        "P18",
+        "P19",
+        "P20",
+        "P21"
       ],
       "negative_cases": [
         {
@@ -1830,9 +1843,7 @@
     },
     {
       "name": "cart_dim",
-      "ast_paths": [
-        "Obj::ProductShape::CartDim"
-      ],
+      "ast_paths": [],
       "positive_file": null,
       "helper_paths": [],
       "positive_cases": [],
@@ -1848,13 +1859,14 @@
       ],
       "gaps": [],
       "retired": true,
-      "retired_reason": "User removed tuple/cart dimension and constructor-factor projection interfaces; retain syntax-rejection fixtures, not positive obligations."
+      "retired_reason": "User removed tuple/cart dimension and constructor-factor projection interfaces; retain syntax-rejection fixtures, not positive obligations.",
+      "removed_ast_paths": [
+        "Obj::ProductShape::CartDim"
+      ]
     },
     {
       "name": "tuple_dim",
-      "ast_paths": [
-        "Obj::ProductShape::TupleDim"
-      ],
+      "ast_paths": [],
       "positive_file": null,
       "helper_paths": [],
       "positive_cases": [],
@@ -1870,13 +1882,14 @@
       ],
       "gaps": [],
       "retired": true,
-      "retired_reason": "User removed tuple/cart dimension and constructor-factor projection interfaces; retain syntax-rejection fixtures, not positive obligations."
+      "retired_reason": "User removed tuple/cart dimension and constructor-factor projection interfaces; retain syntax-rejection fixtures, not positive obligations.",
+      "removed_ast_paths": [
+        "Obj::ProductShape::TupleDim"
+      ]
     },
     {
       "name": "proj",
-      "ast_paths": [
-        "Obj::ProductShape::Proj"
-      ],
+      "ast_paths": [],
       "positive_file": null,
       "helper_paths": [],
       "positive_cases": [],
@@ -1900,23 +1913,17 @@
       ],
       "gaps": [],
       "retired": true,
-      "retired_reason": "User removed tuple/cart dimension and constructor-factor projection interfaces; retain syntax-rejection fixtures, not positive obligations."
+      "retired_reason": "User removed tuple/cart dimension and constructor-factor projection interfaces; retain syntax-rejection fixtures, not positive obligations.",
+      "removed_ast_paths": [
+        "Obj::ProductShape::Proj"
+      ]
     },
     {
       "name": "obj_at_index",
-      "ast_paths": [
-        "Obj::ProductShape::ObjAtIndex"
-      ],
-      "positive_file": "obj_at_index.lit",
+      "ast_paths": [],
+      "positive_file": null,
       "helper_paths": [],
-      "positive_cases": [
-        "P01",
-        "P02",
-        "P03",
-        "P04",
-        "P05",
-        "P06"
-      ],
+      "positive_cases": [],
       "negative_cases": [
         {
           "id": "N01",
@@ -1939,7 +1946,12 @@
           "file": "negative/obj_at_index__n05.lit"
         }
       ],
-      "gaps": []
+      "gaps": [],
+      "removed_ast_paths": [
+        "Obj::ProductShape::ObjAtIndex"
+      ],
+      "retired": true,
+      "retired_reason": "ObjAtIndex AST removed by explicit authorization; all six correct coordinate goals moved to fn_obj P10–P15; original negative fixtures retained."
     },
     {
       "name": "fn_set",

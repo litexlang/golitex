@@ -5,7 +5,7 @@ use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::wrap_obj_well_defined_by_def::{finish_by_def, wrap_common_fail};
 use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
+    AtomicFact, EqualFact, ExistShapedFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
 use crate::ast::obj::{
     FieldAccess, FnSet, FunctionSpace, InstantiatedTemplateObj, Obj, StructAndFieldAccessObj, StructObj,
@@ -14,9 +14,22 @@ use crate::ast::param::ParamType;
 use crate::ast::stmt::TemplateDefEnum;
 use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_obtain_obj_from_atomic_fact_stmt::project_sole_positive_exist_clause;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
+
+fn first_exist_function_signature(family: &ExistShapedFact) -> Option<FnSet> {
+    if matches!(family, ExistShapedFact::NotExist(_)) { return None; }
+    let group = family.plain().typed_parameters.groups.first()?;
+    if group.params.is_empty() { return None; }
+    match &group.param_type {
+        ParamType::Obj(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) => {
+            Some(signature.clone())
+        },
+        _ => None,
+    }
+}
 
 impl Runtime {
     // `&Name` / `&Name<args>`: definition, arity, argument WD and declared types.
@@ -439,6 +452,26 @@ impl Runtime {
                 ret_set: Box::new(stmt.fn_set_clause.ret_set.clone()),
             },
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => self.have_fn_by_exist_signature(stmt)?,
+            // `obtain` exports its first witness as the template object. Its
+            // checked existential binder supplies the same callable carrier as
+            // `have fn`; instance WD remains the caller's responsibility.
+            TemplateDefEnum::ObtainObjFromExistFact(stmt) => {
+                first_exist_function_signature(&stmt.fact)?
+            },
+            TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => {
+                let definition = self.def_prop_visible(&stmt.fact.predicate)?.clone();
+                let family = project_sole_positive_exist_clause(&definition.iff_facts).ok()?;
+                let signature = first_exist_function_signature(&family)?;
+                let param_ids = definition.typed_parameters.ordered_param_ids();
+                if param_ids.len() != stmt.fact.body.len() { return None; }
+                let prop_subst = param_ids.into_iter().zip(stmt.fact.body.iter().cloned()).collect();
+                match self.inst_obj(
+                    &Obj::FunctionSpace(FunctionSpace::FnSet(signature)), &prop_subst,
+                ).ok()? {
+                    Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => signature,
+                    _ => return None,
+                }
+            },
             _ => return None,
         };
         let subst = ids.into_iter().zip(value.args.iter().cloned()).collect();

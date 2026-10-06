@@ -14,8 +14,9 @@ litex -latex -document -lang zh -f examples/stmt_nodes/compile_to_latex/identity
 The CLI emits one JSON artifact. Its stable keys include `success`, `format`,
 `target`, `path`, `language`, `verified`, `content`, and `error`. `success` means
 conversion succeeded; `verified` is always false. On failure, `content` is null,
-`error` describes the input/config/conversion error, and the process exits 1.
+`error` describes the source/config/conversion error, and the process exits 1.
 `-session` and `-strict` do not apply to this conversion route.
+Invalid launch arguments use the common CLI diagnostic path: stderr and exit 2.
 
 Save a complete document without copying JSON escapes:
 
@@ -52,6 +53,14 @@ supply their own document typography. PDF compilation is outside the Litex CLI:
 the CLI writes LaTeX, and does not install fonts or invoke a TeX engine.
 
 ## Data flow and API
+
+The CLI resolves `-latex` into `LaunchCommand::CompileToLatex { input:
+LatexInput, language, document }`. `run_command` dispatches it to
+`run_compile_to_latex` and returns `RunCommandOutcome::CompileToLatex` with a
+`CompileToLatexResult`. Argument parsing and artifact JSON belong to the launch
+and run layers; this compiler module accepts source or parsed AST values.
+C/Python extraction uses the separate `ExtractExecutableCode` command and
+`ExtractExecutableCodeResult`, retaining its verification requirement.
 
 ```text
 source -> Tokenizer::tokenize -> Runtime::parse -> existing AST
@@ -117,6 +126,8 @@ positive verification examples.
 
 ```sh
 cargo test --release --lib compile_to_latex -- --nocapture
+cargo test --release --lib launch_command_tests -- --nocapture
+cargo test --release --lib latex_command_tests -- --nocapture
 cargo test --release --test compile_to_latex_cli -- --nocapture
 cargo build --release
 target/release/litex -f examples/stmt_nodes/compile_to_latex/identity.lit

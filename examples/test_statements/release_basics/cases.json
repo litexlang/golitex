@@ -312,11 +312,11 @@
         "W04"
       ],
       "name": "tuple-dimension",
-      "expected": true,
-      "statements": [
-        true
-      ],
-      "file": "fixtures/W/tuple-dimension.lit"
+      "expected": false,
+      "statements": [],
+      "file": "fixtures/W/tuple-dimension.lit",
+      "session_error": true,
+      "retirement": "tuple_dim removed; retain source as explicit parser rejection"
     },
     {
       "contracts": [
@@ -324,10 +324,10 @@
       ],
       "name": "false-tuple-dimension",
       "expected": false,
-      "statements": [
-        false
-      ],
-      "file": "fixtures/W/false-tuple-dimension.lit"
+      "statements": [],
+      "file": "fixtures/W/false-tuple-dimension.lit",
+      "session_error": true,
+      "retirement": "tuple_dim removed; retain source as explicit parser rejection"
     },
     {
       "contracts": [

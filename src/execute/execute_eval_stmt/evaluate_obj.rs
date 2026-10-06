@@ -57,19 +57,25 @@ pub fn evaluate_obj(
             super::evaluate_aggregate::evaluate_aggregate(runtime, op, depth, active_calls)
         }
         Obj::FnObj(fn_obj) => {
-            if let Some(expansion) =
-                runtime.expanded_named_or_literal_anon_fn_application_body(fn_obj)?
-            {
-                let application_well_defined = match runtime.verify_obj_well_definedness(
-                    obj,
-                    crate::execute::execute_by_stmt::proof_verify_state()
-                        ,
-                )? {
-                    crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(p) => p,
-                    failed => return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
-                };
+            use super::aggregate_evaluation_result::{CheckedBetaFunctionApplicationExpansionProof, FunctionApplicationExpansionProof};
+            let application_well_defined = match runtime.verify_obj_well_definedness(
+                obj, active_calls.function_proof_state,
+            )? {
+                crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(p) => p,
+                failed => return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
+            };
+            let expansion = if let Some(proof) = runtime.expanded_named_or_literal_anon_fn_application_body(fn_obj)? {
+                Some(FunctionApplicationExpansionProof::Anonymous(proof))
+            } else {
+                runtime.parent_checked_beta_body(obj, &application_well_defined, active_calls.function_proof_state)?.map(|(function_body, expanded_body)| {
+                    FunctionApplicationExpansionProof::CheckedBeta(CheckedBetaFunctionApplicationExpansionProof {
+                        function_body, expanded_body,
+                    })
+                })
+            };
+            if let Some(expansion) = expansion {
                 let (body, cites) =
-                    runtime.rewrite_obj_by_known_closed_numeric_equal(&expansion.expanded_body);
+                    runtime.rewrite_obj_by_known_closed_numeric_equal(expansion.expanded_body());
                 active_calls.cited_equal_fact_ids.extend(cites);
                 let value = match evaluate_obj(runtime, &body, depth + 1, active_calls)? {
                     Ok(v) => v,

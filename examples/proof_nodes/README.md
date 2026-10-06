@@ -661,6 +661,12 @@ The [stored function return superset](atomic/by_known_special_property/function_
 
 [Explicit function argument congruence](equal/by_known_forall/function_argument_congruence_explicit.lit) proves a general X/Y-carrier equality lemma and instantiates it with a function-valued argument. It needs no trust. This documents an explicit authoring route; it does not claim automatic discovery of every anonymous-function argument equality.
 
+[Rigid application alias transport](equal/by_known_forall/rigid_application_alias.lit)
+reuses the existing whole-value `f(0)=g(0)` equality inside a stored forall
+argument match. The [acceptance record](experience/problem_notes/forall-equality-index-2026-10-06.md)
+covers conservative constructor indexing, parameter/domain boundaries, real
+source evidence and scoped storage.
+
 [Homogeneous Cartesian coordinates](atomic/by_known_special_property/homogeneous_cart_coordinate.lit) derives variable-index coordinate membership when every factor is known equal to the target carrier. It preserves the existing indexed-object WD (positive integer index within the tuple dimension), shape provenance and all factor equality proofs. It does not infer a common superset for heterogeneous factors or manufacture symbolic tuple constructors.
 
 [Known Cartesian index upper bounds](atomic/by_known_special_property/known_cart_index_upper_bound.lit) transports a stored upper bound through a known tuple shape. It handles Cartesian aliases and guarded function codomains without opening forall search; index positivity and integrality remain separate WD obligations.
@@ -929,3 +935,26 @@ different angles and complex inputs still reject. See the
 
 
 [Principal-bound spellings](equal/by_builtin_rule/arcsin_principal_bound_spellings.lit) and [their nonzero/WD consumer](atomic/by_builtin_rule/cos_nonzero_principal_bound_spellings.lit) preserve original actual bound citations at inherited permissions. [Whole numeric subterm priority](atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit) verifies a formerly intermittent cosine-endpoint comparison. Focused tests exercise all row permutations, rebuilt parents, the preserved single-key wrapper, ten languages, equality/eval, false conclusions and actual source reuse. See [acceptance](experience/problem_notes/trig-order-nonzero-2026-10-06.md).
+
+[First-quadrant facts](atomic/by_builtin_rule/trig_first_quadrant.lit) and
+[quotient WD](equal/by_builtin_rule/trig_first_quadrant_quotient_wd.lit) preserve
+the former first-quadrant nonzero WD failures and check tan/cot positivity
+from the same two strict bounds. Six dedicated typed leaves retain actual
+written bound citations, with `<`/`>` targets and both premise orientations.
+Focused `trig_first_quadrant_tests` also execute these maintained files, reject
+poles/missing/weak/free-argument controls, and check actual stored-forall reuse.
+
+[Negative common-factor order](atomic/by_builtin_rule/negative_common_factor_order.lit)
+and [nonpositive weak order](atomic/by_builtin_rule/nonpositive_common_factor_weak_order.lit)
+restore same-placement rules and extend mixed placements, preserving actual
+sign/order children at the inherited premise ceiling. Strict/weak, four target
+comparisons and all four placements have dedicated evidence. Focused tests
+retain missing/wrong/zero boundaries and actual stored-forall source reuse.
+Archived-overlay execution is distinct from the pending shared startup build.
+
+Signed real difference/order bridges are demonstrated in
+`atomic/by_builtin_rule/signed_difference_order.lit`; fixed unary-minus,
+zero-minus and literal-minus-one spellings are in
+`atomic/by_builtin_rule/negated_sign_order.lit`. Both retain the former bare
+source as comments and are executed by `signed_difference_order_tests` as well
+as their strict release CLI gates.

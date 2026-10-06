@@ -19,10 +19,10 @@
 //!   goal  `$leq(a,c)` with known `$leq(a,b)`, `$leq(b,c)`
 //!   → conclusion binds `x,z`; dom completion binds `y`.
 
+use super::match_forall_conclusion_args::ForallMatchEqualityContext;
+use crate::ast::fact::{atomic_fact_args_ref, atomic_fact_has_positive_polarity};
 use crate::ast::fact::{AtomicFact, Fact, ForallConclusionLocation};
-use crate::ast::fact::{
-    atomic_fact_args_ref, atomic_fact_has_positive_polarity,
-};
+use crate::exec_env::forall_equality_index::EqualityIndexQuery;
 use crate::exec_env::known_forall_conclusion_memory::{
     atomic_at_forall_location, ForallConclusionCite,
 };
@@ -32,17 +32,21 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 impl Runtime {
     // Search known-forall atomic conclusions that can prove `goal`.
-    // Candidates come from equal_conclusions or by_atomic_prop; first success wins.
+    // Candidates come from by_equal or by_atomic_prop; first success wins.
     pub fn search_atomic_fact_proof_by_known_forall_fact(
         &mut self,
         goal: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
         let candidates = self.visible_forall_atomic_conclusion_candidates(goal);
+        let mut equality = ForallMatchEqualityContext::default();
         for cite in candidates {
-            if let Some(proof) =
-                self.try_apply_forall_conclusion_cite(goal, &cite, verify_state.clone())?
-            {
+            if let Some(proof) = self.try_apply_forall_conclusion_cite(
+                goal,
+                &cite,
+                verify_state.clone(),
+                &mut equality,
+            )? {
                 return Ok(Some(proof));
             }
         }
@@ -50,21 +54,30 @@ impl Runtime {
     }
 
     // Collect cites from the execution-environment stack (inner env first).
-    // `=` goals read `equal_conclusions`; other atomics key by (prop, polarity).
-    fn visible_forall_atomic_conclusion_candidates(
+    // `=` goals query the constructor index; other atomics key by (prop, polarity).
+    pub(crate) fn visible_forall_atomic_conclusion_candidates(
         &self,
         goal: &AtomicFact,
     ) -> Vec<ForallConclusionCite> {
         let mut out = Vec::new();
+        let mut equality_query = None;
         for env in self.execution_environments_stack.iter().rev() {
             match goal {
-                AtomicFact::EqualFact(_) => {
+                AtomicFact::EqualFact(equal) => {
+                    let query = equality_query.get_or_insert_with(|| {
+                        EqualityIndexQuery::new(
+                            self.execution_environments_stack
+                                .iter()
+                                .rev()
+                                .map(|env| &env.facts.known_equivalence_classes.generating_edges)
+                                .collect(),
+                        )
+                    });
                     out.extend(
                         env.facts
                             .known_forall_conclusions
-                            .equal_conclusions
-                            .iter()
-                            .cloned(),
+                            .by_equal
+                            .candidates(equal, query),
                     );
                 }
                 _ => {
@@ -86,6 +99,7 @@ impl Runtime {
         goal: &AtomicFact,
         cite: &ForallConclusionCite,
         verify_state: VerifyState,
+        equality: &mut ForallMatchEqualityContext,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
         // Stage 1: resolve forall + atomic conclusion at the cite location.
         let forall = match self.fact_by_id_in_stack(cite.fact_id) {
@@ -115,10 +129,7 @@ impl Runtime {
                     vec![left.clone(), right.clone()],
                     true,
                     chain.line_file.clone().unwrap_or_else(|| {
-                        crate::ast::line_file::SourceLine::new(
-                            0,
-                            crate::runtime::CodeSource::Eval,
-                        )
+                        crate::ast::line_file::SourceLine::new(0, crate::runtime::CodeSource::Eval)
                     }),
                 )?
             }
@@ -137,14 +148,18 @@ impl Runtime {
         let goal_args = atomic_fact_args_ref(goal);
 
         // Stage 3: match conclusion args (may leave dom-only params unbound).
-        let Some((mut subst, arg_match_proofs)) =
-            self.match_forall_conclusion_args_to_subst(&conclusion_args, &goal_args, &param_ids)?
+        let Some((mut subst, arg_match_proofs)) = self.match_forall_conclusion_args_with_equality(
+            &conclusion_args,
+            &goal_args,
+            &param_ids,
+            equality,
+        )?
         else {
             return Ok(None);
         };
 
         // Stage 3b: bind params that appear only in dom facts.
-        if !self.complete_forall_subst_from_dom_facts(&forall, &mut subst, &param_ids)? {
+        if !self.complete_forall_subst_with_equality(&forall, &mut subst, &param_ids, equality)? {
             return Ok(None);
         }
 
@@ -153,6 +168,9 @@ impl Runtime {
             .map(|id| subst.get(id).expect("dom completion").clone())
             .collect();
 
+        // Requirements can run broader verification. Do not reuse a stale
+        // read-only matching snapshot if this candidate fails there.
+        *equality = ForallMatchEqualityContext::default();
         // Stage 4: param-type obligations, then dom facts (shared helper).
         let Some(instantiation_requirements) =
             self.prove_forall_instantiation_requirements(&forall, &subst, verify_state)?

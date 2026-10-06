@@ -1,7 +1,7 @@
 use crate::runtime::{RuntimeError, RuntimeResult};
 use std::path::PathBuf;
 
-/// Natural language for user-facing JSON. Litex source is unchanged.
+/// Natural language for user-facing JSON and mathematical prose. Litex source is unchanged.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum OutputLanguage {
     #[default]
@@ -89,6 +89,14 @@ pub enum ExtractInput {
     Repository(PathBuf),
 }
 
+/// Input shape for parse-only `-latex` compilation.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum LatexInput {
+    Code(String),
+    File(PathBuf),
+    Repository(PathBuf),
+}
+
 /// How a Runtime session was launched. Shared by `run` and `runtime` (no cycle).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum LaunchCommand {
@@ -120,10 +128,15 @@ pub enum LaunchCommand {
         strict: bool,
         language: OutputLanguage,
     },
-    Extract {
+    ExtractExecutableCode {
         target: CodeExtractionTarget,
         input: ExtractInput,
         language: OutputLanguage,
+    },
+    CompileToLatex {
+        input: LatexInput,
+        language: OutputLanguage,
+        document: bool,
     },
 }
 
@@ -136,7 +149,8 @@ impl LaunchCommand {
             | LaunchCommand::Repository { strict, .. } => *strict,
             LaunchCommand::Help { .. }
             | LaunchCommand::Version { .. }
-            | LaunchCommand::Extract { .. } => false,
+            | LaunchCommand::ExtractExecutableCode { .. }
+            | LaunchCommand::CompileToLatex { .. } => false,
         }
     }
 
@@ -148,7 +162,8 @@ impl LaunchCommand {
             | LaunchCommand::Eval { language, .. }
             | LaunchCommand::File { language, .. }
             | LaunchCommand::Repository { language, .. }
-            | LaunchCommand::Extract { language, .. } => *language,
+            | LaunchCommand::ExtractExecutableCode { language, .. }
+            | LaunchCommand::CompileToLatex { language, .. } => *language,
         }
     }
 }
@@ -157,6 +172,8 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
     let mut session = false;
     let mut strict = false;
     let mut language = OutputLanguage::English;
+    let mut latex = false;
+    let mut document = false;
     let mut rest = Vec::new();
     let mut i = 0;
     while i < args.len() {
@@ -173,6 +190,22 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
                 rest.push(code.clone());
                 i += 1;
             }
+        } else if arg == "-latex" || arg == "--latex" {
+            if latex {
+                return Err(RuntimeError::InvalidArguments(
+                    "`-latex` may appear only once".into(),
+                ));
+            }
+            latex = true;
+            i += 1;
+        } else if arg == "-document" || arg == "--document" {
+            if document {
+                return Err(RuntimeError::InvalidArguments(
+                    "`-document` may appear only once".into(),
+                ));
+            }
+            document = true;
+            i += 1;
         } else if arg == "-session" || arg == "--session" {
             session = true;
             i += 1;
@@ -192,6 +225,38 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
             rest.push(arg.clone());
             i += 1;
         }
+    }
+
+    if latex {
+        if session || strict {
+            return Err(RuntimeError::InvalidArguments(
+                "`-latex` does not take `-session` or `-strict`".into(),
+            ));
+        }
+        let input = match rest.as_slice() {
+            [flag, value] if flag == "-e" && !value.is_empty() => {
+                LatexInput::Code(value.clone())
+            }
+            [flag, value] if flag == "-f" && !value.is_empty() => {
+                LatexInput::File(PathBuf::from(value))
+            }
+            [flag, value] if flag == "-r" && !value.is_empty() => {
+                LatexInput::Repository(PathBuf::from(value))
+            }
+            _ => return Err(RuntimeError::InvalidArguments(
+                "`-latex` requires -e <code>, -f <file>, or -r <project>; executable extraction does not apply".into(),
+            )),
+        };
+        return Ok(LaunchCommand::CompileToLatex {
+            input,
+            language,
+            document,
+        });
+    }
+    if document {
+        return Err(RuntimeError::InvalidArguments(
+            "`-document` requires `-latex`".into(),
+        ));
     }
 
     match rest.as_slice() {
@@ -236,7 +301,7 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
                 && !matches!(value.as_str(), "-f" | "-r") =>
         {
             reject_session_strict_for_extract(session, strict)?;
-            Ok(LaunchCommand::Extract {
+            Ok(LaunchCommand::ExtractExecutableCode {
                 target: extraction_target(flag),
                 input: ExtractInput::Code(value.clone()),
                 language,
@@ -248,7 +313,7 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
                 && !value.is_empty() =>
         {
             reject_session_strict_for_extract(session, strict)?;
-            Ok(LaunchCommand::Extract {
+            Ok(LaunchCommand::ExtractExecutableCode {
                 target: extraction_target(flag),
                 input: ExtractInput::File(PathBuf::from(value)),
                 language,
@@ -260,14 +325,14 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
                 && !value.is_empty() =>
         {
             reject_session_strict_for_extract(session, strict)?;
-            Ok(LaunchCommand::Extract {
+            Ok(LaunchCommand::ExtractExecutableCode {
                 target: extraction_target(flag),
                 input: ExtractInput::Repository(PathBuf::from(value)),
                 language,
             })
         }
         _ => Err(RuntimeError::InvalidArguments(
-            "supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-extractpython` / `-extractc` with code / `-f` / `-r`, optional `-session` / `-strict` / `-lang <en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi>`, `-help`, `-version`"
+            "supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-extractpython` / `-extractc` with code / `-f` / `-r`, `-latex` with -e / -f / -r and optional -document, optional `-session` / `-strict` / `-lang <en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi>`, `-help`, `-version`"
                 .to_string(),
         )),
     }

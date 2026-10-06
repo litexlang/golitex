@@ -116,33 +116,6 @@ fn pack_success_by_def(
             unreachable!("binder object WD must use dedicated binder pipelines, not CommonStages")
         }
         Obj::ProductShape(ProductShape::Cart(_)) => ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::Cart(CartObjWellDefinedProof::from_stages(stages))),
-        Obj::ProductShape(ProductShape::CartDim(_)) => {
-            let mut children = take_child_proofs(&mut stages, 1);
-            let mut reqs = take_requirements(&mut stages, 1);
-            ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::CartDim(CartDimObjWellDefinedProof {
-                set_well_defined: children.remove(0),
-                set_is_cart: reqs.remove(0),
-            }))
-        }
-        Obj::ProductShape(ProductShape::Proj(_)) => {
-            let mut children = take_child_proofs(&mut stages, 2);
-            let mut reqs = take_requirements(&mut stages, 3);
-            ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::Proj(ProjObjWellDefinedProof {
-                set_well_defined: children.remove(0),
-                dim_well_defined: children.remove(0),
-                dim_in_npos: reqs.remove(0),
-                set_is_cart: reqs.remove(0),
-                dim_le_cart_dim: reqs.remove(0),
-            }))
-        }
-        Obj::ProductShape(ProductShape::TupleDim(_)) => {
-            let mut children = take_child_proofs(&mut stages, 1);
-            let mut reqs = take_requirements(&mut stages, 1);
-            ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::TupleDim(TupleDimObjWellDefinedProof {
-                arg_well_defined: children.remove(0),
-                arg_is_tuple: reqs.remove(0),
-            }))
-        }
         Obj::ProductShape(ProductShape::Tuple(_)) => ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::Tuple(TupleObjWellDefinedProof::from_stages(stages))),
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(_)) => ObjWellDefinedProofByDef::FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef::FiniteSetSize(FiniteSetSizeObjWellDefinedProof::from_stages(stages))),
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(_)) => ObjWellDefinedProofByDef::FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef::FiniteSetMax(FiniteSetMaxObjWellDefinedProof::from_stages(stages))),
@@ -158,17 +131,6 @@ fn pack_success_by_def(
         Obj::SetFormer(SetFormer::ClosedRange(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::ClosedRange(ClosedRangeObjWellDefinedProof::from_stages(stages))),
         Obj::SetFormer(SetFormer::FiniteSeqSet(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::FiniteSeqSet(FiniteSeqSetObjWellDefinedProof::from_stages(stages))),
         Obj::SetFormer(SetFormer::SeqSet(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SeqSet(SeqSetObjWellDefinedProof::from_stages(stages))),
-        Obj::ProductShape(ProductShape::ObjAtIndex(_)) => {
-            let mut children = take_child_proofs(&mut stages, 2);
-            let mut reqs = take_requirements(&mut stages, 3);
-            ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::ObjAtIndex(ObjAtIndexObjWellDefinedProof {
-                obj_well_defined: children.remove(0),
-                index_well_defined: children.remove(0),
-                index_in_npos: reqs.remove(0),
-                obj_is_tuple: reqs.remove(0),
-                index_le_tuple_dim: reqs.remove(0),
-            }))
-        }
         Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(_)) => ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(StructObjObjWellDefinedProof::from_stages(stages))),
         Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_)) => ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::FieldAccess(FieldAccessObjWellDefinedProof::from_stages(stages))),
         Obj::InstantiatedTemplateObj(_) => ObjWellDefinedProofByDef::InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof::from_stages(stages)),
@@ -362,15 +324,6 @@ pub(super) fn wrap_common_fail(
         Obj::ProductShape(ProductShape::Cart(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::Cart(
             FailToVerifyCartObjWellDefined(common),
         )),
-        Obj::ProductShape(ProductShape::CartDim(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::CartDim(
-            FailToVerifyCartDimObjWellDefined(common),
-        )),
-        Obj::ProductShape(ProductShape::Proj(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::Proj(
-            FailToVerifyProjObjWellDefined(common),
-        )),
-        Obj::ProductShape(ProductShape::TupleDim(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::TupleDim(
-            FailToVerifyTupleDimObjWellDefined(common),
-        )),
         Obj::ProductShape(ProductShape::Tuple(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::Tuple(
             FailToVerifyTupleObjWellDefined(common),
         )),
@@ -415,9 +368,6 @@ pub(super) fn wrap_common_fail(
         )),
         Obj::SetFormer(SetFormer::SeqSet(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::SeqSet(
             FailToVerifySeqSetObjWellDefined(common),
-        )),
-        Obj::ProductShape(ProductShape::ObjAtIndex(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::ObjAtIndex(
-            FailToVerifyObjAtIndexObjWellDefined(common),
         )),
         Obj::StandardSet(_) => FailToVerifyObjWellDefinedResult::StandardSet(
             FailToVerifyStandardSetObjWellDefined::Others(match common {

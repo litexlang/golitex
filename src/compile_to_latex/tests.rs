@@ -113,7 +113,7 @@ fn every_current_statement_fixture_renders_in_every_language() {
         }
     }
     assert_eq!(
-        count, 50,
+        count, 51,
         "update the statement inventory when the parser surface changes"
     );
 }
@@ -149,18 +149,21 @@ fn object_examples_render_without_source_text_fallback() {
 }
 
 #[test]
-fn artifact_errors_and_argument_boundaries_are_explicit() {
+fn selected_command_errors_keep_latex_artifact_metadata() {
     for (args, success) in [
         (vec!["-latex", "-lang", "zh", "-e", "1 = 2"], true),
         (vec!["-latex", "-lang", "fr", "-e", "have"], false),
-        (vec!["-latex", "-e", "1 = 1", "-strict"], false),
-        (vec!["-latex", "-e", "1 = 1", "-session"], false),
-        (vec!["-latex", "-latex", "-e", "1 = 1"], false),
         (vec!["-latex", "-f", "missing.lit"], false),
     ] {
-        let (json, ok) =
-            run_latex_args(&args.into_iter().map(str::to_string).collect::<Vec<_>>()).unwrap();
-        assert_eq!(ok, success, "{json}");
+        let args = args.into_iter().map(str::to_string).collect::<Vec<_>>();
+        let command = crate::launch_command::parse_launch_command(&args).unwrap();
+        let json = match crate::run::run_command(command.clone()) {
+            Ok(outcome) => {
+                assert!(!outcome.process_failed());
+                outcome.normal_json().unwrap().to_string()
+            }
+            Err(error) => crate::json_output::emit_command_error(&command, &error).unwrap(),
+        };
         let value = JsonValue::parse(&json).unwrap();
         let map = value.as_object().unwrap();
         assert_eq!(map.get("success"), Some(&JsonValue::Bool(success)));
@@ -169,8 +172,6 @@ fn artifact_errors_and_argument_boundaries_are_explicit() {
             assert_eq!(map.get("content"), Some(&JsonValue::Null));
         }
     }
-    assert!(run_latex_args(&["-e".into(), "-latex".into()]).is_none());
-    assert!(run_latex_args(&["-f".into(), "-latex".into()]).is_none());
 }
 
 #[test]

@@ -21,9 +21,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     FiniteSetMaxMemberBuiltinRuleProof,
     FiniteSetMinMemberBuiltinRuleProof,
     PositiveIntegerInNPosBuiltinRuleProof,
-    CartDimInNaturalBuiltinRuleProof,
-    TupleDimInNaturalBuiltinRuleProof,
-    AnonymousFnInDeclaredFnSetBuiltinRuleProof,
+            AnonymousFnInDeclaredFnSetBuiltinRuleProof,
     OneSideInfinityIntervalMembershipBuiltinRuleProof,
     PowerSetMembershipBuiltinRuleProof,
     PredecessorInNaturalBuiltinRuleProof,
@@ -69,8 +67,6 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("Finite aggregate scalar carrier", "Checked summands or factors close the declared scalar carrier; empty sums include zero");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
-            Self::CartDimInNatural(p) => p.rule_name_and_message_en(),
-            Self::TupleDimInNatural(p) => p.rule_name_and_message_en(),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_en(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Anonymous function return carrier", "A checked direct application inhabits its declared static scalar codomain"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_en(),
@@ -140,8 +136,6 @@ impl InFactSearchProofByBuiltinRule {
                     message: message.into(),
                 }
             }
-            Self::CartDimInNatural(p) => p.rule_name_and_message_zh(),
-            Self::TupleDimInNatural(p) => p.rule_name_and_message_zh(),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_zh(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text(
                 "匿名函数的返回载体",
@@ -214,8 +208,6 @@ impl InFactSearchProofByBuiltinRule {
                     message: message.into(),
                 }
             }
-            Self::CartDimInNatural(p) => p.rule_name_and_message_zh_hant(),
-            Self::TupleDimInNatural(p) => p.rule_name_and_message_zh_hant(),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_zh_hant(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text(
                 "匿名函數返回載體",
@@ -270,8 +262,6 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("Ensemble porteur scalaire d'agrégat fini", "Les termes ou facteurs vérifiés ferment l'ensemble porteur scalaire déclaré ; les sommes vides incluent zéro");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
-            Self::CartDimInNatural(p) => p.rule_name_and_message_fr(),
-            Self::TupleDimInNatural(p) => p.rule_name_and_message_fr(),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_fr(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Ensemble porteur du retour de fonction anonyme", "Une application directe vérifiée appartient à son codomaine scalaire statique déclaré"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_fr(),
@@ -323,8 +313,6 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("Скалярный носитель конечного агрегата", "Проверенные слагаемые или множители сохраняют объявленный скалярный носитель; пустые суммы включают ноль");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
-            Self::CartDimInNatural(p) => p.rule_name_and_message_ru(),
-            Self::TupleDimInNatural(p) => p.rule_name_and_message_ru(),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_ru(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Носитель возврата анонимной функции", "Проверенное прямое применение принадлежит объявленной статической скалярной области значений"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_ru(),
@@ -376,8 +364,6 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("Portador escalar de agregado finito", "Los sumandos o factores comprobados mantienen cerrado el portador escalar declarado; las sumas vacías incluyen cero");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
-            Self::CartDimInNatural(p) => p.rule_name_and_message_es(),
-            Self::TupleDimInNatural(p) => p.rule_name_and_message_es(),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_es(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Portador de retorno de función anónima", "Una aplicación directa comprobada pertenece a su codominio escalar estático declarado"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_es(),
@@ -429,8 +415,6 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("مجموعة حاملة قياسية لتجميع منتهٍ", "الحدود أو العوامل المتحقق منها تحفظ المجموعة الحاملة القياسية المعلنة؛ والمجاميع الخالية تتضمن صفرًا");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
-            Self::CartDimInNatural(p) => p.rule_name_and_message_ar(),
-            Self::TupleDimInNatural(p) => p.rule_name_and_message_ar(),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_ar(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("مجموعة حاملة لإرجاع دالة مجهولة", "تطبيق مباشر متحقق منه ينتمي إلى مجاله المقابل القياسي الساكن المعلن"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_ar(),
@@ -497,8 +481,6 @@ impl InFactSearchProofByBuiltinRule {
                     message: message.into(),
                 }
             }
-            Self::CartDimInNatural(p) => p.rule_name_and_message_ja(),
-            Self::TupleDimInNatural(p) => p.rule_name_and_message_ja(),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_ja(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text(
                 "無名関数の戻り値の台集合",
@@ -553,8 +535,6 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("유한 집계 스칼라 바탕 집합", "검사된 항 또는 인자는 선언된 스칼라 바탕 집합을 유지하며 빈 합은 0을 포함합니다");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
-            Self::CartDimInNatural(p) => p.rule_name_and_message_ko(),
-            Self::TupleDimInNatural(p) => p.rule_name_and_message_ko(),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_ko(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("익명 함수 반환 바탕 집합", "검사된 직접 적용은 선언된 정적 스칼라 공역에 속합니다"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_ko(),
@@ -606,8 +586,6 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("Tập nền vô hướng tổng hợp hữu hạn", "Các số hạng hoặc thừa số đã kiểm tra giữ tập nền vô hướng đã khai báo đóng; tổng rỗng gồm không");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
-            Self::CartDimInNatural(p) => p.rule_name_and_message_vi(),
-            Self::TupleDimInNatural(p) => p.rule_name_and_message_vi(),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_vi(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Tập nền trả về của hàm ẩn danh", "Áp dụng trực tiếp đã kiểm tra thuộc đối miền vô hướng tĩnh đã khai báo"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_vi(),
@@ -670,8 +648,6 @@ impl InFactSearchProofByBuiltinRule {
             Self::PositiveIntegerInNPos(_) => None,
             Self::AggregateScalarCodomain(_) => None,
             Self::FoldScalarCodomain(_) => None,
-            Self::CartDimInNatural(_) => None,
-            Self::TupleDimInNatural(_) => None,
             Self::AnonymousFnInDeclaredFnSet(_) => None,
             Self::AnonymousFnApplicationScalarCodomain(_) => None,
             Self::StandardSetSubsetMembership(_) => None,
@@ -3288,173 +3264,6 @@ impl NativeScalarCodomainBuiltinRuleProof {
     }
 }
 
-impl CartDimInNaturalBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Cartesian Dimension in N",
-            "a well-defined Cartesian dimension belongs to N and its numeric supertypes",
-        )
-    }
-
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "笛卡尔维数属于自然数",
-            "已通过良定检查的笛卡尔维数属于 N 及其数值超集",
-        )
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "笛卡兒積維度屬於 N",
-            "良定的笛卡兒積維度屬於 N 及其數值超集",
-        )
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Dimension cartésienne dans N", "Une dimension cartésienne bien définie appartient à N et à ses sur-ensembles numériques")
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Декартова размерность в N", "Корректно определённая декартова размерность принадлежит N и его числовым надмножествам")
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Dimensión cartesiana en N",
-            "Una dimensión cartesiana bien definida pertenece a N y a sus superconjuntos numéricos",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "بعد ديكارتي في N",
-            "البعد الديكارتي حسن التعريف ينتمي إلى N ومجموعاته العددية الفوقية",
-        )
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "直積の次元の N への所属",
-            "適切に定義された直積の次元は N とその数値上位集合に属します",
-        )
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "데카르트 차원의 N 소속",
-            "타당하게 정의된 데카르트 차원은 N과 그 수치 상위집합에 속합니다",
-        )
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Chiều Descartes trong N",
-            "Chiều Descartes xác định tốt thuộc N và các tập số cha của nó",
-        )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
-impl TupleDimInNaturalBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Tuple Dimension in N",
-            "a well-defined tuple dimension belongs to N and its numeric supertypes",
-        )
-    }
-
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "元组维数属于自然数",
-            "已通过良定检查的元组维数属于 N 及其数值超集",
-        )
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "元組維度屬於 N",
-            "良定的元組維度屬於 N 及其數值超集",
-        )
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Dimension de tuple dans N",
-            "Une dimension de tuple bien définie appartient à N et à ses sur-ensembles numériques",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Размерность кортежа в N",
-            "Корректно определённая размерность кортежа принадлежит N и его числовым надмножествам",
-        )
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Dimensión de tupla en N",
-            "Una dimensión de tupla bien definida pertenece a N y a sus superconjuntos numéricos",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "بعد صف في N",
-            "بعد الصف حسن التعريف ينتمي إلى N ومجموعاته العددية الفوقية",
-        )
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "タプルの次元の N への所属",
-            "適切に定義されたタプルの次元は N とその数値上位集合に属します",
-        )
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "튜플 차원의 N 소속",
-            "타당하게 정의된 튜플 차원은 N과 그 수치 상위집합에 속합니다",
-        )
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Chiều của bộ trong N",
-            "Chiều bộ xác định tốt thuộc N và các tập số cha của nó",
-        )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
 
 impl AnonymousFnInDeclaredFnSetBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {

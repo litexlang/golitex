@@ -125,6 +125,23 @@ impl Runtime {
         ))
     }
 
+    pub(in super::super) fn parse_release_cart_def_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+        let mut tb = block.clone();
+        tb.expect(RELEASE)?;
+        tb.expect(crate::parse::keywords::CART)?;
+        tb.expect(DEF)?;
+        let obj = parse_obj(self, &mut tb)?;
+        if !tb.exceed_end_of_head() || !tb.body.is_empty() {
+            return Err(tb.parse_error("release cart def expects one cart(...) and no body"));
+        }
+        let Obj::ProductShape(crate::ast::obj::ProductShape::Cart(cart)) = obj else {
+            return Err(tb.parse_error("release cart def expects a cart(...) constructor"));
+        };
+        Ok(Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseCartDefStmt(
+            crate::ast::stmt::ReleaseCartDefStmt { cart, line_file: SourceLine::new(block.line, self.code_source.clone()) },
+        )))
+    }
+
     pub(in super::super) fn parse_release_regularity_axiom_stmt(
         &mut self,
         block: &TokenBlock,

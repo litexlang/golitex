@@ -3,12 +3,11 @@
 
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact, ExistOrAndChainAtomicFact, Fact,
-    GreaterEqualFact, GreaterFact, InFact, InjectiveFact, IsCartFact, IsChoiceFunctionForFact,
-    IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact,
+    GreaterEqualFact, GreaterFact, InFact, InjectiveFact, IsChoiceFunctionForFact,
+    IsFiniteSetFact, IsNonemptySetFact, IsSetFact, LessEqualFact, LessFact,
     NormalAtomicFact, NotBijectiveFact, NotCoprimeFact, NotDvdFact, NotEqualFact,
-    NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact, NotIsCartFact,
-    NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
-    NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact,
+    NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact,     NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
+    NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact,
     NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact,
     PrimeFact, ProperSubsetFact, ProperSupersetFact, SubsetFact, SupersetFact, SurjectiveFact,
 };
@@ -73,17 +72,6 @@ impl From<InFact> for AtomicFact {
     }
 }
 
-impl From<IsCartFact> for AtomicFact {
-    fn from(f: IsCartFact) -> Self {
-        AtomicFact::IsCartFact(f)
-    }
-}
-
-impl From<IsTupleFact> for AtomicFact {
-    fn from(f: IsTupleFact) -> Self {
-        AtomicFact::IsTupleFact(f)
-    }
-}
 
 impl From<SubsetFact> for AtomicFact {
     fn from(f: SubsetFact) -> Self {
@@ -211,17 +199,6 @@ impl From<NotInFact> for AtomicFact {
     }
 }
 
-impl From<NotIsCartFact> for AtomicFact {
-    fn from(f: NotIsCartFact) -> Self {
-        AtomicFact::NotIsCartFact(f)
-    }
-}
-
-impl From<NotIsTupleFact> for AtomicFact {
-    fn from(f: NotIsTupleFact) -> Self {
-        AtomicFact::NotIsTupleFact(f)
-    }
-}
 
 impl From<NotSubsetFact> for AtomicFact {
     fn from(f: NotSubsetFact) -> Self {
@@ -355,17 +332,6 @@ impl From<InFact> for Fact {
     }
 }
 
-impl From<IsCartFact> for Fact {
-    fn from(f: IsCartFact) -> Self {
-        Fact::AtomicFact(f.into())
-    }
-}
-
-impl From<IsTupleFact> for Fact {
-    fn from(f: IsTupleFact) -> Self {
-        Fact::AtomicFact(f.into())
-    }
-}
 
 impl From<SubsetFact> for Fact {
     fn from(f: SubsetFact) -> Self {
@@ -493,17 +459,6 @@ impl From<NotInFact> for Fact {
     }
 }
 
-impl From<NotIsCartFact> for Fact {
-    fn from(f: NotIsCartFact) -> Self {
-        Fact::AtomicFact(f.into())
-    }
-}
-
-impl From<NotIsTupleFact> for Fact {
-    fn from(f: NotIsTupleFact) -> Self {
-        Fact::AtomicFact(f.into())
-    }
-}
 
 impl From<NotSubsetFact> for Fact {
     fn from(f: NotSubsetFact) -> Self {

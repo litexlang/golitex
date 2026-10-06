@@ -55,3 +55,5 @@ mod template_failure;
 pub(in crate::json_output) use template_failure::project_template_failure;
 
 mod log_algebra_base;
+
+pub(in crate::json_output) use stmt::project_release_cart_def;

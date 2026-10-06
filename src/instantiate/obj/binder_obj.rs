@@ -28,9 +28,10 @@ impl Runtime {
                     Obj::InstantiatedTemplateObj(v) => {
                         Ok(FnObjHead::InstantiatedTemplateObj(v))
                     }
-                    _ => Err(InstError::CannotUseAsFnHead),
+                    other => Ok(FnObjHead::Object(Box::new(other))),
                 }
             }
+            FnObjHead::Object(obj) => Ok(FnObjHead::from_obj(self.inst_obj_rec(obj, param_to_arg_map)?)),
             FnObjHead::AnonymousFnLiteral(af) => Ok(FnObjHead::AnonymousFnLiteral(Box::new(
                 self.inst_anonymous_fn(af, param_to_arg_map)?,
             ))),

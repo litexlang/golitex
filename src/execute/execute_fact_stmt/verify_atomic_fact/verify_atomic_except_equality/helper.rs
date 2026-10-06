@@ -1,10 +1,10 @@
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, GreaterEqualFact, GreaterFact, InFact,
-    InjectiveFact, IsCartFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact,
-    IsSetFact, IsTupleFact, LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact,
+    InjectiveFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact,
+    IsSetFact, LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact,
     NotCoprimeFact, NotDvdFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact,
-    NotInjectiveFact, NotIsCartFact, NotIsChoiceFunctionForFact, NotIsFiniteSetFact,
-    NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact, NotLessFact,
+    NotInjectiveFact, NotIsChoiceFunctionForFact, NotIsFiniteSetFact,
+    NotIsNonemptySetFact, NotIsSetFact, NotLessEqualFact, NotLessFact,
     NotNormalAtomicFact, NotPrimeFact, NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact,
     NotSupersetFact, NotSurjectiveFact, PrimeFact, ProperSubsetFact, ProperSupersetFact,
     SubsetFact, SupersetFact, SurjectiveFact,
@@ -182,26 +182,6 @@ pub(super) fn atomic_fact_with_args(
                 line_file: f.line_file.clone(),
             })
         }
-        AtomicFact::IsCartFact(f) => AtomicFact::IsCartFact(IsCartFact {
-            fact_id,
-            set: args.into_iter().next().unwrap(),
-            line_file: f.line_file.clone(),
-        }),
-        AtomicFact::NotIsCartFact(f) => AtomicFact::NotIsCartFact(NotIsCartFact {
-            fact_id,
-            set: args.into_iter().next().unwrap(),
-            line_file: f.line_file.clone(),
-        }),
-        AtomicFact::IsTupleFact(f) => AtomicFact::IsTupleFact(IsTupleFact {
-            fact_id,
-            set: args.into_iter().next().unwrap(),
-            line_file: f.line_file.clone(),
-        }),
-        AtomicFact::NotIsTupleFact(f) => AtomicFact::NotIsTupleFact(NotIsTupleFact {
-            fact_id,
-            set: args.into_iter().next().unwrap(),
-            line_file: f.line_file.clone(),
-        }),
         AtomicFact::SubsetFact(f) => {
             let (left, right) = take2!(args);
             AtomicFact::SubsetFact(SubsetFact {

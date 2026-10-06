@@ -80,34 +80,6 @@ pub(super) fn project_equal_known_tuple(
                 ("value_equal", project_equal_searched(&p.value_equal, runtime)),
             ]);
         }
-        EqualFactSearchProofByKnownSpecialProperty::TupleDimension(p) => {
-            fields.extend([
-                ("rule", string("TupleDimension")),
-                ("reversed", JsonValue::Bool(p.reversed)),
-                ("shape", project_shape(&p.shape, runtime)),
-                (
-                    "dimension_equal",
-                    project_equal_searched(&p.dimension_equal, runtime),
-                ),
-            ]);
-        }
-    }
-    object_for(runtime, fields)
-}
-
-pub(super) fn project_atomic_tuple_shape(
-    rule: &str,
-    shape: &KnownTupleShapeProof,
-    index: Option<usize>,
-    runtime: &Runtime,
-) -> JsonValue {
-    let mut fields = vec![
-        ("type", string("by_known_special_property")),
-        ("rule", string(rule)),
-        ("shape", project_shape(shape, runtime)),
-    ];
-    if let Some(index) = index {
-        fields.push(("index", string(index.to_string())));
     }
     object_for(runtime, fields)
 }
@@ -137,6 +109,14 @@ pub(super) fn project_shape(shape: &KnownTupleShapeProof, runtime: &Runtime) -> 
             fields.extend([
                 ("kind", string("tuple_equality")),
                 ("tuple", project_value(p, runtime)),
+            ]);
+        }
+        KnownTupleShapeProof::CartesianCoordinate(p) => {
+            fields.extend([
+                ("kind", string("cartesian_coordinate")),
+                ("source", project_shape(&p.receiver, runtime)),
+                ("index", string(p.index.to_string())),
+                ("carrier_equal", project_known_equality_path(&p.carrier_equal, runtime)),
             ]);
         }
         KnownTupleShapeProof::FunctionCodomain(p) => {

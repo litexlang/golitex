@@ -237,26 +237,11 @@ pub enum SetFormer {
     IntervalObj(IntervalObj),
 }
 
-// Fixed-arity products, tuples, and their dimensions / projections / indexing.
+// Finite function values and Cartesian sets of such functions.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ProductShape {
-    // Cartesian product of two or more sets. Example: `cart(R, Z)`.
     Cart(Cart),
-
-    // Ordered tuple value (an element of some cart). Example: `(1, 2)`.
     Tuple(Tuple),
-
-    // Number of factors of a cart. Surface: `cart_dim(C)`. Example: `cart_dim(cart(R, Z))` (2).
-    CartDim(CartDim),
-
-    // Length of a tuple. Surface: `tuple_dim(t)`. Example: `tuple_dim((1, 2))` (2).
-    TupleDim(TupleDim),
-
-    // i-th factor *set* of a cart (1-based). Surface: `proj(C, i)`. Example: `proj(cart(R, Z), 1)` (R).
-    Proj(Proj),
-
-    // i-th *component* of a tuple / sequence (1-based). Surface: `t[i]`. Example: `(1, 2)[1]` (1).
-    ObjAtIndex(ObjAtIndex),
 }
 
 // Function type, concrete function value, and image of a function.
@@ -403,12 +388,7 @@ impl IdentifierObj {
     }
 }
 
-// FnObj
-// Applied heads only when a callable contract is easy to recover:
-// Identifier / template instance → InFunctionSet; AnonymousFnLiteral → its own FnSet;
-// FieldAccess → field carrier type. ObjAtIndex is intentionally not a head: `t[i]` is
-// just an element, with no stable function signature, so `t[i](a)` is rejected at parse.
-// Keep `Obj::ProductShape(ProductShape::ObjAtIndex(...))` for tuple/cart indexing such as `(1, 2)[1]`.
+// Applied function expressions. WD determines the actual callable contract.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FnObjHead {
     Identifier(IdentifierObj),
@@ -416,6 +396,19 @@ pub enum FnObjHead {
     AnonymousFnLiteral(Box<AnonymousFn>),
     FieldAccess(FieldAccess),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
+    Object(Box<Obj>),
+}
+
+impl FnObjHead {
+    pub fn from_obj(obj: Obj) -> Self {
+        match obj {
+            Obj::Identifier(id) => Self::Identifier(id),
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(value)) => Self::AnonymousFnLiteral(Box::new(value)),
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(value)) => Self::FieldAccess(value),
+            Obj::InstantiatedTemplateObj(value) => Self::InstantiatedTemplateObj(value),
+            other => Self::Object(Box::new(other)),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -836,31 +829,6 @@ pub struct Cart {
     pub args: Vec<Box<Obj>>,
 }
 
-// Dimension of a cartesian product set.
-// Surface: `cart_dim(C)`
-// Example: `cart_dim(cart(R, Z))` (2).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CartDim {
-    pub set: Box<Obj>,
-}
-
-// i-th factor set of a cart.
-// Surface: `proj(C, i)`
-// Example: `proj(cart(R, Z), 1)` (R).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Proj {
-    pub set: Box<Obj>,
-    pub dim: Box<Obj>,
-}
-
-// Length of a tuple.
-// Surface: `tuple_dim(t)`
-// Example: `tuple_dim((1, 2))` (2).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TupleDim {
-    pub arg: Box<Obj>,
-}
-
 // Ordered tuple value. Example: `(1, 2)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Tuple {
@@ -983,11 +951,7 @@ pub struct SeqSet {
 // What: tuple / sequence indexing (1-based).
 // Surface: `t[i]`
 // Example: `(1, 2)[1]` (1).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ObjAtIndex {
-    pub obj: Box<Obj>,
-    pub index: Box<Obj>,
-}
+
 
 // Built-in number sets and common signed / nonzero variants.
 #[derive(Clone, Debug, PartialEq, Eq)]

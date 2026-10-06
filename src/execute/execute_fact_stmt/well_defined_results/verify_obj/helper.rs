@@ -14,7 +14,7 @@ use std::collections::{HashMap, HashSet};
 
 pub(super) struct CheckedFunctionPrefixSignatureProof {
     pub signature: FnSet,
-    pub membership: VerifyFactResult,
+    pub source: VerifyFactResult,
 }
 
 impl Runtime {
@@ -26,6 +26,26 @@ impl Runtime {
         prefix: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<CheckedFunctionPrefixSignatureProof>> {
+        // A fixed Cartesian position has its own carrier, even when the
+        // enclosing function's common return upper bound is a union.
+        // Read only declared carriers here; verify the actual shorter
+        // application membership below before consuming its signature.
+        if let Some(shape) = self.lookup_known_tuple_shape(prefix) {
+            if let Some(cart) = shape.cart() {
+                let set = Obj::ProductShape(crate::ast::obj::ProductShape::Cart(cart.clone()));
+                let signature = self.cart_function_signature(cart);
+                let membership = crate::ast::fact::Fact::AtomicFact(crate::ast::fact::AtomicFact::InFact(
+                    crate::ast::fact::InFact {
+                        fact_id: self.global_ids.allocate_fact_id(), element: prefix.clone(),
+                        set, line_file: None,
+                    },
+                ));
+                let proof = self.verify_fact(&membership, verify_state)?;
+                if !proof.is_failed() {
+                    return Ok(Some(CheckedFunctionPrefixSignatureProof { signature, source: proof }));
+                }
+            }
+        }
         for (signature, _) in self.collect_in_function_set_candidates(prefix) {
             let membership = crate::ast::fact::Fact::AtomicFact(crate::ast::fact::AtomicFact::InFact(
                 crate::ast::fact::InFact {
@@ -37,7 +57,32 @@ impl Runtime {
             ));
             let proof = self.verify_fact(&membership, verify_state)?;
             if !proof.is_failed() {
-                return Ok(Some(CheckedFunctionPrefixSignatureProof { signature, membership: proof }));
+                return Ok(Some(CheckedFunctionPrefixSignatureProof { signature, source: proof }));
+            }
+        }
+        // A literal tuple's common return bound contains singleton values,
+        // so it need not itself expose a Cartesian carrier. Use the checked
+        // beta value of this strictly shorter application, and retain a real
+        // equality proof before consuming that value's complete domain.
+        let super::entry::VerifyObjWellDefinedResult::Success(prefix_wd) =
+            self.verify_obj_well_definedness(prefix, verify_state)?
+        else { return Ok(None); };
+        if let Some((_, value)) = self.parent_checked_beta_body(prefix, &prefix_wd, verify_state)? {
+            let signature = match &value {
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => Some(function.body.clone()),
+                Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(_)) =>
+                    self.finite_function_signatures(&value).into_iter().next().map(|proof| proof.signature),
+                _ => None,
+            };
+            if let Some(signature) = signature {
+                let equality = crate::ast::fact::EqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(), left: prefix.clone(), right: value,
+                    line_file: None,
+                };
+                let proof = self.verify_equal_fact(&equality, verify_state)?;
+                if !proof.is_failed() {
+                    return Ok(Some(CheckedFunctionPrefixSignatureProof { signature, source: proof }));
+                }
             }
         }
         Ok(None)
@@ -98,6 +143,7 @@ impl Runtime {
         match function {
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => Some(anon.body.clone()),
             Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
+                FnObjHead::Object(obj) => self.resolve_callable_fn_set(obj),
                 FnObjHead::AnonymousFnLiteral(a) => Some(a.body.clone()),
                 FnObjHead::Identifier(id) => {
                     let head = Obj::Identifier(id.clone());
@@ -190,6 +236,7 @@ impl Runtime {
 // Head object for a FnObj (used when looking up InFunctionSet / field type).
 pub(super) fn fn_obj_head_as_obj(head: &FnObjHead) -> Obj {
     match head {
+        FnObjHead::Object(obj) => obj.as_ref().clone(),
         FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
         FnObjHead::InstantiatedTemplateObj(inst) => Obj::InstantiatedTemplateObj(inst.clone()),
         FnObjHead::FieldAccess(access) => {

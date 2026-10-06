@@ -1,0 +1,6 @@
+# Stmt: ReleaseCartDefStmt
+# AST: Stmt::ReleaseAndExpand::ReleaseCartDefStmt
+# Complete ordinary Cartesian function-set definition.
+# case: complete-cart-definition
+release cart def cart(R,Z)
+cart(R,Z)={p finite_seq(union(R,Z),2): p(1) $in R,p(2) $in Z}

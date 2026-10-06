@@ -806,16 +806,6 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             ("size_equal_proof", project_verify_fact(&p.size_equal_proof, runtime)),
             ("subset_proof", project_verify_fact(&p.subset_proof, runtime)),
         ]),
-        EqualitySearchProofByBuiltinRule::CartProjFactor(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("CartProjFactor"))];
-            let _ = p;
-            object_for(runtime, entries)
-        },
-        EqualitySearchProofByBuiltinRule::TupleComponentAtIndex(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("TupleComponentAtIndex"))];
-            let _ = p;
-            object_for(runtime, entries)
-        },
         EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("FiniteSetSizeSetMinus"))];
             let _ = p;

@@ -124,13 +124,6 @@ impl Runtime {
             Obj::SetFormer(SetFormer::ListSet(a)) => self.inst_list_set_obj(a, param_to_arg_map),
             Obj::ProductShape(ProductShape::Cart(a)) => self.inst_cart_obj(a, param_to_arg_map),
             Obj::ProductShape(ProductShape::Tuple(a)) => self.inst_tuple_obj(a, param_to_arg_map),
-            Obj::ProductShape(ProductShape::CartDim(a)) => {
-                self.inst_cart_dim_obj(a, param_to_arg_map)
-            }
-            Obj::ProductShape(ProductShape::Proj(a)) => self.inst_proj_obj(a, param_to_arg_map),
-            Obj::ProductShape(ProductShape::TupleDim(a)) => {
-                self.inst_tuple_dim_obj(a, param_to_arg_map)
-            }
             Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(a)) => {
                 self.inst_finite_set_size_obj(a, param_to_arg_map)
             }
@@ -169,9 +162,6 @@ impl Runtime {
                 self.inst_finite_seq_set_obj(a, param_to_arg_map)
             }
             Obj::SetFormer(SetFormer::SeqSet(a)) => self.inst_seq_set_obj(a, param_to_arg_map),
-            Obj::ProductShape(ProductShape::ObjAtIndex(a)) => {
-                self.inst_obj_at_index_obj(a, param_to_arg_map)
-            }
             Obj::FnObj(f) => self.inst_fn_obj(f, param_to_arg_map),
             Obj::SetFormer(SetFormer::SetBuilder(sb)) => {
                 self.inst_set_builder_obj(sb, param_to_arg_map)

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::runtime::runtime_ids::IdentifierId;
 
-use crate::ast::obj::{FamilyIntersect, FamilyUnion, Cart, CartDim, ClosedRange, FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetReduce, FiniteSetSize, FnRange, IndexCart, IndexIntersect, IndexUnion, Intersect, ListSet, Obj, PowerSet, Product, ProductOfFiniteSet, Proj, Range, Reduce, SeqSet, SetMinus, Sum, SumOfFiniteSet, Tuple, TupleDim, Union, FiniteSetStat, FunctionSpace, IteratedOperator, ProductShape, SetFormer, SetOperator};
+use crate::ast::obj::{FamilyIntersect, FamilyUnion, Cart, ClosedRange, FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetReduce, FiniteSetSize, FnRange, IndexCart, IndexIntersect, IndexUnion, Intersect, ListSet, Obj, PowerSet, Product, ProductOfFiniteSet, Range, Reduce, SeqSet, SetMinus, Sum, SumOfFiniteSet, Tuple, Union, FiniteSetStat, FunctionSpace, IteratedOperator, ProductShape, SetFormer, SetOperator};
 use crate::runtime::Runtime;
 
 use super::super::error::InstError;
@@ -166,42 +166,6 @@ impl Runtime {
     Ok(Obj::ProductShape(ProductShape::Tuple(Tuple { args })))
 }
 
-
-    pub(crate) fn inst_cart_dim_obj(
-        &mut self,
-        a: &CartDim,
-        param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
-    ) -> Result<Obj, InstError> {
-    Ok(Obj::ProductShape(ProductShape::CartDim(CartDim {
-        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
-    })))
-}
-
-
-    pub(crate) fn inst_proj_obj(
-        &mut self,
-        a: &Proj,
-        param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
-    ) -> Result<Obj, InstError> {
-    Ok(Obj::ProductShape(ProductShape::Proj(Proj {
-        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
-        dim: Box::new(self.inst_obj_rec(&a.dim, param_to_arg_map)?),
-    })))
-}
-
-
-    pub(crate) fn inst_tuple_dim_obj(
-        &mut self,
-        a: &TupleDim,
-        param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
-    ) -> Result<Obj, InstError> {
-    Ok(Obj::ProductShape(ProductShape::TupleDim(TupleDim {
-        arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?),
-    })))
-}
 
 
     pub(crate) fn inst_finite_set_size_obj(
@@ -387,16 +351,4 @@ impl Runtime {
     })))
 }
 
-
-    pub(crate) fn inst_obj_at_index_obj(
-        &mut self,
-        a: &crate::ast::obj::ObjAtIndex,
-        param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
-    ) -> Result<Obj, InstError> {
-    Ok(Obj::ProductShape(ProductShape::ObjAtIndex(crate::ast::obj::ObjAtIndex {
-        obj: Box::new(self.inst_obj_rec(&a.obj, param_to_arg_map)?),
-        index: Box::new(self.inst_obj_rec(&a.index, param_to_arg_map)?),
-    })))
-}
 }

@@ -453,8 +453,6 @@ fn map_equality_identities_wave11_proof(
         W::UnionAbsorptionFromSubset(p) => EqualitySearchProofByBuiltinRule::UnionAbsorptionFromSubset(p),
         W::SetMinusRecoversSubset(p) => EqualitySearchProofByBuiltinRule::SetMinusRecoversSubset(p),
         W::EmptySetFromSizeZero(p) => EqualitySearchProofByBuiltinRule::EmptySetFromSizeZero(p),
-        W::CartProjFactor(p) => EqualitySearchProofByBuiltinRule::CartProjFactor(p),
-        W::TupleComponentAtIndex(p) => EqualitySearchProofByBuiltinRule::TupleComponentAtIndex(p),
         W::FiniteSetSizeSetMinus(p) => EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(p),
         W::FiniteSetSizeUnion(p) => EqualitySearchProofByBuiltinRule::FiniteSetSizeUnion(p),
         W::ClosedRangeSingletonListSet(p) => EqualitySearchProofByBuiltinRule::ClosedRangeSingletonListSet(p),

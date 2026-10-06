@@ -1639,47 +1639,47 @@ pub fn explain_stmt_kind(kind: &str, lang: OutputLanguage) -> StmtWhyText {
         ),
 
         ("release_struct", OutputLanguage::Chinese) => ("释放", "释放结构", "释放结构定义"),
-        ("release_obj", OutputLanguage::English) => (
+        ("release_obj" | "release_cart_def", OutputLanguage::English) => (
             "release",
             "Release object def",
             "Release an object definition",
         ),
-        ("release_obj", OutputLanguage::ChineseTraditional) => {
+        ("release_obj" | "release_cart_def", OutputLanguage::ChineseTraditional) => {
             ("釋放", "釋放物件定義", "釋放物件定義")
         }
-        ("release_obj", OutputLanguage::French) => (
+        ("release_obj" | "release_cart_def", OutputLanguage::French) => (
             "Libération",
             "Libération de définition d'objet",
             "Libérer une définition d'objet",
         ),
-        ("release_obj", OutputLanguage::Russian) => (
+        ("release_obj" | "release_cart_def", OutputLanguage::Russian) => (
             "Освобождение",
             "Освобождение определения объекта",
             "Освободить определение объекта",
         ),
-        ("release_obj", OutputLanguage::Spanish) => (
+        ("release_obj" | "release_cart_def", OutputLanguage::Spanish) => (
             "Liberación",
             "Liberación de definición de objeto",
             "Liberar una definición de objeto",
         ),
-        ("release_obj", OutputLanguage::Arabic) => {
+        ("release_obj" | "release_cart_def", OutputLanguage::Arabic) => {
             ("إتاحة", "إتاحة تعريف كائن", "إتاحة تعريف كائن")
         }
-        ("release_obj", OutputLanguage::Japanese) => (
+        ("release_obj" | "release_cart_def", OutputLanguage::Japanese) => (
             "解放",
             "オブジェクト定義の解放",
             "オブジェクト定義を解放します",
         ),
-        ("release_obj", OutputLanguage::Korean) => {
+        ("release_obj" | "release_cart_def", OutputLanguage::Korean) => {
             ("해제", "객체 정의 해제", "객체 정의를 해제합니다")
         }
-        ("release_obj", OutputLanguage::Vietnamese) => (
+        ("release_obj" | "release_cart_def", OutputLanguage::Vietnamese) => (
             "Giải phóng",
             "Giải phóng định nghĩa đối tượng",
             "Giải phóng định nghĩa đối tượng",
         ),
 
-        ("release_obj", OutputLanguage::Chinese) => ("释放", "释放对象定义", "释放对象定义"),
+        ("release_obj" | "release_cart_def", OutputLanguage::Chinese) => ("释放", "释放对象定义", "释放对象定义"),
         ("expand_range", OutputLanguage::English) => (
             "release",
             "Expand range",

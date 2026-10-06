@@ -43,7 +43,17 @@ def main():
             records.append(run_case(args,binary,work,case,0))
     for name, flags, code in [('unknown-flag',['-does-not-exist'],2),('missing-file',['-f',str(work/'missing.lit')],1)]:
         start=time.monotonic(); proc=subprocess.run([str(binary),*flags],cwd=work,text=True,capture_output=True,timeout=args.timeout)
-        records.append(dict(contracts=['C04'],name=name,command=[str(binary),*flags],returncode=proc.returncode,stdout=proc.stdout,stderr=proc.stderr,seconds=time.monotonic()-start,matches=proc.returncode==code and bool(proc.stderr)))
+        diagnostic_matches=bool(proc.stderr)
+        if name=='missing-file':
+            try:
+                output=json.loads(proc.stdout)
+                diagnostic_matches=(output.get('kind')=='run' and output.get('success') is False
+                    and output.get('statement_results')==[] and not proc.stderr
+                    and isinstance(output.get('session_error'),str)
+                    and output['session_error'].startswith('io_error:'))
+            except ValueError:
+                diagnostic_matches=False
+        records.append(dict(contracts=['C04'],name=name,command=[str(binary),*flags],returncode=proc.returncode,stdout=proc.stdout,stderr=proc.stderr,seconds=time.monotonic()-start,matches=proc.returncode==code and diagnostic_matches))
     assert identity==hashlib.sha256(binary.read_bytes()).hexdigest(), 'binary drift invalidates audit'
     for case in manifest['cases']:
         assert (suite/case['file']).read_text()==case['code'], 'fixture drift invalidates audit'
@@ -92,7 +102,22 @@ def run_session(args,binary,work,session):
     start=time.monotonic(); errors=[]
     try:
         proc=subprocess.run(command,input=source,cwd=work,text=True,capture_output=True,timeout=args.timeout)
-        responses=[m=='success' for m in re.findall(r'^(?:(?:litex> |\.\.\. ))*(success|error)$',proc.stdout,re.M)]
+        stream=re.sub(r'(?m)^(?:litex> |\.\.\. )+','',proc.stdout)
+        responses=[]
+        for match in re.finditer(r'(?m)^(success|error|\{)(?=\s|$)',stream):
+            token=match.group(1)
+            if token!='{':
+                responses.append(token=='success')
+                continue
+            try:
+                output,_=json.JSONDecoder().raw_decode(stream,match.start())
+                if (output.get('kind')!='run' or output.get('target')!='repl'
+                        or type(output.get('success')) is not bool):
+                    errors.append('invalid REPL envelope')
+                    continue
+                responses.append(output['success'])
+            except ValueError:
+                errors.append('invalid REPL JSON')
         if responses!=session['responses']: errors.append(f'frames {responses} != {session["responses"]}')
         if bool(proc.stderr)!=session.get('error',False): errors.append('unexpected session stderr')
         if proc.returncode != (1 if session.get('error',False) else 0): errors.append('unexpected session exit')

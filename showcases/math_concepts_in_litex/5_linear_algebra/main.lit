@@ -421,31 +421,31 @@ thm real_field_adapter_values:
     real_field.add(x, y) = real_add(x, y) = x + y
     real_field.mul(x, y) = real_mul(x, y) = x * y
 
-have fn plane_add(u, v cart(R, R)) cart(R, R) = (u[1] + v[1], u[2] + v[2])
+have fn plane_add(u, v cart(R, R)) cart(R, R) = (u(1) + v(1), u(2) + v(2))
 
-have fn plane_smul(a R, v cart(R, R)) cart(R, R) = (a * v[1], a * v[2])
+have fn plane_smul(a R, v cart(R, R)) cart(R, R) = (a * v(1), a * v(2))
 
 # Coordinatewise addition is associative.
 
 claim:
     ? forall x, y, z cart(R, R):
         plane_add(plane_add(x, y), z) = plane_add(x, plane_add(y, z))
-    plane_add(x, y) = (x[1] + y[1], x[2] + y[2])
-    plane_add(x, y)[1] = x[1] + y[1]
-    plane_add(x, y)[2] = x[2] + y[2]
-    plane_add(plane_add(x, y), z) = (plane_add(x, y)[1] + z[1], plane_add(x, y)[2] + z[2]) = ((x[1] + y[1]) + z[1], (x[2] + y[2]) + z[2])
-    plane_add(y, z) = (y[1] + z[1], y[2] + z[2])
-    plane_add(y, z)[1] = y[1] + z[1]
-    plane_add(y, z)[2] = y[2] + z[2]
-    plane_add(x, plane_add(y, z)) = (x[1] + plane_add(y, z)[1], x[2] + plane_add(y, z)[2]) = (x[1] + (y[1] + z[1]), x[2] + (y[2] + z[2]))
-    plane_add(plane_add(x, y), z) = ((x[1] + y[1]) + z[1], (x[2] + y[2]) + z[2]) = (x[1] + (y[1] + z[1]), x[2] + (y[2] + z[2])) = plane_add(x, plane_add(y, z))
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2))
+    plane_add(x, y)(1) = x(1) + y(1)
+    plane_add(x, y)(2) = x(2) + y(2)
+    plane_add(plane_add(x, y), z) = (plane_add(x, y)(1) + z(1), plane_add(x, y)(2) + z(2)) = ((x(1) + y(1)) + z(1), (x(2) + y(2)) + z(2))
+    plane_add(y, z) = (y(1) + z(1), y(2) + z(2))
+    plane_add(y, z)(1) = y(1) + z(1)
+    plane_add(y, z)(2) = y(2) + z(2)
+    plane_add(x, plane_add(y, z)) = (x(1) + plane_add(y, z)(1), x(2) + plane_add(y, z)(2)) = (x(1) + (y(1) + z(1)), x(2) + (y(2) + z(2)))
+    plane_add(plane_add(x, y), z) = ((x(1) + y(1)) + z(1), (x(2) + y(2)) + z(2)) = (x(1) + (y(1) + z(1)), x(2) + (y(2) + z(2))) = plane_add(x, plane_add(y, z))
 
 # Coordinatewise addition is commutative.
 
 claim:
     ? forall x, y cart(R, R):
         plane_add(x, y) = plane_add(y, x)
-    plane_add(x, y) = (x[1] + y[1], x[2] + y[2]) = (y[1] + x[1], y[2] + x[2]) = plane_add(y, x)
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2)) = (y(1) + x(1), y(2) + x(2)) = plane_add(y, x)
 
 # The zero pair is an identity and coordinatewise negation supplies inverses.
 
@@ -453,22 +453,22 @@ claim:
     ? forall x cart(R, R):
         plane_add((0, 0), x) = x
         exist inverse_x cart(R, R) st {plane_add(x, inverse_x) = (0, 0)}
-    x = (x[1], x[2])
-    (0, 0)[1] = 0
-    (0, 0)[2] = 0
-    plane_add((0, 0), x) = ((0, 0)[1] + x[1], (0, 0)[2] + x[2])
-    x[1] $in R
-    x[2] $in R
-    (0, 0)[1] + x[1] = 0 + x[1] = x[1]
-    (0, 0)[2] + x[2] = 0 + x[2] = x[2]
-    ((0, 0)[1] + x[1], (0, 0)[2] + x[2]) = (x[1], x[2])
-    plane_add((0, 0), x) = (x[1], x[2]) = x
-    have inverse_x cart(R, R) = (0 - x[1], 0 - x[2])
-    inverse_x[1] = 0 - x[1]
-    inverse_x[2] = 0 - x[2]
-    x[1] + inverse_x[1] = x[1] + (0 - x[1]) = 0
-    x[2] + inverse_x[2] = x[2] + (0 - x[2]) = 0
-    plane_add(x, inverse_x) = (x[1] + inverse_x[1], x[2] + inverse_x[2]) = (0, 0)
+    x = (x(1), x(2))
+    (0, 0)(1) = 0
+    (0, 0)(2) = 0
+    plane_add((0, 0), x) = ((0, 0)(1) + x(1), (0, 0)(2) + x(2))
+    x(1) $in R
+    x(2) $in R
+    (0, 0)(1) + x(1) = 0 + x(1) = x(1)
+    (0, 0)(2) + x(2) = 0 + x(2) = x(2)
+    ((0, 0)(1) + x(1), (0, 0)(2) + x(2)) = (x(1), x(2))
+    plane_add((0, 0), x) = (x(1), x(2)) = x
+    have inverse_x cart(R, R) = (0 - x(1), 0 - x(2))
+    inverse_x(1) = 0 - x(1)
+    inverse_x(2) = 0 - x(2)
+    x(1) + inverse_x(1) = x(1) + (0 - x(1)) = 0
+    x(2) + inverse_x(2) = x(2) + (0 - x(2)) = 0
+    plane_add(x, inverse_x) = (x(1) + inverse_x(1), x(2) + inverse_x(2)) = (0, 0)
     witness exist inverse_x2 cart(R, R) st {plane_add(x, inverse_x2) = (0, 0)} from inverse_x
 
 # Coordinatewise scalar multiplication respects scalar products and sums.
@@ -478,43 +478,43 @@ claim:
         plane_smul(real_field.mul(a, b), x) = plane_smul(a, plane_smul(b, x))
         plane_smul(real_field.add(a, b), x) = plane_add(plane_smul(a, x), plane_smul(b, x))
     release thm real_field_adapter_values(a, b)
-    plane_smul(b, x) = (b * x[1], b * x[2])
-    plane_smul(b, x)[1] = b * x[1]
-    plane_smul(b, x)[2] = b * x[2]
-    plane_smul(a, plane_smul(b, x)) = (a * plane_smul(b, x)[1], a * plane_smul(b, x)[2]) = (a * (b * x[1]), a * (b * x[2]))
+    plane_smul(b, x) = (b * x(1), b * x(2))
+    plane_smul(b, x)(1) = b * x(1)
+    plane_smul(b, x)(2) = b * x(2)
+    plane_smul(a, plane_smul(b, x)) = (a * plane_smul(b, x)(1), a * plane_smul(b, x)(2)) = (a * (b * x(1)), a * (b * x(2)))
     plane_smul(real_field.mul(a, b), x) = plane_smul(a * b, x)
-    plane_smul(a * b, x) = ((a * b) * x[1], (a * b) * x[2])
-    plane_smul(real_field.mul(a, b), x) = ((a * b) * x[1], (a * b) * x[2]) = (a * (b * x[1]), a * (b * x[2])) = plane_smul(a, plane_smul(b, x))
-    plane_smul(a, x) = (a * x[1], a * x[2])
-    plane_smul(a, x)[1] = a * x[1]
-    plane_smul(a, x)[2] = a * x[2]
-    plane_smul(b, x) = (b * x[1], b * x[2])
-    plane_add(plane_smul(a, x), plane_smul(b, x)) = (plane_smul(a, x)[1] + plane_smul(b, x)[1], plane_smul(a, x)[2] + plane_smul(b, x)[2]) = (a * x[1] + b * x[1], a * x[2] + b * x[2])
+    plane_smul(a * b, x) = ((a * b) * x(1), (a * b) * x(2))
+    plane_smul(real_field.mul(a, b), x) = ((a * b) * x(1), (a * b) * x(2)) = (a * (b * x(1)), a * (b * x(2))) = plane_smul(a, plane_smul(b, x))
+    plane_smul(a, x) = (a * x(1), a * x(2))
+    plane_smul(a, x)(1) = a * x(1)
+    plane_smul(a, x)(2) = a * x(2)
+    plane_smul(b, x) = (b * x(1), b * x(2))
+    plane_add(plane_smul(a, x), plane_smul(b, x)) = (plane_smul(a, x)(1) + plane_smul(b, x)(1), plane_smul(a, x)(2) + plane_smul(b, x)(2)) = (a * x(1) + b * x(1), a * x(2) + b * x(2))
     plane_smul(real_field.add(a, b), x) = plane_smul(a + b, x)
-    plane_smul(a + b, x) = ((a + b) * x[1], (a + b) * x[2])
-    plane_smul(real_field.add(a, b), x) = ((a + b) * x[1], (a + b) * x[2]) = (a * x[1] + b * x[1], a * x[2] + b * x[2]) = plane_add(plane_smul(a, x), plane_smul(b, x))
+    plane_smul(a + b, x) = ((a + b) * x(1), (a + b) * x(2))
+    plane_smul(real_field.add(a, b), x) = ((a + b) * x(1), (a + b) * x(2)) = (a * x(1) + b * x(1), a * x(2) + b * x(2)) = plane_add(plane_smul(a, x), plane_smul(b, x))
 
 # Scalar multiplication distributes over vector addition coordinatewise.
 
 claim:
     ? forall a R, x, y cart(R, R):
         plane_smul(a, plane_add(x, y)) = plane_add(plane_smul(a, x), plane_smul(a, y))
-    plane_add(x, y) = (x[1] + y[1], x[2] + y[2])
-    plane_add(x, y)[1] = x[1] + y[1]
-    plane_add(x, y)[2] = x[2] + y[2]
-    plane_smul(a, plane_add(x, y)) = (a * plane_add(x, y)[1], a * plane_add(x, y)[2]) = (a * (x[1] + y[1]), a * (x[2] + y[2]))
-    plane_smul(a, x) = (a * x[1], a * x[2])
-    plane_smul(a, y) = (a * y[1], a * y[2])
-    plane_smul(a, x)[1] = a * x[1]
-    plane_smul(a, x)[2] = a * x[2]
-    plane_smul(a, y)[1] = a * y[1]
-    plane_smul(a, y)[2] = a * y[2]
-    plane_add(plane_smul(a, x), plane_smul(a, y)) = (plane_smul(a, x)[1] + plane_smul(a, y)[1], plane_smul(a, x)[2] + plane_smul(a, y)[2])
-    plane_smul(a, x)[1] + plane_smul(a, y)[1] = a * x[1] + a * y[1]
-    plane_smul(a, x)[2] + plane_smul(a, y)[2] = a * x[2] + a * y[2]
-    (plane_smul(a, x)[1] + plane_smul(a, y)[1], plane_smul(a, x)[2] + plane_smul(a, y)[2]) = (a * x[1] + a * y[1], a * x[2] + a * y[2])
-    plane_add(plane_smul(a, x), plane_smul(a, y)) = (a * x[1] + a * y[1], a * x[2] + a * y[2])
-    plane_smul(a, plane_add(x, y)) = (a * (x[1] + y[1]), a * (x[2] + y[2])) = (a * x[1] + a * y[1], a * x[2] + a * y[2]) = plane_add(plane_smul(a, x), plane_smul(a, y))
+    plane_add(x, y) = (x(1) + y(1), x(2) + y(2))
+    plane_add(x, y)(1) = x(1) + y(1)
+    plane_add(x, y)(2) = x(2) + y(2)
+    plane_smul(a, plane_add(x, y)) = (a * plane_add(x, y)(1), a * plane_add(x, y)(2)) = (a * (x(1) + y(1)), a * (x(2) + y(2)))
+    plane_smul(a, x) = (a * x(1), a * x(2))
+    plane_smul(a, y) = (a * y(1), a * y(2))
+    plane_smul(a, x)(1) = a * x(1)
+    plane_smul(a, x)(2) = a * x(2)
+    plane_smul(a, y)(1) = a * y(1)
+    plane_smul(a, y)(2) = a * y(2)
+    plane_add(plane_smul(a, x), plane_smul(a, y)) = (plane_smul(a, x)(1) + plane_smul(a, y)(1), plane_smul(a, x)(2) + plane_smul(a, y)(2))
+    plane_smul(a, x)(1) + plane_smul(a, y)(1) = a * x(1) + a * y(1)
+    plane_smul(a, x)(2) + plane_smul(a, y)(2) = a * x(2) + a * y(2)
+    (plane_smul(a, x)(1) + plane_smul(a, y)(1), plane_smul(a, x)(2) + plane_smul(a, y)(2)) = (a * x(1) + a * y(1), a * x(2) + a * y(2))
+    plane_add(plane_smul(a, x), plane_smul(a, y)) = (a * x(1) + a * y(1), a * x(2) + a * y(2))
+    plane_smul(a, plane_add(x, y)) = (a * (x(1) + y(1)), a * (x(2) + y(2))) = (a * x(1) + a * y(1), a * x(2) + a * y(2)) = plane_add(plane_smul(a, x), plane_smul(a, y))
 
 # Multiplication by the scalar-field identity fixes every vector.
 
@@ -522,10 +522,10 @@ claim:
     ? forall x cart(R, R):
         plane_smul(real_field.one, x) = x
     release thm real_field_adapter_values(0, 0)
-    x = (x[1], x[2])
+    x = (x(1), x(2))
     plane_smul(real_field.one, x) = plane_smul(1, x)
-    plane_smul(1, x) = (1 * x[1], 1 * x[2]) = (x[1], x[2])
-    plane_smul(real_field.one, x) = (x[1], x[2]) = x
+    plane_smul(1, x) = (1 * x(1), 1 * x(2)) = (x(1), x(2))
+    plane_smul(real_field.one, x) = (x(1), x(2)) = x
 
 (0, 0) $in cart(R, R)
 
@@ -533,7 +533,7 @@ release thm struct_member(((0, 0), plane_add, plane_smul), &VectorSpace<R, real_
 
 have real_plane &VectorSpace<R, real_field, cart(R, R)> = ((0, 0), plane_add, plane_smul)
 
-have fn projection_x_axis(v cart(R, R)) cart(R, R) = (v[1], 0)
+have fn projection_x_axis(v cart(R, R)) cart(R, R) = (v(1), 0)
 
 # Check additivity and scalar compatibility of (x,y) |-> (x,0).
 
@@ -544,36 +544,36 @@ thm projection_x_axis_is_linear:
         ? forall u, v cart(R, R):
             projection_x_axis(real_plane.add(u, v)) = real_plane.add(projection_x_axis(u), projection_x_axis(v))
         real_plane.add = plane_add
-        plane_add(u, v) = (u[1] + v[1], u[2] + v[2])
-        plane_add(u, v)[1] = u[1] + v[1]
-        projection_x_axis(real_plane.add(u, v)) = projection_x_axis(plane_add(u, v)) = (plane_add(u, v)[1], 0) = (u[1] + v[1], 0)
-        projection_x_axis(u) = (u[1], 0)
-        projection_x_axis(v) = (v[1], 0)
-        projection_x_axis(u)[1] = u[1]
-        projection_x_axis(u)[2] = 0
-        projection_x_axis(v)[1] = v[1]
-        projection_x_axis(v)[2] = 0
-        plane_add(projection_x_axis(u), projection_x_axis(v)) = (projection_x_axis(u)[1] + projection_x_axis(v)[1], projection_x_axis(u)[2] + projection_x_axis(v)[2])
-        projection_x_axis(u)[1] + projection_x_axis(v)[1] = u[1] + v[1]
-        projection_x_axis(u)[2] + projection_x_axis(v)[2] = 0 + 0 = 0
-        (projection_x_axis(u)[1] + projection_x_axis(v)[1], projection_x_axis(u)[2] + projection_x_axis(v)[2]) = (u[1] + v[1], 0)
-        real_plane.add(projection_x_axis(u), projection_x_axis(v)) = plane_add(projection_x_axis(u), projection_x_axis(v)) = (u[1] + v[1], 0)
+        plane_add(u, v) = (u(1) + v(1), u(2) + v(2))
+        plane_add(u, v)(1) = u(1) + v(1)
+        projection_x_axis(real_plane.add(u, v)) = projection_x_axis(plane_add(u, v)) = (plane_add(u, v)(1), 0) = (u(1) + v(1), 0)
+        projection_x_axis(u) = (u(1), 0)
+        projection_x_axis(v) = (v(1), 0)
+        projection_x_axis(u)(1) = u(1)
+        projection_x_axis(u)(2) = 0
+        projection_x_axis(v)(1) = v(1)
+        projection_x_axis(v)(2) = 0
+        plane_add(projection_x_axis(u), projection_x_axis(v)) = (projection_x_axis(u)(1) + projection_x_axis(v)(1), projection_x_axis(u)(2) + projection_x_axis(v)(2))
+        projection_x_axis(u)(1) + projection_x_axis(v)(1) = u(1) + v(1)
+        projection_x_axis(u)(2) + projection_x_axis(v)(2) = 0 + 0 = 0
+        (projection_x_axis(u)(1) + projection_x_axis(v)(1), projection_x_axis(u)(2) + projection_x_axis(v)(2)) = (u(1) + v(1), 0)
+        real_plane.add(projection_x_axis(u), projection_x_axis(v)) = plane_add(projection_x_axis(u), projection_x_axis(v)) = (u(1) + v(1), 0)
     claim:
         ? forall a R, v cart(R, R):
             projection_x_axis(real_plane.smul(a, v)) = real_plane.smul(a, projection_x_axis(v))
         real_plane.smul = plane_smul
-        plane_smul(a, v) = (a * v[1], a * v[2])
-        plane_smul(a, v)[1] = a * v[1]
-        projection_x_axis(real_plane.smul(a, v)) = projection_x_axis(plane_smul(a, v)) = (plane_smul(a, v)[1], 0) = (a * v[1], 0)
-        projection_x_axis(v) = (v[1], 0)
-        projection_x_axis(v)[1] = v[1]
-        projection_x_axis(v)[2] = 0
-        plane_smul(a, projection_x_axis(v)) = (a * projection_x_axis(v)[1], a * projection_x_axis(v)[2])
-        a * projection_x_axis(v)[1] = a * v[1]
-        a * projection_x_axis(v)[2] = a * 0 = 0
-        (a * projection_x_axis(v)[1], a * projection_x_axis(v)[2]) = (a * v[1], 0)
-        plane_smul(a, projection_x_axis(v)) = (a * v[1], 0)
-        real_plane.smul(a, projection_x_axis(v)) = plane_smul(a, projection_x_axis(v)) = (a * v[1], 0)
+        plane_smul(a, v) = (a * v(1), a * v(2))
+        plane_smul(a, v)(1) = a * v(1)
+        projection_x_axis(real_plane.smul(a, v)) = projection_x_axis(plane_smul(a, v)) = (plane_smul(a, v)(1), 0) = (a * v(1), 0)
+        projection_x_axis(v) = (v(1), 0)
+        projection_x_axis(v)(1) = v(1)
+        projection_x_axis(v)(2) = 0
+        plane_smul(a, projection_x_axis(v)) = (a * projection_x_axis(v)(1), a * projection_x_axis(v)(2))
+        a * projection_x_axis(v)(1) = a * v(1)
+        a * projection_x_axis(v)(2) = a * 0 = 0
+        (a * projection_x_axis(v)(1), a * projection_x_axis(v)(2)) = (a * v(1), 0)
+        plane_smul(a, projection_x_axis(v)) = (a * v(1), 0)
+        real_plane.smul(a, projection_x_axis(v)) = plane_smul(a, projection_x_axis(v)) = (a * v(1), 0)
     by def:
         ? $is_linear_map(R, real_field, cart(R, R), cart(R, R), real_plane, real_plane, projection_x_axis)
 
@@ -581,8 +581,8 @@ release thm projection_x_axis_is_linear()
 
 release thm linear_map_kernel_is_subspace(R, real_field, cart(R, R), cart(R, R), real_plane, real_plane, projection_x_axis)
 
-(0, 7)[1] = 0
-projection_x_axis((0, 7)) = ((0, 7)[1], 0) = (0, 0)
+(0, 7)(1) = 0
+projection_x_axis((0, 7)) = ((0, 7)(1), 0) = (0, 0)
 real_plane.zero = (0, 0)
 projection_x_axis((0, 7)) = (0, 0) = real_plane.zero
 
@@ -603,14 +603,14 @@ thm projection_x_axis_is_not_injective:
         $injective(cart(R, R), cart(R, R), projection_x_axis)
         by def:
             ? $injective(cart(R, R), cart(R, R), projection_x_axis)
-        (0, 1)[1] = 0
-        (0, 0)[1] = 0
-        projection_x_axis((0, 1)) = ((0, 1)[1], 0) = (0, 0)
-        projection_x_axis((0, 0)) = ((0, 0)[1], 0) = (0, 0)
+        (0, 1)(1) = 0
+        (0, 0)(1) = 0
+        projection_x_axis((0, 1)) = ((0, 1)(1), 0) = (0, 0)
+        projection_x_axis((0, 0)) = ((0, 0)(1), 0) = (0, 0)
         projection_x_axis((0, 1)) = (0, 0)
         projection_x_axis((0, 0)) = (0, 0)
         projection_x_axis((0, 1)) = projection_x_axis((0, 0))
         (0, 1) = (0, 0)
-        (0, 1)[2] = (0, 0)[2]
-        1 = (0, 1)[2] = (0, 0)[2] = 0
+        (0, 1)(2) = (0, 0)(2)
+        1 = (0, 1)(2) = (0, 0)(2) = 0
         impossible 1 != 0

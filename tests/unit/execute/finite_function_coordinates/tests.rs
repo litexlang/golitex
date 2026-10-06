@@ -23,22 +23,15 @@ fn fact_count(rt: &Runtime) -> usize {
     rt.execution_environments_stack.iter().map(|env| env.facts.facts_by_id.len()).sum()
 }
 
-fn retired_object(obj: &Obj) -> bool {
-    matches!(obj, Obj::ProductShape(ProductShape::ObjAtIndex(_)
-        | ProductShape::TupleDim(_) | ProductShape::CartDim(_) | ProductShape::Proj(_)))
-}
-
 fn assert_no_retired_product_facts(rt: &Runtime) {
+    // The retired variants no longer exist in the AST. Also guard the public
+    // publication surface against rebuilding their old spellings indirectly.
     for env in &rt.execution_environments_stack {
         for fact in env.facts.facts_by_id.values() {
-            let retired = match fact {
-                Fact::AtomicFact(AtomicFact::IsTupleFact(_) | AtomicFact::NotIsTupleFact(_)
-                    | AtomicFact::IsCartFact(_) | AtomicFact::NotIsCartFact(_)) => true,
-                Fact::AtomicFact(AtomicFact::EqualFact(eq)) => retired_object(&eq.left) || retired_object(&eq.right),
-                Fact::AtomicFact(AtomicFact::InFact(member)) => retired_object(&member.element) || retired_object(&member.set),
-                _ => false,
-            };
-            assert!(!retired, "retired product fact published: {}", fact.readable_string());
+            let text = fact.readable_string();
+            for retired in ["cart_dim(", "tuple_dim(", "proj(", "$is_tuple(", "$is_cart("] {
+                assert!(!text.contains(retired), "retired fact published: {text}");
+            }
         }
     }
 }
@@ -150,4 +143,33 @@ fn finite_function_coordinates_local_struct_bridge_output_uses_ordinary_applicat
         assert_eq!(rt.execution_environments_stack.len(), 1);
         assert_no_retired_product_facts(&rt);
     }
+}
+
+#[test]
+fn finite_function_coordinates_nested_tuple_call_preserves_coordinate_carriers_and_domain_boundaries() {
+    let mut rt = runtime(OutputLanguage::English);
+    let run = rt.run_litex_code("have outer cart(cart(R,Z),R)=((1/2,2),3)\nouter(1)(2) $in Z\nouter(1)(2)=2").unwrap();
+    assert!(run.success && run.session_error.is_none(), "{}", crate::json_output::emit_run_detailed(&run, &rt, "nested-tuple", None));
+    assert!(rt.run_litex_code("let alias=outer\nalias(1)(2)=2").unwrap().success);
+    let detailed = project_stmt_detailed(run.statement_results.last().unwrap(), &rt).stringify();
+    assert!(detailed.contains("returned_finite_function_coordinate"), "{detailed}");
+    for goal in ["outer(1)(3)=3", "outer(2)(1)=3", "outer(1)(1) $in Z", "outer(1)(2)=4", "outer(3)(1)=1", "outer(1)(0)=1", "outer(1)(1,2)=2"] {
+        let before = fact_count(&rt);
+        assert!(execute(&mut rt, goal).is_failed(), "{goal}");
+        assert_eq!(fact_count(&rt), before, "failed nested application published: {goal}");
+    }
+    let run = rt.run_litex_code("have deep cart(cart(cart(R,Z),R),R)=(((1/2,2),3),4)\ndeep(1)(1)(2) $in Z\ndeep(1)(1)(2)=2").unwrap();
+    assert!(run.success && run.session_error.is_none(), "{}", crate::json_output::emit_run_detailed(&run, &rt, "deep-tuple", None));
+    for goal in ["deep(1)(1)(3)=3", "deep(1)(2)(1)=1", "deep(2)(1)(1)=1", "deep(1)(1)(1) $in Z"] {
+        let before = fact_count(&rt);
+        assert!(execute(&mut rt, goal).is_failed(), "{goal}");
+        assert_eq!(fact_count(&rt), before);
+    }
+    assert!(rt.run_litex_code("let literal_outer=((1,2),3)\nliteral_outer(1)(2)=2").unwrap().success);
+    for goal in ["literal_outer(1)(3)=3", "literal_outer(2)(1)=1", "literal_outer(1)(2)=3"] {
+        let before = fact_count(&rt);
+        assert!(execute(&mut rt, goal).is_failed(), "{goal}");
+        assert_eq!(fact_count(&rt), before);
+    }
+    assert_no_retired_product_facts(&rt);
 }

@@ -239,15 +239,10 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
         (Obj::SetFormer(SetFormer::ListSet(l)), Obj::SetFormer(SetFormer::ListSet(r))) => boxes_alpha_equal(&l.list, &r.list, map),
         (Obj::ProductShape(ProductShape::Cart(l)), Obj::ProductShape(ProductShape::Cart(r))) => boxes_alpha_equal(&l.args, &r.args, map),
         (Obj::ProductShape(ProductShape::Tuple(l)), Obj::ProductShape(ProductShape::Tuple(r))) => boxes_alpha_equal(&l.args, &r.args, map),
-        (Obj::ProductShape(ProductShape::CartDim(l)), Obj::ProductShape(ProductShape::CartDim(r))) => objs_alpha_equal(&l.set, &r.set, map),
         (Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(r))) => objs_alpha_equal(&l.set, &r.set, map),
         (Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(r))) => objs_alpha_equal(&l.set, &r.set, map),
         (Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(r))) => objs_alpha_equal(&l.set, &r.set, map),
         (Obj::SetFormer(SetFormer::SeqSet(l)), Obj::SetFormer(SetFormer::SeqSet(r))) => objs_alpha_equal(&l.set, &r.set, map),
-        (Obj::ProductShape(ProductShape::Proj(l)), Obj::ProductShape(ProductShape::Proj(r))) => {
-            objs_alpha_equal(&l.set, &r.set, map) && objs_alpha_equal(&l.dim, &r.dim, map)
-        }
-        (Obj::ProductShape(ProductShape::TupleDim(l)), Obj::ProductShape(ProductShape::TupleDim(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
         (Obj::FunctionSpace(FunctionSpace::FnRange(l)), Obj::FunctionSpace(FunctionSpace::FnRange(r))) => objs_alpha_equal(&l.function, &r.function, map),
         (Obj::IteratedOperator(IteratedOperator::Sum(l)), Obj::IteratedOperator(IteratedOperator::Sum(r))) => {
             objs_alpha_equal(&l.start, &r.start, map)
@@ -286,9 +281,6 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
         }
         (Obj::SetFormer(SetFormer::FiniteSeqSet(l)), Obj::SetFormer(SetFormer::FiniteSeqSet(r))) => {
             objs_alpha_equal(&l.set, &r.set, map) && objs_alpha_equal(&l.n, &r.n, map)
-        }
-        (Obj::ProductShape(ProductShape::ObjAtIndex(l)), Obj::ProductShape(ProductShape::ObjAtIndex(r))) => {
-            objs_alpha_equal(&l.obj, &r.obj, map) && objs_alpha_equal(&l.index, &r.index, map)
         }
         (Obj::StandardSet(l), Obj::StandardSet(r)) => l == r,
         (Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(l)), Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(r))) => {
@@ -400,6 +392,7 @@ fn fn_obj_heads_alpha_equal(
     map: &HashMap<IdentifierId, IdentifierId>,
 ) -> bool {
     match (left, right) {
+        (FnObjHead::Object(l), FnObjHead::Object(r)) => objs_alpha_equal(l, r, map),
         (FnObjHead::Identifier(l), FnObjHead::Identifier(r)) => {
             identifier_objs_alpha_equal(l, r, map)
         }

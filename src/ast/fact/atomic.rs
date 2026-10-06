@@ -16,8 +16,8 @@ pub enum AtomicFact {
     IsNonemptySetFact(IsNonemptySetFact),
     IsFiniteSetFact(IsFiniteSetFact),
     InFact(InFact),
-    IsCartFact(IsCartFact),
-    IsTupleFact(IsTupleFact),
+
+
     SubsetFact(SubsetFact),
     SupersetFact(SupersetFact),
     ProperSubsetFact(ProperSubsetFact),
@@ -39,8 +39,8 @@ pub enum AtomicFact {
     NotIsNonemptySetFact(NotIsNonemptySetFact),
     NotIsFiniteSetFact(NotIsFiniteSetFact),
     NotInFact(NotInFact),
-    NotIsCartFact(NotIsCartFact),
-    NotIsTupleFact(NotIsTupleFact),
+
+
     NotSubsetFact(NotSubsetFact),
     NotSupersetFact(NotSupersetFact),
     NotProperSubsetFact(NotProperSubsetFact),
@@ -240,33 +240,6 @@ pub struct NotSubsetFact {
     pub line_file: Option<SourceLine>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct IsTupleFact {
-    pub fact_id: FactId,
-    pub set: Obj,
-    pub line_file: Option<SourceLine>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NotIsTupleFact {
-    pub fact_id: FactId,
-    pub set: Obj,
-    pub line_file: Option<SourceLine>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct IsCartFact {
-    pub fact_id: FactId,
-    pub set: Obj,
-    pub line_file: Option<SourceLine>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NotIsCartFact {
-    pub fact_id: FactId,
-    pub set: Obj,
-    pub line_file: Option<SourceLine>,
-}
 
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -434,8 +407,6 @@ impl AtomicFact {
             AtomicFact::IsNonemptySetFact(f) => f.fact_id,
             AtomicFact::IsFiniteSetFact(f) => f.fact_id,
             AtomicFact::InFact(f) => f.fact_id,
-            AtomicFact::IsCartFact(f) => f.fact_id,
-            AtomicFact::IsTupleFact(f) => f.fact_id,
             AtomicFact::SubsetFact(f) => f.fact_id,
             AtomicFact::SupersetFact(f) => f.fact_id,
             AtomicFact::ProperSubsetFact(f) => f.fact_id,
@@ -457,8 +428,6 @@ impl AtomicFact {
             AtomicFact::NotIsNonemptySetFact(f) => f.fact_id,
             AtomicFact::NotIsFiniteSetFact(f) => f.fact_id,
             AtomicFact::NotInFact(f) => f.fact_id,
-            AtomicFact::NotIsCartFact(f) => f.fact_id,
-            AtomicFact::NotIsTupleFact(f) => f.fact_id,
             AtomicFact::NotSubsetFact(f) => f.fact_id,
             AtomicFact::NotSupersetFact(f) => f.fact_id,
             AtomicFact::NotProperSubsetFact(f) => f.fact_id,
@@ -476,8 +445,8 @@ impl AtomicFact {
     // Predicate-family name shared by a fact and its negation (e.g. both use `in`).
     pub fn prop_name(&self) -> AtomicName {
         use crate::parse::keywords::{
-            BIJECTIVE, COPRIME, DVD, EQUAL, GREATER, GREATER_EQUAL, IN, INJECTIVE, IS_CART,
-            IS_CHOICE_FUNCTION_FOR, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, IS_TUPLE, LESS,
+            BIJECTIVE, COPRIME, DVD, EQUAL, GREATER, GREATER_EQUAL, IN, INJECTIVE,
+            IS_CHOICE_FUNCTION_FOR, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS,
             LESS_EQUAL, PRIME, PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET, SURJECTIVE,
         };
         match self {
@@ -515,12 +484,6 @@ impl AtomicFact {
             }
             AtomicFact::InFact(_) | AtomicFact::NotInFact(_) => AtomicName::Plain {
                 name: IN.into(),
-            },
-            AtomicFact::IsCartFact(_) | AtomicFact::NotIsCartFact(_) => AtomicName::Plain {
-                name: IS_CART.into(),
-            },
-            AtomicFact::IsTupleFact(_) | AtomicFact::NotIsTupleFact(_) => AtomicName::Plain {
-                name: IS_TUPLE.into(),
             },
             AtomicFact::SubsetFact(_) | AtomicFact::NotSubsetFact(_) => AtomicName::Plain {
                 name: SUBSET.into(),

@@ -74,13 +74,12 @@ use super::by_equality_identities_wave10::{
     ReduceEmptyBuiltinRuleProof, SumEmptyRangeBuiltinRuleProof,
 };
 use super::by_equality_identities_wave11::{
-    CartProjFactorBuiltinRuleProof, ClosedRangeSingletonListSetBuiltinRuleProof,
+    ClosedRangeSingletonListSetBuiltinRuleProof,
     EmptySetFromSizeZeroBuiltinRuleProof, FiniteSetReduceAddZeroEqualsSumBuiltinRuleProof,
     FiniteSetSizeSetMinusBuiltinRuleProof, FiniteSetSizeUnionBuiltinRuleProof,
     PowOfLogInverseBuiltinRuleProof, ProductSingleTermBuiltinRuleProof,
     ReduceAddZeroEqualsSumBuiltinRuleProof, SetMinusRecoversSubsetBuiltinRuleProof,
-    SumSingleTermBuiltinRuleProof, TupleComponentAtIndexBuiltinRuleProof,
-    UnionAbsorptionFromSubsetBuiltinRuleProof,
+    SumSingleTermBuiltinRuleProof, UnionAbsorptionFromSubsetBuiltinRuleProof,
 };
 use super::by_equality_identities_wave12::{
     ComplexAbsOfImaginaryUnitBuiltinRuleProof, FiniteSetProductListExpansionBuiltinRuleProof,
@@ -282,8 +281,8 @@ pub enum EqualitySearchProofByBuiltinRule {
     SetMinusRecoversSubset(SetMinusRecoversSubsetBuiltinRuleProof),
     EmptySetFromSizeZero(EmptySetFromSizeZeroBuiltinRuleProof),
     FiniteSetEqualFromSubsetSize(FiniteSetEqualFromSubsetSizeBuiltinRuleProof),
-    CartProjFactor(CartProjFactorBuiltinRuleProof),
-    TupleComponentAtIndex(TupleComponentAtIndexBuiltinRuleProof),
+
+
     FiniteSetSizeSetMinus(FiniteSetSizeSetMinusBuiltinRuleProof),
     FiniteSetSizeUnion(FiniteSetSizeUnionBuiltinRuleProof),
     ClosedRangeSingletonListSet(ClosedRangeSingletonListSetBuiltinRuleProof),

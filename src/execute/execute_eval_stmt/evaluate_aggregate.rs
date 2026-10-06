@@ -157,7 +157,7 @@ fn evaluate_fold_application(runtime:&mut Runtime,function:&Obj,args:Vec<Obj>,de
     let (body,cites)=runtime.rewrite_obj_by_known_closed_numeric_equal(&expansion.expanded_body);
     context.cited_equal_fact_ids.extend(cites);
     let value=match evaluate_obj(runtime,&body,depth+1,context)? {Ok(v)=>v,Err(e)=>return Ok(Err(e))};
-    Ok(Ok(FunctionApplicationEvaluationResult {application:application_obj,application_well_defined,expansion,value}))
+    Ok(Ok(FunctionApplicationEvaluationResult {application:application_obj,application_well_defined,expansion:FunctionApplicationExpansionProof::Anonymous(expansion),value}))
 }
 fn fold_application(function:&Obj,args:Vec<Obj>)->Option<FnObj> {
     let (head,mut body)=match function {

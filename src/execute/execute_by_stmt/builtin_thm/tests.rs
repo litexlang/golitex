@@ -251,13 +251,7 @@ fn exact_function_retired_cart_dimension_has_no_parse_wd_or_numeric_route() {
         assert!(result.session_error.is_some(), "retired syntax accepted: {code}");
         assert!(result.statement_results.is_empty());
     }
-    let mut rt = runtime();
-    let blocks = Tokenizer::new().tokenize("cart({},R)={}", rt.current_file.clone()).unwrap();
-    let statement = rt.parse(&blocks).unwrap().remove(0);
-    let crate::ast::stmt::Stmt::Fact(crate::ast::fact::Fact::AtomicFact(crate::ast::fact::AtomicFact::EqualFact(fact))) = statement else { panic!("equality fixture"); };
-    let legacy = crate::ast::obj::Obj::ProductShape(crate::ast::obj::ProductShape::CartDim(crate::ast::obj::CartDim { set: Box::new(fact.left) }));
-    assert!(rt.verify_obj_well_definedness(&legacy, crate::execute::execute_fact_stmt::VerifyState::top_level()).unwrap().is_failed());
-    assert!(crate::rational_expression::evaluate_obj_to_normalized_decimal_number(&legacy).is_none());
+
 }
 
 #[test]

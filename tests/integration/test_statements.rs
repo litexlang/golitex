@@ -31,7 +31,7 @@ fn check_fixtures() {
     paths.sort();
     assert_eq!(
         paths.len(),
-        50,
+        51,
         "update the explicit inventory when Stmt changes"
     );
     let mut all = BTreeSet::new();
@@ -144,6 +144,7 @@ fn collect_stmt(statement: &Stmt, seen: &mut BTreeSet<String>) {
             ReleaseAndExpandStmt::ReleaseThmStmt(_) => "ReleaseThmStmt",
             ReleaseAndExpandStmt::ReleaseStructDefStmt(_) => "ReleaseStructDefStmt",
             ReleaseAndExpandStmt::ReleaseObjDefStmt(_) => "ReleaseObjDefStmt",
+            ReleaseAndExpandStmt::ReleaseCartDefStmt(_) => "ReleaseCartDefStmt",
             ReleaseAndExpandStmt::ExpandRangeStmt(_) => "ExpandRangeStmt",
             ReleaseAndExpandStmt::ReleaseZornLemmaStmt(stmt) => {
                 collect_stmts(&stmt.proof, seen);

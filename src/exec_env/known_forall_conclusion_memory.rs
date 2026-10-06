@@ -16,6 +16,7 @@ use crate::exec_env::forall_conclusion_index_key::{
     AndForallConclusionIndexKey, ChainForallConclusionIndexKey,
 };
 use crate::runtime::FactId;
+use crate::exec_env::forall_equality_index::ForallEqualityIndex;
 use std::collections::HashMap;
 
 /// Cite a stored forall conclusion: which fact + where inside its then-tree.
@@ -30,7 +31,7 @@ pub struct KnownForallConclusionMemory {
     /// Non-equality atomic leaves (`≠` included here).
     pub by_atomic_prop: HashMap<(AtomicName, bool), Vec<ForallConclusionCite>>,
     /// Only `=` leaves (not `≠`).
-    pub equal_conclusions: Vec<ForallConclusionCite>,
+    pub by_equal: ForallEqualityIndex,
     /// Whole or then-clauses, keyed by structural or index key.
     pub by_or: HashMap<OrFactIndexKey, Vec<ForallConclusionCite>>,
     /// Whole exist then-clauses, keyed by structural exist index key.
@@ -57,7 +58,7 @@ impl KnownForallConclusionMemory {
             match then {
                 ExistOrAndChainAtomicFact::AtomicFact(atomic) => {
                     self.push_atomic_leaf(
-                        atomic,
+                        forall, atomic,
                         ForallConclusionCite {
                             fact_id,
                             location: ForallConclusionLocation::DirectThenFact(
@@ -78,7 +79,7 @@ impl KnownForallConclusionMemory {
                         });
                     for (component_index, atomic) in and_fact.facts.iter().enumerate() {
                         self.push_atomic_leaf(
-                            atomic,
+                            forall, atomic,
                             ForallConclusionCite {
                                 fact_id,
                                 location: ForallConclusionLocation::AndFactComponent(
@@ -163,7 +164,7 @@ impl KnownForallConclusionMemory {
         let fact_id = forall.fact_id;
         for (component_index, atomic) in adjacent.iter().enumerate() {
             self.push_atomic_leaf(
-                atomic,
+                forall, atomic,
                 ForallConclusionCite {
                     fact_id,
                     location: ForallConclusionLocation::ChainFactComponent(
@@ -178,11 +179,7 @@ impl KnownForallConclusionMemory {
     }
 
     pub fn merge_from(&mut self, child: &KnownForallConclusionMemory) {
-        for entry in &child.equal_conclusions {
-            if !self.equal_conclusions.iter().any(|e| e == entry) {
-                self.equal_conclusions.push(entry.clone());
-            }
-        }
+        self.by_equal.merge_from(&child.by_equal);
         for (key, child_entries) in &child.by_atomic_prop {
             let parent_entries = self.by_atomic_prop.entry(key.clone()).or_default();
             for entry in child_entries {
@@ -225,9 +222,9 @@ impl KnownForallConclusionMemory {
         }
     }
 
-    fn push_atomic_leaf(&mut self, atomic: &AtomicFact, cite: ForallConclusionCite) {
+    fn push_atomic_leaf(&mut self, forall: &ForallFact, atomic: &AtomicFact, cite: ForallConclusionCite) {
         match atomic {
-            AtomicFact::EqualFact(_) => self.equal_conclusions.push(cite),
+            AtomicFact::EqualFact(equal) => self.by_equal.record(equal, &forall.typed_parameters.ordered_param_ids(), cite),
             _ => {
                 let key = (atomic.prop_name(), atomic_fact_has_positive_polarity(atomic));
                 self.by_atomic_prop.entry(key).or_default().push(cite);

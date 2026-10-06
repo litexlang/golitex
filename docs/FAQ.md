@@ -41,6 +41,15 @@ domains, scopes, and witnesses with small examples.
 
 ## How does equality reuse known equal objects?
 
+Stored forall equalities are retrieved by nested object constructors,
+function positions and parameter holes on both endpoints. When a fixed
+argument such as `f(0)` has an existing equality with `g(0)`, matching can use
+that complete-value path without requiring `f=g`. Fixed subtrees first use
+Direct identity/equality/calculation, then supported constructor descent with
+Direct-only leaves. Parameter carriers and theorem premises still need proof;
+lookup keys are not proof evidence. See the
+[checked tracer](../examples/proof_nodes/equal/by_known_forall/rigid_application_alias.lit).
+
 After well-definedness, equality first checks exact IR or structural alpha
 identity and already stored equality paths, then finite known tuple-property
 reads, then permitted mathematical builtin rules. Stored paths retain their
@@ -1237,6 +1246,28 @@ Replacing the premise with `b - a >= 0` does not justify strict order. The
 [runnable example](../examples/proof_nodes/atomic/by_builtin_rule/greater_from_positive_difference.lit)
 also covers the corresponding `>` goals.
 
+Saved negative differences now give the complementary real order. Weak targets
+accept a strictly stronger saved bound; a weak bound never proves a strict
+comparison. The fixed negative forms `0-u`, `-u`, `(-1)*u`, and `u*(-1)` use
+these same bounded saved-premise bridges. For example:
+
+```litex
+forall a, b R:
+    a-b<0
+    =>:
+        a<b
+
+forall u R:
+    -u<0
+    =>:
+        u>0
+```
+
+The selected premise retains its actual orientation, strictness and citation in
+Detailed output. These leaves do not recursively search for a difference bound.
+See the [signed difference tracer](../examples/proof_nodes/atomic/by_builtin_rule/signed_difference_order.lit)
+and [negative sign tracer](../examples/proof_nodes/atomic/by_builtin_rule/negated_sign_order.lit).
+
 Some routine consequences are saved when a verified fact enters the context.
 For example, saving `n >= 0` after `n $in Z` publishes `n $in N` in that same
 scope. More generally, a saved `b <= n` or `n >= b` needs both an integer
@@ -1366,22 +1397,21 @@ the unmatched outer application and that nearest prefix. This is guidance to
 project or rewrite the prefix before applying the remaining argument; it does
 not perform new congruence or accept the failed goal.
 
-## Does tuple projection automatically supply every carrier fact?
+## Does a tuple call supply its coordinate carrier?
 
-The current verifier needs an explicit coordinate equality for this example.
-The former direct `(x, y)[1] $in C` goal soft-fails; expose the selected value
-before requesting its carrier:
+Literal and named tuples use ordinary function calls. The selected coordinate's
+carrier is checked from its actual value or Cartesian member source:
 
 ```litex
-forall x, y N:
-    (x, y)[1] = x
-    (x, y)[1] $in C
+forall x,y N:
+    (x,y)(1)=x
+    (x,y)(1) $in C
 ```
 
-The equality is a checked mathematical bridge. This example establishes that
-route, not a general guarantee that cold and pre-populated proof searches
-discover identical intermediate facts. A cache should preserve meaning, but
-adding an explicit proved fact may enable a route that a bare goal misses.
+The direct carrier route `(x,y)(1) $in C` is also supported for this literal
+value. Invalid inputs such as `(x,y)(3)` fail WD. Cartesian set equalities do
+not recover a construction dimension or factor list; element membership
+supplies the complete function domain and coordinate carriers.
 
 ## Which assumptions are available when checking an induction target?
 
@@ -1700,10 +1730,11 @@ an implicit jump.
 
 `strategy` is for proof patterns where the hard part is not the outer
 predicate name, but the internal structure of the object being checked.
-Ordinary `forall` matching is intentionally shallow: it can apply a stored rule
-when the goal shape matches, but it should not blindly search through every
-subexpression of a large object. Deep search would be expensive and hard to
-audit.
+Ordinary `forall` matching retrieves a stored conclusion by shape and performs
+structural parameter substitution. Supported matching constructors can descend
+through nested terms; fixed subterms use existing Direct equality evidence.
+It does not search unrelated subexpressions or additional foralls to invent a
+substitution. Such proof discovery would be expensive and hard to audit.
 
 This matters for predicates that also serve as practical well-definedness
 interfaces. Suppose `f`, `g`, `h`, and `t` are known to have a property such as
@@ -1911,6 +1942,59 @@ forall y R:
 The actual condition and its citation remain in the proof. Open intervals
 remain open for tangent and cosine nonzero; broader or missing bounds still
 reject. See the [acceptance example](../examples/proof_nodes/equal/by_builtin_rule/arcsin_principal_bound_spellings.lit).
+
+### How does a negative multiplier affect inequalities?
+
+A negative common factor reverses strict order. A nonpositive factor, including
+zero, reverses weak order. The factor may occur on either side of each product:
+
+```litex
+forall a,b,c R:
+    0>c
+    a>b
+    =>:
+        c*a<b*c
+
+forall a,b,c R:
+    c<=0
+    a<=b
+    =>:
+        a*c>=c*b
+```
+
+Both the actual sign proof and reversed argument comparison remain in the
+result. Weak/zero premises cannot justify a strict conclusion; missing sign or
+argument-order facts still reject. The rules inherit their caller's premise
+permissions and do not open definitions or rewrite inside that restricted stage.
+The [strict](../examples/proof_nodes/atomic/by_builtin_rule/negative_common_factor_order.lit)
+and [weak](../examples/proof_nodes/atomic/by_builtin_rule/nonpositive_common_factor_weak_order.lit)
+tracers record the supported archived-overlay gate; current shared startup
+compilation remains a separate pending gate.
+
+### Do first-quadrant bounds suffice for tangent and cotangent WD?
+
+Yes. The actual strict bounds certify nonzero sine and cosine before the
+partial operators are checked. The fixed positivity rules use the same
+written bounds:
+
+```litex
+forall x R:
+    0<x
+    x<pi/2
+    =>:
+        0<tan(x)
+
+forall x R:
+    x>0
+    pi/2>x
+    =>:
+        cot(x)>0
+```
+
+Each rule retains both actual bound citations. Closed or missing bounds,
+wrong signs and poles still reject. See the
+[quadrant tracer](../examples/proof_nodes/atomic/by_builtin_rule/trig_first_quadrant.lit)
+and [quotient WD consumer](../examples/proof_nodes/equal/by_builtin_rule/trig_first_quadrant_quotient_wd.lit).
 
 ### Why should stored whole numeric values precede their arguments?
 

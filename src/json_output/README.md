@@ -481,6 +481,13 @@ Detailed eval success includes `source_well_defined` before its rewritten and
 evaluated objects. A failed eval WD is also exposed in Normal
 `why_failed.failure`, including the offending source expression and failed WD
 stage; its command phase remains `eval`.
+Finite-coordinate eval keeps its existing `function_evaluations` list. Each
+checked beta entry exposes `application_well_defined`, `function_body`,
+`expanded_body` and `value`; the body cites the literal equality/member source
+and position. A returned tuple coordinate also retains the shorter receiver's
+WD and beta body. Anonymous-function entries retain their existing
+`function_equal` projection. Aggregate equality consumers keep the same
+chronological function-evaluation evidence.
 
 Normal let and named-function failures expose their existing WD result under
 `why_failed.failure`. Concrete `prop` failures retain `parameter_type`,
@@ -885,3 +892,21 @@ tracers retain their partial-operation guards.
 Fixed trigonometric interval consumers retain the actual written Less/Greater or weak bound result and its source citation for (-pi)/2, -(pi/2), 0-pi/2 and (-1)*(pi/2). Inverse requirement order remains lower then upper; sine-order and raw nonzero evidence keep their existing named fields. There is no new result label or schema.
 
 ClosedNumericEqualSubstitution matches whole original scalar terms before children and can match rebuilt parents in that same structural pass. Equality, atomic and eval consumers retain the selected actual equality IDs, rewritten subject and checked residual/evaluation. The exact single-key replacement interface preserves its original-only behavior. See [numeric priority acceptance](../../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit).
+
+First-quadrant evidence has six dedicated named leaves: CosNonzeroOnFirstQuadrant,
+SinNonzeroOnFirstQuadrant, TanPositiveOnFirstQuadrant, CotPositiveOnFirstQuadrant,
+TanGreaterZeroOnFirstQuadrant and CotGreaterZeroOnFirstQuadrant. Each projects
+`lower_bound_proof` then `upper_bound_proof` using the actual known-premise
+projection and source IDs. Tangent/cotangent WD retains its own denominator
+proof; the positivity leaf does not bypass WD. Six typed fixtures exercise
+all ten languages and four premise orientations. See the
+[quadrant tracer](../../examples/proof_nodes/atomic/by_builtin_rule/trig_first_quadrant.lit).
+
+Negative/nonpositive common-factor order has sixteen dedicated leaf payloads
+(four comparison targets times four factor placements). Each Detailed leaf
+projects `factor_sign_proof` then `reversed_order_proof` as full actual
+VerifyFactResult children. A weak rule may retain a strict or converse source
+fact as stronger evidence; it never manufactures a canonical premise. The
+single-citation summary is empty for these two-source rules; both citations
+remain in their children. Sixteen actual typed leaves execute across ten
+languages. See [strict order](../../examples/proof_nodes/atomic/by_builtin_rule/negative_common_factor_order.lit).

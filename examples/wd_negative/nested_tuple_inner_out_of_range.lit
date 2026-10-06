@@ -1,0 +1,3 @@
+# Boundary: the last statement must fail WD after a successful declaration.
+have outer cart(cart(R,R),R)=((1,2),3)
+outer(1)(3)=3

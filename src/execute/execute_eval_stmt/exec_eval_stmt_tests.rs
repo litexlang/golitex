@@ -486,3 +486,41 @@ fn eval_standard_set_soft_fails() {
         ),
     }
 }
+
+#[test]
+fn eval_tuple_calls_compute_and_publish_without_prior_coordinate_equalities() {
+    let mut rt = runtime_with_file_env();
+    assert!(!exec_one(&mut rt, "let p=(1,2,3)").is_failed());
+    assert_eval_number(&mut rt, "eval p(2)", "2");
+    assert!(!exec_one(&mut rt, "p(2)=2").is_failed());
+    assert!(!exec_one(&mut rt, "have outer cart(cart(R,R),R)=((1,2),3)").is_failed());
+    assert_eval_number(&mut rt, "eval outer(1)(2)", "2");
+    assert!(!exec_one(&mut rt, "outer(1)(2)=2").is_failed());
+    assert!(!exec_one(&mut rt, "let literal_outer=((1,2),3)").is_failed());
+    assert_eval_number(&mut rt, "eval literal_outer(1)(2)", "2");
+    for code in ["eval p(4)", "eval p(0)", "eval p(1,2)", "eval outer(2)(1)", "eval outer(1)(3)"] {
+        let count = rt.top_exec_env().facts.facts_by_id.len();
+        assert!(exec_one(&mut rt, code).is_failed(), "{code}");
+        assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), count, "failed eval published: {code}");
+    }
+    assert!(exec_one(&mut rt, "p(2)=3").is_failed());
+}
+
+#[test]
+fn eval_tuple_coordinate_evidence_and_unknown_values_stay_checked() {
+    for language in OutputLanguage::ALL {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(), session: false, strict: true, language,
+        });
+        assert!(!exec_one(&mut rt, "let p=(1,2,3)").is_failed());
+        let result = exec_one(&mut rt, "eval p(2)");
+        assert!(!result.is_failed());
+        let detailed = crate::json_output::project_stmt_detailed(&result, &rt).stringify();
+        assert!(detailed.contains("finite_function_coordinate"), "{detailed}");
+        assert!(detailed.contains("p(2)") && detailed.contains("tuple_equality"), "missing coordinate source: {detailed}");
+        assert!(!exec_one(&mut rt, "have unknown cart(R,R)").is_failed());
+        let count = rt.top_exec_env().facts.facts_by_id.len();
+        assert!(exec_one(&mut rt, "eval unknown(1)").is_failed());
+        assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), count);
+    }
+}

@@ -36,7 +36,7 @@ fn every_standard_carrier_composes_at_direct_without_publishing_facts() {
         ("have a,b Q", "(a-b)/2 $in Q"),
         ("have a R*", "a^(-1) $in R"),
         ("have n Z", "abs(n) $in N"),
-        ("have a cart(R,R)", "tuple_dim(a) $in N"),
+        ("have a cart(R,R)", "a(1) $in R"),
         (
             "have a R\n$is_finite_set({a})",
             "finite_set_size({a}) $in N",
@@ -85,7 +85,7 @@ fn full_verify_keeps_domains_and_false_carriers_rejected() {
         ("have x R", "sqrt(-1) $in R"),
         ("have x R", "log(1,x) $in R"),
         ("have x R", "floor(i) $in Z"),
-        ("have x R", "tuple_dim(x) $in N"),
+        ("have x R", "x(1) $in N"),
         ("have x R", "(1,2)(3) $in R"),
         ("have x R", "x^(-1) $in R"),
         ("have x R", "0^(-1) $in R"),

@@ -34,9 +34,7 @@ impl Runtime {
         if let Some(proof) = self.search_function_set_membership_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionSetMembership(proof)));
         }
-        if let Some(proof) = self.search_literal_tuple_projection_membership_strategy(fact, ctx)? {
-            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::LiteralTupleProjectionMembership(proof)));
-        }
+
         // nonzero (NotEqual)
         if let Some(proof) = self.search_nonzero_product_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(proof)));

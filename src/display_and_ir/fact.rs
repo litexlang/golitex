@@ -51,8 +51,6 @@ impl AtomicFact {
             AtomicFact::IsNonemptySetFact(x) => x.ir(),
             AtomicFact::IsFiniteSetFact(x) => x.ir(),
             AtomicFact::InFact(x) => x.ir(),
-            AtomicFact::IsCartFact(x) => x.ir(),
-            AtomicFact::IsTupleFact(x) => x.ir(),
             AtomicFact::SubsetFact(x) => x.ir(),
             AtomicFact::SupersetFact(x) => x.ir(),
             AtomicFact::ProperSubsetFact(x) => x.ir(),
@@ -74,8 +72,6 @@ impl AtomicFact {
             AtomicFact::NotIsNonemptySetFact(x) => x.ir(),
             AtomicFact::NotIsFiniteSetFact(x) => x.ir(),
             AtomicFact::NotInFact(x) => x.ir(),
-            AtomicFact::NotIsCartFact(x) => x.ir(),
-            AtomicFact::NotIsTupleFact(x) => x.ir(),
             AtomicFact::NotSubsetFact(x) => x.ir(),
             AtomicFact::NotSupersetFact(x) => x.ir(),
             AtomicFact::NotProperSubsetFact(x) => x.ir(),
@@ -102,8 +98,6 @@ impl AtomicFact {
             AtomicFact::IsNonemptySetFact(x) => x.display_string(),
             AtomicFact::IsFiniteSetFact(x) => x.display_string(),
             AtomicFact::InFact(x) => x.display_string(),
-            AtomicFact::IsCartFact(x) => x.display_string(),
-            AtomicFact::IsTupleFact(x) => x.display_string(),
             AtomicFact::SubsetFact(x) => x.display_string(),
             AtomicFact::SupersetFact(x) => x.display_string(),
             AtomicFact::ProperSubsetFact(x) => x.display_string(),
@@ -125,8 +119,6 @@ impl AtomicFact {
             AtomicFact::NotIsNonemptySetFact(x) => x.display_string(),
             AtomicFact::NotIsFiniteSetFact(x) => x.display_string(),
             AtomicFact::NotInFact(x) => x.display_string(),
-            AtomicFact::NotIsCartFact(x) => x.display_string(),
-            AtomicFact::NotIsTupleFact(x) => x.display_string(),
             AtomicFact::NotSubsetFact(x) => x.display_string(),
             AtomicFact::NotSupersetFact(x) => x.display_string(),
             AtomicFact::NotProperSubsetFact(x) => x.display_string(),
@@ -348,10 +340,6 @@ impl_dollar_set_prop!(IsNonemptySetFact, IS_NONEMPTY_SET);
 impl_not_dollar_set_prop!(NotIsNonemptySetFact, IS_NONEMPTY_SET);
 impl_dollar_set_prop!(IsFiniteSetFact, IS_FINITE_SET);
 impl_not_dollar_set_prop!(NotIsFiniteSetFact, IS_FINITE_SET);
-impl_dollar_set_prop!(IsCartFact, IS_CART);
-impl_not_dollar_set_prop!(NotIsCartFact, IS_CART);
-impl_dollar_set_prop!(IsTupleFact, IS_TUPLE);
-impl_not_dollar_set_prop!(NotIsTupleFact, IS_TUPLE);
 
 impl SubsetFact {
     pub fn ir(&self) -> FactIR {

@@ -1,11 +1,9 @@
 use super::greater::GreaterFactSearchProofByBuiltinRule;
 use super::greater_equal::GreaterEqualFactSearchProofByBuiltinRule;
 use super::in_fact::InFactSearchProofByBuiltinRule;
-use super::is_cart::IsCartFactSearchProofByBuiltinRule;
 use super::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule;
 use super::is_nonempty_set::IsNonemptySetFactSearchProofByBuiltinRule;
 use super::is_set::IsSetFactSearchProofByBuiltinRule;
-use super::is_tuple::IsTupleFactSearchProofByBuiltinRule;
 use super::less::LessFactSearchProofByBuiltinRule;
 use super::less_equal::LessEqualFactSearchProofByBuiltinRule;
 use super::not_equal::NotEqualFactSearchProofByBuiltinRule;
@@ -34,8 +32,8 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinRule {
     IsNonemptySetFact(IsNonemptySetFactSearchProofByBuiltinRule),
     IsFiniteSetFact(IsFiniteSetFactSearchProofByBuiltinRule),
     InFact(InFactSearchProofByBuiltinRule),
-    IsCartFact(IsCartFactSearchProofByBuiltinRule),
-    IsTupleFact(IsTupleFactSearchProofByBuiltinRule),
+
+
     SubsetFact(SubsetFactSearchProofByBuiltinRule),
     SupersetFact(SupersetFactSearchProofByBuiltinRule),
     ProperSubsetFact(ProperSubsetFactSearchProofByBuiltinRule),
@@ -57,8 +55,8 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinRule {
     NotIsNonemptySetFact(NotIsNonemptySetFactSearchProofByBuiltinRule),
     NotIsFiniteSetFact(NotIsFiniteSetFactSearchProofByBuiltinRule),
     NotInFact(NotInFactSearchProofByBuiltinRule),
-    NotIsCartFact(NotIsCartFactSearchProofByBuiltinRule),
-    NotIsTupleFact(NotIsTupleFactSearchProofByBuiltinRule),
+
+
     NotSubsetFact(NotSubsetFactSearchProofByBuiltinRule),
     NotSupersetFact(NotSupersetFactSearchProofByBuiltinRule),
     NotProperSubsetFact(NotProperSubsetFactSearchProofByBuiltinRule),
@@ -141,5 +139,3 @@ pub struct NotCoprimeByComputation {
 }
 
 pub enum NotIsSetFactSearchProofByBuiltinRule {}
-pub enum NotIsCartFactSearchProofByBuiltinRule {}
-pub enum NotIsTupleFactSearchProofByBuiltinRule {}

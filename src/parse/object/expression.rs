@@ -228,13 +228,10 @@ fn parse_field_and_call_postfixes(
         }
 
         if tb.peek() == Some(LEFT_PAREN) {
-            let Some(head) = fn_obj_head_from_obj(result.clone()) else {
-                return Err(tb.parse_error(format!(
-                    "`{}` cannot be applied as a function",
-                    result.display_string()
-                )));
+            let (head, mut body_vectors) = match result {
+                Obj::FnObj(call) => (*call.head, call.body),
+                other => (fn_obj_head_from_obj(other).expect("all object expressions have an application head"), Vec::new()),
             };
-            let mut body_vectors = Vec::new();
             while tb.peek() == Some(LEFT_PAREN) {
                 let args = super::primary::parse_obj_list_paren(rt, tb)?;
                 body_vectors.push(args.into_iter().map(Box::new).collect());

@@ -4,15 +4,14 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     VerifyAtomicExceptEqualityFactSuccess,
 };
 use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, GreaterFact, InFact, IsTupleFact, LessEqualFact, LessFact, NotInFact, SubsetFact,
+    AtomicFact, EqualFact, Fact, GreaterFact, InFact, LessEqualFact, LessFact, NotInFact, SubsetFact,
 };
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
     Add, ArithmeticOperator, Cart, ComplexOperator, ExpLogOperator, FnObj, FnObjHead, FnSet,
     FunctionSpace, IntegerOperator, IntervalObj, IteratedOperator, Literal, Mul, Number, Obj,
     OneSideInfinityIntervalObj, ProductShape, SetFormer, SetOperator, StandardSet,
-    StructAndFieldAccessObj, StructObj, TrigOperator, TupleDim,
-};
+    StructAndFieldAccessObj, StructObj, TrigOperator, };
 use crate::ast::param::SetBoundParameterList;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -92,8 +91,8 @@ pub enum InFactSearchProofByBuiltinRule {
     FoldScalarCodomain(FoldScalarCodomainBuiltinRuleProof),
     // WD has already established the Cartesian/tuple shape. Dimensions are
     // natural numbers and inherit the standard numeric supersets of N.
-    CartDimInNatural(CartDimInNaturalBuiltinRuleProof),
-    TupleDimInNatural(TupleDimInNaturalBuiltinRuleProof),
+
+
     // A checked anonymous function inhabits its own declared FnSet, modulo
     // binder renaming. Domain conditions and free owners must remain exact.
     // Example: `fn(x R) R {x} $in fn(y R) R`.
@@ -247,8 +246,6 @@ pub struct FoldScalarCodomainBuiltinRuleProof {
     pub codomain: StandardSet,
 }
 
-pub struct CartDimInNaturalBuiltinRuleProof {}
-pub struct TupleDimInNaturalBuiltinRuleProof {}
 
 pub struct AnonymousFnInDeclaredFnSetBuiltinRuleProof {}
 pub struct AnonymousFnApplicationScalarCodomainBuiltinRuleProof {
@@ -638,12 +635,6 @@ impl Runtime {
                             }
                         }
                     }
-                }
-            }
-            Obj::ProductShape(ProductShape::CartDim(_))
-            | Obj::ProductShape(ProductShape::TupleDim(_)) => {
-                if let Some(proof) = product_dimension_codomain_proof(&fact.element, set) {
-                    return Ok(Some(proof));
                 }
             }
             Obj::TrigOperator(TrigOperator::Sin(_))
@@ -1678,6 +1669,7 @@ impl Runtime {
 
 fn fn_obj_head_as_obj(head: &FnObjHead) -> Obj {
     match head {
+        FnObjHead::Object(obj) => obj.as_ref().clone(),
         FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
         FnObjHead::AnonymousFnLiteral(a) => {
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(a.as_ref().clone()))
@@ -1813,24 +1805,6 @@ impl Runtime {
         standard_set_is_subset_eq(&codomain, target).then_some(InFactSearchProofByBuiltinRule::AggregateScalarCodomain(
             AggregateScalarCodomainBuiltinRuleProof { iterand_return_set: signature.ret_set.as_ref().clone(), codomain },
         ))
-    }
-}
-
-fn product_dimension_codomain_proof(
-    element: &Obj,
-    target: &StandardSet,
-) -> Option<InFactSearchProofByBuiltinRule> {
-    if !standard_set_is_subset_eq(&StandardSet::N, target) {
-        return None;
-    }
-    match element {
-        Obj::ProductShape(ProductShape::CartDim(_)) => Some(
-            InFactSearchProofByBuiltinRule::CartDimInNatural(CartDimInNaturalBuiltinRuleProof {}),
-        ),
-        Obj::ProductShape(ProductShape::TupleDim(_)) => Some(
-            InFactSearchProofByBuiltinRule::TupleDimInNatural(TupleDimInNaturalBuiltinRuleProof {}),
-        ),
-        _ => None,
     }
 }
 

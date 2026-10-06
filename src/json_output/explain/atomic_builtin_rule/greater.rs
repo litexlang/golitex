@@ -20,6 +20,12 @@ use crate::json_output::explain::text::text;
 impl GreaterFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_en(),
+            Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_en(),
+            Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_en(),
+            Self::MulRightLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_en(),
+            Self::TanGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_en(),
+            Self::CotGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_en(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_en(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_en(),
             Self::FromKnownLess(p) => p.rule_name_and_message_en(),
@@ -39,6 +45,12 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh(),
+            Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh(),
+            Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh(),
+            Self::MulRightLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh(),
+            Self::TanGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
+            Self::CotGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_zh(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_zh(),
             Self::FromKnownLess(p) => p.rule_name_and_message_zh(),
@@ -58,6 +70,12 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulRightLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh_hant(),
+            Self::TanGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
+            Self::CotGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_zh_hant(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownLess(p) => p.rule_name_and_message_zh_hant(),
@@ -77,6 +95,12 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_fr(),
+            Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_fr(),
+            Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_fr(),
+            Self::MulRightLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_fr(),
+            Self::TanGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_fr(),
+            Self::CotGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_fr(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_fr(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_fr(),
             Self::FromKnownLess(p) => p.rule_name_and_message_fr(),
@@ -96,6 +120,12 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ru(),
+            Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ru(),
+            Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ru(),
+            Self::MulRightLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ru(),
+            Self::TanGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_ru(),
+            Self::CotGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_ru(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ru(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_ru(),
             Self::FromKnownLess(p) => p.rule_name_and_message_ru(),
@@ -115,6 +145,12 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_es(),
+            Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_es(),
+            Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_es(),
+            Self::MulRightLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_es(),
+            Self::TanGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_es(),
+            Self::CotGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_es(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_es(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_es(),
             Self::FromKnownLess(p) => p.rule_name_and_message_es(),
@@ -134,6 +170,12 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ar(),
+            Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ar(),
+            Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ar(),
+            Self::MulRightLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ar(),
+            Self::TanGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
+            Self::CotGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ar(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_ar(),
             Self::FromKnownLess(p) => p.rule_name_and_message_ar(),
@@ -153,6 +195,12 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ja(),
+            Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ja(),
+            Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ja(),
+            Self::MulRightLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ja(),
+            Self::TanGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
+            Self::CotGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ja(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_ja(),
             Self::FromKnownLess(p) => p.rule_name_and_message_ja(),
@@ -172,6 +220,12 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ko(),
+            Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ko(),
+            Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ko(),
+            Self::MulRightLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ko(),
+            Self::TanGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
+            Self::CotGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ko(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_ko(),
             Self::FromKnownLess(p) => p.rule_name_and_message_ko(),
@@ -191,6 +245,12 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_vi(),
+            Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_vi(),
+            Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_vi(),
+            Self::MulRightLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_vi(),
+            Self::TanGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_vi(),
+            Self::CotGreaterZeroOnFirstQuadrant(p) => p.rule_name_and_message_vi(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_vi(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_vi(),
             Self::FromKnownLess(p) => p.rule_name_and_message_vi(),
@@ -225,6 +285,13 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::MulLeftNegativeReversesStrictGreater(_) => None,
+            Self::MulRightNegativeReversesStrictGreater(_) => None,
+            Self::MulLeftRightNegativeReversesStrictGreater(_) => None,
+            Self::MulRightLeftNegativeReversesStrictGreater(_) => None,
+            // These rules have two actual bound sources, retained in Detailed.
+            Self::TanGreaterZeroOnFirstQuadrant(_) => None,
+            Self::CotGreaterZeroOnFirstQuadrant(_) => None,
             Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),
             Self::ClosedNumericComparison(_) => None,
             Self::FromKnownLess(p) => p.premise_proof.cite_fact_id(),

@@ -7,6 +7,9 @@
 # Now: the same source renders as a named theorem and an explicit citation.
 # Boundary: conversion success does not verify the statement or its proof.
 # Conversion: target/release/litex -latex -lang zh -f examples/stmt_nodes/compile_to_latex/identity.lit
+# Launch contract: CompileToLatex / LatexInput -> run_compile_to_latex -> CompileToLatexResult.
+# Previously -latex was intercepted in main.rs before ordinary command dispatch.
+# Acceptance: cargo test --release --lib latex_command_tests -- --nocapture
 # Verification: target/release/litex -f examples/stmt_nodes/compile_to_latex/identity.lit
 
 thm identity:
