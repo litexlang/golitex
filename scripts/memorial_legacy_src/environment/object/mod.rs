@@ -1,9 +1,0 @@
-mod knowledge;
-mod known_function;
-mod known_value;
-mod object;
-
-pub use knowledge::SpecialObjectPropertyMemory;
-pub use known_function::KnownFnInfo;
-pub use known_value::KnownObjValue;
-pub use object::ObjectPropertyMemory;
