@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "protocol": "Current release -f/-e run JSON; success=true, session_error=null, exit=0",
+  "source_owned_area": "docs/audits",
+  "retained_migration_blocks": 29,
+  "runnable_repairs": 28,
+  "documented_real_exponent_boundary": 1,
+  "records": [
+    {
+      "file": "docs/Litex_Learner_Cheatsheet.md",
+      "original_line": 152,
+      "before": "have fn shift(t R) R = t + 1\nlet successor = shift\n\nsuccessor(2) = 3\nfn_range(successor) = fn_range(shift)",
+      "after": "have fn shift(t R) R = t + 1\nlet alias = shift\nhave successor fn(t R) R = alias\n\nsuccessor(2) = shift(2) = 3\nfn_range(successor) = fn_range(shift)",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Litex_Learner_Cheatsheet.md",
+      "original_line": 323,
+      "before": "release thm set_builder_member(1, {x R: x > 0})",
+      "after": "release thm set_builder_member(1, {x R: x > 0})",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Litex_Learner_Cheatsheet.md",
+      "original_line": 458,
+      "before": "claim:\n    ? forall n N:\n        2 ^ n >= n + 1\n    by induc n from 0:\n        ? 2 ^ n >= n + 1\n        2^0 = 1 >= 0 + 1\n\n        forall m Z:\n            m >= 0\n            2^m >= m + 1\n            =>:\n                2^m * 2^1 >= (m+1) * 2\n                2 ^ (m + 1) = 2 ^ m * 2^1 >= (m+1) * 2 = (m + 1) + (m + 1) >= m + 1 + 1",
+      "after": "claim:\n    ? forall n N:\n        2 ^ n >= n + 1\n    by induc k from 0:\n        ? 2 ^ k >= k + 1\n        ? from k = 0:\n            2^k = 1 = k+1\n        ? induc:\n            k $in N\n            2^(k+1) = 2^k * 2^1 = 2^k * 2\n            2^k * 2 >= (k+1)*2\n            (k+1)*2 = (k+1)+(k+1) >= (k+1)+1\n            2^(k+1) = 2^k * 2 >= (k+1)*2 = (k+1)+(k+1) >= (k+1)+1",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/FAQ.md",
+      "original_line": 260,
+      "before": "prop all_reals_reflexive():\n    forall x R:\n        x = x\n\nby def $all_reals_reflexive()\n$all_reals_reflexive() or 1 = 1 and 2 = 2",
+      "after": "prop all_reals_reflexive():\n    forall x R:\n        x = x\n\nby def $all_reals_reflexive()\n$all_reals_reflexive() or 1 = 1 and 2 = 2",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/FAQ.md",
+      "original_line": 368,
+      "before": "forall x, y R:\n    x - y > 0\n    =>:\n        x > y\n\nforall x, y R:\n    y < x\n    =>:\n        x > y\n\nforall x, y R:\n    x != y\n    =>:\n        y != x",
+      "after": "forall x, y R:\n    x - y > 0\n    =>:\n        x > y\n\nforall x, y R:\n    y < x\n    =>:\n        x > y\n\nforall x, y R:\n    x != y\n    =>:\n        y != x",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/FAQ.md",
+      "original_line": 970,
+      "before": "struct FirstQuadrant:\n    x R\n    y R\n    <=>:\n        x > 0\n        y > 0\n\nrelease thm struct_member((1, 2), &FirstQuadrant)\nhave p &FirstQuadrant = (1, 2)\np.x = 1\np.y = 2",
+      "after": "struct FirstQuadrant:\n    x R\n    y R\n    <=>:\n        x > 0\n        y > 0\n\nrelease thm struct_member((1, 2), &FirstQuadrant)\nhave p &FirstQuadrant = (1, 2)\np.x = 1\np.y = 2",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/FAQ.md",
+      "original_line": 1648,
+      "before": "have q Q\nrelease thm rational_has_unique_reduced_fraction(q)\nobtain p, d from exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}",
+      "after": "have q Q\nrelease thm rational_has_unique_reduced_fraction(q)\nobtain p, d from exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/FAQ.md",
+      "original_line": 1712,
+      "before": "sketch:\n    have f fn(x R: x > 0) R\n\n    f(1) $in fn_range(f)\n    have by fn_preimage: x from f(1) $in fn_range(f)\n\n    x $in R\n    x > 0\n    f(1) = f(x)",
+      "after": "sketch:\n    have f fn(x R: x > 0) R\n\n    f(1) $in fn_range(f)\n    have by fn_preimage: x from f(1) $in fn_range(f)\n\n    x $in R\n    x > 0\n    f(1) = f(x)",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Litex_Blueprint.md",
+      "original_line": 1124,
+      "before": "thm converges_to_mul_const:\n    ? forall s fn(n N) R, a, c R:\n        $converges_to(s, a)\n        =>:\n            $converges_to(fn(n N) R {c * s(n)}, c * a)\n    claim:\n        ? forall epsilon R+:\n            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}\n        abs(c) + 1 > 0\n        epsilon / (abs(c) + 1) $in R+\n        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}\n        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:\n            forall n N:\n                n >= N0\n                =>:\n                    abs(s(n) - a) < epsilon / (abs(c) + 1)\n                    abs(c * s(n) - c * a) = abs(c) * abs(s(n) - a)\n                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < epsilon\n                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon\n            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)\n    by def $converges_to(fn(n N) R {c * s(n)}, c * a)",
+      "after": "prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):\n    forall n N:\n        n >= N0\n        =>:\n            abs(s(n) - a) < epsilon\n\nprop converges_to(s fn(n N) R, a R):\n    forall epsilon R+:\n        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}\n\nthm converges_to_mul_const:\n    ? forall s, scaled fn(n N) R, a, c R:\n        $converges_to(s, a)\n        forall n N:\n            scaled(n) = c * s(n)\n        =>:\n            $converges_to(scaled, c * a)\n    claim:\n        ? forall epsilon R+:\n            exist N0 N st {$is_eventually_close(scaled, c * a, epsilon, N0)}\n        abs(c) >= 0\n        abs(c) + 1 > 0\n        have scale R+ = abs(c) + 1\n        epsilon / scale > 0\n        epsilon / scale $in R+\n        abs(c) <= scale\n        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / scale, K)}\n        witness exist K N st {$is_eventually_close(scaled, c * a, epsilon, K)} from N0:\n            claim:\n                ? forall n N:\n                    n >= N0\n                    =>:\n                        abs(scaled(n) - c * a) < epsilon\n                scaled(n) = c * s(n)\n                abs(s(n) - a) < epsilon / scale\n                abs(s(n) - a) >= 0\n                scaled(n) - c * a = c * s(n) - c * a = c * (s(n) - a)\n                abs(scaled(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)\n                abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a)\n                scale * abs(s(n) - a) < scale * (epsilon / scale) = epsilon\n                abs(scaled(n) - c * a) = abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a) < epsilon\n            by def $is_eventually_close(scaled, c * a, epsilon, N0)\n    by def $converges_to(scaled, c * a)",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Litex_Blueprint.md",
+      "original_line": 1190,
+      "before": "have fn kth_odd(k Z) Z = 2 * k - 1\n\nforall n Z:\n    n >= 1\n    =>:\n        sum(1, n, kth_odd) $in Z\n\nforall n Z:\n    n^2 $in Z\n\nthm sum_first_odds:\n    ? forall n Z:\n        n >= 1\n        =>:\n            sum(1, n, kth_odd) = n^2\n    by induc n from 1:\n        ? sum(1, n, kth_odd) = n^2\n\n        ? from n = 1:\n            kth_odd(1) = 2 * 1 - 1 = 1\n            sum(1, 1, kth_odd) = kth_odd(1) = 2 * 1 - 1 = 1 = 1^2\n\n        ? induc:\n            kth_odd(n + 1) = 2 * (n + 1) - 1\n            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2",
+      "after": "have fn kth_odd(k Z) Z = 2 * k - 1\n\nforall n Z:\n    n >= 1\n    =>:\n        sum(1, n, kth_odd) $in Z\n\nforall n Z:\n    n^2 $in Z\n\nthm sum_first_odds:\n    ? forall n Z:\n        n >= 1\n        =>:\n            sum(1, n, kth_odd) = n^2\n    by induc n from 1:\n        ? sum(1, n, kth_odd) = n^2\n\n        ? from n = 1:\n            kth_odd(1) = 2 * 1 - 1 = 1\n            sum(1, 1, kth_odd) = kth_odd(1) = 2 * 1 - 1 = 1 = 1^2\n\n        ? induc:\n            kth_odd(n + 1) = 2 * (n + 1) - 1\n            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Litex_Blueprint.md",
+      "original_line": 1407,
+      "before": "have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2\n\nclaim:\n    ? forall x R+:\n        newton_sqrt_two_step(x) = newton_sqrt_two(x)\n    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)\n\nalgo newton_sqrt_two_step(x R) R by cases:\n    case x = 0: 1\n    case x != 0: (x + 2 / x) / 2",
+      "after": "claim:\n    ? forall x R+:\n        (x + 2 / x) / 2 $in R+\n    2 / x > 0\n    x + 2 / x > 0\n    (x + 2 / x) / 2 > 0\n\nhave fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2\nalgo newton_sqrt_two_step(x R) R by cases:\n    case x = 0: 1\n    case x != 0: (x + 2 / x) / 2\nclaim:\n    ? forall x R+:\n        newton_sqrt_two_step(x) = newton_sqrt_two(x)\n    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Litex_Blueprint.md",
+      "original_line": 1837,
+      "before": "by contra:\n    ? not forall x R:\n        x^2 >= x\n    impossible 0.5^2 >= 0.5",
+      "after": "by contra:\n    ? not forall x R:\n        x^2 >= x\n    impossible 0.5^2 >= 0.5",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Litex_Blueprint.md",
+      "original_line": 1866,
+      "before": "have fn kth_odd(k Z) Z = 2 * k - 1\n\nthm sum_first_odds:\n    ? forall n Z:\n        n >= 1\n        =>:\n            sum(1, n, kth_odd) = n^2\n    by induc n from 1:\n        ? sum(1, n, kth_odd) = n^2\n\n        ? from n = 1:\n            kth_odd(1) = 2 * 1 - 1 = 1\n            sum(1, 1, kth_odd) = kth_odd(1) = 1 = 1^2\n\n        ? induc:\n            kth_odd(n + 1) = 2 * (n + 1) - 1\n            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2",
+      "after": "have fn kth_odd(k Z) Z = 2 * k - 1\n\nthm sum_first_odds:\n    ? forall n Z:\n        n >= 1\n        =>:\n            sum(1, n, kth_odd) = n^2\n    by induc n from 1:\n        ? sum(1, n, kth_odd) = n^2\n\n        ? from n = 1:\n            kth_odd(1) = 2 * 1 - 1 = 1\n            sum(1, 1, kth_odd) = kth_odd(1) = 1 = 1^2\n\n        ? induc:\n            kth_odd(n + 1) = 2 * (n + 1) - 1\n            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Litex_Blueprint.md",
+      "original_line": 1914,
+      "before": "struct Triple<X set>:\n    first X\n    second X\n    third X\n\ntemplate<X set>:\n    have fn triple(a, b, c X) &Triple<X> = (a, b, c)\n\n\\triple<R>(1, 2, 3) = (1, 2, 3)\n\nhave p &Triple<R> = \\triple<R>(1, 2, 3)\np.first = 1",
+      "after": "struct Triple<X set>:\n    first X\n    second X\n    third X\n\ntemplate<X set>:\n    have fn triple(a, b, c X) &Triple<X> = (a, b, c)\n\n\\triple<R>(1, 2, 3) = (1, 2, 3)\n\nhave p &Triple<R> = \\triple<R>(1, 2, 3)\np.first = 1",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Representative_Lean_Litex_Example_Comparisons.md",
+      "original_line": 299,
+      "before": "prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):\n    forall n N:\n        n >= N0\n        =>:\n            abs(s(n) - a) < epsilon\n\nprop converges_to(s fn(n N) R, a R):\n    forall epsilon R+:\n        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}\n\nthm converges_to_mul_const:\n    ? forall s fn(n N) R, a, c R:\n        $converges_to(s, a)\n        =>:\n            $converges_to(fn(n N) R {c * s(n)}, c * a)\n    claim:\n        ? forall epsilon R+:\n            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}\n        abs(c) + 1 > 0\n        epsilon / (abs(c) + 1) $in R+\n        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}\n        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:\n            forall n N:\n                n >= N0\n                =>:\n                    abs(s(n) - a) < epsilon / (abs(c) + 1)\n                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)\n                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon\n                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon\n            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)\n    by def $converges_to(fn(n N) R {c * s(n)}, c * a)",
+      "after": "prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):\n    forall n N:\n        n >= N0\n        =>:\n            abs(s(n) - a) < epsilon\n\nprop converges_to(s fn(n N) R, a R):\n    forall epsilon R+:\n        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}\n\nthm converges_to_mul_const:\n    ? forall s, scaled fn(n N) R, a, c R:\n        $converges_to(s, a)\n        forall n N:\n            scaled(n) = c * s(n)\n        =>:\n            $converges_to(scaled, c * a)\n    claim:\n        ? forall epsilon R+:\n            exist N0 N st {$is_eventually_close(scaled, c * a, epsilon, N0)}\n        abs(c) >= 0\n        abs(c) + 1 > 0\n        have scale R+ = abs(c) + 1\n        epsilon / scale > 0\n        epsilon / scale $in R+\n        abs(c) <= scale\n        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / scale, K)}\n        witness exist K N st {$is_eventually_close(scaled, c * a, epsilon, K)} from N0:\n            claim:\n                ? forall n N:\n                    n >= N0\n                    =>:\n                        abs(scaled(n) - c * a) < epsilon\n                scaled(n) = c * s(n)\n                abs(s(n) - a) < epsilon / scale\n                abs(s(n) - a) >= 0\n                scaled(n) - c * a = c * s(n) - c * a = c * (s(n) - a)\n                abs(scaled(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)\n                abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a)\n                scale * abs(s(n) - a) < scale * (epsilon / scale) = epsilon\n                abs(scaled(n) - c * a) = abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a) < epsilon\n            by def $is_eventually_close(scaled, c * a, epsilon, N0)\n    by def $converges_to(scaled, c * a)",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Representative_Lean_Litex_Example_Comparisons.md",
+      "original_line": 355,
+      "before": "forall x, y R:\n    2 * x + 3 * y = 10\n    4 * x + 5 * y = 14\n    =>:\n        y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6\n        x = ((2 * x + 3 * y) - 3 * y) / 2 = (-4)",
+      "after": "forall x, y R:\n    2 * x + 3 * y = 10\n    4 * x + 5 * y = 14\n    =>:\n        y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6\n        x = ((2 * x + 3 * y) - 3 * y) / 2 = (-4)",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Representative_Lean_Litex_Example_Comparisons.md",
+      "original_line": 467,
+      "before": "by contra:\n    ? {a N: a % 4 = 0} != {a N: a % 2 = 0}\n    release thm set_builder_member(2, {a N: a % 2 = 0})\n    2 $in {a N: a % 2 = 0}\n    2 $in {a N: a % 4 = 0}\n    impossible 2 % 4 = 0",
+      "after": "have multiples_of_four power_set(N) = {a N: a % 4 = 0}\nhave multiples_of_two power_set(N) = {a N: a % 2 = 0}\nby contra:\n    ? multiples_of_four != multiples_of_two\n    2 $in multiples_of_two\n    2 $in multiples_of_four\n    impossible 2 % 4 = 0",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Representative_Lean_Litex_Example_Comparisons.md",
+      "original_line": 626,
+      "before": "# `$prime(a)` is native. Its symbolic contract is `2 <= a` together with\n# `a % b != 0` for every `b` in `range(2, a)`.\n\nclaim:\n    ? forall a N+:\n        forall n, d N+:\n            d <= n\n            =>:\n                product(1, n, fn(x N+) N+ {x}) % d = 0\n        forall n N+:\n            2 <= n\n            =>:\n                exist k N+ st {$prime(k), n % k = 0}\n        forall n N+:\n            n <= product(1, n, fn(x N+) N+ {x})\n        2 <= a\n        =>:\n            exist k N+ st {k > a, $prime(k)}\n    2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1\n    obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}\n    by cases:\n        ? k > a\n        case k <= a:\n            product(1, a, fn(x N+) N+ {x}) % k = 0\n            2 <= k\n            (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k\n            1 % k = 1\n            (0 + 1) % k = 1 % k = 1\n            (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1\n            (product(1, a, fn(x N+) N+ {x}) + 1) % k != 0\n            impossible (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0\n        case k > a\n    witness exist prime_larger N+ st {prime_larger > a, $prime(prime_larger)} from k",
+      "after": "have fn factorial_factor(x N+) N+ = x\n\n# `$prime(a)` is native. Its symbolic contract is `2 <= a` together with\n# `a % b != 0` for every `b` in `range(2, a)`.\n\nclaim:\n    ? forall a N+:\n        forall n, d N+:\n            d <= n\n            =>:\n                product(1, n, factorial_factor) % d = 0\n        forall n N+:\n            2 <= n\n            =>:\n                exist k N+ st {$prime(k), n % k = 0}\n        forall n N+:\n            n <= product(1, n, factorial_factor)\n        2 <= a\n        =>:\n            exist k N+ st {k > a, $prime(k)}\n    product(1, a, factorial_factor) $in N+\n    product(1, a, factorial_factor) $in R\n    2 <= a <= product(1, a, factorial_factor) <= product(1, a, factorial_factor) + 1\n    product(1, a, factorial_factor) + 1 $in N+\n    2 <= product(1, a, factorial_factor) + 1\n    obtain k from exist k N+ st {$prime(k), (product(1, a, factorial_factor) + 1) % k = 0}\n    by cases:\n        ? k > a\n        case k <= a:\n            product(1, a, factorial_factor) % k = 0\n            2 <= k\n            (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k\n            1 % k = 1\n            (0 + 1) % k = 1 % k = 1\n            (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k = (0 + 1) % k = 1\n            (product(1, a, factorial_factor) + 1) % k != 0\n            impossible (product(1, a, factorial_factor) + 1) % k = 0\n        case k > a\n    witness exist prime_larger N+ st {prime_larger > a, $prime(prime_larger)} from k",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Representative_Lean_Litex_Example_Comparisons.md",
+      "original_line": 732,
+      "before": "prop all_reals_reflexive():\n    forall x R:\n        x = x\n\nby def $all_reals_reflexive()\n\n$all_reals_reflexive() or 1 = 1 and 2 = 2",
+      "after": "prop all_reals_reflexive():\n    forall x R:\n        x = x\n\nby def $all_reals_reflexive()\n\n$all_reals_reflexive() or 1 = 1 and 2 = 2",
+      "baseline_success": true,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Manual.md",
+      "original_line": 686,
+      "before": "witness exist x R st {x^2 = 4} from 2:\n    2^2 = 4\n\nexist! x R st {x = 0}\n\nby contra:\n    ? not exist x R st {x != x}\n    obtain x from exist x R st {x != x}\n    impossible x != x",
+      "after": "witness exist x R st {x^2 = 4} from 2:\n    2^2 = 4\n\nwitness exist! x R st {x = 0} from 0\n\nby contra:\n    ? not exist x R st {x != x}\n    obtain x from exist x R st {x != x}\n    impossible x != x",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Manual.md",
+      "original_line": 9814,
+      "before": "i $in C\ni * i = (-1)\ni^2 = (-1)\ni^4 = 1\ni^(-1) = (-i)\ni $in C*\nnot 0 $in C*\n\nhave w C*\nw $in C\nw != 0\n\nre(3) = 3\nimg(3) = 0\nre(i) = 0\nimg(i) = 1\n\nforall a, b R:\n    re(a + b * i) = a\n    img(a + b * i) = b\n\nforall z C:\n    z = re(z) + img(z) * i\n    C_abs(z) = sqrt(re(z)^2 + img(z)^2)\n    0 <= C_abs(z)",
+      "after": "i $in C\ni * i = (-1)\ni^2 = (-1)\ni^4 = 1\ni^(-1) = (-i)\ni $in C*\nnot 0 $in C*\n\nhave w C*\nw $in C\nw != 0\n\nre(3) = 3\nimg(3) = 0\nre(i) = 0\nimg(i) = 1\n\nforall a, b R:\n    re(a + b * i) = a\n    img(a + b * i) = b\n\nclaim:\n    ? forall z C:\n        z = re(z) + img(z) * i\n        C_abs(z) = sqrt(re(z)^2 + img(z)^2)\n        0 <= C_abs(z)\n    re(z) $in R\n    img(z) $in R\n    z = re(z) + i * img(z) = re(z) + img(z) * i\n    C_abs(z)^2 = C_abs(re(z) + i * img(z))^2 = re(z)^2 + img(z)^2\n    0 <= C_abs(z)\n    re(z)^2 >= 0\n    img(z)^2 >= 0\n    re(z)^2 + img(z)^2 >= 0\n    sqrt(C_abs(z)^2) = C_abs(z)\n    sqrt(re(z)^2 + img(z)^2) = sqrt(C_abs(z)^2) = C_abs(z)",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Manual.md",
+      "original_line": 9949,
+      "before": "have fn A(k {1, 2}) power_set(N) = {1}\n\nA(1) $subset index_union({1, 2}, N, A)\nset_minus(N, index_union({1, 2}, N, A)) = index_intersect({1, 2}, N, fn(k {1, 2}) power_set(N) {set_minus(N, A(k))})\ncart(Z, set_minus(N, {1})) = set_minus(cart(Z, N), cart(Z, {1}))",
+      "after": "have fn A(k {1, 2}) power_set(N) = {1}\n1 $in {1, 2}\nA(1) $in power_set(N)\nA(1) $subset N\nclaim:\n    ? A(1) $subset index_union({1, 2}, N, A)\n    claim:\n        ? forall x A(1):\n            x $in index_union({1, 2}, N, A)\n        x $in N\n        witness exist k {1, 2} st {x $in A(k)} from 1\n        x $in index_union({1, 2}, N, A)\n    by def A(1) $subset index_union({1, 2}, N, A)\n\nhave fn complement(k {1, 2}) power_set(N) = set_minus(N, A(k))\nby extension:\n    ? set_minus(N, index_union({1, 2}, N, A)) = index_intersect({1, 2}, N, complement)\n    claim:\n        ? forall x set_minus(N, index_union({1, 2}, N, A)):\n            x $in index_intersect({1, 2}, N, complement)\n        claim:\n            ? forall k {1, 2}:\n                x $in complement(k)\n            by contra:\n                ? not x $in A(k)\n                witness exist j {1, 2} st {x $in A(j)} from k\n                x $in index_union({1, 2}, N, A)\n                impossible not x $in index_union({1, 2}, N, A)\n            x $in set_minus(N, A(k))\n            complement(k) = set_minus(N, A(k))\n            x $in complement(k)\n        release thm index_intersect_member(x, index_intersect({1, 2}, N, complement))\n    claim:\n        ? forall x index_intersect({1, 2}, N, complement):\n            x $in set_minus(N, index_union({1, 2}, N, A))\n        by contra:\n            ? not x $in index_union({1, 2}, N, A)\n            obtain k from exist k {1, 2} st {x $in A(k)}\n            x $in complement(k)\n            complement(k) = set_minus(N, A(k))\n            x $in set_minus(N, A(k))\n            impossible x $in A(k)\n        x $in set_minus(N, index_union({1, 2}, N, A))\n\nby extension:\n    ? cart(Z, set_minus(N, {1})) = set_minus(cart(Z, N), cart(Z, {1}))\n    claim:\n        ? forall pair cart(Z, set_minus(N, {1})):\n            pair $in set_minus(cart(Z, N), cart(Z, {1}))\n        pair(1) $in Z\n        pair(2) $in set_minus(N, {1})\n        pair(2) $in N\n        release thm cart_member_from_coordinates(pair, cart(Z, N))\n        by contra:\n            ? not pair $in cart(Z, {1})\n            pair(2) $in {1}\n            impossible not pair(2) $in {1}\n        pair $in set_minus(cart(Z, N), cart(Z, {1}))\n    claim:\n        ? forall pair set_minus(cart(Z, N), cart(Z, {1})):\n            pair $in cart(Z, set_minus(N, {1}))\n        pair $in cart(Z, N)\n        pair(1) $in Z\n        pair(2) $in N\n        by contra:\n            ? not pair(2) $in {1}\n            release thm cart_member_from_coordinates(pair, cart(Z, {1}))\n            impossible not pair $in cart(Z, {1})\n        pair(2) $in set_minus(N, {1})\n        release thm cart_member_from_coordinates(pair, cart(Z, set_minus(N, {1})))",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Manual.md",
+      "original_line": 10023,
+      "before": "forall x, y R:\n    abs(x * y) = abs(x) * abs(y)\n    abs(x + y) <= abs(x) + abs(y)\n    abs(x) - abs(y) <= abs(x - y)\n\nforall a, b R:\n    a != 0\n    b != 0\n    =>:\n        a * b != 0\n        a / b != 0\n\nforall a, b, c, d R:\n    a <= b\n    c < d\n    =>:\n        a + c < b + d\n\nforall a, b, c, d R:\n    a <= c\n    b <= d\n    =>:\n        min(a, b) <= min(c, d)\n        max(a, b) <= max(c, d)",
+      "after": "forall x, y R:\n    abs(x * y) = abs(x) * abs(y)\n    abs(x + y) <= abs(x) + abs(y)\n    abs(x) - abs(y) <= abs(x - y)\n\nforall a, b R:\n    a != 0\n    b != 0\n    =>:\n        a * b != 0\n        a / b != 0\n\nforall a, b, c, d R:\n    a <= b\n    c < d\n    =>:\n        a + c < b + d\n\nclaim:\n    ? forall a, b, c, d R:\n        a <= c\n        b <= d\n        =>:\n            min(a, b) <= min(c, d)\n            max(a, b) <= max(c, d)\n    by cases:\n        ? min(a, b) <= min(c, d)\n        case c <= d:\n            min(c, d) = c\n            by cases:\n                ? min(a, b) <= c\n                case a <= b:\n                    min(a, b) = a <= c\n                case a > b:\n                    b <= a\n                    min(a, b) = b < a <= c\n        case c > d:\n            d <= c\n            min(c, d) = d\n            by cases:\n                ? min(a, b) <= d\n                case a <= b:\n                    min(a, b) = a <= b <= d\n                case a > b:\n                    b <= a\n                    min(a, b) = b <= d\n    by cases:\n        ? max(a, b) <= max(c, d)\n        case d <= c:\n            max(c, d) = c\n            by cases:\n                ? max(a, b) <= c\n                case b <= a:\n                    max(a, b) = a <= c\n                case a < b:\n                    a <= b\n                    max(a, b) = b <= d <= c\n        case c < d:\n            c <= d\n            max(c, d) = d\n            by cases:\n                ? max(a, b) <= d\n                case b <= a:\n                    max(a, b) = a <= c < d\n                case a < b:\n                    a <= b\n                    max(a, b) = b <= d",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Manual.md",
+      "original_line": 10274,
+      "before": "forall x, y R:\n    x = y\n    =>:\n        2 * x + 1 = 2 * y + 1\n\nforall a, b R:\n    a <= b\n    b <= a\n    =>:\n        a = b\n\nforall a, b, c R:\n    b != 0\n    a / b = c\n    =>:\n        a = c * b\n\nforall a, b R:\n    a * b = 0\n    a != 0\n    =>:\n        b = 0",
+      "after": "forall x, y R:\n    x = y\n    =>:\n        2 * x + 1 = 2 * y + 1\n\nforall a, b R:\n    a <= b\n    b <= a\n    =>:\n        a = b\n\nclaim:\n    ? forall a, b, c R:\n        b != 0\n        a / b = c\n        =>:\n            a = c * b\n    a = (a / b) * b = c * b\n\nclaim:\n    ? forall a, b R:\n        a * b = 0\n        a != 0\n        =>:\n            b = 0\n    b = (a * b) / a = 0 / a = 0",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Manual.md",
+      "original_line": 10394,
+      "before": "forall x R:\n    0 <= x^2\n    (-x) <= abs(x)\n    x <= abs(x)\n\nforall a, b, c, d R:\n    a <= b\n    c <= d\n    =>:\n        a + c <= b + d\n        a - d <= b - c\n\nforall m, n Z:\n    =>:\n        m <= n\n    <=>:\n        m < n + 1\n\nforall a, b, c R:\n    a < b\n    0 < c\n    =>:\n        a * c < b * c\n        a / c < b / c\n\nforall a, b R+:\n    a < b\n    =>:\n        log(2, a) < log(2, b)",
+      "after": "claim:\n    ? forall x R:\n        0 <= x^2\n        (-x) <= abs(x)\n        x <= abs(x)\n    by cases:\n        ? -x <= abs(x) and x <= abs(x)\n        case x > 0:\n            x $in R+\n            abs(x) = x\n            -x <= 0 <= x = abs(x)\n            x = abs(x)\n        case x = 0:\n            abs(x) = 0\n            -x = 0 = abs(x)\n            x = 0 = abs(x)\n        case x < 0:\n            x $in R-\n            abs(x) = -x\n            x < 0 < -x = abs(x)\n            -x = abs(x)\n\nclaim:\n    ? forall a, b, c, d R:\n        a <= b\n        c <= d\n        =>:\n            a + c <= b + d\n            a - d <= b - c\n    a + c <= b + c <= b + d\n    a - d <= b - d <= b - c\n\nforall m, n Z:\n    =>:\n        m <= n\n    <=>:\n        m < n + 1\n\nforall a, b, c R:\n    a < b\n    0 < c\n    =>:\n        a * c < b * c\n        a / c < b / c\n\nforall a, b R+:\n    a < b\n    =>:\n        log(2, a) < log(2, b)",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Manual.md",
+      "original_line": 10869,
+      "before": "forall a, b R+, x R:\n    (a * b)^x = a^x * b^x",
+      "after": "forall a, b R+, n Z:\n    (a * b)^n = a^n * b^n",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": "arbitrary real-exponent product law is documented, not claimed executable"
+    },
+    {
+      "file": "docs/Manual.md",
+      "original_line": 10994,
+      "before": "have fn mapping_identity(x {1, 2, 3}) {1, 2, 3} = x\n\nforall x1, x2 {1, 2, 3}:\n    mapping_identity(x1) = mapping_identity(x2)\n    =>:\n        x1 = mapping_identity(x1) = mapping_identity(x2) = x2\nby def $injective({1, 2, 3}, {1, 2, 3}, mapping_identity)\n\nclaim:\n    ? forall y {1, 2, 3}:\n        exist x {1, 2, 3} st {y = mapping_identity(x)}\n    y = mapping_identity(y)\n    witness exist x {1, 2, 3} st {y = mapping_identity(x)} from y\nby def $surjective({1, 2, 3}, {1, 2, 3}, mapping_identity)\nby def $bijective({1, 2, 3}, {1, 2, 3}, mapping_identity)\n\nfinite_set_size(fn_range(mapping_identity)) = finite_set_size({1, 2, 3})",
+      "after": "have fn mapping_identity(x {1, 2, 3}) {1, 2, 3} = x\n\nforall x1, x2 {1, 2, 3}:\n    mapping_identity(x1) = mapping_identity(x2)\n    =>:\n        x1 = mapping_identity(x1) = mapping_identity(x2) = x2\n        x1 = x2\nby def $injective({1, 2, 3}, {1, 2, 3}, mapping_identity)\n\nclaim:\n    ? forall y {1, 2, 3}:\n        exist x {1, 2, 3} st {y = mapping_identity(x)}\n    y = mapping_identity(y)\n    witness exist x {1, 2, 3} st {y = mapping_identity(x)} from y\nby def $surjective({1, 2, 3}, {1, 2, 3}, mapping_identity)\nby def $bijective({1, 2, 3}, {1, 2, 3}, mapping_identity)\n\nby extension:\n    ? fn_range(mapping_identity) = {1, 2, 3}\n    claim:\n        ? forall y fn_range(mapping_identity):\n            y $in {1, 2, 3}\n    claim:\n        ? forall y {1, 2, 3}:\n            y $in fn_range(mapping_identity)\n        mapping_identity(y) = y\n        mapping_identity(y) $in fn_range(mapping_identity)\n$is_finite_set({1, 2, 3})\n$is_finite_set(fn_range(mapping_identity))\nfinite_set_size(fn_range(mapping_identity)) = finite_set_size({1, 2, 3})",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Manual.md",
+      "original_line": 11029,
+      "before": "by def {1} $subset {1, 2}\n\nforall B set, A power_set(B), x A:\n    x $in B\n\nclaim:\n    ? forall A, B set:\n        A $subset B\n        A != B\n        =>:\n            A $proper_subset B\n            B $proper_superset A\n    by def A $proper_subset B\n    by def B $proper_superset A\n\nby def $fn_eq(fn(x R) R {x}, fn(y R) R {y})",
+      "after": "by def {1} $subset {1, 2}\n\nforall B set, A power_set(B), x A:\n    x $in B\n\nclaim:\n    ? forall A, B set:\n        A $subset B\n        A != B\n        =>:\n            A $proper_subset B\n            B $proper_superset A\n    by def A $proper_subset B\n    by def B $proper_superset A\n\nhave fn identity(x R) R = x\nhave fn same_identity(y R) R = y\nby fn_extension:\n    ? identity = same_identity\n    forall t R:\n        identity(t) = t = same_identity(t)\n        identity(t) = same_identity(t)",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    },
+    {
+      "file": "docs/Manual.md",
+      "original_line": 11099,
+      "before": "forall epsilon R+:\n    exist n N+ st {1 / n < epsilon}\n\nforall a, b R:\n    a < b\n    =>:\n        exist q Q st {a < q < b}\n        exist r R st {a < r < b}\n\nforall a, b R:\n    a < b\n    b - a > 1\n    =>:\n        exist c Z st {a < c < b}\n\nforall a Z, d N+:\n    exist! q Z st {a = d * q + a % d}",
+      "after": "claim:\n    ? forall epsilon R+:\n        exist n N+ st {1 / n < epsilon}\n    release thm real_archimedean_natural_upper_bound(1 / epsilon)\n    obtain bound from exist n N+ st {1 / epsilon < n}\n    bound $in R+\n    1 = (1 / epsilon) * epsilon < bound * epsilon\n    1 / bound < (bound * epsilon) / bound = epsilon\n    witness exist n N+ st {1 / n < epsilon} from bound\n\nclaim:\n    ? forall a, b R:\n        a < b\n        =>:\n            exist q Q st {a < q < b}\n            exist r R st {a < r < b}\n    release thm rational_between_reals(a, b)\n    obtain middle from exist q Q st {a < q and q < b}\n    witness exist q Q st {a < q < b} from middle\n    witness exist r R st {a < r < b} from middle\n\nclaim:\n    ? forall a, b R:\n        a < b\n        b - a > 1\n        =>:\n            exist c Z st {a < c < b}\n    floor(a) <= a\n    a < floor(a) + 1\n    floor(a) + 1 <= a + 1\n    a + 1 < a + (b - a) = b\n    witness exist c Z st {a < c < b} from floor(a) + 1\n\nclaim:\n    ? forall a Z, d N+:\n        exist! q Z st {a = d * q + a % d}\n    claim:\n        ? forall x, y Z:\n            a = d * x + a % d\n            a = d * y + a % d\n            =>:\n                x = y\n        d * x = a - a % d = d * y\n        x = (d * x) / d = (d * y) / d = y\n    witness exist! q Z st {a = d * q + a % d} from quot(a, d)",
+      "baseline_success": false,
+      "current_success": true,
+      "math_boundary": null
+    }
+  ]
+}

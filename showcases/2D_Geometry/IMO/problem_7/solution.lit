@@ -150,7 +150,7 @@ thm closed_chain_has_zero_sine_sum:
         by induc m from 0:
             ? $prefix_is_vertical_displacement(m)
 
-            # NL: Base case: m=0, weighted_prefix = 0 and p(1)[2] - p(1)[2] = 0
+            # NL: Base case: m=0, weighted_prefix = 0 and p(1)(2) - p(1)(2) = 0
             ? from m = 0:
                 claim:
                     ? forall:
@@ -161,7 +161,7 @@ thm closed_chain_has_zero_sine_sum:
                     # NL: By definition, weighted_prefix(a, n, 0) = 0
                     weighted_prefix(a, n, 0) = 0
                     0 + 1 = 1
-                    # NL: p(1)[2] - p(1)[2] = 0
+                    # NL: p(1)(2) - p(1)(2) = 0
                     p(0 + 1)(2) - p(1)(2) = p(1)(2) - p(1)(2)
                     p(1)(2) - p(1)(2) = 0
                     weighted_prefix(a, n, 0) = p(0 + 1)(2) - p(1)(2)
@@ -181,7 +181,7 @@ thm closed_chain_has_zero_sine_sum:
                     m <= m + 1
                     m <= n
                     by thm natural_successor_positive_7(m)
-                    # NL: By IH, weighted_prefix(a,n,m) = p(m+1)[2] - p(1)[2]
+                    # NL: By IH, weighted_prefix(a,n,m) = p(m+1)(2) - p(1)(2)
                     by def:
                         ? $prefix_is_vertical_displacement(m)
                     weighted_prefix(a, n, m) = p(m + 1)(2) - p(1)(2)
@@ -192,7 +192,7 @@ thm closed_chain_has_zero_sine_sum:
                     # NL: Substitute IH into the sum
                     weighted_prefix(a, n, m) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n) = (p(m + 1)(2) - p(1)(2)) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)
                     weighted_prefix(a, n, m + 1) = (p(m + 1)(2) - p(1)(2)) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)
-                    # NL: By chain recurrence, p(m+2)[2] = p(m+1)[2] + a(m+1)·sin((2(m+1)-1)π/n)
+                    # NL: By chain recurrence, p(m+2)(2) = p(m+1)(2) + a(m+1)·sin((2(m+1)-1)π/n)
                     p(m + 1 + 1)(2) = p(m + 1)(2) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)
                     p(m + 1 + 1)(2) - p(1)(2) = (p(m + 1)(2) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)) - p(1)(2)
                     # NL: Distribute subtraction
@@ -203,7 +203,7 @@ thm closed_chain_has_zero_sine_sum:
 
     # NL: Instantiate the predicate at m=n to extract the equality
     $prefix_is_vertical_displacement(n)
-    # NL: This yields: forall: n≤n =>: weighted_prefix(a,n,n) = p(n+1)[2]-p(1)[2]
+    # NL: This yields: forall: n≤n =>: weighted_prefix(a,n,n) = p(n+1)(2)-p(1)(2)
     n <= n
     weighted_prefix(a, n, n) = p(n + 1)(2) - p(1)(2)
     # NL: By closure condition, p(n+1) = p(1)

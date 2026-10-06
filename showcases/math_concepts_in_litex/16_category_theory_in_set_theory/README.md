@@ -69,7 +69,7 @@ The ideal mathematical notation says that `Hom(A, B)` is a set for every pair
 of objects. Litex does not use an unrestricted "set of all sets" as a function
 codomain, so the interface supplies one ambient set `Mor` of arrow encodings:
 
-```litex
+```text
 Hom fn(hom_source, hom_target Obj) power_set(Mor)
 ```
 
@@ -181,3 +181,7 @@ composition, and a concrete terminal-category consumer. It does not define:
 The public Litex file contains no direct `trust`, global `axiom`, or
 `abstract_prop`. The Lean file is handwritten comparison material; it was not revalidated
 in this migration.
+
+## Current callable interfaces
+
+The identity-component lemma accepts a named function with its exact pointwise identity specification. The identity natural transformation theorem constructs that function and proves the specification before using the lemma.

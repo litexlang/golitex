@@ -1,3 +1,9 @@
+# Historical design record
+
+This record describes an earlier struct-backed `setting` design. The current
+release has removed that syntax; see README.md and math_collections.md for the
+actual two exported presentations. Its snippets are historical excerpts.
+
 # Struct-backed Setting acceptance
 
 ## Reader-visible contract
@@ -15,7 +21,7 @@ flattened every operation and repeated the algebraic laws, while its struct
 branch stored the field again inside each vector-space record. The following
 is historical design evidence, not current executable Litex:
 
-```litex
+```text
 # struct VectorSpace<K nonempty_set, V nonempty_set>:
 #     field &Field<K>
 #     zero V
@@ -41,7 +47,7 @@ obligation for linear maps.
 The scalar field is fixed in the struct carrier itself, and Settings bind the
 resulting declaration-typed values:
 
-```litex
+```text
 struct VectorSpace<K nonempty_set, field &Field<K>, V nonempty_set>:
     zero V
     add fn(x, y V) V
@@ -84,7 +90,7 @@ setting LinearMapSetting([VectorSpacesSetting], T fn(v V) W):
 The Setting-facing tracer in `main2.lit` exercises the complete route from a
 Setting expansion to struct fields and an existing theorem:
 
-```litex
+```text
 thm setting_linear_map_sends_zero_to_zero:
     ? forall [LinearMapSetting]:
         T(source.zero) = target.zero

@@ -21,7 +21,7 @@ complete file and its actual standalone module entry. Probability theory
 under `17_probability_theory` remains a draft without a published Litex entry.
 Lean analogies are outside these Litex verification results.
 
-The current public Litex sources contain 690 `release thm` calls, no executable
+The current public Litex sources contain 710 `release thm` calls, no executable
 `by thm`, no direct `trust`, and no axioms. Exact source hashes, verification
 commands, and scope boundaries are recorded in
 [`和showcase有关.md`](../../plan/迁移的plan/和showcase有关.md), the
@@ -39,7 +39,7 @@ The usual project artifacts are:
 - `litex.config`: the standalone module entry;
 - `README.md`: scope, run command, and trust boundary;
 - `math_collections.md`: the concept/interface inventory; and
-- `same_math_in_lean.lean`: a handwritten Lean analogy of the same semantics.
+- `same_math_in_lean.lean`, when provided: a separate handwritten Lean analogy.
 
 | No. | Project | Main line / flagship |
 | ---: | --- | --- |
@@ -133,3 +133,9 @@ Algebraic geometry, homological algebra, representation theory, model theory,
 and universal algebra are explicit collection non-goals. Empty placeholder
 modules are not created for future subjects; their boundaries live here until
 there is a checked vertical slice to publish.
+
+Current-src acceptance (2026-10-06): all 27 public showcase modules and 21
+file checks pass strict verification (48/48), including the complete geometry
+library and nine IMO solution packages. See the
+[current acceptance](experience/problem_notes/current-cli-migration-acceptance-2026-10-06.md).
+Lean comparisons are excluded from this Litex result.

@@ -683,14 +683,11 @@ Put additional conditions inside `st { ... }`, or write a separate fact on
 the next line. The enclosing `witness exist ... from ...` form still consumes
 its own `from` clause after the existential.
 
-> **Migration example:** This retained block fails at `search_proof` in the current checker; it is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 witness exist x R st {x^2 = 4} from 2:
     2^2 = 4
 
-exist! x R st {x = 0}
+witness exist! x R st {x = 0} from 0
 
 by contra:
     ? not exist x R st {x != x}
@@ -9811,9 +9808,6 @@ In particular, `arccot(-1)` uses `3*pi/4` in `(0,pi)`.
 
 ### Complex symbolic calculation and coordinate laws
 
-> **Migration example:** This retained block fails at `search_proof` in the current checker; it is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 i $in C
 i * i = (-1)
@@ -9836,10 +9830,21 @@ forall a, b R:
     re(a + b * i) = a
     img(a + b * i) = b
 
-forall z C:
-    z = re(z) + img(z) * i
-    C_abs(z) = sqrt(re(z)^2 + img(z)^2)
+claim:
+    ? forall z C:
+        z = re(z) + img(z) * i
+        C_abs(z) = sqrt(re(z)^2 + img(z)^2)
+        0 <= C_abs(z)
+    re(z) $in R
+    img(z) $in R
+    z = re(z) + i * img(z) = re(z) + img(z) * i
+    C_abs(z)^2 = C_abs(re(z) + i * img(z))^2 = re(z)^2 + img(z)^2
     0 <= C_abs(z)
+    re(z)^2 >= 0
+    img(z)^2 >= 0
+    re(z)^2 + img(z)^2 >= 0
+    sqrt(C_abs(z)^2) = C_abs(z)
+    sqrt(re(z)^2 + img(z)^2) = sqrt(C_abs(z)^2) = C_abs(z)
 ```
 
 Equality calculation also has a bounded exact complex-algebraic mode. It uses
@@ -9946,15 +9951,77 @@ definitions are installed for these identities.
 
 For example:
 
-> **Migration example:** This retained block fails at `search_proof` in the current checker; it is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 have fn A(k {1, 2}) power_set(N) = {1}
+1 $in {1, 2}
+A(1) $in power_set(N)
+A(1) $subset N
+claim:
+    ? A(1) $subset index_union({1, 2}, N, A)
+    claim:
+        ? forall x A(1):
+            x $in index_union({1, 2}, N, A)
+        x $in N
+        witness exist k {1, 2} st {x $in A(k)} from 1
+        x $in index_union({1, 2}, N, A)
+    by def A(1) $subset index_union({1, 2}, N, A)
 
-A(1) $subset index_union({1, 2}, N, A)
-set_minus(N, index_union({1, 2}, N, A)) = index_intersect({1, 2}, N, fn(k {1, 2}) power_set(N) {set_minus(N, A(k))})
-cart(Z, set_minus(N, {1})) = set_minus(cart(Z, N), cart(Z, {1}))
+have fn complement(k {1, 2}) power_set(N) = set_minus(N, A(k))
+by extension:
+    ? set_minus(N, index_union({1, 2}, N, A)) = index_intersect({1, 2}, N, complement)
+    claim:
+        ? forall x set_minus(N, index_union({1, 2}, N, A)):
+            x $in index_intersect({1, 2}, N, complement)
+        claim:
+            ? forall k {1, 2}:
+                x $in complement(k)
+            by contra:
+                ? not x $in A(k)
+                witness exist j {1, 2} st {x $in A(j)} from k
+                x $in index_union({1, 2}, N, A)
+                impossible not x $in index_union({1, 2}, N, A)
+            x $in set_minus(N, A(k))
+            complement(k) = set_minus(N, A(k))
+            x $in complement(k)
+        release thm index_intersect_member(x, index_intersect({1, 2}, N, complement))
+    claim:
+        ? forall x index_intersect({1, 2}, N, complement):
+            x $in set_minus(N, index_union({1, 2}, N, A))
+        by contra:
+            ? not x $in index_union({1, 2}, N, A)
+            obtain k from exist k {1, 2} st {x $in A(k)}
+            x $in complement(k)
+            complement(k) = set_minus(N, A(k))
+            x $in set_minus(N, A(k))
+            impossible x $in A(k)
+        x $in set_minus(N, index_union({1, 2}, N, A))
+
+by extension:
+    ? cart(Z, set_minus(N, {1})) = set_minus(cart(Z, N), cart(Z, {1}))
+    claim:
+        ? forall pair cart(Z, set_minus(N, {1})):
+            pair $in set_minus(cart(Z, N), cart(Z, {1}))
+        pair(1) $in Z
+        pair(2) $in set_minus(N, {1})
+        pair(2) $in N
+        release thm cart_member_from_coordinates(pair, cart(Z, N))
+        by contra:
+            ? not pair $in cart(Z, {1})
+            pair(2) $in {1}
+            impossible not pair(2) $in {1}
+        pair $in set_minus(cart(Z, N), cart(Z, {1}))
+    claim:
+        ? forall pair set_minus(cart(Z, N), cart(Z, {1})):
+            pair $in cart(Z, set_minus(N, {1}))
+        pair $in cart(Z, N)
+        pair(1) $in Z
+        pair(2) $in N
+        by contra:
+            ? not pair(2) $in {1}
+            release thm cart_member_from_coordinates(pair, cart(Z, {1}))
+            impossible not pair $in cart(Z, {1})
+        pair(2) $in set_minus(N, {1})
+        release thm cart_member_from_coordinates(pair, cart(Z, set_minus(N, {1})))
 ```
 
 The matcher keeps one-way laws one-way. In particular, an indexed union of
@@ -10020,9 +10087,6 @@ together.
 
 These are executable instances of four different groups:
 
-> **Migration example:** This retained block fails at `search_proof` in the current checker; it is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 forall x, y R:
     abs(x * y) = abs(x) * abs(y)
@@ -10042,12 +10106,55 @@ forall a, b, c, d R:
     =>:
         a + c < b + d
 
-forall a, b, c, d R:
-    a <= c
-    b <= d
-    =>:
-        min(a, b) <= min(c, d)
-        max(a, b) <= max(c, d)
+claim:
+    ? forall a, b, c, d R:
+        a <= c
+        b <= d
+        =>:
+            min(a, b) <= min(c, d)
+            max(a, b) <= max(c, d)
+    by cases:
+        ? min(a, b) <= min(c, d)
+        case c <= d:
+            min(c, d) = c
+            by cases:
+                ? min(a, b) <= c
+                case a <= b:
+                    min(a, b) = a <= c
+                case a > b:
+                    b <= a
+                    min(a, b) = b < a <= c
+        case c > d:
+            d <= c
+            min(c, d) = d
+            by cases:
+                ? min(a, b) <= d
+                case a <= b:
+                    min(a, b) = a <= b <= d
+                case a > b:
+                    b <= a
+                    min(a, b) = b <= d
+    by cases:
+        ? max(a, b) <= max(c, d)
+        case d <= c:
+            max(c, d) = c
+            by cases:
+                ? max(a, b) <= c
+                case b <= a:
+                    max(a, b) = a <= c
+                case a < b:
+                    a <= b
+                    max(a, b) = b <= d <= c
+        case c < d:
+            c <= d
+            max(c, d) = d
+            by cases:
+                ? max(a, b) <= d
+                case b <= a:
+                    max(a, b) = a <= c < d
+                case a < b:
+                    a <= b
+                    max(a, b) = b <= d
 ```
 
 For example, `a / b != 0` above is not obtained from the multiplication rule
@@ -10271,9 +10378,6 @@ aggregate, and remainder rows.
 | Functions and materialized definitions | Application equations, alpha-equivalent anonymous functions, `by fn_extension` / pointwise forall, same-signature function-set equality, and equality of materialized template or struct values when their resolved objects agree. |
 | Finite aggregates and reductions | Empty, singleton, endpoint, split, insertion/removal, distribution, congruence, and supported reindexing rules described under [Powers, logarithms, sums, products, and remainder](#powers-logarithms-sums-products-and-remainder). |
 
-> **Migration example:** This retained block fails at `search_proof` in the current checker; it is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 forall x, y R:
     x = y
@@ -10286,17 +10390,21 @@ forall a, b R:
     =>:
         a = b
 
-forall a, b, c R:
-    b != 0
-    a / b = c
-    =>:
-        a = c * b
+claim:
+    ? forall a, b, c R:
+        b != 0
+        a / b = c
+        =>:
+            a = c * b
+    a = (a / b) * b = c * b
 
-forall a, b R:
-    a * b = 0
-    a != 0
-    =>:
-        b = 0
+claim:
+    ? forall a, b R:
+        a * b = 0
+        a != 0
+        =>:
+            b = 0
+    b = (a * b) / a = 0 / a = 0
 ```
 
 Structural equality is recursive but bounded. Matching constructors descend
@@ -10391,21 +10499,38 @@ For checked mathematics-first examples, use
 immediate matching from explicit equality transport and composition, including
 the saved weak-difference orientation and subtraction-from-zero forms.
 
-> **Migration example:** This retained block fails at `search_proof` in the current checker; it is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
-forall x R:
-    0 <= x^2
-    (-x) <= abs(x)
-    x <= abs(x)
+claim:
+    ? forall x R:
+        0 <= x^2
+        (-x) <= abs(x)
+        x <= abs(x)
+    by cases:
+        ? -x <= abs(x) and x <= abs(x)
+        case x > 0:
+            x $in R+
+            abs(x) = x
+            -x <= 0 <= x = abs(x)
+            x = abs(x)
+        case x = 0:
+            abs(x) = 0
+            -x = 0 = abs(x)
+            x = 0 = abs(x)
+        case x < 0:
+            x $in R-
+            abs(x) = -x
+            x < 0 < -x = abs(x)
+            -x = abs(x)
 
-forall a, b, c, d R:
-    a <= b
-    c <= d
-    =>:
-        a + c <= b + d
-        a - d <= b - c
+claim:
+    ? forall a, b, c, d R:
+        a <= b
+        c <= d
+        =>:
+            a + c <= b + d
+            a - d <= b - c
+    a + c <= b + c <= b + d
+    a - d <= b - d <= b - c
 
 forall m, n Z:
     =>:
@@ -10863,18 +10988,27 @@ including symbolic `n`; both exponent guards are retained as requirements. See t
 
 
 Mathematically, a real exponent distributes over positive real factors in
-either equality direction. The direct real-exponent proof route remains a
-migration boundary:
+either equality direction. The current symbolic proof interface distinguishes integer and real exponents:
 
-> **Migration example:** This retained block fails at `search_proof` in the current checker; it is not a verified result.
+The symbolic product-power leaf checks integer exponents on positive real
+bases. This supported instance verifies:
 
-<!-- litex:skip-test -->
 ```litex
+forall a, b R+, n Z:
+    (a * b)^n = a^n * b^n
+```
+
+For an arbitrary real exponent, the mathematical identity remains:
+
+```text
 forall a, b R+, x R:
     (a * b)^x = a^x * b^x
 ```
 
-Positivity is required for this mathematical law. The retained example does
+This real-exponent form remains outside the current automatic symbolic rule.
+It is a mathematical boundary example, not an executable proof claim.
+
+Positivity is required for this mathematical law. The real-exponent mathematical form does
 not establish a checked automatic rule for arbitrary real exponents.
 
 Aggregate rules consume the displayed function and index shape. They do not
@@ -10991,9 +11125,6 @@ reduces to compatible function interfaces and pointwise equality.
 Here the definition proofs register the mapping facts, after which the
 cardinality rules consume them directly:
 
-> **Migration example:** This retained block fails at `by_def` in the current checker; it is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 have fn mapping_identity(x {1, 2, 3}) {1, 2, 3} = x
 
@@ -11001,6 +11132,7 @@ forall x1, x2 {1, 2, 3}:
     mapping_identity(x1) = mapping_identity(x2)
     =>:
         x1 = mapping_identity(x1) = mapping_identity(x2) = x2
+        x1 = x2
 by def $injective({1, 2, 3}, {1, 2, 3}, mapping_identity)
 
 claim:
@@ -11011,6 +11143,18 @@ claim:
 by def $surjective({1, 2, 3}, {1, 2, 3}, mapping_identity)
 by def $bijective({1, 2, 3}, {1, 2, 3}, mapping_identity)
 
+by extension:
+    ? fn_range(mapping_identity) = {1, 2, 3}
+    claim:
+        ? forall y fn_range(mapping_identity):
+            y $in {1, 2, 3}
+    claim:
+        ? forall y {1, 2, 3}:
+            y $in fn_range(mapping_identity)
+        mapping_identity(y) = y
+        mapping_identity(y) $in fn_range(mapping_identity)
+$is_finite_set({1, 2, 3})
+$is_finite_set(fn_range(mapping_identity))
 finite_set_size(fn_range(mapping_identity)) = finite_set_size({1, 2, 3})
 ```
 
@@ -11026,9 +11170,6 @@ universal-membership facts may still compose several ordinary proof steps.
 This rule only answers membership goals; it does not rewrite an order goal
 such as `0 < x` into membership in a positive-number set.
 
-> **Migration example:** This retained block still fails at `parse` in the current checker; it is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 by def {1} $subset {1, 2}
 
@@ -11045,7 +11186,13 @@ claim:
     by def A $proper_subset B
     by def B $proper_superset A
 
-by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
+have fn identity(x R) R = x
+have fn same_identity(y R) R = y
+by fn_extension:
+    ? identity = same_identity
+    forall t R:
+        identity(t) = t = same_identity(t)
+        identity(t) = same_identity(t)
 ```
 
 `$fn_eq` and `$fn_eq_in` are removed. The mapping predicates `$injective`,
@@ -11096,27 +11243,52 @@ rule target.
 > `f_choice(alpha) $in g_choice(alpha)` becomes `1 $in {1}` without first
 > storing the pointwise equalities.
 
-> **Migration example:** This retained block fails at `search_proof` in the current checker; it is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
-forall epsilon R+:
-    exist n N+ st {1 / n < epsilon}
+claim:
+    ? forall epsilon R+:
+        exist n N+ st {1 / n < epsilon}
+    release thm real_archimedean_natural_upper_bound(1 / epsilon)
+    obtain bound from exist n N+ st {1 / epsilon < n}
+    bound $in R+
+    1 = (1 / epsilon) * epsilon < bound * epsilon
+    1 / bound < (bound * epsilon) / bound = epsilon
+    witness exist n N+ st {1 / n < epsilon} from bound
 
-forall a, b R:
-    a < b
-    =>:
-        exist q Q st {a < q < b}
-        exist r R st {a < r < b}
+claim:
+    ? forall a, b R:
+        a < b
+        =>:
+            exist q Q st {a < q < b}
+            exist r R st {a < r < b}
+    release thm rational_between_reals(a, b)
+    obtain middle from exist q Q st {a < q and q < b}
+    witness exist q Q st {a < q < b} from middle
+    witness exist r R st {a < r < b} from middle
 
-forall a, b R:
-    a < b
-    b - a > 1
-    =>:
-        exist c Z st {a < c < b}
+claim:
+    ? forall a, b R:
+        a < b
+        b - a > 1
+        =>:
+            exist c Z st {a < c < b}
+    floor(a) <= a
+    a < floor(a) + 1
+    floor(a) + 1 <= a + 1
+    a + 1 < a + (b - a) = b
+    witness exist c Z st {a < c < b} from floor(a) + 1
 
-forall a Z, d N+:
-    exist! q Z st {a = d * q + a % d}
+claim:
+    ? forall a Z, d N+:
+        exist! q Z st {a = d * q + a % d}
+    claim:
+        ? forall x, y Z:
+            a = d * x + a % d
+            a = d * y + a % d
+            =>:
+                x = y
+        d * x = a - a % d = d * y
+        x = (d * x) / d = (d * y) / d = y
+    witness exist! q Z st {a = d * q + a % d} from quot(a, d)
 ```
 
 Outside those canonical builtin shapes, ordinary existential proof routes

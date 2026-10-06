@@ -296,9 +296,6 @@ theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ)
 The Litex proof chooses `epsilon / (abs(c) + 1)`. Since the denominator is
 always positive, one estimate covers both `c = 0` and `c != 0`.
 
-> **Migration example:** Current `src/` checking stops at `def_thm` (`thm`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
     forall n N:
@@ -311,26 +308,38 @@ prop converges_to(s fn(n N) R, a R):
         exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
 
 thm converges_to_mul_const:
-    ? forall s fn(n N) R, a, c R:
+    ? forall s, scaled fn(n N) R, a, c R:
         $converges_to(s, a)
+        forall n N:
+            scaled(n) = c * s(n)
         =>:
-            $converges_to(fn(n N) R {c * s(n)}, c * a)
+            $converges_to(scaled, c * a)
     claim:
         ? forall epsilon R+:
-            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+            exist N0 N st {$is_eventually_close(scaled, c * a, epsilon, N0)}
+        abs(c) >= 0
         abs(c) + 1 > 0
-        epsilon / (abs(c) + 1) $in R+
-        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
-        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
-            forall n N:
-                n >= N0
-                =>:
-                    abs(s(n) - a) < epsilon / (abs(c) + 1)
-                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
-                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
-                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
-            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
-    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
+        have scale R+ = abs(c) + 1
+        epsilon / scale > 0
+        epsilon / scale $in R+
+        abs(c) <= scale
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / scale, K)}
+        witness exist K N st {$is_eventually_close(scaled, c * a, epsilon, K)} from N0:
+            claim:
+                ? forall n N:
+                    n >= N0
+                    =>:
+                        abs(scaled(n) - c * a) < epsilon
+                scaled(n) = c * s(n)
+                abs(s(n) - a) < epsilon / scale
+                abs(s(n) - a) >= 0
+                scaled(n) - c * a = c * s(n) - c * a = c * (s(n) - a)
+                abs(scaled(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a)
+                scale * abs(s(n) - a) < scale * (epsilon / scale) = epsilon
+                abs(scaled(n) - c * a) = abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a) < epsilon
+            by def $is_eventually_close(scaled, c * a, epsilon, N0)
+    by def $converges_to(scaled, c * a)
 ```
 
 Both proofs use the same core idea: obtain a tail bound for a smaller positive
@@ -352,9 +361,6 @@ Litex treats a chain as one factual statement. For a two-equation system, the
 intermediate expressions can be written in the same order as a handwritten
 calculation:
 
-> **Migration example:** Current `src/` checking stops at `search_proof` (`forall x, y R:`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 forall x, y R:
     2 * x + 3 * y = 10
@@ -464,15 +470,13 @@ logical argument.
 To show that the multiples of `4` are not the even natural numbers, `2` is the
 decisive counterexample:
 
-> **Migration example:** Current `src/` checking stops at `by_contra` (`by contradiction`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
+have multiples_of_four power_set(N) = {a N: a % 4 = 0}
+have multiples_of_two power_set(N) = {a N: a % 2 = 0}
 by contra:
-    ? {a N: a % 4 = 0} != {a N: a % 2 = 0}
-    release thm set_builder_member(2, {a N: a % 2 = 0})
-    2 $in {a N: a % 2 = 0}
-    2 $in {a N: a % 4 = 0}
+    ? multiples_of_four != multiples_of_two
+    2 $in multiples_of_two
+    2 $in multiples_of_four
     impossible 2 % 4 = 0
 ```
 
@@ -623,10 +627,9 @@ Both systems can express Euclid's argument in the following form:
 The Litex claim places the background lemmas in its premise and keeps the main
 argument as a direct proof spine:
 
-> **Migration example:** Current `src/` checking stops at `claim` (`claim`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
+have fn factorial_factor(x N+) N+ = x
+
 # `$prime(a)` is native. Its symbolic contract is `2 <= a` together with
 # `a % b != 0` for every `b` in `range(2, a)`.
 
@@ -635,29 +638,33 @@ claim:
         forall n, d N+:
             d <= n
             =>:
-                product(1, n, fn(x N+) N+ {x}) % d = 0
+                product(1, n, factorial_factor) % d = 0
         forall n N+:
             2 <= n
             =>:
                 exist k N+ st {$prime(k), n % k = 0}
         forall n N+:
-            n <= product(1, n, fn(x N+) N+ {x})
+            n <= product(1, n, factorial_factor)
         2 <= a
         =>:
             exist k N+ st {k > a, $prime(k)}
-    2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1
-    obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}
+    product(1, a, factorial_factor) $in N+
+    product(1, a, factorial_factor) $in R
+    2 <= a <= product(1, a, factorial_factor) <= product(1, a, factorial_factor) + 1
+    product(1, a, factorial_factor) + 1 $in N+
+    2 <= product(1, a, factorial_factor) + 1
+    obtain k from exist k N+ st {$prime(k), (product(1, a, factorial_factor) + 1) % k = 0}
     by cases:
         ? k > a
         case k <= a:
-            product(1, a, fn(x N+) N+ {x}) % k = 0
+            product(1, a, factorial_factor) % k = 0
             2 <= k
-            (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k
+            (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k
             1 % k = 1
             (0 + 1) % k = 1 % k = 1
-            (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            (product(1, a, fn(x N+) N+ {x}) + 1) % k != 0
-            impossible (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0
+            (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k = (0 + 1) % k = 1
+            (product(1, a, factorial_factor) + 1) % k != 0
+            impossible (product(1, a, factorial_factor) + 1) % k = 0
         case k > a
     witness exist prime_larger N+ st {prime_larger > a, $prime(prime_larger)} from k
 ```
@@ -729,9 +736,6 @@ The current parser requires a nonempty `prop` parameter list. The closed,
 zero-argument predicate below is retained as an intended interface, not
 working syntax. Use a predicate with real mathematical parameters in current code.
 
-> **Migration example:** Current `src/` checking stops at `parse_error: expected at least one parameter inside (...)`. This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 prop all_reals_reflexive():
     forall x R:

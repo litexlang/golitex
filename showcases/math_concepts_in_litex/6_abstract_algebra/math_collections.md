@@ -29,7 +29,7 @@ future sections of this module.
 ## Modeling conventions
 
 The carrier and operations are supplied explicitly. Candidate structures are
-relations; reusable theorem contexts are named settings. Existing builtin
+relations; reusable theorem contexts are ordinary context predicates. Existing builtin
 sets, functions, equality, and function application remain the underlying
 objects. No parallel arithmetic or container interface is introduced.
 
@@ -55,10 +55,10 @@ objects. No parallel arithmetic or container interface is introduced.
 
 - **Ordinary meaning:** work uniformly in an arbitrary supplied group.
 - **Semantic role:** Reusable universal theorem context.
-- **Ideal Litex form:** `setting GroupSetting(...)` carrying the group
-  parameters and laws, with `prop is_group([GroupSetting])` reusing that
+- **Ideal Litex form:** `prop GroupSetting(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A)` carrying the group
+  parameters and laws, with `prop is_group(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A)` reusing that
   bundle as the definition-facing interface.
-- **Interface sketch:** `forall [GroupSetting], a A: ...`.
+- **Interface sketch:** the explicitly quantified carriers, operations, and context-predicate premises.
 - **Nearest wrong alternative:** Repeating every carrier, operation, and law
   in every theorem obscures the mathematical statement.
 - **Dependencies:** Candidate group structure.
@@ -73,8 +73,7 @@ objects. No parallel arithmetic or container interface is introduced.
 - **Ordinary meaning:** a supplied function between two groups preserves
   multiplication.
 - **Semantic role:** Relation between supplied group data and a function.
-- **Ideal Litex form:** `prop is_group_homomorphism([GroupSetting(A, ...)],
-  [GroupSetting(B, ...)], f ...)`, consumed through a
+- **Ideal Litex form:** `prop is_group_homomorphism(A nonempty_set, mul_A fn(x, y A) A, one_A A, inv_A fn(x A) A, B nonempty_set, mul_B fn(x, y B) B, one_B B, inv_B fn(x B) B, f fn(x A) B)`, consumed through a
   `GroupHomomorphismSetting`.
 - **Interface sketch:** the two setting bundles contribute the group laws;
   the relation and theorem setting each add only
@@ -94,8 +93,8 @@ objects. No parallel arithmetic or container interface is introduced.
 - **Semantic role:** `is_subgroup` and `is_normal_subgroup` are properties of
   a supplied subset. The kernel used by the flagship theorem is an ordinary
   native set-builder value.
-- **Ideal Litex form:** `prop is_subgroup([GroupSetting], H power_set(A))` and
-  `prop is_normal_subgroup([GroupSetting], H power_set(A))`.
+- **Ideal Litex form:** `prop is_subgroup(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, H power_set(A))` and
+  `prop is_normal_subgroup(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, H power_set(A))`.
 - **Interface sketch:** `is_normal_subgroup` consumes `is_subgroup` plus
   `forall a A, h H: mul(mul(a,h),inv(a)) in H`.
 - **Nearest wrong alternative:** A `Subgroup` struct or a public kernel wrapper
@@ -115,8 +114,8 @@ objects. No parallel arithmetic or container interface is introduced.
   `RingHomomorphismSetting` composes source and target ring settings with the
   preservation laws.
 - **Ideal Litex form:** settings plus the definition-facing projections
-  `prop is_commutative_ring([CommutativeRingSetting])` and
-  `prop is_ring_homomorphism([RingHomomorphismSetting])`.
+  `prop is_commutative_ring(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A)` and
+  `prop is_ring_homomorphism(A nonempty_set, add_A fn(x, y A) A, zero_A A, neg_A fn(x A) A, mul_A fn(x, y A) A, one_A A, B nonempty_set, add_B fn(x, y B) B, zero_B B, neg_B fn(x B) B, mul_B fn(x, y B) B, one_B B, map fn(x A) B)`.
 - **Nearest wrong alternative:** a `Ring` struct is premature because current
   consumers do not construct or return ring values. Repeating both complete
   law lists in every map theorem obscures the map itself.
@@ -133,7 +132,7 @@ objects. No parallel arithmetic or container interface is introduced.
   multiplication by arbitrary ring elements. A proper ideal is prime when a
   product in it forces one factor into it.
 - **Semantic role:** properties of a supplied subset, represented by
-  `prop is_ideal([CommutativeRingSetting], I power_set(A))` and
+  `prop is_ideal(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I power_set(A))` and
   `prop is_prime_ideal(...)`.
 - **Nearest wrong alternative:** a first-class ideal struct would package a
   subset no current theorem stores or projects. Defining primality as “the
@@ -149,7 +148,7 @@ objects. No parallel arithmetic or container interface is introduced.
 - **Ordinary meaning:** a quotient of `A` by `I` is presented by a
   commutative ring `Q` and a surjective ring homomorphism `q : A -> Q` whose
   kernel is exactly `I`.
-- **Semantic role:** `setting QuotientRingPresentationSetting(...)`; it
+- **Semantic role:** the explicitly quantified carriers, operations, and context-predicate premises; it
   packages ordinary quotient data, not the theorem to be proved.
 - **Interface sketch:** two ring settings, `I`, `q`, preservation laws,
   the two implications `x in I => q(x)=0_Q` and `q(x)=0_Q => x in I`, and
@@ -170,8 +169,8 @@ objects. No parallel arithmetic or container interface is introduced.
 - **Ordinary meaning:** an integral domain is a nontrivial commutative ring
   with the zero-product property; a field is a nontrivial commutative ring in
   which every nonzero element has a multiplicative inverse.
-- **Ideal Litex form:** `prop is_integral_domain([CommutativeRingSetting])` and
-  `prop is_field([CommutativeRingSetting])`.
+- **Ideal Litex form:** `prop is_integral_domain(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A)` and
+  `prop is_field(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A)`.
 - **Nearest wrong alternative:** putting an inverse function into the base
   ring setting would exclude rings that are not fields and conflate supplied
   data with existential field structure.

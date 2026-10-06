@@ -13,7 +13,7 @@ from `x₀ = 1`. Everything is kept in one `main.lit`, in this order:
 target/release/litex -r showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell
 target/release/litex -extractpython -f showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit
 target/release/litex -extractc -f showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit
-target/release/litex -graph -r showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell
+target/release/litex -strict -r showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell
 cd lean
 lake env lean ../showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/same_math_in_lean.lean
 ```

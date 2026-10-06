@@ -6,7 +6,7 @@ finite sets and `finite_set_size`; the recurrence is published directly as a
 theorem instead of being wrapped in a one-use proposition.
 
 ```bash
-target/release/litex -graph -r showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell
+target/release/litex -strict -r showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell
 lean showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/same_math_in_lean.lean
 ```
 

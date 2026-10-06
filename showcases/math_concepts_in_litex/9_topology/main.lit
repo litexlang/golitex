@@ -1,3 +1,62 @@
+template<X, Y set, f fn(x X) Y, U power_set(Y)>:
+    have preimage power_set(X) = {x X: f(x) $in U}
+
+thm preimage_carrier:
+    ? forall X, Y set, f fn(x X) Y, U power_set(Y), p \preimage<X,Y,f,U>:
+        p $in X
+    \preimage<X,Y,f,U> = {x X: f(x) $in U}
+    p $in \preimage<X,Y,f,U>
+    p $in X
+
+thm preimage_value:
+    ? forall X, Y set, f fn(x X) Y, U power_set(Y), p X:
+        p $in \preimage<X,Y,f,U>
+        =>:
+            f(p) $in U
+    \preimage<X,Y,f,U> = {x X: f(x) $in U}
+    p $in \preimage<X,Y,f,U>
+    f(p) $in U
+
+thm preimage_intro:
+    ? forall X, Y set, f fn(x X) Y, U power_set(Y), p X:
+        f(p) $in U
+        =>:
+            p $in \preimage<X,Y,f,U>
+    \preimage<X,Y,f,U> = {x X: f(x) $in U}
+    p $in \preimage<X,Y,f,U>
+
+thm preimage_set:
+    ? forall X, Y set, f fn(x X) Y, U power_set(Y):
+        \preimage<X,Y,f,U> $in power_set(X)
+    \preimage<X,Y,f,U> = {x X: f(x) $in U}
+    \preimage<X,Y,f,U> $subset X
+    \preimage<X,Y,f,U> $in power_set(X)
+
+template<A, B, CarrierC set, f fn(x A) B, g fn(y B) CarrierC>:
+    have fn composition(x A) CarrierC = g(f(x))
+
+template<X, Y set, f fn(x X) Y, K power_set(X)>:
+    have fn restricted(x K) Y = f(x)
+
+thm composition_type:
+    ? forall A, B, CarrierC set, f fn(x A) B, g fn(y B) CarrierC:
+        \composition<A,B,CarrierC,f,g> $in fn(x A) CarrierC
+    release thm fn_set_member(\composition<A,B,CarrierC,f,g>, fn(x A) CarrierC)
+
+thm restriction_type:
+    ? forall X, Y set, f fn(x X) Y, K power_set(X):
+        \restricted<X,Y,f,K> $in fn(x K) Y
+    release thm fn_set_member(\restricted<X,Y,f,K>, fn(x K) Y)
+
+thm restriction_value:
+    ? forall X,Y set,f fn(x X)Y,K power_set(X),p K:
+        \restricted<X,Y,f,K>(p) = f(p)
+    \restricted<X,Y,f,K> $in fn(x K) Y
+    f(p) $in Y
+    \restricted<X,Y,f,K>(p) $in Y
+    \restricted<X,Y,f,K> = fn(x K) Y {f(x)}
+    \restricted<X,Y,f,K>(p) = f(p)
+
 # Topology — open sets and continuity, setting-first.
 #
 # All set constructions below are native Litex objects.  In particular,
@@ -89,7 +148,7 @@ prop TopologicalMapSetting(X set, open_sets_X power_set(power_set(X)), Y set, op
 prop ContinuousMapSetting(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
     $TopologicalMapSetting(X, open_sets_X, Y, open_sets_Y, f)
     forall open_Y open_sets_Y:
-        {x X: f(x) $in open_Y} $in open_sets_X
+        \preimage<X,Y,f,open_Y> $in open_sets_X
 
 prop is_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
     $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
@@ -99,9 +158,9 @@ prop ContinuousCompositionSetting(A set, open_sets_A power_set(power_set(A)), B 
     $TopologicalSpaceSetting(B, open_sets_B)
     $TopologicalSpaceSetting(CarrierC, open_sets_C)
     forall open_B open_sets_B:
-        {x A: f(x) $in open_B} $in open_sets_A
+        \preimage<A,B,f,open_B> $in open_sets_A
     forall open_C open_sets_C:
-        {y B: g(y) $in open_C} $in open_sets_B
+        \preimage<B,CarrierC,g,open_C> $in open_sets_B
 
 # Tracer theorem: settings carry the ambient hypotheses; the proof works with
 # the native preimage set builders directly.
@@ -109,77 +168,47 @@ thm continuous_composition:
     ? forall A set, open_sets_A power_set(power_set(A)), B set, open_sets_B power_set(power_set(B)), CarrierC set, open_sets_C power_set(power_set(CarrierC)), f fn(x A) B, g fn(y B) CarrierC:
         $ContinuousCompositionSetting(A, open_sets_A, B, open_sets_B, CarrierC, open_sets_C, f, g)
         =>:
-            $is_continuous(A, open_sets_A, CarrierC, open_sets_C, fn(x A) CarrierC {g(f(x))})
+            $is_continuous(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
     claim:
         ? forall target_open open_sets_C:
-            {x A: g(f(x)) $in target_open} $in open_sets_A
-        {y B: g(y) $in target_open} $in open_sets_B
-        have middle_open open_sets_B = {y B: g(y) $in target_open}
-        {x A: f(x) $in middle_open} $in open_sets_A
-        have nested_preimage open_sets_A = {x A: f(x) $in middle_open}
-        have direct_preimage power_set(A) = {x A: g(f(x)) $in target_open}
-        claim:
-            ? nested_preimage $subset direct_preimage
+            \preimage<A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open> $in open_sets_A
+        have middle_open open_sets_B = \preimage<B,CarrierC,g,target_open>
+        have nested_preimage open_sets_A = \preimage<A,B,f,middle_open>
+        release thm composition_type(A,B,CarrierC,f,g)
+        release thm preimage_set(A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open)
+        have direct_preimage power_set(A) = \preimage<A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open>
+        by extension:
+            ? nested_preimage = direct_preimage
             claim:
                 ? forall point nested_preimage:
                     point $in direct_preimage
+                release thm preimage_carrier(A,B,f,middle_open,point)
+                release thm preimage_value(A,B,f,middle_open,point)
+                release thm preimage_value(B,CarrierC,g,target_open,f(point))
+                point $in A
                 f(point) $in middle_open
                 g(f(point)) $in target_open
-                release thm set_builder_member(point, {x A: g(f(x)) $in target_open})
-                point $in {x A: g(f(x)) $in target_open}
-            by def:
-                ? nested_preimage $subset direct_preimage
-        claim:
-            ? direct_preimage $subset nested_preimage
+                \composition<A,B,CarrierC,f,g>(point) = g(f(point))
+                \composition<A,B,CarrierC,f,g>(point) $in target_open
+                release thm preimage_intro(A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open,point)
+                point $in direct_preimage
             claim:
                 ? forall point direct_preimage:
                     point $in nested_preimage
+                release thm preimage_carrier(A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open,point)
+                release thm preimage_value(A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open,point)
+                point $in A
+                \composition<A,B,CarrierC,f,g>(point) $in target_open
+                \composition<A,B,CarrierC,f,g>(point) = g(f(point))
                 g(f(point)) $in target_open
-                release thm set_builder_member(f(point), {y B: g(y) $in target_open})
-                f(point) $in {y B: g(y) $in target_open}
+                release thm preimage_intro(B,CarrierC,g,target_open,f(point))
                 f(point) $in middle_open
-                release thm set_builder_member(point, {x A: f(x) $in middle_open})
-                point $in {x A: f(x) $in middle_open}
-            by def:
-                ? direct_preimage $subset nested_preimage
-        by extension:
-            ? nested_preimage = direct_preimage
+                release thm preimage_intro(A,B,f,middle_open,point)
+                point $in nested_preimage
         direct_preimage $in open_sets_A
-    claim:
-        ? forall target_open open_sets_C:
-            {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open} $in open_sets_A
-        have direct_preimage open_sets_A = {candidate A: g(f(candidate)) $in target_open}
-        have literal_preimage power_set(A) = {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open}
-        claim:
-            ? literal_preimage $subset direct_preimage
-            claim:
-                ? forall point literal_preimage:
-                    point $in direct_preimage
-                fn(argument A) CarrierC {g(f(argument))}(point) = g(f(point))
-                g(f(point)) $in target_open
-                release thm set_builder_member(point, {candidate A: g(f(candidate)) $in target_open})
-                point $in {candidate A: g(f(candidate)) $in target_open}
-            by def:
-                ? literal_preimage $subset direct_preimage
-        claim:
-            ? direct_preimage $subset literal_preimage
-            claim:
-                ? forall point direct_preimage:
-                    point $in literal_preimage
-                g(f(point)) $in target_open
-                fn(argument A) CarrierC {g(f(argument))}(point) = g(f(point))
-                fn(argument A) CarrierC {g(f(argument))}(point) $in target_open
-                release thm set_builder_member(point, {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open})
-                point $in {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open}
-            by def:
-                ? direct_preimage $subset literal_preimage
-        by extension:
-            ? literal_preimage = direct_preimage
-        literal_preimage $in open_sets_A
-    by def $TopologicalMapSetting(A, open_sets_A, CarrierC, open_sets_C, fn(x A) CarrierC {g(f(x))})
-    by def $ContinuousMapSetting(A, open_sets_A, CarrierC, open_sets_C, fn(x A) CarrierC {g(f(x))})
-    by def:
-        ? $is_continuous(A, open_sets_A, CarrierC, open_sets_C, fn(x A) CarrierC {g(f(x))})
+    by def $TopologicalMapSetting(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
+    by def $ContinuousMapSetting(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
+    by def $is_continuous(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
 
 prop is_closed(X set, open_sets power_set(power_set(X)), F power_set(X)):
     $TopologicalSpaceSetting(X, open_sets)
@@ -190,44 +219,48 @@ prop has_closed_preimages(X set, open_sets_X power_set(power_set(X)), Y set, ope
     forall F power_set(Y):
         $is_closed(Y, open_sets_Y, F)
         =>:
-            $is_closed(X, open_sets_X, {x X: f(x) $in F})
+            $is_closed(X, open_sets_X, \preimage<X,Y,f,F>)
 
 thm preimage_of_relative_complement:
     ? forall X, Y set, f fn(x X) Y, F power_set(Y):
-        {x X: f(x) $in set_minus(Y, F)} = set_minus(X, {x X: f(x) $in F})
+        \preimage<X,Y,f,set_minus(Y, F)> = set_minus(X, \preimage<X,Y,f,F>)
     by extension:
-        ? {x X: f(x) $in set_minus(Y, F)} = set_minus(X, {x X: f(x) $in F})
+        ? \preimage<X,Y,f,set_minus(Y, F)> = set_minus(X, \preimage<X,Y,f,F>)
         claim:
-            ? forall point {x X: f(x) $in set_minus(Y, F)}:
-                point $in set_minus(X, {x X: f(x) $in F})
+            ? forall point \preimage<X,Y,f,set_minus(Y, F)>:
+                point $in set_minus(X, \preimage<X,Y,f,F>)
+            release thm preimage_carrier(X,Y,f,set_minus(Y,F),point)
+            release thm preimage_value(X,Y,f,set_minus(Y,F),point)
             point $in X
             f(point) $in set_minus(Y, F)
             not f(point) $in F
             claim:
-                ? not point $in {x X: f(x) $in F}
+                ? not point $in \preimage<X,Y,f,F>
                 by contra:
-                    ? not point $in {x X: f(x) $in F}
-                    point $in {x X: f(x) $in F}
+                    ? not point $in \preimage<X,Y,f,F>
+                    point $in \preimage<X,Y,f,F>
                     f(point) $in F
                     impossible not f(point) $in F
-            point $in set_minus(X, {x X: f(x) $in F})
+            point $in set_minus(X, \preimage<X,Y,f,F>)
+        by def \preimage<X,Y,f,set_minus(Y,F)> $subset set_minus(X,\preimage<X,Y,f,F>)
         claim:
-            ? forall point set_minus(X, {x X: f(x) $in F}):
-                point $in {x X: f(x) $in set_minus(Y, F)}
+            ? forall point set_minus(X, \preimage<X,Y,f,F>):
+                point $in \preimage<X,Y,f,set_minus(Y, F)>
             point $in X
-            not point $in {x X: f(x) $in F}
+            not point $in \preimage<X,Y,f,F>
             f(point) $in Y
             claim:
                 ? not f(point) $in F
                 by contra:
                     ? not f(point) $in F
                     f(point) $in F
-                    release thm set_builder_member(point, {x X: f(x) $in F})
-                    point $in {x X: f(x) $in F}
-                    impossible not point $in {x X: f(x) $in F}
+                    release thm preimage_intro(X,Y,f,F,point)
+                    point $in \preimage<X,Y,f,F>
+                    impossible not point $in \preimage<X,Y,f,F>
             f(point) $in set_minus(Y, F)
-            release thm set_builder_member(point, {x X: f(x) $in set_minus(Y, F)})
-            point $in {x X: f(x) $in set_minus(Y, F)}
+            release thm preimage_intro(X,Y,f,set_minus(Y, F),point)
+            point $in \preimage<X,Y,f,set_minus(Y, F)>
+        by def set_minus(X,\preimage<X,Y,f,F>) $subset \preimage<X,Y,f,set_minus(Y,F)>
 
 # Together, these two directional theorems are the closed-set
 # characterization of continuity.
@@ -240,13 +273,13 @@ thm continuous_map_has_closed_preimages:
         ? forall F power_set(Y):
             $is_closed(Y, open_sets_Y, F)
             =>:
-                $is_closed(X, open_sets_X, {x X: f(x) $in F})
+                $is_closed(X, open_sets_X, \preimage<X,Y,f,F>)
         set_minus(Y, F) $in open_sets_Y
-        {x X: f(x) $in set_minus(Y, F)} $in open_sets_X
+        \preimage<X,Y,f,set_minus(Y, F)> $in open_sets_X
         release thm preimage_of_relative_complement(X, Y, f, F)
-        {x X: f(x) $in set_minus(Y, F)} = set_minus(X, {x X: f(x) $in F})
-        set_minus(X, {x X: f(x) $in F}) $in open_sets_X
-        by def $is_closed(X, open_sets_X, {x X: f(x) $in F})
+        \preimage<X,Y,f,set_minus(Y, F)> = set_minus(X, \preimage<X,Y,f,F>)
+        set_minus(X, \preimage<X,Y,f,F>) $in open_sets_X
+        by def $is_closed(X, open_sets_X, \preimage<X,Y,f,F>)
     by def $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
 
 thm closed_preimages_imply_continuous:
@@ -257,37 +290,37 @@ thm closed_preimages_imply_continuous:
             $is_continuous(X, open_sets_X, Y, open_sets_Y, f)
     claim:
         ? forall U open_sets_Y:
-            {x X: f(x) $in U} $in open_sets_X
+            \preimage<X,Y,f,U> $in open_sets_X
         U $in power_set(Y)
         U $subset Y
         set_minus(Y, set_minus(Y, U)) = U
         set_minus(Y, set_minus(Y, U)) $in open_sets_Y
         by def $is_closed(Y, open_sets_Y, set_minus(Y, U))
-        $is_closed(X, open_sets_X, {x X: f(x) $in set_minus(Y, U)})
-        set_minus(X, {x X: f(x) $in set_minus(Y, U)}) $in open_sets_X
+        $is_closed(X, open_sets_X, \preimage<X,Y,f,set_minus(Y, U)>)
+        set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>) $in open_sets_X
         claim:
-            ? {x X: f(x) $in U} = set_minus(X, {x X: f(x) $in set_minus(Y, U)})
+            ? \preimage<X,Y,f,U> = set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>)
             by extension:
-                ? {x X: f(x) $in U} = set_minus(X, {x X: f(x) $in set_minus(Y, U)})
+                ? \preimage<X,Y,f,U> = set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>)
                 claim:
-                    ? forall point {x X: f(x) $in U}:
-                        point $in set_minus(X, {x X: f(x) $in set_minus(Y, U)})
+                    ? forall point \preimage<X,Y,f,U>:
+                        point $in set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>)
                     point $in X
                     f(point) $in U
                     claim:
-                        ? not point $in {x X: f(x) $in set_minus(Y, U)}
+                        ? not point $in \preimage<X,Y,f,set_minus(Y, U)>
                         by contra:
-                            ? not point $in {x X: f(x) $in set_minus(Y, U)}
-                            point $in {x X: f(x) $in set_minus(Y, U)}
+                            ? not point $in \preimage<X,Y,f,set_minus(Y, U)>
+                            point $in \preimage<X,Y,f,set_minus(Y, U)>
                             f(point) $in set_minus(Y, U)
                             not f(point) $in U
                             impossible f(point) $in U
-                    point $in set_minus(X, {x X: f(x) $in set_minus(Y, U)})
+                    point $in set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>)
                 claim:
-                    ? forall point set_minus(X, {x X: f(x) $in set_minus(Y, U)}):
-                        point $in {x X: f(x) $in U}
+                    ? forall point set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>):
+                        point $in \preimage<X,Y,f,U>
                     point $in X
-                    not point $in {x X: f(x) $in set_minus(Y, U)}
+                    not point $in \preimage<X,Y,f,set_minus(Y, U)>
                     f(point) $in Y
                     claim:
                         ? f(point) $in U
@@ -295,12 +328,13 @@ thm closed_preimages_imply_continuous:
                             ? f(point) $in U
                             not f(point) $in U
                             f(point) $in set_minus(Y, U)
-                            release thm set_builder_member(point, {x X: f(x) $in set_minus(Y, U)})
-                            point $in {x X: f(x) $in set_minus(Y, U)}
-                            impossible not point $in {x X: f(x) $in set_minus(Y, U)}
-                    release thm set_builder_member(point, {x X: f(x) $in U})
-                    point $in {x X: f(x) $in U}
-        {x X: f(x) $in U} $in open_sets_X
+                            release thm preimage_intro(X,Y,f,set_minus(Y, U),point)
+                            point $in \preimage<X,Y,f,set_minus(Y, U)>
+                            impossible not point $in \preimage<X,Y,f,set_minus(Y, U)>
+                    release thm preimage_intro(X,Y,f,U,point)
+                    point $in \preimage<X,Y,f,U>
+        \preimage<X,Y,f,U> $in open_sets_X
+    by def $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
     by def $is_continuous(X, open_sets_X, Y, open_sets_Y, f)
 
 prop is_compact_subset(X set, open_sets power_set(power_set(X)), K power_set(X)):
@@ -308,74 +342,84 @@ prop is_compact_subset(X set, open_sets power_set(power_set(X)), K power_set(X))
     forall Index set, cover fn(index Index) open_sets:
         K $subset family_union(fn_range(cover))
         =>:
-            exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(fn(index J) open_sets {cover(index)}))}
+            exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(\restricted<Index,open_sets,cover,J>))}
 
 thm continuous_image_of_compact_is_compact:
     ? forall X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y, K power_set(X):
         $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
         $is_compact_subset(X, open_sets_X, K)
         =>:
-            $is_compact_subset(Y, open_sets_Y, fn_range(fn(x K) Y {f(x)}))
+            $is_compact_subset(Y, open_sets_Y, fn_range(\restricted<X,Y,f,K>))
+    release thm restriction_type(X,Y,f,K)
     claim:
         ? forall Index set, cover fn(index Index) open_sets_Y:
-            fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(cover))
+            fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(cover))
             =>:
-                exist J power_set(Index) st {$is_finite_set(J), fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))}
-        have fn pullback_cover(index Index) open_sets_X = {x X: f(x) $in cover(index)}
+                exist J power_set(Index) st {$is_finite_set(J), fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(\restricted<Index,open_sets_Y,cover,J>))}
+        have fn pullback_cover(index Index) open_sets_X = \preimage<X,Y,f,cover(index)>
         claim:
             ? K $subset family_union(fn_range(pullback_cover))
             claim:
                 ? forall point K:
                     point $in family_union(fn_range(pullback_cover))
-                fn(x K) Y {f(x)}(point) $in fn_range(fn(x K) Y {f(x)})
-                fn(x K) Y {f(x)}(point) = f(point)
-                f(point) $in fn_range(fn(x K) Y {f(x)})
+                \restricted<X,Y,f,K>(point) $in fn_range(\restricted<X,Y,f,K>)
+                release thm restriction_value(X,Y,f,K,point)
+                \restricted<X,Y,f,K>(point) = f(point)
+                f(point) $in fn_range(\restricted<X,Y,f,K>)
                 f(point) $in family_union(fn_range(cover))
                 obtain target_open from exist source_target_open fn_range(cover) st {f(point) $in source_target_open}
                 have by fn_preimage: selected_index from target_open $in fn_range(cover)
                 target_open = cover(selected_index)
                 f(point) $in cover(selected_index)
-                release thm set_builder_member(point, {x X: f(x) $in cover(selected_index)})
-                point $in {x X: f(x) $in cover(selected_index)}
+                release thm preimage_intro(X,Y,f,cover(selected_index),point)
+                point $in \preimage<X,Y,f,cover(selected_index)>
                 point $in pullback_cover(selected_index)
                 pullback_cover(selected_index) $in fn_range(pullback_cover)
                 point $in family_union(fn_range(pullback_cover))
             by def:
                 ? K $subset family_union(fn_range(pullback_cover))
-        exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))}
-        obtain J from exist source_J power_set(Index) st {$is_finite_set(source_J), K $subset family_union(fn_range(fn(index source_J) open_sets_X {pullback_cover(index)}))}
-        witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(fn(index finite_indices) open_sets_Y {cover(index)}))} from J:
+        exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(\restricted<Index,open_sets_X,pullback_cover,J>))}
+        obtain J from exist source_J power_set(Index) st {$is_finite_set(source_J), K $subset family_union(fn_range(\restricted<Index,open_sets_X,pullback_cover,source_J>))}
+        witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(\restricted<Index,open_sets_Y,cover,finite_indices>))} from J:
             $is_finite_set(J)
+            release thm restriction_type(Index,open_sets_X,pullback_cover,J)
+            release thm restriction_type(Index,open_sets_Y,cover,J)
             claim:
-                ? fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                ? fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(\restricted<Index,open_sets_Y,cover,J>))
                 claim:
-                    ? forall image_point fn_range(fn(x K) Y {f(x)}):
-                        image_point $in family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
-                    have by fn_preimage: source_point from image_point $in fn_range(fn(x K) Y {f(x)})
+                    ? forall image_point fn_range(\restricted<X,Y,f,K>):
+                        image_point $in family_union(fn_range(\restricted<Index,open_sets_Y,cover,J>))
+                    have by fn_preimage: source_point from image_point $in fn_range(\restricted<X,Y,f,K>)
                     source_point $in K
-                    image_point = fn(x K) Y {f(x)}(source_point)
-                    fn(x K) Y {f(x)}(source_point) = f(source_point)
-                    source_point $in family_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))
-                    obtain source_open from exist source_source_open fn_range(fn(index J) open_sets_X {pullback_cover(index)}) st {source_point $in source_source_open}
-                    have by fn_preimage: selected_index from source_open $in fn_range(fn(index J) open_sets_X {pullback_cover(index)})
+                    image_point = \restricted<X,Y,f,K>(source_point)
+                    release thm restriction_value(X,Y,f,K,source_point)
+                    \restricted<X,Y,f,K>(source_point) = f(source_point)
+                    source_point $in family_union(fn_range(\restricted<Index,open_sets_X,pullback_cover,J>))
+                    obtain source_open from exist source_source_open fn_range(\restricted<Index,open_sets_X,pullback_cover,J>) st {source_point $in source_source_open}
+                    have by fn_preimage: selected_index from source_open $in fn_range(\restricted<Index,open_sets_X,pullback_cover,J>)
                     selected_index $in J
                     selected_index $in Index
-                    source_open = fn(index J) open_sets_X {pullback_cover(index)}(selected_index)
-                    fn(index J) open_sets_X {pullback_cover(index)}(selected_index) = pullback_cover(selected_index)
+                    source_open = \restricted<Index,open_sets_X,pullback_cover,J>(selected_index)
+                    release thm restriction_value(Index,open_sets_X,pullback_cover,J,selected_index)
+                    \restricted<Index,open_sets_X,pullback_cover,J>(selected_index) = pullback_cover(selected_index)
                     source_point $in pullback_cover(selected_index)
-                    pullback_cover(selected_index) = {x X: f(x) $in cover(selected_index)}
-                    source_point $in {x X: f(x) $in cover(selected_index)}
+                    cover(selected_index) $in open_sets_Y
+                    \preimage<X,Y,f,cover(selected_index)> $in open_sets_X
+                    pullback_cover(selected_index) = \preimage<X,Y,f,cover(selected_index)>
+                    source_point $in \preimage<X,Y,f,cover(selected_index)>
+                    release thm preimage_value(X,Y,f,cover(selected_index),source_point)
                     f(source_point) $in cover(selected_index)
-                    fn(index J) open_sets_Y {cover(index)}(selected_index) $in fn_range(fn(index J) open_sets_Y {cover(index)})
-                    fn(index J) open_sets_Y {cover(index)}(selected_index) = cover(selected_index)
-                    cover(selected_index) $in fn_range(fn(index J) open_sets_Y {cover(index)})
+                    \restricted<Index,open_sets_Y,cover,J>(selected_index) $in fn_range(\restricted<Index,open_sets_Y,cover,J>)
+                    release thm restriction_value(Index,open_sets_Y,cover,J,selected_index)
+                    \restricted<Index,open_sets_Y,cover,J>(selected_index) = cover(selected_index)
+                    cover(selected_index) $in fn_range(\restricted<Index,open_sets_Y,cover,J>)
                     image_point = f(source_point)
                     image_point $in cover(selected_index)
-                    witness exist target_open fn_range(fn(index J) open_sets_Y {cover(index)}) st {image_point $in target_open} from cover(selected_index):
+                    witness exist target_open fn_range(\restricted<Index,open_sets_Y,cover,J>) st {image_point $in target_open} from cover(selected_index):
                         image_point $in cover(selected_index)
-                    image_point $in family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                    image_point $in family_union(fn_range(\restricted<Index,open_sets_Y,cover,J>))
                 by def:
-                    ? fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                    ? fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(\restricted<Index,open_sets_Y,cover,J>))
     by def:
-        ? fn_range(fn(x K) Y {f(x)}) $subset Y
-    by def $is_compact_subset(Y, open_sets_Y, fn_range(fn(x K) Y {f(x)}))
+        ? fn_range(\restricted<X,Y,f,K>) $subset Y
+    by def $is_compact_subset(Y, open_sets_Y, fn_range(\restricted<X,Y,f,K>))

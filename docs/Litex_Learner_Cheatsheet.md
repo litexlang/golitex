@@ -149,14 +149,12 @@ shift(2) = 3
 
 Use <code>let</code> when the name is only a local abbreviation:
 
-> **Migration example:** Current `src/` checking stops at `search_proof` (`successor(2) = 3`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 have fn shift(t R) R = t + 1
-let successor = shift
+let alias = shift
+have successor fn(t R) R = alias
 
-successor(2) = 3
+successor(2) = shift(2) = 3
 fn_range(successor) = fn_range(shift)
 ```
 
@@ -320,9 +318,6 @@ The standard sets are <code>N</code>, <code>Z</code>, <code>Q</code>, <code>R</c
 and <code>C</code>, with common subsets such as <code>N+</code>, <code>R-</code>,
 and <code>C*</code>. A set builder is bounded by an existing set:
 
-> **Migration example:** Current `src/` checking stops at `release_thm` (`release thm …`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 release thm set_builder_member(1, {x R: x > 0})
 ```
@@ -455,23 +450,20 @@ by induc n from 0:
 
 The base has no induction hypothesis; its local objects do not escape.
 
-> **Migration example:** Current `src/` checking stops at `internal_bug: name n is already bound in an enclosing parse scope`. This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 claim:
     ? forall n N:
         2 ^ n >= n + 1
-    by induc n from 0:
-        ? 2 ^ n >= n + 1
-        2^0 = 1 >= 0 + 1
-
-        forall m Z:
-            m >= 0
-            2^m >= m + 1
-            =>:
-                2^m * 2^1 >= (m+1) * 2
-                2 ^ (m + 1) = 2 ^ m * 2^1 >= (m+1) * 2 = (m + 1) + (m + 1) >= m + 1 + 1
+    by induc k from 0:
+        ? 2 ^ k >= k + 1
+        ? from k = 0:
+            2^k = 1 = k+1
+        ? induc:
+            k $in N
+            2^(k+1) = 2^k * 2^1 = 2^k * 2
+            2^k * 2 >= (k+1)*2
+            (k+1)*2 = (k+1)+(k+1) >= (k+1)+1
+            2^(k+1) = 2^k * 2 >= (k+1)*2 = (k+1)+(k+1) >= (k+1)+1
 ```
 
 Keep induction in a claim or theorem. A bare universal fact is for stating a

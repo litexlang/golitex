@@ -29,3 +29,7 @@ output. Run it with:
 ```sh
 lean showcases/math_concepts_in_litex/9_topology/same_math_in_lean.lean
 ```
+
+## Current callable interfaces
+
+Preimages, composition and function restriction have named templates. The proofs explicitly release their membership, carrier and value lemmas; restrictions retain the exact source subset and original map. Indexed compactness still asks for a finite subcover, and the compact-image theorem proves that conclusion without extra assumptions.

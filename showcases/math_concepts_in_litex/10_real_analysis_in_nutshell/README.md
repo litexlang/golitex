@@ -28,3 +28,7 @@ This module itself stops at sequence-limit existence, uniqueness, and safe
 selection. The broader calculus/real-analysis direction may later grow through
 Rolle and MVT, then stops; uniform convergence, integration, measure theory,
 and functional analysis are separate slices, not completion requirements here.
+
+## Current callable interfaces
+
+Constant sequences use the named function template `\constant_sequence<c>` with value `c` at every positive index. The epsilon-tail proof and unique limit selector remain constructive.

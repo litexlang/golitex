@@ -5,7 +5,7 @@
 Keep `Category<Obj, Mor>`, as selected on 2026-10-03. `Obj` is a set of
 objects and `Mor` bounds arrow encodings. The fields are ordered:
 
-```litex
+```text
 struct Category<Obj set, Mor set>:
     Hom fn(source, target Obj) power_set(Mor)
     identity fn(object Obj) Mor

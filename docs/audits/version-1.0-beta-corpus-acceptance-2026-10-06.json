@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "version": "1.0.0-beta",
+  "binary_sha256": "b2b4da58c1d3490af948fcb66862b16a100001b1a6b2e07f432aa3105d5adb61",
+  "source_sha256": "66ebd1e971ef3a5cb42c7a3438f3cc4ce8ea9dce147d3be12e25edc862d7a3d7",
+  "examples": {
+    "files": 1994,
+    "positive_files": 1295,
+    "negative_files": 689,
+    "capability_observations": 10,
+    "matched": 1994,
+    "unexpected": 0
+  },
+  "docs": {
+    "blocks": 485,
+    "failed": 0
+  },
+  "statements": {
+    "leaves": 51,
+    "checks": 385,
+    "unexpected": 0,
+    "known_gaps": 0
+  },
+  "objects": {
+    "objects": 99,
+    "positive_cases": 665,
+    "positive_files": 95,
+    "negative_fixtures": 309,
+    "failures": 0
+  },
+  "function_sets": {
+    "checks": 85,
+    "passed": 85
+  },
+  "basic_contracts": 175,
+  "by_thm_rust_tests": {
+    "passed": 13,
+    "failed": 0
+  },
+  "books": [
+    {
+      "module": "scripts/The-Mechanics-of-Litex-Proof/textbook",
+      "command": "target/release/litex -strict -r scripts/The-Mechanics-of-Litex-Proof/textbook",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "repo",
+        "path": "scripts/The-Mechanics-of-Litex-Proof/textbook",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": null
+      },
+      "file_hashes": {
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/citation.lit": "825942955fc74af882bcea8a4deecebeed852c1ba6988a3f8ac36bde621903ff",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter05-logic.lit": "4c6ce26eda8f2187a1fb107ef70ae41abd59a3169a7bc42b980325f16ed2d769",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/todo.lit": "268c1c2b483a6e3e7f55cca92b361f113f9d1b4798d056b7198ec1cc960f836c",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter08-functions.lit": "5d816953d295f5c37a60b62468afd38723a6ebe1d2491932a63bfad15f92f63a",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter02-proofs-with-structure.lit": "d94f0651bcacec0204d00eca8ebc4b9cbf73ce67b558bf28ff9623895323ac8f",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter06-induction.lit": "3c4a266361116a73960a6cff4fbd6b37693d53a5ffd01c5ad11004475c53d0ea",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/litex.config": "c9a797ddc0781892db72972e4bd1267ee97d648b49056652567ae9c85262a529",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/introduction.lit": "f0f277397a6c0092125d10c08098566a600ef03ee093b8a87f0eb6e3434ba8c6",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter10-relations.lit": "9aeab8bb12ecee4b6734f5176d7ab21624db02e5b432a353b448c27ce038cf7e",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter03-parity-and-divisibility.lit": "6610f9830fa722c990f4e1c106f1faf5e772cd6486e822b42573d24b37c70775",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter04-proofs-with-structure-ii.lit": "10bb2328e2c472be1ebd1cbeca03115b3ade0327a80c2d3f1cb800ed06fda017",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter01-proofs-by-calculation.lit": "034e5ec1a3e36344f0361177def477c86817b309bf7deaae5ef84439933a782e",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter00-introduction.lit": "f5c0c6eb8e065900b8cdfc62c5d18de379dce213270234ce09c741099328ff55",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter07-number-theory.lit": "695b005a22b8770204d7bb2effef5e63e0df0b6388187bed98189a07d300d77d",
+        "scripts/The-Mechanics-of-Litex-Proof/textbook/chapter09-sets.lit": "c7141f0ec89366020d4e738d84a49c35b9bc0b7fe37a111b00e7d8e4e3acda49"
+      }
+    },
+    {
+      "module": "textbooks/The-Mechanics-of-Litex-Proof",
+      "command": "target/release/litex -strict -r textbooks/The-Mechanics-of-Litex-Proof",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "repo",
+        "path": "textbooks/The-Mechanics-of-Litex-Proof",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [],
+        "session_error": null
+      },
+      "file_hashes": {
+        "textbooks/The-Mechanics-of-Litex-Proof/citation.lit": "825942955fc74af882bcea8a4deecebeed852c1ba6988a3f8ac36bde621903ff",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter05-logic.lit": "4c6ce26eda8f2187a1fb107ef70ae41abd59a3169a7bc42b980325f16ed2d769",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter08-functions.lit": "5d816953d295f5c37a60b62468afd38723a6ebe1d2491932a63bfad15f92f63a",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter02-proofs-with-structure.lit": "d94f0651bcacec0204d00eca8ebc4b9cbf73ce67b558bf28ff9623895323ac8f",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter06-induction.lit": "3c4a266361116a73960a6cff4fbd6b37693d53a5ffd01c5ad11004475c53d0ea",
+        "textbooks/The-Mechanics-of-Litex-Proof/litex.config": "4dea23b93634282a431a1479fe789dd252dedac9adfd2282b197c1f492b8733f",
+        "textbooks/The-Mechanics-of-Litex-Proof/introduction.lit": "f0f277397a6c0092125d10c08098566a600ef03ee093b8a87f0eb6e3434ba8c6",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter10-relations.lit": "9aeab8bb12ecee4b6734f5176d7ab21624db02e5b432a353b448c27ce038cf7e",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter03-parity-and-divisibility.lit": "6610f9830fa722c990f4e1c106f1faf5e772cd6486e822b42573d24b37c70775",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter04-proofs-with-structure-ii.lit": "10bb2328e2c472be1ebd1cbeca03115b3ade0327a80c2d3f1cb800ed06fda017",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter01-proofs-by-calculation.lit": "034e5ec1a3e36344f0361177def477c86817b309bf7deaae5ef84439933a782e",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter00-introduction.lit": "f5c0c6eb8e065900b8cdfc62c5d18de379dce213270234ce09c741099328ff55",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter07-number-theory.lit": "695b005a22b8770204d7bb2effef5e63e0df0b6388187bed98189a07d300d77d",
+        "textbooks/The-Mechanics-of-Litex-Proof/chapter09-sets.lit": "c7141f0ec89366020d4e738d84a49c35b9bc0b7fe37a111b00e7d8e4e3acda49"
+      }
+    }
+  ],
+  "documented_boundary": "Symbolic product-power rules support natural/integer exponents; arbitrary real exponent law remains a mathematical note.",
+  "tooling_boundary": {
+    "ok": false,
+    "manifest": "scripts/.textbooks",
+    "showcases_root": "showcases/math_concepts_in_litex",
+    "strict": true,
+    "contract_error": "showcase lacks required file(s) same_math_in_lean.lean: /Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/showcases/math_concepts_in_litex/15_coordinate_geometry_case_study"
+  },
+  "restored_migration_examples": {
+    "original_blocks": 29,
+    "runnable_blocks": 28,
+    "mathematical_boundary_blocks": 1
+  },
+  "named_callback_tracer": {
+    "command": "target/release/litex -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/named_enumeration_callbacks.lit",
+    "exit_code": 0,
+    "success": true,
+    "negative_command": "target/release/litex -strict -f examples/negative/named_enumeration_callbacks/missing_bijection.lit",
+    "negative_exit_code": 1
+  },
+  "showcase_followup": {
+    "status": "complete",
+    "strict_checks": 48,
+    "modules": 27,
+    "file_checks": 21,
+    "report": "showcases/math_concepts_in_litex/experience/problem_notes/current-cli-migration-acceptance-2026-10-06.json",
+    "lean": "excluded by user"
+  }
+}
