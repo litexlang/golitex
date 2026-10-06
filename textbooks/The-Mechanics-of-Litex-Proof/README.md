@@ -1,106 +1,114 @@
 # The Mechanics of Litex Proof
 
-This book is a Litex version of Heather Macbeth's
-[The Mechanics of Proof](https://hrmacbeth.github.io/math2001/), a textbook on
-mathematical proof using Lean. Its chapters are designed around the original
-book's mathematical topics and proof patterns, with corresponding arguments
-written in Litex.
+This is the complete registered Litex teaching module, with a preface, checked
+citation theorems, Chapters 0–10 and the final lesson-status export. The source
+workspace is `scripts/The-Mechanics-of-Litex-Proof/`; the ordered module entry is
+`textbook/litex.config`.
 
-The aim is to help readers compare how the same mathematical reasoning is
-expressed in Lean and Litex. The Litex examples develop proofs through
-mathematical facts, definitions, calculations, witnesses and previously proved
-results. Reading them alongside the original Lean examples makes differences
-in notation, proof structure and interaction with the checker visible through
-concrete mathematics.
+Build and run the whole book from the repository root:
 
-The book begins with calculation and structured proofs, then develops logic,
-induction, number theory, functions, sets and relations.
-
-Maintained by Jiachen Shen.
-
-## What this book demonstrates
-
-The examples progress from calculations to definitions and constructions, then
-to proofs about functions, sets and relations. These three excerpts show how
-that progression is expressed in Litex.
-
-### State mathematical facts
-
-In [Chapter 1](chapter01-proofs-by-calculation.lit), an assumption and its
-consequence can be written directly:
-
-```litex
-forall x R:
-    x = 2
-    =>:
-        x + 1 = 3
+```sh
+cargo build --release
+target/release/litex -strict -r scripts/The-Mechanics-of-Litex-Proof/textbook
+target/release/litex -r scripts/The-Mechanics-of-Litex-Proof/textbook
 ```
 
-This states that every real number `x` satisfying `x = 2` also satisfies
-`x + 1 = 3`. Litex checks the consequence using the assumption and arithmetic.
-Longer examples build arguments through intermediate facts and calculations.
+For a configured chapter checkpoint, use `-strict -f` with its path. Current
+CLI output must report `success: true`, `session_error: null` and exit code 0.
+The repo JSON summarizes success; it does not expose per-export statement
+counts. The complete configuration contains 14 exports; no active trust, axiom or
+abstract proposition remains.
+Whole-book acceptance and current-build provenance are recorded in the paired
+workspace's `experience/problem_notes/2026-10-6-callable-coordinates_acceptance.md`.
 
-### Define concepts and give witnesses
+When the book introduces a concept already supplied by Litex, it first explains
+the mathematical definition and checks small examples, then comments the switch
+to builtin objects. Later division/remainder/gcd work uses `quot`, `%` and `gcd`.
+The native quotient lesson uses positive divisors; native gcd excludes `(0,0)`.
+Negative divisors use a signed quotient with a nonnegative remainder. The former
+total algorithms are preserved as historical source text in the workspace and
+are not asserted equivalent at those domain/value boundaries. Pascal retains
+its original recursion; Bezout uses an ordinary proved citation theorem.
+The natural-set shift example in Chapter9 has its predicate signature corrected
+to `power_set(N)`, matching its function, prose and witnesses.
 
-[Chapter 3](chapter03-parity-and-divisibility.lit) defines odd integers through
-an existential statement, then proves that 7 is odd by supplying a witness:
+## Proof boundary used by the book
 
-```litex
-prop odd(a Z):
-    exist t Z st {a = 2 * t + 1}
+Atomic proof search follows a visible order:
 
-witness $odd(7) from 3
-```
+1. an already-known non-forall atomic fact;
+2. deterministic builtin computation or one direct builtin rule;
+3. a structural builtin strategy;
+4. an applicable known forall visible in the current runtime;
+5. a user-defined strategy.
 
-The definition requires an integer `t` with `a = 2 * t + 1`. The witness `3`
-lets Litex check `7 = 2 * 3 + 1`. Later proofs use `obtain` to extract witnesses
-from established existential facts and reason with their defining properties.
+A direct builtin rule does not recursively call another direct rule. A builtin
+rule premise may use a known non-forall fact or deterministic computation. A
+builtin strategy may descend through a strictly smaller constructor shape;
+each immediate child is checked first as a known fact or computation and then
+with one fresh direct rule before further structural decomposition.
 
-### Construct mathematical objects
+The corresponding source interfaces are:
 
-[Chapter 8](chapter08-functions.lit) introduces functions with their parameter
-domains and conditions included in the declaration:
+- `by def` introduces a positive defined predicate after its mathematical body
+  has been proved. Negative predicates continue to use ordinary proofs such as
+  `by contra`.
+- When a concrete predicate's whole body is one positive ordinary `exist` fact,
+  `obtain k from $p(args)` and `witness $p(args) from value` cross that named
+  boundary directly at runtime. Named construction excludes `exist!`, which
+  uses explicit `witness exist! ...` plus `by def`. Raw existentials, abstract
+  predicates, nested local definitions, and multi-clause definitions also keep
+  their explicit forms.
+- `release thm <builtin-name>(...)` invokes a named semantic object rule, such as
+  `set_builder_member` or `tuple_equal_from_coordinates`. These interfaces are
+  not silently included in automatic atomic search.
+- A nested function application is unfolded one function definition at a time.
+  The carrier of an immediate compound argument is stated before evaluation
+  when the domain check needs it as a known leaf.
+- Automatic known-forall instantiation uses the candidates visible in the
+  current runtime, which may include earlier exports or referenced imported
+  modules. Use qualified `release thm` when the dependency should be explicit or
+  automatic matching does not supply the intended instance; a local claim may
+  deliberately turn that result into a nearby reusable forall.
+- `let name = value` is used for a proof-local equality alias when the value's
+  carrier need not be established separately. Keep typed `have` when its
+  carrier fact is part of the proof, especially for products, sets, and
+  iterated objects.
+- A witness may omit its indented body when the substituted existential body is
+  already known. Chapter 8 exposes `inverse_implies_bijective` and
+  `bijective_implies_has_inverse`; examples that check both inverse equations
+  reuse the first theorem instead of reopening injectivity and surjectivity.
+- Arithmetic source makes the prefix-minus/power boundary explicit: use
+  `-(t^2)` or `-1 * (t^2)`, `(-t)^2`, and `t^(-1)`. Although the parser reads
+  bare `-t^2` as `-(t^2)`, the book does not use that implicit spelling.
 
-```litex
-have fn f_intro(x R: x > 1) R = x + 1
-f_intro(2) = 3
-```
+The mathematical rationale and dependency map live in
+[`math_collections.md`](math_collections.md). Iteration evidence is kept outside
+the shipping module in
+`scripts/The-Mechanics-of-Litex-Proof/experience/proof_journals/`.
 
-Here the input is a real number greater than 1, and the output is real. The
-application uses `2`, which satisfies the input condition. The chapter also
-develops functions passed as arguments, definitions by cases, constructions
-from unique existence, composition and inverse functions.
+## Editing workflow
 
-### Objects and proof tools across the chapters
+Use an empty configured file in the workspace's `.draft/` area with the current
+release `-strict -f <file> -session`. Replay statements in source order, one
+complete frame at a time; current CLI framing does not support the older
+compact/runner/before/try protocol. Record materially distinct proof attempts
+in the paired workspace's `experience/proof_journals/` before materialization.
+Finish a changed file with a clean configured `-strict -f` gate. Whole-book
+verification uses the actual `-r` entry above, never an inference from isolated
+chapter results. Preserve source statements, domains and teaching comments.
 
-Numbers, sets, functions and tuples are mathematical objects. Equalities,
-membership statements and quantified properties are facts about those objects.
-Definitions and proof commands let readers construct objects, establish facts
-and reuse proved results.
+## Callable coordinates and recurring mathematical values
 
-| Area | Examples in the book | Chapters |
-| --- | --- | --- |
-| Numbers and expressions | `N`, `Z`, `Q`, `R`; arithmetic, powers, absolute values, `quot`, remainders, `gcd` and factorials | 1, 3, 6, 7 |
-| Sets | Finite sets, set builders, intervals, power sets, unions, intersections and set differences | 9 |
-| Functions | Functions as values and arguments, domain conditions, composition and inverse functions | 8 |
-| Tuples and Cartesian products | Pairs, component access and functions taking or returning pairs | 8 |
-| Definitions and logic | `prop`, `forall`, `exist`, `exist!`, equality, membership and logical connectives | 2–5 |
-| Proof structure and reuse | `claim`, `thm`, `release thm`, `witness`, `obtain`, case analysis and contradiction | 2–6 |
-| Induction and construction | Ordinary and strong induction, recursive definitions and function construction from unique existence | 6, 8 |
-| Set and relation proofs | Finite enumeration, extensionality, and proving and registering reflexive, symmetric and transitive laws | 9, 10 |
+Finite tuples use ordinary function application: `p(1)`, `p(2)`. Their complete
+carrier is checked with Cartesian or `finite_seq` membership; retired indexing
+and `tuple_dim` are not part of the book's current interface.
 
-## Contents
+The number-theory product uses the named identity `factorial_factor` on `N+`.
+The real-function lessons name `real_successor` and `real_square`, and the set
+lesson names the two sets of multiples. These definitions retain the original
+mathematics while letting later statements cite the same mathematical values.
 
-| Chapter | Topic |
-| --- | --- |
-| 0 | Introduction |
-| 1 | Proofs by calculation |
-| 2 | Structured proofs |
-| 3 | Parity and divisibility |
-| 4 | Further structured proofs |
-| 5 | Logic |
-| 6 | Induction |
-| 7 | Number theory |
-| 8 | Functions |
-| 9 | Sets |
-| 10 | Relations |
+The relation lesson defines `\equivalence_class<X, a>` as
+`{b X: $rel(a, b)}`. The template retains the representative's carrier and
+lets the symmetry/transitivity proof reuse one class value on each side.

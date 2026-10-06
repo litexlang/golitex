@@ -473,11 +473,15 @@ register transitive:
         =>:
             $rel(x, z)
 
+# Each class is a defined set; the template captures its carrier and representative.
+template<X set, a X>:
+    have equivalence_class set = {b X: $rel(a, b)}
+
 claim:
     ? forall X set, a1, a2 X:
         $rel(a1, a2)
         =>:
-            {b X: $rel(a1, b)} = {b X: $rel(a2, b)}
+            \equivalence_class<X, a1> = \equivalence_class<X, a2>
     claim:
         ? forall b X:
             $rel(a1, b)
@@ -494,23 +498,25 @@ claim:
         $rel(a1, a2)
         $rel(a1, b)
 
+    \equivalence_class<X, a1> = {b X: $rel(a1, b)}
+    \equivalence_class<X, a2> = {b X: $rel(a2, b)}
     by extension:
-        ? {b X: $rel(a1, b)} = {b X: $rel(a2, b)}
+        ? \equivalence_class<X, a1> = \equivalence_class<X, a2>
         claim:
-            ? forall x1 {b X: $rel(a1, b)}:
-                x1 $in {b X: $rel(a2, b)}
+            ? forall x1 \equivalence_class<X, a1>:
+                x1 $in \equivalence_class<X, a2>
             x1 $in X
             $rel(a1, x1)
             $rel(a2, x1)
-            release thm set_builder_member(x1, {b X: $rel(a2, b)})
+            x1 $in \equivalence_class<X, a2>
 
         claim:
-            ? forall x1 {b X: $rel(a2, b)}:
-                x1 $in {b X: $rel(a1, b)}
+            ? forall x1 \equivalence_class<X, a2>:
+                x1 $in \equivalence_class<X, a1>
             x1 $in X
             $rel(a2, x1)
             $rel(a1, x1)
-            release thm set_builder_member(x1, {b X: $rel(a1, b)})
+            x1 $in \equivalence_class<X, a1>
 
 # 10.2.4 Example
 
@@ -522,12 +528,12 @@ claim:
 
 sketch:
     prop rational_pair_eq(p cart(Z, N), q cart(Z, N)):
-        p[1] * (q[2] + 1) = q[1] * (p[2] + 1)
+        p(1) * (q(2) + 1) = q(1) * (p(2) + 1)
 
     claim:
         ? forall p cart(Z, N):
             $rational_pair_eq(p, p)
-        p[1] * (p[2] + 1) = p[1] * (p[2] + 1)
+        p(1) * (p(2) + 1) = p(1) * (p(2) + 1)
         by def $rational_pair_eq(p, p)
 
     claim:
@@ -535,8 +541,8 @@ sketch:
             $rational_pair_eq(p, q)
             =>:
                 $rational_pair_eq(q, p)
-        p[1] * (q[2] + 1) = q[1] * (p[2] + 1)
-        q[1] * (p[2] + 1) = p[1] * (q[2] + 1)
+        p(1) * (q(2) + 1) = q(1) * (p(2) + 1)
+        q(1) * (p(2) + 1) = p(1) * (q(2) + 1)
         by def $rational_pair_eq(q, p)
 
     claim:
@@ -545,10 +551,10 @@ sketch:
             $rational_pair_eq(q, r)
             =>:
                 $rational_pair_eq(p, r)
-        (q[2] + 1) * (p[1] * (r[2] + 1)) = (p[1] * (q[2] + 1)) * (r[2] + 1) = (q[1] * (p[2] + 1)) * (r[2] + 1) = (q[1] * (r[2] + 1)) * (p[2] + 1) = (r[1] * (q[2] + 1)) * (p[2] + 1) = (q[2] + 1) * (r[1] * (p[2] + 1))
-        q[2] + 1 > 0
-        q[2] + 1 != 0
-        p[1] * (r[2] + 1) = ((q[2] + 1) * (p[1] * (r[2] + 1))) / (q[2] + 1) = ((q[2] + 1) * (r[1] * (p[2] + 1))) / (q[2] + 1) = r[1] * (p[2] + 1)
+        (q(2) + 1) * (p(1) * (r(2) + 1)) = (p(1) * (q(2) + 1)) * (r(2) + 1) = (q(1) * (p(2) + 1)) * (r(2) + 1) = (q(1) * (r(2) + 1)) * (p(2) + 1) = (r(1) * (q(2) + 1)) * (p(2) + 1) = (q(2) + 1) * (r(1) * (p(2) + 1))
+        q(2) + 1 > 0
+        q(2) + 1 != 0
+        p(1) * (r(2) + 1) = ((q(2) + 1) * (p(1) * (r(2) + 1))) / (q(2) + 1) = ((q(2) + 1) * (r(1) * (p(2) + 1))) / (q(2) + 1) = r(1) * (p(2) + 1)
         by def $rational_pair_eq(p, r)
 
 # 10.2.6 Bijection between sets

@@ -387,7 +387,7 @@ impl Runtime {
                         CosNonzeroAtZeroBuiltinRuleProof {},
                     )));
                 }
-                if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref()) {
+                if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref())? {
                     return Ok(Some(proof));
                 }
                 if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
@@ -404,7 +404,7 @@ impl Runtime {
                         CosNonzeroAtZeroBuiltinRuleProof {},
                     )));
                 }
-                if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref()) {
+                if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref())? {
                     return Ok(Some(proof));
                 }
                 if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
@@ -424,7 +424,7 @@ impl Runtime {
                         ),
                     ));
                 }
-                if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref()) {
+                if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref())? {
                     return Ok(Some(proof));
                 }
                 if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
@@ -443,7 +443,7 @@ impl Runtime {
                         ),
                     ));
                 }
-                if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref()) {
+                if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref())? {
                     return Ok(Some(proof));
                 }
                 if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
@@ -683,33 +683,61 @@ impl Runtime {
     fn cos_nonzero_on_open_half_pi_for_arg(
         &mut self,
         arg: &Obj,
-    ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
+    ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
         let lower = negative_half_pi();
         let upper = half_pi();
-        let lower_bound_proof = trig_interval_bound_spellings(&lower).into_iter().find_map(|bound| {
-            self.known_less_proof(&bound, arg).or_else(|| self.known_greater_proof(arg, &bound))
-        })?;
-        let upper_bound_proof = self.known_less_proof(arg, &upper)
-            .or_else(|| self.known_greater_proof(&upper, arg))?;
-        Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOpenHalfPi(
+        let mut lower_bound_proof = None;
+        for bound in trig_interval_bound_spellings(&lower) {
+            lower_bound_proof = self.trig_nonzero_bound_from_known_order(&bound, arg)?;
+            if lower_bound_proof.is_some() { break; }
+        }
+        let Some(lower_bound_proof) = lower_bound_proof else { return Ok(None); };
+        let Some(upper_bound_proof) = self.trig_nonzero_bound_from_known_order(arg, &upper)?
+            else { return Ok(None); };
+        Ok(Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOpenHalfPi(
             CosNonzeroOnOpenHalfPiBuiltinRuleProof { lower_bound_proof, upper_bound_proof },
-        ))
+        )))
     }
 
     fn sin_nonzero_on_open_pi_for_arg(
         &mut self,
         arg: &Obj,
-    ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
+    ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
         let lower = zero_obj();
         let upper = pi_obj();
-        let lower_bound_proof = trig_interval_bound_spellings(&lower).into_iter().find_map(|bound| {
-            self.known_less_proof(&bound, arg).or_else(|| self.known_greater_proof(arg, &bound))
-        })?;
-        let upper_bound_proof = self.known_less_proof(arg, &upper)
-            .or_else(|| self.known_greater_proof(&upper, arg))?;
-        Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOpenPi(
+        let Some(lower_bound_proof) = self.trig_nonzero_bound_from_known_order(&lower, arg)?
+            else { return Ok(None); };
+        let Some(upper_bound_proof) = self.trig_nonzero_bound_from_known_order(arg, &upper)?
+            else { return Ok(None); };
+        Ok(Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOpenPi(
             SinNonzeroOnOpenPiBuiltinRuleProof { lower_bound_proof, upper_bound_proof },
-        ))
+        )))
+    }
+
+    // A nonzero interval leaf may consume one direct bound or exactly two
+    // already known order edges, retaining their real transitivity evidence.
+    // No recursive verifier entry, publication, or permission reset occurs.
+    // Example: a<=b and b<pi/2 establish the upper bound needed for cos(a)!=0.
+    fn trig_nonzero_bound_from_known_order(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+    ) -> RuntimeResult<Option<AtomicExceptEqualityFactKnownProof>> {
+        if let Some(proof) = self.known_less_proof(left, right)
+            .or_else(|| self.known_greater_proof(right, left)) {
+            return Ok(Some(proof));
+        }
+        let fact = LessFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: left.clone(), right: right.clone(), line_file: None,
+        };
+        let Some(proof) = self.less_transitivity_proof(&fact)? else { return Ok(None); };
+        Ok(Some(AtomicExceptEqualityFactKnownProof {
+            fact: fact.into(),
+            searched_proof: Box::new(super::super::result::AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+                super::AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(proof),
+            )),
+        }))
     }
 
     fn empty_set_from_nonempty_proof(

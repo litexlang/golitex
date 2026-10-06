@@ -1,0 +1,77 @@
+# IMO 1962 Problem 6: original scalar alternative.
+# Metric radii and center separation are the original scalar certificate.
+
+prop is_isosceles_circle_data(a, h, s, r, rho, d R):
+    a > 0
+    h > 0
+    s > 0
+    r > 0
+    rho > 0
+    d >= 0
+    s^2 = a^2 + h^2
+    2 * r * h = s^2
+    rho * (s + a) = a * h
+    d^2 = (r + rho - h)^2
+
+thm isosceles_euler_square:
+    ? forall a, h, s, r, rho, d R:
+        a > 0
+        h > 0
+        s > 0
+        r > 0
+        rho > 0
+        d >= 0
+        s^2 = a^2 + h^2
+        2 * r * h = s^2
+        rho * (s + a) = a * h
+        d^2 = (r + rho - h)^2
+        =>:
+            d^2 = r * (r - 2 * rho)
+    h != 0
+    (s+a)*(s-a) = s^2-a^2 = (a^2+h^2)-a^2 = h^2
+    h*(rho*h) = rho*h^2 = rho*((s+a)*(s-a)) = (rho*(s+a))*(s-a) = (a*h)*(s-a) = h*(a*(s-a))
+    rho*h = (h*(rho*h))/h = (h*(a*(s-a)))/h = a*(s-a)
+    h*((r+rho-h)^2-r*(r-2*rho)) = h*rho^2+h*(h^2-2*r*h)-2*rho*h^2+2*rho*(2*r*h) = h*rho^2+h*(h^2-s^2)-2*rho*h^2+2*rho*s^2 = h*rho^2+h*(h^2-(a^2+h^2))-2*rho*h^2+2*rho*(a^2+h^2) = h*rho^2-h*a^2+2*rho*a^2
+    h*rho^2-h*a^2+2*rho*a^2 = rho*(rho*h)-h*a^2+2*rho*a^2 = rho*(a*(s-a))-h*a^2+2*rho*a^2 = a*(rho*(s+a))-h*a^2 = a*(a*h)-h*a^2 = 0
+    (r+rho-h)^2-r*(r-2*rho) = (h*((r+rho-h)^2-r*(r-2*rho)))/h = 0/h = 0
+    d^2 = (r+rho-h)^2 = r*(r-2*rho)
+
+thm nonnegative_square_root:
+    ? forall x, y R:
+        x >= 0
+        y >= 0
+        x^2 = y
+        =>:
+            x = sqrt(y)
+    0 <= x
+    0 <= y
+    sqrt(x^2) = x
+    sqrt(x^2) = sqrt(y)
+    x = sqrt(y)
+
+thm isosceles_euler_nonnegative:
+    ? forall a,h,s,r,rho,d R:
+        $is_isosceles_circle_data(a,h,s,r,rho,d)
+        =>:
+            0 <= r*(r-2*rho)
+    by def $is_isosceles_circle_data(a,h,s,r,rho,d)
+    by thm isosceles_euler_square(a,h,s,r,rho,d) => d^2 = r*(r-2*rho)
+    0 <= d^2
+    0 <= r*(r-2*rho)
+
+thm problem_5:
+    ? forall a, h, s, r, rho, d R:
+        # NL: Consider an isosceles triangle; r and rho are its circumradius and
+        # inradius, and d is the distance between the two circle centers.
+        $is_isosceles_circle_data(a, h, s, r, rho, d)
+        =>:
+            # Litex: Well-definedness certificate for the square root below.
+            r * (r - 2 * rho) >= 0
+            # NL: Prove that d = sqrt(r(r - 2rho)).
+            d = sqrt(r * (r - 2 * rho))
+    by def $is_isosceles_circle_data(a, h, s, r, rho, d)
+    release thm isosceles_euler_square(a, h, s, r, rho, d)
+    d^2 >= 0
+    r * (r - 2 * rho) >= 0
+    release thm nonnegative_square_root(d, r * (r - 2 * rho))
+    d = sqrt(r * (r - 2 * rho))

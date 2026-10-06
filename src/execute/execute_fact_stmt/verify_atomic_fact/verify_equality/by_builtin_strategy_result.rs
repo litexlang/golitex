@@ -90,8 +90,13 @@ pub struct ModCongruenceStrategySingleStep {
 // Examples:
 // - From `x != 0`, prove `x / x = 1`.
 // - From `b != 0`, prove `a / b + c / b = (a + c) / b`.
+// - From `b != 0`, `d != 0`, check the common-denominator difference
+//   `a/b-c/d=(a*d-c*b)/(b*d)` using the two actual nonzero factor proofs.
 //
-// `requirement_facts` are exactly those `d != 0` facts (ordered); each entry in
+// Multiplicative denominators / negative-power bases are decomposed into their
+// scalar factors; proving those factors nonzero proves the original product
+// nonzero. Nested-expression domains remain in parent WD.
+// `requirement_facts` are those `d != 0` facts (ordered); each entry in
 // `proof_of_requirement_facts` is the successful verify result for the same index.
 pub struct RationalWithNonzeroPremisesStrategySingleStep {
     pub requirement_facts: Vec<Fact>,

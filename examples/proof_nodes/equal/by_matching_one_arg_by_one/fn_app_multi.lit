@@ -1,13 +1,12 @@
 # Node: equal.ByMatchingOneArgByOne (multi-layer FnObj peel)
 # Run: litex -f examples/proof_nodes/equal/by_matching_one_arg_by_one/fn_app_multi.lit
 #
-# Curried signature via `let f = fn(p R) fn(q R) R` (FnSet, no body) registers
-# InFunctionSet; `let g = f` reuses it through equality-class lookup.
+# Introduce curried function values; a function set alone is not a callable value.
 
 have a R = 1
 have b R = a
 have u R = 2
 have v R = u
-let f = fn(p R) fn(q R) R
-let g = f
+have f fn(p R) fn(q R) R
+have g fn(p R) fn(q R) R = f
 f(u)(a) = g(v)(b)

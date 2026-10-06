@@ -1,0 +1,347 @@
+# IMO 1961 Problem 4 (source folder problem_3).
+# This self-contained development includes the required geometry definitions.
+# Positive parameter domains and noncollinearity are explicit in the statements.
+# Positive barycentric weights give ratios (1-u)/u. A simultaneous strict
+# violation of either ratio bound would contradict u+v+w=1.
+
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
+
+# Dot product.
+
+have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+
+# Squared Euclidean distance |ab|^2 (avoids square roots).
+
+prop is_on_segment(p, a, b cart(R, R)):
+    a != b
+    exist t R st {0 <= t, t <= 1, p(1) = (1 - t) * a(1) + t * b(1), p(2) = (1 - t) * a(2) + t * b(2)}
+
+# p lies on the ray from a through distinct point b (t >= 0).
+
+prop is_collinear(p, q, r cart(R, R)):
+    det(vec(p, q), vec(p, r)) = 0
+
+# Segments ab and cd have equal length.
+
+# Custom predicates for problem_3
+
+# Point p is inside triangle with vertices a, b, c
+prop is_inside_triangle(p, a, b, c cart(R, R)):
+    not $is_collinear(a, b, c)
+    exist u, v, w R st {u > 0, v > 0, w > 0, u + v + w = 1, p(1) = u * a(1) + v * b(1) + w * c(1), p(2) = u * a(2) + v * b(2) + w * c(2)}
+
+# The positive ratio AP/PQ, with P between A and Q.
+
+prop is_cevian_ratio(a, p, q cart(R, R), r R):
+    r > 0
+    (1 + r) * p(1) = a(1) + r * q(1)
+    (1 + r) * p(2) = a(2) + r * q(2)
+
+# Helper theorems for problem_3
+# imo_official_1961_eng_4
+
+# A positive barycentric coordinate at least 1/3 gives a cevian ratio at most 2.
+thm ratio_at_most_two:
+    ? forall u, s, r R:
+        u >= 1/3
+        u + s = 1
+        r > 0
+        r * u = s
+        =>:
+            r <= 2
+    by contra:
+        ? u > 0
+        u <= 0
+        1/3 <= u
+        1/3 <= 0
+        impossible 1/3 > 0
+    1/3 * 3 <= u * 3
+    1/3*3 = 1
+    u*3 = 3*u
+    1 <= 3 * u
+    s + u = 1
+    s + u <= 3 * u
+    s + u - u <= 3 * u - u
+    s + u - u = s
+    3 * u - u = 2 * u
+    s <= 2 * u
+    r * u <= 2 * u
+    by contra:
+        ? r <= 2
+        r > 2
+        r * u > 2 * u
+        impossible r * u <= 2 * u
+
+# A positive barycentric coordinate at most 1/3 gives a cevian ratio at least 2.
+
+thm ratio_at_least_two:
+    ? forall u, s, r R:
+        u > 0
+        u <= 1/3
+        u + s = 1
+        r > 0
+        r * u = s
+        =>:
+            r >= 2
+    u * 3 <= 1/3 * 3
+    u * 3 = 3 * u
+    1/3 * 3 = 1
+    3 * u <= 1
+    3 * u <= u + s
+    3 * u - u <= u + s - u
+    3 * u - u = 2 * u
+    u + s - u = s
+    2 * u <= s
+    2 * u <= r * u
+    by contra:
+        ? r >= 2
+        r < 2
+        r * u < 2 * u
+        impossible 2 * u <= r * u
+
+# Determinant cancellation for a cevian written in affine coordinates.
+
+thm three_ratios_at_least_one_at_most_two:
+    ? forall u,v,w,r1,r2,r3 R:
+        u > 0
+        v > 0
+        w > 0
+        u+v+w = 1
+        r1 > 0
+        r2 > 0
+        r3 > 0
+        r1*u = 1-u
+        r2*v = 1-v
+        r3*w = 1-w
+        =>:
+            r1 <= 2 or r2 <= 2 or r3 <= 2
+    by contra:
+        ? r1 <= 2 or r2 <= 2 or r3 <= 2
+        r1 > 2
+        r2 > 2
+        r3 > 2
+        by contra:
+            ? u < 1/3
+            u >= 1/3
+            by thm ratio_at_most_two(u,1-u,r1) => r1 <= 2
+            impossible r1 > 2
+        by contra:
+            ? v < 1/3
+            v >= 1/3
+            by thm ratio_at_most_two(v,1-v,r2) => r2 <= 2
+            impossible r2 > 2
+        by contra:
+            ? w < 1/3
+            w >= 1/3
+            by thm ratio_at_most_two(w,1-w,r3) => r3 <= 2
+            impossible r3 > 2
+        u+v < 1/3+v
+        1/3+v < 1/3+1/3
+        u+v < 1/3+1/3
+        1/3+1/3 = 2/3
+        u+v < 2/3
+        u+v+w < 2/3+w
+        2/3+w < 2/3+1/3
+        2/3+1/3 = 1
+        u+v+w < 1
+        impossible u+v+w = 1
+
+thm three_ratios_at_least_one_at_least_two:
+    ? forall u,v,w,r1,r2,r3 R:
+        u > 0
+        v > 0
+        w > 0
+        u+v+w = 1
+        r1 > 0
+        r2 > 0
+        r3 > 0
+        r1*u = 1-u
+        r2*v = 1-v
+        r3*w = 1-w
+        =>:
+            r1 >= 2 or r2 >= 2 or r3 >= 2
+    by contra:
+        ? r1 >= 2 or r2 >= 2 or r3 >= 2
+        r1 < 2
+        r2 < 2
+        r3 < 2
+        by contra:
+            ? u > 1/3
+            u <= 1/3
+            by thm ratio_at_least_two(u,1-u,r1) => r1 >= 2
+            impossible r1 < 2
+        by contra:
+            ? v > 1/3
+            v <= 1/3
+            by thm ratio_at_least_two(v,1-v,r2) => r2 >= 2
+            impossible r2 < 2
+        by contra:
+            ? w > 1/3
+            w <= 1/3
+            by thm ratio_at_least_two(w,1-w,r3) => r3 >= 2
+            impossible r3 < 2
+        1/3 < u
+        1/3 < v
+        1/3 < w
+        1/3+1/3 < u+1/3
+        u+1/3 < u+v
+        1/3+1/3 < u+v
+        1/3+1/3 = 2/3
+        2/3 < u+v
+        2/3+1/3 < u+v+1/3
+        u+v+1/3 < u+v+w
+        2/3+1/3 < u+v+w
+        2/3+1/3 = 1
+        1 < u+v+w
+        impossible u+v+w = 1
+
+thm cevian_coordinate_ratio:
+    ? forall x, y, z, h, px, py, qx, qy, u, w, r, t R:
+        x * h - y * z != 0
+        px = u * x + w * z
+        py = u * y + w * h
+        qx = t * z
+        qy = t * h
+        (1 + r) * px = x + r * qx
+        (1 + r) * py = y + r * qy
+        =>:
+            r * u = 1 - u
+    (1+r)*(u*x+w*z)-(x+r*(t*z)) = (1+r)*px-(x+r*qx) = 0
+    (1+r)*(u*y+w*h)-(y+r*(t*h)) = (1+r)*py-(y+r*qy) = 0
+    (x*h-y*z)*((1+r)*u-1) = h*((1+r)*(u*x+w*z)-(x+r*(t*z)))-z*((1+r)*(u*y+w*h)-(y+r*(t*h))) = h*0-z*0 = 0
+    (1+r)*u-1 = ((x*h-y*z)*((1+r)*u-1))/(x*h-y*z) = 0/(x*h-y*z) = 0
+    r*u = ((1+r)*u-1)+1-u = 0+1-u = 1-u
+
+thm determinant_coordinates:
+    ? forall a,b,c cart(R,R):
+        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+    vec(a,b) = (b(1)-a(1),b(2)-a(2))
+    vec(a,c) = (c(1)-a(1),c(2)-a(2))
+    vec(a,b)(1) = (b(1)-a(1),b(2)-a(2))(1) = b(1)-a(1)
+    vec(a,b)(2) = (b(1)-a(1),b(2)-a(2))(2) = b(2)-a(2)
+    vec(a,c)(1) = (c(1)-a(1),c(2)-a(2))(1) = c(1)-a(1)
+    vec(a,c)(2) = (c(1)-a(1),c(2)-a(2))(2) = c(2)-a(2)
+    det(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+
+thm cevian_point_ratio:
+    ? forall a, b, c, p, q cart(R, R), u, v, w, r, t R:
+        not $is_collinear(a, b, c)
+        u + v + w = 1
+        p(1) = u * a(1) + v * b(1) + w * c(1)
+        p(2) = u * a(2) + v * b(2) + w * c(2)
+        q(1) = (1 - t) * b(1) + t * c(1)
+        q(2) = (1 - t) * b(2) + t * c(2)
+        (1 + r) * p(1) = a(1) + r * q(1)
+        (1 + r) * p(2) = a(2) + r * q(2)
+        =>:
+            r * u = 1 - u
+    by contra:
+        ? (a(1)-b(1))*(c(2)-b(2))-(a(2)-b(2))*(c(1)-b(1)) != 0
+        (a(1)-b(1))*(c(2)-b(2))-(a(2)-b(2))*(c(1)-b(1)) = 0
+        by thm determinant_coordinates(a,b,c) => det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) = -((a(1)-b(1))*(c(2)-b(2))-(a(2)-b(2))*(c(1)-b(1))) = 0
+        by def $is_collinear(a,b,c)
+        impossible not $is_collinear(a,b,c)
+    (u+v+w)*b(1) = b(1)
+    (u+v+w)*b(2) = b(2)
+    p(1)-b(1) = u*a(1)+v*b(1)+w*c(1)-b(1) = u*a(1)+v*b(1)+w*c(1)-(u+v+w)*b(1) = u*(a(1)-b(1))+w*(c(1)-b(1))
+    p(2)-b(2) = u*a(2)+v*b(2)+w*c(2)-b(2) = u*a(2)+v*b(2)+w*c(2)-(u+v+w)*b(2) = u*(a(2)-b(2))+w*(c(2)-b(2))
+    q(1)-b(1) = (1-t)*b(1)+t*c(1)-b(1) = t*(c(1)-b(1))
+    q(2)-b(2) = (1-t)*b(2)+t*c(2)-b(2) = t*(c(2)-b(2))
+    (1+r)*(p(1)-b(1)) = (1+r)*p(1)-(1+r)*b(1) = a(1)+r*q(1)-(1+r)*b(1) = (a(1)-b(1))+r*(q(1)-b(1))
+    (1+r)*(p(2)-b(2)) = (1+r)*p(2)-(1+r)*b(2) = a(2)+r*q(2)-(1+r)*b(2) = (a(2)-b(2))+r*(q(2)-b(2))
+    by thm cevian_coordinate_ratio(a(1)-b(1),a(2)-b(2),c(1)-b(1),c(2)-b(2),p(1)-b(1),p(2)-b(2),q(1)-b(1),q(2)-b(2),u,w,r,t) => r*u = 1-u
+
+thm noncollinear_swap_first:
+    ? forall a, b, c cart(R, R):
+        not $is_collinear(a, b, c)
+        =>:
+            not $is_collinear(b, a, c)
+    by contra:
+        ? not $is_collinear(b,a,c)
+        by def $is_collinear(b,a,c)
+        by thm determinant_coordinates(b,a,c) => det(vec(b,a),vec(b,c)) = (a(1)-b(1))*(c(2)-b(2))-(a(2)-b(2))*(c(1)-b(1))
+        (a(1)-b(1))*(c(2)-b(2))-(a(2)-b(2))*(c(1)-b(1)) = det(vec(b,a),vec(b,c)) = 0
+        by thm determinant_coordinates(a,b,c) => det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) = -((a(1)-b(1))*(c(2)-b(2))-(a(2)-b(2))*(c(1)-b(1))) = 0
+        by def $is_collinear(a,b,c)
+        impossible not $is_collinear(a,b,c)
+
+thm noncollinear_cycle:
+    ? forall a, b, c cart(R, R):
+        not $is_collinear(a, b, c)
+        =>:
+            not $is_collinear(c, a, b)
+    by contra:
+        ? not $is_collinear(c,a,b)
+        by def $is_collinear(c,a,b)
+        by thm determinant_coordinates(c,a,b) => det(vec(c,a),vec(c,b)) = (a(1)-c(1))*(b(2)-c(2))-(a(2)-c(2))*(b(1)-c(1))
+        (a(1)-c(1))*(b(2)-c(2))-(a(2)-c(2))*(b(1)-c(1)) = det(vec(c,a),vec(c,b)) = 0
+        by thm determinant_coordinates(a,b,c) => det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) = ((a(1)-c(1))*(b(2)-c(2))-(a(2)-c(2))*(b(1)-c(1))) = 0
+        by def $is_collinear(a,b,c)
+        impossible not $is_collinear(a,b,c)
+
+thm problem_3_part_a:
+    ? forall p1, p2, p3, p, q1, q2, q3 cart(R, R), r1, r2, r3 R:
+        $is_inside_triangle(p, p1, p2, p3)  # P is inside triangle P1P2P3
+        $is_on_segment(q1, p2, p3)                # Q1 is on segment P2P3
+        $is_collinear(p1, p, q1)                  # P1, P, Q1 are collinear (cevian from P1)
+        $is_on_segment(q2, p1, p3)                # Q2 is on segment P1P3
+        $is_collinear(p2, p, q2)                  # P2, P, Q2 are collinear (cevian from P2)
+        $is_on_segment(q3, p1, p2)                # Q3 is on segment P1P2
+        $is_collinear(p3, p, q3)                  # P3, P, Q3 are collinear (cevian from P3)
+        $is_cevian_ratio(p1, p, q1, r1)     # r1 = P1P / PQ1
+        $is_cevian_ratio(p2, p, q2, r2)     # r2 = P2P / PQ2
+        $is_cevian_ratio(p3, p, q3, r3)      # r3 = P3P / PQ3
+        =>:
+            r1 <= 2 or r2 <= 2 or r3 <= 2               # At least one ratio is at most 2
+    by def $is_inside_triangle(p, p1, p2, p3)
+    obtain u, v, w from exist u, v, w R st {u > 0, v > 0, w > 0, u + v + w = 1, p(1) = u * p1(1) + v * p2(1) + w * p3(1), p(2) = u * p1(2) + v * p2(2) + w * p3(2)}
+    by def $is_on_segment(q1, p2, p3)
+    obtain t1 from exist t1 R st {0 <= t1, t1 <= 1, q1(1) = (1 - t1) * p2(1) + t1 * p3(1), q1(2) = (1 - t1) * p2(2) + t1 * p3(2)}
+    by def $is_on_segment(q2, p1, p3)
+    obtain t2 from exist t2 R st {0 <= t2, t2 <= 1, q2(1) = (1 - t2) * p1(1) + t2 * p3(1), q2(2) = (1 - t2) * p1(2) + t2 * p3(2)}
+    by def $is_on_segment(q3, p1, p2)
+    obtain t3 from exist t3 R st {0 <= t3, t3 <= 1, q3(1) = (1 - t3) * p1(1) + t3 * p2(1), q3(2) = (1 - t3) * p1(2) + t3 * p2(2)}
+    by def $is_cevian_ratio(p1, p, q1, r1)
+    by def $is_cevian_ratio(p2, p, q2, r2)
+    by def $is_cevian_ratio(p3, p, q3, r3)
+    release thm noncollinear_swap_first(p1,p2,p3)
+    release thm noncollinear_cycle(p1,p2,p3)
+    by thm cevian_point_ratio(p1, p2, p3, p, q1, u, v, w, r1, t1) => r1*u = 1-u
+    by thm cevian_point_ratio(p2, p1, p3, p, q2, v, u, w, r2, t2) => r2*v = 1-v
+    by thm cevian_point_ratio(p3, p1, p2, p, q3, w, u, v, r3, t3) => r3*w = 1-w
+    release thm three_ratios_at_least_one_at_most_two(u,v,w,r1,r2,r3)
+
+thm problem_3_part_b:
+    ? forall p1, p2, p3, p, q1, q2, q3 cart(R, R), r1, r2, r3 R:
+        $is_inside_triangle(p, p1, p2, p3)  # P is inside triangle P1P2P3
+        $is_on_segment(q1, p2, p3)                # Q1 is on segment P2P3
+        $is_collinear(p1, p, q1)                  # P1, P, Q1 are collinear (cevian from P1)
+        $is_on_segment(q2, p1, p3)                # Q2 is on segment P1P3
+        $is_collinear(p2, p, q2)                  # P2, P, Q2 are collinear (cevian from P2)
+        $is_on_segment(q3, p1, p2)                # Q3 is on segment P1P2
+        $is_collinear(p3, p, q3)                  # P3, P, Q3 are collinear (cevian from P3)
+        $is_cevian_ratio(p1, p, q1, r1)     # r1 = P1P / PQ1
+        $is_cevian_ratio(p2, p, q2, r2)     # r2 = P2P / PQ2
+        $is_cevian_ratio(p3, p, q3, r3)      # r3 = P3P / PQ3
+        =>:
+            r1 >= 2 or r2 >= 2 or r3 >= 2               # At least one ratio is at least 2
+    by def $is_inside_triangle(p, p1, p2, p3)
+    obtain u, v, w from exist u, v, w R st {u > 0, v > 0, w > 0, u + v + w = 1, p(1) = u * p1(1) + v * p2(1) + w * p3(1), p(2) = u * p1(2) + v * p2(2) + w * p3(2)}
+    by def $is_on_segment(q1, p2, p3)
+    obtain t1 from exist t1 R st {0 <= t1, t1 <= 1, q1(1) = (1 - t1) * p2(1) + t1 * p3(1), q1(2) = (1 - t1) * p2(2) + t1 * p3(2)}
+    by def $is_on_segment(q2, p1, p3)
+    obtain t2 from exist t2 R st {0 <= t2, t2 <= 1, q2(1) = (1 - t2) * p1(1) + t2 * p3(1), q2(2) = (1 - t2) * p1(2) + t2 * p3(2)}
+    by def $is_on_segment(q3, p1, p2)
+    obtain t3 from exist t3 R st {0 <= t3, t3 <= 1, q3(1) = (1 - t3) * p1(1) + t3 * p2(1), q3(2) = (1 - t3) * p1(2) + t3 * p2(2)}
+    by def $is_cevian_ratio(p1, p, q1, r1)
+    by def $is_cevian_ratio(p2, p, q2, r2)
+    by def $is_cevian_ratio(p3, p, q3, r3)
+    release thm noncollinear_swap_first(p1,p2,p3)
+    release thm noncollinear_cycle(p1,p2,p3)
+    by thm cevian_point_ratio(p1, p2, p3, p, q1, u, v, w, r1, t1) => r1*u = 1-u
+    by thm cevian_point_ratio(p2, p1, p3, p, q2, v, u, w, r2, t2) => r2*v = 1-v
+    by thm cevian_point_ratio(p3, p1, p2, p, q3, w, u, v, r3, t3) => r3*w = 1-w
+    release thm three_ratios_at_least_one_at_least_two(u,v,w,r1,r2,r3)

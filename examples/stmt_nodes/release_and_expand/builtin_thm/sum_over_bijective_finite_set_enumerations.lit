@@ -1,12 +1,12 @@
-# Before: named builtin was not found.
-# release thm sum_over_bijective_finite_set_enumerations(sum(1, 2, fn(k closed_range(1, 2)) R {f(e1(k))}), sum(1, 2, fn(k closed_range(1, 2)) R {f(e2(k))}))
-# Now: native builtin contract; verify premises before storing conclusions.
-# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/sum_over_bijective_finite_set_enumerations.lit
+# Enumeration invariance with explicit callback values.
+# The callback premises retain the original two compositions f(e1(k)), f(e2(k)).
+# Selection cites the original builtin result through these defining equalities.
 thm enumeration:
-    ? forall f fn(t {1, 2}) R, e1, e2 fn(u closed_range(1, 2)) {1, 2}:
+    ? forall f fn(t {1, 2}) R, e1, e2 fn(u closed_range(1, 2)) {1, 2}, left_fn, right_fn fn(k closed_range(1, 2)) R:
         $bijective(closed_range(1, 2), {1, 2}, e1)
         $bijective(closed_range(1, 2), {1, 2}, e2)
+        left_fn = fn(k closed_range(1, 2)) R{f(e1(k))}
+        right_fn = fn(k closed_range(1, 2)) R{f(e2(k))}
         =>:
-            sum(1, 2, fn(k closed_range(1, 2)) R {f(e1(k))}) = sum(1, 2, fn(k closed_range(1, 2)) R {f(e2(k))})
-    release thm sum_over_bijective_finite_set_enumerations(sum(1, 2, fn(k closed_range(1, 2)) R {f(e1(k))}), sum(1, 2, fn(k closed_range(1, 2)) R {f(e2(k))}))
-# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.
+            sum(1, 2, left_fn) = sum(1, 2, right_fn)
+    by thm sum_over_bijective_finite_set_enumerations(sum(1, 2, left_fn), sum(1, 2, right_fn)) => sum(1, 2, left_fn) = sum(1, 2, right_fn)

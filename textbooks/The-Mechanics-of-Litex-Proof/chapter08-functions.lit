@@ -217,24 +217,28 @@ claim:
 
 # Equivalently, you can use anonymous function to define the function.
 
+have fn real_successor(x R) R = x + 1
+
 claim:
     ? forall x1, x2 R:
-        fn(x R) R {x + 1}(x1) = fn(x R) R {x + 1}(x2)
+        real_successor(x1) = real_successor(x2)
         =>:
             x1 = x2
-    x1 + 1 = fn(x R) R {x + 1}(x1) = fn(x R) R {x + 1}(x2) = x2 + 1
+    x1 + 1 = real_successor(x1) = real_successor(x2) = x2 + 1
     x1 = (x1 + 1) - 1 = (x2 + 1) - 1 = x2
 
-by def $injective_fn(R, R, fn(x R) R {x + 1})
+by def $injective_fn(R, R, real_successor)
 
 # 8.1.4 Example: `x |-> x^2` On `R` Is Not Injective
 
 # To disprove injectivity, find two different inputs with the same output.
 # For the square function on real numbers, the witnesses are `-1` and `1`:
 
+have fn real_square(x R) R = x^2
+
 by contra:
-    ? not $injective_fn(R, R, fn(x R) R {x^2})
-    fn(x R) R {x^2}(1) = 1 = fn(x R) R {x^2}(-1)
+    ? not $injective_fn(R, R, real_square)
+    real_square(1) = 1 = real_square(-1)
     impossible 1 = -1
 
 # 8.1.5 Surjective Functions
@@ -1069,21 +1073,20 @@ sketch:
 # product. Tuple values are written with parentheses, such as `(1, 2)` or
 # `(x, y, z)`. Tuple projections are one-based:
 
-(1, 2)[1] = 1
-(1, 2)[2] = 2
+(1, 2)(1) = 1
+(1, 2)(2) = 2
 
 # If Litex knows `u $in cart(A, B)`, then it treats `u` as a two-tuple, with
-# `u[1] $in A` and `u[2] $in B`. Similarly, equality of tuples gives equality of
+# `u(1) $in A` and `u(2) $in B`. Similarly, equality of tuples gives equality of
 # the corresponding coordinates. This is why product-type proofs often introduce
-# coordinate equations by writing projections such as `u[1]` and `u[2]`.
+# coordinate equations by writing projections such as `u(1)` and `u(2)`.
 
 sketch:
     have u cart(Z, Z)
 
-    $is_tuple(u)
-    tuple_dim(u) = 2
-    u[1] $in Z
-    u[2] $in Z
+    u $in finite_seq(Z, 2)
+    u(1) $in Z
+    u(2) $in Z
 
 # 8.4.1 Example: An Injective But Not Surjective Function From `Z` To `cart(Z, Z)`
 
@@ -1119,7 +1122,7 @@ sketch:
 
             q_Z_pair(m1) = (m1 + 1, 2 - m1)
             q_Z_pair(m2) = (m2 + 1, 2 - m2)
-            m1 + 1 = q_Z_pair(m1)[1] = q_Z_pair(m2)[1] = m2 + 1
+            m1 + 1 = q_Z_pair(m1)(1) = q_Z_pair(m2)(1) = m2 + 1
             m1 = (m1 + 1) - 1 = (m2 + 1) - 1 = m2
 
         by def $injective_fn(Z, cart(Z, Z), q_Z_pair)
@@ -1137,8 +1140,8 @@ sketch:
             (0, 0) = q_Z_pair(n)
             q_Z_pair(n) = (n + 1, 2 - n)
             (0, 0) = (n + 1, 2 - n)
-            0 = (0, 0)[1] = (n + 1, 2 - n)[1] = n + 1
-            0 = (0, 0)[2] = (n + 1, 2 - n)[2] = 2 - n
+            0 = (0, 0)(1) = (n + 1, 2 - n)(1) = n + 1
+            0 = (0, 0)(2) = (n + 1, 2 - n)(2) = 2 - n
             n = 0 - 1 = -1
             n = 2 - (2 - n) = 2 - 0 = 2
             impossible -1 = 2
@@ -1187,32 +1190,32 @@ sketch:
 # Therefore the original function is bijective.
 
 sketch:
-    have fn F_Z2(t cart(Z, Z)) cart(Z, Z) = (t[1] + t[2], t[1] + 2 * t[2])
-    have fn Finv_Z2(s cart(Z, Z)) cart(Z, Z) = (2 * s[1] - s[2], s[2] - s[1])
+    have fn F_Z2(t cart(Z, Z)) cart(Z, Z) = (t(1) + t(2), t(1) + 2 * t(2))
+    have fn Finv_Z2(s cart(Z, Z)) cart(Z, Z) = (2 * s(1) - s(2), s(2) - s(1))
 
     claim:
         ? forall t cart(Z, Z):
             Finv_Z2(F_Z2(t)) = t
-        F_Z2(t) = (t[1] + t[2], t[1] + 2 * t[2])
-        F_Z2(t)[1] = t[1] + t[2]
-        F_Z2(t)[2] = t[1] + 2 * t[2]
-        Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)[1] - F_Z2(t)[2], F_Z2(t)[2] - F_Z2(t)[1])
-        release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
-        2 * F_Z2(t)[1] - F_Z2(t)[2] = 2 * (t[1] + t[2]) - (t[1] + 2 * t[2]) = t[1]
-        F_Z2(t)[2] - F_Z2(t)[1] = (t[1] + 2 * t[2]) - (t[1] + t[2]) = t[2]
-        Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)[1] - F_Z2(t)[2], F_Z2(t)[2] - F_Z2(t)[1]) = (2 * (t[1] + t[2]) - (t[1] + 2 * t[2]), (t[1] + 2 * t[2]) - (t[1] + t[2])) = (t[1], t[2]) = t
+        F_Z2(t) = (t(1) + t(2), t(1) + 2 * t(2))
+        F_Z2(t)(1) = t(1) + t(2)
+        F_Z2(t)(2) = t(1) + 2 * t(2)
+        Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)(1) - F_Z2(t)(2), F_Z2(t)(2) - F_Z2(t)(1))
+        release thm tuple_equal_from_coordinates(t, (t(1), t(2)))
+        2 * F_Z2(t)(1) - F_Z2(t)(2) = 2 * (t(1) + t(2)) - (t(1) + 2 * t(2)) = t(1)
+        F_Z2(t)(2) - F_Z2(t)(1) = (t(1) + 2 * t(2)) - (t(1) + t(2)) = t(2)
+        Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)(1) - F_Z2(t)(2), F_Z2(t)(2) - F_Z2(t)(1)) = (2 * (t(1) + t(2)) - (t(1) + 2 * t(2)), (t(1) + 2 * t(2)) - (t(1) + t(2))) = (t(1), t(2)) = t
 
     claim:
         ? forall s cart(Z, Z):
             F_Z2(Finv_Z2(s)) = s
-        Finv_Z2(s) = (2 * s[1] - s[2], s[2] - s[1])
-        Finv_Z2(s)[1] = 2 * s[1] - s[2]
-        Finv_Z2(s)[2] = s[2] - s[1]
-        F_Z2(Finv_Z2(s)) = (Finv_Z2(s)[1] + Finv_Z2(s)[2], Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2])
-        release thm tuple_equal_from_coordinates(s, (s[1], s[2]))
-        Finv_Z2(s)[1] + Finv_Z2(s)[2] = 2 * s[1] - s[2] + (s[2] - s[1]) = s[1]
-        Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2] = 2 * s[1] - s[2] + 2 * (s[2] - s[1]) = s[2]
-        F_Z2(Finv_Z2(s)) = (Finv_Z2(s)[1] + Finv_Z2(s)[2], Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2]) = (2 * s[1] - s[2] + (s[2] - s[1]), 2 * s[1] - s[2] + 2 * (s[2] - s[1])) = (s[1], s[2]) = s
+        Finv_Z2(s) = (2 * s(1) - s(2), s(2) - s(1))
+        Finv_Z2(s)(1) = 2 * s(1) - s(2)
+        Finv_Z2(s)(2) = s(2) - s(1)
+        F_Z2(Finv_Z2(s)) = (Finv_Z2(s)(1) + Finv_Z2(s)(2), Finv_Z2(s)(1) + 2 * Finv_Z2(s)(2))
+        release thm tuple_equal_from_coordinates(s, (s(1), s(2)))
+        Finv_Z2(s)(1) + Finv_Z2(s)(2) = 2 * s(1) - s(2) + (s(2) - s(1)) = s(1)
+        Finv_Z2(s)(1) + 2 * Finv_Z2(s)(2) = 2 * s(1) - s(2) + 2 * (s(2) - s(1)) = s(2)
+        F_Z2(Finv_Z2(s)) = (Finv_Z2(s)(1) + Finv_Z2(s)(2), Finv_Z2(s)(1) + 2 * Finv_Z2(s)(2)) = (2 * s(1) - s(2) + (s(2) - s(1)), 2 * s(1) - s(2) + 2 * (s(2) - s(1))) = (s(1), s(2)) = s
 
     by def $is_inverse(cart(Z, Z), cart(Z, Z), F_Z2, Finv_Z2)
     release thm inverse_implies_bijective(cart(Z, Z), cart(Z, Z), F_Z2, Finv_Z2)
@@ -1242,32 +1245,32 @@ sketch:
 # This inverse is valid over `R`.
 
 sketch:
-    have fn F_R2(t cart(R, R)) cart(R, R) = (t[1] + t[2], t[1] - t[2])
-    have fn Finv_R2(s cart(R, R)) cart(R, R) = ((s[1] + s[2]) / 2, (s[1] - s[2]) / 2)
+    have fn F_R2(t cart(R, R)) cart(R, R) = (t(1) + t(2), t(1) - t(2))
+    have fn Finv_R2(s cart(R, R)) cart(R, R) = ((s(1) + s(2)) / 2, (s(1) - s(2)) / 2)
 
     claim:
         ? forall t cart(R, R):
             Finv_R2(F_R2(t)) = t
-        F_R2(t) = (t[1] + t[2], t[1] - t[2])
-        F_R2(t)[1] = t[1] + t[2]
-        F_R2(t)[2] = t[1] - t[2]
-        Finv_R2(F_R2(t)) = ((F_R2(t)[1] + F_R2(t)[2]) / 2, (F_R2(t)[1] - F_R2(t)[2]) / 2)
-        release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
-        (F_R2(t)[1] + F_R2(t)[2]) / 2 = (t[1] + t[2] + (t[1] - t[2])) / 2 = t[1]
-        (F_R2(t)[1] - F_R2(t)[2]) / 2 = ((t[1] + t[2]) - (t[1] - t[2])) / 2 = t[2]
-        Finv_R2(F_R2(t)) = ((F_R2(t)[1] + F_R2(t)[2]) / 2, (F_R2(t)[1] - F_R2(t)[2]) / 2) = ((t[1] + t[2] + (t[1] - t[2])) / 2, ((t[1] + t[2]) - (t[1] - t[2])) / 2) = (t[1], t[2]) = t
+        F_R2(t) = (t(1) + t(2), t(1) - t(2))
+        F_R2(t)(1) = t(1) + t(2)
+        F_R2(t)(2) = t(1) - t(2)
+        Finv_R2(F_R2(t)) = ((F_R2(t)(1) + F_R2(t)(2)) / 2, (F_R2(t)(1) - F_R2(t)(2)) / 2)
+        release thm tuple_equal_from_coordinates(t, (t(1), t(2)))
+        (F_R2(t)(1) + F_R2(t)(2)) / 2 = (t(1) + t(2) + (t(1) - t(2))) / 2 = t(1)
+        (F_R2(t)(1) - F_R2(t)(2)) / 2 = ((t(1) + t(2)) - (t(1) - t(2))) / 2 = t(2)
+        Finv_R2(F_R2(t)) = ((F_R2(t)(1) + F_R2(t)(2)) / 2, (F_R2(t)(1) - F_R2(t)(2)) / 2) = ((t(1) + t(2) + (t(1) - t(2))) / 2, ((t(1) + t(2)) - (t(1) - t(2))) / 2) = (t(1), t(2)) = t
 
     claim:
         ? forall s cart(R, R):
             F_R2(Finv_R2(s)) = s
-        Finv_R2(s) = ((s[1] + s[2]) / 2, (s[1] - s[2]) / 2)
-        Finv_R2(s)[1] = (s[1] + s[2]) / 2
-        Finv_R2(s)[2] = (s[1] - s[2]) / 2
-        F_R2(Finv_R2(s)) = (Finv_R2(s)[1] + Finv_R2(s)[2], Finv_R2(s)[1] - Finv_R2(s)[2])
-        release thm tuple_equal_from_coordinates(s, (s[1], s[2]))
-        Finv_R2(s)[1] + Finv_R2(s)[2] = (s[1] + s[2]) / 2 + (s[1] - s[2]) / 2 = s[1]
-        Finv_R2(s)[1] - Finv_R2(s)[2] = (s[1] + s[2]) / 2 - (s[1] - s[2]) / 2 = s[2]
-        F_R2(Finv_R2(s)) = (Finv_R2(s)[1] + Finv_R2(s)[2], Finv_R2(s)[1] - Finv_R2(s)[2]) = ((s[1] + s[2]) / 2 + (s[1] - s[2]) / 2, (s[1] + s[2]) / 2 - (s[1] - s[2]) / 2) = (s[1], s[2]) = s
+        Finv_R2(s) = ((s(1) + s(2)) / 2, (s(1) - s(2)) / 2)
+        Finv_R2(s)(1) = (s(1) + s(2)) / 2
+        Finv_R2(s)(2) = (s(1) - s(2)) / 2
+        F_R2(Finv_R2(s)) = (Finv_R2(s)(1) + Finv_R2(s)(2), Finv_R2(s)(1) - Finv_R2(s)(2))
+        release thm tuple_equal_from_coordinates(s, (s(1), s(2)))
+        Finv_R2(s)(1) + Finv_R2(s)(2) = (s(1) + s(2)) / 2 + (s(1) - s(2)) / 2 = s(1)
+        Finv_R2(s)(1) - Finv_R2(s)(2) = (s(1) + s(2)) / 2 - (s(1) - s(2)) / 2 = s(2)
+        F_R2(Finv_R2(s)) = (Finv_R2(s)(1) + Finv_R2(s)(2), Finv_R2(s)(1) - Finv_R2(s)(2)) = ((s(1) + s(2)) / 2 + (s(1) - s(2)) / 2, (s(1) + s(2)) / 2 - (s(1) - s(2)) / 2) = (s(1), s(2)) = s
 
     by def $is_inverse(cart(R, R), cart(R, R), F_R2, Finv_R2)
     release thm inverse_implies_bijective(cart(R, R), cart(R, R), F_R2, Finv_R2)
@@ -1315,7 +1318,7 @@ sketch:
 # `(x1, y1) = (x2, y2)`, so the function is injective.
 
 sketch:
-    have fn rho_R3(t cart(R, R)) cart(R, R, R) = (t[1] + t[2], t[1] - t[2], t[2])
+    have fn rho_R3(t cart(R, R)) cart(R, R, R) = (t(1) + t(2), t(1) - t(2), t(2))
 
     claim:
         ? $injective_fn(cart(R, R), cart(R, R, R), rho_R3)
@@ -1324,14 +1327,14 @@ sketch:
                 rho_R3(u) = rho_R3(v)
                 =>:
                     u = v
-            rho_R3(u) = (u[1] + u[2], u[1] - u[2], u[2])
-            rho_R3(v) = (v[1] + v[2], v[1] - v[2], v[2])
-            u[2] = rho_R3(u)[3] = rho_R3(v)[3] = v[2]
-            u[1] + u[2] = rho_R3(u)[1] = rho_R3(v)[1] = v[1] + v[2]
-            u[1] = (u[1] + u[2]) - u[2] = (v[1] + v[2]) - v[2] = v[1]
-            release thm tuple_equal_from_coordinates(u, (u[1], u[2]))
-            (u[1], u[2]) = (v[1], v[2])
-            release thm tuple_equal_from_coordinates(v, (v[1], v[2]))
+            rho_R3(u) = (u(1) + u(2), u(1) - u(2), u(2))
+            rho_R3(v) = (v(1) + v(2), v(1) - v(2), v(2))
+            u(2) = rho_R3(u)(3) = rho_R3(v)(3) = v(2)
+            u(1) + u(2) = rho_R3(u)(1) = rho_R3(v)(1) = v(1) + v(2)
+            u(1) = (u(1) + u(2)) - u(2) = (v(1) + v(2)) - v(2) = v(1)
+            release thm tuple_equal_from_coordinates(u, (u(1), u(2)))
+            (u(1), u(2)) = (v(1), v(2))
+            release thm tuple_equal_from_coordinates(v, (v(1), v(2)))
         by def $injective_fn(cart(R, R), cart(R, R, R), rho_R3)
 
 # 8.4.5 Example: Addition From `R^2` To `R`
@@ -1364,9 +1367,9 @@ sketch:
 # ```
 
 sketch:
-    have fn add_R2(p cart(R, R)) R = p[1] + p[2]
+    have fn add_R2(p cart(R, R)) R = p(1) + p(2)
     forall p cart(R, R):
-        add_R2(p) = p[1] + p[2]
+        add_R2(p) = p(1) + p(2)
     have neg_one R = -1
 
     claim:
@@ -1376,11 +1379,11 @@ sketch:
             $injective_fn(cart(R, R), R, add_R2)
             (0, 0) $in cart(R, R)
             (1, neg_one) $in cart(R, R)
-            add_R2((0, 0)) = (0, 0)[1] + (0, 0)[2] = 0 + 0 = 0
-            add_R2((1, neg_one)) = (1, neg_one)[1] + (1, neg_one)[2] = 1 + neg_one = 0
+            add_R2((0, 0)) = (0, 0)(1) + (0, 0)(2) = 0 + 0 = 0
+            add_R2((1, neg_one)) = (1, neg_one)(1) + (1, neg_one)(2) = 1 + neg_one = 0
             add_R2((0, 0)) = add_R2((1, neg_one))
             (0, 0) = (1, neg_one)
-            0 = (0, 0)[1] = (1, neg_one)[1] = 1
+            0 = (0, 0)(1) = (1, neg_one)(1) = 1
             impossible 0 = 1
 
     claim:
@@ -1389,7 +1392,7 @@ sketch:
             ? forall a R:
                 exist p cart(R, R) st {a = add_R2(p)}
             witness exist p cart(R, R) st {a = add_R2(p)} from (a, 0):
-                a = a + 0 = (a, 0)[1] + (a, 0)[2] = add_R2((a, 0))
+                a = a + 0 = (a, 0)(1) + (a, 0)(2) = add_R2((a, 0))
         by def $surjective_fn(cart(R, R), R, add_R2)
 
 # 8.4.6 Example: `5m + 8n` From `Z^2` To `Z`
@@ -1420,9 +1423,9 @@ sketch:
 # So the input `(-3a, 2a)` maps to `a`.
 
 sketch:
-    have fn Z_lin58(u cart(Z, Z)) Z = 5 * u[1] + 8 * u[2]
+    have fn Z_lin58(u cart(Z, Z)) Z = 5 * u(1) + 8 * u(2)
     forall u cart(Z, Z):
-        Z_lin58(u) = 5 * u[1] + 8 * u[2]
+        Z_lin58(u) = 5 * u(1) + 8 * u(2)
 
     claim:
         ? not $injective_fn(cart(Z, Z), Z, Z_lin58)
@@ -1431,15 +1434,15 @@ sketch:
             $injective_fn(cart(Z, Z), Z, Z_lin58)
             (0, 0) $in cart(Z, Z)
             (8, -5) $in cart(Z, Z)
-            (0, 0)[1] = 0
-            (0, 0)[2] = 0
-            (8, -5)[1] = 8
-            (8, -5)[2] = -5
-            Z_lin58((0, 0)) = 5 * (0, 0)[1] + 8 * (0, 0)[2] = 5 * 0 + 8 * 0 = 0
-            Z_lin58((8, -5)) = 5 * (8, -5)[1] + 8 * (8, -5)[2] = 5 * 8 + 8 * (-5) = 0
+            (0, 0)(1) = 0
+            (0, 0)(2) = 0
+            (8, -5)(1) = 8
+            (8, -5)(2) = -5
+            Z_lin58((0, 0)) = 5 * (0, 0)(1) + 8 * (0, 0)(2) = 5 * 0 + 8 * 0 = 0
+            Z_lin58((8, -5)) = 5 * (8, -5)(1) + 8 * (8, -5)(2) = 5 * 8 + 8 * (-5) = 0
             Z_lin58((0, 0)) = Z_lin58((8, -5))
             (0, 0) = (8, -5)
-            0 = (0, 0)[1] = (8, -5)[1] = 8
+            0 = (0, 0)(1) = (8, -5)(1) = 8
             impossible 0 = 8
 
     claim:
@@ -1448,9 +1451,9 @@ sketch:
             ? forall a Z:
                 exist u cart(Z, Z) st {a = Z_lin58(u)}
             witness exist u cart(Z, Z) st {a = Z_lin58(u)} from (-3 * a, 2 * a):
-                (-3 * a, 2 * a)[1] = -3 * a
-                (-3 * a, 2 * a)[2] = 2 * a
-                a = 5 * (-3 * a) + 8 * (2 * a) = 5 * (-3 * a, 2 * a)[1] + 8 * (-3 * a, 2 * a)[2] = Z_lin58((-3 * a, 2 * a))
+                (-3 * a, 2 * a)(1) = -3 * a
+                (-3 * a, 2 * a)(2) = 2 * a
+                a = 5 * (-3 * a) + 8 * (2 * a) = 5 * (-3 * a, 2 * a)(1) + 8 * (-3 * a, 2 * a)(2) = Z_lin58((-3 * a, 2 * a))
         by def $surjective_fn(cart(Z, Z), Z, Z_lin58)
 
 # 8.4.7 Example: `5m + 10n` From `Z^2` To `Z`
@@ -1480,9 +1483,9 @@ sketch:
 # ```
 
 sketch:
-    have fn Z_lin510(u cart(Z, Z)) Z = 5 * u[1] + 10 * u[2]
+    have fn Z_lin510(u cart(Z, Z)) Z = 5 * u(1) + 10 * u(2)
     forall u cart(Z, Z):
-        Z_lin510(u) = 5 * u[1] + 10 * u[2]
+        Z_lin510(u) = 5 * u(1) + 10 * u(2)
 
     claim:
         ? forall k Z:
@@ -1495,15 +1498,15 @@ sketch:
             $injective_fn(cart(Z, Z), Z, Z_lin510)
             (0, 0) $in cart(Z, Z)
             (2, -1) $in cart(Z, Z)
-            (0, 0)[1] = 0
-            (0, 0)[2] = 0
-            (2, -1)[1] = 2
-            (2, -1)[2] = -1
-            Z_lin510((0, 0)) = 5 * (0, 0)[1] + 10 * (0, 0)[2] = 5 * 0 + 10 * 0 = 0
-            Z_lin510((2, -1)) = 5 * (2, -1)[1] + 10 * (2, -1)[2] = 5 * 2 + 10 * (-1) = 0
+            (0, 0)(1) = 0
+            (0, 0)(2) = 0
+            (2, -1)(1) = 2
+            (2, -1)(2) = -1
+            Z_lin510((0, 0)) = 5 * (0, 0)(1) + 10 * (0, 0)(2) = 5 * 0 + 10 * 0 = 0
+            Z_lin510((2, -1)) = 5 * (2, -1)(1) + 10 * (2, -1)(2) = 5 * 2 + 10 * (-1) = 0
             Z_lin510((0, 0)) = Z_lin510((2, -1))
             (0, 0) = (2, -1)
-            0 = (0, 0)[1] = (2, -1)[1] = 2
+            0 = (0, 0)(1) = (2, -1)(1) = 2
             impossible 0 = 2
 
     claim:
@@ -1516,10 +1519,10 @@ sketch:
             exist u cart(Z, Z) st {1 = Z_lin510(u)}
             obtain u from exist u cart(Z, Z) st {1 = Z_lin510(u)}
             1 = Z_lin510(u)
-            Z_lin510(u) = 5 * u[1] + 10 * u[2] = 5 * (u[1] + 2 * u[2])
-            1 = 5 * (u[1] + 2 * u[2])
-            (5 * (u[1] + 2 * u[2])) % 5 = 0
-            1 % 5 = (5 * (u[1] + 2 * u[2])) % 5 = 0
+            Z_lin510(u) = 5 * u(1) + 10 * u(2) = 5 * (u(1) + 2 * u(2))
+            1 = 5 * (u(1) + 2 * u(2))
+            (5 * (u(1) + 2 * u(2))) % 5 = 0
+            1 % 5 = (5 * (u(1) + 2 * u(2))) % 5 = 0
             impossible 1 % 5 = 0
 
 # 8.4.8 Example: Swapping Coordinates
@@ -1539,19 +1542,19 @@ sketch:
 # Thus `g o g = Id`.
 
 sketch:
-    have fn swap_R2(t cart(R, R)) cart(R, R) = (t[2], t[1])
+    have fn swap_R2(t cart(R, R)) cart(R, R) = (t(2), t(1))
     have fn id_R2(t cart(R, R)) cart(R, R) = t
     have fn swap_swap_R2(t cart(R, R)) cart(R, R) = swap_R2(swap_R2(t))
 
     claim:
         ? forall t cart(R, R):
             swap_swap_R2(t) = id_R2(t)
-        swap_R2(t) = (t[2], t[1])
-        swap_R2(swap_R2(t)) = (swap_R2(t)[2], swap_R2(t)[1])
-        swap_swap_R2(t) = swap_R2(swap_R2(t)) = (swap_R2(t)[2], swap_R2(t)[1]) = (t[1], t[2])
+        swap_R2(t) = (t(2), t(1))
+        swap_R2(swap_R2(t)) = (swap_R2(t)(2), swap_R2(t)(1))
+        swap_swap_R2(t) = swap_R2(swap_R2(t)) = (swap_R2(t)(2), swap_R2(t)(1)) = (t(1), t(2))
         id_R2(t) = t
-        release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
-        swap_swap_R2(t) = (t[1], t[2]) = t = id_R2(t)
+        release thm tuple_equal_from_coordinates(t, (t(1), t(2)))
+        swap_swap_R2(t) = (t(1), t(2)) = t = id_R2(t)
 
 # 8.4.9 Example: A Bijection From `N^2` To `N`
 
@@ -1645,17 +1648,17 @@ sketch:
     prop triangular_interval(n, s N):
         tri(s) <= n
         n < tri(s + 1)
-    have fn diagonal_index(u cart(N, N)) N = tri(u[1]) + u[2]
+    have fn diagonal_index(u cart(N, N)) N = tri(u(1)) + u(2)
     thm diagonal_interval:
         ? forall u cart(N, N):
-            u[2] <= u[1]
+            u(2) <= u(1)
             =>:
-                tri(u[1]) <= diagonal_index(u)
-                diagonal_index(u) < tri(u[1] + 1)
-        tri(u[1]) + u[1] $in N
-        tri(u[1]) + u[1] + 1 $in N
-        tri(u[1]) <= tri(u[1]) + u[2] = diagonal_index(u)
-        diagonal_index(u) = tri(u[1]) + u[2] <= tri(u[1]) + u[1] < tri(u[1]) + u[1] + 1 = tri(u[1] + 1)
+                tri(u(1)) <= diagonal_index(u)
+                diagonal_index(u) < tri(u(1) + 1)
+        tri(u(1)) + u(1) $in N
+        tri(u(1)) + u(1) + 1 $in N
+        tri(u(1)) <= tri(u(1)) + u(2) = diagonal_index(u)
+        diagonal_index(u) = tri(u(1)) + u(2) <= tri(u(1)) + u(1) < tri(u(1)) + u(1) + 1 = tri(u(1) + 1)
     thm triangular_monotone:
         ? forall a, b N:
             a < b
@@ -1675,61 +1678,61 @@ sketch:
         tri(a + 1) = (2 * tri(a + 1)) / 2 <= (2 * tri(b)) / 2 = tri(b)
     thm diagonal_strict_order:
         ? forall u, v cart(N, N):
-            u[2] <= u[1]
-            v[2] <= v[1]
-            u[1] < v[1]
+            u(2) <= u(1)
+            v(2) <= v(1)
+            u(1) < v(1)
             =>:
                 diagonal_index(u) < diagonal_index(v)
         release thm diagonal_interval(u)
-        release thm triangular_monotone(u[1], v[1])
+        release thm triangular_monotone(u(1), v(1))
         release thm diagonal_interval(v)
-        diagonal_index(u) < tri(u[1] + 1) <= tri(v[1]) <= diagonal_index(v)
+        diagonal_index(u) < tri(u(1) + 1) <= tri(v(1)) <= diagonal_index(v)
     claim:
         ? forall u, v cart(N, N):
-            u[2] <= u[1]
-            v[2] <= v[1]
+            u(2) <= u(1)
+            v(2) <= v(1)
             diagonal_index(u) = diagonal_index(v)
             =>:
-                u[1] = v[1]
+                u(1) = v(1)
         by contra:
-            ? not u[1] < v[1]
+            ? not u(1) < v(1)
             release thm diagonal_strict_order(u, v)
             diagonal_index(u) < diagonal_index(v)
             impossible diagonal_index(u) = diagonal_index(v)
         by contra:
-            ? not v[1] < u[1]
+            ? not v(1) < u(1)
             release thm diagonal_strict_order(v, u)
             diagonal_index(v) < diagonal_index(u)
             impossible diagonal_index(u) = diagonal_index(v)
-        u[1] >= v[1]
-        v[1] >= u[1]
-    have fn cauchy_pair(t cart(N, N)) N = tri(t[1] + t[2]) + t[2]
+        u(1) >= v(1)
+        v(1) >= u(1)
+    have fn cauchy_pair(t cart(N, N)) N = tri(t(1) + t(2)) + t(2)
     claim:
         ? forall u, v cart(N, N):
-            u[1] = v[1]
+            u(1) = v(1)
             diagonal_index(u) = diagonal_index(v)
             =>:
-                u[2] = v[2]
-        tri(u[1]) + u[2] = diagonal_index(u) = diagonal_index(v) = tri(v[1]) + v[2]
-        u[2] = (tri(u[1]) + u[2]) - tri(u[1]) = (tri(v[1]) + v[2]) - tri(v[1]) = v[2]
+                u(2) = v(2)
+        tri(u(1)) + u(2) = diagonal_index(u) = diagonal_index(v) = tri(v(1)) + v(2)
+        u(2) = (tri(u(1)) + u(2)) - tri(u(1)) = (tri(v(1)) + v(2)) - tri(v(1)) = v(2)
     claim:
         ? forall t1, t2 cart(N, N):
             cauchy_pair(t1) = cauchy_pair(t2)
             =>:
                 t1 = t2
-        have u cart(N, N) = (t1[1] + t1[2], t1[2])
-        have v cart(N, N) = (t2[1] + t2[2], t2[2])
-        u[2] = t1[2] <= t1[1] + t1[2] = u[1]
-        v[2] = t2[2] <= t2[1] + t2[2] = v[1]
-        diagonal_index(u) = tri(t1[1] + t1[2]) + t1[2] = cauchy_pair(t1)
-        diagonal_index(v) = tri(t2[1] + t2[2]) + t2[2] = cauchy_pair(t2)
-        u[1] = v[1]
-        u[2] = v[2]
-        t1[2] = u[2] = v[2] = t2[2]
-        t1[1] = (t1[1] + t1[2]) - t1[2] = u[1] - u[2] = v[1] - v[2] = (t2[1] + t2[2]) - t2[2] = t2[1]
-        release thm tuple_equal_from_coordinates(t1, (t1[1], t1[2]))
-        release thm tuple_equal_from_coordinates(t2, (t2[1], t2[2]))
-        t1 = (t1[1], t1[2]) = (t2[1], t2[2]) = t2
+        have u cart(N, N) = (t1(1) + t1(2), t1(2))
+        have v cart(N, N) = (t2(1) + t2(2), t2(2))
+        u(2) = t1(2) <= t1(1) + t1(2) = u(1)
+        v(2) = t2(2) <= t2(1) + t2(2) = v(1)
+        diagonal_index(u) = tri(t1(1) + t1(2)) + t1(2) = cauchy_pair(t1)
+        diagonal_index(v) = tri(t2(1) + t2(2)) + t2(2) = cauchy_pair(t2)
+        u(1) = v(1)
+        u(2) = v(2)
+        t1(2) = u(2) = v(2) = t2(2)
+        t1(1) = (t1(1) + t1(2)) - t1(2) = u(1) - u(2) = v(1) - v(2) = (t2(1) + t2(2)) - t2(2) = t2(1)
+        release thm tuple_equal_from_coordinates(t1, (t1(1), t1(2)))
+        release thm tuple_equal_from_coordinates(t2, (t2(1), t2(2)))
+        t1 = (t1(1), t1(2)) = (t2(1), t2(2)) = t2
     claim:
         ? forall a, b N:
             b <= a
@@ -1792,11 +1795,11 @@ sketch:
         have a N = s0 - b
         a + b = (s0 - b) + b = s0
         have p cart(N, N) = (a, b)
-        p[1] = a
-        p[2] = b
-        p[1] + p[2] = a + b = s0
-        tri(p[1] + p[2]) = tri(a + b) = tri(s0)
-        cauchy_pair(p) = tri(p[1] + p[2]) + p[2] = tri(s0) + p[2] = tri(s0) + b = tri(s0) + (n - tri(s0)) = n
+        p(1) = a
+        p(2) = b
+        p(1) + p(2) = a + b = s0
+        tri(p(1) + p(2)) = tri(a + b) = tri(s0)
+        cauchy_pair(p) = tri(p(1) + p(2)) + p(2) = tri(s0) + p(2) = tri(s0) + b = tri(s0) + (n - tri(s0)) = n
         witness exist t cart(N, N) st {n = cauchy_pair(t)} from p:
             n = cauchy_pair(p)
     by def $injective_fn(cart(N, N), N, cauchy_pair)

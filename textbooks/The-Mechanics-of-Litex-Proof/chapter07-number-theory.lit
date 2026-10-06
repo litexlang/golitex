@@ -16,7 +16,7 @@
 # The first example in Macbeth's chapter is Euclid's theorem: there are infinitely
 # many primes. In Litex, the proof can be written in the same forward order as the
 # mathematical idea. Take the factorial-like product
-# `product(1, a, fn(x N+) N+ {x})`, then take a prime factor `k` of this product plus
+# `product(1, a, factorial_factor)`, then take a prime factor `k` of this product plus
 # one. If `k <= a`, then `k` divides the product. But `k` also divides the product
 # plus one, so the same remainder would have to be both `0` and `1`, a
 # contradiction. Therefore `k > a`.
@@ -31,9 +31,12 @@
 # `2` has a prime factor; and `a <= 1 * 2 * ... * a`. These checked derivations
 # keep the final Euclid proof focused on its contradiction argument.
 
+# The common factor function in each finite product is the identity on N+.
+have fn factorial_factor(x N+) N+ = x
+
 claim:
     ? forall a N+:
-        product(1, a, fn(x N+) N+ {x}) % a = 0 and a <= product(1, a, fn(x N+) N+ {x})
+        product(1, a, factorial_factor) % a = 0 and a <= product(1, a, factorial_factor)
     thm bounded_remainder_unique:
         ? forall dividend Z, m N+, k N:
             k < m
@@ -76,38 +79,38 @@ claim:
         s = s + (k - s) = k
         dividend % m = s = k
     by induc a from 1:
-        ? product(1, a, fn(x N+) N+ {x}) % a = 0 and a <= product(1, a, fn(x N+) N+ {x})
+        ? product(1, a, factorial_factor) % a = 0 and a <= product(1, a, factorial_factor)
         ? from a = 1:
-            product(1, 1, fn(x N+) N+ {x}) = 1
-            1 <= product(1, 1, fn(x N+) N+ {x})
+            product(1, 1, factorial_factor) = 1
+            1 <= product(1, 1, factorial_factor)
         ? induc:
             a + 1 >= 1 + 1 = 2
             a + 1 > 0
             a + 1 $in N+
             a + 1 != 0
-            (fn(x N+) N+ {x})(a + 1) = a + 1
-            have prefix_product N+ = product(1, a, fn(x N+) N+ {x})
-            have next_product N+ = product(1, a + 1, fn(x N+) N+ {x})
+            (factorial_factor)(a + 1) = a + 1
+            have prefix_product N+ = product(1, a, factorial_factor)
+            have next_product N+ = product(1, a + 1, factorial_factor)
             a + 1 $in N+
             witness exist quotient Z st {next_product = (a + 1) * quotient + 0} from prefix_product:
-                next_product = product(1, a + 1, fn(x N+) N+ {x}) = product(1, a, fn(x N+) N+ {x}) * (a + 1) = prefix_product * (a + 1) = (a + 1) * prefix_product = (a + 1) * prefix_product + 0
+                next_product = product(1, a + 1, factorial_factor) = product(1, a, factorial_factor) * (a + 1) = prefix_product * (a + 1) = (a + 1) * prefix_product = (a + 1) * prefix_product + 0
             obtain quotient_value from exist quotient Z st {next_product = (a + 1) * quotient + 0}
             next_product = (a + 1) * quotient_value + 0
             release thm bounded_remainder_unique(next_product, a + 1, 0)
             next_product % (a + 1) = 0
-            witness exist actual_quotient Z st {product(1, a + 1, fn(x N+) N+ {x}) = (a + 1) * actual_quotient + 0} from quotient_value:
-                product(1, a + 1, fn(x N+) N+ {x}) = next_product = (a + 1) * quotient_value + 0
-            release thm bounded_remainder_unique(product(1, a + 1, fn(x N+) N+ {x}), a + 1, 0)
-            product(1, a + 1, fn(x N+) N+ {x}) % (a + 1) = 0
+            witness exist actual_quotient Z st {product(1, a + 1, factorial_factor) = (a + 1) * actual_quotient + 0} from quotient_value:
+                product(1, a + 1, factorial_factor) = next_product = (a + 1) * quotient_value + 0
+            release thm bounded_remainder_unique(product(1, a + 1, factorial_factor), a + 1, 0)
+            product(1, a + 1, factorial_factor) % (a + 1) = 0
             prefix_product >= 1
-            next_product = product(1, a + 1, fn(x N+) N+ {x}) = product(1, a, fn(x N+) N+ {x}) * (a + 1) = prefix_product * (a + 1) = (a + 1) * prefix_product
-            a + 1 = (a + 1) * 1 <= (a + 1) * prefix_product = next_product = product(1, a + 1, fn(x N+) N+ {x})
+            next_product = product(1, a + 1, factorial_factor) = product(1, a, factorial_factor) * (a + 1) = prefix_product * (a + 1) = (a + 1) * prefix_product
+            a + 1 = (a + 1) * 1 <= (a + 1) * prefix_product = next_product = product(1, a + 1, factorial_factor)
 
 claim:
     ? forall a, k N+:
         k <= a
         =>:
-            product(1, a, fn(x N+) N+ {x}) % k = 0
+            product(1, a, factorial_factor) % k = 0
     thm product_quotient_decomposition:
         ? forall dividend Z, divisor N+:
             dividend = divisor * quot(dividend, divisor) + dividend % divisor
@@ -153,41 +156,41 @@ claim:
         s = s + (residue - s) = residue
         dividend % divisor = s = residue
     by cases:
-        ? product(1, a, fn(x N+) N+ {x}) % k = 0
+        ? product(1, a, factorial_factor) % k = 0
         case k = a:
-            product(1, a, fn(x N+) N+ {x}) % a = 0
-            product(1, a, fn(x N+) N+ {x}) % k = product(1, a, fn(x N+) N+ {x}) % a = 0
+            product(1, a, factorial_factor) % a = 0
+            product(1, a, factorial_factor) % k = product(1, a, factorial_factor) % a = 0
         case k < a:
             k + 1 > 0
             k + 1 $in N+
             k + 1 <= a
-            product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x})
-            have prefix_product Z = product(1, k, fn(x N+) N+ {x})
-            have suffix_product Z = product(k + 1, a, fn(x N+) N+ {x})
-            have whole_product N+ = product(1, a, fn(x N+) N+ {x})
-            product(1, k, fn(x N+) N+ {x}) % k = 0
-            release thm product_quotient_decomposition(product(1, k, fn(x N+) N+ {x}), k)
-            quot(product(1, k, fn(x N+) N+ {x}), k) $in Z
-            (product(1, k, fn(x N+) N+ {x})) = (k) * quot(product(1, k, fn(x N+) N+ {x}), k) + (product(1, k, fn(x N+) N+ {x})) % (k)
-            witness exist q Z st {product(1, k, fn(x N+) N+ {x}) = k * q + product(1, k, fn(x N+) N+ {x}) % k} from quot(product(1, k, fn(x N+) N+ {x}), k):
-                product(1, k, fn(x N+) N+ {x}) = k * quot(product(1, k, fn(x N+) N+ {x}), k) + product(1, k, fn(x N+) N+ {x}) % k
-            obtain r from exist q Z st {product(1, k, fn(x N+) N+ {x}) = k * q + product(1, k, fn(x N+) N+ {x}) % k}
-            prefix_product = product(1, k, fn(x N+) N+ {x}) = k * r + product(1, k, fn(x N+) N+ {x}) % k = k * r + 0 = k * r = r * k
+            product(1, a, factorial_factor) = product(1, k, factorial_factor) * product(k + 1, a, factorial_factor)
+            have prefix_product Z = product(1, k, factorial_factor)
+            have suffix_product Z = product(k + 1, a, factorial_factor)
+            have whole_product N+ = product(1, a, factorial_factor)
+            product(1, k, factorial_factor) % k = 0
+            release thm product_quotient_decomposition(product(1, k, factorial_factor), k)
+            quot(product(1, k, factorial_factor), k) $in Z
+            (product(1, k, factorial_factor)) = (k) * quot(product(1, k, factorial_factor), k) + (product(1, k, factorial_factor)) % (k)
+            witness exist q Z st {product(1, k, factorial_factor) = k * q + product(1, k, factorial_factor) % k} from quot(product(1, k, factorial_factor), k):
+                product(1, k, factorial_factor) = k * quot(product(1, k, factorial_factor), k) + product(1, k, factorial_factor) % k
+            obtain r from exist q Z st {product(1, k, factorial_factor) = k * q + product(1, k, factorial_factor) % k}
+            prefix_product = product(1, k, factorial_factor) = k * r + product(1, k, factorial_factor) % k = k * r + 0 = k * r = r * k
             ((r) * (k)) * (suffix_product) = ((r) * (suffix_product)) * (k)
             witness exist t Z st {whole_product = t * k} from r * suffix_product:
-                whole_product = product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * suffix_product = (r * k) * suffix_product = (r * suffix_product) * k
+                whole_product = product(1, a, factorial_factor) = product(1, k, factorial_factor) * product(k + 1, a, factorial_factor) = product(1, k, factorial_factor) * suffix_product = (r * k) * suffix_product = (r * suffix_product) * k
             obtain whole_quotient from exist t Z st {whole_product = t * k}
             whole_product = whole_quotient * k = k * whole_quotient = k * whole_quotient + 0
-            witness exist aggregate_quotient Z st {product(1, a, fn(x N+) N+ {x}) = k * aggregate_quotient + 0} from r * suffix_product:
-                product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * suffix_product = prefix_product * suffix_product = (k * r) * suffix_product = k * (r * suffix_product) + 0
-            release thm factor_product_remainder_unique(product(1, a, fn(x N+) N+ {x}), k, 0)
-            product(1, a, fn(x N+) N+ {x}) % k = 0
+            witness exist aggregate_quotient Z st {product(1, a, factorial_factor) = k * aggregate_quotient + 0} from r * suffix_product:
+                product(1, a, factorial_factor) = product(1, k, factorial_factor) * product(k + 1, a, factorial_factor) = product(1, k, factorial_factor) * suffix_product = prefix_product * suffix_product = (k * r) * suffix_product = k * (r * suffix_product) + 0
+            release thm factor_product_remainder_unique(product(1, a, factorial_factor), k, 0)
+            product(1, a, factorial_factor) % k = 0
 
 claim:
     ? forall a N+:
-        a <= product(1, a, fn(x N+) N+ {x})
+        a <= product(1, a, factorial_factor)
 
-    product(1, a, fn(x N+) N+ {x}) % a = 0 and a <= product(1, a, fn(x N+) N+ {x})
+    product(1, a, factorial_factor) % a = 0 and a <= product(1, a, factorial_factor)
 
 claim:
     ? forall a N+:
@@ -276,23 +279,23 @@ claim:
         ? forall value R:
             value <= value + 1
     a >= 2 >= 1
-    product(1, a, fn(x N+) N+ {x}) $in N+
-    product(1, a, fn(x N+) N+ {x}) + 1 $in N+
-    release thm scalar_successor_bound(product(1, a, fn(x N+) N+ {x}))
-    2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1
-    obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}
+    product(1, a, factorial_factor) $in N+
+    product(1, a, factorial_factor) + 1 $in N+
+    release thm scalar_successor_bound(product(1, a, factorial_factor))
+    2 <= a <= product(1, a, factorial_factor) <= product(1, a, factorial_factor) + 1
+    obtain k from exist k N+ st {$prime(k), (product(1, a, factorial_factor) + 1) % k = 0}
     by cases:
         ? k > a
         case k <= a:
-            product(1, a, fn(x N+) N+ {x}) % k = 0
+            product(1, a, factorial_factor) % k = 0
             2 <= k
-            (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k
+            (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k
             0 % k = 0
             1 < k
             1 % k = 1
             (0 + 1) % k = 1 % k = 1
-            (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            0 = (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
+            (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k = (0 + 1) % k = 1
+            0 = (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k = (0 + 1) % k = 1
             impossible 0 = 1
         case k > a
     witness exist prime_larger N+ st {prime_larger > a, $prime(prime_larger)} from k
@@ -309,15 +312,15 @@ claim:
 #   <tr>
 #     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 # <pre style="margin: 0; white-space: pre-wrap"><code>claim forall a N+: 2 <= a => {exist k N+ st {k > a, $prime(k)}}:
-#     2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1
-#     obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}
+#     2 <= a <= product(1, a, factorial_factor) <= product(1, a, factorial_factor) + 1
+#     obtain k from exist k N+ st {$prime(k), (product(1, a, factorial_factor) + 1) % k = 0}
 #     by cases:
 #         ? k > a
 #         case k <= a:
-#             product(1, a, fn(x N+) N+ {x}) % k = 0
+#             product(1, a, factorial_factor) % k = 0
 #             1 % k = 1
-#             (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
-#             impossible (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0
+#             (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k = (0 + 1) % k = 1
+#             impossible (product(1, a, factorial_factor) + 1) % k = 0
 #         case k > a
 #     witness exist k N+ st {k > a, $prime(k)} from k</code></pre>
 #     </td>
@@ -388,8 +391,8 @@ claim:
 
 # So the witness for `d | b` is `x * z + b * y`.
 
-# Chapter 6 proves the Euclidean recurrence and Bezout identity for builtin gcd.
-# Integer divisibility uses the definition from Chapter 3.
+# In the current Litex file we do not need to rebuild the Euclidean algorithm.
+# The root citation package supplies the stable gcd and Bézout interfaces.
 
 prop gcd_eq_one(a, d Z):
     a != 0 or d != 0
@@ -400,7 +403,7 @@ thm bezout_of_coprime:
         $gcd_eq_one(a, d)
         =>:
             exist x Z, y Z st {1 = x * a + y * d}
-    release thm chap6::bezout_identity(a, d)
+    release thm citation::bezout_identity(a, d)
     obtain x, y from exist x Z, y Z st {gcd(a, d) = x * a + y * d}
     witness exist u Z, v Z st {1 = u * a + v * d} from x, y:
         1 = gcd(a, d) = x * a + y * d
@@ -412,15 +415,15 @@ thm bezout_of_coprime:
 
 claim:
     ? forall d, a, b Z:
-        $chap3::dvdZ(d, a * b)
+        $citation::divides(d, a * b)
         $gcd_eq_one(a, d)
         =>:
-            $chap3::dvdZ(d, b)
+            $citation::divides(d, b)
 
     release thm bezout_of_coprime(a, d)
     obtain u, v from exist x Z, y Z st {1 = x * a + y * d}
     obtain z from exist z Z st {a * b = d * z}
-    witness $chap3::dvdZ(d, b) from u * z + b * v:
+    witness $citation::divides(d, b) from u * z + b * v:
         b = b * 1 = b * (u * a + v * d) = u * (a * b) + b * v * d = u * (d * z) + b * v * d = d * (u * z + b * v)
 
 # 7.3 Gauss's and Euclid's Lemmas
@@ -433,8 +436,9 @@ claim:
 # induction to extend Euclid's lemma from a product of two factors to a power:
 # if `p` divides `a^k`, then `p` divides `a`.
 
-# Litex supplies the builtin `gcd` object and its common-divisor laws.
-# Chapter 6 proves the Euclidean recurrence and Bezout identity used here.
+# The `gcd` object is treated abstractly here. Its finite-maximum construction
+# and Euclidean descent live in `citation.lit`, so this section uses only the
+# resulting Bézout and divisibility laws.
 
 # This is a common proof pattern in Litex and in mathematics. Many times we do
 # not need to know a concept's internal definition or where it came from; it is
@@ -443,67 +447,13 @@ claim:
 # divisibility properties, not because we expand the Euclidean algorithm every
 # time we use it.
 
-thm gcd_of_prime_is_one_or_prime:
-    ? forall a Z, p N+:
-        $prime(p)
-        =>:
-            gcd(a, p) = 1 or gcd(a, p) = p
-    gcd(a, p) $in N+
-    p % gcd(a, p) = 0
-    have k Z = quot(p, gcd(a, p))
-    p = gcd(a, p) * quot(p, gcd(a, p)) + p % gcd(a, p) = gcd(a, p) * quot(p, gcd(a, p)) = gcd(a, p) * k
-    by contra:
-        ? k != 0
-        k = 0
-        p = gcd(a, p) * k = gcd(a, p) * 0 = 0
-        impossible p != 0
-    release thm chap6::integer_abs_positive(k)
-    abs(k) $in N+
-    gcd(a, p) * 1 <= gcd(a, p) * abs(k)
-    abs(gcd(a, p)) = gcd(a, p)
-    abs(p) = abs(gcd(a, p) * k) = abs(gcd(a, p)) * abs(k) = gcd(a, p) * abs(k)
-    abs(p) = p
-    gcd(a, p) = gcd(a, p) * 1 <= gcd(a, p) * abs(k) = p
-    gcd(a, p) = p or gcd(a, p) < p
-    by cases:
-        ? gcd(a, p) = 1 or gcd(a, p) = p
-        case gcd(a, p) = p:
-            gcd(a, p) = 1 or gcd(a, p) = p
-        case gcd(a, p) < p:
-            gcd(a, p) >= 1
-            gcd(a, p) <= 1 or gcd(a, p) >= 1 + 1
-            by cases:
-                ? gcd(a, p) = 1 or gcd(a, p) > 1
-                case gcd(a, p) <= 1:
-                    gcd(a, p) = 1
-                case gcd(a, p) >= 1 + 1:
-                    gcd(a, p) >= 2 > 1
-            gcd(a, p) = 1 or gcd(a, p) > 1
-            by cases:
-                ? gcd(a, p) = 1 or gcd(a, p) = p
-                case gcd(a, p) = 1:
-                    gcd(a, p) = 1 or gcd(a, p) = p
-                case gcd(a, p) > 1:
-                    gcd(a, p) <= 1 or gcd(a, p) >= 1 + 1
-                    by cases:
-                        ? gcd(a, p) >= 2
-                        case gcd(a, p) <= 1:
-                            impossible gcd(a, p) > 1
-                        case gcd(a, p) >= 1 + 1:
-                            gcd(a, p) >= 1 + 1 = 2
-                    gcd(a, p) >= 2
-                    gcd(a, p) $in range(2, p)
-                    $prime(p)
-                    p % gcd(a, p) != 0
-                    impossible p % gcd(a, p) = 0
-
 sketch:
     claim:
         ? forall d, a, b Z:
-            $chap3::dvdZ(d, a * b)
+            $citation::divides(d, a * b)
             $gcd_eq_one(a, d)
             =>:
-                $chap3::dvdZ(d, b)
+                $citation::divides(d, b)
         release thm bezout_of_coprime(a, d)
         obtain u, v from exist u Z, v Z st {1 = u * a + v * d}
         obtain z from exist z Z st {a * b = d * z}
@@ -512,41 +462,39 @@ sketch:
     claim:
         ? forall a, b N, p N+:
             $prime(p)
-            $chap3::dvdZ(p, a * b)
+            $citation::divides(p, a * b)
             =>:
-                $chap3::dvdZ(p, a) or $chap3::dvdZ(p, b)
+                $citation::divides(p, a) or $citation::divides(p, b)
         a $in Z
         b $in Z
         p $in Z
-        gcd(a, p) $in N+
+        release thm citation::gcd_positive(a, p)
         1 <= gcd(a, p)
-        p % gcd(a, p) = 0
-        release thm gcd_of_prime_is_one_or_prime(a, p)
+        release thm citation::gcd_divides_right(a, p)
+        release thm citation::gcd_of_prime_is_one_or_prime(a, p)
         by cases:
-            ? $chap3::dvdZ(p, a) or $chap3::dvdZ(p, b)
+            ? $citation::divides(p, a) or $citation::divides(p, b)
             case gcd(a, p) = 1:
                 by def $gcd_eq_one(a, p)
                 release thm bezout_of_coprime(a, p)
                 obtain u, v from exist u Z, v Z st {1 = u * a + v * p}
                 obtain z from exist z Z st {a * b = p * z}
-                witness $chap3::dvdZ(p, b) from u * z + b * v:
+                witness $citation::divides(p, b) from u * z + b * v:
                     b = b * 1 = b * (u * a + v * p) = u * (a * b) + b * v * p = u * (p * z) + b * v * p = p * (u * z + b * v)
-                $chap3::dvdZ(p, a) or $chap3::dvdZ(p, b)
+                $citation::divides(p, a) or $citation::divides(p, b)
             case gcd(a, p) = p:
-                a % gcd(a, p) = 0
-                witness exist multiple Z st {a = gcd(a, p) * multiple} from quot(a, gcd(a, p)):
-                    a = gcd(a, p) * quot(a, gcd(a, p)) + a % gcd(a, p) = gcd(a, p) * quot(a, gcd(a, p))
+                release thm citation::gcd_divides_left(a, p)
                 obtain q from exist q Z st {a = gcd(a, p) * q}
-                witness $chap3::dvdZ(p, a) from q:
+                witness $citation::divides(p, a) from q:
                     a = gcd(a, p) * q = p * q
-                $chap3::dvdZ(p, a) or $chap3::dvdZ(p, b)
+                $citation::divides(p, a) or $citation::divides(p, b)
     prop euclid_lemma_pow_at(k Z):
         forall a N, p N+:
             k >= 1
             $prime(p)
-            $chap3::dvdZ(p, a ^ k)
+            $citation::divides(p, a ^ k)
             =>:
-                $chap3::dvdZ(p, a)
+                $citation::divides(p, a)
     by induc k from 1:
         ? $euclid_lemma_pow_at(k)
         ? from k = 1:
@@ -554,9 +502,9 @@ sketch:
                 ? forall a N, p N+:
                     k >= 1
                     $prime(p)
-                    $chap3::dvdZ(p, a ^ k)
+                    $citation::divides(p, a ^ k)
                     =>:
-                        $chap3::dvdZ(p, a)
+                        $citation::divides(p, a)
                 a ^ k = a ^ 1 = a
             by def $euclid_lemma_pow_at(k)
         ? induc:
@@ -564,29 +512,29 @@ sketch:
                 ? forall a N, p N+:
                     k + 1 >= 1
                     $prime(p)
-                    $chap3::dvdZ(p, a ^ (k + 1))
+                    $citation::divides(p, a ^ (k + 1))
                     =>:
-                        $chap3::dvdZ(p, a)
+                        $citation::divides(p, a)
                 k > 0
                 k $in N+
                 a ^ k $in N
                 a ^ (k + 1) = a ^ k * a ^ 1 = a ^ k * a
-                $chap3::dvdZ(p, a ^ k * a)
-                $chap3::dvdZ(p, a ^ k) or $chap3::dvdZ(p, a)
+                $citation::divides(p, a ^ k * a)
+                $citation::divides(p, a ^ k) or $citation::divides(p, a)
                 by cases:
-                    ? $chap3::dvdZ(p, a)
-                    case $chap3::dvdZ(p, a ^ k):
-                        $chap3::dvdZ(p, a)
-                    case $chap3::dvdZ(p, a):
-                        $chap3::dvdZ(p, a)
+                    ? $citation::divides(p, a)
+                    case $citation::divides(p, a ^ k):
+                        $citation::divides(p, a)
+                    case $citation::divides(p, a):
+                        $citation::divides(p, a)
             by def $euclid_lemma_pow_at(k + 1)
     claim:
         ? forall a, k N, p N+:
             1 <= k
             $prime(p)
-            $chap3::dvdZ(p, a ^ k)
+            $citation::divides(p, a ^ k)
             =>:
-                $chap3::dvdZ(p, a)
+                $citation::divides(p, a)
         k $in Z
         $euclid_lemma_pow_at(k)
 
@@ -671,7 +619,7 @@ sketch:
             k^2 % a = 0
             =>:
                 k % a = 0
-        release thm gcd_of_prime_is_one_or_prime(k, a)
+        release thm citation::gcd_of_prime_is_one_or_prime(k, a)
         by cases:
             ? k % a = 0
             case gcd(k, a) = 1:
@@ -699,9 +647,7 @@ sketch:
                 by contra:
                     ? k % a = 0
                     k % a != 0
-                    k % gcd(k, a) = 0
-                    witness exist multiple Z st {k = gcd(k, a) * multiple} from quot(k, gcd(k, a)):
-                        k = gcd(k, a) * quot(k, gcd(k, a)) + k % gcd(k, a) = gcd(k, a) * quot(k, gcd(k, a))
+                    release thm citation::gcd_divides_left(k, a)
                     obtain t from exist t Z st {k = gcd(k, a) * t}
                     k = gcd(k, a) * t = a * t
                     k = a * t + 0
@@ -755,12 +701,15 @@ sketch:
         release thm prime_remainder_unique(q^2, 2, 0)
         q^2 % 2 = 0
         q % 2 = 0
+        witness $citation::divides(2, p) from c
         quot(q, 2) $in Z
         (q) = (2) * quot(q, 2) + (q) % (2)
         witness exist t Z st {q = 2 * t + q % 2} from quot(q, 2):
             q = 2 * quot(q, 2) + q % 2
         obtain d from exist t Z st {q = 2 * t + q % 2}
         q = 2 * d + q % 2 = 2 * d
+        witness $citation::divides(2, q) from d
+        release thm citation::common_divisor_le_gcd(p, q, 2)
         2 <= gcd(p, q) = 1
         impossible 2 <= 1
 

@@ -378,7 +378,7 @@ fn wrong_missing_bounds_order_argument_and_poles_reject() {
     ]{let r=runtime(OutputLanguage::English).run_litex_code(code).unwrap();assert!(!r.success&&r.session_error.is_none(),"{code}");}
 }
 #[test]
-fn complete_guards_keep_partial_wd_and_maintained_tracers_execute() {
+fn interval_order_supplies_partial_wd_and_maintained_tracers_execute() {
     for code in [
         "forall a,b R:\n    -pi/2<a\n    b<pi/2\n    a<b\n    =>:\n        tan(a)<tan(b)\n",
         "forall a,b R:\n    -pi/2<a\n    b<pi/2\n    a<=b\n    =>:\n        tan(a)<=tan(b)\n",
@@ -387,7 +387,7 @@ fn complete_guards_keep_partial_wd_and_maintained_tracers_execute() {
     ] {
         let mut rt = runtime(OutputLanguage::English);
         let r = rt.run_litex_code(code).unwrap();
-        assert!(!r.success && r.session_error.is_none(), "{code}");
+        assert!(r.success && r.session_error.is_none(), "{code}");
         let d = crate::json_output::project_run_detailed(
             &r,
             &rt,

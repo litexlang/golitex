@@ -2,17 +2,18 @@
 claim:
     ? forall n N+, c R:
         sum(1,n,fn(k Z) R{c}) = n*c
+    let constant_terms = fn(k Z) R{c}
     by induc m from 1:
-        ? sum(1,m,fn(k Z) R{c}) = m*c
+        ? sum(1,m,constant_terms) = m*c
         ? from m = 1:
-            sum(1,m,fn(k Z) R{c}) = sum(1,1,fn(k Z) R{c}) = fn(k Z) R{c}(1) = c = m*c
+            sum(1,m,constant_terms) = sum(1,1,constant_terms) = constant_terms(1) = c = m*c
         ? induc:
             m >= 1
-            fn(k Z) R{c}(m+1) = c
-            sum(1,m+1,fn(k Z) R{c}) = sum(1,m,fn(k Z) R{c}) + fn(k Z) R{c}(m+1) = m*c+c = (m+1)*c
+            constant_terms(m+1) = c
+            sum(1,m+1,constant_terms) = sum(1,m,constant_terms) + constant_terms(m+1) = m*c+c = (m+1)*c
     n $in Z
     n >= 1
-    sum(1,n,fn(k Z) R{c}) = n*c
+    sum(1,n,fn(k Z) R{c}) = sum(1,n,constant_terms) = n*c
 
 have n N+
 have c R
@@ -20,19 +21,20 @@ have f, g fn(k Z) R
 have nonzero_constant R*
 claim:
     ? product(1, n, fn(k Z) R* {nonzero_constant}) = nonzero_constant ^ n
+    let constant_terms = fn(k Z) R* {nonzero_constant}
     by induc m from 1:
-        ? product(1,m,fn(k Z) R*{nonzero_constant}) = nonzero_constant^m
+        ? product(1,m,constant_terms) = nonzero_constant^m
         ? from m = 1:
-            product(1,m,fn(k Z) R*{nonzero_constant}) = product(1,1,fn(k Z) R*{nonzero_constant}) = fn(k Z) R*{nonzero_constant}(1) = nonzero_constant = nonzero_constant^m
+            product(1,m,constant_terms) = product(1,1,constant_terms) = constant_terms(1) = nonzero_constant = nonzero_constant^m
         ? induc:
             m >= 1
-            fn(k Z) R*{nonzero_constant}(m+1) = nonzero_constant
+            constant_terms(m+1) = nonzero_constant
             m $in Z
             nonzero_constant != 0
-            product(1,m+1,fn(k Z) R*{nonzero_constant}) = product(1,m,fn(k Z) R*{nonzero_constant}) * fn(k Z) R*{nonzero_constant}(m+1) = nonzero_constant^m*nonzero_constant = nonzero_constant^m*nonzero_constant^1 = nonzero_constant^(m+1)
+            product(1,m+1,constant_terms) = product(1,m,constant_terms) * constant_terms(m+1) = nonzero_constant^m*nonzero_constant = nonzero_constant^m*nonzero_constant^1 = nonzero_constant^(m+1)
     n $in Z
     n >= 1
-    product(1,n,fn(k Z) R*{nonzero_constant}) = nonzero_constant^n
+    product(1, n, fn(k Z) R* {nonzero_constant}) = product(1,n,constant_terms) = nonzero_constant^n
 claim:
     ? sum(1, n, fn(k Z) R {f(k) + g(k)}) = sum(1, n, f) + sum(1, n, g)
     let h = fn(k Z) R{f(k)+g(k)}
@@ -93,13 +95,13 @@ claim:
     sum(1,n,fn(k Z) R{c*f(k)}) = sum(1,n,h) = c*sum(1,n,f)
 sum(1, n + 1, f) = sum(1, n, f) + sum(n + 1, n + 1, f)
 product(1, n + 1, f) = product(1, n, f) * product(n + 1, n + 1, f)
-claim:
-    ? sum(1,n,fn(k Z) Z{k+k}) = sum(1,n,fn(j Z) Z{2*j})
-    by fn_extension:
-        ? fn(k Z) Z{k+k} = fn(j Z) Z{2*j}
-        forall t Z:
-            fn(k Z) Z{k+k}(t) = t+t = 2*t = fn(j Z) Z{2*j}(t)
-            fn(k Z) Z{k+k}(t) = fn(j Z) Z{2*j}(t)
+let doubled = fn(k Z) Z{k+k}
+let scaled = fn(j Z) Z{2*j}
+by fn_extension:
+    ? doubled = scaled
+    forall t Z:
+        doubled(t) = t+t = 2*t = scaled(t)
+sum(1,n,doubled) = sum(1,n,scaled)
 
 # Legal source and target ranges are explicit hypotheses for this reindexing rule.
 forall a, b, t Z:

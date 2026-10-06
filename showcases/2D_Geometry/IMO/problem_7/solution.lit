@@ -1,0 +1,805 @@
+have fn prefix_weight(n N+, j N) R = sin(j * pi / n)^2
+
+
+thm prefix_weight_zero:
+    ? forall n N+:
+        n >= 3
+        =>:
+            prefix_weight(n, 0) = 0
+    0 * pi / n = 0
+    prefix_weight(n, 0) = sin(0 * pi / n)^2
+    sin(0 * pi / n)^2 = sin(0)^2
+    sin(0) = 0
+    sin(0)^2 = 0
+    prefix_weight(n, 0) = 0
+
+# The last Abel weight vanishes because sin(pi)=0.
+
+thm prefix_weight_at_n_zero:
+    ? forall n N+:
+        n >= 3
+        =>:
+            prefix_weight(n, n) = 0
+    n * pi / n = pi
+    prefix_weight(n, n) = sin(n * pi / n)^2
+    sin(n * pi / n)^2 = sin(pi)^2
+    sin(pi) = 0
+    sin(pi)^2 = 0
+    prefix_weight(n, n) = 0
+
+
+thm sine_square_difference_7:
+    ? forall x,y R:
+        sin(x)^2-sin(y)^2 = sin(x+y)*sin(x-y)
+    cos(x)^2+sin(x)^2 = 1
+    cos(y)^2+sin(y)^2 = 1
+    cos(x)^2 = (cos(x)^2+sin(x)^2)-sin(x)^2 = 1-sin(x)^2
+    cos(y)^2 = (cos(y)^2+sin(y)^2)-sin(y)^2 = 1-sin(y)^2
+    sin(x+y) = sin(x)*cos(y)+cos(x)*sin(y)
+    sin(x-y) = sin(x)*cos(y)-cos(x)*sin(y)
+    sin(x+y)*sin(x-y) = (sin(x)*cos(y)+cos(x)*sin(y))*(sin(x)*cos(y)-cos(x)*sin(y)) = sin(x)^2*cos(y)^2-cos(x)^2*sin(y)^2
+    sin(x)^2*cos(y)^2 = sin(x)^2*(1-sin(y)^2)
+    cos(x)^2*sin(y)^2 = (1-sin(x)^2)*sin(y)^2
+    sin(x)^2*cos(y)^2-cos(x)^2*sin(y)^2 = sin(x)^2*(1-sin(y)^2)-(1-sin(x)^2)*sin(y)^2 = sin(x)^2-sin(y)^2
+
+thm prefix_weight_step:
+    ? forall n N+, j N+:
+        n >= 3
+        =>:
+            prefix_weight(n, j) - prefix_weight(n, j - 1) = sin((2 * j - 1) * pi / n) * sin(pi / n)
+    n != 0
+    j*pi/n+(j-1)*pi/n = (2*j-1)*pi/n
+    j*pi/n-(j-1)*pi/n = pi/n
+    prefix_weight(n,j) = sin(j*pi/n)^2
+    prefix_weight(n,j-1) = sin((j-1)*pi/n)^2
+    by thm sine_square_difference_7(j*pi/n,(j-1)*pi/n)
+    sin(j*pi/n+(j-1)*pi/n) = sin((2*j-1)*pi/n)
+    sin(j*pi/n-(j-1)*pi/n) = sin(pi/n)
+    prefix_weight(n,j)-prefix_weight(n,j-1) = sin(j*pi/n)^2-sin((j-1)*pi/n)^2 = sin(j*pi/n+(j-1)*pi/n)*sin(j*pi/n-(j-1)*pi/n) = sin((2*j-1)*pi/n)*sin(pi/n)
+
+thm natural_zero_or_positive_7:
+    ? forall m N:
+        m = 0 or m > 0
+    0 <= m
+    by contra:
+        ? m = 0 or m > 0
+        m != 0
+        m <= 0
+        m = 0
+        impossible m != 0
+
+thm natural_predecessor_nonnegative_7:
+    ? forall m N:
+        m > 0
+        =>:
+            m-1 >= 0
+    m $in Z
+    0 < m
+    m >= 1
+    m-1 >= 0
+
+have fn weighted_prefix(a fn(index N+) R+, n N+, m N: n >= 3) R by induc m from 0:
+    case m = 0: 0
+    case m > 0: weighted_prefix(a, n, m - 1) + a(m) * sin((2 * m - 1) * pi / n)
+
+# NL: A normalized equiangular polygonal chain: each directed side has angle (2k-1)π/n
+
+thm natural_successor_positive_7:
+    ? forall k N:
+        k+1 $in N+
+    0 <= k
+    k+1 $in N
+    0 < k+1
+    k+1 $in N+
+
+thm positive_natural_successor_7:
+    ? forall k N+:
+        k+1 $in N+
+    k $in N
+    by thm natural_successor_positive_7(k)
+
+have fn next_index_7(k N) N+ = k+1
+
+prop normalized_equiangular_chain(n N+, a fn(index N+) R+, p fn(k N+) cart(R, R)):
+    p(1) = (0, 0)
+    forall k N+:
+        k <= n
+        k+1 $in N+
+        =>:
+            p(k + 1)(1) = p(k)(1) + a(k) * cos((2 * k - 1) * pi / n)
+            p(k + 1)(2) = p(k)(2) + a(k) * sin((2 * k - 1) * pi / n)
+    forall k N+:
+        k = n
+        k+1 $in N+
+        =>:
+            p(k+1) = p(1)
+
+prop has_normalized_equiangular_polygon(n N+, a fn(index N+) R+):
+    exist p fn(k N+) cart(R, R) st {$normalized_equiangular_chain(n, a, p)}
+
+# ============================================================================
+# KEY LEMMA: Closure condition forces weighted sine sum to zero
+# ============================================================================
+
+
+thm closed_chain_has_zero_sine_sum:
+    # NL: For any n-gon (n≥3) with a closed equiangular chain
+    #     the weighted prefix sum at m=n equals zero
+    ? forall n N+, a fn(index N+) R+:
+        n >= 3
+        $has_normalized_equiangular_polygon(n, a)
+        =>:
+            weighted_prefix(a, n, n) = 0
+    # NL: Obtain the coordinate function from the existence predicate
+    obtain p from $has_normalized_equiangular_polygon(n, a)
+    by def $normalized_equiangular_chain(n, a, p)
+    by thm positive_natural_successor_7(n)
+
+    # NL: Define a local predicate: the weighted prefix at m equals vertical displacement
+    prop prefix_is_vertical_displacement(m N):
+        forall:
+            m <= n
+            m+1 $in N+
+            =>:
+                weighted_prefix(a, n, m) = p(m + 1)(2) - p(1)(2)
+
+    # NL: Prove by induction that the predicate holds for all m ∈ ℕ
+    claim:
+        ? forall m N:
+            $prefix_is_vertical_displacement(m)
+        by induc m from 0:
+            ? $prefix_is_vertical_displacement(m)
+
+            # NL: Base case: m=0, weighted_prefix = 0 and p(1)[2] - p(1)[2] = 0
+            ? from m = 0:
+                claim:
+                    ? forall:
+                        0 <= n
+                        0+1 $in N+
+                        =>:
+                            weighted_prefix(a, n, 0) = p(0 + 1)(2) - p(1)(2)
+                    # NL: By definition, weighted_prefix(a, n, 0) = 0
+                    weighted_prefix(a, n, 0) = 0
+                    0 + 1 = 1
+                    # NL: p(1)[2] - p(1)[2] = 0
+                    p(0 + 1)(2) - p(1)(2) = p(1)(2) - p(1)(2)
+                    p(1)(2) - p(1)(2) = 0
+                    weighted_prefix(a, n, 0) = p(0 + 1)(2) - p(1)(2)
+                by def:
+                    ? $prefix_is_vertical_displacement(0)
+
+            # NL: Inductive step: assume true for m, prove for m+1
+            ? induc:
+                claim:
+                    ? forall:
+                        m + 1 <= n
+                        m+1+1 $in N+
+                        =>:
+                            weighted_prefix(a, n, m + 1) = p(m + 1 + 1)(2) - p(1)(2)
+                    # NL: Given m+1 ≤ n, derive m ≤ n to apply IH
+                    m + 1 <= n
+                    m <= m + 1
+                    m <= n
+                    by thm natural_successor_positive_7(m)
+                    # NL: By IH, weighted_prefix(a,n,m) = p(m+1)[2] - p(1)[2]
+                    by def:
+                        ? $prefix_is_vertical_displacement(m)
+                    weighted_prefix(a, n, m) = p(m + 1)(2) - p(1)(2)
+                    # NL: By recursive definition, prefix(m+1) = prefix(m) + a(m+1)·sin((2(m+1)-1)π/n)
+                    weighted_prefix(a, n, m + 1) = weighted_prefix(a, n, m + 1 - 1) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)
+                    m + 1 - 1 = m
+                    weighted_prefix(a, n, m + 1) = weighted_prefix(a, n, m) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)
+                    # NL: Substitute IH into the sum
+                    weighted_prefix(a, n, m) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n) = (p(m + 1)(2) - p(1)(2)) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)
+                    weighted_prefix(a, n, m + 1) = (p(m + 1)(2) - p(1)(2)) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)
+                    # NL: By chain recurrence, p(m+2)[2] = p(m+1)[2] + a(m+1)·sin((2(m+1)-1)π/n)
+                    p(m + 1 + 1)(2) = p(m + 1)(2) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)
+                    p(m + 1 + 1)(2) - p(1)(2) = (p(m + 1)(2) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)) - p(1)(2)
+                    # NL: Distribute subtraction
+                    (p(m + 1)(2) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)) - p(1)(2) = (p(m + 1)(2) - p(1)(2)) + a(m + 1) * sin((2 * (m + 1) - 1) * pi / n)
+                    weighted_prefix(a, n, m + 1) = p(m + 1 + 1)(2) - p(1)(2)
+                by def:
+                    ? $prefix_is_vertical_displacement(m + 1)
+
+    # NL: Instantiate the predicate at m=n to extract the equality
+    $prefix_is_vertical_displacement(n)
+    # NL: This yields: forall: n≤n =>: weighted_prefix(a,n,n) = p(n+1)[2]-p(1)[2]
+    n <= n
+    weighted_prefix(a, n, n) = p(n + 1)(2) - p(1)(2)
+    # NL: By closure condition, p(n+1) = p(1)
+    p(n + 1) = p(1)
+    have closing_vertex cart(R,R) = p(n + 1)
+    have initial_vertex cart(R,R) = p(1)
+    closing_vertex = initial_vertex
+    p(n + 1)(2) = closing_vertex(2) = initial_vertex(2) = p(1)(2)
+    p(n + 1)(2) - p(1)(2) = 0
+    weighted_prefix(a, n, n) = 0
+
+
+have fn variation_prefix(a fn(index N+) R+, n N+, m N: n >= 3) R by induc m from 0:
+    case m = 0: 0
+    case m > 0: variation_prefix(a, n, m - 1) + (a(m) - a(m + 1)) * prefix_weight(n, m)
+
+
+thm abel_step_algebra_7:
+    ? forall w,v,u,z,f,g,x,y,s,t R:
+        w*s = x*f+u
+        v = w+x*t
+        g-f = t*s
+        z = u+(x-y)*g
+        =>:
+            v*s = y*g+z
+    v*s = (w+x*t)*s
+    (w+x*t)*s = w*s+x*(t*s)
+    w*s+x*(t*s) = (x*f+u)+x*(g-f)
+    (x*f+u)+x*(g-f) = x*g+u
+    v*s = x*g+u
+    y*g+z = y*g+(u+(x-y)*g)
+    y*g+(u+(x-y)*g) = x*g+u
+    v*s = y*g+z
+
+thm abel_prefix_identity:
+    ? forall a fn(index N+) R+, n N+, m N:
+        n >= 3
+        =>:
+            weighted_prefix(a, n, m) * sin(pi / n) = a(m + 1) * prefix_weight(n, m) + variation_prefix(a, n, m)
+    by induc m from 0:
+        ? weighted_prefix(a,n,m)*sin(pi/n) = a(m+1)*prefix_weight(n,m)+variation_prefix(a,n,m)
+        ? from m = 0:
+            weighted_prefix(a,n,0) = 0
+            by thm prefix_weight_zero(n)
+            variation_prefix(a,n,0) = 0
+            weighted_prefix(a,n,0)*sin(pi/n) = 0
+            a(0+1)*prefix_weight(n,0)+variation_prefix(a,n,0) = 0
+        ? induc:
+            by thm natural_successor_positive_7(m)
+            by thm positive_natural_successor_7(m+1)
+            m+1 > 0
+            m+1-1 = m
+            weighted_prefix(a,n,m+1) = weighted_prefix(a,n,m+1-1)+a(m+1)*sin((2*(m+1)-1)*pi/n)
+            weighted_prefix(a,n,m+1-1) = weighted_prefix(a,n,m)
+            weighted_prefix(a,n,m+1) = weighted_prefix(a,n,m)+a(m+1)*sin((2*(m+1)-1)*pi/n)
+            variation_prefix(a,n,m+1) = variation_prefix(a,n,m+1-1)+(a(m+1)-a(m+1+1))*prefix_weight(n,m+1)
+            variation_prefix(a,n,m+1-1) = variation_prefix(a,n,m)
+            variation_prefix(a,n,m+1) = variation_prefix(a,n,m)+(a(m+1)-a(m+1+1))*prefix_weight(n,m+1)
+            by thm prefix_weight_step(n,m+1)
+            by thm abel_step_algebra_7(weighted_prefix(a,n,m),weighted_prefix(a,n,m+1),variation_prefix(a,n,m),variation_prefix(a,n,m+1),prefix_weight(n,m),prefix_weight(n,m+1),a(m+1),a(m+1+1),sin(pi/n),sin((2*(m+1)-1)*pi/n))
+
+thm prefix_weight_nonneg:
+    ? forall n N+, j N:
+        prefix_weight(n, j) >= 0
+    sin(j * pi / n)^2 >= 0
+    prefix_weight(n, j) = sin(j * pi / n)^2
+    prefix_weight(n, j) >= 0
+
+
+thm sine_nonzero_open_pi_7:
+    ? forall x R:
+        0 < x
+        x < pi
+        =>:
+            sin(x) != 0
+    0 <= x
+    x <= pi
+    by contra:
+        ? sin(x) != 0
+        sin(x) = 0
+        sin(x)^2 = 0^2 = 0
+        cos(x)^2+sin(x)^2 = 1
+        cos(x)^2+sin(x)^2 = cos(x)^2+0 = cos(x)^2
+        cos(x)^2 = 1
+        (cos(x)-1)*(cos(x)+1) = cos(x)^2-1 = 0
+        by cases:
+            ? sin(x) != 0
+            case cos(x) = 1:
+                -1 <= cos(x)
+                cos(x) <= 1
+                arccos(cos(x)) = x
+                arccos(cos(x)) = arccos(1) = 0
+                x = 0
+                impossible 0 < x
+            case cos(x) != 1:
+                cos(x)-1 != 0
+                cos(x)+1 = 0
+                cos(x) = -1
+                -1 <= cos(x)
+                cos(x) <= 1
+                arccos(cos(x)) = x
+                arccos(cos(x)) = arccos(-1) = pi
+                x = pi
+                impossible x < pi
+        impossible sin(x) = 0
+
+thm nonzero_real_square_positive_7:
+    ? forall z R:
+        z != 0
+        =>:
+            z^2 > 0
+    z*z = z^2
+    z^2 >= 0
+    by contra:
+        ? z^2 > 0
+        z^2 <= 0
+        z^2 = 0
+        z*z = 0
+        z = 0
+        impossible z != 0
+
+thm prefix_weight_positive:
+    ? forall n N+, j N+:
+        n >= 3
+        j < n
+        =>:
+            prefix_weight(n, j) > 0
+    j > 0
+    pi > 0
+    n > 0
+    j*pi > 0
+    1/n > 0
+    (j*pi)*(1/n) > 0
+    (j*pi)*(1/n) = j*pi/n
+    0 < j*pi/n
+    j*pi < n*pi
+    j*pi/n < n*pi/n
+    n*pi/n = pi
+    j*pi/n < pi
+    by thm sine_nonzero_open_pi_7(j*pi/n)
+    by thm nonzero_real_square_positive_7(sin(j*pi/n))
+    prefix_weight(n,j) = sin(j*pi/n)^2
+    prefix_weight(n,j) > 0
+
+# Custom Predicates for Problem 7
+# imo_official_1963_eng_3
+
+# ⚠️ PREDICATE RULES ⚠️
+# 1. 只定义本题专用的谓词（Only problem-specific predicates）
+# 2. 尽量使用库中已有的谓词（Prefer library predicates when possible）
+# 3. 谓词定义要清晰明确（Clear and explicit definitions）
+
+# ============================================================================
+# CUSTOM PREDICATES
+# ============================================================================
+
+# NL: Sequence a is monotone non-increasing from index 1 to n
+prop is_monotone_nonincreasing(n N+, a seq(R+)):
+    forall idx_left, idx_right N+:
+        1 <= idx_left
+        idx_left <= idx_right
+        idx_right <= n
+        =>:
+            a(idx_left) >= a(idx_right)
+
+thm variation_nonnegative_up_to:
+    ? forall a fn(index N+) R+, n N+, bound, step N:
+        n >= 3
+        forall idx N+:
+            idx <= bound
+            idx+1 $in N+
+            =>:
+                a(idx) >= a(idx + 1)
+        step <= bound
+        =>:
+            variation_prefix(a, n, step) >= 0
+
+    # The induction statement is independent of the external bound:
+    # monotonicity through k implies nonnegativity of the first k variation terms.
+    prop unbounded_nonneg(k N):
+        forall:
+            forall idx N+:
+                idx <= k
+                idx+1 $in N+
+                =>:
+                    a(idx) >= a(idx + 1)
+            =>:
+                variation_prefix(a, n, k) >= 0
+
+    claim:
+        ? forall k N:
+            $unbounded_nonneg(k)
+        by induc k from 0:
+            ? $unbounded_nonneg(k)
+
+            ? from k = 0:
+                claim:
+                    ? forall:
+                        forall idx N+:
+                            idx <= 0
+                            idx+1 $in N+
+                            =>:
+                                a(idx) >= a(idx + 1)
+                        =>:
+                            variation_prefix(a, n, 0) >= 0
+                    variation_prefix(a, n, 0) = 0
+                    variation_prefix(a, n, 0) >= 0
+                by def:
+                    ? $unbounded_nonneg(0)
+
+            ? induc:
+                claim:
+                    ? forall:
+                        forall idx N+:
+                            idx <= k + 1
+                            idx+1 $in N+
+                            =>:
+                                a(idx) >= a(idx + 1)
+                        =>:
+                            variation_prefix(a, n, k + 1) >= 0
+
+                    # Restrict the assumed monotonicity through k+1 to indices through k.
+                    claim:
+                        ? forall idx N+:
+                            idx <= k
+                            idx+1 $in N+
+                            =>:
+                                a(idx) >= a(idx + 1)
+                        idx <= k + 1
+                        a(idx) >= a(idx + 1)
+
+                    by def:
+                        ? $unbounded_nonneg(k)
+                    variation_prefix(a, n, k) >= 0
+
+                    by thm natural_successor_positive_7(k)
+                    by thm positive_natural_successor_7(k+1)
+                    k+1 > 0
+                    k+1-1 = k
+                    variation_prefix(a,n,k+1) = variation_prefix(a,n,k+1-1)+(a(k+1)-a(k+1+1))*prefix_weight(n,k+1)
+                    variation_prefix(a,n,k+1-1) = variation_prefix(a,n,k)
+                    variation_prefix(a, n, k + 1) = variation_prefix(a, n, k) + (a(k + 1) - a(k + 1 + 1)) * prefix_weight(n, k + 1)
+                    by thm prefix_weight_nonneg(n, k + 1)
+                    prefix_weight(n, k + 1) >= 0
+                    k + 1 <= k + 1
+                    a(k + 1) >= a(k + 1 + 1)
+                    a(k + 1) - a(k + 1 + 1) >= 0
+                    (a(k + 1) - a(k + 1 + 1)) * prefix_weight(n, k + 1) >= 0 * 0
+                    0 * 0 = 0
+                    (a(k + 1) - a(k + 1 + 1)) * prefix_weight(n, k + 1) >= 0
+                    variation_prefix(a, n, k) + (a(k + 1) - a(k + 1 + 1)) * prefix_weight(n, k + 1) >= 0 + 0
+                    0 + 0 = 0
+                    variation_prefix(a, n, k) + (a(k + 1) - a(k + 1 + 1)) * prefix_weight(n, k + 1) >= 0
+                    variation_prefix(a, n, k + 1) >= 0
+                by def:
+                    ? $unbounded_nonneg(k + 1)
+
+    # Restrict the original monotonicity through bound to indices through step.
+    claim:
+        ? forall idx N+:
+            idx <= step
+            idx+1 $in N+
+            =>:
+                a(idx) >= a(idx + 1)
+        idx <= bound
+        a(idx) >= a(idx + 1)
+
+    $unbounded_nonneg(step)
+    variation_prefix(a, n, step) >= 0
+
+
+
+# If one adjacent drop is strict before n, the accumulated variation is strictly positive at n.
+
+thm strict_drop_forces_positive_variation:
+    ? forall a fn(index N+) R+, n N+, s N+:
+        n >= 3
+        s < n
+        forall idx N+:
+            idx < n
+            idx+1 $in N+
+            =>:
+                a(idx) >= a(idx + 1)
+        a(s) > a(next_index_7(s))
+        =>:
+            variation_prefix(a, n, n) > 0
+
+    s $in N
+    n $in N
+    s > 0
+    n > 0
+    by thm natural_predecessor_nonnegative_7(s)
+    by thm natural_predecessor_nonnegative_7(n)
+    s-1 $in N
+    n-1 $in N
+    by thm positive_natural_successor_7(s)
+    by thm positive_natural_successor_7(n)
+    next_index_7(s) = s+1
+    a(next_index_7(s)) = a(s+1)
+    a(s) > a(s+1)
+
+    claim:
+        ? forall idx N+:
+            idx <= s - 1
+            idx+1 $in N+
+            =>:
+                a(idx) >= a(idx + 1)
+        s - 1 < s
+        idx < s
+        idx < n
+        a(idx) >= a(idx + 1)
+
+    by thm variation_nonnegative_up_to(a, n, s - 1, s - 1)
+    variation_prefix(a, n, s - 1) >= 0
+    by thm prefix_weight_positive(n, s)
+    prefix_weight(n, s) > 0
+    a(s) - a(s + 1) > 0
+    (a(s) - a(s + 1)) * prefix_weight(n, s) > 0
+    variation_prefix(a, n, s) = variation_prefix(a, n, s - 1) + (a(s) - a(s + 1)) * prefix_weight(n, s)
+    variation_prefix(a, n, s - 1) + (a(s) - a(s + 1)) * prefix_weight(n, s) > 0
+    variation_prefix(a, n, s) > 0
+
+    prop positive_after(offset N):
+        forall:
+            s + offset < n
+            =>:
+                variation_prefix(a, n, s + offset) > 0
+
+    claim:
+        ? forall offset N:
+            $positive_after(offset)
+        by induc offset from 0:
+            ? $positive_after(offset)
+
+            ? from offset = 0:
+                claim:
+                    ? forall:
+                        s + 0 < n
+                        =>:
+                            variation_prefix(a, n, s + 0) > 0
+                    s + 0 = s
+                    variation_prefix(a, n, s + 0) = variation_prefix(a, n, s)
+                    variation_prefix(a, n, s + 0) > 0
+                by def:
+                    ? $positive_after(0)
+
+            ? induc:
+                claim:
+                    ? forall:
+                        s + (offset + 1) < n
+                        =>:
+                            variation_prefix(a, n, s + (offset + 1)) > 0
+                    s+(offset+1) = s+offset+1
+                    0 < 1
+                    0+(s+offset) < 1+(s+offset)
+                    0+(s+offset) = s+offset
+                    1+(s+offset) = s+(offset+1)
+                    s + offset < s + (offset + 1)
+                    s + offset < n
+                    $positive_after(offset)
+                    variation_prefix(a, n, s + offset) > 0
+                    s + (offset + 1) = s + offset + 1
+                    s + offset + 1 < n
+                    s+offset $in N
+                    by thm natural_successor_positive_7(s+offset)
+                    by thm positive_natural_successor_7(s+offset+1)
+                    a(s + offset + 1) >= a(s + offset + 1 + 1)
+                    a(s + offset + 1) - a(s + offset + 1 + 1) >= 0
+                    by thm prefix_weight_nonneg(n, s + offset + 1)
+                    prefix_weight(n, s + offset + 1) >= 0
+                    (a(s + offset + 1) - a(s + offset + 1 + 1)) * prefix_weight(n, s + offset + 1) >= 0
+                    variation_prefix(a, n, s + offset + 1) = variation_prefix(a, n, s + offset + 1 - 1) + (a(s + offset + 1) - a(s + offset + 1 + 1)) * prefix_weight(n, s + offset + 1)
+                    s + offset + 1 - 1 = s + offset
+                    variation_prefix(a, n, s + offset + 1 - 1) = variation_prefix(a, n, s + offset)
+                    variation_prefix(a, n, s + offset + 1) = variation_prefix(a, n, s + offset) + (a(s + offset + 1) - a(s + offset + 1 + 1)) * prefix_weight(n, s + offset + 1)
+                    variation_prefix(a, n, s + offset) + (a(s + offset + 1) - a(s + offset + 1 + 1)) * prefix_weight(n, s + offset + 1) > 0
+                    variation_prefix(a, n, s + offset + 1) > 0
+                    variation_prefix(a,n,s+(offset+1)) = variation_prefix(a,n,s+offset+1)
+                    variation_prefix(a, n, s + (offset + 1)) > 0
+                by def:
+                    ? $positive_after(offset + 1)
+
+    s <= n - 1
+    s + ((n - 1) - s) = n - 1
+    n - 1 < n
+    (n-1)-s >= 0
+    (n-1)-s $in Z
+    (n-1)-s $in N
+    $positive_after((n - 1) - s)
+    variation_prefix(a, n, s + ((n - 1) - s)) > 0
+    variation_prefix(a, n, n - 1) > 0
+    by thm prefix_weight_at_n_zero(n)
+    prefix_weight(n, n) = 0
+    variation_prefix(a, n, n) = variation_prefix(a, n, n - 1) + (a(n) - a(n + 1)) * prefix_weight(n, n)
+    (a(n) - a(n + 1)) * prefix_weight(n, n) = 0
+    variation_prefix(a, n, n - 1) + (a(n) - a(n + 1)) * prefix_weight(n, n) = variation_prefix(a, n, n - 1) + 0
+    variation_prefix(a, n, n - 1) + 0 = variation_prefix(a, n, n - 1)
+    variation_prefix(a, n, n) = variation_prefix(a, n, n - 1)
+    variation_prefix(a, n, n) > 0
+
+# Zero accumulated variation excludes every strict adjacent drop.
+
+thm zero_variation_forces_adjacent_equal:
+    ? forall a fn(index N+) R+, n, s N+:
+        n >= 3
+        s < n
+        forall idx N+:
+            idx < n
+            idx+1 $in N+
+            =>:
+                a(idx) >= a(idx + 1)
+        variation_prefix(a, n, n) = 0
+        =>:
+            a(s) = a(s + 1)
+    by thm positive_natural_successor_7(s)
+    s+1 $in N+
+    next_index_7(s)=s+1
+    a(next_index_7(s))=a(s+1)
+    by contra:
+        ? a(s) = a(s + 1)
+        a(s) != a(s + 1)
+        a(s) >= a(s + 1)
+        by contra:
+            ? a(s) > a(s + 1)
+            a(s) <= a(s + 1)
+            a(s) = a(s + 1)
+            impossible a(s) != a(s + 1)
+        a(s) > a(s + 1)
+        by thm strict_drop_forces_positive_variation(a, n, s)
+        variation_prefix(a, n, n) > 0
+        impossible variation_prefix(a, n, n) = 0
+
+# Abel summation converts a zero weighted sine sum into zero accumulated variation.
+
+
+thm zero_weighted_prefix_forces_zero_variation:
+    ? forall a fn(index N+) R+, n N+:
+        n >= 3
+        weighted_prefix(a, n, n) = 0
+        =>:
+            variation_prefix(a, n, n) = 0
+    by thm abel_prefix_identity(a, n, n)
+    weighted_prefix(a, n, n) * sin(pi / n) = a(n + 1) * prefix_weight(n, n) + variation_prefix(a, n, n)
+    by thm prefix_weight_at_n_zero(n)
+    prefix_weight(n, n) = 0
+    weighted_prefix(a, n, n) * sin(pi / n) = 0 * sin(pi / n)
+    0 * sin(pi / n) = 0
+    weighted_prefix(a, n, n) * sin(pi / n) = 0
+    a(n + 1) * prefix_weight(n, n) = a(n + 1) * 0
+    a(n + 1) * 0 = 0
+    a(n + 1) * prefix_weight(n, n) = 0
+    a(n + 1) * prefix_weight(n, n) + variation_prefix(a, n, n) = 0 + variation_prefix(a, n, n)
+    0 + variation_prefix(a, n, n) = variation_prefix(a, n, n)
+    a(n + 1) * prefix_weight(n, n) + variation_prefix(a, n, n) = variation_prefix(a, n, n)
+    variation_prefix(a, n, n) = 0
+
+# Adjacent equalities propagate from the first entry to every entry through n.
+
+thm zero_variation_forces_equal_to_first:
+    ? forall a fn(index N+) R+, n, target N+:
+        n >= 3
+        target <= n
+        forall idx N+:
+            idx < n
+            idx+1 $in N+
+            =>:
+                a(idx) >= a(idx + 1)
+        variation_prefix(a, n, n) = 0
+        =>:
+            a(1) = a(target)
+
+    prop equal_after(offset N):
+        forall:
+            1 + offset <= n
+            =>:
+                a(1) = a(1 + offset)
+
+    claim:
+        ? forall offset N:
+            $equal_after(offset)
+        by induc offset from 0:
+            ? $equal_after(offset)
+
+            ? from offset = 0:
+                claim:
+                    ? forall:
+                        1 + offset <= n
+                        =>:
+                            a(1) = a(1 + offset)
+                    1 + offset = 1
+                    a(1) = a(1)
+                    a(1) = a(1 + offset)
+                by def:
+                    ? $equal_after(offset)
+
+            ? induc:
+                $equal_after(offset)
+                claim:
+                    ? forall:
+                        1 + (offset + 1) <= n
+                        =>:
+                            a(1) = a(1 + (offset + 1))
+                    0<1
+                    (1+offset)+0<(1+offset)+1
+                    (1+offset)+0=1+offset
+                    (1+offset)+1=1+(offset+1)
+                    1 + offset < 1 + (offset + 1)
+                    1 + offset < n
+                    $equal_after(offset)
+                    a(1) = a(1 + offset)
+                    by thm zero_variation_forces_adjacent_equal(a, n, 1 + offset)
+                    a(1 + offset) = a(1 + offset + 1)
+                    1 + offset + 1 = 1 + (offset + 1)
+                    by thm natural_successor_positive_7(offset)
+                    offset+1 $in N+
+                    by thm positive_natural_successor_7(offset+1)
+                    (offset+1)+1 $in N+
+                    1+(offset+1)=(offset+1)+1
+                    1+(offset+1) $in N+
+                    1+offset+1=(offset+1)+1
+                    1+offset+1 $in N+
+                    a(1+(offset+1))=a(1+offset+1)
+                    a(1 + offset) = a(1 + (offset + 1))
+                    a(1) = a(1 + (offset + 1))
+                by def:
+                    ? $equal_after(offset + 1)
+
+    1 + (target - 1) = target
+    1 + (target - 1) <= n
+    $equal_after(target - 1)
+    a(1) = a(1 + (target - 1))
+    a(1) = a(target)
+
+# Every two entries through n are equal once the accumulated variation vanishes.
+
+
+
+thm zero_variation_forces_all_equal:
+    ? forall a fn(index N+) R+, n, idx_1, idx_2 N+:
+        n >= 3
+        idx_1 <= n
+        idx_2 <= n
+        forall idx N+:
+            idx < n
+            idx+1 $in N+
+            =>:
+                a(idx) >= a(idx + 1)
+        variation_prefix(a, n, n) = 0
+        =>:
+            a(idx_1) = a(idx_2)
+    by thm zero_variation_forces_equal_to_first(a, n, idx_1)
+    a(1) = a(idx_1)
+    by thm zero_variation_forces_equal_to_first(a, n, idx_2)
+    a(1) = a(idx_2)
+    a(idx_1) = a(1)
+    a(idx_1) = a(idx_2)
+
+# ============================================================================
+# MAIN THEOREM: Monotone + closure => all sides equal
+# ============================================================================
+
+
+thm problem_7:
+    # NL: Given an n-gon (n≥3) with equal angles, if consecutive sides are
+    #     monotone non-increasing, then all sides are equal
+    ? forall n, idx_1, idx_2 N+, a seq(R+):
+        n >= 3
+        $has_normalized_equiangular_polygon(n, a)
+        $is_monotone_nonincreasing(n, a)
+        1 <= idx_1
+        idx_1 <= n
+        1 <= idx_2
+        idx_2 <= n
+        =>:
+            a(idx_1) = a(idx_2)
+    # NL: Closure makes the full weighted sine sum zero.
+    by thm closed_chain_has_zero_sine_sum(n, a)
+    weighted_prefix(a, n, n) = 0
+
+    # NL: Abel summation and the zero endpoint weight convert this into zero total variation.
+    by thm zero_weighted_prefix_forces_zero_variation(a, n)
+    variation_prefix(a, n, n) = 0
+
+    # NL: The original all-pairs monotonicity implies each adjacent inequality before n.
+    claim:
+        ? forall idx N+:
+            idx < n
+            idx+1 $in N+
+            =>:
+                a(idx) >= a(idx + 1)
+        idx < n
+        idx <= idx + 1
+        idx + 1 <= n
+        $is_monotone_nonincreasing(n, a)
+        a(idx) >= a(idx + 1)
+
+    # NL: Zero nonnegative variation forces every adjacent drop to vanish, hence any two sides are equal.
+    by thm zero_variation_forces_all_equal(a, n, idx_1, idx_2)
+    a(idx_1) = a(idx_2)

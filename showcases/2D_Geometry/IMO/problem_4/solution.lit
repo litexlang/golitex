@@ -1,0 +1,816 @@
+# IMO 1961 Problem 5: triangle construction and the equality case.
+# The four original geometric theorem statements collectively state the problem.
+# t=tan(omega/2), with 0<t<1; geometry definitions are copied from the requested new file.
+
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
+
+# Dot product.
+
+have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
+
+# 2D determinant (signed parallelogram area / cross product z-component).
+
+have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+
+# Squared Euclidean distance |ab|^2 (avoids square roots).
+
+have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
+
+# General form: the line ax + by + c = 0 (a, b not both zero).
+
+prop is_collinear(p, q, r cart(R, R)):
+    det(vec(p, q), vec(p, r)) = 0
+
+# Segments ab and cd have equal length.
+
+prop is_right_angle(p, q, r cart(R, R)):
+    p != q
+    r != q
+    dot(vec(q, p), vec(q, r)) = 0
+
+# Directed segments ab and cd are parallel.
+
+prop is_midpoint(m, a, b cart(R, R)):
+    m(1) = (a(1) + b(1)) / 2
+    m(2) = (a(2) + b(2)) / 2
+
+# p lies on the affine line through a and b (any real parameter t).
+# Allows a = b (then only p = a); use is_on_line when a distinct line is required.
+
+prop is_triangle(a, b, c cart(R, R)):
+    det(vec(a, b), vec(a, c)) != 0
+
+# Triangle abc is isosceles with apex a (ab = ac), not the general "two sides equal".
+
+# IMO 1961 Problem 5 (dataset id 4, imo_official_1961_eng_5)
+#
+# [Original problem]
+# Construct triangle ABC if AC = b, AB = c and angle AMB = omega, where M is
+# the midpoint of segment BC and omega < 90 degrees. Prove that a solution
+# exists if and only if
+#
+#     b * tan(omega / 2) <= c < b.
+#
+# Determine the equality case.
+#
+# [Natural language <-> Litex objects]
+# - The problem's positive lengths b and c are `side_b` and `side_c`.
+# - The problem's points A, B, C, M are `a`, `b`, `c`, `m` in cart(R, R).
+#   The point variable `b` is distinct from the length variable `side_b`.
+# - `t = tan(omega / 2)`. Since the intended angle is positive and
+#   omega < 90 degrees, the formal range is `t > 0` and `t < 1`.
+#
+# [Natural-language construction <-> problem_4_configuration]
+# - "triangle ABC"                 <-> $is_triangle(a, b, c)
+# - "M is the midpoint of BC"      <-> $is_midpoint(m, b, c)
+# - "AC = b"                       <-> distance_sq(a, c) = side_b^2
+# - "AB = c"                       <-> distance_sq(a, b) = side_c^2
+# - "angle AMB = omega"            <-> the positive-dot and polynomial
+#   half-angle clauses in `problem_4_configuration`; these encode the acute
+#   angle without division or an inverse-trigonometric primitive.
+#
+# [Original claims <-> main Litex theorem]
+# - The complete translated problem is written directly in `problem_4`.
+# - Its goal contains both directions of constructibility and both directions
+#   of the equality case, with their original quantifier shapes.
+# - `problem_4_necessity`, `problem_4_sufficiency`
+#   `problem_4_boundary_implies_right_triangle`, and
+#   `problem_4_right_triangle_implies_boundary` are proof helpers cited only
+#   in the proof body of `problem_4`.
+# - At equality M is also proved equidistant from A, B, and C.
+#
+# Coordinates occur only inside the sufficiency proof to construct witnesses;
+# all public theorem statements quantify arbitrary points and use predicates.
+
+# Scalar order lemmas.
+thm nonnegative_order_from_squares_4:
+    ? forall x, y R:
+        x >= 0
+        y >= 0
+        x^2 >= y^2
+        =>:
+            x >= y
+    by contra:
+        ? x >= y
+        x < y
+        y-x > 0
+        2*x >= 0
+        (y-x)+2*x > 0
+        (y-x)+2*x = x+y
+        x+y > 0
+        (y - x) * (x + y) > 0
+        (y-x)*(x+y) = y^2-x^2
+        y^2 - x^2 > 0
+        y^2 > x^2
+        impossible x^2 >= y^2
+
+thm positive_order_from_squares_4:
+    ? forall x, y R:
+        x > 0
+        y > 0
+        x^2 <= y^2
+        =>:
+            x <= y
+    x >= 0
+    y >= 0
+    y^2 >= x^2
+    by thm nonnegative_order_from_squares_4(y,x) => y >= x
+
+thm angle_certificate_implies_side_condition_4:
+    ? forall side_b, side_c, t, x, y, d R:
+        side_b > 0
+        side_c > 0
+        t > 0
+        t < 1
+        x > 0
+        y > 0
+        d > 0
+        side_b^2 = x + y + 2 * d
+        side_c^2 = x + y - 2 * d
+        (1 + t^2)^2 * d^2 = (1 - t^2)^2 * x * y
+        =>:
+            side_b * t <= side_c
+            side_c < side_b
+    t * t < t * 1
+    t * t = t^2
+    t * 1 = t
+    t^2 < t
+    t^2 < 1
+    1 - t^2 > 0
+    t^2 >= 0
+    1 + t^2 > 0
+    x + y > 0
+    (x - y)^2 >= 0
+    (x + y)^2 - 4 * x * y = (x - y)^2
+    (1 - t^2)^2 >= 0
+    (x + y)^2 - 4 * x * y >= 0
+    (1 - t^2)^2 * ((x + y)^2 - 4 * x * y) >= 0
+    (1 - t^2)^2 * ((x + y)^2 - 4 * x * y) = (1 - t^2)^2 * (x + y)^2 - (1 - t^2)^2 * 4 * x * y
+    (1 - t^2)^2 * (x + y)^2 = (1 - t^2)^2 * ((x + y)^2 - 4 * x * y) + (1 - t^2)^2 * 4 * x * y
+    (1 - t^2)^2 * ((x + y)^2 - 4 * x * y) + (1 - t^2)^2 * 4 * x * y >= 0 + (1 - t^2)^2 * 4 * x * y
+    0 + (1 - t^2)^2 * 4 * x * y = (1 - t^2)^2 * 4 * x * y
+    (1 - t^2)^2 * (x + y)^2 >= (1 - t^2)^2 * 4 * x * y
+    (1 - t^2)^2 * x * y = (1 + t^2)^2 * d^2
+    4 * ((1 - t^2)^2 * x * y) = 4 * ((1 + t^2)^2 * d^2)
+    (1 - t^2)^2 * 4 * x * y = 4 * ((1 - t^2)^2 * x * y)
+    4 * ((1 + t^2)^2 * d^2) = 4 * (1 + t^2)^2 * d^2
+    (1 - t^2)^2 * 4 * x * y = 4 * (1 + t^2)^2 * d^2
+    ((1 - t^2) * (x + y))^2 = (1 - t^2)^2 * (x + y)^2
+    (2 * (1 + t^2) * d)^2 = 4 * (1 + t^2)^2 * d^2
+    ((1 - t^2) * (x + y))^2 >= (2 * (1 + t^2) * d)^2
+    (1 - t^2) * (x + y) > 0
+    2*(1+t^2) > 0
+    2 * (1 + t^2) * d > 0
+    by thm nonnegative_order_from_squares_4((1 - t^2) * (x + y), 2 * (1 + t^2) * d) => (1 - t^2) * (x + y) >= 2 * (1 + t^2) * d
+    (1 - t^2) * (x + y) - 2 * (1 + t^2) * d >= 0
+    (x + y - 2 * d) - t^2 * (x + y + 2 * d) = (1 - t^2) * (x + y) - 2 * (1 + t^2) * d
+    (x + y - 2 * d) - t^2 * (x + y + 2 * d) >= 0
+    x + y - 2 * d = ((x + y - 2 * d) - t^2 * (x + y + 2 * d)) + t^2 * (x + y + 2 * d)
+    ((x + y - 2 * d) - t^2 * (x + y + 2 * d)) + t^2 * (x + y + 2 * d) >= 0 + t^2 * (x + y + 2 * d)
+    0 + t^2 * (x + y + 2 * d) = t^2 * (x + y + 2 * d)
+    x + y - 2 * d >= t^2 * (x + y + 2 * d)
+    t^2*side_b^2 = t^2*(x+y+2*d)
+    side_c^2 >= t^2 * side_b^2
+    (side_b * t)^2 = t^2 * side_b^2
+    (side_b * t)^2 <= side_c^2
+    side_b * t > 0
+    by thm positive_order_from_squares_4(side_b*t,side_c) => side_b*t <= side_c
+    side_b^2 - side_c^2 = (x + y + 2 * d) - (x + y - 2 * d)
+    (x + y + 2 * d) - (x + y - 2 * d) = 4 * d
+    side_b^2 - side_c^2 = 4 * d
+    4 * d > 0
+    side_b^2 - side_c^2 > 0
+    side_b^2 > side_c^2
+    by contra:
+        ? side_c < side_b
+        side_c >= side_b
+        side_c >= 0
+        side_b >= 0
+        side_c*side_c >= side_b*side_c
+        side_b*side_c >= side_b*side_b
+        side_c*side_c = side_c^2
+        side_b*side_b = side_b^2
+        side_c^2 >= side_b^2
+        impossible side_b^2 > side_c^2
+
+
+# Construction lemmas.
+
+thm positive_pair_from_sum_product_4:
+    ? forall total, prod R:
+        prod > 0
+        total - 2 * prod >= 0
+        =>:
+            exist p, q R st {p > 0, q > 0, p^2 + q^2 = total, p * q = prod}
+    4 * prod > 0
+    (total + 2 * prod) - (total - 2 * prod) = 4 * prod
+    (total + 2 * prod) - (total - 2 * prod) > 0
+    total + 2 * prod > total - 2 * prod
+    4*prod + (total-2*prod) > 0
+    4*prod + (total-2*prod) = total+2*prod
+    total + 2 * prod > 0
+    total+2*prod >= 0
+    0 <= total+2*prod
+    0 <= total-2*prod
+    sqrt(total + 2 * prod)^2 = total + 2 * prod
+    sqrt(total - 2 * prod)^2 = total - 2 * prod
+    0 <= sqrt(total + 2 * prod)
+    0 <= sqrt(total - 2 * prod)
+    sqrt(total + 2 * prod)^2 - sqrt(total - 2 * prod)^2 = 4 * prod
+    4 * prod > 0
+    sqrt(total + 2 * prod)^2 > sqrt(total - 2 * prod)^2
+    by contra:
+        ? sqrt(total + 2 * prod) > sqrt(total - 2 * prod)
+        sqrt(total + 2 * prod) <= sqrt(total - 2 * prod)
+        sqrt(total + 2 * prod)*sqrt(total + 2 * prod) <= sqrt(total - 2 * prod)*sqrt(total + 2 * prod)
+        sqrt(total - 2 * prod)*sqrt(total + 2 * prod) <= sqrt(total - 2 * prod)*sqrt(total - 2 * prod)
+        sqrt(total + 2 * prod)*sqrt(total + 2 * prod) = sqrt(total + 2 * prod)^2
+        sqrt(total - 2 * prod)*sqrt(total - 2 * prod) = sqrt(total - 2 * prod)^2
+        sqrt(total + 2 * prod)^2 <= sqrt(total - 2 * prod)^2
+        impossible sqrt(total + 2 * prod)^2 > sqrt(total - 2 * prod)^2
+    sqrt(total + 2 * prod) > sqrt(total - 2 * prod)
+    sqrt(total + 2 * prod) + sqrt(total - 2 * prod) > 0
+    (sqrt(total + 2 * prod) + sqrt(total - 2 * prod)) / 2 > 0
+    sqrt(total + 2 * prod) - sqrt(total - 2 * prod) > 0
+    (sqrt(total + 2 * prod) - sqrt(total - 2 * prod)) / 2 > 0
+    ((sqrt(total + 2 * prod) + sqrt(total - 2 * prod)) / 2)^2 + ((sqrt(total + 2 * prod) - sqrt(total - 2 * prod)) / 2)^2 = (sqrt(total + 2 * prod)^2 + sqrt(total - 2 * prod)^2) / 2
+    (sqrt(total + 2 * prod)^2 + sqrt(total - 2 * prod)^2) / 2 = ((total+2*prod)+(total-2*prod))/2 = total
+    ((sqrt(total + 2 * prod) + sqrt(total - 2 * prod)) / 2) * ((sqrt(total + 2 * prod) - sqrt(total - 2 * prod)) / 2) = (sqrt(total + 2 * prod)^2 - sqrt(total - 2 * prod)^2) / 4
+    (sqrt(total + 2 * prod)^2 - sqrt(total - 2 * prod)^2) / 4 = (4*prod)/4 = prod
+    witness exist p, q R st {p > 0, q > 0, p^2 + q^2 = total, p * q = prod} from (sqrt(total + 2 * prod) + sqrt(total - 2 * prod)) / 2, (sqrt(total + 2 * prod) - sqrt(total - 2 * prod)) / 2
+
+thm side_condition_gives_construction_parameters_4:
+    ? forall side_b, side_c, t R:
+        side_b > 0
+        side_c > 0
+        t > 0
+        t < 1
+        t^2 < 1
+        1 - t^2 != 0
+        4 * (1 - t^2) != 0
+        side_b * t <= side_c
+        side_c < side_b
+        =>:
+            exist p, q R st {p > 0, q > 0, p^2 + q^2 = (side_b^2 + side_c^2) / 2, p * q = (side_b^2 - side_c^2) * (1 + t^2) / (4 * (1 - t^2))}
+    t * t < t * 1
+    t * t = t^2
+    t * 1 = t
+    t^2 < t
+    t^2 < 1
+    1 - t^2 > 0
+    side_b * t > 0
+    side_b*t >= 0
+    side_c >= 0
+    (side_b*t)*(side_b*t) <= side_c*(side_b*t)
+    side_c*(side_b*t) <= side_c*side_c
+    (side_b*t)*(side_b*t) = (side_b*t)^2
+    side_c*side_c = side_c^2
+    (side_b * t)^2 <= side_c^2
+    (side_b * t)^2 = side_b^2 * t^2
+    side_b^2 * t^2 <= side_c^2
+    side_c^2 - side_b^2 * t^2 >= 0
+    side_c*side_c < side_b*side_c
+    side_b*side_c < side_b*side_b
+    side_b*side_b = side_b^2
+    side_c^2 < side_b^2
+    side_b^2 - side_c^2 > 0
+    1 + t^2 > 0
+    (side_b^2 - side_c^2) * (1 + t^2) > 0
+    4 * (1 - t^2) > 0
+    (side_b^2 - side_c^2) * (1 + t^2) / (4 * (1 - t^2)) > 0
+    (side_b^2 + side_c^2) / 2 - 2 * ((side_b^2 - side_c^2) * (1 + t^2) / (4 * (1 - t^2))) = (side_c^2 - side_b^2 * t^2) / (1 - t^2)
+    (side_c^2 - side_b^2 * t^2) / (1 - t^2) >= 0
+    (side_b^2 + side_c^2) / 2 - 2 * ((side_b^2 - side_c^2) * (1 + t^2) / (4 * (1 - t^2))) >= 0
+    release thm positive_pair_from_sum_product_4((side_b^2 + side_c^2) / 2, (side_b^2 - side_c^2) * (1 + t^2) / (4 * (1 - t^2)))
+
+
+# Geometric configuration and coordinate witness.
+# The parameter t is tan(omega / 2).  The last two clauses are the
+# division-free half-angle certificate for angle AMB = omega.
+
+prop problem_4_configuration(side_b, side_c, t R, a, b, c, m cart(R, R)):
+    side_b > 0
+    side_c > 0
+    t > 0
+    t < 1
+    $is_triangle(a, b, c)
+    $is_midpoint(m, b, c)
+    distance_sq(a, c) = side_b^2
+    distance_sq(a, b) = side_c^2
+    dot(vec(m, a), vec(m, b)) > 0
+    (1 + t^2)^2 * dot(vec(m, a), vec(m, b))^2 = (1 - t^2)^2 * distance_sq(m, a) * distance_sq(m, b)
+
+thm vector_projections_4:
+    ? forall a,b cart(R,R):
+        vec(a,b)(1) = b(1)-a(1)
+        vec(a,b)(2) = b(2)-a(2)
+    vec(a,b) = (b(1)-a(1),b(2)-a(2))
+    vec(a,b)(1) = (b(1)-a(1),b(2)-a(2))(1) = b(1)-a(1)
+    vec(a,b)(2) = (b(1)-a(1),b(2)-a(2))(2) = b(2)-a(2)
+
+thm dot_coordinates_4:
+    ? forall a,b,c,d cart(R,R):
+        dot(vec(a,b),vec(c,d)) = (b(1)-a(1))*(d(1)-c(1))+(b(2)-a(2))*(d(2)-c(2))
+    release thm vector_projections_4(a,b)
+    release thm vector_projections_4(c,d)
+    dot(vec(a,b),vec(c,d)) = vec(a,b)(1)*vec(c,d)(1)+vec(a,b)(2)*vec(c,d)(2) = (b(1)-a(1))*(d(1)-c(1))+(b(2)-a(2))*(d(2)-c(2))
+
+thm distance_coordinates_4:
+    ? forall a,b cart(R,R):
+        distance_sq(a,b) = (b(1)-a(1))^2+(b(2)-a(2))^2
+    release thm dot_coordinates_4(a,b,a,b)
+    distance_sq(a,b) = dot(vec(a,b),vec(a,b)) = (b(1)-a(1))*(b(1)-a(1))+(b(2)-a(2))*(b(2)-a(2)) = (b(1)-a(1))^2+(b(2)-a(2))^2
+
+thm determinant_coordinates_4:
+    ? forall a,b,c cart(R,R):
+        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+    vec(a,b) = (b(1)-a(1),b(2)-a(2))
+    vec(a,c) = (c(1)-a(1),c(2)-a(2))
+    vec(a,b)(1) = (b(1)-a(1),b(2)-a(2))(1) = b(1)-a(1)
+    vec(a,b)(2) = (b(1)-a(1),b(2)-a(2))(2) = b(2)-a(2)
+    vec(a,c)(1) = (c(1)-a(1),c(2)-a(2))(1) = c(1)-a(1)
+    vec(a,c)(2) = (c(1)-a(1),c(2)-a(2))(2) = c(2)-a(2)
+    det(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+
+thm tuple_distance_coordinates_4:
+    ? forall x,y,u,v R:
+        distance_sq((x,y),(u,v)) = (u-x)^2+(v-y)^2
+    (u,v)(1) = u
+    (u,v)(2) = v
+    (x,y)(1) = x
+    (x,y)(2) = y
+    (u,v)(1)-(x,y)(1) = u-(x,y)(1) = u-x
+    (u,v)(2)-(x,y)(2) = v-(x,y)(2) = v-y
+    ((u,v)(1)-(x,y)(1))^2 = (u-x)^2
+    ((u,v)(2)-(x,y)(2))^2 = (v-y)^2
+    release thm distance_coordinates_4((x,y),(u,v))
+    distance_sq((x,y),(u,v)) = ((u,v)(1)-(x,y)(1))^2+((u,v)(2)-(x,y)(2))^2 = (u-x)^2+(v-y)^2
+
+thm tuple_vector_projections_4:
+    ? forall x,y,u,v R:
+        vec((x,y),(u,v))(1) = u-x
+        vec((x,y),(u,v))(2) = v-y
+    (u,v)(1) = u
+    (u,v)(2) = v
+    (x,y)(1) = x
+    (x,y)(2) = y
+    (u,v)(1)-(x,y)(1) = u-(x,y)(1) = u-x
+    (u,v)(2)-(x,y)(2) = v-(x,y)(2) = v-y
+    release thm vector_projections_4((x,y),(u,v))
+    vec((x,y),(u,v))(1) = (u,v)(1)-(x,y)(1) = u-x
+    vec((x,y),(u,v))(2) = (u,v)(2)-(x,y)(2) = v-y
+
+thm tuple_dot_coordinates_4:
+    ? forall x,y,u,v,z,w,r,s R:
+        dot(vec((x,y),(u,v)),vec((z,w),(r,s))) = (u-x)*(r-z)+(v-y)*(s-w)
+    release thm tuple_vector_projections_4(x,y,u,v)
+    release thm tuple_vector_projections_4(z,w,r,s)
+    vec((x,y),(u,v))(1)*vec((z,w),(r,s))(1) = (u-x)*(r-z)
+    vec((x,y),(u,v))(2)*vec((z,w),(r,s))(2) = (v-y)*(s-w)
+    dot(vec((x,y),(u,v)),vec((z,w),(r,s))) = vec((x,y),(u,v))(1)*vec((z,w),(r,s))(1)+vec((x,y),(u,v))(2)*vec((z,w),(r,s))(2) = (u-x)*(r-z)+(v-y)*(s-w)
+
+thm tuple_determinant_coordinates_4:
+    ? forall x,y,u,v,r,s R:
+        det(vec((x,y),(u,v)),vec((x,y),(r,s))) = (u-x)*(s-y)-(v-y)*(r-x)
+    release thm tuple_vector_projections_4(x,y,u,v)
+    release thm tuple_vector_projections_4(x,y,r,s)
+    vec((x,y),(u,v))(1)*vec((x,y),(r,s))(2) = (u-x)*(s-y)
+    vec((x,y),(u,v))(2)*vec((x,y),(r,s))(1) = (v-y)*(r-x)
+    det(vec((x,y),(u,v)),vec((x,y),(r,s))) = vec((x,y),(u,v))(1)*vec((x,y),(r,s))(2)-vec((x,y),(u,v))(2)*vec((x,y),(r,s))(1) = (u-x)*(s-y)-(v-y)*(r-x)
+
+thm coordinate_configuration_from_values_4:
+    ? forall side_b,side_c,t,p,x,y R:
+        side_b > 0
+        side_c > 0
+        t > 0
+        t < 1
+        p > 0
+        x > 0
+        y > 0
+        side_b^2 = (p+x)^2+y^2
+        side_c^2 = (p-x)^2+y^2
+        (1+t^2)^2*(p*x)^2 = (1-t^2)^2*p^2*(x^2+y^2)
+        =>:
+            $problem_4_configuration(side_b,side_c,t,(p,0),(x,y),(-x,-y),(0,0))
+    release thm tuple_distance_coordinates_4(p,0,-x,-y)
+    distance_sq((p,0),(-x,-y)) = (-x-p)^2+(-y-0)^2 = (p+x)^2+y^2 = side_b^2
+    release thm tuple_distance_coordinates_4(p,0,x,y)
+    distance_sq((p,0),(x,y)) = (x-p)^2+(y-0)^2 = (p-x)^2+y^2 = side_c^2
+    release thm tuple_distance_coordinates_4(0,0,p,0)
+    distance_sq((0,0),(p,0)) = (p-0)^2+(0-0)^2 = p^2
+    release thm tuple_distance_coordinates_4(0,0,x,y)
+    distance_sq((0,0),(x,y)) = (x-0)^2+(y-0)^2 = x^2+y^2
+    release thm tuple_dot_coordinates_4(0,0,p,0,0,0,x,y)
+    dot(vec((0,0),(p,0)),vec((0,0),(x,y))) = (p-0)*(x-0)+(0-0)*(y-0) = p*x
+    p*x > 0
+    dot(vec((0,0),(p,0)),vec((0,0),(x,y))) > 0
+    (1+t^2)^2*dot(vec((0,0),(p,0)),vec((0,0),(x,y)))^2 = (1+t^2)^2*(p*x)^2 = (1-t^2)^2*p^2*(x^2+y^2) = (1-t^2)^2*distance_sq((0,0),(p,0))*distance_sq((0,0),(x,y))
+    release thm tuple_determinant_coordinates_4(p,0,x,y,-x,-y)
+    det(vec((p,0),(x,y)),vec((p,0),(-x,-y))) = (x-p)*(-y-0)-(y-0)*(-x-p) = 2*p*y
+    2*p > 0
+    2*p*y > 0
+    det(vec((p,0),(x,y)),vec((p,0),(-x,-y))) != 0
+    by def $is_triangle((p,0),(x,y),(-x,-y))
+    (x,y)(1) = x
+    (x,y)(2) = y
+    (-x,-y)(1) = -x
+    (-x,-y)(2) = -y
+    (0,0)(1) = 0
+    (0,0)(2) = 0
+    (x,y)(1)+(-x,-y)(1) = x+(-x) = 0
+    (x,y)(2)+(-x,-y)(2) = y+(-y) = 0
+    ((x,y)(1)+(-x,-y)(1))/2 = 0/2 = 0 = (0,0)(1)
+    ((x,y)(2)+(-x,-y)(2))/2 = 0/2 = 0 = (0,0)(2)
+    by def $is_midpoint((0,0),(x,y),(-x,-y))
+    by def $problem_4_configuration(side_b,side_c,t,(p,0),(x,y),(-x,-y),(0,0))
+
+thm coordinate_witness_4:
+    ? forall side_b, side_c, t, p, q R:
+        side_b > 0
+        side_c > 0
+        t > 0
+        t < 1
+        t^2 < 1
+        1 - t^2 != 0
+        1 + t^2 != 0
+        p > 0
+        q > 0
+        p^2 + q^2 = (side_b^2 + side_c^2) / 2
+        p * q = (side_b^2 - side_c^2) * (1 + t^2) / (4 * (1 - t^2))
+        =>:
+            $problem_4_configuration(side_b, side_c, t, (p, 0), (q * (1 - t^2) / (1 + t^2), 2 * q * t / (1 + t^2)), (-q * (1 - t^2) / (1 + t^2), -2 * q * t / (1 + t^2)), (0, 0))
+
+    1-t^2 > 0
+    4*(1-t^2) > 0
+    4*(1-t^2) != 0
+    1+t^2 > 0
+    q*(1-t^2) > 0
+    q*(1-t^2)/(1+t^2) > 0
+    2*q > 0
+    2*q*t > 0
+    2*q*t/(1+t^2) > 0
+    (q*(1-t^2)/(1+t^2))^2+(2*q*t/(1+t^2))^2 = q^2
+    2*p*(q*(1-t^2)/(1+t^2)) = 2*(p*q)*(1-t^2)/(1+t^2) = 2*((side_b^2-side_c^2)*(1+t^2)/(4*(1-t^2)))*(1-t^2)/(1+t^2) = (side_b^2-side_c^2)/2
+    (p+(q*(1-t^2)/(1+t^2)))^2+(2*q*t/(1+t^2))^2 = p^2+((q*(1-t^2)/(1+t^2))^2+(2*q*t/(1+t^2))^2)+2*p*(q*(1-t^2)/(1+t^2)) = (p^2+q^2)+(side_b^2-side_c^2)/2 = (side_b^2+side_c^2)/2+(side_b^2-side_c^2)/2 = side_b^2
+    (p-(q*(1-t^2)/(1+t^2)))^2+(2*q*t/(1+t^2))^2 = p^2+((q*(1-t^2)/(1+t^2))^2+(2*q*t/(1+t^2))^2)-2*p*(q*(1-t^2)/(1+t^2)) = (p^2+q^2)-(side_b^2-side_c^2)/2 = (side_b^2+side_c^2)/2-(side_b^2-side_c^2)/2 = side_c^2
+    (1+t^2)^2*(p*(q*(1-t^2)/(1+t^2)))^2 = (1-t^2)^2*p^2*q^2 = (1-t^2)^2*p^2*((q*(1-t^2)/(1+t^2))^2+(2*q*t/(1+t^2))^2)
+    -(q*(1-t^2)/(1+t^2)) = -q*(1-t^2)/(1+t^2)
+    -(2*q*t/(1+t^2)) = -2*q*t/(1+t^2)
+    (-(q*(1-t^2)/(1+t^2)),-(2*q*t/(1+t^2))) = (-q*(1-t^2)/(1+t^2),-2*q*t/(1+t^2))
+    release thm coordinate_configuration_from_values_4(side_b,side_c,t,p,q*(1-t^2)/(1+t^2),2*q*t/(1+t^2))
+
+thm positive_dot_forces_nonzero_norm_4:
+    ? forall x,y,u,v R:
+        x*u+y*v > 0
+        =>:
+            x^2+y^2 > 0
+    by contra:
+        ? x^2+y^2 > 0
+        x^2+y^2 <= 0
+        0 <= x^2
+        0 <= y^2
+        0+x^2 <= y^2+x^2
+        0+y^2 <= x^2+y^2
+        0+x^2 = x^2
+        0+y^2 = y^2
+        y^2+x^2 = x^2+y^2
+        x^2 <= x^2+y^2
+        y^2 <= x^2+y^2
+        x^2 <= 0
+        y^2 <= 0
+        x^2 = 0
+        y^2 = 0
+        x = 0
+        y = 0
+        x*u+y*v = 0
+        impossible x*u+y*v > 0
+
+thm configuration_scalar_bridge_4:
+    ? forall side_b, side_c, t R, a, b, c, m cart(R, R):
+        $problem_4_configuration(side_b, side_c, t, a, b, c, m)
+        =>:
+            distance_sq(m, a) > 0
+            distance_sq(m, b) > 0
+            side_b^2 = distance_sq(m, a) + distance_sq(m, b) + 2 * dot(vec(m, a), vec(m, b))
+            side_c^2 = distance_sq(m, a) + distance_sq(m, b) - 2 * dot(vec(m, a), vec(m, b))
+            distance_sq(m, b) = distance_sq(m, c)
+            dot(vec(a, b), vec(a, c)) = distance_sq(m, a) - distance_sq(m, b)
+
+    by def $problem_4_configuration(side_b,side_c,t,a,b,c,m)
+    by def $is_midpoint(m,b,c)
+    c(1)-m(1) = c(1)-(b(1)+c(1))/2 = -(b(1)-(b(1)+c(1))/2) = -(b(1)-m(1))
+    c(2)-m(2) = c(2)-(b(2)+c(2))/2 = -(b(2)-(b(2)+c(2))/2) = -(b(2)-m(2))
+    release thm distance_coordinates_4(m,a)
+    release thm distance_coordinates_4(m,b)
+    release thm distance_coordinates_4(m,c)
+    release thm distance_coordinates_4(a,b)
+    release thm distance_coordinates_4(a,c)
+    release thm dot_coordinates_4(m,a,m,b)
+    release thm dot_coordinates_4(a,b,a,c)
+    (a(1)-m(1))*(b(1)-m(1))+(a(2)-m(2))*(b(2)-m(2)) > 0
+    release thm positive_dot_forces_nonzero_norm_4(a(1)-m(1),a(2)-m(2),b(1)-m(1),b(2)-m(2))
+    distance_sq(m,a) > 0
+    (b(1)-m(1))*(a(1)-m(1))+(b(2)-m(2))*(a(2)-m(2)) = (a(1)-m(1))*(b(1)-m(1))+(a(2)-m(2))*(b(2)-m(2))
+    (b(1)-m(1))*(a(1)-m(1))+(b(2)-m(2))*(a(2)-m(2)) > 0
+    release thm positive_dot_forces_nonzero_norm_4(b(1)-m(1),b(2)-m(2),a(1)-m(1),a(2)-m(2))
+    distance_sq(m,b) > 0
+    (c(1)-m(1))^2+(c(2)-m(2))^2 = (-(b(1)-m(1)))^2+(-(b(2)-m(2)))^2 = (b(1)-m(1))^2+(b(2)-m(2))^2
+    distance_sq(m,c) = (c(1)-m(1))^2+(c(2)-m(2))^2 = (b(1)-m(1))^2+(b(2)-m(2))^2 = distance_sq(m,b)
+    c(1)-a(1) = (c(1)-m(1))-(a(1)-m(1)) = -(b(1)-m(1))-(a(1)-m(1))
+    c(2)-a(2) = (c(2)-m(2))-(a(2)-m(2)) = -(b(2)-m(2))-(a(2)-m(2))
+    b(1)-a(1) = (b(1)-m(1))-(a(1)-m(1))
+    b(2)-a(2) = (b(2)-m(2))-(a(2)-m(2))
+    dot(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(1)-a(1))+(b(2)-a(2))*(c(2)-a(2)) = ((b(1)-m(1))-(a(1)-m(1)))*(-(b(1)-m(1))-(a(1)-m(1)))+((b(2)-m(2))-(a(2)-m(2)))*(-(b(2)-m(2))-(a(2)-m(2))) = ((a(1)-m(1))^2+(a(2)-m(2))^2)-((b(1)-m(1))^2+(b(2)-m(2))^2) = distance_sq(m,a)-distance_sq(m,b)
+    side_b^2 = distance_sq(a,c) = (c(1)-a(1))^2+(c(2)-a(2))^2 = (-(b(1)-m(1))-(a(1)-m(1)))^2+(-(b(2)-m(2))-(a(2)-m(2)))^2 = ((a(1)-m(1))^2+(a(2)-m(2))^2)+((b(1)-m(1))^2+(b(2)-m(2))^2)+2*((a(1)-m(1))*(b(1)-m(1))+(a(2)-m(2))*(b(2)-m(2))) = distance_sq(m,a)+distance_sq(m,b)+2*dot(vec(m,a),vec(m,b))
+    side_c^2 = distance_sq(a,b) = (b(1)-a(1))^2+(b(2)-a(2))^2 = ((b(1)-m(1))-(a(1)-m(1)))^2+((b(2)-m(2))-(a(2)-m(2)))^2 = ((a(1)-m(1))^2+(a(2)-m(2))^2)+((b(1)-m(1))^2+(b(2)-m(2))^2)-2*((a(1)-m(1))*(b(1)-m(1))+(a(2)-m(2))*(b(2)-m(2))) = distance_sq(m,a)+distance_sq(m,b)-2*dot(vec(m,a),vec(m,b))
+
+thm configuration_implies_side_condition_4:
+    ? forall side_b, side_c, t R, a, b, c, m cart(R, R):
+        $problem_4_configuration(side_b, side_c, t, a, b, c, m)
+        =>:
+            side_b * t <= side_c
+            side_c < side_b
+    by def $problem_4_configuration(side_b, side_c, t, a, b, c, m)
+    release thm configuration_scalar_bridge_4(side_b, side_c, t, a, b, c, m)
+    release thm angle_certificate_implies_side_condition_4(side_b, side_c, t, distance_sq(m, a), distance_sq(m, b), dot(vec(m, a), vec(m, b)))
+
+
+# Equality-case lemmas.
+
+thm boundary_certificate_forces_equal_radii_4:
+    ? forall side_b, side_c, t, x, y, d R:
+        t > 0
+        t < 1
+        x > 0
+        y > 0
+        d > 0
+        side_b^2 = x + y + 2 * d
+        side_c^2 = x + y - 2 * d
+        (1 + t^2)^2 * d^2 = (1 - t^2)^2 * x * y
+        side_b * t = side_c
+        =>:
+            x = y
+    side_c^2 = (side_b * t)^2
+    (side_b * t)^2 = t^2 * side_b^2
+    side_c^2 = t^2 * side_b^2
+    side_c^2 = x + y - 2 * d
+    t^2 * side_b^2 = t^2 * (x + y + 2 * d)
+    (x + y - 2 * d) = t^2 * (x + y + 2 * d)
+    (x + y - 2 * d) - t^2 * (x + y + 2 * d) = 0
+    (1 - t^2) * (x + y) - 2 * (1 + t^2) * d = (x + y - 2 * d) - t^2 * (x + y + 2 * d)
+    (1 - t^2) * (x + y) - 2 * (1 + t^2) * d = 0
+    (1 - t^2) * (x + y) = 2 * (1 + t^2) * d
+    ((1 - t^2) * (x + y))^2 = (2 * (1 + t^2) * d)^2
+    ((1 - t^2) * (x + y))^2 = (1 - t^2)^2 * (x + y)^2
+    (2 * (1 + t^2) * d)^2 = 4 * (1 + t^2)^2 * d^2
+    4 * (1 + t^2)^2 * d^2 = 4 * ((1 + t^2)^2 * d^2)
+    4 * ((1 - t^2)^2 * x * y) = 4 * (1 - t^2)^2 * x * y
+    4 * ((1 + t^2)^2 * d^2) = 4 * ((1 - t^2)^2 * x * y)
+    4 * (1 + t^2)^2 * d^2 = 4 * (1 - t^2)^2 * x * y
+    (1 - t^2)^2 * (x + y)^2 = 4 * (1 - t^2)^2 * x * y
+    (1 - t^2)^2 * (x + y)^2 - 4 * (1 - t^2)^2 * x * y = 0
+    (1 - t^2)^2 * ((x + y)^2 - 4 * x * y) = (1 - t^2)^2 * (x + y)^2 - 4 * (1 - t^2)^2 * x * y
+    (1 - t^2)^2 * ((x + y)^2 - 4 * x * y) = 0
+    (x + y)^2 - 4 * x * y = (x - y)^2
+    (1 - t^2)^2 * (x - y)^2 = 0
+    t * t < t * 1
+    t * t = t^2
+    t * 1 = t
+    t^2 < t
+    t^2 < 1
+    1 - t^2 > 0
+    (1-t^2)*(1-t^2) > 0
+    (1-t^2)*(1-t^2) = (1-t^2)^2
+    (1 - t^2)^2 > 0
+    (1 - t^2)^2 != 0
+    (x - y)^2 = 0
+    x - y = 0
+    x = y
+
+thm equal_radii_certificate_forces_boundary_4:
+    ? forall side_b, side_c, t, x, d R:
+        side_b > 0
+        side_c > 0
+        t > 0
+        t < 1
+        x > 0
+        d > 0
+        side_b^2 = x + x + 2 * d
+        side_c^2 = x + x - 2 * d
+        (1 + t^2)^2 * d^2 = (1 - t^2)^2 * x * x
+        =>:
+            side_b * t = side_c
+    t * t < t * 1
+    t * t = t^2
+    t * 1 = t
+    t^2 < t
+    t^2 < 1
+    1 - t^2 > 0
+    1 + t^2 > 0
+    (1 + t^2) * d > 0
+    (1 - t^2) * x > 0
+    ((1 + t^2) * d)^2 = (1 + t^2)^2 * d^2
+    ((1 - t^2) * x)^2 = (1 - t^2)^2 * x^2
+    x * x = x^2
+    ((1 + t^2) * d)^2 = ((1 - t^2) * x)^2
+    release thm positive_order_from_squares_4((1 + t^2) * d, (1 - t^2) * x)
+    (1 + t^2) * d <= (1 - t^2) * x
+    release thm positive_order_from_squares_4((1 - t^2) * x, (1 + t^2) * d)
+    (1 - t^2) * x <= (1 + t^2) * d
+    (1 + t^2) * d = (1 - t^2) * x
+    side_c^2 - t^2 * side_b^2 = (x + x - 2 * d) - t^2 * (x + x + 2 * d)
+    (x + x - 2 * d) - t^2 * (x + x + 2 * d) = 2 * ((1 - t^2) * x - (1 + t^2) * d)
+    side_c^2 - t^2 * side_b^2 = 2 * ((1 - t^2) * x - (1 + t^2) * d)
+    (1 - t^2) * x - (1 + t^2) * d = 0
+    2 * ((1 - t^2) * x - (1 + t^2) * d) = 0
+    side_c^2 - t^2 * side_b^2 = 0
+    side_c^2 = t^2 * side_b^2
+    (side_b * t)^2 = t^2 * side_b^2
+    side_c^2 = (side_b * t)^2
+    side_b * t > 0
+    release thm positive_order_from_squares_4(side_c, side_b * t)
+    side_c <= side_b * t
+    release thm positive_order_from_squares_4(side_b * t, side_c)
+    side_b * t <= side_c
+    side_b * t = side_c
+
+
+# Main problem, "a solution exists iff b*tan(omega/2) <= c < b".
+# Litex expresses the iff as the following two theorems because its two sides
+# have different quantifier shapes: an arbitrary configuration versus the
+# existence of a configuration.
+#
+# NL: Every triangle satisfying the construction obeys the two inequalities.
+
+thm triangle_nonzero_arms_4:
+    ? forall a,b,c cart(R,R):
+        $is_triangle(a,b,c)
+        =>:
+            b != a
+            c != a
+    by def $is_triangle(a,b,c)
+    release thm determinant_coordinates_4(a,b,c)
+    by contra:
+        ? b != a
+        b = a
+        b(1) = a(1)
+        b(2) = a(2)
+        b(1)-a(1) = 0
+        b(2)-a(2) = 0
+        (b(1)-a(1))*(c(2)-a(2)) = 0*(c(2)-a(2)) = 0
+        (b(2)-a(2))*(c(1)-a(1)) = 0*(c(1)-a(1)) = 0
+        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) = 0-0 = 0
+        impossible det(vec(a,b),vec(a,c)) != 0
+    by contra:
+        ? c != a
+        c = a
+        c(1) = a(1)
+        c(2) = a(2)
+        c(1)-a(1) = 0
+        c(2)-a(2) = 0
+        (b(1)-a(1))*(c(2)-a(2)) = (b(1)-a(1))*0 = 0
+        (b(2)-a(2))*(c(1)-a(1)) = (b(2)-a(2))*0 = 0
+        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1)) = 0-0 = 0
+        impossible det(vec(a,b),vec(a,c)) != 0
+
+thm problem_4_necessity:
+    ? forall side_b, side_c, t R, a, b, c, m cart(R, R):
+        # NL: b and c are positive prescribed side lengths.
+        side_b > 0
+        side_c > 0
+        # NL: t = tan(omega/2), where 0 < omega < 90 degrees.
+        t > 0
+        t < 1
+        # NL: ABC is a triangle.
+        $is_triangle(a, b, c)
+        # NL: M is the midpoint of BC.
+        $is_midpoint(m, b, c)
+        # NL: AC = b.
+        distance_sq(a, c) = side_b^2
+        # NL: AB = c.
+        distance_sq(a, b) = side_c^2
+        # NL: angle AMB = omega, in a division-free half-angle encoding.
+        dot(vec(m, a), vec(m, b)) > 0
+        (1 + t^2)^2 * dot(vec(m, a), vec(m, b))^2 = (1 - t^2)^2 * distance_sq(m, a) * distance_sq(m, b)
+        =>:
+            # NL: b*tan(omega/2) <= c.
+            side_b * t <= side_c
+            # NL: c < b.
+            side_c < side_b
+    $problem_4_configuration(side_b, side_c, t, a, b, c, m)
+    by def $problem_4_configuration(side_b, side_c, t, a, b, c, m)
+    release thm configuration_implies_side_condition_4(side_b, side_c, t, a, b, c, m)
+
+# NL: Conversely, the two inequalities guarantee that such a triangle exists.
+
+thm problem_4_sufficiency:
+    ? forall side_b, side_c, t R:
+        # NL: b and c are positive prescribed side lengths.
+        side_b > 0
+        side_c > 0
+        # NL: t = tan(omega/2) for the intended positive omega < 90 degrees.
+        t > 0
+        t < 1
+        # NL: b*tan(omega/2) <= c < b.
+        side_b * t <= side_c
+        side_c < side_b
+        =>:
+            # NL: There exist points A, B, C such that ABC is a triangle.
+            # NL: M is the midpoint of BC.
+            # NL: AC = b.
+            # NL: AB = c.
+            # NL: angle AMB is acute, as part of the encoding angle AMB = omega.
+            # NL: angle AMB = omega, where t = tan(omega/2).
+            exist a, b, c, m cart(R, R) st {$is_triangle(a, b, c), $is_midpoint(m, b, c), distance_sq(a, c) = side_b^2, distance_sq(a, b) = side_c^2, dot(vec(m, a), vec(m, b)) > 0, (1 + t^2)^2 * dot(vec(m, a), vec(m, b))^2 = (1 - t^2)^2 * distance_sq(m, a) * distance_sq(m, b)}
+    t * t < t * 1
+    t * t = t^2
+    t * 1 = t
+    t^2 < t
+    t^2 < 1
+    1 - t^2 > 0
+    1 - t^2 != 0
+    1 + t^2 > 0
+    1 + t^2 != 0
+    4 * (1 - t^2) > 0
+    4 * (1 - t^2) != 0
+    release thm side_condition_gives_construction_parameters_4(side_b, side_c, t)
+    obtain p, q from exist p0, q0 R st {p0 > 0, q0 > 0, p0^2 + q0^2 = (side_b^2 + side_c^2) / 2, p0 * q0 = (side_b^2 - side_c^2) * (1 + t^2) / (4 * (1 - t^2))}
+    release thm coordinate_witness_4(side_b, side_c, t, p, q)
+    by def $problem_4_configuration(side_b, side_c, t, (p, 0), (q * (1 - t^2) / (1 + t^2), 2 * q * t / (1 + t^2)), (-q * (1 - t^2) / (1 + t^2), -2 * q * t / (1 + t^2)), (0, 0))
+    witness exist a, b, c, m cart(R, R) st {$is_triangle(a, b, c), $is_midpoint(m, b, c), distance_sq(a, c) = side_b^2, distance_sq(a, b) = side_c^2, dot(vec(m, a), vec(m, b)) > 0, (1 + t^2)^2 * dot(vec(m, a), vec(m, b))^2 = (1 - t^2)^2 * distance_sq(m, a) * distance_sq(m, b)} from (p, 0), (q * (1 - t^2) / (1 + t^2), 2 * q * t / (1 + t^2)), (-q * (1 - t^2) / (1 + t^2), -2 * q * t / (1 + t^2)), (0, 0)
+
+# Equality case, forward direction.
+# NL: Equality b*tan(omega/2) = c forces M to be equidistant from all three
+# vertices; equivalently, M is the circumcenter and angle BAC is right.
+
+thm problem_4_boundary_implies_right_triangle:
+    ? forall side_b, side_c, t R, a, b, c, m cart(R, R):
+        # NL: b and c are positive prescribed side lengths.
+        side_b > 0
+        side_c > 0
+        # NL: t = tan(omega/2), where 0 < omega < 90 degrees.
+        t > 0
+        t < 1
+        # NL: ABC is a triangle.
+        $is_triangle(a, b, c)
+        # NL: M is the midpoint of BC.
+        $is_midpoint(m, b, c)
+        # NL: AC = b.
+        distance_sq(a, c) = side_b^2
+        # NL: AB = c.
+        distance_sq(a, b) = side_c^2
+        # NL: angle AMB = omega, in a division-free half-angle encoding.
+        dot(vec(m, a), vec(m, b)) > 0
+        (1 + t^2)^2 * dot(vec(m, a), vec(m, b))^2 = (1 - t^2)^2 * distance_sq(m, a) * distance_sq(m, b)
+        # NL: Equality holds in the lower bound.
+        side_b * t = side_c
+        =>:
+            # NL: MA = MB and MA = MC (written with squared distances).
+            distance_sq(m, a) = distance_sq(m, b)
+            distance_sq(m, a) = distance_sq(m, c)
+            # NL: Angle BAC is a right angle.
+            $is_right_angle(b, a, c)
+    by def $problem_4_configuration(side_b,side_c,t,a,b,c,m)
+    release thm configuration_scalar_bridge_4(side_b,side_c,t,a,b,c,m)
+    release thm boundary_certificate_forces_equal_radii_4(side_b,side_c,t,distance_sq(m,a),distance_sq(m,b),dot(vec(m,a),vec(m,b)))
+    distance_sq(m,a) = distance_sq(m,b)
+    distance_sq(m,a) = distance_sq(m,c)
+    dot(vec(a,b),vec(a,c)) = distance_sq(m,a)-distance_sq(m,b) = 0
+    release thm triangle_nonzero_arms_4(a,b,c)
+    by def $is_right_angle(b,a,c)
+
+thm problem_4_right_triangle_implies_boundary:
+    ? forall side_b, side_c, t R, a, b, c, m cart(R, R):
+        # NL: b and c are positive prescribed side lengths.
+        side_b > 0
+        side_c > 0
+        # NL: t = tan(omega/2), where 0 < omega < 90 degrees.
+        t > 0
+        t < 1
+        # NL: ABC is a triangle.
+        $is_triangle(a, b, c)
+        # NL: M is the midpoint of BC.
+        $is_midpoint(m, b, c)
+        # NL: AC = b.
+        distance_sq(a, c) = side_b^2
+        # NL: AB = c.
+        distance_sq(a, b) = side_c^2
+        # NL: angle AMB = omega, in a division-free half-angle encoding.
+        dot(vec(m, a), vec(m, b)) > 0
+        (1 + t^2)^2 * dot(vec(m, a), vec(m, b))^2 = (1 - t^2)^2 * distance_sq(m, a) * distance_sq(m, b)
+        # NL: Angle BAC is a right angle.
+        $is_right_angle(b, a, c)
+        =>:
+            # NL: Equality holds in the lower bound.
+            side_b * t = side_c
+    by def $problem_4_configuration(side_b, side_c, t, a, b, c, m)
+    by def $is_right_angle(b, a, c)
+    release thm configuration_scalar_bridge_4(side_b, side_c, t, a, b, c, m)
+    distance_sq(m, a) - distance_sq(m, b) = 0
+    distance_sq(m, a) = distance_sq(m, b)
+    side_b^2 = distance_sq(m, a) + distance_sq(m, b) + 2 * dot(vec(m, a), vec(m, b)) = distance_sq(m, a) + distance_sq(m, a) + 2 * dot(vec(m, a), vec(m, b))
+    side_c^2 = distance_sq(m, a) + distance_sq(m, b) - 2 * dot(vec(m, a), vec(m, b)) = distance_sq(m, a) + distance_sq(m, a) - 2 * dot(vec(m, a), vec(m, b))
+    (1 + t^2)^2 * dot(vec(m, a), vec(m, b))^2 = (1 - t^2)^2 * distance_sq(m, a) * distance_sq(m, b) = (1 - t^2)^2 * distance_sq(m, a) * distance_sq(m, a)
+    release thm equal_radii_certificate_forces_boundary_4(side_b, side_c, t, distance_sq(m, a), dot(vec(m, a), vec(m, b)))
+
+# Main proof theorem for the complete statement translated above.

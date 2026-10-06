@@ -15,14 +15,22 @@ struct Bundle:
     f fn(x R) R
     tag N
 
-forall b &Bundle, narrow fn(x N) N, n N:
-    b.f = narrow
-    =>:
-        b.f(n) $in N
-        b.f(b.f(n)) $in N
+claim:
+    ? forall b &Bundle, narrow fn(x N) N, n N:
+        b.f = narrow
+        =>:
+            b.f(n) $in N
+            b.f(b.f(n)) $in N
+    b.f(n) = narrow(n)
+    b.f(n) $in N
+    b.f(b.f(n)) = narrow(b.f(n))
+    b.f(b.f(n)) $in N
 
-forall b &Bundle, narrow fn(x R: x > 0) N, a R:
-    b.f = narrow
-    a > 0
-    =>:
-        b.f(a) $in N
+claim:
+    ? forall b &Bundle, narrow fn(x R: x > 0) N, a R:
+        b.f = narrow
+        a > 0
+        =>:
+            b.f(a) $in N
+    b.f(a) = narrow(a)
+    b.f(a) $in N

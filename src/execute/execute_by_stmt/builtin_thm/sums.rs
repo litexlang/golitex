@@ -74,15 +74,34 @@ fn prepare_sums_contract(rt: &mut Runtime, id: BuiltinTheoremId, args: &[Obj]) -
         }
         SumOverBijectiveFiniteSetEnumerations => {
             let (Obj::IteratedOperator(IteratedOperator::Sum(left)), Obj::IteratedOperator(IteratedOperator::Sum(right))) = (&a, &b) else { return Err("both arguments must be sum(...) objects".to_string()); };
+            // Reindexing depends on the callback's proved composition, not its
+            // spelling. For a named term(k)=f(e(k)), retain term=literal as a
+            // checked domain obligation before inspecting the composition.
+            let mut requirements = Vec::new();
+            let mut callbacks = Vec::new();
+            for function in [&left.func, &right.func] {
+                if matches!(function.as_ref(), Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))) {
+                    callbacks.push(function.as_ref().clone());
+                    continue;
+                }
+                let literal = rt.exact_property_object_values(function)
+                    .into_iter()
+                    .map(|(value, _)| value)
+                    .find(|value| matches!(value, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))))
+                    .ok_or("cannot recover a proved enumeration callback body")?;
+                requirements.push(equal(rt, function.as_ref().clone(), literal.clone()).into());
+                callbacks.push(literal);
+            }
             let i = rt.fresh_internal_param();
-            let left_value = apply_body(rt, &left.func, identifier(&i))?;
-            let right_value = apply_body(rt, &right.func, identifier(&i))?;
+            let left_value = apply_body(rt, &callbacks[0], identifier(&i))?;
+            let right_value = apply_body(rt, &callbacks[1], identifier(&i))?;
             let (left_outer, left_enum) = enumeration(&left_value, &identifier(&i))?;
             let (right_outer, right_enum) = enumeration(&right_value, &identifier(&i))?;
             let left_target = return_set(rt, &left_enum).ok_or("cannot recover left enumerator's codomain")?;
             let right_target = return_set(rt, &right_enum).ok_or("cannot recover right enumerator's codomain")?;
             let domain = range(left.start.as_ref().clone(), left.end.as_ref().clone());
-            vec![equal(rt, left.start.as_ref().clone(), right.start.as_ref().clone()).into(), equal(rt, left.end.as_ref().clone(), right.end.as_ref().clone()).into(), equal(rt, left_outer, right_outer).into(), equal(rt, left_target.clone(), right_target).into(), finite(rt, left_target.clone()).into(), bijective(rt, domain.clone(), left_target.clone(), left_enum).into(), bijective(rt, domain, left_target, right_enum).into()]
+            requirements.extend([equal(rt, left.start.as_ref().clone(), right.start.as_ref().clone()).into(), equal(rt, left.end.as_ref().clone(), right.end.as_ref().clone()).into(), equal(rt, left_outer, right_outer).into(), equal(rt, left_target.clone(), right_target).into(), finite(rt, left_target.clone()).into(), bijective(rt, domain.clone(), left_target.clone(), left_enum).into(), bijective(rt, domain, left_target, right_enum).into()]);
+            requirements
         }
         _ => unreachable!(),
     };

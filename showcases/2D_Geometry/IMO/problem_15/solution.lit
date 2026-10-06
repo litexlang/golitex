@@ -1,0 +1,241 @@
+thm branch_a_twice_b_impossible:
+    ? forall a, b, c N+:
+        b = a + 1
+        c = b + 1
+        a^2 * c + b^3 = b * (a^2 + c^2)
+        =>:
+            a = 4
+    a > 0
+    a*a > 0
+    a*a = a^2
+    a^2 > 0
+
+    by contra:
+        ? a = 4
+        c = b + 1 = (a + 1) + 1 = a + 2
+        a^2 * c + b^3 = a^2 * (a + 2) + (a + 1)^3 = 2 * a^3 + 5 * a^2 + 3 * a + 1
+        a^2 * c + b^3 + (a^2 + 5 * a + 3) = (2 * a^3 + 5 * a^2 + 3 * a + 1) + (a^2 + 5 * a + 3) = 2 * a^3 + 6 * a^2 + 8 * a + 4
+        b * (a^2 + c^2) = (a + 1) * (a^2 + (a + 2)^2) = 2 * a^3 + 6 * a^2 + 8 * a + 4
+        5 * a > 0
+        a^2 + 5 * a > 0
+        a^2 + 5 * a + 3 > 0
+        a^2 * c + b^3 < a^2 * c + b^3 + (a^2 + 5 * a + 3) = b * (a^2 + c^2)
+        have x R = a^2 * c + b^3
+        x < x
+        impossible x < x
+
+
+thm branch_a_twice_c_impossible:
+    ? forall a, b, c N+:
+        b = a + 1
+        c = b + 1
+        a^2 * b + c^3 = c * (a^2 + b^2)
+        =>:
+            a = 4
+    a > 0
+    a*a > 0
+    a*a = a^2
+    a^2 > 0
+
+    by contra:
+        ? a = 4
+        c = b + 1 = (a + 1) + 1 = a + 2
+        a^2 * b + c^3 = a^2 * (a + 1) + (a + 2)^3 = 2 * a^3 + 7 * a^2 + 12 * a + 8
+        c * (a^2 + b^2) = (a + 2) * (a^2 + (a + 1)^2) = 2 * a^3 + 6 * a^2 + 5 * a + 2
+        a^2 * b + c^3 = c * (a^2 + b^2) = 2 * a^3 + 6 * a^2 + 5 * a + 2
+        c * (a^2 + b^2) + (a^2 + 7 * a + 6) = (2 * a^3 + 6 * a^2 + 5 * a + 2) + (a^2 + 7 * a + 6) = 2 * a^3 + 7 * a^2 + 12 * a + 8 = a^2 * b + c^3 = c * (a^2 + b^2)
+        7 * a > 0
+        a^2 + 7 * a > 0
+        a^2 + 7 * a + 6 > 0
+        c * (a^2 + b^2) < c * (a^2 + b^2) + (a^2 + 7 * a + 6) = c * (a^2 + b^2)
+        have x R = c * (a^2 + b^2)
+        x < x
+        impossible x < x
+
+
+thm branch_b_twice_a_impossible:
+    ? forall a, b, c N+:
+        b = a + 1
+        c = b + 1
+        a + b > c
+        b^2 * c + a^3 = a * (b^2 + c^2)
+        =>:
+            a = 4
+    a > 0
+    c = b+1 = (a+1)+1 = a+2
+    a*(b^2+c^2)-(b^2*c+a^3) = a*((a+1)^2+(a+2)^2)-((a+1)^2*(a+2)+a^3)
+    a*((a+1)^2+(a+2)^2)-((a+1)^2*(a+2)+a^3) = 2*(a-1)*(a+1)
+    a*(b^2+c^2)-(b^2*c+a^3) = 0
+    2*(a-1)*(a+1) = 0
+    a+1 > 0
+    a+1 != 0
+    2*(a-1) = 0
+    a-1 = 0
+    a = 1
+    b = a+1 = 2
+    c = b+1 = 3
+    a+b = 1+2 = 3 = c
+    by contra:
+        ? a = 4
+        impossible a+b > c
+
+thm branch_b_twice_c_impossible:
+    ? forall a, b, c N+:
+        b = a + 1
+        c = b + 1
+        b^2 * a + c^3 = c * (b^2 + a^2)
+        =>:
+            a = 4
+    a > 0
+    a*a > 0
+    a*a = a^2
+    a^2 > 0
+
+    by contra:
+        ? a = 4
+        c = b + 1 = (a + 1) + 1 = a + 2
+        b^2 * a + c^3 = (a + 1)^2 * a + (a + 2)^3 = 2 * a^3 + 8 * a^2 + 13 * a + 8
+        c * (b^2 + a^2) = (a + 2) * ((a + 1)^2 + a^2) = 2 * a^3 + 6 * a^2 + 5 * a + 2
+        b^2 * a + c^3 = c * (b^2 + a^2) = 2 * a^3 + 6 * a^2 + 5 * a + 2
+        c * (b^2 + a^2) + (2 * a^2 + 8 * a + 6) = (2 * a^3 + 6 * a^2 + 5 * a + 2) + (2 * a^2 + 8 * a + 6) = 2 * a^3 + 8 * a^2 + 13 * a + 8 = b^2 * a + c^3 = c * (b^2 + a^2)
+        2 * a^2 > 0
+        8 * a > 0
+        2 * a^2 + 8 * a > 0
+        2 * a^2 + 8 * a + 6 > 0
+        c * (b^2 + a^2) < c * (b^2 + a^2) + (2 * a^2 + 8 * a + 6) = c * (b^2 + a^2)
+        have x R = c * (b^2 + a^2)
+        x < x
+        impossible x < x
+
+
+thm branch_c_twice_a_unique:
+    ? forall a, b, c N+:
+        b = a + 1
+        c = b + 1
+        c^2 * b + a^3 = a * (c^2 + b^2)
+        =>:
+            a = 4
+    a > 0
+
+    c = b + 1 = (a + 1) + 1 = a + 2
+    c^2 * b + a^3 = (a + 2)^2 * (a + 1) + a^3 = 2 * a^3 + 5 * a^2 + 8 * a + 4
+    a * (c^2 + b^2) = a * ((a + 2)^2 + (a + 1)^2) = 2 * a^3 + 6 * a^2 + 5 * a
+    2 * a^3 + 5 * a^2 + 8 * a + 4 = c^2 * b + a^3 = a * (c^2 + b^2) = 2 * a^3 + 6 * a^2 + 5 * a
+    (2 * a^3 + 6 * a^2 + 5 * a) - (2 * a^3 + 5 * a^2 + 8 * a + 4) = 0
+    6 * a^2 + 5 * a - 5 * a^2 - 8 * a - 4 = 0
+    a^2 - 3 * a - 4 = 0
+    (a - 4) * (a + 1) = a^2 - 3 * a - 4 = 0
+    a + 1 > 0
+    a + 1 != 0
+    a - 4 = 0
+    a = 4
+
+
+thm branch_c_twice_b_impossible:
+    ? forall a, b, c N+:
+        b = a + 1
+        c = b + 1
+        c^2 * a + b^3 = b * (c^2 + a^2)
+        =>:
+            a = 4
+    a > 0
+
+    by contra:
+        ? a = 4
+        c = b + 1 = (a + 1) + 1 = a + 2
+        c^2 * a + b^3 = (a + 2)^2 * a + (a + 1)^3 = 2 * a^3 + 7 * a^2 + 7 * a + 1
+        b * (c^2 + a^2) = (a + 1) * ((a + 2)^2 + a^2) = 2 * a^3 + 6 * a^2 + 8 * a + 4
+        2 * a^3 + 7 * a^2 + 7 * a + 1 = c^2 * a + b^3 = b * (c^2 + a^2) = 2 * a^3 + 6 * a^2 + 8 * a + 4
+        (2 * a^3 + 7 * a^2 + 7 * a + 1) - (2 * a^3 + 6 * a^2 + 8 * a + 4) = 0
+        7 * a^2 + 7 * a + 1 - 6 * a^2 - 8 * a - 4 = 0
+        a^2 - a - 3 = 0
+        by cases:
+            ? a <= 2
+            case a <= 2:
+                a <= 2
+            case a > 2:
+                a $in Z
+                2 < a
+                a >= 3
+                3 <= a
+                2 + 1 = 3
+                2 + 1 <= a
+                a > 0
+                (2 + 1) * a <= a * a
+                (2 + 1) * a = 3 * a
+                a^2 = a * a
+                a^2 - a >= 3 * a - a
+                3 * a - a = 2 * a
+                2 * a > 2 * 2 = 4
+                a^2 - a >= 2 * a > 4
+                a^2 - a - 3 > 4 - 3 = 1
+                a^2 - a - 3 > 0
+                impossible a^2 - a - 3 = 0
+        a > 0
+        a * a <= 2 * a
+        a^2 = a * a
+        a^2 - a <= 2 * a - a
+        2 * a - a = a
+        a^2 - a <= a <= 2
+        a^2 - a <= 2
+        a^2 - a - 3 <= 2 - 3 = -1
+        a^2 - a - 3 < 0
+        impossible a^2 - a - 3 = 0
+
+thm problem_15:
+    ? forall marker {0}:
+        exist! a, b, c N+ st {b = a + 1, c = b + 1, a + b > c, a^2 * c + b^3 = b * (a^2 + c^2) or a^2 * b + c^3 = c * (a^2 + b^2) or b^2 * c + a^3 = a * (b^2 + c^2) or b^2 * a + c^3 = c * (b^2 + a^2) or c^2 * b + a^3 = a * (c^2 + b^2) or c^2 * a + b^3 = b * (c^2 + a^2)}
+    witness exist! a, b, c N+ st {b = a + 1, c = b + 1, a + b > c, a^2 * c + b^3 = b * (a^2 + c^2) or a^2 * b + c^3 = c * (a^2 + b^2) or b^2 * c + a^3 = a * (b^2 + c^2) or b^2 * a + c^3 = c * (b^2 + a^2) or c^2 * b + a^3 = a * (c^2 + b^2) or c^2 * a + b^3 = b * (c^2 + a^2)} from 4, 5, 6:
+        5 = 4 + 1
+        6 = 5 + 1
+        4 + 5 > 6
+        6^2 * 5 + 4^3 = 244 = 4 * (6^2 + 5^2)
+        c^2 * b + a^3 = a * (c^2 + b^2)
+        claim:
+            ? forall a1, b1, c1, a2, b2, c2 N+:
+                b1 = a1 + 1
+                c1 = b1 + 1
+                a1 + b1 > c1
+                a1^2 * c1 + b1^3 = b1 * (a1^2 + c1^2) or a1^2 * b1 + c1^3 = c1 * (a1^2 + b1^2) or b1^2 * c1 + a1^3 = a1 * (b1^2 + c1^2) or b1^2 * a1 + c1^3 = c1 * (b1^2 + a1^2) or c1^2 * b1 + a1^3 = a1 * (c1^2 + b1^2) or c1^2 * a1 + b1^3 = b1 * (c1^2 + a1^2)
+                b2 = a2 + 1
+                c2 = b2 + 1
+                a2 + b2 > c2
+                a2^2 * c2 + b2^3 = b2 * (a2^2 + c2^2) or a2^2 * b2 + c2^3 = c2 * (a2^2 + b2^2) or b2^2 * c2 + a2^3 = a2 * (b2^2 + c2^2) or b2^2 * a2 + c2^3 = c2 * (b2^2 + a2^2) or c2^2 * b2 + a2^3 = a2 * (c2^2 + b2^2) or c2^2 * a2 + b2^3 = b2 * (c2^2 + a2^2)
+                =>:
+                    (a1, b1, c1) = (a2, b2, c2)
+            by cases:
+                ? a1 = 4
+                case a1^2 * c1 + b1^3 = b1 * (a1^2 + c1^2):
+                    by thm branch_a_twice_b_impossible(a1, b1, c1)
+                case a1^2 * b1 + c1^3 = c1 * (a1^2 + b1^2):
+                    by thm branch_a_twice_c_impossible(a1, b1, c1)
+                case b1^2 * c1 + a1^3 = a1 * (b1^2 + c1^2):
+                    by thm branch_b_twice_a_impossible(a1, b1, c1)
+                case b1^2 * a1 + c1^3 = c1 * (b1^2 + a1^2):
+                    by thm branch_b_twice_c_impossible(a1, b1, c1)
+                case c1^2 * b1 + a1^3 = a1 * (c1^2 + b1^2):
+                    by thm branch_c_twice_a_unique(a1, b1, c1)
+                case c1^2 * a1 + b1^3 = b1 * (c1^2 + a1^2):
+                    by thm branch_c_twice_b_impossible(a1, b1, c1)
+            by cases:
+                ? a2 = 4
+                case a2^2 * c2 + b2^3 = b2 * (a2^2 + c2^2):
+                    by thm branch_a_twice_b_impossible(a2, b2, c2)
+                case a2^2 * b2 + c2^3 = c2 * (a2^2 + b2^2):
+                    by thm branch_a_twice_c_impossible(a2, b2, c2)
+                case b2^2 * c2 + a2^3 = a2 * (b2^2 + c2^2):
+                    by thm branch_b_twice_a_impossible(a2, b2, c2)
+                case b2^2 * a2 + c2^3 = c2 * (b2^2 + a2^2):
+                    by thm branch_b_twice_c_impossible(a2, b2, c2)
+                case c2^2 * b2 + a2^3 = a2 * (c2^2 + b2^2):
+                    by thm branch_c_twice_a_unique(a2, b2, c2)
+                case c2^2 * a2 + b2^3 = b2 * (c2^2 + a2^2):
+                    by thm branch_c_twice_b_impossible(a2, b2, c2)
+            b1 = a1 + 1 = 4 + 1 = 5
+            b2 = a2 + 1 = 4 + 1 = 5
+            c1 = b1 + 1 = 5 + 1 = 6
+            c2 = b2 + 1 = 5 + 1 = 6
+            a1 = 4 = a2
+            b1 = 5 = b2
+            c1 = 6 = c2
+            (a1, b1, c1) = (a2, b2, c2)

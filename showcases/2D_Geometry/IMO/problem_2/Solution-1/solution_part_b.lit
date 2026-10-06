@@ -1,0 +1,86 @@
+# IMO 1960 Problem 6
+# 1960/6.
+# Consider a cone of revolution with an inscribed sphere tangent to the base
+# of the cone. A cylinder is circumscribed about this sphere so
+# that one of its bases lies in the base of the cone. Let V1 be the volume of the
+# cone and V2 the volume of the cylinder.
+# (a) Prove that V1 ≠ V2.
+# (b) Find the smallest number k for which V1 = kV2, for this case, construct
+# the angle subtended by a diameter of the base of the cone at the vertex of
+# the cone.
+
+
+thm problem_2:
+    ? forall r, base_r, height, v1, v2, cos_theta, x R:
+        $predicate::cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x)
+        =>:
+            3 * v1 * (x^2 - 1) = x^4 * v2
+
+    by def $predicate::cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x)
+    by thm theorem::ratio_identity(r, base_r, height, v1, v2, x) => 3*v1*(x^2-1) = x^4*v2
+
+# Since v2 is positive, 3*v1 >= 4*v2 is equivalent to v1/v2 >= 4/3.
+
+thm problem_2_minimum_ratio:
+    ? forall r, base_r, height, v1, v2, cos_theta, x R:
+        $predicate::cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x)
+        =>:
+            3 * v1 >= 4 * v2
+
+    by def $predicate::cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x)
+    r >= 0
+    by contra:
+        ? x > 1
+        x <= 1
+        x * r <= 1 * r
+        1 * r = r
+        x * r <= r
+        base_r <= r
+        impossible base_r > r
+    by thm theorem::ratio_identity(r, base_r, height, v1, v2, x) => 3*v1*(x^2-1) = x^4*v2
+    by thm theorem::minimum_ratio_bound(r, v1, v2, x) => 3*v1 >= 4*v2
+
+# At x^2=2 the lower bound is attained, so v1/v2=4/3.
+
+thm problem_2_equality_ratio:
+    ? forall r, base_r, height, v1, v2, cos_theta, x R:
+        $predicate::cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x)
+        x^2 = 2
+        =>:
+            3 * v1 = 4 * v2
+
+    by def $predicate::cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x)
+    by thm theorem::ratio_identity(r, base_r, height, v1, v2, x) => 3*v1*(x^2-1) = x^4*v2
+    by thm theorem::equality_ratio(v1, v2, x) => 3*v1 = 4*v2
+
+# The corresponding apex angle theta satisfies cos(theta)=7/9.
+
+thm problem_2_equality_apex_angle:
+    ? forall r, base_r, height, v1, v2, cos_theta, x R:
+        $predicate::cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x)
+        x^2 = 2
+        =>:
+            9 * cos_theta = 7
+
+    by def $predicate::cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x)
+    by thm theorem::equality_apex_cosine(r, base_r, height, cos_theta, x) => 9*cos_theta = 7
+
+thm problem_2_attained_configuration:
+    ? $predicate::cone_sphere_cylinder(1, sqrt(2), 4, 8/3, 2, 7/9, sqrt(2))
+    sqrt(2)^2 = 2
+    sqrt(2) >= 0
+    by contra:
+        ? sqrt(2) > 1
+        sqrt(2) <= 1
+        sqrt(2)*sqrt(2) <= 1*sqrt(2)
+        2 = sqrt(2)^2 = sqrt(2)*sqrt(2)
+        1*sqrt(2) = sqrt(2)
+        2 <= sqrt(2)
+        2 <= 1
+        impossible 2 > 1
+    by def $predicate::cone_sphere_cylinder(1, sqrt(2), 4, 8/3, 2, 7/9, sqrt(2))
+
+thm problem_2_minimum_is_attained:
+    ? exist r, base_r, height, v1, v2, cos_theta, x R st {$predicate::cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x), 3*v1 = 4*v2, 9*cos_theta = 7}
+    by thm problem_2_attained_configuration => $predicate::cone_sphere_cylinder(1, sqrt(2), 4, 8/3, 2, 7/9, sqrt(2))
+    witness exist r, base_r, height, v1, v2, cos_theta, x R st {$predicate::cone_sphere_cylinder(r, base_r, height, v1, v2, cos_theta, x), 3*v1 = 4*v2, 9*cos_theta = 7} from 1, sqrt(2), 4, 8/3, 2, 7/9, sqrt(2)
