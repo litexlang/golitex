@@ -13,4 +13,5 @@ let let_s = {1, 2}
 # case: callable-alias
 have fn let_id(x R) R = x + 1
 let let_alias = let_id
+let_alias = fn(x R) R {x + 1}
 let_alias(4) = 5

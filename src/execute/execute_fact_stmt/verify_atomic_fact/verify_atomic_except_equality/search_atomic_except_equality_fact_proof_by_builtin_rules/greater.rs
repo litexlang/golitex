@@ -13,6 +13,12 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `a > b`.
 pub enum GreaterFactSearchProofByBuiltinRule {
+    MulLeftNegativeReversesStrictGreater(super::order_negative_common_factor::MulLeftNegativeReversesStrictGreaterProof),
+    MulRightNegativeReversesStrictGreater(super::order_negative_common_factor::MulRightNegativeReversesStrictGreaterProof),
+    MulLeftRightNegativeReversesStrictGreater(super::order_negative_common_factor::MulLeftRightNegativeReversesStrictGreaterProof),
+    MulRightLeftNegativeReversesStrictGreater(super::order_negative_common_factor::MulRightLeftNegativeReversesStrictGreaterProof),
+    TanGreaterZeroOnFirstQuadrant(super::trig_first_quadrant::TanGreaterZeroOnFirstQuadrantProof),
+    CotGreaterZeroOnFirstQuadrant(super::trig_first_quadrant::CotGreaterZeroOnFirstQuadrantProof),
     FromKnownOrderComplement(FromKnownOrderComplementBuiltinRuleProof),
     // Closed numeric comparison by evaluation.
     // Mathematical property: if both sides evaluate to decimals L, R with L > R,
@@ -191,6 +197,13 @@ impl Runtime {
                 }
             }
             _ => {}
+        }
+        if let Some(proof) = self.search_negative_common_factor_greater(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+
+        if let Some(proof) = self.search_first_quadrant_positive_greater(fact) {
+            return Ok(Some(proof));
         }
         let Some((cmp, left_normal, right_normal)) =
             compare_closed_numeric_objs(&fact.left, &fact.right)

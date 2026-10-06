@@ -17,6 +17,116 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::MulLeftNegativeReversesStrictLess(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("MulLeftNegativeReversesStrictLess")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::MulRightNegativeReversesStrictLess(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("MulRightNegativeReversesStrictLess")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::MulLeftRightNegativeReversesStrictLess(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("MulLeftRightNegativeReversesStrictLess")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::MulRightLeftNegativeReversesStrictLess(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("MulRightLeftNegativeReversesStrictLess")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::MulLeftNegativeReversesStrictGreater(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterFact")), ("rule", string("MulLeftNegativeReversesStrictGreater")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::MulRightNegativeReversesStrictGreater(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterFact")), ("rule", string("MulRightNegativeReversesStrictGreater")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::MulLeftRightNegativeReversesStrictGreater(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterFact")), ("rule", string("MulLeftRightNegativeReversesStrictGreater")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::MulRightLeftNegativeReversesStrictGreater(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterFact")), ("rule", string("MulRightLeftNegativeReversesStrictGreater")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::MulLeftNonpositiveReversesWeakLessEqual(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessEqualFact")), ("rule", string("MulLeftNonpositiveReversesWeakLessEqual")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::MulRightNonpositiveReversesWeakLessEqual(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessEqualFact")), ("rule", string("MulRightNonpositiveReversesWeakLessEqual")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::MulLeftRightNonpositiveReversesWeakLessEqual(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessEqualFact")), ("rule", string("MulLeftRightNonpositiveReversesWeakLessEqual")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::MulRightLeftNonpositiveReversesWeakLessEqual(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessEqualFact")), ("rule", string("MulRightLeftNonpositiveReversesWeakLessEqual")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::MulLeftNonpositiveReversesWeakGreaterEqual(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterEqualFact")), ("rule", string("MulLeftNonpositiveReversesWeakGreaterEqual")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::MulRightNonpositiveReversesWeakGreaterEqual(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterEqualFact")), ("rule", string("MulRightNonpositiveReversesWeakGreaterEqual")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::MulLeftRightNonpositiveReversesWeakGreaterEqual(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterEqualFact")), ("rule", string("MulLeftRightNonpositiveReversesWeakGreaterEqual")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::MulRightLeftNonpositiveReversesWeakGreaterEqual(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterEqualFact")), ("rule", string("MulRightLeftNonpositiveReversesWeakGreaterEqual")),
+            ("factor_sign_proof", project_verify_fact(&p.factor_sign_proof, runtime)),
+            ("reversed_order_proof", project_verify_fact(&p.reversed_order_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnFirstQuadrant(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("NotEqualFact")), ("rule", string("CosNonzeroOnFirstQuadrant")),
+            ("lower_bound_proof", super::searched::project_known_premise(&p.lower_bound_proof, runtime)),
+            ("upper_bound_proof", super::searched::project_known_premise(&p.upper_bound_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnFirstQuadrant(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("NotEqualFact")), ("rule", string("SinNonzeroOnFirstQuadrant")),
+            ("lower_bound_proof", super::searched::project_known_premise(&p.lower_bound_proof, runtime)),
+            ("upper_bound_proof", super::searched::project_known_premise(&p.upper_bound_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::TanPositiveOnFirstQuadrant(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("TanPositiveOnFirstQuadrant")),
+            ("lower_bound_proof", super::searched::project_known_premise(&p.lower_bound_proof, runtime)),
+            ("upper_bound_proof", super::searched::project_known_premise(&p.upper_bound_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::CotPositiveOnFirstQuadrant(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("CotPositiveOnFirstQuadrant")),
+            ("lower_bound_proof", super::searched::project_known_premise(&p.lower_bound_proof, runtime)),
+            ("upper_bound_proof", super::searched::project_known_premise(&p.upper_bound_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::TanGreaterZeroOnFirstQuadrant(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterFact")), ("rule", string("TanGreaterZeroOnFirstQuadrant")),
+            ("lower_bound_proof", super::searched::project_known_premise(&p.lower_bound_proof, runtime)),
+            ("upper_bound_proof", super::searched::project_known_premise(&p.upper_bound_proof, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::CotGreaterZeroOnFirstQuadrant(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("family", string("GreaterFact")), ("rule", string("CotGreaterZeroOnFirstQuadrant")),
+            ("lower_bound_proof", super::searched::project_known_premise(&p.lower_bound_proof, runtime)),
+            ("upper_bound_proof", super::searched::project_known_premise(&p.upper_bound_proof, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::SinPositiveOnOpenPi(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("SinPositiveOnOpenPi")),
             ("lower_bound", project_verify_fact(&p.lower_bound, runtime)),
@@ -473,6 +583,24 @@ pub(super) fn project_atomic_builtin_rule(
             }
             entries.push(("left_to_mid_strict", JsonValue::Bool(p.left_to_mid_strict)));
             entries.push(("mid_to_right_strict", JsonValue::Bool(p.mid_to_right_strict)));
+            object_for(runtime, entries)
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::LessFromNegativeDifference(p)) => {
+            let mut entries = vec![
+                ("type", string("builtin_rule")),
+                ("family", string("LessFact")),
+                ("rule", string("LessFromNegativeDifference")),
+            ];
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
+            object_for(runtime, entries)
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::NegativeDifferenceFromLess(p)) => {
+            let mut entries = vec![
+                ("type", string("builtin_rule")),
+                ("family", string("LessFact")),
+                ("rule", string("NegativeDifferenceFromLess")),
+            ];
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::LessFromPosDifference(p)) => {
@@ -1047,6 +1175,24 @@ pub(super) fn project_atomic_builtin_rule(
             }
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonpositiveDifference(p)) => {
+            let mut entries = vec![
+                ("type", string("builtin_rule")),
+                ("family", string("LessEqualFact")),
+                ("rule", string("LessEqualFromNonpositiveDifference")),
+            ];
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
+            object_for(runtime, entries)
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::NonpositiveDifferenceFromLessEqual(p)) => {
+            let mut entries = vec![
+                ("type", string("builtin_rule")),
+                ("family", string("LessEqualFact")),
+                ("rule", string("NonpositiveDifferenceFromLessEqual")),
+            ];
+            entries.push(("premise_proof", super::searched::project_known_premise(&p.premise_proof, runtime)));
+            object_for(runtime, entries)
+        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -1570,14 +1716,6 @@ pub(super) fn project_atomic_builtin_rule(
             ("type", string("builtin_rule")), ("family", string("InFact")),
             ("rule", string("AnonymousFnInDeclaredFnSet")),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::CartDimInNatural(_)) => object_for(runtime, vec![
-            ("type", string("builtin_rule")), ("family", string("InFact")),
-            ("rule", string("CartDimInNatural")),
-        ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::TupleDimInNatural(_)) => object_for(runtime, vec![
-            ("type", string("builtin_rule")), ("family", string("InFact")),
-            ("rule", string("TupleDimInNatural")),
-        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::PositiveIntegerInNPos(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("InFact")),
             ("rule", string("PositiveIntegerInNPos")),
@@ -1838,24 +1976,6 @@ pub(super) fn project_atomic_builtin_rule(
             ];
             entries.push(("left_in_n_proof", project_verify_fact(&p.left_in_n_proof, runtime)));
             entries.push(("right_in_n_proof", project_verify_fact(&p.right_in_n_proof, runtime)));
-            object_for(runtime, entries)
-        },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsCartFact(br::is_cart::IsCartFactSearchProofByBuiltinRule::CartConstructor(p)) => {
-            let mut entries = vec![
-                ("type", string("builtin_rule")),
-                ("family", string("IsCartFact")),
-                ("rule", string("CartConstructor")),
-            ];
-            let _ = p;
-            object_for(runtime, entries)
-        },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsTupleFact(br::is_tuple::IsTupleFactSearchProofByBuiltinRule::TupleLiteral(p)) => {
-            let mut entries = vec![
-                ("type", string("builtin_rule")),
-                ("family", string("IsTupleFact")),
-                ("rule", string("TupleLiteral")),
-            ];
-            let _ = p;
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::StandardSetSubset(p)) => {
@@ -2456,12 +2576,6 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("outside_order_proof", project_verify_fact(&p.outside_order_proof, runtime)));
             object_for(runtime, entries)
         },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsCartFact(_) => object_for(runtime, vec![
-            ("type", string("builtin_rule")), ("family", string("NotIsCartFact")),
-        ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsTupleFact(_) => object_for(runtime, vec![
-            ("type", string("builtin_rule")), ("family", string("NotIsTupleFact")),
-        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSubsetFact(br::not_subset::NotSubsetFactSearchProofByBuiltinRule::FromKnownNotSuperset(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),

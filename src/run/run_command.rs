@@ -1,6 +1,6 @@
 use super::output::write_stdout;
 use super::run_command_outcome::{HelpResult, RunCommandOutcome, VersionResult};
-use super::{run_eval, run_extract, run_repl};
+use super::{run_compile_to_latex, run_eval, run_extract_executable_code, run_repl};
 use crate::launch_command::LaunchCommand;
 use crate::run_module::{run_file_with_config, run_project};
 use crate::runtime::RuntimeResult;
@@ -34,9 +34,13 @@ pub fn run_command(command: LaunchCommand) -> RuntimeResult<RunCommandOutcome> {
             let result = run_project(command)?;
             Ok(RunCommandOutcome::RunRepo(result))
         }
-        command @ LaunchCommand::Extract { .. } => {
-            let result = run_extract::run_extract(command)?;
-            Ok(RunCommandOutcome::Extract(result))
+        command @ LaunchCommand::ExtractExecutableCode { .. } => {
+            let result = run_extract_executable_code::run_extract_executable_code(command)?;
+            Ok(RunCommandOutcome::ExtractExecutableCode(result))
+        }
+        command @ LaunchCommand::CompileToLatex { .. } => {
+            let result = run_compile_to_latex::run_compile_to_latex(command)?;
+            Ok(RunCommandOutcome::CompileToLatex(result))
         }
     }
 }

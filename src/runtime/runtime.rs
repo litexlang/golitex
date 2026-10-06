@@ -55,14 +55,22 @@ impl Runtime {
             LaunchCommand::Repl { .. } => CodeSource::Repl,
             LaunchCommand::File { .. }
             | LaunchCommand::Repository { .. }
-            | LaunchCommand::Extract {
+            | LaunchCommand::ExtractExecutableCode {
                 input: crate::launch_command::ExtractInput::File(_)
                     | crate::launch_command::ExtractInput::Repository(_),
                 ..
+            }
+            | LaunchCommand::CompileToLatex {
+                input: crate::launch_command::LatexInput::File(_)
+                    | crate::launch_command::LatexInput::Repository(_),
+                ..
             } => CodeSource::StandaloneFile,
-            LaunchCommand::Extract {
+            LaunchCommand::ExtractExecutableCode {
                 input: crate::launch_command::ExtractInput::Code(_),
                 ..
+            }
+            | LaunchCommand::CompileToLatex {
+                input: crate::launch_command::LatexInput::Code(_), ..
             } => CodeSource::Eval,
             LaunchCommand::Help { .. } | LaunchCommand::Version { .. } => {
                 panic!("Runtime::new does not accept Help/Version LaunchCommand")
@@ -71,16 +79,24 @@ impl Runtime {
         let file = match &command {
             LaunchCommand::Repl { .. } => RealOrVirtualPath::Repl,
             LaunchCommand::Eval { .. }
-            | LaunchCommand::Extract {
+            | LaunchCommand::ExtractExecutableCode {
                 input: crate::launch_command::ExtractInput::Code(_),
                 ..
+            }
+            | LaunchCommand::CompileToLatex {
+                input: crate::launch_command::LatexInput::Code(_), ..
             } => RealOrVirtualPath::Eval,
             LaunchCommand::File { path, .. }
             | LaunchCommand::Repository { path, .. }
-            | LaunchCommand::Extract {
+            | LaunchCommand::ExtractExecutableCode {
                 input:
                     crate::launch_command::ExtractInput::File(path)
                     | crate::launch_command::ExtractInput::Repository(path),
+                ..
+            }
+            | LaunchCommand::CompileToLatex {
+                input: crate::launch_command::LatexInput::File(path)
+                    | crate::launch_command::LatexInput::Repository(path),
                 ..
             } => RealOrVirtualPath::Real(path.clone()),
             LaunchCommand::Help { .. } | LaunchCommand::Version { .. } => {

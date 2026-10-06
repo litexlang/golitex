@@ -39,6 +39,7 @@ LessEqualFactSearchProofByBuiltinRule,
     IntegerPredecessorLeBuiltinRuleProof,
     IntegerSuccessorLeBuiltinRuleProof,
     LessEqualFromNonnegDifferenceBuiltinRuleProof,
+
     LessEqualFromPosDenomQuotientBoundBuiltinRuleProof,
     LessEqualFromPosDivProductBoundBuiltinRuleProof,
     LessEqualTransitivityBuiltinRuleProof,
@@ -71,6 +72,10 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_en(),
+            Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_en(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_en(),
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_en(),
             Self::FloorLowerBound(p) => p.rule_name_and_message_en(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_en(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_en(),
@@ -126,6 +131,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_en(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_en(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_en(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_en(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_en(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_en(),
             Self::ModRemainderNonnegative(p) => p.rule_name_and_message_en(),
             Self::DivMonotoneWeakSamePosDivisor(p) => p.rule_name_and_message_en(),
@@ -154,6 +162,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh(),
+            Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh(),
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh(),
             Self::FloorLowerBound(p) => p.rule_name_and_message_zh(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_zh(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_zh(),
@@ -215,6 +227,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_zh(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_zh(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_zh(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_zh(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_zh(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_zh(),
             Self::ModRemainderNonnegative(p) => p.rule_name_and_message_zh(),
             Self::DivMonotoneWeakSamePosDivisor(p) => p.rule_name_and_message_zh(),
@@ -243,6 +258,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
             Self::FloorLowerBound(p) => p.rule_name_and_message_zh_hant(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_zh_hant(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_zh_hant(),
@@ -304,6 +323,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_zh_hant(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_zh_hant(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_zh_hant(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_zh_hant(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_zh_hant(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_zh_hant(),
             Self::ModRemainderNonnegative(p) => p.rule_name_and_message_zh_hant(),
             Self::DivMonotoneWeakSamePosDivisor(p) => p.rule_name_and_message_zh_hant(),
@@ -332,6 +354,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_fr(),
+            Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_fr(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_fr(),
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_fr(),
             Self::FloorLowerBound(p) => p.rule_name_and_message_fr(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_fr(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_fr(),
@@ -387,6 +413,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_fr(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_fr(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_fr(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_fr(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_fr(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_fr(),
             Self::ModRemainderNonnegative(p) => p.rule_name_and_message_fr(),
             Self::DivMonotoneWeakSamePosDivisor(p) => p.rule_name_and_message_fr(),
@@ -415,6 +444,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ru(),
+            Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ru(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ru(),
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ru(),
             Self::FloorLowerBound(p) => p.rule_name_and_message_ru(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_ru(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_ru(),
@@ -470,6 +503,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_ru(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_ru(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ru(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_ru(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_ru(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_ru(),
             Self::ModRemainderNonnegative(p) => p.rule_name_and_message_ru(),
             Self::DivMonotoneWeakSamePosDivisor(p) => p.rule_name_and_message_ru(),
@@ -498,6 +534,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_es(),
+            Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_es(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_es(),
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_es(),
             Self::FloorLowerBound(p) => p.rule_name_and_message_es(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_es(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_es(),
@@ -553,6 +593,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_es(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_es(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_es(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_es(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_es(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_es(),
             Self::ModRemainderNonnegative(p) => p.rule_name_and_message_es(),
             Self::DivMonotoneWeakSamePosDivisor(p) => p.rule_name_and_message_es(),
@@ -581,6 +624,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ar(),
+            Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ar(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ar(),
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ar(),
             Self::FloorLowerBound(p) => p.rule_name_and_message_ar(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_ar(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_ar(),
@@ -642,6 +689,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_ar(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_ar(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ar(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_ar(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_ar(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_ar(),
             Self::ModRemainderNonnegative(p) => p.rule_name_and_message_ar(),
             Self::DivMonotoneWeakSamePosDivisor(p) => p.rule_name_and_message_ar(),
@@ -670,6 +720,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ja(),
+            Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ja(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ja(),
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ja(),
             Self::FloorLowerBound(p) => p.rule_name_and_message_ja(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_ja(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_ja(),
@@ -731,6 +785,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_ja(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_ja(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ja(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_ja(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_ja(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_ja(),
             Self::ModRemainderNonnegative(p) => p.rule_name_and_message_ja(),
             Self::DivMonotoneWeakSamePosDivisor(p) => p.rule_name_and_message_ja(),
@@ -759,6 +816,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ko(),
+            Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ko(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ko(),
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_ko(),
             Self::FloorLowerBound(p) => p.rule_name_and_message_ko(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_ko(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_ko(),
@@ -820,6 +881,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_ko(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_ko(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ko(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_ko(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_ko(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_ko(),
             Self::ModRemainderNonnegative(p) => p.rule_name_and_message_ko(),
             Self::DivMonotoneWeakSamePosDivisor(p) => p.rule_name_and_message_ko(),
@@ -848,6 +912,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_vi(),
+            Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_vi(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_vi(),
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_vi(),
             Self::FloorLowerBound(p) => p.rule_name_and_message_vi(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_vi(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_vi(),
@@ -909,6 +977,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_vi(),
             Self::LessEqualTransitivity(p) => p.rule_name_and_message_vi(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_vi(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_vi(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_vi(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.rule_name_and_message_vi(),
             Self::ModRemainderNonnegative(p) => p.rule_name_and_message_vi(),
             Self::DivMonotoneWeakSamePosDivisor(p) => p.rule_name_and_message_vi(),
@@ -952,6 +1023,10 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::MulLeftNonpositiveReversesWeakLessEqual(_) => None,
+            Self::MulRightNonpositiveReversesWeakLessEqual(_) => None,
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(_) => None,
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(_) => None,
             Self::FloorLowerBound(_) => None,
             Self::CeilUpperBound(_) => None,
             Self::ClosedSubtractionBound(p) => Some(p.bound.cite_fact_id),
@@ -963,6 +1038,9 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::FromKnownInPositiveNatural(p) => p.premise_proof.cite_fact_id(),
             Self::LessEqualTransitivity(_) => None,
             Self::LessEqualFromNonnegDifference(p) => p.premise_proof.cite_fact_id(),
+            Self::LessEqualFromNonpositiveDifference(p) => p.premise_proof.cite_fact_id(),
+            Self::NonpositiveDifferenceFromLessEqual(p) => p.premise_proof.cite_fact_id(),
+
             Self::NonnegDifferenceFromLessEqual(p) => p.premise_proof.cite_fact_id(),
             Self::NumericLowerBoundWeakenLe(p) => Some(p.cite_fact_id),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => Some(p.cite_fact_id),

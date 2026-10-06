@@ -17,24 +17,7 @@ impl Runtime {
             (&fact.left, &fact.right, false),
             (&fact.right, &fact.left, true),
         ] {
-            if let Obj::ProductShape(ProductShape::TupleDim(dim)) = left {
-                if let Some(shape) = self.lookup_known_tuple_shape(dim.arg.as_ref()) {
-                    let n = Obj::Literal(Literal::Number(Number {
-                        normalized_value: shape.dimension().to_string(),
-                    }));
-                    if let Some(equal) = self.lookup_known_obj_equality(&n, right) {
-                        return Ok(Some(
-                            EqualFactSearchProofByKnownSpecialProperty::TupleDimension(
-                                TupleDimensionKnownProof {
-                                    reversed,
-                                    shape,
-                                    dimension_equal: Box::new(equal),
-                                },
-                            ),
-                        ));
-                    }
-                }
-            }
+
             // A coordinate match is one option for an ordinary application.
             // A non-coordinate call must still reach tuple-value beta and eta.
             if let Obj::FnObj(application) = left {
@@ -128,7 +111,7 @@ pub enum EqualFactSearchProofByKnownSpecialProperty {
     TupleProjection(TupleProjectionKnownProof),
     FnTupleProjection(FnTupleProjectionKnownProof),
     FnTupleValue(FnTupleValueKnownProof),
-    TupleDimension(TupleDimensionKnownProof),
+
 }
 
 pub struct TupleReconstructionKnownProof {
@@ -152,11 +135,6 @@ pub struct FnTupleProjectionKnownProof {
     pub component_equal: Box<EqualFactSearchedProof>,
 }
 
-pub struct TupleDimensionKnownProof {
-    pub reversed: bool,
-    pub shape: KnownTupleShapeProof,
-    pub dimension_equal: Box<EqualFactSearchedProof>,
-}
 
 pub struct FnTupleValueKnownProof {
     pub reversed: bool,

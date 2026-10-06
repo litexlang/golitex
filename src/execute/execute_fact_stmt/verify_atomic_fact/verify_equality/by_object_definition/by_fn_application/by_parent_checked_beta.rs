@@ -40,6 +40,17 @@ pub enum ParentCheckedBetaFunctionBody {
         source: Box<crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof>,
         index: usize,
     },
+    ReturnedFiniteFunctionCoordinate {
+        receiver_well_defined: Box<ObjWellDefinedProof>,
+        receiver_function_body: Box<ParentCheckedBetaFunctionBody>,
+        returned_tuple: crate::ast::obj::Tuple,
+        index: usize,
+    },
+    ReturnedAnonymousFunctionApplication {
+        receiver_well_defined: Box<ObjWellDefinedProof>,
+        receiver_function_body: Box<ParentCheckedBetaFunctionBody>,
+        returned_function: AnonymousFn,
+    },
     AnonymousLiteral,
     KnownAnonymousFunction {
         function: AnonymousFn,
@@ -67,8 +78,8 @@ impl Runtime {
             return Ok(None);
         }
         if let (Some((left_function_body, left_expanded_body)), Some((right_function_body, right_expanded_body))) = (
-            self.parent_checked_beta_body(&fact.left, &parent_wd.left)?,
-            self.parent_checked_beta_body(&fact.right, &parent_wd.right)?,
+            self.parent_checked_beta_body(&fact.left, &parent_wd.left, state)?,
+            self.parent_checked_beta_body(&fact.right, &parent_wd.right, state)?,
         ) {
             let residual_equal = EqualFact {
                 fact_id: self.global_ids.allocate_fact_id(), left: left_expanded_body.clone(),
@@ -85,7 +96,7 @@ impl Runtime {
             (&fact.left, &fact.right, &parent_wd.left, ParentEqualitySide::Left),
             (&fact.right, &fact.left, &parent_wd.right, ParentEqualitySide::Right),
         ] {
-            let Some((function_body, expanded_body)) = self.parent_checked_beta_body(app_side, app_wd)?
+            let Some((function_body, expanded_body)) = self.parent_checked_beta_body(app_side, app_wd, state)?
             else { continue; };
             let residual_equal = EqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),
@@ -102,9 +113,10 @@ impl Runtime {
         Ok(None)
     }
 
-    fn parent_checked_beta_body(
-        &mut self, side: &Obj, app_wd: &ObjWellDefinedProof,
+    pub(in crate::execute) fn parent_checked_beta_body(
+        &mut self, side: &Obj, app_wd: &ObjWellDefinedProof, state: VerifyState,
     ) -> RuntimeResult<Option<(ParentCheckedBetaFunctionBody, Obj)>> {
+            if app_wd.obj() != side { return Ok(None); }
             let Obj::FnObj(app) = side else { return Ok(None); };
             if let Some(receiver) = self.finite_function_application_receiver(app) {
                 if let Some(index) = crate::execute::execute_fact_stmt::known_tuple::literal_positive_usize(&app.body.last().unwrap()[0]) {
@@ -115,6 +127,49 @@ impl Runtime {
                         return Ok(Some((ParentCheckedBetaFunctionBody::KnownFiniteFunctionCoordinate {
                             source: Box::new(source), index,
                         }, coordinate)));
+                    }
+                    // Descend through a strictly shorter receiver application.
+                    // Its checked beta value must be an actual tuple, rather
+                    // than merely a common return-set upper bound.
+                    if matches!(&receiver, Obj::FnObj(_)) {
+                        let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(receiver_well_defined) =
+                            self.verify_obj_well_definedness(&receiver, state)?
+                        else { return Ok(None); };
+                        if let Some((receiver_function_body, Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(returned_tuple)))) =
+                            self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)? {
+                            if let Some(coordinate) = returned_tuple.args.get(index - 1) {
+                                let coordinate = coordinate.as_ref().clone();
+                                return Ok(Some((ParentCheckedBetaFunctionBody::ReturnedFiniteFunctionCoordinate {
+                                    receiver_well_defined: Box::new(receiver_well_defined),
+                                    receiver_function_body: Box::new(receiver_function_body), returned_tuple, index,
+                                }, coordinate)));
+                            }
+                        }
+                    }
+                }
+            }
+            // A tuple coordinate may itself be an anonymous function. The
+            // complete application WD checked its last argument group and
+            // guards; unfold the strictly shorter receiver before applying
+            // that actual returned value. Example: `(fn(x R) R {x},0)(1)(2)`.
+            if app.body.len() > 1 {
+                let receiver = Obj::FnObj(crate::ast::obj::FnObj {
+                    head: app.head.clone(), body: app.body[..app.body.len()-1].to_vec(),
+                });
+                if let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(receiver_well_defined) =
+                    self.verify_obj_well_definedness(&receiver, state)? {
+                    if let Some((receiver_function_body, Obj::FunctionSpace(FunctionSpace::AnonymousFn(returned_function)))) =
+                        self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)? {
+                        let args: Vec<Obj> = app.body.last().unwrap().iter().map(|arg| arg.as_ref().clone()).collect();
+                        if args.len() == set_bound_parameter_count(&returned_function.body.set_bound_parameters) {
+                            let subst = set_bound_params_to_arg_map(&returned_function.body.set_bound_parameters, &args);
+                            if let Ok(expanded_body) = self.inst_obj(returned_function.equal_to.as_ref(), &subst) {
+                                return Ok(Some((ParentCheckedBetaFunctionBody::ReturnedAnonymousFunctionApplication {
+                                    receiver_well_defined: Box::new(receiver_well_defined),
+                                    receiver_function_body: Box::new(receiver_function_body), returned_function,
+                                }, expanded_body)));
+                            }
+                        }
                     }
                 }
             }

@@ -1,0 +1,26 @@
+# Tracer: first-quadrant quotient WD and fixed-law consumers
+# Before (current rejected):
+# forall x R:
+#     0<x
+#     x<pi/2
+#     =>:
+#         tan(x)=sin(x)/cos(x)
+# Former behavior: WD search failed to prove the required sine/cosine nonzero fact.
+# Now (verified on frozen baseline plus isolated rule overlay):
+forall x R:
+    0<x
+    x<pi/2
+    =>:
+        tan(x)=sin(x)/cos(x)
+
+forall x R:
+    x>0
+    pi/2>x
+    =>:
+        cot(x)=cos(x)/sin(x)
+        tan(x)*cot(x)=1
+
+# Boundary: missing/weak bounds, poles, wrong signs and different free arguments still reject.
+# Evidence: tmp/2026-10-06/legacy-trig-quadrant-order-followup/isolated-final/litex-current -strict -f examples/proof_nodes/equal/by_builtin_rule/trig_first_quadrant_quotient_wd.lit
+# Tests: isolated-validation release/offline --lib trig_first_quadrant_tests (24 focused tests).
+# Live gate pending: shared LaunchCommand/Runtime API build mismatch; see acceptance note.

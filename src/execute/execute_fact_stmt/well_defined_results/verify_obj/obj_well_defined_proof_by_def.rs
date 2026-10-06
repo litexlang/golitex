@@ -111,10 +111,10 @@ pub enum SetFormerObjWellDefinedProofByDef {
 pub enum ProductShapeObjWellDefinedProofByDef {
     Cart(CartObjWellDefinedProof),
     Tuple(TupleObjWellDefinedProof),
-    CartDim(CartDimObjWellDefinedProof),
-    TupleDim(TupleDimObjWellDefinedProof),
-    Proj(ProjObjWellDefinedProof),
-    ObjAtIndex(ObjAtIndexObjWellDefinedProof),
+
+
+
+
 }
 
 pub enum FunctionSpaceObjWellDefinedProofByDef {
@@ -883,26 +883,6 @@ impl CartObjWellDefinedProof {
     }
 }
 
-// cart_dim(S): set WD, then `$is_cart(S)`.
-pub struct CartDimObjWellDefinedProof {
-    pub set_well_defined: Box<ObjWellDefinedProof>,
-    pub set_is_cart: VerifyFactResult,
-}
-
-// proj(S, i): set/dim WD, then `i $in N+`, `$is_cart(S)`, `i <= cart_dim(S)`.
-pub struct ProjObjWellDefinedProof {
-    pub set_well_defined: Box<ObjWellDefinedProof>,
-    pub dim_well_defined: Box<ObjWellDefinedProof>,
-    pub dim_in_npos: VerifyFactResult,
-    pub set_is_cart: VerifyFactResult,
-    pub dim_le_cart_dim: VerifyFactResult,
-}
-
-// tuple_dim(t): arg WD, then `$is_tuple(t)`.
-pub struct TupleDimObjWellDefinedProof {
-    pub arg_well_defined: Box<ObjWellDefinedProof>,
-    pub arg_is_tuple: VerifyFactResult,
-}
 
 pub struct TupleObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
@@ -1131,14 +1111,6 @@ impl SeqSetObjWellDefinedProof {
     }
 }
 
-// t[i]: obj/index WD, then `i $in N+`, `$is_tuple(t)`, `i <= tuple_dim(t)`.
-pub struct ObjAtIndexObjWellDefinedProof {
-    pub obj_well_defined: Box<ObjWellDefinedProof>,
-    pub index_well_defined: Box<ObjWellDefinedProof>,
-    pub index_in_npos: VerifyFactResult,
-    pub obj_is_tuple: VerifyFactResult,
-    pub index_le_tuple_dim: VerifyFactResult,
-}
 
 pub struct StandardSetObjWellDefinedProof {}
 

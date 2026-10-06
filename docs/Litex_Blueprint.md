@@ -394,7 +394,7 @@ These rule branches are organized around concrete mathematical interfaces, rathe
 
 Lean can extend automation; `simp` and `grind` already use known facts. Litex makes a more specific choice: bounded local checking by fact shape is the default behavior of ordinary statements, and its proposition interface stays within a range that is easier to index. For example, it does not support `forall p prop`, which quantifies over arbitrary propositions; its usual goals have named predicates or atomic relations such as membership, equality, and order.
 
-That restriction lets Litex's current fact and rule tables narrow candidates by relation or predicate head before checking arguments and premises. It does not prove that Lean cannot offer a similar experience, or that higher-order propositions make every goal unindexable. It identifies the expressive boundary chosen for Litex's default checking path. The usability it gains and forms of expression it forgoes need testing in real formalization tasks.
+That restriction lets Litex's current fact and rule tables narrow candidates by relation or predicate head before checking arguments and premises. Stored forall equality conclusions also use nested constructor patterns, function positions and parameter holes on both endpoints. Fixed argument subterms can use existing Direct equality before constructor descent; instantiation carriers and premises still require checked evidence. It does not prove that Lean cannot offer a similar experience, or that higher-order propositions make every goal unindexable. It identifies the expressive boundary chosen for Litex's default checking path. The usability it gains and forms of expression it forgoes need testing in real formalization tasks.
 
 </details>
 
@@ -456,6 +456,21 @@ both the `TanCotProduct` leaf and the enclosing WD citations. The analogous
 laws; they do not restore a general trigonometric normalizer. The
 [product tracer](../examples/proof_nodes/equal/by_builtin_rule/tan_cot_product.lit)
 records the before/after behavior.
+
+Negative/nonpositive common-factor rules are fixed order leaves with two
+mandatory stages: checked sign, then checked reversed argument comparison.
+Sixteen dedicated payloads cover four comparison targets and four product
+placements. Fixed converse/stronger-premise alternatives retain the inherited
+ceiling and chosen proof; no global normalization or search stage is added.
+Positive/nonnegative routes keep precedence. The [weak-order tracer](../examples/proof_nodes/atomic/by_builtin_rule/nonpositive_common_factor_weak_order.lit)
+also preserves the strict-versus-zero boundary.
+
+First-quadrant leaves read the actual strict bounds `0<x<pi/2`, retaining
+both source citations. Two nonzero leaves supply the existing sine/cosine
+requirements during tangent/cotangent WD; four separate Less/Greater leaves
+certify positivity after WD. No new search stage or persistent state is
+introduced. The [quadrant tracer](../examples/proof_nodes/atomic/by_builtin_rule/trig_first_quadrant.lit)
+checks these producer and consumer paths.
 
 The fixed interval checker accepts four literal forms of the negative half-pi
 endpoint and both comparison directions, keeping the actually checked source

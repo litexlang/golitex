@@ -1,6 +1,6 @@
 use super::compile::to_latex_from_ast;
 use super::helper::escape_text;
-use crate::launch_command::{LaunchCommand, OutputLanguage};
+use crate::launch_command::{LatexInput, LaunchCommand, OutputLanguage};
 use crate::module_manager::{GlobalModuleManager, LitexConfig};
 use crate::run_module::{load_config, resolve_std_root};
 use crate::runtime::{CodeSource, RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
@@ -21,11 +21,10 @@ pub fn to_latex(source: &str, runtime: &mut Runtime) -> RuntimeResult<String> {
 }
 
 pub fn to_latex_from_source(source: &str, language: OutputLanguage) -> RuntimeResult<String> {
-    let mut runtime = Runtime::new(LaunchCommand::Eval {
-        code: source.into(),
-        session: false,
-        strict: false,
+    let mut runtime = Runtime::new(LaunchCommand::CompileToLatex {
+        input: LatexInput::Code(source.into()),
         language,
+        document: false,
     });
     let cwd = std::env::current_dir().map_err(|error| io_error(Path::new("."), error))?;
     if cwd.join("litex.config").is_file() {
@@ -39,11 +38,10 @@ pub fn to_latex_from_file(path: &str, language: OutputLanguage) -> RuntimeResult
     let mut root = file.parent();
     while let Some(dir) = root {
         if dir.join("litex.config").is_file() {
-            let mut runtime = Runtime::new(LaunchCommand::File {
-                path: file.clone(),
-                session: false,
-                strict: false,
+            let mut runtime = Runtime::new(LaunchCommand::CompileToLatex {
+                input: LatexInput::File(file.clone()),
                 language,
+                document: false,
             });
             let config = prepare_modules(&mut runtime, dir)?;
             let selected = config
@@ -59,22 +57,20 @@ pub fn to_latex_from_file(path: &str, language: OutputLanguage) -> RuntimeResult
         }
         root = dir.parent();
     }
-    let mut runtime = Runtime::new(LaunchCommand::File {
-        path: file.clone(),
-        session: false,
-        strict: false,
+    let mut runtime = Runtime::new(LaunchCommand::CompileToLatex {
+        input: LatexInput::File(file.clone()),
         language,
+        document: false,
     });
     to_latex(&read_source(&file)?, &mut runtime)
 }
 
 pub fn to_latex_from_repository(path: &str, language: OutputLanguage) -> RuntimeResult<String> {
     let root = fs::canonicalize(path).map_err(|error| io_error(Path::new(path), error))?;
-    let mut runtime = Runtime::new(LaunchCommand::Repository {
-        path: root.clone(),
-        session: false,
-        strict: false,
+    let mut runtime = Runtime::new(LaunchCommand::CompileToLatex {
+        input: LatexInput::Repository(root.clone()),
         language,
+        document: false,
     });
     let config = prepare_modules(&mut runtime, &root)?;
     render_exports(&mut runtime, &config, None)

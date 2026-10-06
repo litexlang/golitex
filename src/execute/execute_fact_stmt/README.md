@@ -86,9 +86,9 @@ Object WD (`verify_obj_well_definedness`) returns
 - `Ok(Success(ByKnown { obj, wd_id }))` when a WD id is visible on the env stack
 - `Ok(Success(ByDef { obj, proof }))` when by-definition succeeds;
   `ObjWellDefinedProofByDef` mirrors `Obj` (one dedicated proof struct per
-  variant). Scalar (P0), identifier-headed `FnObj`, binder objects (`FnSet` /
-  `AnonymousFn` / `SetBuilder` with `local_env`), and cart/index (`CartDim` /
-  `Proj` / `TupleDim` / `ObjAtIndex`) fill named semantic requirements; many
+  variant). Scalar (P0), `FnObj` with named or ordinary object heads, binder
+  objects (`FnSet` / `AnonymousFn` / `SetBuilder` with `local_env`), and
+  Cartesian/tuple finite functions fill named semantic requirements; many
   other set/iterated constructors remain children-only until later slices
 - `Ok(Failed { obj, reason })` when a child WD or requirement soft-misses;
   `FailToVerifyObjWellDefinedResult` also mirrors `Obj`

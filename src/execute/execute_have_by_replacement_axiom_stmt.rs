@@ -144,7 +144,7 @@ impl Runtime {
 
     fn known_replacement_uniqueness(&self, prop_name: &AtomicName, source_set: &Obj) -> bool {
         for env in self.execution_environments_stack.iter().rev() {
-            for cite in &env.facts.known_forall_conclusions.equal_conclusions {
+            for cite in env.facts.known_forall_conclusions.by_equal.parameter_pair_cites() {
                 let Some(Fact::ForallFact(forall)) = env.facts.facts_by_id.get(&cite.fact_id)
                 else {
                     continue;

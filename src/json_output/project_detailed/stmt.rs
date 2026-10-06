@@ -1450,6 +1450,9 @@ fn project_release_and_expand(
     result: &ExecReleaseAndExpandStmtResult,
     runtime: &Runtime,
 ) -> JsonValue {
+    if let ExecReleaseAndExpandStmtResult::CartDef(result) = result {
+        return project_release_cart_def(result, runtime);
+    }
     if let ExecReleaseAndExpandStmtResult::Thm(result) = result {
         return super::theorem::project_release_thm(result, runtime);
     }
@@ -1457,6 +1460,7 @@ fn project_release_and_expand(
         ExecReleaseAndExpandStmtResult::Thm(_) => "release_thm",
         ExecReleaseAndExpandStmtResult::StructDef(_) => "release_struct_def",
         ExecReleaseAndExpandStmtResult::ObjDef(_) => "release_obj_def",
+        ExecReleaseAndExpandStmtResult::CartDef(_) => "release_cart_def",
         ExecReleaseAndExpandStmtResult::ExpandRange(_) => "expand_range",
         ExecReleaseAndExpandStmtResult::ZornLemma(_) => "release_zorn_lemma",
         ExecReleaseAndExpandStmtResult::AxiomOfChoice(_) => "release_axiom_of_choice",
@@ -1723,4 +1727,33 @@ pub(in crate::json_output) fn project_cases_definition_failure(
     };
     details.insert(0, ("phase", string(phase)));
     object_for(runtime, details)
+}
+
+pub(in crate::json_output) fn project_release_cart_def(
+    result: &crate::execute::execute_release_cart_def_stmt::ExecReleaseCartDefStmtResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_release_cart_def_stmt::ExecReleaseCartDefStmtResult;
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::VerifyEqualityFailed;
+    match result {
+        ExecReleaseCartDefStmtResult::Success(s) => object_for(runtime, vec![
+            ("success", bool_value(true)), ("kind", string("release_cart_def")),
+            ("statement", string(s.statement.readable_string())),
+            ("fact", string(crate::ast::fact::Fact::from(s.verification.fact.clone()).readable_string())),
+            ("fact_id", string(s.verification.fact.fact_id.to_string())),
+            ("well_defined", super::wd::project_equal_wd_proof(&s.verification.well_defined_proof, runtime)),
+            ("searched_proof", super::searched::project_equal_searched(&s.verification.searched_proof, runtime)),
+            ("store_and_infer", super::store::project_store_and_infer(&s.store_and_infer, runtime)),
+        ]),
+        ExecReleaseCartDefStmtResult::Failed(reason) => {
+            let (phase, details) = match reason {
+                VerifyEqualityFailed::FailToVerifyWellDefined(f) => ("well_defined", super::wd_failure::project_obj_wd_failure(&f.reason, runtime)),
+                VerifyEqualityFailed::FailToSearchProof { fact, well_defined_proof } => ("search_proof", object_for(runtime, vec![
+                    ("fact", string(crate::ast::fact::Fact::from(fact.clone()).readable_string())),
+                    ("well_defined", super::wd::project_equal_wd_proof(well_defined_proof, runtime)),
+                ])),
+            };
+            object_for(runtime, vec![("success", bool_value(false)), ("kind", string("release_cart_def")), ("phase", string(phase)), ("failure", details)])
+        }
+    }
 }

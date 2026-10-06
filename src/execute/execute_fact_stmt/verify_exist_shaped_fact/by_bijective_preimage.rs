@@ -43,6 +43,7 @@ impl Runtime {
                 continue;
             }
             let function = match application.head.as_ref() {
+                FnObjHead::Object(obj) => obj.as_ref().clone(),
                 FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
                 FnObjHead::AnonymousFnLiteral(f) => {
                     Obj::FunctionSpace(FunctionSpace::AnonymousFn(f.as_ref().clone()))

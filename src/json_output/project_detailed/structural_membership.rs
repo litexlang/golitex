@@ -105,8 +105,8 @@ fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
         RealPart => "re",
         ImaginaryPart => "img",
         ComplexAbs => "C_abs",
-        TupleDim => "tuple_dim",
-        CartDim => "cart_dim",
+
+
         FiniteSetSize => "finite_set_size",
         FiniteSetMax => "finite_set_max",
         FiniteSetMin => "finite_set_min",

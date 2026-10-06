@@ -1,0 +1,20 @@
+# Tracer: arbitrary object expressions use the shared function application path.
+# Before (rejected by the parser):
+# (1,2)(1)=1
+# ((1,2),3)(1)(2)=2
+# Now: every argument group checks the actual receiver's complete domain.
+# Boundary: (1,2)(3), ((1,2),3)(2)(1), scalar calls and wrong groups reject.
+# Gate: release litex -strict -f this file.
+
+(1,2)(1)=1
+(1,2)(2) $in Z
+tuple(7)(1)=7
+((1,2),3)(1)(2)=2
+eval (1,2)(2)
+
+have fn f(x R) fn(y R) R=fn(y R) R {x+y}
+f(2)=fn(y R) R {2+y}
+(f(2))(3)=5
+
+have p cart(R,Z)=(1,2)
+p(2)=2

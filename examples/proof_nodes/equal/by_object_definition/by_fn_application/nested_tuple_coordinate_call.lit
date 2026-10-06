@@ -1,0 +1,21 @@
+# Tracer: nested tuple calls preserve each position's declared carrier.
+# Before: after `have outer cart(cart(R,Z),R)=((1/2,2),3)`,
+# `outer(1)(2)=2` failed WD, including after `outer(1)=(1/2,2)`.
+# Now: the actual prefix membership is checked before the next call.
+# Boundary: outer(1)(3), outer(2)(1), and outer(1)(1) $in Z fail.
+# Gate: release litex -strict -f this file.
+
+have outer cart(cart(R,Z),R)=((1/2,2),3)
+outer(1)(2) $in Z
+outer(1)(2)=2
+outer(1)(1) $in R
+
+let alias=outer
+alias(1)(2)=2
+
+have deep cart(cart(cart(R,Z),R),R)=(((1/2,2),3),4)
+deep(1)(1)(2) $in Z
+deep(1)(1)(2)=2
+
+let literal_outer=((1,2),3)
+literal_outer(1)(2)=2

@@ -25,36 +25,6 @@ pub(super) fn evaluate_finite_object(
             }
             Ok(Ok(Obj::ProductShape(ProductShape::Tuple(Tuple { args }))))
         }
-        Obj::ProductShape(ProductShape::TupleDim(d)) => {
-            if let Obj::ProductShape(ProductShape::Tuple(t)) = d.arg.as_ref() {
-                return Ok(Ok(number(t.args.len())));
-            }
-            Ok(Err(ExecEvalStmtFailed::UnsupportedExpression))
-        }
-        Obj::ProductShape(ProductShape::ObjAtIndex(at)) => {
-            let index = match evaluate_obj(runtime, &at.index, depth + 1, context)? {
-                Ok(v) => v,
-                Err(e) => return Ok(Err(e)),
-            };
-            let Some(i) = EvalRational::from_obj(&index)
-                .and_then(|v| v.to_i128_if_integer())
-                .and_then(|i| usize::try_from(i).ok())
-            else {
-                return Ok(Err(ExecEvalStmtFailed::EvaluationFailed));
-            };
-            let tuple = match at.obj.as_ref() {
-                Obj::ProductShape(ProductShape::Tuple(t)) => t.clone(),
-                other => match evaluate_obj(runtime, other, depth + 1, context)? {
-                    Ok(Obj::ProductShape(ProductShape::Tuple(t))) => t,
-                    Ok(_) => return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression)),
-                    Err(e) => return Ok(Err(e)),
-                },
-            };
-            let Some(component) = i.checked_sub(1).and_then(|i| tuple.args.get(i)) else {
-                return Ok(Err(ExecEvalStmtFailed::EvaluationFailed));
-            };
-            evaluate_obj(runtime, component, depth + 1, context)
-        }
         Obj::FiniteSetStat(stat) => {
             let (set, max) = match stat {
                 FiniteSetStat::FiniteSetSize(s) => (&s.set, None),

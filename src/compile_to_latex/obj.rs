@@ -3,7 +3,7 @@ use super::helper::{ident, identifier, name, operator, parens};
 use crate::ast::obj::*;
 use crate::launch_command::OutputLanguage;
 use crate::module_manager::GlobalModuleManager;
-use crate::runtime::{RuntimeError, RuntimeResult};
+use crate::runtime::RuntimeResult;
 
 pub(super) fn obj(
     value: &Obj,
@@ -235,12 +235,6 @@ fn expression(
                 }
                 (parens(&items.join(", ")), 50)
             }
-            ProductShape::ObjAtIndex(x) => (format!("{}_{{{}}}", e(&x.obj, 51)?, o(&x.index)?), 50),
-            ProductShape::CartDim(_) | ProductShape::TupleDim(_) | ProductShape::Proj(_) => {
-                return Err(RuntimeError::Unsupported(
-                    "LaTeX: retired product dimension/projection AST".into(),
-                ))
-            }
         },
         Obj::FunctionSpace(x) => (
             match x {
@@ -252,6 +246,7 @@ fn expression(
         ),
         Obj::FnObj(x) => {
             let mut head = match x.head.as_ref() {
+                FnObjHead::Object(value) => parens(&obj(value, modules, lang)?),
                 FnObjHead::Identifier(x) => identifier(x, modules)?,
                 FnObjHead::AnonymousFnLiteral(x) => parens(&anonymous(x, modules, lang)?),
                 FnObjHead::FieldAccess(x) => field_access(x, modules, lang)?,

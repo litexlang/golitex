@@ -67,12 +67,6 @@ impl Runtime {
         obj: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
-        // A retired operator cannot acquire WD through either a fresh proof
-        // or a previously recorded cache entry. Its legacy AST shape remains
-        // only until the separately proposed AST deletion is authorized.
-        if let Some(reason) = retired_product_shape_failure(obj) {
-            return Ok(VerifyObjWellDefinedResult::Failed { obj: obj.clone(), reason });
-        }
         if let Some(wd_id) = self.well_defined_visible_in_stack(obj) {
             return Ok(VerifyObjWellDefinedResult::Success(
                 ObjWellDefinedProof::ByKnown {
@@ -105,7 +99,7 @@ impl Runtime {
         // Identifier / template-instance / anonymous-literal / field-access headed FnObj.
         if let Obj::FnObj(value) = obj {
             match value.head.as_ref() {
-                FnObjHead::Identifier(_) | FnObjHead::InstantiatedTemplateObj(_) => {
+                FnObjHead::Identifier(_) | FnObjHead::InstantiatedTemplateObj(_) | FnObjHead::Object(_) => {
                     return self.verify_in_function_set_headed_fn_obj_well_definedness(
                         value,
                         verify_state,
@@ -336,15 +330,6 @@ impl Runtime {
             Obj::ProductShape(ProductShape::Cart(value)) => {
                 self.verify_cart_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::ProductShape(ProductShape::CartDim(_)) => {
-                unreachable!("retired product operators fail before WD cache or definition dispatch")
-            }
-            Obj::ProductShape(ProductShape::Proj(_)) => {
-                unreachable!("retired product operators fail before WD cache or definition dispatch")
-            }
-            Obj::ProductShape(ProductShape::TupleDim(_)) => {
-                unreachable!("retired product operators fail before WD cache or definition dispatch")
-            }
             Obj::ProductShape(ProductShape::Tuple(value)) => {
                 self.verify_tuple_obj_well_definedness_by_def(value, verify_state)
             }
@@ -390,9 +375,6 @@ impl Runtime {
             Obj::SetFormer(SetFormer::SeqSet(value)) => {
                 self.verify_seq_set_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::ProductShape(ProductShape::ObjAtIndex(_)) => {
-                unreachable!("retired product operators fail before WD cache or definition dispatch")
-            }
             Obj::StandardSet(_) => {
                 self.verify_standard_set_obj_well_definedness_by_def(verify_state)
             }
@@ -414,30 +396,4 @@ impl Runtime {
             }
         }
     }
-}
-
-// The legacy AST is retained pending the concrete deletion proposal. This
-// guard precedes known WD, so neither fresh nor replayed old operators are WD.
-fn retired_product_shape_failure(obj: &Obj) -> Option<FailToVerifyObjWellDefinedResult> {
-    use super::fail_to_verify_obj_well_defined::{
-        FailToVerifyCartDimObjWellDefined, FailToVerifyObjAtIndexObjWellDefined,
-        FailToVerifyObjWellDefinedByDefCommon, FailToVerifyProductShapeObjWellDefinedResult,
-        FailToVerifyProjObjWellDefined, FailToVerifyTupleDimObjWellDefined,
-    };
-    let failure = match obj {
-        Obj::ProductShape(ProductShape::CartDim(_)) =>
-            FailToVerifyProductShapeObjWellDefinedResult::CartDim(FailToVerifyCartDimObjWellDefined(
-                FailToVerifyObjWellDefinedByDefCommon::Others("cart_dim is removed: construction dimension is not a property of a Cartesian set".into()))),
-        Obj::ProductShape(ProductShape::TupleDim(_)) =>
-            FailToVerifyProductShapeObjWellDefinedResult::TupleDim(FailToVerifyTupleDimObjWellDefined(
-                FailToVerifyObjWellDefinedByDefCommon::Others("tuple_dim is removed: use exact complete-domain evidence".into()))),
-        Obj::ProductShape(ProductShape::Proj(_)) =>
-            FailToVerifyProductShapeObjWellDefinedResult::Proj(FailToVerifyProjObjWellDefined(
-                FailToVerifyObjWellDefinedByDefCommon::Others("proj is removed: Cartesian sets do not retain construction projections".into()))),
-        Obj::ProductShape(ProductShape::ObjAtIndex(_)) =>
-            FailToVerifyProductShapeObjWellDefinedResult::ObjAtIndex(FailToVerifyObjAtIndexObjWellDefined(
-                FailToVerifyObjWellDefinedByDefCommon::Others("object indexing with [] is removed: use ordinary function application t(i)".into()))),
-        _ => return None,
-    };
-    Some(FailToVerifyObjWellDefinedResult::ProductShape(failure))
 }

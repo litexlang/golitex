@@ -1,0 +1,17 @@
+# Tracer: rigid application equality inside forall argument matching.
+# Before: the following exact source rejected at search_proof.
+# forall f, g fn(x R) R, a R:
+#     f(0) = g(0)
+#     forall y R:
+#         y + f(0) = y
+#     =>:
+#         a + g(0) = a
+# Now: use the real f(0)=g(0) path without assuming f=g.
+forall f, g fn(x R) R, a R:
+    f(0) = g(0)
+    forall y R:
+        y + f(0) = y
+    =>:
+        a + g(0) = a
+# Boundary: removing f(0)=g(0) must still reject the transport.
+# Evidence: litex -strict -f examples/proof_nodes/equal/by_known_forall/rigid_application_alias.lit

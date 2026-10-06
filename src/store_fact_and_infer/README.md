@@ -98,7 +98,8 @@ Tracer: `examples/infer/equal/nonzero_real_square.lit`.
   stops the N-to-sign projection cycle. Normal output lists the consequence;
   Detailed output retains its FactId through the existing flat infer projection.
   The tracer is `examples/infer/atomic/weak_integer_lower_bound_in_n.lit`.
-- `$is_cart` → dim ≥ 2; Subset / Superset → elementwise forall
+- Subset / Superset → elementwise forall. Removed Cartesian shape predicates
+  produce no dimension facts.
 
 The FnRange and indexed-family application builders preserve existing callable
 FieldAccess heads as well as identifiers, anonymous functions and templates.

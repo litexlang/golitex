@@ -739,8 +739,8 @@ fn is_negative_atomic(fact: &AtomicFact) -> bool {
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
             | AtomicFact::NotInFact(_)
-            | AtomicFact::NotIsCartFact(_)
-            | AtomicFact::NotIsTupleFact(_)
+
+
             | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
     )

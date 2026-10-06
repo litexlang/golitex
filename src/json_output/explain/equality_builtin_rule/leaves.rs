@@ -74,13 +74,12 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
     ReduceEmptyBuiltinRuleProof, SumEmptyRangeBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::{
-    CartProjFactorBuiltinRuleProof, ClosedRangeSingletonListSetBuiltinRuleProof,
+    ClosedRangeSingletonListSetBuiltinRuleProof,
     EmptySetFromSizeZeroBuiltinRuleProof, FiniteSetReduceAddZeroEqualsSumBuiltinRuleProof,
     FiniteSetSizeSetMinusBuiltinRuleProof, FiniteSetSizeUnionBuiltinRuleProof,
     PowOfLogInverseBuiltinRuleProof, ProductSingleTermBuiltinRuleProof,
     ReduceAddZeroEqualsSumBuiltinRuleProof, SetMinusRecoversSubsetBuiltinRuleProof,
-    SumSingleTermBuiltinRuleProof, TupleComponentAtIndexBuiltinRuleProof,
-    UnionAbsorptionFromSubsetBuiltinRuleProof
+    SumSingleTermBuiltinRuleProof, UnionAbsorptionFromSubsetBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::{
     ComplexAbsOfImaginaryUnitBuiltinRuleProof, FiniteSetProductListExpansionBuiltinRuleProof,
@@ -8365,174 +8364,6 @@ impl EmptySetFromSizeZeroBuiltinRuleProof {
     }
 }
 
-impl CartProjFactorBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Cartesian factor recovered by projection",
-            "Projection recovers a Cartesian factor",
-        )
-    }
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "笛卡尔积因子的投影",
-            "对笛卡尔积作坐标投影，得到对应的因子集合",
-        )
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("笛卡兒積因子投影", "投影取回笛卡兒積因子")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Projection d'un facteur cartésien",
-            "La projection retrouve un facteur cartésien",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Проекция декартова множителя",
-            "Проекция восстанавливает декартов множитель",
-        )
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Proyección de factor cartesiano",
-            "La proyección recupera un factor cartesiano",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "إسقاط عامل ديكارتي",
-            "الإسقاط يستعيد عاملًا ديكارتيًا",
-        )
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "直積因子の射影",
-            "射影は直積の因子を復元します",
-        )
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "데카르트 인자의 사영",
-            "사영은 데카르트 곱의 인자를 복원합니다",
-        )
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Chiếu thừa số Descartes",
-            "Phép chiếu khôi phục thừa số Descartes",
-        )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
-impl TupleComponentAtIndexBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "tuple component",
-            "The i-th component of a tuple equals the stated entry",
-        )
-    }
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "元组分量",
-            "元组的第 i 个分量等于所述分量",
-        )
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "元組分量",
-            "元組第 i 個分量等於對應項目",
-        )
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Composante de tuple",
-            "La i-ème composante d'un tuple est égale à l'entrée indiquée",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Компонента кортежа",
-            "i-я компонента кортежа равна указанному элементу",
-        )
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Componente de tupla",
-            "La componente i de una tupla equivale a la entrada indicada",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "مكوّن صف",
-            "المكوّن رقم i للصف يساوي العنصر المحدد",
-        )
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "タプルの成分",
-            "タプルの第 i 成分は指定された要素に等しいです",
-        )
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "튜플 성분",
-            "튜플의 i번째 성분은 명시된 항목과 같습니다",
-        )
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Thành phần của bộ",
-            "Thành phần thứ i của bộ bằng phần tử đã nêu",
-        )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
 
 impl FiniteSetSizeSetMinusBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {

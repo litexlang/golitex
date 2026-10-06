@@ -61,10 +61,10 @@ pub fn calculate_closed_atomic_fact(fact: &AtomicFact) -> Option<ClosedCalculati
         | NotIsNonemptySetFact(_)
         | IsFiniteSetFact(_)
         | NotIsFiniteSetFact(_)
-        | IsCartFact(_)
-        | NotIsCartFact(_)
-        | IsTupleFact(_)
-        | NotIsTupleFact(_)
+
+
+
+
         | SubsetFact(_)
         | NotSubsetFact(_)
         | SupersetFact(_)

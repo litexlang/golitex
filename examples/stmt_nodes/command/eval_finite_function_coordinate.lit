@@ -1,0 +1,20 @@
+# Tracer: evaluate finite-function coordinates using checked beta evidence.
+# Before: `let p=(1,2,3)` followed by `eval p(2)` failed unless
+# the author first asserted `p(2)=2`.
+# Now: eval computes and publishes that equality itself.
+# Boundary: p(4), p(0), scalar continuation and an unknown coordinate fail.
+# Gate: release litex -strict -f this file.
+
+let p=(1,2,3)
+eval p(2)
+p(2)=2
+eval p(1)+p(3)
+p(1)+p(3)=4
+
+have outer cart(cart(R,R),R)=((1,2),3)
+eval outer(1)(2)
+outer(1)(2)=2
+
+let literal_outer=((1,2),3)
+eval literal_outer(1)(2)
+literal_outer(1)(2)=2

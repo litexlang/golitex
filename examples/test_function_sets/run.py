@@ -119,9 +119,10 @@ def evaluate(path):
         return dict(result, observed='accept', phase='success')
     if not envelope['success'] and process.returncode == 1:
         error = result['session_error']
-        if failed and (error is None or (isinstance(error, str) and error.startswith('Runtime(ParseError('))):
+        parse_error = isinstance(error, str) and error.startswith(('parse_error:', 'Runtime(ParseError('))
+        if failed and (error is None or parse_error):
             return dict(result, observed='reject', phase=failed[0].get('why_failed', {}).get('phase', 'verification'), failures=failed)
-        if isinstance(error, str) and error.startswith('Runtime(ParseError('):
+        if parse_error:
             return dict(result, observed='reject', phase='parse', diagnostic=error, failures=failed)
     return dict(result, diagnostic=repr(envelope)[-4000:])
 

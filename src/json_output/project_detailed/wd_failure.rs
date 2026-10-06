@@ -569,18 +569,6 @@ fn project_fail_to_verify_product_shape_obj_well_defined_result(
         FailToVerifyProductShapeObjWellDefinedResult::Tuple(p) => {
             node(rt, "Tuple", None, common(&p.0, rt))
         }
-        FailToVerifyProductShapeObjWellDefinedResult::CartDim(p) => {
-            node(rt, "CartDim", None, common(&p.0, rt))
-        }
-        FailToVerifyProductShapeObjWellDefinedResult::TupleDim(p) => {
-            node(rt, "TupleDim", None, common(&p.0, rt))
-        }
-        FailToVerifyProductShapeObjWellDefinedResult::Proj(p) => {
-            node(rt, "Proj", None, common(&p.0, rt))
-        }
-        FailToVerifyProductShapeObjWellDefinedResult::ObjAtIndex(p) => {
-            node(rt, "ObjAtIndex", None, common(&p.0, rt))
-        }
     }
 }
 

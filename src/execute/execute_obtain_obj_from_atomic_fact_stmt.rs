@@ -146,7 +146,7 @@ impl Runtime {
     }
 }
 
-fn project_sole_positive_exist_clause(
+pub(in crate::execute) fn project_sole_positive_exist_clause(
     iff_facts: &[Fact],
 ) -> Result<ExistShapedFact, String> {
     if iff_facts.len() != 1 {

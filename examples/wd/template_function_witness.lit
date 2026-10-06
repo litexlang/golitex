@@ -1,0 +1,23 @@
+# Before migration: the same checked obtain template failed at its application
+# with "no matching function signature". No trust or extra assumptions are needed.
+# Before:
+# prop has_equal_function(S nonempty_set, T nonempty_set, f fn(x S) T):
+#     exist g fn(x S) T st {g = f}
+# 
+# template<S nonempty_set, T nonempty_set, f fn(x S) T: $has_equal_function(S, T, f)>:
+#     obtain selected_function from $has_equal_function(S, T, f)
+# 
+# have fn identity(x R) R = x
+# witness $has_equal_function(R, R, identity) from identity
+# \selected_function<R, R, identity>(2) $in R
+
+# Now: instantiate the verified witness carrier before checking the application.
+prop has_equal_function(S nonempty_set, T nonempty_set, f fn(x S) T):
+    exist g fn(x S) T st {g = f}
+
+template<S nonempty_set, T nonempty_set, f fn(x S) T: $has_equal_function(S, T, f)>:
+    obtain selected_function from $has_equal_function(S, T, f)
+
+have fn identity(x R) R = x
+witness $has_equal_function(R, R, identity) from identity
+\selected_function<R, R, identity>(2) $in R

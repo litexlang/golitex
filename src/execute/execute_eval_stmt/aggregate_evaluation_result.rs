@@ -94,8 +94,27 @@ pub enum AggregateTermExpansion {
 pub struct FunctionApplicationEvaluationResult {
     pub application: Obj,
     pub application_well_defined: ObjWellDefinedProof,
-    pub expansion: AnonFnApplicationBodyProof,
+    pub expansion: FunctionApplicationExpansionProof,
     pub value: Obj,
+}
+
+pub enum FunctionApplicationExpansionProof {
+    Anonymous(AnonFnApplicationBodyProof),
+    CheckedBeta(CheckedBetaFunctionApplicationExpansionProof),
+}
+
+pub struct CheckedBetaFunctionApplicationExpansionProof {
+    pub function_body: crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody,
+    pub expanded_body: Obj,
+}
+
+impl FunctionApplicationExpansionProof {
+    pub fn expanded_body(&self) -> &Obj {
+        match self {
+            Self::Anonymous(proof) => &proof.expanded_body,
+            Self::CheckedBeta(proof) => &proof.expanded_body,
+        }
+    }
 }
 
 pub struct AlgoApplicationEvaluationResult {

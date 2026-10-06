@@ -1,7 +1,6 @@
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, InjectiveFact, IsChoiceFunctionForFact,
-    NotBijectiveFact, NotCoprimeFact, NotDvdFact, NotInjectiveFact, NotIsCartFact,
-    NotIsChoiceFunctionForFact, NotIsSetFact, NotIsTupleFact, NotPrimeFact, NotProperSubsetFact,
+    NotBijectiveFact, NotCoprimeFact, NotDvdFact, NotInjectiveFact,     NotIsChoiceFunctionForFact, NotIsSetFact, NotPrimeFact, NotProperSubsetFact,
     NotProperSupersetFact, NotSurjectiveFact, PrimeFact, ProperSubsetFact, ProperSupersetFact,
     SurjectiveFact,
 };
@@ -14,9 +13,8 @@ use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
     InjectiveFactSearchProofByBuiltinRule, IsChoiceFunctionForFactSearchProofByBuiltinRule,
     NotBijectiveFactSearchProofByBuiltinRule, NotCoprimeFactSearchProofByBuiltinRule,
     NotDvdFactSearchProofByBuiltinRule, NotInjectiveFactSearchProofByBuiltinRule,
-    NotIsCartFactSearchProofByBuiltinRule, NotIsChoiceFunctionForFactSearchProofByBuiltinRule,
-    NotIsSetFactSearchProofByBuiltinRule, NotIsTupleFactSearchProofByBuiltinRule,
-    NotPrimeFactSearchProofByBuiltinRule, NotProperSubsetFactSearchProofByBuiltinRule,
+    NotIsChoiceFunctionForFactSearchProofByBuiltinRule,
+    NotIsSetFactSearchProofByBuiltinRule,     NotPrimeFactSearchProofByBuiltinRule, NotProperSubsetFactSearchProofByBuiltinRule,
     NotProperSupersetFactSearchProofByBuiltinRule, NotSurjectiveFactSearchProofByBuiltinRule,
     PrimeFactSearchProofByBuiltinRule, ProperSubsetFactSearchProofByBuiltinRule,
     ProperSupersetFactSearchProofByBuiltinRule, SurjectiveFactSearchProofByBuiltinRule,
@@ -59,12 +57,6 @@ impl Runtime {
             AtomicFact::InFact(fact) => Ok(self
                 .search_in_fact_proof_by_builtin_rule(fact, verify_state)?
                 .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact)),
-            AtomicFact::IsCartFact(fact) => Ok(self
-                .search_is_cart_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::IsCartFact)),
-            AtomicFact::IsTupleFact(fact) => Ok(self
-                .search_is_tuple_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::IsTupleFact)),
             AtomicFact::SubsetFact(fact) => Ok(self
                 .search_subset_fact_proof_by_builtin_rule(fact, verify_state)?
                 .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact)),
@@ -128,12 +120,6 @@ impl Runtime {
             AtomicFact::NotInFact(fact) => Ok(self
                 .search_not_in_fact_proof_by_builtin_rule(fact, verify_state)?
                 .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotInFact)),
-            AtomicFact::NotIsCartFact(fact) => Ok(self
-                .search_not_is_cart_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsCartFact)),
-            AtomicFact::NotIsTupleFact(fact) => Ok(self
-                .search_not_is_tuple_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsTupleFact)),
             AtomicFact::NotSubsetFact(fact) => Ok(self
                 .search_not_subset_fact_proof_by_builtin_rule(fact, verify_state)?
                 .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSubsetFact)),
@@ -292,19 +278,4 @@ impl Runtime {
         Ok(None)
     }
 
-    pub fn search_not_is_cart_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotIsCartFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotIsCartFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_not_is_tuple_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotIsTupleFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotIsTupleFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
 }

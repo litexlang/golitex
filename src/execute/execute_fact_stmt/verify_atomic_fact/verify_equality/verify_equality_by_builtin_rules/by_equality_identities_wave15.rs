@@ -220,6 +220,7 @@ fn cart_of(left: &Obj, right: &Obj) -> Obj {
 
 fn callable_head_obj(head: &FnObjHead) -> Option<Obj> {
     match head {
+        FnObjHead::Object(obj) => Some(obj.as_ref().clone()),
         FnObjHead::Identifier(id) => Some(Obj::Identifier(id.clone())),
         FnObjHead::InstantiatedTemplateObj(t) => Some(Obj::InstantiatedTemplateObj(t.clone())),
         FnObjHead::FieldAccess(f) => Some(Obj::StructAndFieldAccessObj(

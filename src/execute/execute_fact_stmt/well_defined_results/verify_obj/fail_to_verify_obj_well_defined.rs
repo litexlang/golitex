@@ -109,10 +109,10 @@ pub enum FailToVerifySetFormerObjWellDefinedResult {
 pub enum FailToVerifyProductShapeObjWellDefinedResult {
     Cart(FailToVerifyCartObjWellDefined),
     Tuple(FailToVerifyTupleObjWellDefined),
-    CartDim(FailToVerifyCartDimObjWellDefined),
-    TupleDim(FailToVerifyTupleDimObjWellDefined),
-    Proj(FailToVerifyProjObjWellDefined),
-    ObjAtIndex(FailToVerifyObjAtIndexObjWellDefined),
+
+
+
+
 }
 
 pub enum FailToVerifyFunctionSpaceObjWellDefinedResult {
@@ -363,11 +363,6 @@ pub enum FailToVerifyAnonymousFnObjWellDefined {
 
 pub struct FailToVerifyCartObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub struct FailToVerifyCartDimObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
-
-pub struct FailToVerifyProjObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
-
-pub struct FailToVerifyTupleDimObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifyTupleObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
@@ -404,7 +399,6 @@ pub struct FailToVerifyFiniteSeqSetObjWellDefined(pub FailToVerifyObjWellDefined
 
 pub struct FailToVerifySeqSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub struct FailToVerifyObjAtIndexObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub enum FailToVerifyStandardSetObjWellDefined {
     Others(String),

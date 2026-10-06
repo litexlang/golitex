@@ -1,16 +1,18 @@
 # Statement regression tests
 
 Task: detailed per-statement tests requested on 2026-10-01.
-The authoritative inventory is `src/ast/stmt.rs`: 50 reachable statement
+The authoritative inventory is `src/ast/stmt.rs`: 51 reachable statement
 leaves, including `Stmt::Fact`. Each leaf has one primary `.lit` file with
-multiple runnable scenarios. There are 172 positive scenarios,
-132 negative scenarios, 24 additional boundary/regression checks, and no open
+multiple runnable scenarios. There are 173 positive scenarios,
+135 negative scenarios, 24 additional boundary/regression checks, and no open
 K-number gap reproduction. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
-Latest current-worktree completion scan: [2026-10-03 audit](audit_2026-10-03.md).
-All 377 CLI checks and the actual-AST integration pass; separate open kernel
-observations and semantic boundaries remain listed in that report.
+The [2026-10-06 tuple/cart acceptance](../proof_nodes/experience/problem_notes/tuple-cart-local-call-eval-2026-10-06.md)
+checks all 51 current statement leaves in 383 CLI checks and passes the
+actual-AST integration. Its separate basics gate passes 175 checks. The
+[2026-10-03 audit](audit_2026-10-03.md) is a dated 377-check baseline;
+separate kernel observations and semantic boundaries remain in that report.
 
 The [2026-10-04 CLI/strict acceptance](experience/problem_notes/cli-source-strict-abstract.md)
 allows pure abstract predicates in strict mode and fixes negative-leading `-e`
@@ -193,3 +195,5 @@ recursive `.lit` file in this directory as a positive example.
 | `ClaimStmt` | [claim_stmt.lit](claim_stmt.lit) | 3 | 2 |
 | `SketchStmt` | [sketch_stmt.lit](sketch_stmt.lit) | 3 | 2 |
 | `EvalStmt` | [eval_stmt.lit](eval_stmt.lit) | 5 | 4 |
+
+The added `release_cart_def_stmt.lit` covers the approved complete Cartesian-definition command and reuses its stored equality.

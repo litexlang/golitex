@@ -4,11 +4,11 @@ use crate::runtime::runtime_ids::IdentifierId;
 
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact, GreaterEqualFact, GreaterFact,
-    InFact, InjectiveFact, IsCartFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact,
-    IsSetFact, IsTupleFact, LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact,
+    InFact, InjectiveFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact,
+    IsSetFact, LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact,
     NotCoprimeFact, NotDvdFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact,
-    NotInjectiveFact, NotIsCartFact, NotIsChoiceFunctionForFact, NotIsFiniteSetFact,
-    NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact, NotLessFact,
+    NotInjectiveFact, NotIsChoiceFunctionForFact, NotIsFiniteSetFact,
+    NotIsNonemptySetFact, NotIsSetFact, NotLessEqualFact, NotLessFact,
     NotNormalAtomicFact, NotPrimeFact, NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact,
     NotSupersetFact, NotSurjectiveFact, PrimeFact, ProperSubsetFact, ProperSupersetFact,
     SubsetFact, SupersetFact, SurjectiveFact,
@@ -156,26 +156,6 @@ impl Runtime {
         AtomicFact::NotInFact(f) => Ok(AtomicFact::NotInFact(NotInFact {
             fact_id,
             element: self.inst_obj_rec(&f.element, param_to_arg_map)?,
-            set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
-            line_file: f.line_file.clone(),
-        })),
-        AtomicFact::IsCartFact(f) => Ok(AtomicFact::IsCartFact(IsCartFact {
-            fact_id,
-            set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
-            line_file: f.line_file.clone(),
-        })),
-        AtomicFact::NotIsCartFact(f) => Ok(AtomicFact::NotIsCartFact(NotIsCartFact {
-            fact_id,
-            set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
-            line_file: f.line_file.clone(),
-        })),
-        AtomicFact::IsTupleFact(f) => Ok(AtomicFact::IsTupleFact(IsTupleFact {
-            fact_id,
-            set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
-            line_file: f.line_file.clone(),
-        })),
-        AtomicFact::NotIsTupleFact(f) => Ok(AtomicFact::NotIsTupleFact(NotIsTupleFact {
-            fact_id,
             set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
             line_file: f.line_file.clone(),
         })),

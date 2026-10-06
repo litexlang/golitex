@@ -526,6 +526,7 @@ pub enum ReleaseAndExpandStmt {
     // Re-store one object-definition's facts for an identifier (preview).
     // Example: `release obj def f`.
     ReleaseObjDefStmt(ReleaseObjDefStmt),
+    ReleaseCartDefStmt(ReleaseCartDefStmt),
     // Expand numeric-range membership into equality cases.
     // Example: `expand: x $in range(1, 3)` stores `x = 1 or x = 2`.
     ExpandRangeStmt(ExpandRangeStmt),
@@ -538,6 +539,12 @@ pub enum ReleaseAndExpandStmt {
     // Axiom of regularity.
     // Example: `release regularity_axiom(S)`.
     ReleaseRegularityAxiomStmt(ReleaseRegularityAxiomStmt),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ReleaseCartDefStmt {
+    pub cart: crate::ast::obj::Cart,
+    pub line_file: SourceLine,
 }
 
 // What: instantiate a theorem and commit all of its conclusions.

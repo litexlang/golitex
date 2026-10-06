@@ -73,8 +73,8 @@ pub enum IntrinsicCodomain {
     RealPart,
     ImaginaryPart,
     ComplexAbs,
-    TupleDim,
-    CartDim,
+
+
     FiniteSetSize,
     FiniteSetMax,
     FiniteSetMin,

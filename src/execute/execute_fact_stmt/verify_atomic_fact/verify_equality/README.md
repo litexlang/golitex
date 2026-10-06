@@ -27,6 +27,25 @@ needed for identity and peer comparison.
 
 ## Entry and search order
 
+Known forall equality conclusions are compiled when recorded into the
+scope-owned `ForallEqualityIndex`. Its trie distinguishes nested leaf
+constructors, rigid nodes, parameter holes, function positions and application
+groups across both equality endpoints. Query-local finite alias discovery is
+read-only and borrows the visible scope graphs; selected entries retain their
+real source FactId and then-location. Closed goals retain a syntax view as well
+as their calculated key. Shared continuations conservatively retain already-bound
+expression fallback, such as `f(t)=t+1` used for `f(1)=2`.
+Opaque binder branches stay conservative and use the complete matcher checks.
+
+The argument matcher consumes whole rigid-term Direct evidence before smaller
+constructor descent. A query-local context shares the lazily built Direct graph
+and failed comparisons across candidate matching, and resets before broader
+requirement verification. It checks function prefixes before arguments while preserving certificate slot
+order, and still verifies instantiated types/domain facts. The new
+[tracer](../../../../../examples/proof_nodes/equal/by_known_forall/rigid_application_alias.lit)
+uses `f(0)=g(0)` directly without assuming `f=g`. Existing stage ceilings,
+outer WD, symmetry and statement transactions remain in force.
+
 ```text
 verify_equal_fact(goal, state)
   -> WD left, then right with the same ceiling
@@ -71,8 +90,8 @@ releases the geo dot-symmetry theorem and reads its exact conclusion.
 ## Known tuple properties
 
 `ByKnownSpecialProperty` is a sibling of identity, not another alpha case.
-Cartesian membership proves `p = (p[1],p[2])`; a stored path to `(a,b)` proves
-`p[1] = a`. A function definition may supply a literal tuple after one beta
+Cartesian membership proves `p = (p(1),p(2))`; a stored path to `(a,b)` proves
+`p(1) = a`. A function definition may supply a literal tuple after one beta
 substitution. Application WD precedes this step, and all candidate WD
 signatures must agree with the selected definition's full signature, including
 domains. A signature ambiguity or non-tuple body misses without recursive
@@ -82,8 +101,9 @@ agree. `FnTupleValue` reads one tuple-valued application reached by a stored
 subject path, and `FnTupleProjection` can use that path for a named result.
 Neither route publishes a value equality or restarts definition search. See
 [the template alias tracer](../../../../../examples/stmt_nodes/definition/template_alias_struct_tuple.lit).
-Tuple shape also supplies atomic `is_tuple`, literal index bounds,
-coordinate carrier membership, and equality `tuple_dim(p) = n`.
+The finite-function source supplies its complete `closed_range(1,n)` domain
+and fixed-coordinate carrier membership. It supplies no shape predicate or
+dimension fact; those AST branches have been removed.
 
 The shared reader in `known_tuple.rs` only traverses stored equality edges
 with visited-node tracking. It retains FactIds and local certificates, writes

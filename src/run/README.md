@@ -19,6 +19,15 @@ finishes. Companion packages:
 | `Eval` | `-e <code>` | `run_eval` | **cwd** `litex.config` (missing → empty) |
 | `File` | `-f <file>` | `run_file_with_config` | **parent(file)** (missing → empty / isolated) |
 | `Repository` | `-r <dir>` | `run_project` | **`<dir>`** (missing → hard error) |
+| `ExtractExecutableCode` | `-extractc` / `-extractpython` + code / `-f` / `-r` | `run_extract_executable_code` | executable extractor's verified input selection |
+| `CompileToLatex` | `-latex` + `-e` / `-f` / `-r` | `run_compile_to_latex` | parse-only manifest metadata |
+
+Both conversion commands go through `parse_launch_command` and `run_command`.
+`ExtractExecutableCode { target, input: ExtractInput, language }` verifies and
+extracts C/Python computational fragments. `CompileToLatex { input: LatexInput,
+language, document }` renders the parsed AST and returns `CompileToLatexResult`;
+its compiler never runs verification. These are separate command, input and
+result types. `document` retains the existing `-document` wrapper option.
 
 Shared flags (where allowed): `-session` (keep last env → REPL), `-strict`
 (forbid `trust` / `trust have`; allow `abstract_prop` signatures), `-lang en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi` (JSON /
@@ -167,6 +176,8 @@ No Runtime, no config.
 |---------|-------------------|--------------------|-------------------|
 | `RunFile` / `RunEval` / `RunRepo` | in `statement_results`, `success: false` | `session_error: "failed to import project"` | readable error in batch JSON |
 | `RunRepl` | printed per step | start fails as `Err` | `Err` |
+| `ExtractExecutableCode` | verification required before artifact | `Err` | extracted-code artifact error JSON |
+| `CompileToLatex` | not verified; parse-only artifact | manifest error → `Err` | LaTeX artifact error JSON |
 
 Process exit uses `outcome.process_failed()` (false success or session error).
 

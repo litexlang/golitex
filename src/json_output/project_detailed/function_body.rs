@@ -38,7 +38,7 @@ pub(super) fn project_parent_checked_beta(
     object_for(runtime, fields)
 }
 
-fn project_parent_checked_function_body(
+pub(super) fn project_parent_checked_function_body(
     proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody,
     runtime: &Runtime,
 ) -> JsonValue {
@@ -48,6 +48,19 @@ fn project_parent_checked_function_body(
             ("type", string("finite_function_coordinate")),
             ("source", super::function_domain::project_finite_function_source(source, runtime)),
             ("index", string(index.to_string())),
+        ]),
+        ParentCheckedBetaFunctionBody::ReturnedFiniteFunctionCoordinate { receiver_well_defined, receiver_function_body, returned_tuple, index } => object_for(runtime, vec![
+            ("type", string("returned_finite_function_coordinate")),
+            ("application_well_defined", super::wd::project_obj_wd_proof(receiver_well_defined, runtime)),
+            ("function_body", project_parent_checked_function_body(receiver_function_body, runtime)),
+            ("value", string(Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(returned_tuple.clone())).readable_string())),
+            ("index", string(index.to_string())),
+        ]),
+        ParentCheckedBetaFunctionBody::ReturnedAnonymousFunctionApplication { receiver_well_defined, receiver_function_body, returned_function } => object_for(runtime, vec![
+            ("type", string("returned_anonymous_function_application")),
+            ("application_well_defined", super::wd::project_obj_wd_proof(receiver_well_defined, runtime)),
+            ("function_body", project_parent_checked_function_body(receiver_function_body, runtime)),
+            ("function", string(Obj::FunctionSpace(crate::ast::obj::FunctionSpace::AnonymousFn(returned_function.clone())).readable_string())),
         ]),
         ParentCheckedBetaFunctionBody::AnonymousLiteral => object_for(runtime, vec![("type", string("anonymous_literal"))]),
         ParentCheckedBetaFunctionBody::KnownAnonymousFunction { function, function_equal, checked_domain } => object_for(runtime, vec![

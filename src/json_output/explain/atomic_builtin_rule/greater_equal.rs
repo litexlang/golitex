@@ -19,6 +19,10 @@ use crate::json_output::explain::text::text;
 impl GreaterEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_en(),
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_en(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_en(),
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_en(),
             Self::ClosedSubtractionBound(_) => text("Subtract from a stored numeric bound", "The stored upper or lower bound remains sufficient after subtracting the closed constant"),
             Self::ComplexModulusNonnegative => text("Nonnegative complex modulus", "The principal complex modulus is nonnegative"),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_en(),
@@ -37,6 +41,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh(),
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh(),
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh(),
             Self::ClosedSubtractionBound(_) => text(
                 "从已有数值界减去常数",
                 "已有上界或下界减去闭式常数后满足目标弱序界",
@@ -61,6 +69,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh_hant(),
             Self::ClosedSubtractionBound(_) => text(
                 "從已有數值界減去常數",
                 "已有上界或下界減去封閉常數後仍足以滿足目標",
@@ -85,6 +97,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_fr(),
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_fr(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_fr(),
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_fr(),
             Self::ClosedSubtractionBound(_) => text("Soustraction d'une borne numérique stockée", "La borne supérieure ou inférieure stockée reste suffisante après soustraction de la constante fermée"),
             Self::ComplexModulusNonnegative => text("Module complexe non négatif", "Le module complexe principal est non négatif"),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_fr(),
@@ -103,6 +119,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ru(),
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ru(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ru(),
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ru(),
             Self::ClosedSubtractionBound(_) => text("Вычитание из сохранённой числовой границы", "Сохранённая верхняя или нижняя граница остаётся достаточной после вычитания замкнутой константы"),
             Self::ComplexModulusNonnegative => text("Неотрицательный комплексный модуль", "Главный комплексный модуль неотрицателен"),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_ru(),
@@ -121,6 +141,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_es(),
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_es(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_es(),
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_es(),
             Self::ClosedSubtractionBound(_) => text("Resta de una cota numérica almacenada", "La cota superior o inferior almacenada sigue siendo suficiente al restar la constante cerrada"),
             Self::ComplexModulusNonnegative => text("Módulo complejo no negativo", "El módulo complejo principal es no negativo"),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_es(),
@@ -139,6 +163,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ar(),
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ar(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ar(),
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ar(),
             Self::ClosedSubtractionBound(_) => text(
                 "طرح من حد عددي مخزن",
                 "يبقى الحد الأعلى أو الأدنى المخزن كافيًا بعد طرح الثابت المغلق",
@@ -163,6 +191,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ja(),
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ja(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ja(),
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ja(),
             Self::ClosedSubtractionBound(_) => text(
                 "保存済みの数値の境界からの減算",
                 "保存済みの上界または下界は閉じた定数を引いた後も十分です",
@@ -187,6 +219,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ko(),
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ko(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ko(),
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ko(),
             Self::ClosedSubtractionBound(_) => text(
                 "저장된 수치 경계에서 빼기",
                 "저장된 상한 또는 하한은 닫힌 상수를 뺀 후에도 충분합니다",
@@ -211,6 +247,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_vi(),
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_vi(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_vi(),
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_vi(),
             Self::ClosedSubtractionBound(_) => text(
                 "Trừ từ cận số đã lưu",
                 "Cận trên hoặc dưới đã lưu vẫn đủ sau khi trừ hằng đóng",
@@ -250,6 +290,10 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(_) => None,
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(_) => None,
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(_) => None,
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(_) => None,
             Self::ClosedSubtractionBound(p) => Some(p.bound.cite_fact_id),
             Self::FromKnownLessEqual(p) => p.premise_proof.cite_fact_id(),
             Self::FromKnownOrderComplement(p) => p.premise_proof.cite_fact_id(),

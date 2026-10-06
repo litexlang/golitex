@@ -112,6 +112,7 @@ fn apply_body(rt: &mut Runtime, function: &Obj, arg: Obj) -> Result<Obj, String>
 }
 fn head_obj(head: &FnObjHead) -> Obj {
     match head {
+        FnObjHead::Object(obj) => obj.as_ref().clone(),
         FnObjHead::Identifier(x) => Obj::Identifier(x.clone()),
         FnObjHead::AnonymousFnLiteral(x) => Obj::FunctionSpace(FunctionSpace::AnonymousFn(x.as_ref().clone())),
         FnObjHead::FieldAccess(x) => Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(x.clone())),

@@ -1,7 +1,9 @@
-# Known gap: K001
+# Historical K001 bare-call source preserved in the migration journal.
+# Current exact-property contract: publish the checked body equality before calling.
 # Desired success: true
 # See todo.md; runner checks observed behavior explicitly.
 
 have fn f(x R) R = x + 1
 let g = f
+g = fn(x R) R {x + 1}
 g(4) = 5

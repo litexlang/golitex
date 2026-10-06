@@ -493,7 +493,7 @@ Keywords exist in `keywords.rs` but have no primary arm today (do not document a
 
 | Wrong | Right |
 |---|---|
-| `[1, 2]` list literal | use index `obj[i]`; sets use `{…}` |
+| `[1, 2]` list literal | tuple `(1,2)` and ordinary call `obj(i)`; singleton `tuple(1)`; sets `{…}` |
 | `&Point{obj}` / `&Name(…)` | `&Point` / `&Name<args>` |
 | `struct Name(…)` params | `struct Name<…>:` |
 

@@ -51,7 +51,7 @@ fn internal_error_merge_collision_returns_explicit_litex_bug() {
             error.to_string()
         );
     }
-    let extracted = crate::run::run_extract::extract_launch_error_json(&error);
+    let extracted = crate::run::run_extract_executable_code::extract_launch_error_json(&error);
     assert!(extracted.contains("internal_bug: Litex internal bug:"));
     assert!(extracted.contains("identifier `x` already defined in parent"));
 }

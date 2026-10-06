@@ -12,6 +12,10 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    MulLeftNonpositiveReversesWeakLessEqual(super::order_negative_common_factor::MulLeftNonpositiveReversesWeakLessEqualProof),
+    MulRightNonpositiveReversesWeakLessEqual(super::order_negative_common_factor::MulRightNonpositiveReversesWeakLessEqualProof),
+    MulLeftRightNonpositiveReversesWeakLessEqual(super::order_negative_common_factor::MulLeftRightNonpositiveReversesWeakLessEqualProof),
+    MulRightLeftNonpositiveReversesWeakLessEqual(super::order_negative_common_factor::MulRightLeftNonpositiveReversesWeakLessEqualProof),
     FloorLowerBound(super::rounding_definition_bounds::FloorLowerBoundProof),
     CeilUpperBound(super::rounding_definition_bounds::CeilUpperBoundProof),
     ExpWeakMonotone(super::exp_ln_order::ExpWeakMonotoneProof),
@@ -143,6 +147,9 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Subtraction bridge: known `0 <= b - a` prove `a <= b`.
     // Example: known `0 <= y - x` proves `x <= y`.
     LessEqualFromNonnegDifference(LessEqualFromNonnegDifferenceBuiltinRuleProof),
+    LessEqualFromNonpositiveDifference(LessEqualFromNonpositiveDifferenceBuiltinRuleProof),
+    NonpositiveDifferenceFromLessEqual(NonpositiveDifferenceFromLessEqualBuiltinRuleProof),
+
     // Subtraction bridge: known `a <= b` prove `0 <= b - a`.
     // Example: known `x <= y` proves `0 <= y - x`.
     NonnegDifferenceFromLessEqual(NonnegDifferenceFromLessEqualBuiltinRuleProof),
@@ -519,6 +526,10 @@ impl Runtime {
             return Ok(Some(LessEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(LessEqualClosedSubtractionBoundBuiltinRuleProof { bound: proof })));
         }
 
+        if let Some(proof) = self.search_negative_common_factor_less_equal(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+
         // Closed numeric is zero-premise (no nested rule search).
         if let Some((cmp, left_normal, right_normal)) =
             compare_closed_numeric_objs(&fact.left, &fact.right)
@@ -587,4 +598,12 @@ pub(super) fn is_zero_obj(obj: &Obj) -> bool {
             normalized_value,
         })) if normalized_value == "0"
     )
+}
+
+pub struct LessEqualFromNonpositiveDifferenceBuiltinRuleProof {
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
+}
+
+pub struct NonpositiveDifferenceFromLessEqualBuiltinRuleProof {
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }

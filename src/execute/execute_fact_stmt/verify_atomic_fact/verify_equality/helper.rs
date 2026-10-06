@@ -6,7 +6,7 @@ use crate::exec_env::known_fact_memory::ObjIR;
 // Empty Vec = no children (should not succeed Matching; caller treats as miss).
 //
 // Covered: numeric ops, FnObj application layers, sets/tuples/carts, ranges,
-// sums/products/reduces, struct params / field access, ObjAtIndex, etc.
+// sums/products/reduces, struct params / field access, ordinary function calls, etc.
 // Not covered (intentional): Identifier/Number/StandardSet leaves; SetBuilder /
 // AnonymousFn / FnSet (binders); InstantiatedTemplateObj (legacy also skips).
 pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Obj, Obj)>> {
@@ -104,10 +104,6 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
         (Obj::SetOperator(SetOperator::PowerSet(l)), Obj::SetOperator(SetOperator::PowerSet(r))) => {
             Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
         }
-        (Obj::ProductShape(ProductShape::CartDim(l)), Obj::ProductShape(ProductShape::CartDim(r))) => {
-            Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
-        }
-        (Obj::ProductShape(ProductShape::TupleDim(l)), Obj::ProductShape(ProductShape::TupleDim(r))) => unary!(l, r),
         (Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(r))) => {
             Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
         }
@@ -170,14 +166,6 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
         (Obj::SetFormer(SetFormer::SeqSet(l)), Obj::SetFormer(SetFormer::SeqSet(r))) => {
             Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
         }
-        (Obj::ProductShape(ProductShape::Proj(l)), Obj::ProductShape(ProductShape::Proj(r))) => Some(vec![
-            (l.set.as_ref().clone(), r.set.as_ref().clone()),
-            (l.dim.as_ref().clone(), r.dim.as_ref().clone()),
-        ]),
-        (Obj::ProductShape(ProductShape::ObjAtIndex(l)), Obj::ProductShape(ProductShape::ObjAtIndex(r))) => Some(vec![
-            (l.obj.as_ref().clone(), r.obj.as_ref().clone()),
-            (l.index.as_ref().clone(), r.index.as_ref().clone()),
-        ]),
         (Obj::ProductShape(ProductShape::Tuple(l)), Obj::ProductShape(ProductShape::Tuple(r))) => slice_pairs!(l.args, r.args),
         (Obj::SetFormer(SetFormer::ListSet(l)), Obj::SetFormer(SetFormer::ListSet(r))) => slice_pairs!(l.list, r.list),
         (Obj::ProductShape(ProductShape::Cart(l)), Obj::ProductShape(ProductShape::Cart(r))) => slice_pairs!(l.args, r.args),
@@ -373,7 +361,7 @@ fn fn_obj_corresponding_arg_pairs(left: &FnObj, right: &FnObj) -> Option<Vec<(Ob
     Some(pairs)
 }
 
-fn fn_obj_prefix_obj(fo: &FnObj, groups_to_keep: usize) -> Obj {
+pub(crate) fn fn_obj_prefix_obj(fo: &FnObj, groups_to_keep: usize) -> Obj {
     if groups_to_keep == 0 {
         return fn_obj_head_as_obj(fo.head.as_ref());
     }
@@ -385,6 +373,7 @@ fn fn_obj_prefix_obj(fo: &FnObj, groups_to_keep: usize) -> Obj {
 
 fn fn_obj_head_as_obj(head: &FnObjHead) -> Obj {
     match head {
+        FnObjHead::Object(obj) => obj.as_ref().clone(),
         FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
         FnObjHead::AnonymousFnLiteral(a) => Obj::FunctionSpace(FunctionSpace::AnonymousFn(a.as_ref().clone())),
         FnObjHead::FieldAccess(v) => {

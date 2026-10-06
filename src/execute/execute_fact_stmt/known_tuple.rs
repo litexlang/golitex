@@ -19,6 +19,14 @@ pub enum KnownTupleShapeProof {
     CartesianMembership(KnownCartesianTupleProof),
     TupleEquality(KnownTupleValueProof),
     FunctionCodomain(KnownFunctionCartesianTupleProof),
+    CartesianCoordinate(KnownCartesianCoordinateTupleProof),
+}
+
+pub struct KnownCartesianCoordinateTupleProof {
+    pub receiver: Box<KnownTupleShapeProof>,
+    pub index: usize,
+    pub carrier_equal: KnownEqualityPathProof,
+    pub cart: Cart,
 }
 
 pub struct KnownCartesianTupleProof {
@@ -75,6 +83,7 @@ impl KnownTupleShapeProof {
             Self::CartesianMembership(p) => p.cart.args.len(),
             Self::TupleEquality(p) => p.value.args.len(),
             Self::FunctionCodomain(p) => p.cart.args.len(),
+            Self::CartesianCoordinate(p) => p.cart.args.len(),
         }
     }
 
@@ -82,6 +91,7 @@ impl KnownTupleShapeProof {
         match self {
             Self::CartesianMembership(p) => Some(&p.cart),
             Self::FunctionCodomain(p) => Some(&p.cart),
+            Self::CartesianCoordinate(p) => Some(&p.cart),
             Self::TupleEquality(_) => None,
         }
     }
@@ -91,6 +101,7 @@ impl KnownTupleShapeProof {
             Self::CartesianMembership(p) => Some(p.membership.fact_id),
             Self::FunctionCodomain(p) => Some(p.membership_proof.cite_property_fact_id),
             Self::TupleEquality(p) => p.tuple_equal.path.first().map(|edge| edge.2),
+            Self::CartesianCoordinate(p) => p.receiver.cite_fact_id(),
         }
     }
 }
@@ -100,8 +111,8 @@ impl Runtime {
         &mut self,
         subject: &Obj,
     ) -> Option<KnownTupleShapeProof> {
-        // Membership must be published on the exact subject. Only its directly
-        // indexed carrier definition may expose a cart constructor.
+        // Prefer membership published on this exact subject. Only a checked
+        // equality path may transport another value's Cartesian membership.
         for property in self.known_special_properties_of(subject) {
             let SpecialProperty::Membership(membership) = property else { continue; };
             let Some((cart, carrier_equal)) = self.known_cart_carrier(&membership.set) else { continue; };
@@ -110,7 +121,33 @@ impl Runtime {
                 membership, carrier_equal, cart,
             }));
         }
+        for (candidate, path) in self.exact_property_object_values(subject) {
+            if path.is_empty() { continue; }
+            for property in self.known_special_properties_of(&candidate) {
+                let SpecialProperty::Membership(membership) = property else { continue; };
+                let Some((cart, carrier_equal)) = self.known_cart_carrier(&membership.set) else { continue; };
+                return Some(KnownTupleShapeProof::CartesianMembership(KnownCartesianTupleProof {
+                    subject_equal: KnownEqualityPathProof::new(path), membership, carrier_equal, cart,
+                }));
+            }
+        }
         if let Obj::FnObj(app) = subject {
+            // The checked call selects one declared Cartesian coordinate.
+            // Descend only through the strictly shorter receiver, preserving
+            // the original membership and carrier-equality certificates.
+            if let Some(receiver) = self.finite_function_application_receiver(app) {
+                if let Some(index) = literal_positive_usize(&app.body.last().unwrap()[0]) {
+                    if let Some(shape) = self.lookup_known_tuple_shape(&receiver) {
+                        if let Some(factor) = shape.cart().and_then(|cart| cart.args.get(index - 1)) {
+                            if let Some((cart, carrier_equal)) = self.known_cart_carrier(factor) {
+                                return Some(KnownTupleShapeProof::CartesianCoordinate(KnownCartesianCoordinateTupleProof {
+                                    receiver: Box::new(shape), index, carrier_equal, cart,
+                                }));
+                            }
+                        }
+                    }
+                }
+            }
             for (signature, _) in self.collect_in_function_set_candidates(&tuple_function_head(app)) {
                 let Some(return_set) = self.applied_fn_set_return_set(app, &signature) else { continue; };
                 let Some((cart, carrier_equal)) = self.known_cart_carrier(&return_set) else { continue; };
@@ -286,6 +323,7 @@ pub(crate) fn literal_positive_usize(obj: &Obj) -> Option<usize> {
 
 pub(in crate::execute) fn tuple_function_head(app: &FnObj) -> Obj {
     match app.head.as_ref() {
+        FnObjHead::Object(obj) => obj.as_ref().clone(),
         FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
         FnObjHead::AnonymousFnLiteral(anon) => {
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.as_ref().clone()))

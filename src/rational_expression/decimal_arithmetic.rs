@@ -188,11 +188,6 @@ fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
                 Some(argument)
             }
         }
-        Obj::ProductShape(ProductShape::CartDim(_)) => None,
-        Obj::ProductShape(ProductShape::TupleDim(tuple_dim)) => match &*tuple_dim.arg {
-            Obj::ProductShape(ProductShape::Tuple(tuple)) => Some(Number::new(tuple.args.len().to_string())),
-            _ => None,
-        },
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(finite_set_size)) => match &*finite_set_size.set {
             Obj::SetFormer(SetFormer::ListSet(list_set)) => Some(Number::new(list_set.list.len().to_string())),
             Obj::SetFormer(SetFormer::ClosedRange(cr)) => {

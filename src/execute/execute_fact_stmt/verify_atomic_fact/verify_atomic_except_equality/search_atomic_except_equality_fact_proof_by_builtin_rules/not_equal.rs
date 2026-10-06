@@ -21,6 +21,8 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
+    CosNonzeroOnFirstQuadrant(super::trig_first_quadrant::CosNonzeroOnFirstQuadrantProof),
+    SinNonzeroOnFirstQuadrant(super::trig_first_quadrant::SinNonzeroOnFirstQuadrantProof),
     LcmNonzeroFromNonzeroOperands(super::common_relation_nonzero::LcmNonzeroFromNonzeroOperandsProof),
     LogNonzeroFromNonunitArgument(super::common_relation_nonzero::LogNonzeroFromNonunitArgumentProof),
     PositiveNonunitIntegerPower(super::common_relation_nonzero::PositiveNonunitIntegerPowerProof),
@@ -388,6 +390,11 @@ impl Runtime {
                 if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref()) {
                     return Ok(Some(proof));
                 }
+                if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnFirstQuadrant(
+                        super::trig_first_quadrant::CosNonzeroOnFirstQuadrantProof { lower_bound_proof, upper_bound_proof },
+                    )));
+                }
             }
             (left, Obj::TrigOperator(TrigOperator::Cos(Cos { arg })))
                 if is_zero_obj(left) =>
@@ -399,6 +406,11 @@ impl Runtime {
                 }
                 if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref()) {
                     return Ok(Some(proof));
+                }
+                if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnFirstQuadrant(
+                        super::trig_first_quadrant::CosNonzeroOnFirstQuadrantProof { lower_bound_proof, upper_bound_proof },
+                    )));
                 }
             }
 
@@ -415,6 +427,11 @@ impl Runtime {
                 if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref()) {
                     return Ok(Some(proof));
                 }
+                if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnFirstQuadrant(
+                        super::trig_first_quadrant::SinNonzeroOnFirstQuadrantProof { lower_bound_proof, upper_bound_proof },
+                    )));
+                }
             }
             (left, Obj::TrigOperator(TrigOperator::Sin(Sin { arg })))
                 if is_zero_obj(left) =>
@@ -428,6 +445,11 @@ impl Runtime {
                 }
                 if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref()) {
                     return Ok(Some(proof));
+                }
+                if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnFirstQuadrant(
+                        super::trig_first_quadrant::SinNonzeroOnFirstQuadrantProof { lower_bound_proof, upper_bound_proof },
+                    )));
                 }
             }
 

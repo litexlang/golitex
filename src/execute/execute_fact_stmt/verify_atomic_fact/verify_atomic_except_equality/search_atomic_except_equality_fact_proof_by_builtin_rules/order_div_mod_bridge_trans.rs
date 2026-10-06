@@ -29,6 +29,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     LessEqualFromNonnegDifferenceBuiltinRuleProof, LessEqualTransitivityBuiltinRuleProof,
     ModRemainderNonnegativeBuiltinRuleProof, NonnegDifferenceFromLessEqualBuiltinRuleProof,
 };
+use super::signed_difference::{difference_spellings, difference_parts};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::parse::keywords::{LESS, LESS_EQUAL};
@@ -54,6 +55,12 @@ impl Runtime {
         if let Some(proof) =
             self.nonneg_difference_from_less_equal_proof(fact, verify_state.clone())?
         {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.less_equal_from_nonpositive_difference_proof(fact)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.nonpositive_difference_from_less_equal_proof(fact)? {
             return Ok(Some(proof));
         }
         if let Some(proof) = self.mod_remainder_nonnegative_proof(fact, verify_state.clone())? {
@@ -91,6 +98,12 @@ impl Runtime {
             return Ok(Some(proof));
         }
         if let Some(proof) = self.pos_difference_from_less_proof(fact, verify_state.clone())? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.less_from_negative_difference_proof(fact)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.negative_difference_from_less_proof(fact)? {
             return Ok(Some(proof));
         }
         if let Some(proof) =
@@ -202,15 +215,14 @@ impl Runtime {
         fact: &LessEqualFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
-        let difference = sub_obj(&fact.right, &fact.left);
-        let Some(premise_proof) = self.known_less_equal_proof(&zero_obj(), &difference) else {
-            return Ok(None);
-        };
-        Ok(Some(
-            LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference(
-                LessEqualFromNonnegDifferenceBuiltinRuleProof { premise_proof },
-            ),
-        ))
+        for difference in difference_spellings(&fact.right, &fact.left) {
+            if let Some(premise_proof) = self.known_signed_difference_order(&zero_obj(), &difference, true) {
+                return Ok(Some(LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference(
+                    LessEqualFromNonnegDifferenceBuiltinRuleProof { premise_proof },
+                )));
+            }
+        }
+        Ok(None)
     }
 
     // `a <= b` implies `0 <= b - a` (order premise must already be known).
@@ -223,13 +235,8 @@ impl Runtime {
         if !is_zero_obj(&fact.left) {
             return Ok(None);
         }
-        let Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })) = &fact.right
-        else {
-            return Ok(None);
-        };
-        let Some(premise_proof) = self.known_less_equal_proof(right.as_ref(), left.as_ref()) else {
-            return Ok(None);
-        };
+        let Some((left, right)) = difference_parts(&fact.right) else { return Ok(None); };
+        let Some(premise_proof) = self.known_signed_difference_order(&right, &left, true) else { return Ok(None); };
         Ok(Some(
             LessEqualFactSearchProofByBuiltinRule::NonnegDifferenceFromLessEqual(
                 NonnegDifferenceFromLessEqualBuiltinRuleProof { premise_proof },
@@ -245,17 +252,14 @@ impl Runtime {
         fact: &LessFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
-        let difference = sub_obj(&fact.right, &fact.left);
-        let premise_proof = if let Some(proof) = self.known_less_proof(&zero_obj(), &difference) {
-            proof
-        } else if let Some(proof) = self.known_greater_proof(&difference, &zero_obj()) {
-            proof
-        } else {
-            return Ok(None);
-        };
-        Ok(Some(LessFactSearchProofByBuiltinRule::LessFromPosDifference(
-            LessFromPosDifferenceBuiltinRuleProof { premise_proof },
-        )))
+        for difference in difference_spellings(&fact.right, &fact.left) {
+            if let Some(premise_proof) = self.known_signed_difference_order(&zero_obj(), &difference, false) {
+                return Ok(Some(LessFactSearchProofByBuiltinRule::LessFromPosDifference(
+                    LessFromPosDifferenceBuiltinRuleProof { premise_proof },
+                )));
+            }
+        }
+        Ok(None)
     }
 
     // `a < b` implies `0 < b - a` (order premise must already be known).
@@ -268,13 +272,8 @@ impl Runtime {
         if !is_zero_obj(&fact.left) {
             return Ok(None);
         }
-        let Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })) = &fact.right
-        else {
-            return Ok(None);
-        };
-        let Some(premise_proof) = self.known_less_proof(right.as_ref(), left.as_ref()) else {
-            return Ok(None);
-        };
+        let Some((left, right)) = difference_parts(&fact.right) else { return Ok(None); };
+        let Some(premise_proof) = self.known_signed_difference_order(&right, &left, false) else { return Ok(None); };
         Ok(Some(LessFactSearchProofByBuiltinRule::PosDifferenceFromLess(
             PosDifferenceFromLessBuiltinRuleProof { premise_proof },
         )))

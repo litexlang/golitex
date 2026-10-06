@@ -552,6 +552,7 @@ impl Runtime {
         path: &[(Obj, Obj, crate::runtime::FactId)], ctx: VerifyState,
     ) -> RuntimeResult<Vec<CompleteFunctionDomainProof>> {
         let head = match application.head.as_ref() {
+            FnObjHead::Object(obj) => obj.as_ref().clone(),
             FnObjHead::Identifier(head) => Obj::Identifier(head.clone()),
             FnObjHead::AnonymousFnLiteral(function) => Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.as_ref().clone())),
             FnObjHead::FieldAccess(access) => Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access.clone())),
@@ -809,7 +810,7 @@ pub(crate) fn function_application(function: &Obj, arguments: Vec<Box<Obj>>) -> 
         Obj::FunctionSpace(FunctionSpace::AnonymousFn(x)) => FnObjHead::AnonymousFnLiteral(Box::new(x.clone())),
         Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(x)) => FnObjHead::FieldAccess(x.clone()),
         Obj::InstantiatedTemplateObj(x) => FnObjHead::InstantiatedTemplateObj(x.clone()),
-        _ => return Err("expected a callable function object".into()),
+        other => FnObjHead::Object(Box::new(other.clone())),
     };
     Ok(Obj::FnObj(FnObj { head: Box::new(head), body: vec![arguments] }))
 }

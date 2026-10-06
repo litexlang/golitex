@@ -20,6 +20,12 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    MulLeftNegativeReversesStrictLess(super::order_negative_common_factor::MulLeftNegativeReversesStrictLessProof),
+    MulRightNegativeReversesStrictLess(super::order_negative_common_factor::MulRightNegativeReversesStrictLessProof),
+    MulLeftRightNegativeReversesStrictLess(super::order_negative_common_factor::MulLeftRightNegativeReversesStrictLessProof),
+    MulRightLeftNegativeReversesStrictLess(super::order_negative_common_factor::MulRightLeftNegativeReversesStrictLessProof),
+    TanPositiveOnFirstQuadrant(super::trig_first_quadrant::TanPositiveOnFirstQuadrantProof),
+    CotPositiveOnFirstQuadrant(super::trig_first_quadrant::CotPositiveOnFirstQuadrantProof),
     SinPositiveOnOpenPi(super::trig_interval_order::SinPositiveOnOpenPiProof),
     SinStrictMonotoneOnHalfPi(super::trig_interval_order::SinStrictMonotoneOnHalfPiProof),
     FloorStrictUpperBound(super::rounding_definition_bounds::FloorStrictUpperBoundProof),
@@ -96,6 +102,9 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Subtraction bridge: known `0 < b - a` prove `a < b`.
     // Example: known `0 < y - x` proves `x < y`.
     LessFromPosDifference(LessFromPosDifferenceBuiltinRuleProof),
+    LessFromNegativeDifference(LessFromNegativeDifferenceBuiltinRuleProof),
+    NegativeDifferenceFromLess(NegativeDifferenceFromLessBuiltinRuleProof),
+
     // Subtraction bridge: known `a < b` prove `0 < b - a`.
     // Example: known `x < y` proves `0 < y - x`.
     PosDifferenceFromLess(PosDifferenceFromLessBuiltinRuleProof),
@@ -561,6 +570,14 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
+        if let Some(proof) = self.search_negative_common_factor_less(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+
+        if let Some(proof) = self.search_first_quadrant_positive_less(fact) {
+            return Ok(Some(proof));
+        }
+
         if let Some(proof) = self.search_sin_interval_order(fact, verify_state)? {
             return Ok(Some(proof));
         }
@@ -781,3 +798,11 @@ impl Runtime {
 #[cfg(test)]
 #[path = "../../../../../../tests/unit/execute/positive_closed_decrement/tests.rs"]
 mod positive_closed_decrement_tests;
+
+pub struct LessFromNegativeDifferenceBuiltinRuleProof {
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
+}
+
+pub struct NegativeDifferenceFromLessBuiltinRuleProof {
+    pub premise_proof: AtomicExceptEqualityFactKnownProof,
+}

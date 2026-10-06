@@ -104,6 +104,7 @@ impl ReleaseAndExpandStmt {
             ReleaseAndExpandStmt::ReleaseThmStmt(x) => x.ir(),
             ReleaseAndExpandStmt::ReleaseStructDefStmt(x) => x.ir(),
             ReleaseAndExpandStmt::ReleaseObjDefStmt(x) => x.ir(),
+            ReleaseAndExpandStmt::ReleaseCartDefStmt(x) => x.ir(),
             ReleaseAndExpandStmt::ExpandRangeStmt(x) => x.ir(),
             ReleaseAndExpandStmt::ReleaseZornLemmaStmt(x) => x.ir(),
             ReleaseAndExpandStmt::ReleaseAxiomOfChoiceStmt(x) => x.ir(),
@@ -1791,5 +1792,10 @@ impl ByStrongInducStmt {
         }
         StmtIR(out)
     }
+    impl_display_pair!();
+}
+
+impl ReleaseCartDefStmt {
+    pub fn ir(&self) -> StmtIR { StmtIR(format!("release cart def {}", self.cart.ir())) }
     impl_display_pair!();
 }

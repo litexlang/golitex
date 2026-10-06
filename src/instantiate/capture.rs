@@ -72,6 +72,7 @@ pub fn collect_free_plain_ids(
         }
         Obj::FnObj(f) => {
             match f.head.as_ref() {
+                crate::ast::obj::FnObjHead::Object(obj) => collect_free_plain_ids(obj, bound, out),
                 crate::ast::obj::FnObjHead::Identifier(id) => {
                     collect_free_plain_ids(&Obj::Identifier(id.clone()), bound, out);
                 }
@@ -192,12 +193,6 @@ pub fn collect_free_plain_ids(
         }
         Obj::ProductShape(ProductShape::Cart(a)) => collect_obj_list(&a.args, bound, out),
         Obj::ProductShape(ProductShape::Tuple(a)) => collect_obj_list(&a.args, bound, out),
-        Obj::ProductShape(ProductShape::CartDim(a)) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::ProductShape(ProductShape::Proj(a)) => {
-            collect_free_plain_ids(&a.set, bound, out);
-            collect_free_plain_ids(&a.dim, bound, out);
-        }
-        Obj::ProductShape(ProductShape::TupleDim(a)) => collect_free_plain_ids(&a.arg, bound, out),
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(a)) => {
             collect_free_plain_ids(&a.set, bound, out)
         }
@@ -242,10 +237,6 @@ pub fn collect_free_plain_ids(
             collect_free_plain_ids(&a.n, bound, out);
         }
         Obj::SetFormer(SetFormer::SeqSet(a)) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::ProductShape(ProductShape::ObjAtIndex(a)) => {
-            collect_free_plain_ids(&a.obj, bound, out);
-            collect_free_plain_ids(&a.index, bound, out);
-        }
         Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(a)) => {
             for o in &a.params {
                 collect_free_plain_ids(o, bound, out);

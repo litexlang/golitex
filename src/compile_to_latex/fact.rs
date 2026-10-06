@@ -50,17 +50,7 @@ pub(super) fn atomic(
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
 ) -> RuntimeResult<String> {
-    if matches!(
-        value,
-        AtomicFact::IsCartFact(_)
-            | AtomicFact::IsTupleFact(_)
-            | AtomicFact::NotIsCartFact(_)
-            | AtomicFact::NotIsTupleFact(_)
-    ) {
-        return Err(RuntimeError::Unsupported(
-            "LaTeX: retired cart/tuple shape predicate AST".into(),
-        ));
-    }
+
     let mut args = Vec::new();
     for arg in atomic_fact_args_ref(value) {
         args.push(obj(arg, modules, lang)?);

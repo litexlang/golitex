@@ -121,6 +121,7 @@ pub(super) fn finite_pullback_map(function: &Obj, domain: &Obj, source: &Obj) ->
         return Some(Obj::FnObj(map));
     }
     Some(match map.head.as_ref() {
+        FnObjHead::Object(obj) => obj.as_ref().clone(),
         FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
         FnObjHead::AnonymousFnLiteral(function) => {
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.as_ref().clone()))

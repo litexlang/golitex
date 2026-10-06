@@ -631,7 +631,7 @@ fn exist_unique_trust_infers_uniqueness_forall() {
         "exist! infer must store uniqueness forall"
     );
     assert!(
-        !facts.known_forall_conclusions.equal_conclusions.is_empty(),
+        !facts.known_forall_conclusions.by_equal.is_empty(),
         "uniqueness forall equal conclusion must be indexed"
     );
     assert!(
@@ -788,11 +788,11 @@ fn stored_forall_indexes_equal_then_in_known_forall_conclusions() {
         "forall must be in facts_by_id"
     );
     assert_eq!(
-        facts.known_forall_conclusions.equal_conclusions.len(),
+        facts.known_forall_conclusions.by_equal.len(),
         1,
-        "atomic `=` then must be indexed under equal_conclusions"
+        "atomic `=` then must be indexed under by_equal"
     );
-    let entry = &facts.known_forall_conclusions.equal_conclusions[0];
+    let entry = &facts.known_forall_conclusions.by_equal.cite(0);
     assert!(matches!(
         entry.location,
         crate::ast::fact::ForallConclusionLocation::DirectThenFact(ref loc)
@@ -3213,4 +3213,53 @@ fn by_def_rechecks_known_predicate_obligations() {
     assert!(!exec_one(&mut runtime, "abstract_prop opaque(x)").is_failed());
     assert!(!exec_one(&mut runtime, "trust $opaque(1)").is_failed());
     assert!(exec_one(&mut runtime, "by def $opaque(1)").is_failed());
+}
+
+
+fn template_function_witness_runtime() -> Runtime {
+    let mut runtime = runtime_with_file_env();
+    for code in [
+        "prop has_equal_function(S nonempty_set, T nonempty_set, f fn(x S) T):\n    exist g fn(x S) T st {g = f}",
+        "template<S nonempty_set, T nonempty_set, f fn(x S) T: $has_equal_function(S, T, f)>:\n    obtain selected_function from $has_equal_function(S, T, f)",
+        "have fn identity(x N) N = x",
+        "witness $has_equal_function(N, N, identity) from identity",
+    ] {
+        assert!(!exec_one(&mut runtime, code).is_failed(), "fixture: {code}");
+    }
+    runtime
+}
+
+#[test]
+fn template_function_witness_atomic_carrier_and_domain() {
+    let mut runtime = template_function_witness_runtime();
+    assert!(!exec_one(&mut runtime, r"\selected_function<N, N, identity>(2) $in N").is_failed());
+    assert!(exec_one(&mut runtime, r"\selected_function<N, N, identity>(1 / 2) $in N").is_failed());
+}
+
+#[test]
+fn template_function_witness_direct_exist_carrier() {
+    let mut runtime = template_function_witness_runtime();
+    assert!(!exec_one(&mut runtime, "template<f fn(x N) N: $has_equal_function(N, N, f)>:\n    obtain direct_selected from exist g fn(x N) N st {g = f}").is_failed());
+    assert!(!exec_one(&mut runtime, r"\direct_selected<identity>(2) $in N").is_failed());
+}
+
+#[test]
+fn template_function_witness_rejects_unsatisfied_guard() {
+    let mut runtime = template_function_witness_runtime();
+    assert!(!exec_one(&mut runtime, "prop function_zero_is_one(f fn(x N) N):\n    f(0) = 1").is_failed());
+    assert!(!exec_one(&mut runtime, "template<f fn(x N) N: $has_equal_function(N, N, f), $function_zero_is_one(f)>:\n    obtain guarded_selected from $has_equal_function(N, N, f)").is_failed());
+    assert!(exec_one(&mut runtime, r"\guarded_selected<identity>(2) $in N").is_failed());
+}
+
+#[test]
+fn template_function_witness_rejects_scalar_witness() {
+    let mut runtime = runtime_with_file_env();
+    for code in [
+        "prop has_equal_scalar(a R):\n    exist b R st {b = a}",
+        "template<a R: $has_equal_scalar(a)>:\n    obtain selected_scalar from $has_equal_scalar(a)",
+        "witness $has_equal_scalar(0) from 0",
+    ] {
+        assert!(!exec_one(&mut runtime, code).is_failed(), "fixture: {code}");
+    }
+    assert!(exec_one(&mut runtime, r"\selected_scalar<0>(2) $in R").is_failed());
 }

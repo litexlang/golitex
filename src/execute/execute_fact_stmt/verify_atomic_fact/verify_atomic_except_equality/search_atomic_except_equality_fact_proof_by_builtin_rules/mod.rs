@@ -11,11 +11,9 @@ pub mod lcm_order;
 pub mod greater;
 pub mod greater_equal;
 pub mod in_fact;
-pub mod is_cart;
 pub mod is_finite_set;
 pub mod is_nonempty_set;
 pub mod is_set;
-pub mod is_tuple;
 pub mod less;
 pub mod less_equal;
 pub mod normal_atomic;
@@ -55,3 +53,9 @@ pub mod gcd_common_divisor_bound;
 
 pub mod trig_interval_order;
 pub mod common_relation_nonzero;
+
+pub mod trig_first_quadrant;
+
+pub mod order_negative_common_factor;
+
+pub mod signed_difference;

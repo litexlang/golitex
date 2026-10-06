@@ -164,29 +164,24 @@ pub(super) fn project_function_evaluations(
             .collect(),
     )
 }
-fn project_function_evaluation(p:&FunctionApplicationEvaluationResult,runtime:&Runtime)->JsonValue {
-    object_for(
-                    runtime,
-                    vec![
-                        ("application", string(p.application.readable_string())),
-                        (
-                            "application_well_defined",
-                            super::wd::project_obj_wd_proof(&p.application_well_defined, runtime),
-                        ),
-                        (
-                            "function_equal",
-                            super::searched::project_known_equality_path(
-                                &p.expansion.function_equal,
-                                runtime,
-                            ),
-                        ),
-                        (
-                            "expanded_body",
-                            string(p.expansion.expanded_body.readable_string()),
-                        ),
-                        ("value", string(p.value.readable_string())),
-                    ],
-                )
+fn project_function_evaluation(p: &FunctionApplicationEvaluationResult, runtime: &Runtime) -> JsonValue {
+    let mut fields = vec![
+        ("application", string(p.application.readable_string())),
+        ("application_well_defined", super::wd::project_obj_wd_proof(&p.application_well_defined, runtime)),
+    ];
+    match &p.expansion {
+        FunctionApplicationExpansionProof::Anonymous(proof) => fields.push((
+            "function_equal", super::searched::project_known_equality_path(&proof.function_equal, runtime),
+        )),
+        FunctionApplicationExpansionProof::CheckedBeta(proof) => fields.push((
+            "function_body", super::function_body::project_parent_checked_function_body(&proof.function_body, runtime),
+        )),
+    }
+    fields.extend([
+        ("expanded_body", string(p.expansion.expanded_body().readable_string())),
+        ("value", string(p.value.readable_string())),
+    ]);
+    object_for(runtime, fields)
 }
 pub(super) fn cites(ids: &[crate::runtime::FactId]) -> JsonValue {
     JsonValue::Array(ids.iter().map(|id| string(id.to_string())).collect())

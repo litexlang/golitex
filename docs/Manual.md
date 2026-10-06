@@ -28,6 +28,7 @@ identity may need the defining equation as an explicit bridge.
 | System pipeline | Follow source input through the complete system and identify each owner's job | [Pipeline and component map](#system-pipeline) |
 | Project organization | Select dependencies/exports and understand names and load order | [Projects](#project-organization) |
 | Syntax and proof/output | Write facts, check WD and read verification results | [Syntax](#syntax-reference), [facts](#factual-statements), [WD](#well-defined-objects), [proof/output](#proof-process) |
+| Basic proof writing | Turn a mathematical sentence into the right declaration, goal, proof block and witness | [Basic decisions](#basic-decisions-before-writing-a-proof) |
 | Dictionaries and practice | Look up native contracts and choose a mathematical proof formulation | [S](#statement-dictionary), [O](#object-dictionary), [F/C](#builtin-atomic-fact-dictionary-and-relationships), [pitfalls](#pitfalls-and-missing-proof-steps), [recipes](#recommended-mathematical-formulations) |
 | Advanced interfaces | Read deeper function, struct and template contracts | [Interface details](#advanced-interface-details) |
 | Native rules and inference | Find extra guarded laws, calculation limits and inference triggers | [Verification rules](#builtin-verification-rules), [inference](#builtin-inference) |
@@ -47,6 +48,13 @@ records the consolidation. The [pipeline and ordering audit](audits/manual-pipel
 records the current whole-system chapter and reading order.
 The [equality/order recipe audit](audits/manual-order-recipes-2026-10-06.json)
 records the checked algebra, translation, sign and sum-of-squares routes.
+The [square/product audit](audits/manual-square-product-2026-10-06.json)
+extends those routes with cancellation, square/absolute-value conversion,
+equality cases, weighted estimates and quadratic certificates.
+The [power catalog audit](audits/manual-power-catalog-2026-10-06.json)
+records the parity, integer-exponent order and common-estimate lookup extension.
+The [proof-basics audit](audits/manual-proof-basics-2026-10-06.json)
+records the introductory writing decisions and their paired scope/logic controls.
 Expected rejections and retained migration examples are labelled and excluded
 from the positive fence collector. An assumed example is not a strict proof.
 The S19, S23 and S24 trust/axiom entries intentionally demonstrate ordinary-mode
@@ -1018,6 +1026,266 @@ them, such as `case` arms and the base/step headers of finite-set induction.
 `by contra` is the sole exception to the empty-tail rule: its last statement
 must always be an explicit `impossible fact`.
 
+### Basic decisions before writing a proof
+
+This is the writing entry for a reader or AI that knows the intended
+mathematics but has not yet chosen its Litex form. The dictionaries own
+the exact contracts; the decisions below connect them into a small proof.
+Keep the mathematical domain, quantifier order and conclusion fixed while
+choosing syntax or repairing a verification miss.
+
+| Decision | Basic distinction | Contract to consult |
+|---|---|---|
+| Introduce or name a value | `have x R` introduces an arbitrary real; `have x R = 2` specifies its value; `let` names an expression | [S04](#s04-arbitrary-members), [S05](#s05-typed-values-given-by-equality), [S03](#s03-equality-aliases) |
+| Define a condition or a function | `prop` names a proposition; `$P(a)` asserts an instance; `have fn` defines a callable value | [R02](#r02-choose-the-language-form-by-mathematical-role), [R04](#r04-a-relation-and-its-selected-value-have-different-roles) |
+| State a conditional result | Put hypotheses before `=>:` and conclusions after it; without the arrow the listed facts are conclusions | [Universal facts](#universal-facts) |
+| Execute proof actions | A bare `forall` contains facts; commands such as `by def`, `witness`, `obtain` and local declarations need a statement/proof surface | [S33](#s33-local-claims) |
+| Use a goal parameter | A claim activates its goal's binders and premises; use those names directly | [S33](#s33-local-claims), [scope](#scope-and-failure) |
+| Prove or consume existence | Supply a value with `witness`; extract a value with `obtain` from an existence fact that verifies | [S35](#s35-existential-witnesses), [S07](#s07-extract-existential-witnesses) |
+| Claim uniqueness | `exist!` requires uniqueness as well as a satisfying witness | [S36](#s36-unique-existential-witnesses) |
+| Use a logical fact | An implication needs its premise; a disjunction does not select a branch | [Compound facts](#conjunctions-chains-and-disjunctions), [S39](#s39-proof-by-exhaustive-cases) |
+| Make an expression meaningful | Put its actual domain/guard in the interface before using it; `N` subtraction and division are not total closure rules | [WD](#well-defined-objects), [P01–P03](#p01-reflexivity-does-not-bypass-well-definedness) |
+| Connect equal expressions | Expose the changed value or defining equation before a larger calculation when needed | [P04](#p04-connect-division-and-multiplication-explicitly), [P05](#p05-a-function-equation-may-need-to-be-exposed-before-substitution), [P07](#p07-name-the-value-equality-before-arithmetic) |
+| Prove equality of structured values | Element membership, set inclusion, set equality and function equality have different obligations | [F01](#f01-membership-and-nonmembership), [S45](#s45-set-extensionality), [S46](#s46-function-extensionality) |
+| Read a failed check | Distinguish parse, WD and proof-search failures; an unknown fact does not prove its negation | [Output](#reading-verifier-output), [P12](#p12-a-search-miss-does-not-disprove-an-inequality) |
+
+#### Separate values, definitions and facts
+
+An arbitrary member is not a chosen numerical value. Naming a mathematical
+expression also does not perform mutable assignment. The calculation below
+keeps the named expression and its intermediate value visible:
+
+```litex
+have arbitrary R
+have chosen R = 2
+let twice = 2*chosen
+twice = 2*chosen = 2*2 = 4
+```
+
+`arbitrary=0` is not justified by its declaration. A second `let` with the
+same active name is a rebinding error, not an update to a variable. Likewise,
+declaring `prop is_above_two(t R): t>2` defines the condition; it does not
+establish that an arbitrary real satisfies it. Establish the instance:
+
+```litex
+prop is_above_two(t R):
+    t > 2
+have a R = 3
+by def $is_above_two(a)
+```
+
+The defining function equation and a declared output carrier have separate
+roles too. A return carrier makes a value usable at that type; it does not
+give every equation one might want about the value. See the
+[function-law example](#prove-a-law-of-the-function).
+
+#### Make the goal, hypotheses and block role explicit
+
+**Checked goal/proof form:** the `? forall` header introduces `x` and its
+local hypothesis. The body uses that same `x` and executes the proof action.
+After success the universal result is available at a concrete argument.
+
+```litex
+prop is_positive(t R):
+    t > 0
+claim:
+    ? forall x R:
+        x > 0
+        =>:
+            $is_positive(x)
+    by def $is_positive(x)
+have a R = 3
+$is_positive(a)
+```
+
+The explicit `by def` command belongs in the proof body. Moving it into
+the conclusions of a bare `forall` is a parse error:
+
+<!-- litex:skip-test -->
+```litex
+prop is_positive(t R):
+    t > 0
+forall x R:
+    x > 0
+    =>:
+        by def $is_positive(x)
+```
+
+A bare universal may state the factual conclusion `$is_positive(x)` directly
+when its verification route already works; `claim` is the surface for the
+explicit command, not a mandatory wrapper for every true universal.
+
+Without `=>:`, `forall x R: x>0; x!=0` claims both conclusions for every
+real and is false. With the arrow, the first is a hypothesis for the second:
+
+```litex
+forall x R:
+    x > 0
+    =>:
+        x != 0
+```
+
+Claim parameters and local hypotheses do not become global names or facts.
+Do not reintroduce an already active `x` with another `forall x`, or use it
+after the claim. A statement such as `(1/2)*2=1` proves one numerical instance;
+it does not prove `forall x R: (1/2)*x=1`. For a universal proof, work with
+the active arbitrary parameter and the exact stated hypotheses.
+
+#### Preserve witness dependencies and distinguish existence from uniqueness
+
+**Checked dependent witness:** in “for every `x`, there is a `y`”, the
+witness may depend on the active `x`. Choose it inside that scope.
+
+```litex
+claim:
+    ? forall x R:
+        exist y R st {y = x+1}
+    witness exist y R st {y = x+1} from x+1
+```
+
+A single `have y R = 1` outside the universal is a fixed value and cannot
+stand for this varying witness. Keep quantifier order and dependencies intact.
+
+**Checked introduction and elimination:** first supply a satisfying value,
+then extract a named value from the verified existence fact.
+
+```litex
+witness exist w R st {w^2 = 4} from 2
+obtain root from exist w R st {w^2 = 4}
+root^2 = 4
+```
+
+`obtain` checks its source itself. A separate identical `exist` line before
+it is unnecessary when that check already succeeds. It cannot manufacture
+an unproved existence fact, such as a real root with `w^2=-1`.
+A witness proves the substituted body; it need not repeat that same body in
+an indented proof unless an actual intermediate step is needed.
+
+Uniqueness is an additional mathematical obligation. Supplying `2` proves
+`exist w R st {w^2=4}` but not `exist!`: `-2` is another solution. The linear
+specification has a unique witness:
+
+```litex
+witness exist! w R st {w = 2} from 2
+```
+
+Finally, `forall x S` does not assert that `S` is nonempty. An empty-domain
+universal can be true vacuously, while `have x S` needs nonemptiness. See
+[P06](#p06-arbitrary-have-needs-nonemptiness) and the
+[empty-domain discussion](#universal-facts).
+
+#### Keep logical directions and branches separate
+
+If `P(x)=>Q(x)` is available, first establish `P(x)` before using its
+conclusion. `Q(x)` alone does not give the converse. The following strict
+example uses abstract predicate signatures and local mathematical hypotheses;
+no instances of either predicate are assumed globally:
+
+```litex
+abstract_prop is_first(x)
+abstract_prop is_second(x)
+forall x R:
+    $is_first(x)
+    forall t R:
+        $is_first(t)
+        =>:
+            $is_second(t)
+    =>:
+        $is_second(x)
+```
+
+Similarly, `P(x) or Q(x)` gives neither selected branch. To prove one common
+conclusion, establish it in both cases. Empty branch bodies are sufficient
+here because each case plus its supplied implication already closes the goal:
+
+```litex
+abstract_prop is_first(x)
+abstract_prop is_second(x)
+abstract_prop is_result(x)
+claim:
+    ? forall x R:
+        $is_first(x) or $is_second(x)
+        forall t R:
+            $is_first(t)
+            =>:
+                $is_result(t)
+        forall t R:
+            $is_second(t)
+            =>:
+                $is_result(t)
+        =>:
+            $is_result(x)
+    by cases:
+        ? $is_result(x)
+        case $is_first(x)
+        case $is_second(x)
+```
+
+Use the [fact-shape grammar](#binder-and-fact-shape-guide) when combining
+quantifiers and logical operators. Mathematical equivalence does not imply
+that arbitrary nested logical source forms are valid grammar.
+
+#### Check the exact object, domain and mathematical claim
+
+The following facts have related meanings but distinct argument roles:
+
+```litex
+have A set = {1,2}
+1 $in A
+{1} $subset A
+{1} $in power_set(A)
+```
+
+The first membership concerns a number, the inclusion concerns a set, and
+the last membership concerns a subset as a member of a power set. Set
+equality requires both inclusion directions. Function equality requires
+the complete domain and agreement there; `f(0)=g(0)` supplies only one
+application equality. For example, `f(t)=t` and `g(t)=t^2` agree at `0` but
+differ at `2`. Use [extensionality](#s46-function-extensionality) when that
+is the mathematical goal.
+
+Keep carrier and arithmetic conditions attached to operations. For natural
+`n`, `n-1` need not be natural because `n` may be zero. The guarded version is:
+
+```litex
+forall n N+:
+    n-1 $in N
+```
+
+Closed rational arithmetic is exact, not a floating-point tolerance check:
+
+```litex
+1/3 != 0.333333
+1/3 + 1/6 = 1/2
+```
+
+`eval` computes on its supported executable surface; it is not a replacement
+for the symbolic universal statement one intended to prove. Likewise, a few
+numerical examples do not replace a universal proof.
+
+#### A short write-check-edit loop
+
+1. Write the exact goal, carrier, hypotheses and witness dependencies.
+2. Choose the mathematical action and its S/O/F entry; use an existing native
+   or library interface before recreating its definition locally.
+3. Make the target and declared interface WD before their proof bodies.
+   A later proof-body fact cannot repair a rejected goal header.
+4. Check the first failing stage. Fix syntax, a justified domain obligation,
+   or the smallest missing mathematical bridge at that point. Preserve the
+   theorem's meaning; do not add an unproved premise or `trust` to force success.
+5. After a proof works, try the shorter route and remove redundant echoes;
+   retain the mathematical spine and demonstrated bridges. Replay the complete
+   snippet in a clean strict context and inspect its run/statement results.
+
+An entry saying that a bridge was needed in an audited build is dated evidence,
+not a permanent requirement to repeat it in every later version. The same
+principle applies to a recorded direct-search miss. Use the current checker
+and keep version-specific observations distinct from the mathematical contract.
+
+The [proof-basics audit](audits/manual-proof-basics-2026-10-06.json) records
+the checked snippets and controls for definition/truth, scope, quantifier
+dependency, implication direction, disjunction selection and uniqueness.
+
 ### The core loop
 
 For an ordinary atomic fact, Litex follows this public progression:
@@ -1165,6 +1433,34 @@ Coordinate bounds remain mandatory. See the
 [coordinate tracer](../examples/infer/atomic/cart_exact_function_coordinates.lit)
 and [nested-call tracer](../examples/proof_nodes/equal/by_object_definition/by_fn_application/finite_function_coordinate_call.lit).
 
+Stored `forall` equality conclusions use a nested constructor index for both
+endpoints, with parameter holes, function positions and separate application
+groups. Fixed objects retain their actual identities and may match through
+existing equality paths. Binder objects use conservative index branches and
+still require the full alpha/capture checks. An index hit only selects a
+candidate: instantiated parameter carriers and domain facts remain mandatory.
+
+During argument matching, a subtree containing none of the selected forall's
+parameters first checks equality of the complete value at Direct permission.
+On a miss, supported matching constructors descend to Direct-only leaves;
+this does not restart forall, definition or rewrite search. A function
+parameter can bind a curried function-valued prefix. For example:
+
+```litex
+forall f, g fn(x R) R, a R:
+    f(0) = g(0)
+    forall y R:
+        y + f(0) = y
+    =>:
+        a + g(0) = a
+```
+
+Here `f(0)` is fixed relative to the inner parameter `y`; its existing
+equality with `g(0)` supplies the argument transport. This does not assert
+that the functions `f` and `g` are equal. The
+[rigid-application tracer](../examples/proof_nodes/equal/by_known_forall/rigid_application_alias.lit)
+has executable missing-equality and wrong-carrier controls in its focused tests.
+
 ### Reading verifier output
 
 Default Normal JSON identifies each statement, its success or failure,
@@ -1272,6 +1568,9 @@ statement's body. The examples in the dictionaries show the active-binder form.
 
 | Mathematical intention | Route through the dictionary |
 |---|---|
+| Choose basic declaration, proof and scope actions for a mathematical sentence | [Basic writing decisions](#basic-decisions-before-writing-a-proof) |
+| Construct a witness that depends on a universally quantified input | [Witness dependencies](#preserve-witness-dependencies-and-distinguish-existence-from-uniqueness) → [S35](#s35-existential-witnesses) |
+| Use an implication or a disjunction without reversing or selecting it | [Logical directions](#keep-logical-directions-and-branches-separate) → [S39](#s39-proof-by-exhaustive-cases) |
 | Define the reciprocal on nonzero reals | [R01](#r01-define-and-use-a-reciprocal-function) → [S01](#s01-expression-defined-functions) → [O01](#o01-division) |
 | Make `1 / x` meaningful | [O01 domain](#domain-and-well-definedness) → [P01](#p01-reflexivity-does-not-bypass-well-definedness) |
 | Learn what follows from a carrier declaration | [F01 relationships](#relationships-with-other-facts) |
@@ -1286,6 +1585,16 @@ statement's body. The examples in the dictionaries show the active-binder form.
 | Multiply or divide an inequality | [R08](#r08-scale-an-inequality-with-the-correct-sign) → [P13](#p13-preserve-sign-strictness-and-expression-shape) |
 | Prove a polynomial bound using sums of squares | [R09](#r09-build-a-sum-of-squares-proof) |
 | Use an absolute-value or triangle bound | [R10](#r10-expose-absolute-value-bounds) → [P13](#p13-preserve-sign-strictness-and-expression-shape) |
+| Determine a product's sign, detect zero factors, or cancel a factor | [R11](#r11-product-signs-zero-factors-and-cancellation) |
+| Multiply bounds for two varying nonnegative factors | [R11 product bounds](#bound-a-product-with-two-varying-factors) |
+| Compare squares, recover absolute values, or take square roots | [R12](#r12-squares-absolute-values-and-equality-cases) |
+| Bound a squared sum, use a weighted estimate or two-dimensional Cauchy–Schwarz | [R13](#r13-reusable-quadratic-certificates) |
+| Find when a square-based bound is an equality | [R12 zero cases](#zero-and-strictly-positive-square-sums), [R13 equality cases](#recover-the-equality-case) |
+| Clear positive denominators or bound a general positive quadratic | [R14](#r14-clear-denominators-and-bound-a-positive-quadratic) |
+| Use even powers, odd-power signs, or power zero cases | [R15 parity](#power-signs-parity-and-zero-cases) → [O27](#o27-powers) |
+| Decide which direction a power inequality takes | [R15](#r15-power-signs-and-two-kinds-of-monotonicity) |
+| Compare powers with different integer exponents | [R15 exponent order](#order-arbitrary-integer-exponents) |
+| Find a familiar scalar inequality and its checked proof | [R16](#r16-common-real-inequalities-at-a-glance) |
 | Construct a uniquely specified callable value | [S13](#s13-functions-from-unique-existence), [S36](#s36-unique-existential-witnesses) |
 | Prove an image value has a source | [S09](#s09-extract-function-preimages), [O81](#o81-function-images) |
 | Prove a set or function equality | [S45](#s45-set-extensionality), [S46](#s46-function-extensionality) |
@@ -4369,6 +4678,9 @@ forall x R:
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
+For checked signs, parity and order recipes, see
+[R15 power signs and monotonicity](#r15-power-signs-and-two-kinds-of-monotonicity).
+
 ### O28. Real absolute value
 
 **Public form:** `abs(x)`.
@@ -5673,7 +5985,15 @@ finite_set_size(cart()) = 1
 
 **Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
-**Nearest boundary.** Use ordinary function calls on a named value; old [index] syntax and tuple_dim are removed. A singleton uses tuple(value), since (value) is grouping.
+**Nearest boundary.** Ordinary calls also accept literal tuple heads: `(1,2)(1)=1` and `((1,2),3)(1)(2)=2`. Every call checks its receiver's complete domain; `(1,2)(3)` and `((1,2),3)(2)(1)` fail WD. Old `[index]`, dimension and constructor-projection syntax is removed. A singleton uses `tuple(value)`, since `(value)` is grouping.
+
+`release cart def cart(A,B)` verifies and stores the complete equality
+`cart(A,B)={p finite_seq(union(A,B),2):p(1) $in A,p(2) $in B}`.
+It also supports `cart(A)` and `cart()`; the zero-factor definition is
+`cart()=finite_seq({},0)`. Factors must be sets, the command accepts one
+`cart(...)` constructor with no body, and failures publish no partial facts.
+See [the command tracer](../examples/stmt_nodes/release_and_expand/release_cart_def.lit).
+
 
 **Checked example.**
 
@@ -5681,6 +6001,7 @@ finite_set_size(cart()) = 1
 have p cart(R, Z) = (1, 2)
 p(1) = 1
 p(2) = 2
+(fn(x R) R {x}, 0)(1)(2) = 2
 ```
 
 **Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O78` in the [inventory and verification record](audits/reference-inventory-2026-10-06.json).
@@ -7829,6 +8150,735 @@ It also records shorter-route/deletion attempts and sign/strictness/domain
 controls. [The native order table](#order-and-comparison-rules) gives the
 broader guarded families; these recipes give the checked proof sequences.
 
+### R11. Product signs, zero factors and cancellation
+
+**Ordinary mathematics:** multiplication combines two signs. Applying it to
+an order relation additionally needs the common factor's sign. Cancelling a
+factor needs nonzeroness; its sign determines the direction for order.
+These are separate obligations, even when they concern the same product.
+
+| Mathematical task | Exact condition | Useful conclusion or route |
+|---|---|---|
+| Nonnegative product | `a>=0`, `b>=0`, or both `a<=0`, `b<=0` | `a*b>=0` |
+| Positive product | Both strictly positive or both strictly negative | `a*b>0`; a zero endpoint would invalidate strictness |
+| Opposite weak signs | `a>=0`, `b<=0` | `a*b<=0`; expose `a*b<=a*0=0` |
+| Opposite strict signs | `a>0`, `b<0` | `a*b<0`; expose `a*b<a*0=0` |
+| Nonzero product | `a!=0`, `b!=0` | `a*b!=0` |
+| Zero product | `a*b=0` | `a=0 or b=0`; this does not select either factor |
+| Select a zero factor | `a*b=0`, `b!=0` | `a=0` |
+| Cancel in equality | `a*k=b*k`, `k!=0` | `a=b` |
+| Cancel in weak order | `a*k<=b*k`, `k>0` | `a<=b` |
+| Cancel a negative factor | `a*k<=b*k`, `k<0` | `a>=b` |
+
+All operands here are real. [R08](#r08-scale-an-inequality-with-the-correct-sign)
+covers multiplication/division by one fixed factor; this entry covers sign
+combinations, reverse use and two varying factors.
+
+**Checked direct sign and zero facts:**
+
+```litex
+forall a, b R:
+    a <= 0
+    b <= 0
+    =>:
+        0 <= a*b
+forall a, b R:
+    a > 0
+    b > 0
+    =>:
+        a*b > 0
+forall a, b R:
+    a < 0
+    b < 0
+    =>:
+        a*b > 0
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a*b != 0
+forall a, b R:
+    a*b = 0
+    =>:
+        a = 0 or b = 0
+forall a, b R:
+    a*b = 0
+    b != 0
+    =>:
+        a = 0
+```
+
+**Checked opposite-sign routes:** in the audited build, the displayed
+translation through the zero product supplies the step that the bare goal
+misses. It applies positive/nonnegative multiplication to `b<=0` or `b<0`.
+
+```litex
+claim:
+    ? forall a, b R:
+        0 <= a
+        b <= 0
+        =>:
+            a*b <= 0
+    a*b <= a*0 = 0
+claim:
+    ? forall a, b R:
+        0 < a
+        b < 0
+        =>:
+            a*b < 0
+    a*b < a*0 = 0
+```
+
+**Checked cancellation:** divide the original product expressions by the
+same nonzero factor, then use their equalities with the endpoints.
+
+```litex
+claim:
+    ? forall a, b, k R:
+        k > 0
+        a*k <= b*k
+        =>:
+            a <= b
+    a = (a*k)/k <= (b*k)/k = b
+claim:
+    ? forall a, b, k R:
+        k < 0
+        a*k <= b*k
+        =>:
+            a >= b
+    a = (a*k)/k >= (b*k)/k = b
+claim:
+    ? forall a, b, k R:
+        k != 0
+        a*k = b*k
+        =>:
+            a = b
+    a = (a*k)/k = (b*k)/k = b
+```
+
+The bare cancellation conclusions miss in fresh audited runs; these chains
+verify. `k>=0` is insufficient for cancellation because it includes `k=0`.
+For example, `2*0=1*0` gives no equality or order between `2` and `1`.
+
+#### Bound a product with two varying factors
+
+**Ordinary mathematics:** if `0<=a<=b` and `0<=c<=d`, then `a*c<=b*d`.
+The weak bound verifies directly. For a strict result, one comparison must
+be strict and the factor multiplying that comparison must be positive.
+
+```litex
+forall a, b, c, d R:
+    0 <= a
+    a <= b
+    0 <= c
+    c <= d
+    =>:
+        a*c <= b*d
+claim:
+    ? forall a, b, c, d R:
+        0 <= a
+        a < b
+        0 < c
+        c <= d
+        =>:
+            a*c < b*d
+    a*c < b*c <= b*d
+```
+
+The shared intermediate product is `b*c`. The second factor's domain makes
+the first step strict; the first factor's bounds supply the nonnegative `b`
+needed by the second step. Merely knowing `a<=b` and `c<=d` is insufficient
+when signs are unrestricted: `-2<=-1`, `-3<=-2`, but `6>2`.
+
+### R12. Squares, absolute values and equality cases
+
+**Ordinary mathematics:** a square measures magnitude. Order on squares
+therefore compares absolute values; order on the original signed values
+requires a sign restriction. A real square is zero exactly when its base is
+zero. Use that fact to recover the equality cases of nonnegative bounds.
+
+| Mathematical task | Recommended statement or route |
+|---|---|
+| Remove the sign before squaring | `abs(x)^2 = x^2` |
+| Take the root of a square on all reals | `sqrt(x^2) = abs(x)` |
+| Take the root of a square with `x>=0` | `sqrt(x^2) = x` |
+| Square a square root with `x>=0` | `sqrt(x)^2 = x` |
+| Separate a product's magnitude | `abs(x*y) = abs(x)*abs(y)` |
+| Remove absolute value from a square | `abs(x^2) = x^2` |
+| Compare magnitudes | `a^2<=b^2` gives `abs(a)<=abs(b)` |
+| Recover signed order from squares | With `a,b>=0`, `a^2<=b^2` gives `a<=b` |
+| Recover zero from a square | `x^2=0` gives `x=0` |
+| Recover zero from a square sum | `a^2+b^2=0` gives `a=b=0` |
+
+**Checked conversion identities:**
+
+```litex
+forall x R:
+    abs(x)^2 = x^2
+    sqrt(x^2) = abs(x)
+    abs(x^2) = x^2
+forall x, y R:
+    abs(x*y) = abs(x)*abs(y)
+forall x R:
+    0 <= x
+    =>:
+        sqrt(x^2) = x
+        sqrt(x)^2 = x
+```
+
+**Checked square-order directions:** the forward magnitude bound verifies
+directly. The reverse direction uses square monotonicity on nonnegative
+absolute values, with equality transport at the endpoints.
+
+```litex
+forall a, b R:
+    a^2 <= b^2
+    =>:
+        abs(a) <= abs(b)
+claim:
+    ? forall a, b R:
+        abs(a) <= abs(b)
+        =>:
+            a^2 <= b^2
+    a^2 = abs(a)^2 <= abs(b)^2 = b^2
+```
+
+**Checked signed reflection:** expose the square-root domain facts before
+using root monotonicity, then remove the roots using the nonnegative bases.
+
+```litex
+claim:
+    ? forall a, b R:
+        0 <= a
+        0 <= b
+        a^2 <= b^2
+        =>:
+            a <= b
+    0 <= a^2
+    0 <= b^2
+    a = sqrt(a^2) <= sqrt(b^2) = b
+```
+
+Deleting either square-domain statement makes the root comparison miss in
+the audited build. They are verified domain bridges, not extra hypotheses.
+For squaring in the forward direction, use the nonnegative-base example in
+[R09](#r09-build-a-sum-of-squares-proof).
+
+#### Zero and strictly positive square sums
+
+**Checked zero and strict cases:** a nonzero summand's base is sufficient
+for strict positivity of a two-square sum. Conversely, a zero square sum
+forces both bases to zero.
+
+```litex
+forall x R:
+    x^2 = 0
+    =>:
+        x = 0
+forall x, y R:
+    x != 0
+    =>:
+        x^2+y^2 > 0
+forall a, b R:
+    a^2+b^2 = 0
+    =>:
+        a = 0
+        b = 0
+```
+
+Equal squares do not select a sign: `(-2)^2=2^2` and `not -2=2`.
+Likewise `sqrt((-2)^2)=2`, not `-2`. Establish a nonnegative base before
+removing the absolute value from a square root.
+
+### R13. Reusable quadratic certificates
+
+**Ordinary mathematics:** several frequently used estimates share one
+proof route: write `upper-lower` as a nonnegative square (possibly divided
+by a positive parameter), save its nonnegative orientation and compare
+the endpoints. The mathematical certificate is the important reusable idea;
+each displayed proof composes existing native equalities and order rules.
+These are not additional named native predicates or automatic tactics.
+
+| Useful bound | Nonnegative difference | Domain |
+|---|---|---|
+| `4*a*b <= (a+b)^2` | `(a-b)^2` | Any real `a,b` |
+| `(a+b)^2 <= 2*(a^2+b^2)` | `(a-b)^2` | Any real `a,b` |
+| `2*a*b <= t*a^2+b^2/t` | `(t*a-b)^2/t` | Real `a,b`; `t>0` |
+| `(a*c+b*d)^2 <= (a^2+b^2)*(c^2+d^2)` | `(a*d-b*c)^2` | Any real `a,b,c,d` |
+
+**Checked squared-sum and product bounds:** both allow signed inputs.
+
+```litex
+claim:
+    ? forall a, b R:
+        4*a*b <= (a+b)^2
+    (a+b)^2-4*a*b = (a-b)^2 >= 0
+    0 <= (a+b)^2-4*a*b
+claim:
+    ? forall a, b R:
+        (a+b)^2 <= 2*(a^2+b^2)
+    2*(a^2+b^2)-(a+b)^2 = (a-b)^2 >= 0
+    0 <= 2*(a^2+b^2)-(a+b)^2
+```
+
+**Checked weighted bound:** choosing a positive `t` adjusts the cost of
+the two square terms. This is useful when a proof has unequal coefficients.
+Positivity gives both the denominator's WD and the certificate's sign.
+
+```litex
+claim:
+    ? forall a, b, t R:
+        0 < t
+        =>:
+            2*a*b <= t*a^2+b^2/t
+    t*a^2+b^2/t-2*a*b = (t*a-b)^2/t >= 0
+    0 <= t*a^2+b^2/t-2*a*b
+```
+
+For `t<0`, the claimed direction is invalid: `a=1`, `b=0`, `t=-1` would
+require `0<=-1`. At `t=0`, the formula has an undefined denominator.
+The parameter's condition is part of the mathematical interface.
+
+**Checked two-dimensional Cauchy–Schwarz:** the identity also connects the
+dot product and the complementary determinant. It works for all signed
+real inputs and is a direct certificate for a degree-four polynomial bound.
+
+```litex
+claim:
+    ? forall a, b, c, d R:
+        (a*c+b*d)^2 <= (a^2+b^2)*(c^2+d^2)
+    (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2 = (a*d-b*c)^2 >= 0
+    0 <= (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2
+```
+
+Both certificate statements are needed in the audited proof. The bare
+target misses; the full route verifies in strict mode. This example proves
+the two-dimensional instance. A general finite-dimensional theorem would
+need its own statement, summation interface and proof.
+
+#### Recover the equality case
+
+**Ordinary mathematics:** once a bound was obtained from a square, equality
+forces that square to zero. Its base must then be zero. For the bound in
+R06 this yields `a=b`; for the Cauchy certificate it yields `a*d=b*c`.
+
+```litex
+claim:
+    ? forall a, b R:
+        a^2+b^2 = 2*a*b
+        =>:
+            a = b
+    (a-b)^2 = a^2+b^2-2*a*b = 0
+    a-b = 0
+claim:
+    ? forall a, b, c, d R:
+        (a*c+b*d)^2 = (a^2+b^2)*(c^2+d^2)
+        =>:
+            a*d = b*c
+    (a*d-b*c)^2 = (a^2+b^2)*(c^2+d^2)-(a*c+b*d)^2 = 0
+    a*d-b*c = 0
+```
+
+The final difference equalities connect the recovered zero base to the
+requested equality. They supply the matching premise rather than inventing
+an extra equality assumption.
+
+### R14. Clear denominators and bound a positive quadratic
+
+**Ordinary mathematics:** a positive common denominator lets a product
+bound and a fractional bound express the same order. When the denominator
+has unknown sign, prove its sign or split into cases before the move.
+
+**Checked cross-multiplication in both directions:** the two denominators
+are individually positive, so their product is positive. The displayed
+chains preserve the original expressions while multiplying or dividing.
+
+```litex
+claim:
+    ? forall a, b, c, d R:
+        0 < b
+        0 < d
+        a/b <= c/d
+        =>:
+            a*d <= c*b
+    (a/b)*b <= (c/d)*b
+    a*d = ((a/b)*b)*d <= ((c/d)*b)*d = c*b
+claim:
+    ? forall a, b, c, d R:
+        0 < b
+        0 < d
+        a*d <= c*b
+        =>:
+            a/b <= c/d
+    0 < b*d
+    a/b = (a*d)/(b*d) <= (c*b)/(b*d) = c/d
+```
+
+Nonzeroness alone permits the divisions but does not justify their order
+direction. Use [R08](#r08-scale-an-inequality-with-the-correct-sign) for
+negative denominators.
+
+#### Complete a general positive quadratic
+
+**Ordinary mathematics:** when `a>0`, the quadratic `a*x^2+b*x+c` has lower
+bound `c-b^2/(4*a)`. Complete the square:
+`a*(x+b/(2*a))^2 + c-b^2/(4*a)`.
+
+**Checked recommended form:** encode the positive coefficient with `R+`
+and divide by `a` and the closed constants in separate expression nodes.
+Thus `(b^2/a)/4` is the same mathematical bound, and `(b/a)/2` is the same
+shift. The expressions make the denominator obligations directly usable.
+
+```litex
+claim:
+    ? forall a R+, b, c, x R:
+        a*x^2+b*x+c >= c-(b^2/a)/4
+    a*(x+(b/a)/2)^2 >= 0
+    a*x^2+b*x+c = a*(x+(b/a)/2)^2+(c-(b^2/a)/4) >= 0+(c-(b^2/a)/4) = c-(b^2/a)/4
+```
+
+The equality checks the algebraic identity; the product is nonnegative
+because the coefficient is positive and the other factor is a real square.
+The bound is attained at `x=-(b/a)/2`, where that square is zero.
+
+The equivalent literal goal with denominator `4*a` fails at goal WD in the
+audited build, before the proof body can supply extra facts. That is a
+representation/domain-evidence boundary, not a mathematical exception to
+the formula. The reassociated form above verifies the same mathematical
+lower bound without adding a hypothesis. For `a<0`, the square term instead
+gives an upper bound; for `a=0`, this completed-square formula is undefined.
+
+#### Checked counterexamples for the square/product routes
+
+These examples illustrate why zero cancellation, unsigned square reflection
+and multiplication of unrelated signed bounds need their stated conditions.
+
+```litex
+2*0 = 1*0
+not 2 <= 1
+(-2)^2 = 2^2
+not -2 = 2
+sqrt((-2)^2) = 2
+not sqrt((-2)^2) = -2
+-2 <= -1
+-3 <= -2
+(-2)*(-3) > (-1)*(-2)
+1*0 = 0
+not 1 = 0
+not 2*1*0 <= (-1)*1^2+0^2/(-1)
+```
+
+**Evidence for R11–R14:** the
+[square/product audit](audits/manual-square-product-2026-10-06.json)
+records the strict standalone examples, false sign/zero/square controls,
+direct-search observations and deletion checks. Direct facts and composed
+proofs are labelled separately. None requires `trust`, `axiom`, or imports.
+
+### R15. Power signs and two kinds of monotonicity
+
+**Ordinary mathematics:** decide which input to `a^t` is changing. Holding
+the exponent fixed and increasing the base is different from holding the
+base fixed and increasing the exponent. Specify the exponent's domain, the
+base's sign and its position relative to `1` before applying an order rule.
+
+| Task | Exact conditions | Conclusion | Checked route here |
+|---|---|---|---|
+| Nonnegative even power | `x` real, `n` natural | `x^(2*n)>=0` | Write it as `(x^n)^2` |
+| Strictly positive even integer power | `x` nonzero real, `n` integer | `x^(2*n)>0` | Expose `x^n!=0`, then the square |
+| Negative odd natural power | `x<0`, `n` natural | `x^(2*n+1)<0` | Factor out a positive even power |
+| Positive real power | `a>0`, `t` real | `a^t>0` | Direct checked fact |
+| Increase the base | `0<=a<=b`, `n` positive natural | `a^n<=b^n` | Direct checked fact |
+| Increase the integer exponent | `a>=1`, integers `m<=n` | `a^m<=a^n` | Nonnegative exponent gap |
+| Strict integer-exponent growth | `a>1`, integers `m<n` | `a^m<a^n` | Positive gap and positive factor |
+| Decrease with the integer exponent | `0<a<=1`, integers `m<=n` | `a^n<=a^m` | Unit-interval power and gap |
+| Strict decrease by one exponent | `0<a<1`, integer `n` | `a^(n+1)<a^n` | Multiply by the base |
+| Upper range on a unit interval | `0<=a<=1`, `n` positive natural | `0<=a^n<=a` | Induction and nonnegative multiplication |
+| Lower range above one | `a>=1`, `n` positive natural | `a<=a^n` | The integer-exponent order result |
+
+For real exponents, the same mathematical exponent-order directions hold
+on a positive base: above `1` they increase, in `(0,1)` they decrease, and
+at `1` they are constant. Strict growth requires `a>1`, not merely `a>=1`.
+For a fixed real exponent on positive bases, positive exponents preserve
+base order, negative exponents reverse it, and exponent zero is constant.
+The general-order code certified in this section uses **integer exponents**;
+the base-order code uses **positive natural exponents**. The real-exponent
+WD/positivity example does not certify a general real-exponent order rule.
+
+#### Power signs, parity and zero cases
+
+**Checked even powers:** the natural version permits a zero base, including
+`n=0` under Litex's `0^0=1` convention. The integer version permits negative
+exponents and therefore states its nonzero base domain as `R*`.
+
+```litex
+claim:
+    ? forall x R, n N:
+        x^(2*n) >= 0
+    x^(2*n) = (x^n)^2 >= 0
+claim:
+    ? forall x R*, n Z:
+        x^(2*n) > 0
+    x^n != 0
+    x^(2*n) = (x^n)^2 > 0
+```
+
+The first identity is a power-of-power equality followed by real-square
+nonnegativity. The second proof additionally exposes the intermediate
+power's nonzeroness; it is a necessary bridge in the audited proof. Saying
+that an exponent is `2*t` is insufficient when `t` is an arbitrary real:
+`t=1/4` makes the exponent `1/2`, with a different domain and no parity claim.
+
+**Checked odd negative powers:** retain the sign of the base and split the
+odd exponent into its even part plus one.
+
+```litex
+claim:
+    ? forall x R, n N:
+        x < 0
+        =>:
+            x^(2*n+1) < 0
+    x != 0
+    x^n != 0
+    x^(2*n+1) = x^(2*n)*x^1 = x^(2*n)*x = (x^n)^2*x < (x^n)^2*0 = 0
+```
+
+**Checked constants, output signs and zero recovery:** positive bases admit
+all real exponents. Zero powers follow their own natural-exponent convention;
+recovering a zero base requires a strictly positive natural exponent.
+
+```litex
+forall x R:
+    x^0 = 1
+forall t R:
+    1^t = 1
+0^0 = 1
+forall n N+:
+    0^n = 0
+forall a R+, t R:
+    a^t $in R
+    a^t > 0
+forall x R, n N+:
+    x^n = 0
+    =>:
+        x = 0
+```
+
+Zero with a negative exponent has no WD route. A negative base with an
+arbitrary noninteger real exponent is outside the supported domain.
+See [O27](#o27-powers) for the full power domain branches.
+
+#### Increase the base on the nonnegative region
+
+**Checked natural-power monotonicity:** a positive natural exponent preserves
+weak order on nonnegative bases. The larger base is also nonnegative because
+it is at least the smaller base.
+
+```litex
+forall a, b R, n N+:
+    0 <= a
+    a <= b
+    =>:
+        a^n <= b^n
+```
+
+Even exponents do not preserve signed base order on all reals:
+`-2<=-1` but `(-2)^2>(-1)^2`. For magnitude comparisons, use
+[R12](#r12-squares-absolute-values-and-equality-cases).
+
+**Checked unit-interval bound:** for a positive natural exponent, repeated
+multiplication by a number in `[0,1]` cannot increase the value above that base.
+
+```litex
+claim:
+    ? forall a R, n N+:
+        0 <= a
+        a <= 1
+        =>:
+            0 <= a^n
+            a^n <= a
+    by induc n from 1:
+        ? a^n <= a
+        ? from n = 1:
+            a^n = a^1 = a
+        ? induc:
+            a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= a
+```
+
+#### Increase or decrease an exponent by one
+
+**Checked successor routes:** positive bases keep every integer power positive.
+Multiplying by a base at least `1` increases weakly; a base greater than `1`
+increases strictly; a base in `(0,1)` decreases strictly.
+
+```litex
+claim:
+    ? forall a R+, n Z:
+        1 <= a
+        =>:
+            a^n <= a^(n+1)
+    a^(n+1) = a^n*a^1 = a^n*a >= a^n*1 = a^n
+claim:
+    ? forall a R+, n Z:
+        1 < a
+        =>:
+            a^n < a^(n+1)
+    a^(n+1) = a^n*a^1 = a^n*a > a^n*1 = a^n
+claim:
+    ? forall a R+, n Z:
+        a < 1
+        =>:
+            a^(n+1) < a^n
+    a^(n+1) = a^n*a^1 = a^n*a < a^n*1 = a^n
+```
+
+At base `1`, every power is `1`; use weak monotonicity. Negative bases can
+alternate signs as the exponent changes, so their sequence has no analogous
+unrestricted monotonicity rule.
+
+#### Order arbitrary integer exponents
+
+**Checked growth package:** first prove that natural powers of a base at
+least `1` are at least `1`. For integers `m<=n`, the gap `n-m` is natural.
+Multiply its bound by the positive `a^m` and combine the powers. This includes
+negative integer exponents. The later claims use that same result to bound
+a positive natural power below by its base and to obtain strict order.
+
+```litex
+claim:
+    ? forall a R+, n N:
+        1 <= a
+        =>:
+            1 <= a^n
+    by induc n from 0:
+        ? 1 <= a^n
+        ? from n = 0:
+            a^n = a^0 = 1
+        ? induc:
+            a^(n+1) = a^n*a^1 = a^n*a >= 1*a = a >= 1
+claim:
+    ? forall a R+, m, n Z:
+        1 <= a
+        m <= n
+        =>:
+            a^m <= a^n
+    0 <= n-m
+    1 <= a^(n-m)
+    a^m = a^m*1 <= a^m*a^(n-m) = a^(m+(n-m)) = a^n
+claim:
+    ? forall a R+, n N+:
+        1 <= a
+        =>:
+            a <= a^n
+    a = a^1 <= a^n
+claim:
+    ? forall a R+, m, n Z:
+        1 < a
+        m < n
+        =>:
+            a^m < a^n
+    0 < n-m
+    a <= a^(n-m)
+    a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n
+```
+
+**Checked decay package:** on a positive base at most `1`, natural powers
+are at most `1`. Use the same nonnegative gap and multiply its upper bound
+by a positive power of the base.
+
+```litex
+claim:
+    ? forall a R+, n N:
+        a <= 1
+        =>:
+            a^n <= 1
+    by induc n from 0:
+        ? a^n <= 1
+        ? from n = 0:
+            a^n = a^0 = 1
+        ? induc:
+            a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= 1
+claim:
+    ? forall a R+, m, n Z:
+        a <= 1
+        m <= n
+        =>:
+            a^n <= a^m
+    0 <= n-m
+    a^(n-m) <= 1
+    a^n = a^(m+(n-m)) = a^m*a^(n-m) <= a^m*1 = a^m
+```
+
+**Observed real-exponent coverage boundary:** the mathematical growth law
+also holds for real `u<=v`. This direct true goal misses at `search_proof`
+in the audited release. The integer proofs above do not establish this
+stronger real-exponent statement. A source-level log/exp proof attempt was
+also not accepted; no claim of mathematical impossibility follows.
+
+<!-- litex:skip-test -->
+```litex
+forall a, u, v R:
+    1 <= a
+    u <= v
+    =>:
+        a^u <= a^v
+```
+
+**Checked boundary examples:** these show strictness at base `1`, reversed
+direction below `1`, sign changes on negative bases and zero-exponent behavior.
+
+```litex
+1^2 = 1^3
+(1/2)^3 < (1/2)^2
+(-2)^2 > (-1)^2
+(-2)^3 < (-1)^3
+(-2)^4 > (-2)^2
+(-2)^(-2) > 0
+(-1)^2 > (-1)^3
+0^0 = 1
+0^2 = 0
+```
+
+**Evidence:** the [power catalog audit](audits/manual-power-catalog-2026-10-06.json)
+records clean strict checks, rejected domain/strictness controls and deletion
+variants. Direct facts, composed parity proofs, induction and unproved
+real-exponent search targets are separate coverage categories.
+
+### R16. Common real inequalities at a glance
+
+**Ordinary mathematics:** choose a familiar estimate by its mathematical
+shape, then follow its checked proof owner. These bounds are usable results
+of native rules and short proofs; their appearance in this table does not
+make each one a separate builtin theorem or automatic tactic.
+
+| Familiar bound | Exact domain | Checked proof or interface |
+|---|---|---|
+| `a^2+b^2 >= 2*a*b` | Any real `a,b`, including opposite signs | [R06 square completion and translation](#r06-complete-a-square-and-translate-the-bound) |
+| `x^(2*n) >= 0` | Real `x`, natural `n` | [R15 parity](#power-signs-parity-and-zero-cases) |
+| `x^(2*n) > 0` | Nonzero real `x`, integer `n` | [R15 parity](#power-signs-parity-and-zero-cases) |
+| `4*a*b <= (a+b)^2` | Any real `a,b` | [R13 quadratic certificates](#r13-reusable-quadratic-certificates) |
+| `(a+b)^2 <= 2*(a^2+b^2)` | Any real `a,b` | [R13 quadratic certificates](#r13-reusable-quadratic-certificates) |
+| `2*a*b <= t*a^2+b^2/t` | Real `a,b`; `t>0` | [R13 weighted bound](#r13-reusable-quadratic-certificates) |
+| `a^2+b^2+c^2 >= a*b+b*c+c*a` | Any real `a,b,c` | [R09 three-square certificate](#r09-build-a-sum-of-squares-proof) |
+| `(a*c+b*d)^2 <= (a^2+b^2)*(c^2+d^2)` | Any real `a,b,c,d` | [R13 two-dimensional Cauchy–Schwarz](#r13-reusable-quadratic-certificates) |
+| `abs(x+y) <= abs(x)+abs(y)` | Any real `x,y` | [R10 triangle bounds](#r10-expose-absolute-value-bounds) |
+| `abs(x)-abs(y) <= abs(x-y)` | Any real `x,y` | [R10 reverse-triangle bound](#r10-expose-absolute-value-bounds) |
+| `a*x^2+b*x+c >= c-(b^2/a)/4` | `a>0`, real `b,c,x` | [R14 completed quadratic](#complete-a-general-positive-quadratic) |
+| `a^m <= a^n` | `a>=1`, integer `m<=n` | [R15 exponent growth](#order-arbitrary-integer-exponents) |
+| `a <= a^n` | `a>=1`, positive natural `n` | [R15 lower range](#order-arbitrary-integer-exponents) |
+| `0 <= a^n <= a` | `0<=a<=1`, positive natural `n` | [R15 unit-interval range](#increase-the-base-on-the-nonnegative-region) |
+
+For a strict conclusion or an equality case, return to the proof's
+nonnegative term. A square certificate becomes strictly positive when its
+base is nonzero; equality makes its base zero. Multiplication additionally
+needs a positive factor to preserve strictness. See
+[R12 zero cases](#zero-and-strictly-positive-square-sums) and
+[R13 equality cases](#recover-the-equality-case).
+
+Keep the mathematical domain attached to the bound. The first square bound
+does not require `a,b>=0`; the weighted bound does require `t>0`; an even
+power has an integer parity condition; exponent monotonicity has a base-range
+condition. Those distinctions determine which estimate is appropriate.
+
 ## Advanced interface details
 
 The dictionaries give each interface its meaning, required conditions and
@@ -9292,7 +10342,7 @@ alone never supplies an order. The order layer recognizes these contracts:
 | Addition and subtraction | Componentwise weak inequalities add; any strict component makes the result strict. Common translation preserves order. Subtraction uses the opposite ordering on the subtrahend. Nonnegative or positive increments give the corresponding one-sided bounds. |
 | Products | Same weak signs give a nonnegative product; same strict signs give a positive product; opposite signs give a negative/nonpositive product. Multiplying an inequality preserves its direction for a positive factor and reverses it for a negative factor; weak zero factors only support weak conclusions. |
 | Quotients | A positive denominator preserves order and supports cross-multiplication. A negative denominator reverses order. Sign conclusions require the numerator sign and a strictly positive denominator. Rules such as `a<=b/c` consume a positive `c` and the matching multiplied inequality. |
-| Powers | Positive real bases with positive real/rational exponent preserve and reflect order. Positive natural exponents are monotone on nonnegative bases; odd exponents are monotone on all reals; even exponents compare absolute values. Negative integer exponents reverse positive-base order. |
+| Powers | Mathematical directions: positive exponents preserve base order on positive bases; positive natural exponents are monotone on nonnegative bases; odd natural exponents are monotone on all reals; even exponents compare magnitudes; negative exponents reverse positive-base order. The checked domains and compositions are narrower than this mathematical list: see [R15](#r15-power-signs-and-two-kinds-of-monotonicity) for natural-base order, parity certificates, integer-exponent growth/decay and the real-exponent search boundary. |
 | Roots, logarithms, and absolute value | `sqrt(x)` is nonnegative, and positive for positive `x`. A logarithm with base `>1` preserves strict order; a base strictly between `0` and `1` reverses it. Absolute value supplies direct, triangle, and reverse-triangle bounds, including `abs(sum(...,f)) <= sum(...,fn(index Z) R {abs(f(index))})` and the analogous finite-set sum under the matching index/carrier facts. |
 | Finite aggregates and extrema | Pointwise weak/strict order on the relevant index set gives sum order. A nonnegative finite-set summand is at most the total. Finite-set extrema bound every member. Finite subset inclusion bounds cardinality, and union cardinality is at most the sum. |
 | Native ordered objects | Floor and ceiling preserve weak order but not strict order. `min` and `max` expose argument bounds and componentwise monotonicity. Native `exp`/`ln` and trigonometric order use the dedicated sections below; complex modulus uses the [complex scalar contract](#complex-scalars-beta-preview). |
@@ -9302,6 +10352,19 @@ both strict spellings with fixed known-fact lookups and retains the premise's
 citation; it does not search for a new difference bound. The enclosing comparison
 still requires real operands. See the runnable
 [positive-difference tracer](../examples/proof_nodes/atomic/by_builtin_rule/greater_from_positive_difference.lit).
+
+The complementary saved bridges are `a-b<0 => a<b`, `a<b => a-b<0`,
+`a-b<=0 => a<=b`, and `a<=b => a-b<=0`. Each is a dedicated builtin evidence
+leaf. Positive and negative weak bridges may consume a stronger strict fact,
+but strict conclusions require strict premises. Both orientations of each saved
+comparison are checked with fixed known-premise lookups. When the minuend is
+literal zero, `0-u`, `-u`, `(-1)*u`, and `u*(-1)` are fixed equivalent
+spellings; this does not enable a general symbolic simplifier. The parent WD
+check still requires real operands. `>` and `>=` retain the existing strategy
+that exchanges the comparison arguments. Detailed JSON keeps the actual chosen
+`premise_proof`, including its comparison and citation, under each dedicated
+rule name. See [signed differences](../examples/proof_nodes/atomic/by_builtin_rule/signed_difference_order.lit)
+and [negative signs](../examples/proof_nodes/atomic/by_builtin_rule/negated_sign_order.lit).
 
 For checked mathematics-first examples, use
 [R06–R10](#r06-complete-a-square-and-translate-the-bound). They distinguish
@@ -9666,6 +10729,27 @@ bound proofs. Strict endpoints still matter for tangent WD. See the
 and [nonzero](../examples/proof_nodes/atomic/by_builtin_rule/cos_nonzero_principal_bound_spellings.lit)
 examples; this does not normalize arbitrary symbolic bounds.
 
+For real `x` with the actual bounds `0<x` and `x<pi/2`, fixed
+first-quadrant rules establish `sin(x)!=0`, `cos(x)!=0`, `0<tan(x)` and
+`0<cot(x)`. Bounds may use their converse comparison spelling; the positive
+goals may also be written `tan(x)>0` or `cot(x)>0`. Partial-operation WD
+retains its ordinary nonzero requirement and the actual bound citations.
+See the [quadrant](../examples/proof_nodes/atomic/by_builtin_rule/trig_first_quadrant.lit)
+and [quotient WD](../examples/proof_nodes/equal/by_builtin_rule/trig_first_quadrant_quotient_wd.lit)
+examples. Missing or weak bounds and poles remain rejected.
+
+Shared negative factors reverse strict real order; shared nonpositive factors
+reverse weak order. Fixed rules cover `<`, `>`, `<=`, `>=` and all four product
+placements (`c*a`/`c*b`, `a*c`/`b*c`, and the two mixed placements).
+The rule checks factor sign first and reversed argument order second. Each
+child retains the actual checked comparison and citation; weak rules may use
+strict premises as stronger evidence. Strict goals require a strictly negative
+factor and strict argument order. The existing positive/nonnegative routes
+remain first. See the [strict](../examples/proof_nodes/atomic/by_builtin_rule/negative_common_factor_order.lit)
+and [weak](../examples/proof_nodes/atomic/by_builtin_rule/nonpositive_common_factor_weak_order.lit)
+acceptance artifacts. These source examples are verified on the archived
+isolated overlay while the shared startup API build is pending.
+
 Known closed numeric equalities are substituted by matching whole original
 scalar terms before their children. A parent rebuilt from changed children
 can then use its known value in the same structural pass. For example, with
@@ -9811,6 +10895,8 @@ presentation.
 | Power sets and inclusions | `A $subset B` introduces `A $in power_set(B)`. A displayed set or builder belongs to a power set after its elements/base are contained. One directly known inclusion can lift an element into the target set. |
 | Products and indexed objects | Tuple/cart membership checks the complete finite domain and every coordinate's factor. General Cartesian membership checks the complete indexed domain, a return bound in `family_union(S)`, and every indexed factor. Ordinary calls expose the selected carrier. |
 | Functions and structs | Function-set membership checks the complete domain, including guards and parameter groups, plus the return bound. A checked signature supplies the instantiated return carrier of a valid application. Struct membership checks the named carrier and instantiated equivalent facts. A set-valued function/template definition may be unfolded once for membership. |
+
+A template whose checked body uses `obtain` can export a function witness. The callable signature comes from the first existential binder, either directly or from the concrete predicate’s sole positive `exist` / `exist!` clause. Template argument types and guards must hold before that signature is used; each application must still satisfy the function’s own domain. A non-function witness has no callable signature. See the [function witness regression](../examples/wd/template_function_witness.lit).
 
 The type-predicate layer classifies set structure separately:
 
@@ -10300,8 +11386,14 @@ program have the boundaries stated below.
 > `eval` first checks the source expression's well-definedness, including each
 > function argument domain and domain condition. It then substitutes
 > `known_closed_numeric_equal` representatives and
-> recursively evaluates: closed-numeric simplify, and plain-Identifier function
-> calls through a stored algo (case match → return expr → evaluate again).
+> recursively evaluates closed numeric expressions, checked named/literal
+> function bodies, finite-function coordinates, and stored algorithms
+> (case match → return expr → evaluate again). For `let p=(1,2,3)`,
+> `eval p(2)` computes `2` and stores `p(2)=2` without an earlier assertion.
+> Nested Cartesian tuple values may continue as functions: after
+> `have outer cart(cart(R,R),R)=((1,2),3)`, `eval outer(1)(2)` computes `2`.
+> Every call checks its own domain. `outer(2)(1)` and `p(4)` fail WD;
+> a carrier membership alone supplies no concrete value to evaluate.
 > Each executed algorithm step must also verify its defining function equation
 > at the normalized arguments. The exact computation and these checked equations
 > establish `expr = evaluated_object`; both sides pass WD before the equality is

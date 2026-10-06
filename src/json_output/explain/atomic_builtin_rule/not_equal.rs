@@ -29,6 +29,8 @@ use crate::json_output::explain::text::text;
 impl NotEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_en(),
+            Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_en(),
             Self::PeriodicTrigNonzero(_) => text(
                 "Nonzero periodic trigonometric value",
                 "The exact pi coefficient and checked integer terms exclude sine/cosine zeros",
@@ -92,6 +94,8 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
+            Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
             Self::PeriodicTrigNonzero(_) => text(
                 "周期三角值非零",
                 "精确 pi 系数和已验证的整数项排除了正弦或余弦的零点",
@@ -155,6 +159,8 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
+            Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
             Self::PeriodicTrigNonzero(_) => text(
                 "週期三角值非零",
                 "精確 pi 係數與已驗證的整數項排除正弦或餘弦零點",
@@ -218,6 +224,8 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_fr(),
+            Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_fr(),
             Self::PeriodicTrigNonzero(_) => text("Valeur trigonométrique périodique non nulle", "Le coefficient exact de pi et les termes entiers vérifiés excluent les zéros du sinus ou cosinus"),
             Self::NonzeroFromSignedBound(_) => text("Non-nullité issue d’une borne signée", "Une borne vérifiée sépare strictement la valeur de zéro"),
             Self::ImaginaryUnitNonzero(_) => text("Unité imaginaire non nulle", "L'unité imaginaire réservée vérifie i² = -1 et est non nulle"),
@@ -254,6 +262,8 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ru(),
+            Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ru(),
             Self::PeriodicTrigNonzero(_) => text("Ненулевое периодическое тригонометрическое значение", "Точный коэффициент pi и проверенные целочисленные члены исключают нули синуса или косинуса"),
             Self::NonzeroFromSignedBound(_) => text("Ненулевое значение из знаковой границы", "Проверенная граница строго отделяет значение от нуля"),
             Self::ImaginaryUnitNonzero(_) => text("Мнимая единица отлична от нуля", "Зарезервированная мнимая единица удовлетворяет i² = -1 и ненулевая"),
@@ -290,6 +300,8 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_es(),
+            Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_es(),
             Self::PeriodicTrigNonzero(_) => text("Valor trigonométrico periódico no nulo", "El coeficiente exacto de pi y los términos enteros comprobados excluyen ceros de seno o coseno"),
             Self::NonzeroFromSignedBound(_) => text("Valor no nulo a partir de una cota con signo", "Una cota comprobada separa estrictamente el valor de cero"),
             Self::ImaginaryUnitNonzero(_) => text("Unidad imaginaria no nula", "La unidad imaginaria reservada cumple i² = -1 y es no nula"),
@@ -326,6 +338,8 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
+            Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
             Self::PeriodicTrigNonzero(_) => text(
                 "قيمة مثلثية دورية غير صفرية",
                 "معامل pi الدقيق والحدود الصحيحة المتحقق منها يستبعدان أصفار الجيب أو جيب التمام",
@@ -389,6 +403,8 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
+            Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
             Self::PeriodicTrigNonzero(_) => text(
                 "周期的三角関数値の非ゼロ性",
                 "正確な pi の係数と検証済みの整数項が正弦または余弦の零点を除外します",
@@ -452,6 +468,8 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
+            Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
             Self::PeriodicTrigNonzero(_) => text(
                 "주기 삼각함숫값이 0이 아님",
                 "정확한 pi 계수와 검증된 정수 항이 사인 또는 코사인의 영점을 배제합니다",
@@ -515,6 +533,8 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_vi(),
+            Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_vi(),
             Self::PeriodicTrigNonzero(_) => text("Giá trị lượng giác tuần hoàn khác không", "Hệ số pi chính xác và các hạng nguyên đã kiểm tra loại trừ điểm không của sin hoặc cos"),
             Self::NonzeroFromSignedBound(_) => text("Giá trị khác không từ cận có dấu", "Cận đã kiểm tra tách giá trị nghiêm ngặt khỏi không"),
             Self::ImaginaryUnitNonzero(_) => text("Đơn vị ảo khác không", "Đơn vị ảo dành riêng thỏa i² = -1 và khác không"),

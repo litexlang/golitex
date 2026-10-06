@@ -357,9 +357,6 @@ impl Obj {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(x)) => s.push_str(&x.ir()),
                 Obj::StandardSet(x) => s.push_str(&x.ir()),
                 Obj::ProductShape(ProductShape::Cart(x)) => s.push_str(&x.ir()),
-                Obj::ProductShape(ProductShape::CartDim(x)) => s.push_str(&x.ir()),
-                Obj::ProductShape(ProductShape::Proj(x)) => s.push_str(&x.ir()),
-                Obj::ProductShape(ProductShape::TupleDim(x)) => s.push_str(&x.ir()),
                 Obj::ProductShape(ProductShape::Tuple(x)) => s.push_str(&x.ir()),
                 Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(x)) => s.push_str(&x.ir()),
                 Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(x)) => s.push_str(&x.ir()),
@@ -379,7 +376,6 @@ impl Obj {
                 Obj::SetFormer(SetFormer::SeqSet(x)) => s.push_str(&x.ir()),
                 Obj::SetOperator(SetOperator::PowerSet(x)) => s.push_str(&x.ir()),
                 Obj::SetOperator(SetOperator::IndexCart(x)) => s.push_str(&x.ir()),
-                Obj::ProductShape(ProductShape::ObjAtIndex(x)) => s.push_str(&x.ir()),
                 Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(x)) => {
                     s.push_str(&x.ir())
                 }
@@ -424,6 +420,10 @@ impl IdentifierObj {
 impl FnObjHead {
     pub fn ir(&self) -> ObjIR {
         match self {
+            FnObjHead::Object(obj) => match obj.as_ref() {
+                Obj::ProductShape(ProductShape::Tuple(_)) => obj.ir(),
+                _ => ObjIR(format!("({})", obj.ir())),
+            },
             FnObjHead::Identifier(x) => x.ir(),
             FnObjHead::AnonymousFnLiteral(a) => a.ir(),
             FnObjHead::FieldAccess(v) => v.ir(),
@@ -713,11 +713,8 @@ impl Cart {
     }
     impl_display_pair!();
 }
-impl_obj_kw_call!(CartDim, CART_DIM, set);
 
-impl_obj_kw_call!(Proj, PROJ, set, dim);
 
-impl_obj_kw_call!(TupleDim, TUPLE_DIM, arg);
 
 impl Tuple {
     pub fn ir(&self) -> ObjIR {
@@ -782,18 +779,6 @@ impl_obj_kw_call!(FiniteSeqSet, FINITE_SEQ, set, n);
 
 impl_obj_kw_call!(SeqSet, SEQ, set);
 
-impl ObjAtIndex {
-    pub fn ir(&self) -> ObjIR {
-        let mut out = String::new();
-        out.push_str(&self.obj.ir());
-        out.push_str(&format!("{}", LEFT_BRACKET));
-        out.push_str(&self.index.ir());
-        out.push_str(&format!("{}", RIGHT_BRACKET));
-
-        ObjIR(out)
-    }
-    impl_display_pair!();
-}
 impl StructObj {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();

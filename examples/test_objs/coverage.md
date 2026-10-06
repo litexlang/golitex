@@ -2,7 +2,7 @@
 
 Task: add detailed regression files for every current Litex Obj variant.
 
-The current manifest inventories 99 retained terminal Obj declarations, 96 dedicated positive files and three explicitly retired interface families. It lists 659 positive cases, 309 rejection fixtures and 0 recorded gaps. These are written-case counts, not a full-corpus pass.
+The current manifest inventories 95 terminal Obj declarations, 95 dedicated positive files and four explicitly retired interface families. It lists 665 positive cases, 309 rejection fixtures and 0 recorded gaps. These are written-case counts, not a full-corpus pass.
 
 The earlier 2026-10-03 [audit](audit_2026-10-03.md) observed 67 direct
 rejections. The subsequent [F authoring repairs](experience/problem_notes/f_authoring_repairs_2026-10-03.md)
@@ -143,3 +143,7 @@ expectation failures are retained separately.
 Numeric operators test exact values and their defined carriers; parser precedence is covered by subtraction, division, power and factorial cases. Number sets and interval variants each have their own positive membership and exclusion boundaries. Functions test all head kinds, arity, refinement, codomain and closure use. Product/index cases test dimensions, nesting and forbidden indices. Set operators test emptiness where permitted, elementary laws, displayed sets and indexed families. The two qualified-identifier projects use different values with identical terminal names.
 
 A missing direct proof, incomplete WD rule and incorrectly admitted object are different outcomes; consult [todo.md](todo.md) for concrete evidence. The initial corpus task changed no core source. The approved follow-up repaired numeric and aggregate owners without changing Obj/Stmt/Fact AST shapes; the current acceptance record separates that work from concurrent recoveries.
+
+## Approved tuple/cart AST retirement, 2026-10-06
+
+CartDim, TupleDim, Proj and ObjAtIndex declarations were deleted, so their four retired registry entries carry `removed_ast_paths` rather than claiming current leaves. Original ObjAtIndex positive goals P01–P06 moved unchanged to ordinary FnObj P10–P15; all their negative fixtures remain. FnObj P16–P21 exercise the Object head, literal/nested/singleton calls, eval and grouped call layers. Current executable totals are manifest counts; gate receipts are maintained in the tuple/cart source-owned journal.

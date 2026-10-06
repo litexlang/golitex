@@ -1,0 +1,22 @@
+# Tracer: release the full exact-domain Cartesian function-set definition.
+# Before (rejected by the parser):
+# release cart def cart(R,Z)
+# Now: the complete checked equality is published and reusable.
+# Boundary: cart(R,2), missing a coordinate, wrong order and wrong length reject.
+# Gate: release litex -strict -f this file.
+
+release cart def cart(R,Z)
+cart(R,Z)={p finite_seq(union(R,Z),2):p(1) $in R,p(2) $in Z}
+release cart def cart(R)
+cart(R)={p finite_seq(R,1):p(1) $in R}
+release cart def cart()
+cart()=finite_seq({},0)
+
+have A,B,T set
+release cart def cart(A,B,T)
+cart(A,B,T)={p finite_seq(union(union(A,B),T),3):p(1) $in A,p(2) $in B,p(3) $in T}
+
+have D set={p finite_seq(union(R,Z),2):p(1) $in R,p(2) $in Z}
+D=cart(R,Z)
+have value D=(1,2)
+value(2) $in Z

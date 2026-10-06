@@ -1,11 +1,9 @@
 use super::{
     AndChainAtomicFact, AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact,
     ExistShapedFact, Fact, PlainExistFact, GreaterEqualFact, GreaterFact, InFact, InjectiveFact,
-    IsCartFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact,
-    LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact, NotCoprimeFact, NotDvdFact,
-    NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact, NotIsCartFact,
-    NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
-    NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact,
+    IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,     LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact, NotCoprimeFact, NotDvdFact,
+    NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact,     NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
+    NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact,
     NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact,
     OrFact, PrimeFact, ProperSubsetFact, ProperSupersetFact, QuantifierFreeFact, SubsetFact,
     SupersetFact, SurjectiveFact,
@@ -29,8 +27,8 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
             | AtomicFact::NotInFact(_)
-            | AtomicFact::NotIsCartFact(_)
-            | AtomicFact::NotIsTupleFact(_)
+
+
             | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
             | AtomicFact::NotProperSubsetFact(_)
@@ -67,10 +65,6 @@ pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotIsFiniteSetFact(f) => vec![&f.set],
         AtomicFact::InFact(f) => vec![&f.element, &f.set],
         AtomicFact::NotInFact(f) => vec![&f.element, &f.set],
-        AtomicFact::IsCartFact(f) => vec![&f.set],
-        AtomicFact::NotIsCartFact(f) => vec![&f.set],
-        AtomicFact::IsTupleFact(f) => vec![&f.set],
-        AtomicFact::NotIsTupleFact(f) => vec![&f.set],
         AtomicFact::SubsetFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotSubsetFact(f) => vec![&f.left, &f.right],
         AtomicFact::SupersetFact(f) => vec![&f.left, &f.right],
@@ -347,30 +341,6 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
         AtomicFact::NotInFact(f) => InFact {
             fact_id: new_fact_id,
             element: f.element.clone(),
-            set: f.set.clone(),
-            line_file: f.line_file.clone(),
-        }
-        .into(),
-        AtomicFact::IsCartFact(f) => NotIsCartFact {
-            fact_id: new_fact_id,
-            set: f.set.clone(),
-            line_file: f.line_file.clone(),
-        }
-        .into(),
-        AtomicFact::NotIsCartFact(f) => IsCartFact {
-            fact_id: new_fact_id,
-            set: f.set.clone(),
-            line_file: f.line_file.clone(),
-        }
-        .into(),
-        AtomicFact::IsTupleFact(f) => NotIsTupleFact {
-            fact_id: new_fact_id,
-            set: f.set.clone(),
-            line_file: f.line_file.clone(),
-        }
-        .into(),
-        AtomicFact::NotIsTupleFact(f) => IsTupleFact {
-            fact_id: new_fact_id,
             set: f.set.clone(),
             line_file: f.line_file.clone(),
         }

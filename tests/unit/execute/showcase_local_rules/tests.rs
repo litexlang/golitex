@@ -161,7 +161,7 @@ fn full_add2_chain_and_projection_boundaries() {
     for node in [
         "by_matching_one_arg_by_one",
         "by_closed_calculation",
-        "TupleIndexBound",
+        "domain_fn_set",
         "TupleProjection",
     ] {
         assert!(detailed.contains(node), "{node}");

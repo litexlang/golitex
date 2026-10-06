@@ -266,6 +266,7 @@ fn application_is_displayed_preimage(element: &Obj, function: &Obj) -> bool {
         return false;
     };
     let head_obj = match application.head.as_ref() {
+        FnObjHead::Object(obj) => obj.as_ref().clone(),
         FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
         FnObjHead::AnonymousFnLiteral(anon) => {
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.as_ref().clone()))

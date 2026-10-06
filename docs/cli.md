@@ -446,7 +446,12 @@ Dependency manifests supply names; dependency source is not executed or emitted.
 Use `-latex -document` for a complete XeLaTeX article, or omit `-document` for
 a fragment. All ten `-lang` choices select complete mathematical prose templates.
 The JSON keys stay stable across locales; `content` contains LaTeX, `success`
-reports conversion, and `verified` is always false. On failure `content` is null
-and the process exits 1. Conversion does not execute or verify source; `-strict`
+reports conversion, and `verified` is always false. On conversion failure `content` is null
+and the process exits 1. Invalid launch arguments produce stderr and exit 2,
+through the common argument parser. Conversion does not execute or verify source; `-strict`
 and `-session` are rejected. See the [compiler guide](../src/compile_to_latex/README.md)
 for saving `.tex`, the font/package requirements, API and coverage.
+
+Internally `CompileToLatex` and `ExtractExecutableCode` are separate launch
+commands and outcome types. `-latex` goes through the normal command dispatcher;
+it does not share C/Python's verification and executable extraction pipeline.
