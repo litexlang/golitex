@@ -13,7 +13,7 @@ This independent first version fixes an analytic plane over `R^2` and checks:
 Run it from the repository root with:
 
 ```bash
-target/release/litex -compact -runner -r showcases/math_concepts_in_litex/2_euclidean_geometry
+target/release/litex -strict -r showcases/math_concepts_in_litex/2_euclidean_geometry
 ```
 
 The module has no `trust` or local axiom. Its analytic model is intentional and

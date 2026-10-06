@@ -29,7 +29,7 @@ The executable Litex slice now contains:
 Run it from the repository root with:
 
 ```bash
-target/release/litex -graph -r showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms
+target/release/litex -strict -r showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms
 ```
 
 The public Litex file has no `trust`, global `axiom`, or `abstract_prop`. Its

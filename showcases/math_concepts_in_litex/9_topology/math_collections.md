@@ -37,11 +37,11 @@ only universal theorem contexts.
 
 - **Ordinary meaning:** reason in an arbitrary supplied topological space.
 - **Semantic role:** Reusable universal theorem context.
-- **Ideal Litex form:** `setting TopologicalSpaceSetting(X, open_sets)` as the single
-  source of parameters and laws, with `prop is_topology_on([TopologicalSpaceSetting])`
+- **Ideal Litex form:** `prop TopologicalSpaceSetting(X set, open_sets power_set(power_set(X)))` as the single
+  source of parameters and laws, with `prop is_topology_on(X set, open_sets power_set(power_set(X)))`
   as the definition-facing interface.
-- **Interface sketch:** `forall [TopologicalSpaceSetting], A, B open_sets: ...`
-  and `[TopologicalSpaceSetting(Y, open_sets_Y)]` when a second renamed space
+- **Interface sketch:** the explicitly quantified carriers, operations, and context-predicate premises
+  and `prop TopologicalSpaceSetting(X set, open_sets power_set(power_set(X)))` when a second renamed space
   is needed.
 - **Nearest wrong alternative:** A struct forces field projection even when
   no theorem passes a topological space as a value.
@@ -56,9 +56,9 @@ only universal theorem contexts.
 - **Semantic role:** Relation on two candidate topologies and a function.
 - **Ideal Litex form:** `TopologicalMapSetting` composes two renamed topology
   bundles and a function; `ContinuousMapSetting` adds the open-preimage law;
-  `prop is_continuous([ContinuousMapSetting])` exposes the ordinary flat ABI.
+  `prop is_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y)` exposes the ordinary flat ABI.
 - **Interface sketch:**
-  `prop is_continuous([TopologicalSpaceSetting(X, open_sets_X)], [TopologicalSpaceSetting(Y, open_sets_Y)], f ...)`
+  `prop is_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y)`
   followed only by the open-preimage law.
 - **Nearest wrong alternative:** A continuous-map struct is premature before
   callers pass or project packaged maps.
@@ -73,8 +73,8 @@ only universal theorem contexts.
 - **Ordinary meaning:** `F` is closed when its relative complement is open;
   a map is continuous exactly when every closed set has closed preimage.
 - **Semantic role:** Definition plus two directional named theorems.
-- **Ideal Litex form:** `is_closed([TopologicalSpaceSetting], F)` and
-  `has_closed_preimages([TopologicalMapSetting])`.
+- **Ideal Litex form:** `prop is_closed(X set, open_sets power_set(power_set(X)), F power_set(X))` and
+  `prop has_closed_preimages(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y)`.
 - **Interface sketch:** `continuous_map_has_closed_preimages` and
   `closed_preimages_imply_continuous` sit next to one another as the checked
   iff characterization.

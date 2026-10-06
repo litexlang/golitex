@@ -6,7 +6,7 @@ interfaces and proves that `y(x)=x^2+1` solves the initial-value problem
 that the initial value selects `c` uniquely.
 
 ```bash
-target/release/litex -graph -r showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell
+target/release/litex -strict -r showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell
 ```
 
 `has_derivative_at(f, x, slope)` remains the epsilon-delta relation used to

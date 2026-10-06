@@ -81,7 +81,7 @@ readable setting-first development.
   the five-segment axiom, betweenness identity, inner Pasch, and three
   non-collinear witnesses.
 - **Semantic role:** Declaration family of assumptions.
-- **Ideal Litex form:** `setting TarskiNeutralDimensionlessSetting(...)`.
+- **Ideal Litex form:** `prop TarskiNeutralDimensionlessSetting(Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a Point, lower_b Point, lower_c Point)`.
 - **Interface sketch:** The setting carries `Point`, `Bet`, `Cong`, and the
   three lower-dimension witnesses, then states the eight axiom groups directly.
 - **Nearest wrong alternative:** A `struct` would make theorem users construct

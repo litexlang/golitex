@@ -25,26 +25,29 @@ prop is_convergent_sequence(a fn(index N+) R):
 
 # A constant sequence is eventually epsilon-close immediately, with n0 = 1.
 
+template<c R>:
+    have fn constant_sequence(n N+) R = c
+
 thm constant_sequence_has_limit:
     ? forall c R:
-        $has_limit(fn(n N+) R {c}, c)
-    have fn constant(n N+) R = c
+        $has_limit(\constant_sequence<c>, c)
     claim:
         ? forall epsilon R+:
-            $has_eventual_closeness_to(constant, c, epsilon)
-        forall n N+:
-            n >= 1
-            =>:
-                constant(n) = c
-                constant(n) - c = 0
-                abs(constant(n) - c) = 0
-                0 < epsilon
-                abs(constant(n) - c) < epsilon
-        by def $is_tail_close_to(constant, c, epsilon, 1)
-        witness $has_eventual_closeness_to(constant, c, epsilon) from 1
-    by def $has_limit(constant, c)
-    constant = fn(n N+) R {c}
-    $has_limit(fn(n N+) R {c}, c)
+            $has_eventual_closeness_to(\constant_sequence<c>, c, epsilon)
+        claim:
+            ? forall n N+:
+                n >= 1
+                =>:
+                    abs(\constant_sequence<c>(n) - c) < epsilon
+            \constant_sequence<c>(n) = c
+            \constant_sequence<c>(n) - c = 0
+            abs(\constant_sequence<c>(n) - c) = 0
+            0 < epsilon
+            abs(\constant_sequence<c>(n) - c) < epsilon
+        by def $is_tail_close_to(\constant_sequence<c>, c, epsilon, 1)
+        witness $has_eventual_closeness_to(\constant_sequence<c>, c, epsilon) from 1
+    by def $has_limit(\constant_sequence<c>, c)
+    $has_limit(\constant_sequence<c>, c)
 
 # Keep witness construction in a claim, then close the contradiction with facts.
 # The common tail index n1 + n2 is at least each positive starting index.

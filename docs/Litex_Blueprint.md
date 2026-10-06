@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: October 5, 2026.
+Last updated: October 6, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -1119,33 +1119,52 @@ If AI asks `by def` to establish convergence without first constructing the `for
 }
 ```
 
-A failed fragment does not enter the accepted context. The definition gives the shape of the goal; a proof must still construct an appropriate `N0` for each `epsilon`. The next fragment preserves that repair idea, but still needs migration and verification:
+A failed fragment does not enter the accepted context. The definition gives the shape of the goal; a proof must still construct an appropriate `N0` for each `epsilon`. The next complete fragment constructs a bound for every positive epsilon and specifies the scaled sequence pointwise:
 
-> **Migration example:** Current `src/` checking stops at `def_thm` (`thm`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
-thm converges_to_mul_const:
-    ? forall s fn(n N) R, a, c R:
-        $converges_to(s, a)
+prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
+    forall n N:
+        n >= N0
         =>:
-            $converges_to(fn(n N) R {c * s(n)}, c * a)
+            abs(s(n) - a) < epsilon
+
+prop converges_to(s fn(n N) R, a R):
+    forall epsilon R+:
+        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
+
+thm converges_to_mul_const:
+    ? forall s, scaled fn(n N) R, a, c R:
+        $converges_to(s, a)
+        forall n N:
+            scaled(n) = c * s(n)
+        =>:
+            $converges_to(scaled, c * a)
     claim:
         ? forall epsilon R+:
-            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+            exist N0 N st {$is_eventually_close(scaled, c * a, epsilon, N0)}
+        abs(c) >= 0
         abs(c) + 1 > 0
-        epsilon / (abs(c) + 1) $in R+
-        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
-        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
-            forall n N:
-                n >= N0
-                =>:
-                    abs(s(n) - a) < epsilon / (abs(c) + 1)
-                    abs(c * s(n) - c * a) = abs(c) * abs(s(n) - a)
-                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < epsilon
-                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
-            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
-    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
+        have scale R+ = abs(c) + 1
+        epsilon / scale > 0
+        epsilon / scale $in R+
+        abs(c) <= scale
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / scale, K)}
+        witness exist K N st {$is_eventually_close(scaled, c * a, epsilon, K)} from N0:
+            claim:
+                ? forall n N:
+                    n >= N0
+                    =>:
+                        abs(scaled(n) - c * a) < epsilon
+                scaled(n) = c * s(n)
+                abs(s(n) - a) < epsilon / scale
+                abs(s(n) - a) >= 0
+                scaled(n) - c * a = c * s(n) - c * a = c * (s(n) - a)
+                abs(scaled(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a)
+                scale * abs(s(n) - a) < scale * (epsilon / scale) = epsilon
+                abs(scaled(n) - c * a) = abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a) < epsilon
+            by def $is_eventually_close(scaled, c * a, epsilon, N0)
+    by def $converges_to(scaled, c * a)
 ```
 
 The current build stops at `def_thm` for this `thm`, so neither it nor the scalar-multiplication conclusion can enter the accepted prefix.
@@ -1187,9 +1206,6 @@ The intended Litex–Lean–Mathlib path is:
 
 Example: we want to prove that the sum of the first `n` positive odd numbers is `n^2`. We first write Litex source:
 
-> **Migration example:** Current `src/` checking stops at `internal_bug: name n is already bound in an enclosing parse scope`. This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 have fn kth_odd(k Z) Z = 2 * k - 1
 
@@ -1404,20 +1420,22 @@ This route is deliberately narrow and experimental. It is not a whole-Litex-to-P
 
 The same Litex proof used for scientific computing can become executable code. For example, one Newton step toward √2:
 
-> **Migration example:** Current `src/` checking stops at `parse_error: undefined name newton_sqrt_two_step`. This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
-have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+claim:
+    ? forall x R+:
+        (x + 2 / x) / 2 $in R+
+    2 / x > 0
+    x + 2 / x > 0
+    (x + 2 / x) / 2 > 0
 
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+algo newton_sqrt_two_step(x R) R by cases:
+    case x = 0: 1
+    case x != 0: (x + 2 / x) / 2
 claim:
     ? forall x R+:
         newton_sqrt_two_step(x) = newton_sqrt_two(x)
     newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
-
-algo newton_sqrt_two_step(x R) R by cases:
-    case x = 0: 1
-    case x != 0: (x + 2 / x) / 2
 ```
 
 To Python:
@@ -1469,6 +1487,10 @@ I hope more people can participate in rigorous verification while retaining math
 <summary><strong>A note from the author</strong></summary>
 
 I am Jiachen Shen (沈嘉辰), a mathematics PhD student at Fudan University. Lean showed me that mathematics and programming can meet in a real language. Litex explores whether formal source can follow more closely the mental flow of solving mathematical problems.
+
+Today's Litex has been shaped through repeated experiments, refactoring, and sometimes rebuilding from scratch. These processes have often been long and painful, but they have gradually helped me see which forms of writing fit mathematical thinking, which implementations can support them over time, and how to keep the language consistent as a whole.
+
+Given my personal time and resources, I could not have brought this language design to its current scale of code, documentation, and examples without AI assistance. AI gives one person a chance to keep guiding the language design while taking on implementation and maintenance work that would otherwise be difficult to manage alone. This is also why Litex's development is closely tied to this era.
 
 Litex began with sustained personal work and now also benefits from others' support. Through the open-source [golitex](https://github.com/litexlang/golitex) project, I hope to meet people interested in discussing language design, mathematical formalization, and Math for AI. Criticism and alternative approaches deserve serious consideration.
 
@@ -1834,9 +1856,6 @@ claim:
 
 Proof by contradiction—show that “every real satisfies `x^2 >= x`” fails:
 
-> **Migration example:** Current `src/` checking stops at `by_contra` (`by contradiction`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 by contra:
     ? not forall x R:
@@ -1863,9 +1882,6 @@ by cases:
 
 Proof by induction—the sum of the first `n` odd positives is `n^2`:
 
-> **Migration example:** Current `src/` checking stops at `internal_bug: name n is already bound in an enclosing parse scope`. This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 have fn kth_odd(k Z) Z = 2 * k - 1
 
@@ -1911,9 +1927,6 @@ forall s nonempty_set, G &Group<s>, identity s:
 
 A `template`—a parameterized definition family, then `\name<args>` to materialize:
 
-> **Migration example:** Current `src/` checking stops at `search_proof` (`p.first = 1`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 struct Triple<X set>:
     first X

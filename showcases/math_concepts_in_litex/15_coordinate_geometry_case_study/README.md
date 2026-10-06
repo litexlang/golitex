@@ -9,7 +9,7 @@ The source is Jiachen Shen and Keyao Zhu's
 [geo.lit](../../../scripts/LitexGeo-AutoBuild/shenjiachen/新geo和geo_definitions/geo.lit).
 The showcase copy preserves its definitions, hypotheses, conclusions, and
 proof steps. Its 402 theorem calls use `release thm` in place of `by thm`.
-The source file in `scripts/` is unchanged.
+The pinned source snapshot remains historical; the current maintained library supplies this migration.
 
 Run the showcase from the repository root:
 
@@ -32,10 +32,11 @@ passed strict file verification (227/227). Both its candidate module and the
 actual module at this public directory passed on the same release binary.
 See the [acceptance note](../experience/problem_notes/plane-geometry-replacement-acceptance-2026-10-05.md).
 
-Tuple/cart migration status (2026-10-06): the dated verification above used the
-old coordinate syntax. The new source-only draft has 176/227 items accepted in
-source order; `vertical_angles_equal` remains unverified after interactive
-timeouts, and the full draft run reached a 1200-second process limit without
-results. This public `main.lit` has not been replaced. Its new-syntax migration
-is incomplete; no trust or Rust repair was added in this batch. See the
-[migration evidence](../../../examples/proof_nodes/experience/problem_notes/tuple-cart-source-only-migration-2026-10-06.md).
+Current migration (2026-10-06): `main.lit` now uses `p(1)` / `p(2)` and
+is copied from the maintained current `showcases/2D_Geometry/geo.lit`.
+That library preserves the geometry statements and includes explicit named
+coordinate bridges in the proofs. The earlier incomplete draft observation
+remains in its dated migration evidence; it does not describe this file.
+
+Litex release checks do not require a Lean analogy file. This library has no
+`same_math_in_lean.lean`, and no Lean verification is claimed here.

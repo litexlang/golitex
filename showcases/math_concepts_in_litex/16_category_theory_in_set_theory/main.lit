@@ -308,12 +308,13 @@ thm natural_transformation_from_naturality:
 
 # A local component name connects function evaluation with both unit laws.
 thm identity_component_is_natural:
-    ? forall CObj set, CMor set, source_category &Category<CObj, CMor>, DObj set, DMor set, target_category &Category<DObj, DMor>, F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CMor: functor_arrow $in source_category.Hom(functor_source, functor_target)) DMor, chosen_source, chosen_target CObj, chosen_arrow CMor:
+    ? forall CObj set, CMor set, source_category &Category<CObj, CMor>, DObj set, DMor set, target_category &Category<DObj, DMor>, F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CMor: functor_arrow $in source_category.Hom(functor_source, functor_target)) DMor, identity_components fn(chosen_object CObj) DMor, chosen_source, chosen_target CObj, chosen_arrow CMor:
         $is_functor(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow)
+        forall chosen_object CObj:
+            identity_components(chosen_object) = target_category.identity(F_object(chosen_object))
         chosen_arrow $in source_category.Hom(chosen_source, chosen_target)
         =>:
-            $naturality_square_commutes(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, F_object, F_arrow, fn(chosen_object CObj) DMor {target_category.identity(F_object(chosen_object))}, chosen_source, chosen_target, chosen_arrow)
-    let identity_components = fn(chosen_object CObj) DMor {target_category.identity(F_object(chosen_object))}
+            $naturality_square_commutes(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, F_object, F_arrow, identity_components, chosen_source, chosen_target, chosen_arrow)
     F_arrow(chosen_source, chosen_target, chosen_arrow) $in target_category.Hom(F_object(chosen_source), F_object(chosen_target))
     release thm category_identity_is_identity_morphism(DObj, DMor, target_category, F_object(chosen_target))
     release thm category_identity_is_identity_morphism(DObj, DMor, target_category, F_object(chosen_source))
@@ -329,13 +330,17 @@ thm identity_natural_transformation_exists:
         =>:
             exist identity_component fn(chosen_object CObj) DMor st {$is_natural_transformation(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, F_object, F_arrow, identity_component)}
     let identity_on_components = fn(chosen_object CObj) DMor {target_category.identity(F_object(chosen_object))}
+    claim:
+        ? forall chosen_object CObj:
+            identity_on_components(chosen_object) = target_category.identity(F_object(chosen_object))
+        identity_on_components(chosen_object) = target_category.identity(F_object(chosen_object))
     witness exist identity_component fn(chosen_object CObj) DMor st {$is_natural_transformation(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, F_object, F_arrow, identity_component)} from identity_on_components:
         claim:
             ? forall chosen_source, chosen_target CObj, chosen_arrow CMor:
                 chosen_arrow $in source_category.Hom(chosen_source, chosen_target)
                 =>:
                     $naturality_square_commutes(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, F_object, F_arrow, identity_on_components, chosen_source, chosen_target, chosen_arrow)
-            release thm identity_component_is_natural(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, chosen_source, chosen_target, chosen_arrow)
+            release thm identity_component_is_natural(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, identity_on_components, chosen_source, chosen_target, chosen_arrow)
         release thm natural_transformation_from_naturality(CObj, CMor, source_category, DObj, DMor, target_category, F_object, F_arrow, F_object, F_arrow, identity_on_components)
 
 # Vertical composition uses the actual natural-transformation premises.

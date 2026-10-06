@@ -257,9 +257,6 @@ The current parser requires a nonempty `prop` parameter list. The closed,
 zero-argument predicate below is retained as an intended interface, not
 working syntax. Use a predicate with real mathematical parameters in current code.
 
-> **Migration example:** Current `src/` checking stops at `parse_error: expected at least one parameter inside (...)`. This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 prop all_reals_reflexive():
     forall x R:
@@ -365,9 +362,6 @@ can provide additional imported `forall` facts. The user-facing effect is
 similar: the verifier can use common mathematical background without the
 current file proving a local lemma first.
 
-> **Migration example:** Current `src/` checking stops at `search_proof` (`forall x, y R:`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 forall x, y R:
     x - y > 0
@@ -967,9 +961,6 @@ view” of a sole carrier (parse error:
 
 For example:
 
-> **Migration example:** Current `src/` checking stops at `release_thm` (`release thm …`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 struct FirstQuadrant:
     x R
@@ -1645,9 +1636,6 @@ If a named theorem's only direct conclusion is positive `exist` or `exist!`,
 use `release thm` (to store the existential) then `obtain` from that exist,
 or keep the existential and name witnesses in a `claim` as needed:
 
-> **Migration example:** Current `src/` checking stops at `release_thm` (`release thm …`). This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 have q Q
 release thm rational_has_unique_reduced_fraction(q)
@@ -1709,9 +1697,6 @@ preimage. `have by fn_preimage` turns that move into an explicit proof step.
 
 For example:
 
-> **Migration example:** Current `src/` checking stops at `session_error`. This retained block is not a verified result.
-
-<!-- litex:skip-test -->
 ```litex
 sketch:
     have f fn(x R: x > 0) R
