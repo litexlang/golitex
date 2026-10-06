@@ -1,0 +1,25 @@
+# Tracer: whole known numeric subterms precede their children.
+# Before: this exact claim intermittently failed under frozen before/after binaries.
+# claim:
+#     ? forall a,b R:
+#         a=0
+#         b=pi
+#         =>:
+#             cos(b)<cos(a)
+#     cos(a)=cos(0)=1
+#     cos(b)=cos(pi)=-1
+#     cos(b)<cos(a)
+# Now: one structural pass selects the actual whole numeric equality and cites it.
+claim:
+    ? forall a,b R:
+        a=0
+        b=pi
+        =>:
+            cos(b)<cos(a)
+    cos(a)=cos(0)=1
+    cos(b)=cos(pi)=-1
+    cos(b)<cos(a)
+
+# Boundary: wrong numeric conclusions, failed-source reuse and implicit partial-operation WD reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit
+# Tests: cargo test --release --offline --lib closed_numeric_subterm_priority_tests

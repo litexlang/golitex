@@ -57,6 +57,11 @@ translation, this multilingual explanatory copy became feasible; the language
 setting changes the feedback, not the mathematical statement being checked.
 See the [CLI language options](docs/cli.md#basic-shape).
 
+**LaTeX export (preview).** `litex -latex -document -lang zh -f example.lit`
+compiles parsed source into mathematical LaTeX with prose in any of the ten
+CLI languages. It preserves definitions and explicit proof steps without
+executing or verifying them. See the [LaTeX compiler guide](src/compile_to_latex/README.md).
+
 ## Start from familiar mathematical objects
 
 Litex aims for a Python-like entry into formal mathematics, where more people

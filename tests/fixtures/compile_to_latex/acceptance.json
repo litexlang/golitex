@@ -1,0 +1,140 @@
+{
+  "date": "2026-10-06",
+  "scope": "parse-only current AST to localized LaTeX; no AST/Runtime/Env contract changes",
+  "binary_sha256": "f33df1336e92ff816324860a148579bf9e3f7b49af4f8ab07d7d670c122ca51e",
+  "rust_unit_tests": {
+    "command": "cargo test --release --lib compile_to_latex -- --nocapture",
+    "passed": 11,
+    "failed": 0
+  },
+  "cli_tests": {
+    "command": "cargo test --release --test compile_to_latex_cli -- --nocapture",
+    "passed": 4,
+    "failed": 0
+  },
+  "native_gate": {
+    "command": "python3 tests/compile_to_latex_xelatex.py --output-dir tmp/2026-10-06/compile-to-latex/tex-gate",
+    "engine": "XeTeX 3.141592653-2.6-0.999995 (TeX Live 2023)",
+    "documents": [
+      {
+        "language": "en",
+        "statement_fixtures": 50,
+        "object_fixtures": 94,
+        "compiled": true,
+        "missing_glyphs": 0,
+        "pages": 143,
+        "overfull_warnings": 57
+      },
+      {
+        "language": "zh",
+        "statement_fixtures": 50,
+        "object_fixtures": 94,
+        "compiled": true,
+        "missing_glyphs": 0,
+        "pages": 165,
+        "overfull_warnings": 47
+      },
+      {
+        "language": "zh-hant",
+        "statement_fixtures": 50,
+        "object_fixtures": 94,
+        "compiled": true,
+        "missing_glyphs": 0,
+        "pages": 165,
+        "overfull_warnings": 50
+      },
+      {
+        "language": "fr",
+        "statement_fixtures": 50,
+        "object_fixtures": 94,
+        "compiled": true,
+        "missing_glyphs": 0,
+        "pages": 143,
+        "overfull_warnings": 63
+      },
+      {
+        "language": "ru",
+        "statement_fixtures": 50,
+        "object_fixtures": 94,
+        "compiled": true,
+        "missing_glyphs": 0,
+        "pages": 144,
+        "overfull_warnings": 70
+      },
+      {
+        "language": "es",
+        "statement_fixtures": 50,
+        "object_fixtures": 94,
+        "compiled": true,
+        "missing_glyphs": 0,
+        "pages": 143,
+        "overfull_warnings": 66
+      },
+      {
+        "language": "ar",
+        "statement_fixtures": 50,
+        "object_fixtures": 94,
+        "compiled": true,
+        "missing_glyphs": 0,
+        "pages": 144,
+        "overfull_warnings": 43
+      },
+      {
+        "language": "ja",
+        "statement_fixtures": 50,
+        "object_fixtures": 94,
+        "compiled": true,
+        "missing_glyphs": 0,
+        "pages": 145,
+        "overfull_warnings": 39
+      },
+      {
+        "language": "ko",
+        "statement_fixtures": 50,
+        "object_fixtures": 94,
+        "compiled": true,
+        "missing_glyphs": 0,
+        "pages": 144,
+        "overfull_warnings": 37
+      },
+      {
+        "language": "vi",
+        "statement_fixtures": 50,
+        "object_fixtures": 94,
+        "compiled": true,
+        "missing_glyphs": 0,
+        "pages": 143,
+        "overfull_warnings": 57
+      }
+    ]
+  },
+  "primary_tracer": {
+    "path": "examples/stmt_nodes/compile_to_latex/identity.lit",
+    "verification_command": "target/release/litex -f examples/stmt_nodes/compile_to_latex/identity.lit",
+    "exit_code": 0,
+    "json_success": true,
+    "session_error": null,
+    "latex_document": "examples/stmt_nodes/compile_to_latex/identity.zh.tex",
+    "pdf": "examples/stmt_nodes/compile_to_latex/identity.zh.pdf"
+  },
+  "visual_review": {
+    "engine": "bundled PDFium",
+    "reviewed": "Chinese primary tracer and first-page contact sheet for all ten corpus documents",
+    "primary_tracer_layout": "clear and complete; Chinese text and math visible"
+  },
+  "known_limits": [
+    "Conversion does not verify source truth or well-definedness.",
+    "Long formulas and case arrays may overflow margins; no automatic line breaking or whole-book pagination.",
+    "Comments and quoted asides are discarded upstream by the tokenizer.",
+    "Document wrappers need the documented XeLaTeX packages and fonts."
+  ],
+  "environment_notes": [
+    "Codex built-in preview timed out while downloading its initial Tectonic format; source was preserved and local XeLaTeX validated output.",
+    "Bundled Poppler lacks Adobe-GB1 mapping on this host; visual review used the available PDFium renderer."
+  ],
+  "native_repairs": [
+    "Inserted a delimiter after \\langle to prevent command/identifier concatenation.",
+    "Used the bundled Big5 Ming font for Traditional Chinese instead of Fandol, which missed traditional characters.",
+    "Loaded geometry before polyglossia/bidi for Arabic."
+  ]
+}

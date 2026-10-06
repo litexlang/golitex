@@ -93,6 +93,8 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof as P;
             let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
             match p {
+                P::TanCotProduct(p) => entries.push(("angle", string(p.angle.readable_string()))),
+                P::TanSquareReciprocalCosine(p) => entries.push(("angle", string(p.angle.readable_string()))),
                 P::CosDoubleAngle(p) => {
                     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::CosDoubleAngleForm as F;
                     entries.push(("angle", string(p.angle.readable_string())));

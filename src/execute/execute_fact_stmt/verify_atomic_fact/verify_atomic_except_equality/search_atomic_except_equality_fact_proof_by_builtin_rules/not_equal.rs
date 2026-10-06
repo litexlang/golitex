@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::verify_trig_interval_bound::trig_interval_bound_spellings;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{
     AtomicFact, Fact, InFact, IsNonemptySetFact, LessEqualFact, LessFact, NotEqualFact, NotInFact,
@@ -663,8 +664,11 @@ impl Runtime {
     ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
         let lower = negative_half_pi();
         let upper = half_pi();
-        let lower_bound_proof = self.known_less_proof(&lower, arg)?;
-        let upper_bound_proof = self.known_less_proof(arg, &upper)?;
+        let lower_bound_proof = trig_interval_bound_spellings(&lower).into_iter().find_map(|bound| {
+            self.known_less_proof(&bound, arg).or_else(|| self.known_greater_proof(arg, &bound))
+        })?;
+        let upper_bound_proof = self.known_less_proof(arg, &upper)
+            .or_else(|| self.known_greater_proof(&upper, arg))?;
         Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOpenHalfPi(
             CosNonzeroOnOpenHalfPiBuiltinRuleProof { lower_bound_proof, upper_bound_proof },
         ))
@@ -676,8 +680,11 @@ impl Runtime {
     ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
         let lower = zero_obj();
         let upper = pi_obj();
-        let lower_bound_proof = self.known_less_proof(&lower, arg)?;
-        let upper_bound_proof = self.known_less_proof(arg, &upper)?;
+        let lower_bound_proof = trig_interval_bound_spellings(&lower).into_iter().find_map(|bound| {
+            self.known_less_proof(&bound, arg).or_else(|| self.known_greater_proof(arg, &bound))
+        })?;
+        let upper_bound_proof = self.known_less_proof(arg, &upper)
+            .or_else(|| self.known_greater_proof(&upper, arg))?;
         Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOpenPi(
             SinNonzeroOnOpenPiBuiltinRuleProof { lower_bound_proof, upper_bound_proof },
         ))

@@ -36,7 +36,9 @@ def main():
         objects = [obj for obj in objects if obj["name"] in args.object]
     leaf_count = sum(len(obj["ast_paths"]) for obj in manifest["objects"])
     if args.audit_only:
-        print(f"AST audit passed: {leaf_count} Obj leaves, {len(manifest['objects'])} dedicated object files.")
+        active_count = sum(not obj.get("retired", False) for obj in manifest["objects"])
+        print(f"AST inventory passed: {leaf_count} Obj leaves, {active_count} positive files, "
+              f"{len(manifest['objects']) - active_count} retired interface families with rejection fixtures.")
         return 0
 
     build_source = source_digest(root)
@@ -67,7 +69,7 @@ def main():
         "objects": len(objects), "positive_assertions": sum(len(obj["positive_cases"]) for obj in objects),
         "observations": [], "failures": [], "known_gaps": []}
     for obj in objects:
-        fixtures = [("positive", obj["positive_file"], "accept", None)]
+        fixtures = [] if obj.get("retired", False) else [("positive", obj["positive_file"], "accept", None)]
         gaps = {gap["file"]: gap for gap in obj["gaps"]}
         for case in obj["negative_cases"]:
             fixtures.append(("negative", case["file"], "reject", gaps.get(case["file"])))
@@ -191,11 +193,16 @@ def audit(suite, root, manifest):
     object_names = [obj["name"] for obj in manifest["objects"]]
     if len(object_names) != len(set(object_names)):
         errors.append("duplicate object name")
-    targets = [obj['positive_file'] for obj in manifest['objects']]
+    targets = [obj['positive_file'] for obj in manifest['objects'] if not obj.get("retired", False)]
     if len(targets) != len(set(targets)):
         errors.append("several objects share the same dedicated file")
     for obj in manifest["objects"]:
-        if not obj["positive_cases"]:
+        retired = obj.get("retired", False)
+        if retired and (obj.get("positive_file") is not None or obj["positive_cases"] or obj["gaps"]):
+            errors.append("retired interface still has positive obligations: " + obj["name"])
+        if retired and not obj.get("retired_reason"):
+            errors.append("retired interface lacks an explicit reason: " + obj["name"])
+        if not retired and not obj["positive_cases"]:
             errors.append("no accepted case for " + obj["name"])
         if not obj["negative_cases"]:
             errors.append("no executable negative for " + obj["name"])
@@ -204,12 +211,13 @@ def audit(suite, root, manifest):
                 expected_files.add(record["file"])
                 if key == "gaps" and record["intended"] == record["baseline"]["observed"]:
                     errors.append("resolved/stale gap " + record["file"])
-        expected_files.add(obj["positive_file"])
-        target = suite / obj["positive_file"]
-        if target.is_file():
-            ids = re.findall(r"^# (P\d+):", target.read_text(), re.MULTILINE)
-            if ids != obj["positive_cases"]:
-                errors.append("positive case labels differ from manifest: " + obj["positive_file"])
+        if not retired:
+            expected_files.add(obj["positive_file"])
+            target = suite / obj["positive_file"]
+            if target.is_file():
+                ids = re.findall(r"^# (P\d+):", target.read_text(), re.MULTILINE)
+                if ids != obj["positive_cases"]:
+                    errors.append("positive case labels differ from manifest: " + obj["positive_file"])
     for file in sorted(expected_files):
         path = suite / file
         if not path.is_file():
@@ -247,7 +255,7 @@ def evaluate(binary, root, path, timeout):
     if envelope["success"] is True and process.returncode == 0 and not failed and error is None:
         observed, phase = "accept", "success"
     elif envelope["success"] is False and process.returncode == 1:
-        parse_error = isinstance(error, str) and error.startswith("Runtime(ParseError(")
+        parse_error = isinstance(error, str) and error.startswith(("parse_error:", "Runtime(ParseError("))
         if failed and (error is None or parse_error):
             observed = "reject"
             phase = failed[0].get("why_failed", {}).get("phase", "verification")

@@ -55,3 +55,13 @@ pub mod by_elementary_definitions;
 pub mod log_algebra_base_proof;
 
 pub mod by_gcd_lcm_universal_divisibility;
+
+mod by_trig_quotient_relations;
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/trig_quotient_relations/tests.rs"]
+mod trig_quotient_relations_tests;
+
+pub(in crate::execute) mod verify_trig_interval_bound;
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/trig_interval_bound_spellings/tests.rs"]
+mod trig_interval_bound_spellings_tests;

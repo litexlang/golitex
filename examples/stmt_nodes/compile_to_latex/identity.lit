@@ -1,0 +1,15 @@
+# Tracer: parse-only localized LaTeX compilation.
+# Before: this source could be verified, but src had no -latex conversion route.
+# thm identity:
+#     ? forall x R:
+#         x = x
+# by thm identity(2) => 2 = 2
+# Now: the same source renders as a named theorem and an explicit citation.
+# Boundary: conversion success does not verify the statement or its proof.
+# Conversion: target/release/litex -latex -lang zh -f examples/stmt_nodes/compile_to_latex/identity.lit
+# Verification: target/release/litex -f examples/stmt_nodes/compile_to_latex/identity.lit
+
+thm identity:
+    ? forall x R:
+        x = x
+by thm identity(2) => 2 = 2

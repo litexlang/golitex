@@ -2,7 +2,7 @@
 
 Task: add detailed regression files for every current Litex Obj variant.
 
-The inventory maps 99 terminal Obj paths to 99 dedicated positive files, with 665 positive cases, 309 rejection fixtures and 0 recorded gaps.
+The current manifest inventories 99 retained terminal Obj declarations, 96 dedicated positive files and three explicitly retired interface families. It lists 659 positive cases, 309 rejection fixtures and 0 recorded gaps. These are written-case counts, not a full-corpus pass.
 
 The earlier 2026-10-03 [audit](audit_2026-10-03.md) observed 67 direct
 rejections. The subsequent [F authoring repairs](experience/problem_notes/f_authoring_repairs_2026-10-03.md)
@@ -32,7 +32,7 @@ expectation failures are retained separately.
 | `Obj::Identifier::Plain` | [identifier_plain](identifier_plain.lit) | 6 | 3 | 0 |
 | `Obj::FnObj` | [fn_obj](fn_obj.lit) | 9 | 5 | 0 |
 | `Obj::Literal::Number` | [number](number.lit) | 9 | 3 | 0 |
-| `Obj::Literal::ImaginaryUnit` | [imaginary_unit](imaginary_unit.lit) | 8 | 3 | 0 |
+| `Obj::Literal::ImaginaryUnit` | [imaginary_unit](imaginary_unit.lit) | 9 | 3 | 0 |
 | `Obj::Literal::EulerNumber` | [euler_number](euler_number.lit) | 5 | 2 | 0 |
 | `Obj::Literal::Pi` | [pi](pi.lit) | 5 | 2 | 0 |
 | `Obj::ArithmeticOperator::Add` | [add](add.lit) | 7 | 2 | 0 |
@@ -44,18 +44,18 @@ expectation failures are retained separately.
 | `Obj::ArithmeticOperator::Abs` | [abs](abs.lit) | 6 | 2 | 0 |
 | `Obj::ArithmeticOperator::Min` | [min](min.lit) | 6 | 2 | 0 |
 | `Obj::ArithmeticOperator::Max` | [max](max.lit) | 6 | 2 | 0 |
-| `Obj::ArithmeticOperator::Floor` | [floor](floor.lit) | 9 | 3 | 0 |
-| `Obj::ArithmeticOperator::Ceil` | [ceil](ceil.lit) | 9 | 3 | 0 |
+| `Obj::ArithmeticOperator::Floor` | [floor](floor.lit) | 10 | 3 | 0 |
+| `Obj::ArithmeticOperator::Ceil` | [ceil](ceil.lit) | 10 | 3 | 0 |
 | `Obj::ArithmeticOperator::Sign` | [sign](sign.lit) | 8 | 2 | 0 |
 | `Obj::IntegerOperator::Mod` | [mod](mod.lit) | 8 | 3 | 0 |
 | `Obj::IntegerOperator::Quot` | [quot](quot.lit) | 8 | 5 | 0 |
-| `Obj::IntegerOperator::Gcd` | [gcd](gcd.lit) | 8 | 3 | 0 |
+| `Obj::IntegerOperator::Gcd` | [gcd](gcd.lit) | 9 | 3 | 0 |
 | `Obj::IntegerOperator::Lcm` | [lcm](lcm.lit) | 7 | 2 | 0 |
 | `Obj::IntegerOperator::Factorial` | [factorial](factorial.lit) | 7 | 3 | 0 |
 | `Obj::TrigOperator::Sin` | [sin](sin.lit) | 8 | 3 | 0 |
 | `Obj::TrigOperator::Cos` | [cos](cos.lit) | 8 | 2 | 0 |
-| `Obj::TrigOperator::Tan` | [tan](tan.lit) | 8 | 4 | 0 |
-| `Obj::TrigOperator::Cot` | [cot](cot.lit) | 6 | 3 | 0 |
+| `Obj::TrigOperator::Tan` | [tan](tan.lit) | 9 | 4 | 0 |
+| `Obj::TrigOperator::Cot` | [cot](cot.lit) | 7 | 3 | 0 |
 | `Obj::TrigOperator::Arcsin` | [arcsin](arcsin.lit) | 4 | 4 | 0 |
 | `Obj::TrigOperator::Arccos` | [arccos](arccos.lit) | 4 | 4 | 0 |
 | `Obj::TrigOperator::Arctan` | [arctan](arctan.lit) | 4 | 2 | 0 |
@@ -82,11 +82,11 @@ expectation failures are retained separately.
 | `Obj::SetFormer::ClosedRange` | [closed_range](closed_range.lit) | 7 | 2 | 0 |
 | `Obj::SetFormer::FiniteSeqSet` | [finite_seq_set](finite_seq_set.lit) | 5 | 3 | 0 |
 | `Obj::SetFormer::SeqSet` | [seq_set](seq_set.lit) | 5 | 2 | 0 |
-| `Obj::ProductShape::Cart` | [cart](cart.lit) | 6 | 5 | 0 |
-| `Obj::ProductShape::Tuple` | [tuple](tuple.lit) | 6 | 2 | 0 |
-| `Obj::ProductShape::CartDim` | [cart_dim](cart_dim.lit) | 4 | 2 | 0 |
-| `Obj::ProductShape::TupleDim` | [tuple_dim](tuple_dim.lit) | 4 | 2 | 0 |
-| `Obj::ProductShape::Proj` | [proj](proj.lit) | 4 | 4 | 0 |
+| `Obj::ProductShape::Cart` | [cart](cart.lit) | 5 | 5 | 0 |
+| `Obj::ProductShape::Tuple` | [tuple](tuple.lit) | 5 | 2 | 0 |
+| `Obj::ProductShape::CartDim` | Retired interface; rejection fixtures retained | 0 | 2 | 0 |
+| `Obj::ProductShape::TupleDim` | Retired interface; rejection fixtures retained | 0 | 2 | 0 |
+| `Obj::ProductShape::Proj` | Retired interface; rejection fixtures retained | 0 | 4 | 0 |
 | `Obj::ProductShape::ObjAtIndex` | [obj_at_index](obj_at_index.lit) | 6 | 5 | 0 |
 | `Obj::FunctionSpace::FnSet` | [fn_set](fn_set.lit) | 6 | 3 | 0 |
 | `Obj::FunctionSpace::AnonymousFn` | [anonymous_fn](anonymous_fn.lit) | 7 | 4 | 0 |
@@ -98,8 +98,8 @@ expectation failures are retained separately.
 | `Obj::IteratedOperator::Reduce` | [reduce](reduce.lit) | 5 | 3 | 0 |
 | `Obj::IteratedOperator::FiniteSetReduce` | [finite_set_reduce](finite_set_reduce.lit) | 6 | 3 | 0 |
 | `Obj::FiniteSetStat::FiniteSetSize` | [finite_set_size](finite_set_size.lit) | 7 | 3 | 0 |
-| `Obj::FiniteSetStat::FiniteSetMax` | [finite_set_max](finite_set_max.lit) | 6 | 5 | 0 |
-| `Obj::FiniteSetStat::FiniteSetMin` | [finite_set_min](finite_set_min.lit) | 6 | 5 | 0 |
+| `Obj::FiniteSetStat::FiniteSetMax` | [finite_set_max](finite_set_max.lit) | 7 | 5 | 0 |
+| `Obj::FiniteSetStat::FiniteSetMin` | [finite_set_min](finite_set_min.lit) | 7 | 5 | 0 |
 | `Obj::StructAndFieldAccessObj::StructObj` | [struct_obj](struct_obj.lit) | 4 | 3 | 0 |
 | `Obj::StructAndFieldAccessObj::FieldAccess` | [field_access](field_access.lit) | 4 | 4 | 0 |
 | `Obj::InstantiatedTemplateObj` | [instantiated_template_obj](instantiated_template_obj.lit) | 4 | 3 | 0 |

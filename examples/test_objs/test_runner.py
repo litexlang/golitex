@@ -70,6 +70,13 @@ class RunnerBoundaryTests(unittest.TestCase):
         self.assertEqual(self.evaluate(envelope, 1)["observed"], "reject")
         self.assertEqual(self.evaluate(envelope, 2)["observed"], "infrastructure_failure")
 
+    def test_current_parse_rejection_protocol(self):
+        envelope = {"kind": "run", "success": False, "statement_results": [],
+            "session_error": "parse_error: cart_dim is removed at line 2"}
+        result = self.evaluate(envelope, 1)
+        self.assertEqual((result["observed"], result["phase"]), ("reject", "parse"))
+        self.assertEqual(self.evaluate(envelope, 2)["observed"], "infrastructure_failure")
+
     def test_panic_and_invalid_json_are_not_negative_test_successes(self):
         process = subprocess.CompletedProcess([], -6, "", "thread panicked")
         with patch.object(RUNNER.subprocess, "run", return_value=process):

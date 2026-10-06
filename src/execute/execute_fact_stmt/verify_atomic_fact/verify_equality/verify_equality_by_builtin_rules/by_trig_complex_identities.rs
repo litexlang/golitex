@@ -9,6 +9,8 @@ use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum TrigComplexIdentityProof {
+    TanCotProduct(super::by_trig_quotient_relations::TanCotProductBuiltinRuleProof),
+    TanSquareReciprocalCosine(super::by_trig_quotient_relations::TanSquareReciprocalCosineBuiltinRuleProof),
     SinHalfPiShift(SinHalfPiShiftProof),
     CosHalfPiShift(CosHalfPiShiftProof),
     CosDoubleAngle(CosDoubleAngleBuiltinRuleProof),
@@ -77,6 +79,8 @@ impl CosHalfPiReflectionBuiltinRuleProof {
 impl TrigComplexIdentityProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::TanCotProduct(_) => "TanCotProduct",
+            Self::TanSquareReciprocalCosine(_) => "TanSquareReciprocalCosine",
             Self::SinHalfPiShift(_) => "SinHalfPiShift",
             Self::CosHalfPiShift(_) => "CosHalfPiShift",
             Self::CosDoubleAngle(_) => "CosDoubleAngle",
@@ -117,6 +121,9 @@ impl Runtime {
             return Ok(Some(P::NumericComplexModulus(proof)));
         }
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            if let Some(proof) = super::by_trig_quotient_relations::trig_quotient_relation(left, right) {
+                return Ok(Some(proof));
+            }
             if let Some(proof) = self.periodic_trig_value(left, state.clone())? {
                 if crate::rational_expression::objs_equal_by_rational_expression_evaluation(&proof.value, right) {
                     return Ok(Some(P::PeriodicTrig(proof)));

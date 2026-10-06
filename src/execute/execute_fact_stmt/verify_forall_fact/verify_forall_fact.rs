@@ -1,8 +1,9 @@
+use super::source_fact_alpha::same_source_fact;
 use crate::ast::fact::{Fact, ForallFact};
 use crate::ast::obj::{IdentifierObj, Obj};
 use crate::ast::param::ParamType;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::{compound_objs_alpha_equal, quantifier_free_source_facts_alpha_equal};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::{compound_objs_alpha_equal};
 use crate::execute::execute_fact_stmt::verify_forall_fact::result::{
     forall_fact_result_from_success, forall_fact_result_from_then_fail,
     forall_fact_result_from_wd_fail,
@@ -209,7 +210,7 @@ impl Runtime {
                 .all(|(src, dst)| {
                     self.inst_fact(src, &subst)
                         .ok()
-                        .is_some_and(|inst| same_quantified_source_fact(&inst, dst))
+                        .is_some_and(|inst| same_source_fact(self, &inst, dst))
                 })
                 && source
                     .then_facts
@@ -219,7 +220,7 @@ impl Runtime {
                         self.inst_fact(&Fact::from(src.clone()), &subst)
                             .ok()
                             .is_some_and(|inst| {
-                                same_quantified_source_fact(&inst, &Fact::from(dst.clone()))
+                                same_source_fact(self, &inst, &Fact::from(dst.clone()))
                             })
                     });
             if facts_match {
@@ -334,28 +335,11 @@ impl Runtime {
     }
 }
 
-// Exact free identities and polarity remain significant. The existing exist
-// alpha key handles its own witness binders after outer parameters are renamed.
-fn same_quantified_source_fact(source: &Fact, goal: &Fact) -> bool {
-    if std::mem::discriminant(source) != std::mem::discriminant(goal) {
-        return false;
-    }
-    match (
-        crate::ast::fact::exist_shaped_fact_from_fact(source),
-        crate::ast::fact::exist_shaped_fact_from_fact(goal),
-    ) {
-        (Some(a), Some(b)) => {
-            // Nested function/set binders also permit alpha-renaming. Keep
-            // free identities, carriers and the complete existential body exact.
-            crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::plain_exist_facts_alpha_equal(
-                crate::exec_env::exist_shaped_fact_index_key::plain_exist_fact(&a),
-                crate::exec_env::exist_shaped_fact_index_key::plain_exist_fact(&b),
-            )
-        }
-        _ => source.ir() == goal.ir() || quantifier_free_source_facts_alpha_equal(source, goal),
-    }
-}
 
 #[cfg(test)]
 #[path = "../../../../tests/unit/execute/forall_source_replay/tests.rs"]
 mod source_replay_tests;
+
+#[cfg(test)]
+#[path = "../../../../tests/unit/execute/forall_nested_source_replay/tests.rs"]
+mod forall_nested_source_replay_tests;

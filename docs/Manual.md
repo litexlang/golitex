@@ -24,12 +24,15 @@ identity may need the defining equation as an explicit bridge.
 
 | Part | Read it to | Start here |
 |---|---|---|
-| Start and foundations | Understand objects, facts, context, WD and scope | [Core reading model](#the-core-reading-model), [pure-set model](#pure-set-object-model) |
-| Syntax and proof process | Write compound facts and read verification results | [Syntax](#syntax-reference), [facts](#factual-statements), [proof process](#proof-process) |
-| Dictionaries | Look up every native statement, object and atomic family | [Statements](#statement-dictionary), [objects](#object-dictionary), [atomic facts](#builtin-atomic-fact-dictionary-and-relationships) |
-| Native rules and inference | Find additional laws, exact calculation and stored consequences | [Verification rules](#builtin-verification-rules), [inference](#builtin-inference) |
-| Practice | Repair mistakes and choose mathematical formulations | [Pitfalls](#pitfalls-and-missing-proof-steps), [recommended writing](#recommended-mathematical-formulations) |
-| Projects and boundaries | Configure dependencies, extract code, and interpret trust | [Project workflows](#project-workflows), [compatibility](#removed-and-renamed-public-forms), [appendix](#appendix) |
+| Design principles | Understand the mathematical object model and checking contracts | [Principles](#design-principles), [core model](#the-core-reading-model) |
+| System pipeline | Follow source input through the complete system and identify each owner's job | [Pipeline and component map](#system-pipeline) |
+| Project organization | Select dependencies/exports and understand names and load order | [Projects](#project-organization) |
+| Syntax and proof/output | Write facts, check WD and read verification results | [Syntax](#syntax-reference), [facts](#factual-statements), [WD](#well-defined-objects), [proof/output](#proof-process) |
+| Dictionaries and practice | Look up native contracts and choose a mathematical proof formulation | [S](#statement-dictionary), [O](#object-dictionary), [F/C](#builtin-atomic-fact-dictionary-and-relationships), [pitfalls](#pitfalls-and-missing-proof-steps), [recipes](#recommended-mathematical-formulations) |
+| Advanced interfaces | Read deeper function, struct and template contracts | [Interface details](#advanced-interface-details) |
+| Native rules and inference | Find extra guarded laws, calculation limits and inference triggers | [Verification rules](#builtin-verification-rules), [inference](#builtin-inference) |
+| Execution and extraction | Run algorithms/eval and inspect Python/C extraction boundaries | [Executable path](#execution-and-extraction) |
+| Compatibility and evidence | Interpret removed forms, assumptions and verification records | [Compatibility](#removed-and-renamed-public-forms), [coverage](#verification-and-coverage), [appendix](#appendix) |
 
 The native inventory has **51 public statement forms, 93 active object leaves,
 20 builtin atomic families with their negative forms, and two native certificate
@@ -40,7 +43,10 @@ not every imported theorem or every individual kernel rewrite.
 The detailed Reference entries now live here. Their original
 [inventory evidence](audits/reference-inventory-2026-10-06.json) remains a
 historical source-owned record; the [merge audit](audits/manual-merge-2026-10-06.json)
-records content destinations and current checks of this combined document.
+records the consolidation. The [pipeline and ordering audit](audits/manual-pipeline-2026-10-06.json)
+records the current whole-system chapter and reading order.
+The [equality/order recipe audit](audits/manual-order-recipes-2026-10-06.json)
+records the checked algebra, translation, sign and sum-of-squares routes.
 Expected rejections and retained migration examples are labelled and excluded
 from the positive fence collector. An assumed example is not a strict proof.
 The S19, S23 and S24 trust/axiom entries intentionally demonstrate ordinary-mode
@@ -98,16 +104,20 @@ is not a proof that `x != 0`. The context only says that `x` is real.
 
 ### Reading path
 
-For a first proof, read the core model, [well-definedness](#well-defined-objects),
-and [fact grammar](#factual-statements), then follow [the mathematical routes](#i-know-the-mathematics).
-For a known spelling, use the [syntax route](#i-know-the-syntax) and each
-dictionary's complete index. Object domains have one owner in the O entries;
-statement execution has one owner in the S entries; atomic meanings and
-relationships have one owner in the F entries. Rule sections add recognized
-law shapes and evidence boundaries rather than another definition catalogue.
+Read [design principles](#design-principles), the [system pipeline](#system-pipeline),
+and [project organization](#project-organization) for the system-level picture.
+Then use [syntax](#syntax-reference), [fact grammar](#factual-statements),
+[WD](#well-defined-objects) and [proof/output](#proof-process) for authoring.
+The S/O/F/C dictionaries and P/R entries provide the detailed lookup route.
 
-The [Learner Cheatsheet](Litex_Learner_Cheatsheet.md) provides compact learning
-developments; [examples](../examples/README.md) provide longer runnable files.
+The final technical chapters continue with [advanced interfaces](#advanced-interface-details),
+[native rules](#builtin-verification-rules) and [inference](#builtin-inference),
+then [execution/extraction](#execution-and-extraction). Each deep note links
+back to its dictionary entry; domains, facts and scope have the same meaning
+in both views.
+
+The [Learner Cheatsheet](Litex_Learner_Cheatsheet.md) supplies compact learning
+developments; [examples](../examples/README.md) supply longer runnable files.
 The [FAQ](FAQ.md), [Blueprint](Litex_Blueprint.md), and
 [Lean–Litex comparisons](Representative_Lean_Litex_Example_Comparisons.md)
 cover rationale and comparisons. Installation and command flags belong in
@@ -125,7 +135,9 @@ context effect differs from an all-conclusions release. See the
 for examples and reasons. These source-style preferences do not impose parser
 restrictions.
 
-## Language foundations
+<a id="language-foundations"></a>
+
+## Design principles
 
 ### Pure-set object model
 
@@ -161,113 +173,258 @@ own well-definedness obligations. These restrictions are what separate
 "every object is set-coded" from the inconsistent claim that every predicate
 defines a set of all objects.
 
-## Well-Defined Objects
 
-Before Litex tries to prove a fact, it checks that every object in that fact is
-meaningful in the current context. A well-definedness failure is an `error`,
-not a soft-miss theorem label.
+### Meaning, evidence and context
 
-### Domain obligations
+Objects, facts and statements have the roles shown in the
+[core reading model](#the-core-reading-model). Before truth verification,
+well-definedness checks that the objects and predicate applications are
+meaningful under their domains. A successful statement can then make facts
+available in its scope; later statements consume those facts through checked
+routes. [Inference](#builtin-inference) accounts for the routine consequences
+published after acceptance.
 
-Ordinary `prop` and `abstract_prop` facts must refer to a declaration visible
-at the point where their well-definedness is checked, with exactly the declared
-number of arguments. Qualified predicate names use the declaration in that
-module and file. A declaration later in a claim's proof body cannot make an
-earlier undefined goal well-defined. This also applies to negated predicate
-facts and to facts used as quantified assumptions.
+These are mathematical and checking contracts. Naming, operator precedence,
+delimiters and Unicode spellings are [syntax rules](#syntax-reference).
+The [trust boundary](#trust-boundary) states what a successful check assumes.
 
-Function definitions are checked under the parameter types and domain facts
-written in their signature.
+## System pipeline
+
+This chapter follows one current source input from launch to visible results.
+Project mounting supplies its definitions and names; the source runner handles
+tokenization and statement order; each statement handler checks its own
+mathematical obligations and commits accepted information. The [proof
+process](#proof-process) zooms into verification inside this larger flow.
+
+### From input to results
+
+```mermaid
+flowchart TD
+    A["CLI or REPL entry"] --> B["Load configured imports and exports"]
+    B --> C["Read the current source input"]
+    C --> D["Tokenize the whole input into top-level blocks"]
+    D --> E["Parse the next complete block and resolve names"]
+    E --> F["Dispatch the statement in a temporary execution scope"]
+    F --> G["Check WD and the statement-specific obligations"]
+    G --> H["Record accepted definitions, facts and inference effects"]
+    H --> I["Commit a successful statement"]
+    I --> J{"More blocks?"}
+    J -->|yes| E
+    J -->|no| K["Return results: JSON or REPL feedback"]
+    F -->|soft failure| L["Discard current effects and restore parse bindings"]
+    L --> J
+    E -->|parse error| M["Stop and report the error"]
+    F -->|execution error| M
+    D -->|tokenizer error| M
+    M --> K
+```
+
+The tokenize step runs over the complete current input before any of its
+statements execute. After that, parsing and execution alternate **one complete
+top-level block at a time**. A theorem, claim or sketch includes its entire
+nested proof in that block; parsing does not execute an unfinished proof.
+Successful earlier blocks remain available when a later block soft-fails.
+
+WD and truth verification are distinct obligations. A fact assertion verifies
+its fact before storing it. A definition checks its construction contract;
+a proof directive runs its scoped proof route; `eval` checks its computation
+and result equality. Ordinary-mode `trust` checks WD while explicitly assuming
+truth, and strict mode rejects the user-assumption forms. The diagram groups
+these handler-specific checks without claiming they all use one verifier.
+
+**Source:** [source runner](../src/run/run_litex_code.rs),
+[statement transaction and dispatch](../src/execute/exec_stmt.rs),
+[fact verify → store/infer](../src/execute/execute_fact_stmt/exec_fact_stmt.rs).
+
+### What each part owns
+
+| Part | Responsibility | Input → result | Implementation |
+|---|---|---|---|
+| Launch and run | Select file/project/source/REPL, strict policy and output language; route to the appropriate runner | Command arguments → selected run | [launch](../src/launch_command.rs), [run](../src/run/README.md) |
+| Project loading | Read `litex.config`, run imports and selected exports in order, and record completed file environments | Manifest and files → mounted project context | [run_module](../src/run_module/README.md) |
+| Module and name management | Track module/file owners and resolve qualified names against loaded exports | Alias/export/name → its owner-qualified identity | [module_manager](../src/module_manager/README.md) |
+| Tokenization | Recognize tokens, comments, aliases, indentation and complete source blocks | Source text → token blocks or tokenizer error | [tokenize](../src/tokenize/mod.rs) |
+| Parsing and AST | Build the Stmt/Obj/Fact shapes, attach binder identities and resolve source names | One complete block → structured statement or parse error | [parser entry](../src/parse/parse.rs), [AST](../src/ast/mod.rs) |
+| Runtime and execution environments | Own active context, name visibility and scoped statement execution; commit successful effects | Existing context + statement → success, soft failure or hard error | [Runtime](../src/runtime/mod.rs), [ExecEnv](../src/exec_env/mod.rs), [exec_stmt](../src/execute/exec_stmt.rs) |
+| Well-definedness | Check child objects, declaration/signature visibility, carriers and partial-operation guards | Object/fact + context → domain evidence or WD failure | [object WD](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/mod.rs), [atomic WD](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs) |
+| Fact verification and proof handlers | Reuse known facts and permitted calculation/rules/definitions/universals; check explicit proof routes | Goal + available evidence → typed verification result | [fact checking](../src/execute/execute_fact_stmt/README.md), [proof statements](../src/execute/execute_by_stmt/mod.rs) |
+| Instantiation | Substitute actual arguments into domains, bodies and facts while retaining binding identity and checking the caller's obligations | Parameterized interface + arguments → instantiated interface | [instantiate](../src/instantiate/mod.rs) |
+| Exact mathematical calculation | Provide bounded exact numeric/algebraic calculation to the checking and evaluation paths | Supported expressions → exact values/normal forms or a declined calculation | [rational_expression](../src/rational_expression/mod.rs) |
+| Storage and inference | Index accepted seeds, assign/cite facts and publish supported routine consequences in the current scope | Accepted fact → stored fact and inference effects | [store_fact_and_infer](../src/store_fact_and_infer/README.md) |
+| Display and result projection | Render statements and project existing result/evidence trees into localized output; projection adds no proof | Structured statement/result → readable representation and JSON | [display_and_ir](../src/display_and_ir/README.md), [json_output](../src/json_output/README.md) |
+| Import knowledge-base cache | Reuse a completed dependency's saved knowledge where policy permits; strict imports replay source | Dependency record → cached context or cold execution | [knowledge_base](../src/knowledge_base/README.md), [strict cache policy](../src/run_module/import_kb.rs) |
+| Optional executable extraction | Select marked source, verify that virtual program, then lower the supported executable subset to Python or C | Selected checked program → executable-code artifact | [extract_executable_code](../src/extract_executable_code/README.md) |
+
+Instantiation, exact calculation, storage and name resolution are shared
+services used at the appropriate points, rather than unconditional extra
+passes over every statement. A cold project import re-enters the same source and
+statement checking path for the dependency's files. An eligible cache hit
+restores completed dependency knowledge; strict imports take the source path. Imported file environments
+keep their owners; they are not flattened into one ambient fact collection.
+The current active Rust modules are listed in [src/lib.rs](../src/lib.rs).
+
+### One statement leaves evidence for the next
 
 ```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-have fn root(x R: 0 <= x) R = sqrt(x)
-
-reciprocal(2) = 1 / 2
-sqrt(4) = 2
-root(4) = 2
+have n N
+0 <= n
+n + 0 = n
 ```
 
-The same expressions fail when their obligations are absent:
+The parser introduces the name for the declaration. Execution checks that
+`N` is a usable nonempty carrier, stores `n $in N`, and inference publishes
+the nonnegative bound. The second line reads that known consequence. The third
+line checks the addition's object domains and proves the equality through the
+ordinary equality route. Each successful statement commits before the next
+block is parsed. [F01](#f01-membership-and-nonmembership) owns the membership
+contract and [S04](#s04-arbitrary-members) owns arbitrary-member introduction.
 
-```text
-have x R
-1 / x = 1
-sqrt(x) = 0
-```
+**Expected soft failure — the third statement misses `search_proof`; the
+fourth still succeeds:**
 
-Both factual lines produce `error`: the first lacks `x != 0`; the second lacks
-`0 <= x`.
-
-### Ordered assumptions during well-definedness
-
-The premises of a `forall` and the facts in an `exist` body are checked
-from left to right in their temporary binder scope. After one fact is known to
-be well-defined, Litex records it there as an assumption and runs its sound
-inference. A positive concrete predicate may therefore expose its definition,
-including a universal clause needed by a later object obligation.
-
-The same ordering applies to the domains of `not forall` and
-`forall … <=>:` during their independent WD checks, including definition
-bodies and claim goals. A checked domain such as `y != 0` can guard a later
-`1 / y`. For an iff, only the common domain guards both branches; a condition
-on one branch does not justify objects on the other branch. These local
-assumptions do not prove the quantified fact or escape its binder scope.
-See [the executable guarded-quantifier example](../examples/wd/fact/guarded_quantifier_domains.lit).
-
-**Checked example.**
-
+<!-- litex:skip-test -->
 ```litex
-prop nonzero_on(E power_set(R), g fn(x E) R):
-    forall x E:
-        g(x) != 0
-
-forall E power_set(R), f, g fn(x E) R:
-    $nonzero_on(E, g)
-    =>:
-        fn(x E) R {f(x) / g(x)} $in fn(x E) R
+have n N
+0 <= n
+n = 0
+n + 0 = n
 ```
 
-Here the checked predicate premise exposes `forall x E: g(x) != 0`, so the
-anonymous function body is meaningful throughout `E`. This is scoped
-definition use, not unrestricted proof search: recursion guards still apply,
-an `abstract_prop` has no body to expose, and omitting the predicate premise
-still leaves the division ill-defined. The temporary assumptions and inferred
-facts do not escape the quantified or existential check.
+The aggregate run reports failure because one statement failed; there is no
+session error, and the successful statements remain recorded. The failed
+equality is not a proof of `n != 0`. A failed declaration likewise restores
+its speculative parse bindings, so it cannot occupy a name for the next
+block. Global identifier counters are not rolled back or reused.
 
-The equivalent facts in a `struct` `<=>:` block are also checked from left to
-right in a temporary field scope. Each successful fact is staged without
-definition inference before the next fact is checked. This lets a filter guard
-justify a later partial expression, both when the struct is defined and when
-an instantiated struct carrier is checked:
+### Project loading, proof checking and executable output
 
-**Checked example.**
+Read [project organization](#project-organization) next for which sources are
+selected and how their names are made available. Read [proof process](#proof-process)
+for which evidence can justify a goal. Finally, [execution and extraction](#execution-and-extraction)
+explains how checked algorithms become computations or target programs.
+Those chapters describe connected parts of this pipeline, with separate
+responsibilities and checked boundaries.
 
-```litex
-struct NonzeroPair:
-    value R
-    tag N
-    <=>:
-        value != 0
-        1 / value = 1 / value
+<a id="project-workflows"></a>
+
+## Project organization
+
+### Modules and manifests (preview)
+
+> **Project modules:** there is no `submodule` and no `[hierarchy]`.
+> A maintained package is a single module. `[export]` lists only `.lit` files;
+> `[import]` and `[import std]` share one alias namespace within each manifest.
+>
+> - Tables / parse / `::` elaborate:
+>   [`src/module_manager/README.md`](../src/module_manager/README.md)
+> - How `-r` / `-f` / `-e` / REPL mount and run:
+>   [`src/run/README.md`](../src/run/README.md)
+> - Fixtures:
+>   [`examples/module_manager/`](../examples/module_manager/)
+
+A maintained project directory has one `litex.config`.
+
+```ini
+[import]
+Algebra = "../Algebra"
+
+[import std]
+basics # Alternatively: basics = basics (choose one spelling, not both)
+
+[export]
+chap1 = "./chapter01.lit"
+chap2 = "./chapter02.lit"
+chap3 = "./chapter03.lit"
 ```
 
-Source order is significant: omitting `value != 0`, or placing it after the
-reciprocal, leaves the reciprocal ill-defined. These temporary filter facts do
-not escape the struct check and are not proved merely by appearing in the
-definition.
+Under the Litex CLI:
 
-<a id="main-object-criteria"></a>
+| Command | Config | Behavior |
+|---------|--------|----------|
+| `-r <dir>` | required at `<dir>` | all imports, then all exports |
+| `-f <file>` | optional at `parent(file)` | listed → prefix through file; unlisted → full mount then file; missing → isolated |
+| `-e` / bare REPL | optional at cwd | full mount (or empty), then eval / REPL |
 
-### Where to find object obligations
+Mount soft Failed becomes session `FailToImport`. Soft Failed on a `-f`
+**target** itself stays a normal file failure.
 
-Each [O entry](#object-dictionary) owns its precise domain and common native
-properties. For example, [O01](#o01-division) checks the denominator guard;
-[O79](#o79-function-spaces) checks the complete fixed signature;
-[O92](#o92-definition-owned-field-access) distinguishes field WD from releasing
-struct properties. [S04](#s04-arbitrary-members) and
-[P06](#p06-arbitrary-have-needs-nonemptiness) explain why introducing an arbitrary
-member requires nonemptiness. These conditions are checked before truth search.
+Important rules:
+
+1. `[export]` is ordered and each entry names one `.lit` file. Exporting a
+   child directory or nested config node is not allowed.
+2. `[export]` is an explicit selection list, not a complete directory
+   inventory. Unlisted files and folders are sidecars: discovery does not
+   parse, execute, or expose them in the module namespace. Every declared
+   export path must exist and point to a `.lit` file.
+3. `[import] Alias = path` mounts another module directory.
+   `[import std]` accepts either a bare name `N` (meaning `N = N`) or
+   `Alias = StdName`; both mount `<std_root>/<StdName>` under `Alias`.
+   After resolution `[import]` and `[import std]` are the same kind of
+   import. Import aliases from both sections must be unique within that
+   `litex.config`; separate packages may reuse an alias for their own paths.
+   An export name may reuse an import spelling: `a::b` is always a
+   current export, `a::b::c` is an import path, and `a:::b` is explicit
+   single-export sugar for `a::<sole_export>::b`.
+4. Canonical names follow the mount alias and export name, for example
+   `Algebra::chap1::name` or `basics:::name` when `basics` has one export.
+
+Struct carriers accept these same paths: `&local::Pair`,
+`&Lib::facts::Tagged<R>` and, for an import with exactly one export,
+`&Lib:::Tagged<R>`. The full definition owner is retained for field types,
+function returns and nested struct fields. Missing paths, wrong arguments
+and tuples outside the chosen carrier are rejected. See the runnable
+[qualified struct fixture](../examples/module_manager/qualified_struct_views/README.md).
+
+Cross-module references always use canonical qualified names. Module aliases
+and symbols are separate, so a local symbol may also be named `A`; field
+selection such as `obj.b` remains in the field namespace. An export is
+unavailable while it is still loading, so an earlier file cannot cite a later
+export.
+
+An import alias is resolved using the importing package's manifest, then the
+normalized directory path selects the global module ID. For example, two
+packages may each declare `Common = "./dep"` and refer to different dependency
+directories. Same-path imports under different aliases share one module.
+The loader assigns distinct global display labels when local aliases repeat;
+these labels do not change source name resolution. See the runnable
+[cross-file identity fixture](../examples/module_manager/cross_file_identity/README.md).
+
+Project dependencies come from `litex.config` (`[import]` / `[import std]`),
+not from source-level `import` statements. Every `.lit` file rejects `import`;
+reproducible dependencies belong in the manifest. The interactive REPL runs
+Litex source blocks only; it does not add a separate terminal `import`
+command surface.
+
+```ini
+[hierarchy]
+module
+```
+
+```ini
+[hierarchy]
+submodule
+```
+
+```ini
+[export]
+Part2 = "./Part2"
+```
+
+```ini
+[import]
+basics = "../OtherBasics"
+
+[import std]
+basics = basics
+```
+
+These manifests are invalid under the current module design: `[hierarchy]` and
+`submodule` are removed, `[export]` cannot name a folder, and import aliases
+must be unique across `[import]` and `[import std]`.
+
+Project execution, persistent sessions and output are
+CLI contracts rather than language syntax. See the [CLI reference](cli.md) for
+installation, project-running examples, and the current command set.
 
 ## Syntax Reference
 
@@ -738,6 +895,114 @@ This is a parse `error`; write `not forall ...` on one header.
 
 ---
 
+## Well-Defined Objects
+
+Before Litex tries to prove a fact, it checks that every object in that fact is
+meaningful in the current context. A well-definedness failure is an `error`,
+not a soft-miss theorem label.
+
+### Domain obligations
+
+Ordinary `prop` and `abstract_prop` facts must refer to a declaration visible
+at the point where their well-definedness is checked, with exactly the declared
+number of arguments. Qualified predicate names use the declaration in that
+module and file. A declaration later in a claim's proof body cannot make an
+earlier undefined goal well-defined. This also applies to negated predicate
+facts and to facts used as quantified assumptions.
+
+Function definitions are checked under the parameter types and domain facts
+written in their signature.
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+have fn root(x R: 0 <= x) R = sqrt(x)
+
+reciprocal(2) = 1 / 2
+sqrt(4) = 2
+root(4) = 2
+```
+
+The same expressions fail when their obligations are absent:
+
+```text
+have x R
+1 / x = 1
+sqrt(x) = 0
+```
+
+Both factual lines produce `error`: the first lacks `x != 0`; the second lacks
+`0 <= x`.
+
+### Ordered assumptions during well-definedness
+
+The premises of a `forall` and the facts in an `exist` body are checked
+from left to right in their temporary binder scope. After one fact is known to
+be well-defined, Litex records it there as an assumption and runs its sound
+inference. A positive concrete predicate may therefore expose its definition,
+including a universal clause needed by a later object obligation.
+
+The same ordering applies to the domains of `not forall` and
+`forall … <=>:` during their independent WD checks, including definition
+bodies and claim goals. A checked domain such as `y != 0` can guard a later
+`1 / y`. For an iff, only the common domain guards both branches; a condition
+on one branch does not justify objects on the other branch. These local
+assumptions do not prove the quantified fact or escape its binder scope.
+See [the executable guarded-quantifier example](../examples/wd/fact/guarded_quantifier_domains.lit).
+
+**Checked example.**
+
+```litex
+prop nonzero_on(E power_set(R), g fn(x E) R):
+    forall x E:
+        g(x) != 0
+
+forall E power_set(R), f, g fn(x E) R:
+    $nonzero_on(E, g)
+    =>:
+        fn(x E) R {f(x) / g(x)} $in fn(x E) R
+```
+
+Here the checked predicate premise exposes `forall x E: g(x) != 0`, so the
+anonymous function body is meaningful throughout `E`. This is scoped
+definition use, not unrestricted proof search: recursion guards still apply,
+an `abstract_prop` has no body to expose, and omitting the predicate premise
+still leaves the division ill-defined. The temporary assumptions and inferred
+facts do not escape the quantified or existential check.
+
+The equivalent facts in a `struct` `<=>:` block are also checked from left to
+right in a temporary field scope. Each successful fact is staged without
+definition inference before the next fact is checked. This lets a filter guard
+justify a later partial expression, both when the struct is defined and when
+an instantiated struct carrier is checked:
+
+**Checked example.**
+
+```litex
+struct NonzeroPair:
+    value R
+    tag N
+    <=>:
+        value != 0
+        1 / value = 1 / value
+```
+
+Source order is significant: omitting `value != 0`, or placing it after the
+reciprocal, leaves the reciprocal ill-defined. These temporary filter facts do
+not escape the struct check and are not proved merely by appearing in the
+definition.
+
+<a id="main-object-criteria"></a>
+
+### Where to find object obligations
+
+Each [O entry](#object-dictionary) owns its precise domain and common native
+properties. For example, [O01](#o01-division) checks the denominator guard;
+[O79](#o79-function-spaces) checks the complete fixed signature;
+[O92](#o92-definition-owned-field-access) distinguishes field WD from releasing
+struct properties. [S04](#s04-arbitrary-members) and
+[P06](#p06-arbitrary-have-needs-nonemptiness) explain why introducing an arbitrary
+member requires nonemptiness. These conditions are checked before truth search.
+
 ## Proof Process
 
 The proof process answers one question: why may the current statement be added
@@ -1016,6 +1281,11 @@ statement's body. The examples in the dictionaries show the active-binder form.
 | Choose between naming a value and asserting a property | [R02](#r02-choose-the-language-form-by-mathematical-role), [R04](#r04-a-relation-and-its-selected-value-have-different-roles) |
 | Build a function over each carrier set | [R03](#r03-a-declaration-family-over-an-arbitrary-carrier) |
 | Define a piecewise function and prove a law | [R05](#r05-a-piecewise-definition-and-a-universal-law) |
+| Prove `a^2+b^2 >= 2*a*b` by completing a square | [R06](#r06-complete-a-square-and-translate-the-bound) → [P12](#p12-a-search-miss-does-not-disprove-an-inequality) |
+| Move a term across an inequality or compose bounds | [R07](#r07-translate-add-subtract-and-compose-bounds) → [F05](#f05-weak-less-than) |
+| Multiply or divide an inequality | [R08](#r08-scale-an-inequality-with-the-correct-sign) → [P13](#p13-preserve-sign-strictness-and-expression-shape) |
+| Prove a polynomial bound using sums of squares | [R09](#r09-build-a-sum-of-squares-proof) |
+| Use an absolute-value or triangle bound | [R10](#r10-expose-absolute-value-bounds) → [P13](#p13-preserve-sign-strictness-and-expression-shape) |
 | Construct a uniquely specified callable value | [S13](#s13-functions-from-unique-existence), [S36](#s36-unique-existential-witnesses) |
 | Prove an image value has a source | [S09](#s09-extract-function-preimages), [O81](#o81-function-images) |
 | Prove a set or function equality | [S45](#s45-set-extensionality), [S46](#s46-function-extensionality) |
@@ -1568,24 +1838,9 @@ absolute(3) = 3
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S01 Expression-defined functions](#s01-expression-defined-functions), [O79 Function spaces](#o79-function-spaces), [O03 Function applications](#o03-function-applications).
 
-#### Case equations and compound guards
+**Further detail:** [Case equations and compound guards](#case-equations-and-compound-guards).
 
-Relation-chain guards contribute every adjacent comparison to the mutual
-exclusion check, just as the equivalent flat `and` guard does. This also
-applies to `algo ... by cases`; coverage and return checks are still required.
 
-> **Preview:** after `have fn f(...) T = body`, `by cases`, or
-> `by induc`, application equalities such as `f(args) = subst(body)` are proved
-> by the equality **object-definition** stage (same idea as `\Template<args>(...)`
-> and `have` / `let` identifier unfolds). For `by cases` / `by induc`, Litex looks
-> up the stored definition, matches a case guard at the concrete arguments, and
-> unfolds that case body. The same unfolds apply when the definition lives in a
-> `template<…>:` body: `\name<args>(fn_args)` matches the template parameters,
-> then the case/induc guards and body, exactly as for ordinary `have fn`.
-> Runnable coverage of all nine leaf shapes (identifier `have`/`let`, three
-> ordinary `have fn` forms, four template forms) is in
-> `examples/tmp_have_fn_object_definition.lit`.
-> `by exist!` still does not get that equality unfold.
 
 <a id="recursive-functions-by-an-integer-measure"></a>
 
@@ -1615,38 +1870,9 @@ countdown(1) = countdown(0) = 0
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S01 Expression-defined functions](#s01-expression-defined-functions), [O79 Function spaces](#o79-function-spaces), [O03 Function applications](#o03-function-applications).
 
-#### Nested cases and decreasing calls
+**Further detail:** [Nested cases and decreasing calls](#nested-cases-and-decreasing-calls).
 
-`have fn ... by induc measure from lower` defines a recursive function. Litex
-checks that the measure and lower bound are integers, recursive calls stay in
-the domain, and each recursive measure is smaller but not below the bound.
-Every sibling case list, including nested lists, must cover its enclosing
-domain and be pairwise disjoint. A nested list is checked under its parent
-guard; it need not cover integers excluded by that guard. An invalid list
-rejects the declaration before any function or case equation is published.
 
-For a real-valued `x` and a closed numeric expression `c` whose exact value is
-positive, the checker proves `x - c < x`. This includes offsets such as `2`,
-`1 + 1`, and `1 / 3`; it does not assume that a symbolic offset is positive.
-Zero, negative offsets, and nondecreasing recursive calls remain rejected.
-See the [two-step recursive domain tracer](../examples/wd/positive_closed_decrement_recursive.lit).
-Detailed output records the actual offset as `SubtractPositiveClosedLess`;
-the existing literal-one route retains its `SubtractOneLess` label.
-
-```litex
-have fn countdown(n N) N by induc n from 0:
-    case n = 0: 0
-    case n >= 1: countdown(n - 1)
-
-forall n N:
-    countdown(n) $in N
-```
-
-The stored case equations are directly usable at arguments whose case can be
-proved. Litex instantiates the selected equation and performs nested arithmetic
-normalization, so a successor argument does not require separate lines for
-`n + 1 > 0` and `(n + 1) - 1 = n`. It still refuses to select a case when its
-condition is not known.
 
 <a id="functions-from-unique-existence"></a>
 
@@ -1688,34 +1914,9 @@ forall x A:
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S01 Expression-defined functions](#s01-expression-defined-functions), [O79 Function spaces](#o79-function-spaces), [O03 Function applications](#o03-function-applications).
 
-#### Selection facts and binder replay
+**Further detail:** [Selection facts and binder replay](#selection-facts-and-binder-replay).
 
-> **Preview:** `have fn … by exist!` is goal-only (no proof
-> body). Exec requires the `forall … exist!` goal to be already proved
-> (`claim` / `thm` / `trust`), then stores `f $in FnSet(...)`, the property
-> forall (`body` with the witness replaced by `f(args)`), and the uniqueness
-> forall (`body ⇒ witness = f(args)`). It does **not** store `f = AnonymousFn`,
-> so applications do not unfold by equality the way `have fn f(...) T = body`
-> does. The name is recorded in the definition table, so `release obj def f`
-> re-stores the same three facts.
->
-> A `template` may use this form as its body. Instantiating `\Name<args>`
-> installs the same three facts as a plain `have fn by exist!` (FnSet
-> membership, property forall, uniqueness forall), with subjects equal to
-> the instance.
 
-`have fn name by exist!` turns an **already proved** unique-existence
-statement into a function. Prove the `forall … exist!` outside; the `have fn`
-block only names the goal and selects the function.
-
-An already proved whole `forall` can be replayed with renamed outer
-parameters and existential witnesses, including an outer parameter absent
-from the conclusion. Replay checks the goal's well-definedness, preserves
-the carriers, premises and free definition owners, and cites the stored
-source fact. Existential function/set carriers also allow renaming their
-nested bound variables; their domains, return carriers, guards and free
-identities remain unchanged. Replay does not assign a value to an unused
-parameter.
 
 <a id="user-defined-predicates"></a>
 
@@ -1849,31 +2050,9 @@ mode. Struct parameterization belongs to the struct declaration itself.
 argument contracts. See R03 for the checked family and both calls. The source
 enumeration is [TemplateDefEnum](../src/ast/stmt.rs).
 
-#### Carrier families and function arguments
+**Further detail:** [Carrier families and function arguments](#carrier-families-and-function-arguments).
 
-Read a template as the parameterized counterpart of an ordinary definition
-statement. The body is the same kind of definition that would appear outside
-(`have …`, `have fn …`, and the other supported definition forms): Litex
-checks it as if the angle-bracket parameters were already introduced and
-satisfied the header conditions. Instantiating `\name<args>` then gives the
-corresponding defined object or function for those concrete arguments.
 
-That is why `template` is necessary and cannot be replaced by a simple
-`fn_set` / ordinary function whose domain is written as `set`. A Litex function
-parameter must range over one fixed set. The binder kind `set` is not such a
-set: it is a surface parameter kind meaning "a set," not an element of a
-set-of-all-sets. So a family indexed by an arbitrary set belongs in the
-template header, not as a fake function argument. The rejected form
-`have fn identity_set(A set) set = A` is recorded earlier under
-[Bare facts and `have`](#bare-facts-and-have); for a longer reading see
-[Why does Litex have `template`?](FAQ.md#why-does-litex-have-template).
-
-```litex
-template<S set, z S>:
-    have fn const_on_S(x S) S = z
-
-\const_on_S<R, 0>(2) = 0
-```
 
 <a id="named-interfaces-thm-axiom-release-thm-and-by-thm--fact"></a>
 
@@ -2046,42 +2225,7 @@ eval nonzero_flag(2)
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S01 Expression-defined functions](#s01-expression-defined-functions), [O79 Function spaces](#o79-function-spaces), [O03 Function applications](#o03-function-applications).
 
-#### Checked algorithm execution
-
-> **Preview:** the surface is `algo f(x R) R by cases:` or
-> `algo f(n N) N by induc n from 0:` (no separate `have fn` required).
-> Execution defines the function (same checks as `have fn … by cases` / `by induc`)
-> and stores the executable presentation.
-> `eval` first checks the source expression's well-definedness, including each
-> function argument domain and domain condition. It then substitutes
-> `known_closed_numeric_equal` representatives and
-> recursively evaluates: closed-numeric simplify, and plain-Identifier function
-> calls through a stored algo (case match → return expr → evaluate again).
-> Each executed algorithm step must also verify its defining function equation
-> at the normalized arguments. The exact computation and these checked equations
-> establish `expr = evaluated_object`; both sides pass WD before the equality is
-> stored and inferred in the current scope. A failure discards the statement's
-> temporary facts. Recursive execution keeps its depth/cycle limits and checks
-> each recorded equation independently. Normal output lists the stored equality;
-> Detailed output retains its FactId, WD, definition evidence and store result.
->
-> Finite sums/products evaluate through checked function applications. Nested
-> aggregates share a total allowance of 1024 terms; bounds and values use exact
-> arithmetic. Named function equations and finite list/range sets are supported.
-> An unavailable enumeration or exhausted allowance fails. See
-> `examples/stmt_nodes/command/aggregate_eval.lit`.
-> Tracers: `examples/stmt_nodes/definition/def_algo.lit`,
-> `examples/stmt_nodes/command/eval.lit`.
-> Result-publication tracer: `examples/stmt_nodes/command/eval_store_result.lit`.
->
-```litex
-algo nonzero_flag(x R) R by cases:
-    case x = 0: 0
-    case x != 0: 1
-
-eval nonzero_flag(0) + 1
-nonzero_flag(0) + 1 = 1
-```
+**Further detail:** [Checked algorithm execution](#checked-algorithm-execution).
 
 ### S22. Executable functions by induction
 
@@ -2270,35 +2414,7 @@ claim:
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
-#### One-layer release and its published facts
-
-`release struct def e` opens exactly one definition-owned struct layer. It has no
-`as &Struct` form: the struct must already be fixed by the definition of `e`,
-by a function's explicit return carrier, or by the direct struct carrier of the
-previous field in a chain.
-
-Before storing anything, the statement verifies the exact membership
-`e $in &Struct`. Failure is atomic: no partial tuple or field facts remain.
-For a struct with fields `a : A` and `b : B`, success releases:
-
-- `e $in cart(A, B)`;
-- `e.a = e(1)` and `e.b = e(2)`;
-- the instantiated field-carrier facts; and
-- the struct's instantiated `<=>:` facts.
-
-The Cartesian member carries the accurate complete domain. Opening publishes
-no tuple shape predicate, dimension or indexed-object fact. A function-valued
-field keeps its domain conditions; a checked equality endpoint may be needed
-to connect a field's value to the original coordinate before evaluating it.
-See [the struct-coordinate tracer](../examples/stmt_nodes/definition/struct_function_coordinate_bridges.lit).
-
-Repeating the same statement is
-idempotent. Opening is never recursive: `release struct def outer` does not also
-open a struct-valued `outer.inner`. Its quantified laws may already be usable
-through known-forall matching; use `release struct def outer.inner` to materialize
-its one-layer representation and property facts.
-
-##### Explicit object-definition release: `release obj def` (preview)
+**Further detail:** [One-layer release and its published facts](#one-layer-release-and-its-published-facts).
 
 ### S28. Replay an object definition
 
@@ -2324,18 +2440,7 @@ identity(2) = 2
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
-#### Definition lookup and supported source owners
-
-> **Preview:** `release obj def I` takes exactly one identifier
-> `I` (plain or `mod::export::`-qualified). It looks up
-> `StoredIdentifierDefinition` for that name — in the live Env stack or in a
-> finished export file's Env — and stores the definition's accompanying facts
-> into the **current** Env. Subjects use the written spelling of `I`.
->
-> Supported sources: `let`, `have` / `have … = …` / `have …:`, `trust have`,
-> and `have fn` / `by cases` / `by exist!` / `by induc`. Binder-only `ParamType`
-> rows are rejected. This does **not** open a struct layer; use
-> `release struct def` for that.
+**Further detail:** [Definition lookup and supported source owners](#definition-lookup-and-supported-source-owners).
 
 ### S29. Expand finite integer membership
 
@@ -3630,68 +3735,7 @@ forall x R:
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
 
-#### Function-valued arguments and indexed signatures
-
-A function-valued parameter can receive a returned function application.
-Substitution retains the existing argument groups and appends the parameter's
-call. The outer body can be unfolded while its argument remains symbolic:
-
-```litex
-have fn mk(x R) cart(R,Z) = (x,2)
-have fn first(p cart(R,Z)) R = p(1)
-first(mk(7)) = mk(7)(1)
-mk(7)(1) = 7
-```
-
-The [parameter-application tracer](../examples/proof_nodes/equal/by_object_definition/by_fn_application/function_value_parameter_application.lit)
-also checks a returned two-input function. Each input and domain condition
-still passes ordinary application WD; separate fixtures reject wrong call
-groups, complete lengths, guards and coordinate values.
-
-##### Function qualifications and aliases
-
-Function signatures, bodies, complete domains, return carriers and finite
-coordinates are read from declarations and the exact object's indexed special
-properties. These structural readers do not construct or traverse equality
-classes, and do not recursively inspect the properties of equal objects.
-A known `g $in fn(x R) R` supplies a call signature. A directly published
-equality to an anonymous function additionally supplies its body:
-
-```litex
-have fn f(x R) R = x + 1
-let g = f
-g = fn(t R) R {t + 1}
-g(4) = 5
-```
-
-The explicit equality is proved by the ordinary equality verifier and indexed
-on `g`. Without it, `let g = f` does not transfer `f`'s signature or body to
-`g`. Membership alone cannot prove a numeric value. A checked template
-instance can be read directly from its declaration, including when that exact
-instance is the value recorded for an alias:
-
-```litex
-template<a R>:
-    have fn shift(x R) R = x + a
-let shift_two = \shift<2>
-shift_two(3) = 5
-have fn wrapped_shift(x R) R = \shift<2>(x)
-wrapped_shift(3) = 5
-```
-
-Carrier inference likewise reads a directly indexed definition; for a chain
-`Alias = Base = finite_seq(R, 2)`, publish `Alias = finite_seq(R, 2)` before
-introducing a member. Finite-set enumeration for `eval` reads a literal set or
-a direct indexed set value, without searching an alias chain.
-
-The application still checks its arguments and guards, then verifies the
-substituted body under the existing bounded definition permissions. Structural
-transport cites the exact stored fact; its path certificate has at most one
-edge. Ordinary equality and fact proving retain their own equality-path
-routes, so an author can prove and publish the needed endpoint before use.
-Default struct field views retain their definition-owned selection below.
-
-Stored function applications also have a bounded `FnApplicationInStandardSuperset` known-property leaf. After application WD, it compares every applicable stored signature's instantiated numeric return carrier with the target standard set. For example, an R-returning `f(a)` belongs to C. Every candidate must be contained in the target, and at least one inclusion must be strict; an exact-carrier query retains its existing producer. Evidence cites each signature and the known equality path connecting its subject to the applied head. This leaf opens no domain, equality, or general premise search. Nonstandard return carriers and heads with native template/field declarations are left to the existing routes, which own their declaration evidence.
+**Further detail:** [Function-valued arguments and indexed signatures](#function-valued-arguments-and-indexed-signatures).
 
 ### O04. Exact numeric literals
 
@@ -5673,127 +5717,7 @@ fn(x R) R = fn(t R) R
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
 
-#### Complete domains, restrictions and fixed signatures
-
-Membership in `fn(...) ReturnSet` requires the function's complete domain to
-equal the declared input domain, including every domain condition. The return
-set is an upper bound on values. A function on `N+` cannot also belong to
-`fn(k closed_range(1,2)) R` merely because its first two values are real.
-Construct an actual restriction when a smaller domain is needed:
-
-```litex
-have fn z(i1 N+) Z = 0
-have fn z2(k closed_range(1,2)) Z = z(k)
-z2 $in finite_seq(Z,2)
-release thm fn_set_member(z2, finite_seq(R,2))
-```
-
-`seq(S)` has complete domain `N+`; `finite_seq(S,n)` has complete domain
-`closed_range(1,n)`. The same function may belong to several return upper
-bounds while retaining that domain. `finite_seq(S,0)` has empty domain.
-Default membership and `release thm fn_set_member` check the same contract.
-
-An anonymous or named function always checks its header, domain conditions,
-return carrier and body for well-definedness. Its return bound concerns only
-complete input assignments. A checked empty input domain makes that bound
-vacuous, including an empty return carrier; it does not prove that the body
-value itself belongs to the empty set. For a guarded domain, first provide
-the exclusion proof:
-
-```litex
-forall k R:
-    k<0
-    =>:
-        not k>0
-have fn empty_body(k R:k>0,k<0) {}=0
-empty_body={}
-()={}
-empty_body=()
-empty_body $in finite_seq({},0)
-```
-
-`0 $in {}` and `empty_body(1)=0` still fail. An undefined body such as `1/0`
-also fails WD even when the complete input domain is empty.
-
-> **Preview:** zero and one Cartesian factors use the same exact-domain
-> membership contract as larger products. `()` is the empty function graph,
-> `cart()` contains that one graph, and `cart(S)` contains one-coordinate
-> functions. `(a)` remains grouping; use `tuple(a)` for one coordinate.
-
-```litex
-() = {}
-cart() = {()}
-tuple(7) $in cart(Z)
-have p cart(Z) = tuple(7)
-p(1) = 7
-finite_set_size(cart()) = 1
-```
-
-`p(2)` is outside this member's complete domain and fails WD. A function
-space on an empty domain contains exactly the empty function even when its
-return carrier is empty; this does not make a nonempty outer curried domain
-empty. These boundary examples certify the listed exact-domain paths.
-The struct interface separately determines named field views.
-
-Both `have fn f(x S) T = body` and `fn(x S) T {body}` must prove
-`body $in T` under the declared parameter types and domain conditions before
-the function is accepted. Returning a parameter still requires this proof:
-`have fn f(x Z) N = x` is rejected because `x $in N` does not follow from
-`x $in Z`. `have fn f(x N) Z = x` is valid, as is the restricted definition
-`have fn f(x Z: x >= 0) N = x`.
-
-> **Preview:** `A -> B` is sugar for the simple function set
-> `fn(_ A) B` (internal binder `__param_<id>`). It is right-associative:
-> `A -> B -> C` means `A -> (B -> C)`. Arithmetic, `×`, `∩`, and `∪` bind
-> tighter than `->`, so `R × R -> R` means `(R × R) -> R`. Use `=>` for logical
-> implication; `->` is only the function-set arrow. This sugar does not support
-> `{body}` or domain `: conditions` — write those with full `fn(...)`.
-> Neither spelling permits a return set that refers to its own domain binder.
->
-> **Preview:** every `fn` / anonymous-fn parameter domain and return set
-> must be fixed relative to that signature: neither may refer to any of its own
-> parameters. `fn(x R, y Z) R` and `fn(p cart(R, Z)) R` are valid shapes;
-> `fn(x R, y S(x)) R`, `fn(x R) {x}` and
-> `fn(S power_set(R)) fn(x S) R` are rejected during parsing.
-> Domain `: conditions` and function bodies may refer to the parameters.
-> Ordinary quantifier binders such as `forall S set, x S` remain sequential.
-
-Function parameter names are collected without registering them while their
-carriers are parsed. The parser registers the bindings for domain conditions,
-closes that scope before parsing the return object, and reopens the same IDs
-for an anonymous or named function body. Thus a nested return space cannot
-capture an outer function parameter, including inside its own conditions or
-body. WD independently enforces the same restriction for constructed objects.
-The rule also applies to `have fn`, `algo`, and signatures derived by
-`have fn ... by exist!`. It does not change ordinary `forall` / `exist`
-parameter dependencies.
-
-An enclosing set is fixed for an inner function, and a fixed function space
-may itself be a return set. Disjoint signatures may reuse a parameter spelling
-with distinct binding IDs:
-
-```litex
-let curried_space = fn(x R) fn(x R) R
-curried_space = curried_space
-forall A nonempty_set:
-    fn(x A) A {x} = fn(y A) A {y}
-fn(x R: x > 0) R {x + 1}(2) = 3
-```
-
-A parameter-dependent output property belongs in a separate fact rather than
-the return set. For example, the former `have fn identity(x R) {x} = x`
-becomes a fixed-return definition plus its precise membership property:
-
-```litex
-have fn identity(x R) R = x
-forall a R:
-    identity(a) $in {a}
-```
-
-For families parameterized by an arbitrary carrier, use `template<A set>`.
-The binder kinds `set`, `nonempty_set`, and `finite_set` are still not ordinary
-function domains. Tracer:
-[`examples/wd/fixed_function_signature_scopes.lit`](../examples/wd/fixed_function_signature_scopes.lit).
+**Further detail:** [Complete domains, restrictions and fixed signatures](#complete-domains-restrictions-and-fixed-signatures).
 
 ### O80. Anonymous functions
 
@@ -6181,68 +6105,7 @@ struct PosPoint:
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S16 Structured carriers](#s16-structured-carriers), [S27 Open one struct definition layer](#s27-open-one-struct-definition-layer).
 
-#### Struct representation and law publication
-
-Struct `<=>:` conditions are checked in source order in a temporary field scope.
-After a condition passes WD, it is assumed locally while checking later conditions;
-for example, `x != 0` may precede a condition containing `1 / x`. These assumptions
-leave the scope with the definition check and are released only for an actual member.
-
-A `struct` defines a named set together with one definition-owned field view.
-Once its header parameters are fixed, `&Name<args>` is one ordinary set, not a
-set of sets. Every binder and function signature position that accepts a set
-therefore also accepts a struct carrier.
-
-Each actual header argument must satisfy its declared type before the struct
-instance is well-defined. For `struct Box<n N>:`, `&Box<0>` is valid and
-`&Box<-1>` is rejected. This also checks `set`, `nonempty_set`, and `finite_set`
-header kinds. Dependent headers such as `S set, a S` use the actual argument
-for `S` when checking `a`.
-
-##### Tuple representation
-
-A structure must define at least two fields. It is represented by a tuple in
-definition order. If `Point` defines `x` and then `y`, opening a `Point` value
-`p` establishes `p.x = p(1)` and `p.y = p(2)`. The field-to-coordinate relation
-belongs to the struct definition; Litex does not guess it from field names.
-
-> **Preview:** a struct with fewer than two fields is a parse
-> error (`struct definition expects at least two fields`). There is no
-> one-field “identity view” of a sole carrier.
-
-The tuple representation is deliberately opaque outside two places:
-
-1. the verifier may inspect it internally while proving `e $in &Struct`; and
-2. a successful `release struct def e` (or the automatic direct-binding case below)
-   stores the public representation facts.
-
-A generic membership fact `e $in &Struct` does not itself store field carriers,
-field-to-coordinate equalities, or struct laws.
-
-> **Preview:** `e $in &Struct` is proved by the
-> `StructObjMembership` builtin: check field carriers (literal tuple components
-> `$in Ti`, or else `e $in cart(T1,…,Tn)` via `CartMembership`) and each
-> instantiated `<=>:` law. Success is opaque membership only — still no
-> automatic property release. `CartMembership` itself proves
-> `e $in cart(A1,…,An)` by its accurate complete domain `closed_range(1,n)`
-> and every coordinate's factor membership. Checking a shorter call range,
-> a common return upper bound, or only some coordinates is insufficient.
-
-A successful `struct` definition also publishes its checked laws as universal
-facts over the original header parameters and an instance of that exact struct.
-A consequent universal is flattened into the same parameter list; its premises
-are retained and existential witnesses stay inside. For example, a law
-`forall x A: exist y A st {add(x,y)=zero}` of `Op<A>` publishes
-`forall A nonempty_set, s &Op<A>, x A: exist y A st {s.add(x,y)=s.zero}`.
-These are definition consequences, with source FactIds retained in the result.
-Ordinary known-forall matching can consume them without an explicit release
-when it can verify the instance carrier and every condition. This does not
-publish tuple/field-index representation facts or recursively open instances.
-Publication follows the definition's existing environment scope. Importing a
-module does not inject its universal facts into the caller's ambient environment;
-an imported instance can use the existing explicit `release struct def` path.
-A top-level `not forall` law remains on the instance-release path because it
-is not a supported universal conclusion shape; it is not hoisted or strengthened.
+**Further detail:** [Struct representation and law publication](#struct-representation-and-law-publication).
 
 ### O92. Definition-owned field access
 
@@ -6278,124 +6141,9 @@ forall p &Point:
 
 <a id="examples"></a>
 
-#### Field WD, automatic opening and selected views
+**Further detail:** [Field WD, automatic opening and selected views](#field-wd-automatic-opening-and-selected-views).
 
-Field syntax and property release are separate. To decide whether `e.y` is a
-well-defined object, Litex only determines the definition-owned struct carrier
-of `e` and checks that this struct defines `y`. To decide `e.y.z`, it also
-checks that `y` is defined directly with a struct carrier that defines `z`.
-This WD traversal does not store any field carrier, tuple bridge, or struct
-law. The final field's carrier matters only when a surrounding operation needs
-it, for example when calling a function-valued field.
 
-Consequently, `f(t).x = f(t).x` can be well-defined and reflexive before any
-opening, while a theorem that needs a law about `f(t).x` still requires
-`release struct def f(t)` or `release struct def f(t).x`, depending on which layer owns
-that law.
-
-##### The only automatic property release
-
-A direct syntactic symbol binding written with a struct carrier, such as
-`p &Point` or `forall p &Point`, opens one layer automatically. This is why
-properties of a directly bound `p` are immediately available.
-
-No other form opens properties automatically. In particular, a function
-result defined as `&Point`, a nested struct-valued field, an equality, and a
-later proof of membership still require `release struct def ...`. Those definitions
-are sufficient for field-access WD, but not for importing the struct laws.
-Named fields therefore belong to definitions, never to membership search.
-Litex has no `&Point{p}.x` form for selecting another view later.
-
-The same rule applies to `forall`, `exist`, set-builder, proposition, theorem,
-template, and function binders. A function may return a struct carrier
-directly, and its result then supports fields:
-
-Function, proposition, and theorem argument lists are explicit. Pass struct
-fields by name and tuple entries by index:
-
-```litex
-struct Point:
-    x R
-    y R
-
-release thm struct_member((1, 2), &Point)
-have p &Point = (1, 2)
-
-prop has_point_coordinates(x, y R):
-    x = x
-
-by def:
-    ? $has_point_coordinates(p.x, p.y)
-```
-
-Struct header parameters and `<=>:` facts are not positional fields. Tuple
-calls likewise name entries explicitly, for example `f(t(1), t(2), t(3))`.
-Ordinary arity, membership, and function-domain checks apply to every written
-argument.
-
-If a selected field is itself defined directly with a struct type, field
-notation may continue through that defined view:
-
-```litex
-struct Coordinates:
-    x R
-    y R
-
-struct TaggedPoint:
-    point &Coordinates
-    tag N
-
-release thm struct_member((1, 2), &Coordinates)
-release thm struct_member(((1, 2), 0), &TaggedPoint)
-have item &TaggedPoint = ((1, 2), 0)
-release struct def item.point
-item.point.x $in R
-```
-
-Here the definition of `TaggedPoint.point` supplies the owner of the next
-field, so the entire path is well-defined before the `by` statement. The
-explicit opening is needed only to release `Coordinates`' field-carrier and
-representation facts. Parameterized and module-qualified struct field types
-work the same way. A final field may be called, as in
-`space.scalars.mul(a, b)`. Fields also work after a call when the function's
-defined return carrier is a struct, as in `make_box(f).entries(i)`. A callable
-field's defined carrier must be a function set.
-
-When `expr` is a materialized template-selected struct object, a callable
-field projects through the selected tuple value before application. Thus an
-entries field defined by an anonymous function can be evaluated directly once
-the selected object's struct membership is known.
-
-A vector-space structure can own its scalar system rather than asking each
-single-space theorem to carry scalar operations separately. With
-`space &VectorSpace<s,V>`, ordinary code can write
-`space.smul(space.scalars.mul(a,b),v)`. A relation that joins two spaces, such
-as linearity of a map, records one compatibility fact
-`Vspace.scalars = Wspace.scalars`; callers then pass the spaces themselves.
-
-A later membership fact does not add named fields retroactively:
-
-```text
-struct Point:
-    x R
-    y R
-
-have p cart(R, R) = (1, 2)
-release thm struct_member(p, &Point)
-p.x = 1
-```
-
-The last line is a parse `error`. The membership still exposes the ordinary
-struct-membership proposition for later proof use, but it exposes neither
-positional Cartesian facts nor `Point` field names. There is deliberately no
-`release struct def p as &Point` escape hatch. To use those names, construct a new
-definition-owned object explicitly:
-
-Likewise, if `p &Point` later also belongs to `&ComplexPair`, `p.x` remains the
-field chosen by its `Point` definition. Write
-`have p2 &ComplexPair = (p.x, p.y)` to obtain `p2.real` and `p2.img`.
-Chained notation follows only directly defined struct carriers; it does not
-follow named set aliases, equalities, or later membership facts.
 
 <a id="template-instances"></a>
 
@@ -6426,81 +6174,9 @@ template<S set>:
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S17 Parameterized declaration families](#s17-parameterized-declaration-families), [S28 Replay an object definition](#s28-replay-an-object-definition).
 
-#### Instance ownership and automatic definition facts
+**Further detail:** [Instance ownership and automatic definition facts](#instance-ownership-and-automatic-definition-facts).
 
-The name uses the ordinary module/export forms: `\export::name<args>`,
-`\Module::export::name<args>`, or `\Module:::name<args>` when the imported
-module has one export. These forms preserve the same canonical template owner;
-knowing an export name does not make a missing template valid. The configured
-[qualified-template example](../examples/module_manager/qualified_template_names/main.lit)
-checks all three forms and their rejection boundaries.
 
-A template parameter such as `S set` is not a function argument ranging over a
-set of all sets. The body is checked once in the parameterized context. On
-success, Litex substitutes its defined name with `\name<parameters>` in the
-body definition facts and stores them under the template's universal binders
-and header conditions. Later `\name<args>` keeps its surface form; ordinary
-known-`forall` search can instantiate those facts, and existing
-definition-unfolding routes remain available.
-
-> **Preview:** automatic template definition facts include object membership
-> and set kinds, defining equalities, selected-witness properties, function
-> signatures and guarded case/recursive equations, unique-selection properties
-> and uniqueness, and replacement introduction/elimination. Only facts emitted
-> by the successful body definition stores and their ordinary inference escape;
-> parameter assumptions and proof-search intermediate facts stay local.
-
-```litex
-template<S nonempty_set>:
-    have member S
-
-\member<R> $in R
-forall T nonempty_set:
-    \member<T> $in T
-```
-
-The definition stores `forall S nonempty_set: \member<S> $in S`. It does not
-claim that all members of `S` equal the selected object. Header conditions
-remain premises of every published fact:
-
-```litex
-template<S set: $is_nonempty_set(S)>:
-    have selected S
-
-\selected<R> $in R
-```
-
-Here the stored fact has binder `S set`, premise `$is_nonempty_set(S)`, and
-conclusion `\selected<S> $in S`. An empty-set argument is rejected. Function
-domains and case conditions are retained as well. A `trust have` body remains
-trusted and is rejected under `-strict`; automatic publication does not prove
-its assumptions. The [runnable acceptance example](../examples/stmt_nodes/definition/template_definition_facts.lit)
-covers the definition families and direct use of their instances.
-
-When a template selects a set-builder value, membership in the instance unfolds
-to membership in the defining set-builder. **Assumption demonstration (ordinary mode):**
-the following example explicitly assumes `$marked(1)`; it is rejected in strict mode.
-
-```litex
-abstract_prop marked(x)
-
-template<S set>:
-    have marked_elements set = {x S: $marked(x)}
-
-trust $marked(1)
-1 $in R
-\marked_elements<R> = {x R: $marked(x)}
-release thm set_builder_member(1, {x R: $marked(x)})
-1 $in \marked_elements<R>
-```
-
-Known membership in `\marked_elements<R>` is proved from the base-set membership
-and every defining fact of the set-builder after definitional unfold.
-
-> **Preview:** storing `x $in {t S: P(t), …}` (or `x $in Name`
-> when `Name` is known equal to that set-builder) also stores `x $in S` and the
-> instantiated defining facts. That is the store-time reverse of set-builder
-> membership.
 
 <a id="builtin-predicates"></a>
 
@@ -7361,6 +7037,1449 @@ The journal preserves both results. This is a current proof-search boundary
 of the consumer, not a rejection of the function-space theorem interface.
 No kernel or existing fixture was changed for this reference.
 
+## Pitfalls and missing proof steps
+
+Each card pairs an exact rejection with an appropriate positive example or a
+linked correction. Error-phase labels below are taken from isolated current
+runs. A mathematical counterexample, missing premise, and proof-search miss
+are different reasons; each card states which applies.
+
+### P01. Reflexivity does not bypass well-definedness
+
+**Intention:** assert the reflexive equality of a reciprocal expression.
+**Expected rejection — phase `well_defined`:**
+
+<!-- litex:skip-test -->
+```litex
+have x R
+1 / x = 1 / x
+```
+
+The checker stops before comparing the two sides: `x != 0` is unavailable.
+Writing identical expressions does not make an undefined division legal.
+The positive counterpart is the guarded universal in
+[O01](#domain-and-well-definedness), with the same reflexive goal for inputs
+in its actual domain. For a callable construction, use the next card.
+
+### P02. The body must be meaningful throughout the function domain
+
+**Expected rejection — phase `have_fn_equal`; anonymous-function body WD fails:**
+
+<!-- litex:skip-test -->
+```litex
+have fn reciprocal(x R) R = 1 / x
+```
+
+The declared domain includes zero. The repair for the intended partial
+reciprocal is the guarded definition in [S01](#parameters-domain-and-return-set).
+This is a domain correction, not proof automation. If the intended mathematics
+requires a value at zero, a different definition specifying that value is needed.
+
+### P03. A legal function declaration does not license every call
+
+**Expected rejection — phase `well_defined`:**
+
+<!-- litex:skip-test -->
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(0) = 0
+```
+
+The call violates the written guard. Changing the right side of the equation
+cannot repair its argument domain. The positive calls at `2` and `-2` in S01
+satisfy the signature.
+
+A guard also does not establish any desired equation involving the expression.
+**Expected rejection — phase `search_proof`:**
+
+<!-- litex:skip-test -->
+```litex
+forall x R:
+    x != 0
+    =>:
+        1 / x = 1
+```
+
+The expressions are WD, but the mathematical universal is false; `x = 2` is
+a counterexample. Nonzeroness and the value of the reciprocal are independent
+questions. This example must not be diagnosed as another missing WD guard.
+
+### P04. Connect division and multiplication explicitly
+
+**Intention:** from `a / b = c` and `b != 0`, deduce `a = c * b`.
+**Expected rejection — phase `search_proof` in this cold context:**
+
+<!-- litex:skip-test -->
+```litex
+forall a, b, c R:
+    b != 0
+    a / b = c
+    =>:
+        a = c * b
+```
+
+The mathematics is valid. In the current checker, this bare goal does not
+find the route by itself. A checked proof keeps the same hypothesis and target:
+
+```litex
+claim:
+    ? forall a, b, c R:
+        b != 0
+        a / b = c
+        =>:
+            a = c * b
+    a = (a / b) * b = c * b
+```
+
+The chain has two mathematical steps: `(a / b) * b = a` uses division
+cancellation, and replacing `a / b` by `c` uses the premise. Its middle
+expression connects an implemented identity to a known equality.
+The proof uses the active goal parameters `a`, `b`, `c`; it does not introduce
+a second universal with renamed parameters inside the proof body.
+
+The reverse direction has the corresponding boundary.
+**Expected rejection — phase `search_proof`:**
+
+<!-- litex:skip-test -->
+```litex
+forall a, b, c R:
+    b != 0
+    a = b * c
+    =>:
+        a / b = c
+```
+
+Checked counterpart:
+
+```litex
+claim:
+    ? forall a, b, c R:
+        b != 0
+        a = b * c
+        =>:
+            a / b = c
+    a / b = (b * c) / b = c
+```
+
+Removing the equality-chain body from either `claim` was independently tested
+and rejected. These are current proof-search boundaries, not additional
+mathematical hypotheses or claims that every algebraic proof needs a `claim`.
+
+### P05. A function equation may need to be exposed before substitution
+
+The complete reciprocal-law proof is in [R01](#prove-a-law-of-the-function).
+It contains these two mathematical steps:
+
+<!-- litex:skip-test -->
+```litex
+# Fragment of the full checked R01 proof; x and reciprocal are defined there.
+reciprocal(x) = 1 / x
+reciprocal(x) * x = (1 / x) * x = 1
+```
+
+The first line establishes the specific function value equality. The second
+uses it under multiplication and closes the scalar identity. In the current
+checked context, a direct universal goal fails; deleting the first line while
+retaining the chain also fails. Retaining only the first line fails to close
+the law. The full two-step proof passes.
+
+This boundary concerns the exact reciprocal-law example. It does not mean
+that every function application needs a manually repeated defining equation.
+Concrete evaluations such as `reciprocal(2) = 1 / 2` already verify directly.
+
+### P06. Arbitrary `have` needs nonemptiness
+
+**Expected rejection — phase `have_in_nonempty`:**
+
+<!-- litex:skip-test -->
+```litex
+have x {t R: t > 0}
+```
+
+In this cold context, the checker has not established that this builder is
+nonempty. It does not follow that the set is empty. The correction in
+[F01](#set-builder-membership) supplies `1` as a concrete member using
+`witness`, then introduces an arbitrary member with `have`.
+
+A builder's definition, an established member, and an arbitrary selection
+are different steps. Do not append uses of `x` after a failed declaration:
+that name was not successfully introduced, so a later line has an earlier
+name-resolution problem to fix first.
+
+### P07. Name the value equality before arithmetic
+
+In this current two-level alias example the final arithmetic equality misses search. A direct equality chain connects the alias to the numerical value before use; this is a boundary of the example, not a rule that every alias requires an extra line.
+
+**Expected rejection — search_proof:**
+
+<!-- litex:skip-test -->
+```litex
+have a R = 2
+let b = a
+b + 1 = 3
+```
+
+**Checked counterpart:**
+
+```litex
+have a R = 2
+a = 2
+let b = a
+b = a = 2
+b + 1 = 3
+```
+
+**Evidence:** `P07` / `N11` in the current inventory journal.
+
+### P08. Displayed sets require proved distinct elements
+
+Repeated elements are harmless in informal set notation, but the native displayed-set constructor requires pairwise verified inequality. With symbolic values, carry the genuine distinctness condition if two elements are intended.
+
+**Expected rejection — let (object well-definedness):**
+
+<!-- litex:skip-test -->
+```litex
+let A = {1,1}
+```
+
+**Checked counterpart:**
+
+```litex
+forall a, b R:
+    a != b
+    =>:
+        $is_finite_set({a, b})
+        finite_set_size({a, b}) = 2
+```
+
+**Evidence:** `P08` / `N01` in the current inventory journal.
+
+### P09. An explicit definition proof has its own obligations
+
+The ordinary closed fact $prime(5) verifies by calculation. A cold by-def request still asks for the lower bound and trial-divisor universal. Prove the finite trial condition explicitly, then fold the definition. This differs from asking the calculation route to repeat its answer.
+
+**Expected rejection — by_def:**
+
+<!-- litex:skip-test -->
+```litex
+by def $prime(5)
+```
+
+**Checked counterpart:**
+
+```litex
+by for:
+    ? forall divisor range(2, 5):
+        5 % divisor != 0
+by def $prime(5)
+```
+
+**Evidence:** `P09` / `N13` in the current inventory journal.
+
+### P10. Divisibility argument order and negative proof
+
+The native form $dvd(a,d) has dividend first, nonzero divisor second. In the checked negative example ordinary search misses; an explicit contradiction uses the positive definition’s remainder equality without changing the mathematical goal.
+
+**Expected rejection — search_proof:**
+
+<!-- litex:skip-test -->
+```litex
+not $dvd(5,2)
+```
+
+**Checked counterpart:**
+
+```litex
+4 % 2 = 0
+witness exist a Z st {4 = a * 2} from 2
+by def $dvd(4, 2)
+by contra:
+    ? not $dvd(5, 2)
+    impossible 5 % 2 = 0
+```
+
+**Evidence:** `P10` / `N12` in the current inventory journal.
+
+### P11. An empty indexed domain is not a zero-factor Cartesian product
+
+The current indexed union/intersection/product constructors require a nonempty index. Ordinary cart() has a separate exact finite-function meaning and cardinality one. These public constructors have different domain contracts.
+
+**Expected rejection — let (object well-definedness):**
+
+<!-- litex:skip-test -->
+```litex
+let family = fn(k {}) power_set(N) {{1}}
+let U = index_union({}, N, family)
+```
+
+**Checked counterpart:**
+
+```litex
+() $in cart()
+finite_set_size(cart()) = 1
+let family = fn(k {1}) power_set(N) {{1}}
+let U = index_union({1}, N, family)
+$is_set(U)
+```
+
+**Evidence:** `P11` / `N14` in the current inventory journal.
+
+### P12. A search miss does not disprove an inequality
+
+**Common mistake:** interpret a failed direct goal as evidence that nonlinear
+inequalities, algebraic rearrangement, or the mathematical problem are
+impossible to formalize. These are different questions: whether the statement
+is true, whether a supplied proof verifies, and whether the checker discovers
+that proof from the current facts.
+
+**Observed search boundary:** the following true goal soft-fails at
+`search_proof` in the build recorded in the recipe audit. This is a capability
+observation, not a false statement or a permanent rejection requirement.
+
+<!-- litex:skip-test -->
+```litex
+forall a, b R:
+    a^2+b^2 >= 2*a*b
+```
+
+**Checked repair:** [R06](#r06-complete-a-square-and-translate-the-bound)
+proves exactly that goal in strict mode. Expose the square identity, its
+nonnegative bound, and the common translation. No new hypothesis is needed.
+The shorter proof containing only `(a-b)^2 >= 0` also misses the conclusion
+in this build. A subtraction proof works after explicitly storing the
+`0 <= difference` spelling consumed by the difference rule.
+
+The active native pipeline uses known facts, exact calculations, builtin
+rules, definitions and explicit proof statements. Its atomic checker is not
+a generic SMT optimization entrypoint. A search miss does not establish a
+limitation of SMT or of other proof assistants. Report the failed step and
+the attempted proof route; reserve a kernel-gap claim for a reduced,
+source-backed failure of a mathematically valid interface.
+
+A numeric sample check is evidence about those samples, not a proof for all
+real inputs. A polynomial identity or sum-of-squares certificate becomes
+proof evidence here when its equality and guarded order steps verify.
+`trust` remains an assumption even if its comment describes external work;
+a comment does not change the checker’s trust boundary.
+
+### P13. Preserve sign, strictness and expression shape
+
+**Mathematical boundaries:** every ordered operand is real. Adding a common
+real expression needs no sign condition. Multiplication and division do.
+
+| Incorrect general step | Counterexample | Correct requirement or conclusion |
+|---|---|---|
+| `a<=b` implies `a*k<=b*k` for arbitrary real `k` | `1<=2`, but `1*(-1)>2*(-1)` | `k>=0` preserves weak order; `k<0` reverses it |
+| `a<b`, `k>=0` implies `a*k<b*k` | `1<2`, but `1*0=2*0` | Require `k>0` for the strict preserved bound |
+| `a<=b` implies `a<b` | `1<=1`, but `not 1<1` | Keep the weak conclusion unless an additional strict argument is proved |
+| `k>=0` makes `a/k` meaningful | `k=0` is allowed by that premise | Require nonzero WD and the appropriate strictly positive/negative sign |
+| `a<=b` implies `a^2<=b^2` on all reals | `-2<=-1`, but `(-2)^2>(-1)^2` | Restrict both bases to the nonnegative region or compare absolute values |
+| `z $in C` makes `z^2>=0` an ordered fact | A general complex scalar has no real-order contract | Establish real membership before using a real-order rule |
+
+The numerical counterexamples above are checked without assumptions:
+
+```litex
+1 <= 2
+1*(-1) > 2*(-1)
+1 < 2
+1*0 = 2*0
+1 <= 1
+not 1 < 1
+-2 <= -1
+(-2)^2 > (-1)^2
+```
+
+**Matching boundary:** equal mathematical expressions may have distinct
+object shapes. The bound rules used in
+[R08](#r08-scale-an-inequality-with-the-correct-sign) and
+[R10](#r10-expose-absolute-value-bounds) consume explicit subtraction from
+zero. Writing `0-x = -x <= M` exposes the equality and stores the matching
+bound; expecting the checker to invent that rewriting inside every order
+premise can miss. Similarly, an order rule may consume a stored premise
+rather than recursively discovering it. See R06's two spellings of a
+nonnegative difference and R09's explicit nonnegative summands.
+
+**Evidence:** P12/P13 controls and the checked counterparts are recorded in
+the [recipe audit](audits/manual-order-recipes-2026-10-06.json).
+
+## Recommended mathematical formulations
+
+### R01. Define and use a reciprocal function
+
+**Ordinary mathematics:** a function on nonzero reals, returning `1 / x`.
+
+**Recommended form:** the guarded expression-defined function from S01:
+`have fn reciprocal(x R: x != 0) R = 1 / x`.
+The signature states the domain where the expression is meaningful, and the
+return carrier states the output contract. Callers can see their obligation
+without inspecting the definition body.
+
+**Supported alternative:** use the nonzero-real carrier `R*`:
+
+```litex
+have fn reciprocal(x R*) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+`R*` carries real membership and nonzeroness. Both definitions express the
+same intended mathematical domain here. The explicit guard spells out the
+condition for readers learning WD; the carrier form is useful when the domain
+already plays a recurring role. The current public spellings include `R+`
+and `R*`; do not infer aliases such as `R_pos` from old notes.
+
+### Prove a law of the function
+
+**Ordinary mathematics:** the reciprocal multiplied by its nonzero argument
+is one. Define the callable value, expose its equation at the active argument,
+then use the division identity:
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            reciprocal(x) * x = 1
+    reciprocal(x) = 1 / x
+    reciprocal(x) * x = (1 / x) * x = 1
+```
+
+This example demonstrates the full route through the dictionaries:
+
+1. [S01](#s01-expression-defined-functions) gives the definition and stored
+   callable contract.
+2. [O01](#o01-division) explains the guard and the scalar identity.
+3. [F01](#f01-membership-and-nonmembership) explains carrier information and
+   legal function applications.
+4. [P05](#p05-a-function-equation-may-need-to-be-exposed-before-substitution)
+   explains the two explicit steps needed by this proof.
+
+The proof machinery remains local to the `claim`; the successful statement
+exports its universal conclusion. No helper theorem merely restating the
+function definition is introduced.
+
+### R02. Choose the language form by mathematical role
+
+| Mathematical intention | Recommended form | Why |
+|---|---|---|
+| A named callable value given by a formula | `have fn ... = ...` | Later code needs to apply the function and use its return contract |
+| A condition on an object | `prop ...` | Names a mathematical proposition with a concrete definition |
+| A one-off derived fact requiring intermediate steps | `claim` | Proves and exports the goal while keeping helpers local |
+| A routine carrier consequence | State the membership directly | Use the existing carrier machinery without an unnecessary wrapper |
+| A division transformation whose cold goal misses | A local equality chain as in P04 | Connects the original expression to the usable identity |
+| A reusable mathematical result | A named `thm` interface | Worth naming when later developments need that result |
+
+These are recommendations about roles and proof organization, not a list of
+new parser restrictions. Distinguish a mathematical domain requirement from
+a source-style choice. For example, multiline `forall` is the recommended
+teaching form; the supported inline syntax is not made invalid by that choice.
+
+### R03. A declaration family over an arbitrary carrier
+
+**Mathematical role:** declaration family. **Form:** template with a formula-defined function.
+
+An identity map for each carrier set S. The set changes the declaration’s input and return carrier; later use specializes the family then calls the function.
+
+```litex
+template<S set>:
+    have fn identity(x S) S = x
+\identity<R>(2) = 2
+\identity<Z>(-3) = -3
+```
+
+The binder category set is not a writable universal set to use as a normal function input domain. An ordinary formula function over real inputs remains have fn, without a template.
+
+**Evidence:** `R03` in the current inventory record; the interface and immediate use both verify in strict mode.
+
+### R04. A relation and its selected value have different roles
+
+**Mathematical role:** relation versus callable value. **Form:** prop for the relation; have fn for the callable value.
+
+A reciprocal relation checks a supplied value and argument; a reciprocal function supplies a value that a caller can apply. The relation’s nonzero domain is encoded in its carrier rather than supplied later by convention.
+
+```litex
+prop is_reciprocal_of(value R, argument R*):
+    value = 1 / argument
+by def $is_reciprocal_of(1 / 2, 2)
+have fn reciprocal(x R*) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+A proposition about a candidate output is not a replacement for a callable function. Use the relation when callers assert truth about supplied values, and the function when callers need reciprocal(x).
+
+**Evidence:** `R04` in the current inventory record; the interface and immediate use both verify in strict mode.
+
+### R05. A piecewise definition and a universal law
+
+**Mathematical role:** function definition and mathematical result. **Form:** have fn by cases, followed by a local claim.
+
+Define an absolute-value function from two disjoint exhaustive real cases. To prove its agreement with the native abs, use the active input binder and the same mathematical case split.
+
+```litex
+have fn absolute(x R) R by cases:
+    case x >= 0: x
+    case x < 0: -x
+claim:
+    ? forall x R:
+        absolute(x) = abs(x)
+    by cases:
+        ? absolute(x) = abs(x)
+        case x >= 0:
+            0 <= x
+            absolute(x) = x = abs(x)
+        case x < 0:
+            x <= 0
+            absolute(x) = -x = abs(x)
+```
+
+The guarded equations of the definition are already usable. In this comparison with native abs, the proof additionally states the weak sign facts consumed by the abs rule before the equality chains. These facts follow from the cases; they are not new mathematical hypotheses. Independent deletion controls identify the necessary bridges.
+
+**Evidence:** `R05` in the current inventory record; the interface and immediate use both verify in strict mode.
+
+### R06. Complete a square and translate the bound
+
+**Ordinary mathematics:** for any real `a,b`, prove `a^2+b^2 >= 2*a*b`.
+Complete the square, then add `2*a*b` to both sides of the nonnegative bound.
+The added expression can have either sign: translation preserves order.
+
+**Checked recommended form:** keep the equality and order steps together.
+
+```litex
+claim:
+    ? forall a, b R:
+        a^2 + b^2 >= 2*a*b
+    a^2 - 2*a*b + b^2 = (a-b)^2 >= 0
+    a^2 + b^2 = (a^2 - 2*a*b + b^2) + 2*a*b >= 0 + 2*a*b = 2*a*b
+```
+
+The first chain combines an algebraic identity with even-power
+nonnegativity. The second writes the target's left side as the known
+nonnegative expression plus the target's right side. Each adjacent equality
+or comparison is checked; the chain then supplies the endpoint bound.
+This is algebra plus order translation, with no optimization oracle or
+assumption. `claim` exposes `a,b` as active real binders inside its proof.
+
+**Checked difference alternative:** turn a nonnegative difference into an
+endpoint comparison, explicitly storing the orientation the native rule uses.
+
+```litex
+claim:
+    ? forall a, b R:
+        a^2+b^2 >= 2*a*b
+    a^2+b^2-2*a*b = (a-b)^2 >= 0
+    0 <= a^2+b^2-2*a*b
+```
+
+The last line is mathematically the converse of the preceding bound;
+it supplies the saved `0 <= right-left` premise. In the audited build,
+deleting that line leaves the claim's endpoint search unresolved. This is a
+proof-matching bridge, not an additional mathematical premise. A chain that
+only establishes the square identity and its nonnegativity also leaves the
+claim conclusion unresolved. Prefer the first proof when teaching the
+mathematical rearrangement; use the second when an existing proof already
+has a difference bound.
+
+**Related entries:** [F02 equality](#f02-equality-and-inequality),
+[F05/F06 real order](#f05-weak-less-than),
+[P12 search boundaries](#p12-a-search-miss-does-not-disprove-an-inequality),
+[native order rules](#order-and-comparison-rules).
+
+### R07. Translate, add, subtract and compose bounds
+
+**Ordinary mathematics:** an equality identifies interchangeable endpoints;
+an inequality orders them. First expose a useful expression by equality,
+then apply the order move with its exact shared term or middle expression.
+All variables in the following table are real.
+
+| Mathematical move | Litex fact to write | Condition or proof shape |
+|---|---|---|
+| Add the same expression | `a+c <= b+c` | `a<=b`; no sign restriction on `c` |
+| Subtract the same expression | `a-c <= b-c` | `a<=b` |
+| Subtract ordered expressions from a common term | `c-a >= c-b` | `a<=b`; the subtrahend's order reverses |
+| Add two bounds | `a+c <= b+d` | `a<=b`, `c<=d`; an explicit shared-addend chain is also available |
+| Subtract two bounds | `a-d <= b-c` | `a<=b`, `c<=d`; use `a-d <= b-d <= b-c` |
+| Compose weak bounds | `a<=c` | `a<=b`, `b<=c`, with the same middle expression |
+| Compose a strict and a weak bound | `a<c` | `a<=b`, `b<c`; retain the strict step |
+| Weaken a strict bound | `a<=b` | `a<b`; the converse does not follow |
+| Replace an endpoint by an equal value | `a<=c` | `a=b`, `b<=c`; expose the equality before using it |
+| Rewrite a bound as a difference | `0<=b-a` or `a<=b` | Store the corresponding `a<=b` or `0<=b-a` premise |
+
+**Checked basic moves:** these universal facts verify directly from their
+premises. They make the domain and conditions visible at the use site.
+
+```litex
+forall a, b, c R:
+    a <= b
+    =>:
+        a+c <= b+c
+        a-c <= b-c
+        c-a >= c-b
+forall a, b, c R:
+    a <= b
+    b <= c
+    =>:
+        a <= c
+forall a, b, c R:
+    a <= b
+    b < c
+    =>:
+        a < c
+forall a, b R:
+    a < b
+    =>:
+        a <= b
+forall a, b, c R:
+    a = b
+    b <= c
+    =>:
+        a <= c
+forall a, b R:
+    a <= b
+    =>:
+        0 <= b-a
+forall a, b R:
+    0 <= b-a
+    =>:
+        a <= b
+```
+
+**Checked componentwise proof:** subtract the larger second operand on the
+left. The explicit middle term prevents a missing compound search step.
+
+```litex
+claim:
+    ? forall a, b, c, d R:
+        a <= b
+        c <= d
+        =>:
+            a+c <= b+d
+            a-d <= b-c
+    a+c <= b+c <= b+d
+    a-d <= b-d <= b-c
+```
+
+**Checked negation by translation:** multiplying by `-1` reverses real
+order. An explicit translation chain also proves the result without relying
+on automatic matching of a unary negative object.
+
+```litex
+claim:
+    ? forall a, b R:
+        a < b
+        =>:
+            -b < -a
+    -b = a+(-a-b) < b+(-a-b) = -a
+```
+
+The native rule families include addition congruence, order transitivity,
+order weakening and saved-difference bridges. These checked routes do not
+promise arbitrary automatic rearrangement inside a larger expression.
+
+### R08. Scale an inequality with the correct sign
+
+**Ordinary mathematics:** positive factors preserve order, negative factors
+reverse it, and a zero factor loses strictness. Division additionally has
+the nonzero WD obligation. Establish the sign before writing the scaled bound.
+
+**Checked direct forms:** a nonnegative factor is sufficient for weak
+multiplication. A strictly positive factor preserves strict multiplication;
+a strictly signed divisor determines the direction and excludes zero.
+
+```litex
+forall a, b, k R:
+    a <= b
+    k >= 0
+    =>:
+        a*k <= b*k
+forall a, b, k R:
+    a < b
+    k > 0
+    =>:
+        a*k < b*k
+forall a, b, k R:
+    a <= b
+    k > 0
+    =>:
+        a/k <= b/k
+forall a, b, k R:
+    a <= b
+    k < 0
+    =>:
+        a/k >= b/k
+```
+
+**Checked negative-factor proof:** expose the positive factor `0-k`,
+multiply, then reverse order by subtracting from zero. The equalities return
+to the requested products.
+
+```litex
+claim:
+    ? forall a, b, k R:
+        a < b
+        k < 0
+        =>:
+            a*k > b*k
+    a*(0-k) < b*(0-k)
+    a*k = 0-a*(0-k) > 0-b*(0-k) = b*k
+```
+
+The sign check `0-k>0` follows from `k<0` during the positive multiplication
+step; it can be written out for explanation but is not required as a separate
+statement here. The negative multiplication target alone misses in the audited
+build; this proof provides its valid mathematical route. This example also explains
+why a table of true laws must distinguish a builtin's immediate matching
+shape from a result proved by composing several builtin laws.
+
+### R09. Build a sum-of-squares proof
+
+**Ordinary mathematics:** a real square is nonnegative; sums of
+nonnegative terms stay nonnegative. If a polynomial difference equals a
+sum of squares with nonnegative coefficients, verify that identity and
+each sign step, then translate to the desired endpoints.
+
+**Checked sign primitives:** keep the real carrier. A nonzero real base
+gives a strictly positive square; a possibly zero base gives a weak bound.
+
+```litex
+forall x R:
+    x^2 >= 0
+    x^4 >= 0
+forall x R:
+    x != 0
+    =>:
+        0 < x^2
+forall u, v R:
+    u >= 0
+    v >= 0
+    =>:
+        u+v >= 0
+        u*v >= 0
+forall a, b R:
+    0 <= a
+    a <= b
+    =>:
+        a^2 <= b^2
+```
+
+**Checked three-variable example:** prove
+`a^2+b^2+c^2 >= a*b+b*c+c*a`. The positive coefficient `1/2` and every
+square's real carrier make the certificate's sign clear.
+
+```litex
+claim:
+    ? forall a, b, c R:
+        a^2+b^2+c^2 >= a*b+b*c+c*a
+    (a-b)^2+(b-c)^2 >= 0
+    (a-b)^2+(b-c)^2+(c-a)^2 >= 0
+    ((a-b)^2+(b-c)^2+(c-a)^2)/2 >= 0
+    a^2+b^2+c^2 = ((a-b)^2+(b-c)^2+(c-a)^2)/2 + (a*b+b*c+c*a) >= 0+(a*b+b*c+c*a) = a*b+b*c+c*a
+```
+
+The identity is checked algebraically. The preceding statements expose the
+accumulated nonnegative sums and quotient before the endpoint chain; their
+square signs are checked by native rules without separate square statements.
+In the audited build, the certificate identity with an appended `>=0`
+alone misses; merely listing its three square bounds before the last chain
+also misses. Those failures describe the missing composition, not the
+impossibility of multivariable nonlinear inequalities. Finding a suitable
+certificate for a different problem is separate mathematical work; this
+recipe does not promise a general certificate search algorithm.
+
+### R10. Expose absolute-value bounds
+
+**Ordinary mathematics:** to prove `abs(x)<=M`, supply the bounds on `x`
+and its negative. The native matching form uses `0-x`. Triangle and
+reverse-triangle bounds are useful starting facts for sums and differences.
+
+**Checked direct forms:**
+
+```litex
+forall x, M R:
+    x <= M
+    0-x <= M
+    =>:
+        abs(x) <= M
+forall x, y R:
+    abs(x+y) <= abs(x)+abs(y)
+    abs(x)-abs(y) <= abs(x-y)
+```
+
+**Checked interval proof:** starting from `-M<=x<=M`, translate the lower
+bound into the required upper bound on `0-x`.
+
+```litex
+claim:
+    ? forall x, M R:
+        -M <= x
+        x <= M
+        =>:
+            abs(x) <= M
+    0-x = -M+(M-x) <= x+(M-x) = M
+    abs(x) <= M
+```
+
+If the available premise is already `-x<=M`, the corresponding bridge is
+`0-x = -x <= M`. This is equality transport, with no extra sign assumption.
+Keep the exact verified reverse-triangle orientation above; a nested absolute
+value or converse spelling can require additional steps.
+
+**Evidence for R06–R10:** all positive code blocks are self-contained strict
+proofs in the [recipe audit](audits/manual-order-recipes-2026-10-06.json).
+It also records shorter-route/deletion attempts and sign/strictness/domain
+controls. [The native order table](#order-and-comparison-rules) gives the
+broader guarded families; these recipes give the checked proof sequences.
+
+## Advanced interface details
+
+The dictionaries give each interface its meaning, required conditions and
+immediate use. This chapter continues those same contracts with complete
+domains, scope/representation boundaries and publication details. The linked
+S/O entry remains the place to start; each extended contract is maintained
+once here.
+
+### Function interfaces
+
+#### Function-valued arguments and indexed signatures
+
+A function-valued parameter can receive a returned function application.
+Substitution retains the existing argument groups and appends the parameter's
+call. The outer body can be unfolded while its argument remains symbolic:
+
+```litex
+have fn mk(x R) cart(R,Z) = (x,2)
+have fn first(p cart(R,Z)) R = p(1)
+first(mk(7)) = mk(7)(1)
+mk(7)(1) = 7
+```
+
+The [parameter-application tracer](../examples/proof_nodes/equal/by_object_definition/by_fn_application/function_value_parameter_application.lit)
+also checks a returned two-input function. Each input and domain condition
+still passes ordinary application WD; separate fixtures reject wrong call
+groups, complete lengths, guards and coordinate values.
+
+##### Function qualifications and aliases
+
+Function signatures, bodies, complete domains, return carriers and finite
+coordinates are read from declarations and the exact object's indexed special
+properties. These structural readers do not construct or traverse equality
+classes, and do not recursively inspect the properties of equal objects.
+A known `g $in fn(x R) R` supplies a call signature. A directly published
+equality to an anonymous function additionally supplies its body:
+
+```litex
+have fn f(x R) R = x + 1
+let g = f
+g = fn(t R) R {t + 1}
+g(4) = 5
+```
+
+The explicit equality is proved by the ordinary equality verifier and indexed
+on `g`. Without it, `let g = f` does not transfer `f`'s signature or body to
+`g`. Membership alone cannot prove a numeric value. A checked template
+instance can be read directly from its declaration, including when that exact
+instance is the value recorded for an alias:
+
+```litex
+template<a R>:
+    have fn shift(x R) R = x + a
+let shift_two = \shift<2>
+shift_two(3) = 5
+have fn wrapped_shift(x R) R = \shift<2>(x)
+wrapped_shift(3) = 5
+```
+
+Carrier inference likewise reads a directly indexed definition; for a chain
+`Alias = Base = finite_seq(R, 2)`, publish `Alias = finite_seq(R, 2)` before
+introducing a member. Finite-set enumeration for `eval` reads a literal set or
+a direct indexed set value, without searching an alias chain.
+
+The application still checks its arguments and guards, then verifies the
+substituted body under the existing bounded definition permissions. Structural
+transport cites the exact stored fact; its path certificate has at most one
+edge. Ordinary equality and fact proving retain their own equality-path
+routes, so an author can prove and publish the needed endpoint before use.
+Default struct field views retain their definition-owned selection below.
+
+Stored function applications also have a bounded `FnApplicationInStandardSuperset` known-property leaf. After application WD, it compares every applicable stored signature's instantiated numeric return carrier with the target standard set. For example, an R-returning `f(a)` belongs to C. Every candidate must be contained in the target, and at least one inclusion must be strict; an exact-carrier query retains its existing producer. Evidence cites each signature and the known equality path connecting its subject to the applied head. This leaf opens no domain, equality, or general premise search. Nonstandard return carriers and heads with native template/field declarations are left to the existing routes, which own their declaration evidence.
+
+**Entry:** [O03](#o03-function-applications).
+
+
+#### Complete domains, restrictions and fixed signatures
+
+Membership in `fn(...) ReturnSet` requires the function's complete domain to
+equal the declared input domain, including every domain condition. The return
+set is an upper bound on values. A function on `N+` cannot also belong to
+`fn(k closed_range(1,2)) R` merely because its first two values are real.
+Construct an actual restriction when a smaller domain is needed:
+
+```litex
+have fn z(i1 N+) Z = 0
+have fn z2(k closed_range(1,2)) Z = z(k)
+z2 $in finite_seq(Z,2)
+release thm fn_set_member(z2, finite_seq(R,2))
+```
+
+`seq(S)` has complete domain `N+`; `finite_seq(S,n)` has complete domain
+`closed_range(1,n)`. The same function may belong to several return upper
+bounds while retaining that domain. `finite_seq(S,0)` has empty domain.
+Default membership and `release thm fn_set_member` check the same contract.
+
+An anonymous or named function always checks its header, domain conditions,
+return carrier and body for well-definedness. Its return bound concerns only
+complete input assignments. A checked empty input domain makes that bound
+vacuous, including an empty return carrier; it does not prove that the body
+value itself belongs to the empty set. For a guarded domain, first provide
+the exclusion proof:
+
+```litex
+forall k R:
+    k<0
+    =>:
+        not k>0
+have fn empty_body(k R:k>0,k<0) {}=0
+empty_body={}
+()={}
+empty_body=()
+empty_body $in finite_seq({},0)
+```
+
+`0 $in {}` and `empty_body(1)=0` still fail. An undefined body such as `1/0`
+also fails WD even when the complete input domain is empty.
+
+> **Preview:** zero and one Cartesian factors use the same exact-domain
+> membership contract as larger products. `()` is the empty function graph,
+> `cart()` contains that one graph, and `cart(S)` contains one-coordinate
+> functions. `(a)` remains grouping; use `tuple(a)` for one coordinate.
+
+```litex
+() = {}
+cart() = {()}
+tuple(7) $in cart(Z)
+have p cart(Z) = tuple(7)
+p(1) = 7
+finite_set_size(cart()) = 1
+```
+
+`p(2)` is outside this member's complete domain and fails WD. A function
+space on an empty domain contains exactly the empty function even when its
+return carrier is empty; this does not make a nonempty outer curried domain
+empty. These boundary examples certify the listed exact-domain paths.
+The struct interface separately determines named field views.
+
+Both `have fn f(x S) T = body` and `fn(x S) T {body}` must prove
+`body $in T` under the declared parameter types and domain conditions before
+the function is accepted. Returning a parameter still requires this proof:
+`have fn f(x Z) N = x` is rejected because `x $in N` does not follow from
+`x $in Z`. `have fn f(x N) Z = x` is valid, as is the restricted definition
+`have fn f(x Z: x >= 0) N = x`.
+
+> **Preview:** `A -> B` is sugar for the simple function set
+> `fn(_ A) B` (internal binder `__param_<id>`). It is right-associative:
+> `A -> B -> C` means `A -> (B -> C)`. Arithmetic, `×`, `∩`, and `∪` bind
+> tighter than `->`, so `R × R -> R` means `(R × R) -> R`. Use `=>` for logical
+> implication; `->` is only the function-set arrow. This sugar does not support
+> `{body}` or domain `: conditions` — write those with full `fn(...)`.
+> Neither spelling permits a return set that refers to its own domain binder.
+>
+> **Preview:** every `fn` / anonymous-fn parameter domain and return set
+> must be fixed relative to that signature: neither may refer to any of its own
+> parameters. `fn(x R, y Z) R` and `fn(p cart(R, Z)) R` are valid shapes;
+> `fn(x R, y S(x)) R`, `fn(x R) {x}` and
+> `fn(S power_set(R)) fn(x S) R` are rejected during parsing.
+> Domain `: conditions` and function bodies may refer to the parameters.
+> Ordinary quantifier binders such as `forall S set, x S` remain sequential.
+
+Function parameter names are collected without registering them while their
+carriers are parsed. The parser registers the bindings for domain conditions,
+closes that scope before parsing the return object, and reopens the same IDs
+for an anonymous or named function body. Thus a nested return space cannot
+capture an outer function parameter, including inside its own conditions or
+body. WD independently enforces the same restriction for constructed objects.
+The rule also applies to `have fn`, `algo`, and signatures derived by
+`have fn ... by exist!`. It does not change ordinary `forall` / `exist`
+parameter dependencies.
+
+An enclosing set is fixed for an inner function, and a fixed function space
+may itself be a return set. Disjoint signatures may reuse a parameter spelling
+with distinct binding IDs:
+
+```litex
+let curried_space = fn(x R) fn(x R) R
+curried_space = curried_space
+forall A nonempty_set:
+    fn(x A) A {x} = fn(y A) A {y}
+fn(x R: x > 0) R {x + 1}(2) = 3
+```
+
+A parameter-dependent output property belongs in a separate fact rather than
+the return set. For example, the former `have fn identity(x R) {x} = x`
+becomes a fixed-return definition plus its precise membership property:
+
+```litex
+have fn identity(x R) R = x
+forall a R:
+    identity(a) $in {a}
+```
+
+For families parameterized by an arbitrary carrier, use `template<A set>`.
+The binder kinds `set`, `nonempty_set`, and `finite_set` are still not ordinary
+function domains. Tracer:
+[`examples/wd/fixed_function_signature_scopes.lit`](../examples/wd/fixed_function_signature_scopes.lit).
+
+**Entry:** [O79](#o79-function-spaces).
+
+
+#### Case equations and compound guards
+
+Relation-chain guards contribute every adjacent comparison to the mutual
+exclusion check, just as the equivalent flat `and` guard does. This also
+applies to `algo ... by cases`; coverage and return checks are still required.
+
+> **Preview:** after `have fn f(...) T = body`, `by cases`, or
+> `by induc`, application equalities such as `f(args) = subst(body)` are proved
+> by the equality **object-definition** stage (same idea as `\Template<args>(...)`
+> and `have` / `let` identifier unfolds). For `by cases` / `by induc`, Litex looks
+> up the stored definition, matches a case guard at the concrete arguments, and
+> unfolds that case body. The same unfolds apply when the definition lives in a
+> `template<…>:` body: `\name<args>(fn_args)` matches the template parameters,
+> then the case/induc guards and body, exactly as for ordinary `have fn`.
+> Runnable coverage of all nine leaf shapes (identifier `have`/`let`, three
+> ordinary `have fn` forms, four template forms) is in
+> `examples/tmp_have_fn_object_definition.lit`.
+> `by exist!` still does not get that equality unfold.
+
+**Entry:** [S11](#s11-piecewise-functions).
+
+
+#### Nested cases and decreasing calls
+
+`have fn ... by induc measure from lower` defines a recursive function. Litex
+checks that the measure and lower bound are integers, recursive calls stay in
+the domain, and each recursive measure is smaller but not below the bound.
+Every sibling case list, including nested lists, must cover its enclosing
+domain and be pairwise disjoint. A nested list is checked under its parent
+guard; it need not cover integers excluded by that guard. An invalid list
+rejects the declaration before any function or case equation is published.
+
+For a real-valued `x` and a closed numeric expression `c` whose exact value is
+positive, the checker proves `x - c < x`. This includes offsets such as `2`,
+`1 + 1`, and `1 / 3`; it does not assume that a symbolic offset is positive.
+Zero, negative offsets, and nondecreasing recursive calls remain rejected.
+See the [two-step recursive domain tracer](../examples/wd/positive_closed_decrement_recursive.lit).
+Detailed output records the actual offset as `SubtractPositiveClosedLess`;
+the existing literal-one route retains its `SubtractOneLess` label.
+
+```litex
+have fn countdown(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: countdown(n - 1)
+
+forall n N:
+    countdown(n) $in N
+```
+
+The stored case equations are directly usable at arguments whose case can be
+proved. Litex instantiates the selected equation and performs nested arithmetic
+normalization, so a successor argument does not require separate lines for
+`n + 1 > 0` and `(n + 1) - 1 = n`. It still refuses to select a case when its
+condition is not known.
+
+**Entry:** [S12](#s12-functions-by-decreasing-integer-measure).
+
+
+#### Selection facts and binder replay
+
+> **Preview:** `have fn … by exist!` is goal-only (no proof
+> body). Exec requires the `forall … exist!` goal to be already proved
+> (`claim` / `thm` / `trust`), then stores `f $in FnSet(...)`, the property
+> forall (`body` with the witness replaced by `f(args)`), and the uniqueness
+> forall (`body ⇒ witness = f(args)`). It does **not** store `f = AnonymousFn`,
+> so applications do not unfold by equality the way `have fn f(...) T = body`
+> does. The name is recorded in the definition table, so `release obj def f`
+> re-stores the same three facts.
+>
+> A `template` may use this form as its body. Instantiating `\Name<args>`
+> installs the same three facts as a plain `have fn by exist!` (FnSet
+> membership, property forall, uniqueness forall), with subjects equal to
+> the instance.
+
+`have fn name by exist!` turns an **already proved** unique-existence
+statement into a function. Prove the `forall … exist!` outside; the `have fn`
+block only names the goal and selects the function.
+
+An already proved whole `forall` can be replayed with renamed outer
+parameters and existential witnesses, including an outer parameter absent
+from the conclusion. Replay checks the goal's well-definedness, preserves
+the carriers, premises and free definition owners, and cites the stored
+source fact. Existential function/set carriers also allow renaming their
+nested bound variables; their domains, return carriers, guards and free
+identities remain unchanged. Replay does not assign a value to an unused
+parameter.
+
+Nested `forall` premises are compared recursively with their own bound-name
+renamings, including dependent `exist!` witness carriers. The complete
+conditions, existential polarity and free owners must still match. Source
+matching does not raise the caller's WD permissions. The
+[nested unique-source tracer](../examples/proof_nodes/forall/known_source_nested_unique.lit)
+checks the full proof, stored source and exact repeat.
+
+**Entry:** [S13](#s13-functions-from-unique-existence).
+
+
+### Struct interfaces
+
+#### Struct representation and law publication
+
+Struct `<=>:` conditions are checked in source order in a temporary field scope.
+After a condition passes WD, it is assumed locally while checking later conditions;
+for example, `x != 0` may precede a condition containing `1 / x`. These assumptions
+leave the scope with the definition check and are released only for an actual member.
+
+A `struct` defines a named set together with one definition-owned field view.
+Once its header parameters are fixed, `&Name<args>` is one ordinary set, not a
+set of sets. Every binder and function signature position that accepts a set
+therefore also accepts a struct carrier.
+
+Each actual header argument must satisfy its declared type before the struct
+instance is well-defined. For `struct Box<n N>:`, `&Box<0>` is valid and
+`&Box<-1>` is rejected. This also checks `set`, `nonempty_set`, and `finite_set`
+header kinds. Dependent headers such as `S set, a S` use the actual argument
+for `S` when checking `a`.
+
+##### Tuple representation
+
+A structure must define at least two fields. It is represented by a tuple in
+definition order. If `Point` defines `x` and then `y`, opening a `Point` value
+`p` establishes `p.x = p(1)` and `p.y = p(2)`. The field-to-coordinate relation
+belongs to the struct definition; Litex does not guess it from field names.
+
+> **Preview:** a struct with fewer than two fields is a parse
+> error (`struct definition expects at least two fields`). There is no
+> one-field “identity view” of a sole carrier.
+
+The tuple representation is deliberately opaque outside two places:
+
+1. the verifier may inspect it internally while proving `e $in &Struct`; and
+2. a successful `release struct def e` (or the automatic direct-binding case below)
+   stores the public representation facts.
+
+A generic membership fact `e $in &Struct` does not itself store field carriers,
+field-to-coordinate equalities, or struct laws.
+
+> **Preview:** `e $in &Struct` is proved by the
+> `StructObjMembership` builtin: check field carriers (literal tuple components
+> `$in Ti`, or else `e $in cart(T1,…,Tn)` via `CartMembership`) and each
+> instantiated `<=>:` law. Success is opaque membership only — still no
+> automatic property release. `CartMembership` itself proves
+> `e $in cart(A1,…,An)` by its accurate complete domain `closed_range(1,n)`
+> and every coordinate's factor membership. Checking a shorter call range,
+> a common return upper bound, or only some coordinates is insufficient.
+
+A successful `struct` definition also publishes its checked laws as universal
+facts over the original header parameters and an instance of that exact struct.
+A consequent universal is flattened into the same parameter list; its premises
+are retained and existential witnesses stay inside. For example, a law
+`forall x A: exist y A st {add(x,y)=zero}` of `Op<A>` publishes
+`forall A nonempty_set, s &Op<A>, x A: exist y A st {s.add(x,y)=s.zero}`.
+These are definition consequences, with source FactIds retained in the result.
+Ordinary known-forall matching can consume them without an explicit release
+when it can verify the instance carrier and every condition. This does not
+publish tuple/field-index representation facts or recursively open instances.
+Publication follows the definition's existing environment scope. Importing a
+module does not inject its universal facts into the caller's ambient environment;
+an imported instance can use the existing explicit `release struct def` path.
+A top-level `not forall` law remains on the instance-release path because it
+is not a supported universal conclusion shape; it is not hoisted or strengthened.
+
+**Entry:** [O91](#o91-struct-carriers).
+
+
+#### Field WD, automatic opening and selected views
+
+Field syntax and property release are separate. To decide whether `e.y` is a
+well-defined object, Litex only determines the definition-owned struct carrier
+of `e` and checks that this struct defines `y`. To decide `e.y.z`, it also
+checks that `y` is defined directly with a struct carrier that defines `z`.
+This WD traversal does not store any field carrier, tuple bridge, or struct
+law. The final field's carrier matters only when a surrounding operation needs
+it, for example when calling a function-valued field.
+
+When the receiver has the required definition-owned view, a reflexive field
+fact can be well-defined before opening. An explicit `release struct def f(t)`
+(or `release struct def f(t).x` for an inner layer) materializes that instance's
+representation and property facts. An individual law may instead be checked
+from a published struct universal when its carrier and conditions can be
+matched; publication does not promise automatic discovery of every such goal.
+
+##### The only automatic property release
+
+A direct syntactic symbol binding written with a struct carrier, such as
+`p &Point` or `forall p &Point`, opens one layer automatically. This is why
+properties of a directly bound `p` are immediately available.
+
+Other forms do not automatically materialize the whole property package.
+A function result with a directly defined struct return and a directly
+struct-valued field can supply a definition-owned view for field WD.
+Use `release struct def ...` to store that layer's field carriers, tuple
+bridges and instantiated laws. The separately published universals described
+above are another source of individual law proofs when matching succeeds.
+An equality or later membership alone does not choose a new named-field view.
+Litex has no `&Point{p}.x` form for selecting another view later.
+
+The direct struct-binding rule also applies in `forall`, `exist`, set builders,
+predicates, theorems, templates and function binders. Function results use
+their definition-owned return view rather than acquiring a view from arbitrary
+membership.
+
+Function, proposition, and theorem argument lists are explicit. Pass struct
+fields by name and tuple entries by index:
+
+```litex
+struct Point:
+    x R
+    y R
+
+release thm struct_member((1, 2), &Point)
+have p &Point = (1, 2)
+
+prop has_point_coordinates(x, y R):
+    x = x
+
+by def:
+    ? $has_point_coordinates(p.x, p.y)
+```
+
+Struct header parameters and `<=>:` facts are not positional fields. Tuple
+calls likewise name entries explicitly, for example `f(t(1), t(2), t(3))`.
+Ordinary arity, membership, and function-domain checks apply to every written
+argument.
+
+If a selected field is itself defined directly with a struct type, field
+notation may continue through that defined view:
+
+```litex
+struct Coordinates:
+    x R
+    y R
+
+struct TaggedPoint:
+    point &Coordinates
+    tag N
+
+release thm struct_member((1, 2), &Coordinates)
+release thm struct_member(((1, 2), 0), &TaggedPoint)
+have item &TaggedPoint = ((1, 2), 0)
+release struct def item.point
+item.point.x $in R
+```
+
+Here the definition of `TaggedPoint.point` supplies the owner of the next
+field, so the entire path is well-defined before the `by` statement. The
+explicit opening is needed only to release `Coordinates`' field-carrier and
+representation facts. Parameterized and module-qualified struct field types
+work the same way. A final field may be called, as in
+`space.scalars.mul(a, b)`. Fields also work after a call when the function's
+defined return carrier is a struct, as in `make_box(f).entries(i)`. A callable
+field's defined carrier must be a function set.
+
+When `expr` is a materialized template-selected struct object, a callable
+field projects through the selected tuple value before application. Thus an
+entries field defined by an anonymous function can be evaluated directly once
+the selected object's struct membership is known.
+
+A vector-space structure can own its scalar system rather than asking each
+single-space theorem to carry scalar operations separately. With
+`space &VectorSpace<s,V>`, ordinary code can write
+`space.smul(space.scalars.mul(a,b),v)`. A relation that joins two spaces, such
+as linearity of a map, records one compatibility fact
+`Vspace.scalars = Wspace.scalars`; callers then pass the spaces themselves.
+
+A later membership fact does not add named fields retroactively:
+
+```text
+struct Point:
+    x R
+    y R
+
+have p cart(R, R) = (1, 2)
+release thm struct_member(p, &Point)
+p.x = 1
+```
+
+The last line is a parse `error`. The membership still exposes the ordinary
+struct-membership proposition for later proof use, but it exposes neither
+positional Cartesian facts nor `Point` field names. There is deliberately no
+`release struct def p as &Point` escape hatch. To use those names, construct a new
+definition-owned object explicitly:
+
+Likewise, if `p &Point` later also belongs to `&ComplexPair`, `p.x` remains the
+field chosen by its `Point` definition. Write
+`have p2 &ComplexPair = (p.x, p.y)` to obtain `p2.real` and `p2.img`.
+Chained notation follows only directly defined struct carriers; it does not
+follow named set aliases, equalities, or later membership facts.
+
+**Entry:** [O92](#o92-definition-owned-field-access).
+
+
+#### One-layer release and its published facts
+
+`release struct def e` opens exactly one definition-owned struct layer. It has no
+`as &Struct` form: the struct must already be fixed by the definition of `e`,
+by a function's explicit return carrier, or by the direct struct carrier of the
+previous field in a chain.
+
+Before storing anything, the statement verifies the exact membership
+`e $in &Struct`. Failure is atomic: no partial tuple or field facts remain.
+For a struct with fields `a : A` and `b : B`, success releases:
+
+- `e $in cart(A, B)`;
+- `e.a = e(1)` and `e.b = e(2)`;
+- the instantiated field-carrier facts; and
+- the struct's instantiated `<=>:` facts.
+
+The Cartesian member carries the accurate complete domain. Opening publishes
+no tuple shape predicate, dimension or indexed-object fact. A function-valued
+field keeps its domain conditions; a checked equality endpoint may be needed
+to connect a field's value to the original coordinate before evaluating it.
+See [the struct-coordinate tracer](../examples/stmt_nodes/definition/struct_function_coordinate_bridges.lit).
+
+Repeating the same statement is
+idempotent. Opening is never recursive: `release struct def outer` does not also
+open a struct-valued `outer.inner`. Its quantified laws may already be usable
+through known-forall matching; use `release struct def outer.inner` to materialize
+its one-layer representation and property facts.
+
+##### Explicit object-definition release: `release obj def` (preview)
+
+**Entry:** [S27](#s27-open-one-struct-definition-layer).
+
+
+#### Definition lookup and supported source owners
+
+> **Preview:** `release obj def I` takes exactly one identifier
+> `I` (plain or `mod::export::`-qualified). It looks up
+> `StoredIdentifierDefinition` for that name — in the live Env stack or in a
+> finished export file's Env — and stores the definition's accompanying facts
+> into the **current** Env. Subjects use the written spelling of `I`.
+>
+> Supported sources: `let`, `have` / `have … = …` / `have …:`, `trust have`,
+> and `have fn` / `by cases` / `by exist!` / `by induc`. Binder-only `ParamType`
+> rows are rejected. This does **not** open a struct layer; use
+> `release struct def` for that.
+
+**Entry:** [S28](#s28-replay-an-object-definition).
+
+
+### Template interfaces
+
+#### Carrier families and function arguments
+
+Read a template as the parameterized counterpart of an ordinary definition
+statement. The body is the same kind of definition that would appear outside
+(`have …`, `have fn …`, and the other supported definition forms): Litex
+checks it as if the angle-bracket parameters were already introduced and
+satisfied the header conditions. Instantiating `\name<args>` then gives the
+corresponding defined object or function for those concrete arguments.
+
+That is why `template` is necessary and cannot be replaced by a simple
+`fn_set` / ordinary function whose domain is written as `set`. A Litex function
+parameter must range over one fixed set. The binder kind `set` is not such a
+set: it is a surface parameter kind meaning "a set," not an element of a
+set-of-all-sets. So a family indexed by an arbitrary set belongs in the
+template header, not as a fake function argument. The rejected form
+`have fn identity_set(A set) set = A` is recorded earlier under
+[Bare facts and `have`](#bare-facts-and-have); for a longer reading see
+[Why does Litex have `template`?](FAQ.md#why-does-litex-have-template).
+
+```litex
+template<S set, z S>:
+    have fn const_on_S(x S) S = z
+
+\const_on_S<R, 0>(2) = 0
+```
+
+**Entry:** [S17](#s17-parameterized-declaration-families).
+
+
+#### Instance ownership and automatic definition facts
+
+The name uses the ordinary module/export forms: `\export::name<args>`,
+`\Module::export::name<args>`, or `\Module:::name<args>` when the imported
+module has one export. These forms preserve the same canonical template owner;
+knowing an export name does not make a missing template valid. The configured
+[qualified-template example](../examples/module_manager/qualified_template_names/main.lit)
+checks all three forms and their rejection boundaries.
+
+A template parameter such as `S set` is not a function argument ranging over a
+set of all sets. The body is checked once in the parameterized context. On
+success, Litex substitutes its defined name with `\name<parameters>` in the
+body definition facts and stores them under the template's universal binders
+and header conditions. Later `\name<args>` keeps its surface form; ordinary
+known-`forall` search can instantiate those facts, and existing
+definition-unfolding routes remain available.
+
+> **Preview:** automatic template definition facts include object membership
+> and set kinds, defining equalities, selected-witness properties, function
+> signatures and guarded case/recursive equations, unique-selection properties
+> and uniqueness, and replacement introduction/elimination. Only facts emitted
+> by the successful body definition stores and their ordinary inference escape;
+> parameter assumptions and proof-search intermediate facts stay local.
+
+```litex
+template<S nonempty_set>:
+    have member S
+
+\member<R> $in R
+forall T nonempty_set:
+    \member<T> $in T
+```
+
+The definition stores `forall S nonempty_set: \member<S> $in S`. It does not
+claim that all members of `S` equal the selected object. Header conditions
+remain premises of every published fact:
+
+```litex
+template<S set: $is_nonempty_set(S)>:
+    have selected S
+
+\selected<R> $in R
+```
+
+Here the stored fact has binder `S set`, premise `$is_nonempty_set(S)`, and
+conclusion `\selected<S> $in S`. An empty-set argument is rejected. Function
+domains and case conditions are retained as well. A `trust have` body remains
+trusted and is rejected under `-strict`; automatic publication does not prove
+its assumptions. The [runnable acceptance example](../examples/stmt_nodes/definition/template_definition_facts.lit)
+covers the definition families and direct use of their instances.
+
+When a template selects a set-builder value, membership in the instance unfolds
+to membership in the defining set-builder. **Assumption demonstration (ordinary mode):**
+the following example explicitly assumes `$marked(1)`; it is rejected in strict mode.
+
+```litex
+abstract_prop marked(x)
+
+template<S set>:
+    have marked_elements set = {x S: $marked(x)}
+
+trust $marked(1)
+1 $in R
+\marked_elements<R> = {x R: $marked(x)}
+release thm set_builder_member(1, {x R: $marked(x)})
+1 $in \marked_elements<R>
+```
+
+Known membership in `\marked_elements<R>` is proved from the base-set membership
+and every defining fact of the set-builder after definitional unfold.
+
+> **Preview:** storing `x $in {t S: P(t), …}` (or `x $in Name`
+> when `Name` is known equal to that set-builder) also stores `x $in S` and the
+> instantiated defining facts. That is the store-time reverse of set-builder
+> membership.
+
+**Entry:** [O93](#o93-template-instances).
+
 ## Builtin Verification Rules
 
 Builtin verification rules are small mathematical patterns implemented by the
@@ -8184,6 +9303,11 @@ citation; it does not search for a new difference bound. The enclosing compariso
 still requires real operands. See the runnable
 [positive-difference tracer](../examples/proof_nodes/atomic/by_builtin_rule/greater_from_positive_difference.lit).
 
+For checked mathematics-first examples, use
+[R06–R10](#r06-complete-a-square-and-translate-the-bound). They distinguish
+immediate matching from explicit equality transport and composition, including
+the saved weak-difference orientation and subtraction-from-zero forms.
+
 > **Migration example:** This retained block fails at `search_proof` in the current checker; it is not a verified result.
 
 <!-- litex:skip-test -->
@@ -8512,6 +9636,7 @@ The symbolic trigonometric interface recognizes the following exact families:
 | Family | Recognized laws and required domains |
 |---|---|
 | Core identities | Values at `0` and `pi / 2`, sine and cosine addition and difference formulas, the unit-circle identity, and `tan(x)=sin(x)/cos(x)` or `cot(x)=cos(x)/sin(x)` when the denominator is known nonzero. |
+| Fixed quotient identities | `tan(x)*cot(x)=1` requires real `x`, `sin(x)!=0` and `cos(x)!=0`; `1+tan(x)^2=1/cos(x)^2` requires real `x` and `cos(x)!=0`. Equality direction, factor/summand order and squares written as repeated multiplication are supported. |
 | Principal inverse sine | `arcsin(x)` requires `x in [(-1),1]`, returns a value in `[(-pi)/2,pi/2]`, and satisfies `sin(arcsin(x))=x`. Conversely, `arcsin(sin(y))=y` requires `y` in that principal interval. |
 | Principal inverse cosine | `arccos(x)` requires `x in [(-1),1]`, returns a value in `[0,pi]`, and satisfies `cos(arccos(x))=x`. Conversely, `arccos(cos(y))=y` requires `y` in `[0,pi]`. |
 | Principal inverse tangent | `arctan(x)` is total on `R`, returns a value in `((-pi)/2,pi/2)`, and satisfies `tan(arctan(x))=x`. Conversely, `arctan(tan(y))=y` requires `y` in that open principal interval. |
@@ -8524,6 +9649,30 @@ The symbolic trigonometric interface recognizes the following exact families:
 These are exact symbolic rules, not numerical approximation. Unlisted special
 angles, complex trigonometry, continuity, and analytic definitions need
 explicit source facts or library interfaces.
+
+The [tangent/cotangent product](../examples/proof_nodes/equal/by_builtin_rule/tan_cot_product.lit)
+and [tangent square](../examples/proof_nodes/equal/by_builtin_rule/tan_square_reciprocal_cosine.lit)
+examples preserve the former search misses. Their fixed identity leaves run
+after equality WD checks every partial operation; Detailed output retains the
+angle and the enclosing nonzero evidence. They do not expand arbitrary nested
+trigonometric expressions.
+
+The fixed principal-interval consumers recognize `(-pi)/2`, `-(pi/2)`,
+`0-pi/2` and `(-1)*(pi/2)` as the same lower endpoint. Conditions may be
+written in either comparison direction. Right inverses, sine's strict order
+and cosine's open-interval nonzero certificate retain the actual written
+bound proofs. Strict endpoints still matter for tangent WD. See the
+[inverse](../examples/proof_nodes/equal/by_builtin_rule/arcsin_principal_bound_spellings.lit)
+and [nonzero](../examples/proof_nodes/atomic/by_builtin_rule/cos_nonzero_principal_bound_spellings.lit)
+examples; this does not normalize arbitrary symbolic bounds.
+
+Known closed numeric equalities are substituted by matching whole original
+scalar terms before their children. A parent rebuilt from changed children
+can then use its known value in the same structural pass. For example, with
+both `a=0` and `cos(a)=1`, the whole cosine value wins. Equality, order and
+`eval` retain each selected equality citation; residual verification keeps its
+existing permissions. The [numeric substitution tracer](../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit)
+preserves the former process-dependent failure.
 
 ### Native numeric function rules
 
@@ -9134,545 +10283,53 @@ When auditing a proof, distinguish:
 This distinction is also part of the trusted boundary: builtin inference rules
 are checker code, not source-level theorems silently imported from a library.
 
-## Pitfalls and missing proof steps
-
-Each card pairs an exact rejection with an appropriate positive example or a
-linked correction. Error-phase labels below are taken from isolated current
-runs. A mathematical counterexample, missing premise, and proof-search miss
-are different reasons; each card states which applies.
-
-### P01. Reflexivity does not bypass well-definedness
-
-**Intention:** assert the reflexive equality of a reciprocal expression.
-**Expected rejection — phase `well_defined`:**
-
-<!-- litex:skip-test -->
-```litex
-have x R
-1 / x = 1 / x
-```
-
-The checker stops before comparing the two sides: `x != 0` is unavailable.
-Writing identical expressions does not make an undefined division legal.
-The positive counterpart is the guarded universal in
-[O01](#domain-and-well-definedness), with the same reflexive goal for inputs
-in its actual domain. For a callable construction, use the next card.
-
-### P02. The body must be meaningful throughout the function domain
-
-**Expected rejection — phase `have_fn_equal`; anonymous-function body WD fails:**
-
-<!-- litex:skip-test -->
-```litex
-have fn reciprocal(x R) R = 1 / x
-```
-
-The declared domain includes zero. The repair for the intended partial
-reciprocal is the guarded definition in [S01](#parameters-domain-and-return-set).
-This is a domain correction, not proof automation. If the intended mathematics
-requires a value at zero, a different definition specifying that value is needed.
-
-### P03. A legal function declaration does not license every call
-
-**Expected rejection — phase `well_defined`:**
-
-<!-- litex:skip-test -->
-```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-reciprocal(0) = 0
-```
-
-The call violates the written guard. Changing the right side of the equation
-cannot repair its argument domain. The positive calls at `2` and `-2` in S01
-satisfy the signature.
-
-A guard also does not establish any desired equation involving the expression.
-**Expected rejection — phase `search_proof`:**
-
-<!-- litex:skip-test -->
-```litex
-forall x R:
-    x != 0
-    =>:
-        1 / x = 1
-```
-
-The expressions are WD, but the mathematical universal is false; `x = 2` is
-a counterexample. Nonzeroness and the value of the reciprocal are independent
-questions. This example must not be diagnosed as another missing WD guard.
-
-### P04. Connect division and multiplication explicitly
-
-**Intention:** from `a / b = c` and `b != 0`, deduce `a = c * b`.
-**Expected rejection — phase `search_proof` in this cold context:**
-
-<!-- litex:skip-test -->
-```litex
-forall a, b, c R:
-    b != 0
-    a / b = c
-    =>:
-        a = c * b
-```
-
-The mathematics is valid. In the current checker, this bare goal does not
-find the route by itself. A checked proof keeps the same hypothesis and target:
-
-```litex
-claim:
-    ? forall a, b, c R:
-        b != 0
-        a / b = c
-        =>:
-            a = c * b
-    a = (a / b) * b = c * b
-```
-
-The chain has two mathematical steps: `(a / b) * b = a` uses division
-cancellation, and replacing `a / b` by `c` uses the premise. Its middle
-expression connects an implemented identity to a known equality.
-The proof uses the active goal parameters `a`, `b`, `c`; it does not introduce
-a second universal with renamed parameters inside the proof body.
-
-The reverse direction has the corresponding boundary.
-**Expected rejection — phase `search_proof`:**
-
-<!-- litex:skip-test -->
-```litex
-forall a, b, c R:
-    b != 0
-    a = b * c
-    =>:
-        a / b = c
-```
-
-Checked counterpart:
-
-```litex
-claim:
-    ? forall a, b, c R:
-        b != 0
-        a = b * c
-        =>:
-            a / b = c
-    a / b = (b * c) / b = c
-```
-
-Removing the equality-chain body from either `claim` was independently tested
-and rejected. These are current proof-search boundaries, not additional
-mathematical hypotheses or claims that every algebraic proof needs a `claim`.
-
-### P05. A function equation may need to be exposed before substitution
-
-The complete reciprocal-law proof is in [R01](#prove-a-law-of-the-function).
-It contains these two mathematical steps:
-
-<!-- litex:skip-test -->
-```litex
-# Fragment of the full checked R01 proof; x and reciprocal are defined there.
-reciprocal(x) = 1 / x
-reciprocal(x) * x = (1 / x) * x = 1
-```
-
-The first line establishes the specific function value equality. The second
-uses it under multiplication and closes the scalar identity. In the current
-checked context, a direct universal goal fails; deleting the first line while
-retaining the chain also fails. Retaining only the first line fails to close
-the law. The full two-step proof passes.
-
-This boundary concerns the exact reciprocal-law example. It does not mean
-that every function application needs a manually repeated defining equation.
-Concrete evaluations such as `reciprocal(2) = 1 / 2` already verify directly.
-
-### P06. Arbitrary `have` needs nonemptiness
-
-**Expected rejection — phase `have_in_nonempty`:**
-
-<!-- litex:skip-test -->
-```litex
-have x {t R: t > 0}
-```
-
-In this cold context, the checker has not established that this builder is
-nonempty. It does not follow that the set is empty. The correction in
-[F01](#set-builder-membership) supplies `1` as a concrete member using
-`witness`, then introduces an arbitrary member with `have`.
-
-A builder's definition, an established member, and an arbitrary selection
-are different steps. Do not append uses of `x` after a failed declaration:
-that name was not successfully introduced, so a later line has an earlier
-name-resolution problem to fix first.
-
-### P07. Name the value equality before arithmetic
-
-In this current two-level alias example the final arithmetic equality misses search. A direct equality chain connects the alias to the numerical value before use; this is a boundary of the example, not a rule that every alias requires an extra line.
-
-**Expected rejection — search_proof:**
-
-<!-- litex:skip-test -->
-```litex
-have a R = 2
-let b = a
-b + 1 = 3
-```
-
-**Checked counterpart:**
-
-```litex
-have a R = 2
-a = 2
-let b = a
-b = a = 2
-b + 1 = 3
-```
-
-**Evidence:** `P07` / `N11` in the current inventory journal.
-
-### P08. Displayed sets require proved distinct elements
-
-Repeated elements are harmless in informal set notation, but the native displayed-set constructor requires pairwise verified inequality. With symbolic values, carry the genuine distinctness condition if two elements are intended.
-
-**Expected rejection — let (object well-definedness):**
-
-<!-- litex:skip-test -->
-```litex
-let A = {1,1}
-```
-
-**Checked counterpart:**
-
-```litex
-forall a, b R:
-    a != b
-    =>:
-        $is_finite_set({a, b})
-        finite_set_size({a, b}) = 2
-```
-
-**Evidence:** `P08` / `N01` in the current inventory journal.
-
-### P09. An explicit definition proof has its own obligations
-
-The ordinary closed fact $prime(5) verifies by calculation. A cold by-def request still asks for the lower bound and trial-divisor universal. Prove the finite trial condition explicitly, then fold the definition. This differs from asking the calculation route to repeat its answer.
-
-**Expected rejection — by_def:**
-
-<!-- litex:skip-test -->
-```litex
-by def $prime(5)
-```
-
-**Checked counterpart:**
-
-```litex
-by for:
-    ? forall divisor range(2, 5):
-        5 % divisor != 0
-by def $prime(5)
-```
-
-**Evidence:** `P09` / `N13` in the current inventory journal.
-
-### P10. Divisibility argument order and negative proof
-
-The native form $dvd(a,d) has dividend first, nonzero divisor second. In the checked negative example ordinary search misses; an explicit contradiction uses the positive definition’s remainder equality without changing the mathematical goal.
-
-**Expected rejection — search_proof:**
-
-<!-- litex:skip-test -->
-```litex
-not $dvd(5,2)
-```
-
-**Checked counterpart:**
-
-```litex
-4 % 2 = 0
-witness exist a Z st {4 = a * 2} from 2
-by def $dvd(4, 2)
-by contra:
-    ? not $dvd(5, 2)
-    impossible 5 % 2 = 0
-```
-
-**Evidence:** `P10` / `N12` in the current inventory journal.
-
-### P11. An empty indexed domain is not a zero-factor Cartesian product
-
-The current indexed union/intersection/product constructors require a nonempty index. Ordinary cart() has a separate exact finite-function meaning and cardinality one. These public constructors have different domain contracts.
-
-**Expected rejection — let (object well-definedness):**
-
-<!-- litex:skip-test -->
-```litex
-let family = fn(k {}) power_set(N) {{1}}
-let U = index_union({}, N, family)
-```
-
-**Checked counterpart:**
-
-```litex
-() $in cart()
-finite_set_size(cart()) = 1
-let family = fn(k {1}) power_set(N) {{1}}
-let U = index_union({1}, N, family)
-$is_set(U)
-```
-
-**Evidence:** `P11` / `N14` in the current inventory journal.
-
-## Recommended mathematical formulations
-
-### R01. Define and use a reciprocal function
-
-**Ordinary mathematics:** a function on nonzero reals, returning `1 / x`.
-
-**Recommended form:** the guarded expression-defined function from S01:
-`have fn reciprocal(x R: x != 0) R = 1 / x`.
-The signature states the domain where the expression is meaningful, and the
-return carrier states the output contract. Callers can see their obligation
-without inspecting the definition body.
-
-**Supported alternative:** use the nonzero-real carrier `R*`:
-
-```litex
-have fn reciprocal(x R*) R = 1 / x
-reciprocal(2) = 1 / 2
-```
-
-`R*` carries real membership and nonzeroness. Both definitions express the
-same intended mathematical domain here. The explicit guard spells out the
-condition for readers learning WD; the carrier form is useful when the domain
-already plays a recurring role. The current public spellings include `R+`
-and `R*`; do not infer aliases such as `R_pos` from old notes.
-
-### Prove a law of the function
-
-**Ordinary mathematics:** the reciprocal multiplied by its nonzero argument
-is one. Define the callable value, expose its equation at the active argument,
-then use the division identity:
-
-```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-claim:
-    ? forall x R:
-        x != 0
-        =>:
-            reciprocal(x) * x = 1
-    reciprocal(x) = 1 / x
-    reciprocal(x) * x = (1 / x) * x = 1
-```
-
-This example demonstrates the full route through the dictionaries:
-
-1. [S01](#s01-expression-defined-functions) gives the definition and stored
-   callable contract.
-2. [O01](#o01-division) explains the guard and the scalar identity.
-3. [F01](#f01-membership-and-nonmembership) explains carrier information and
-   legal function applications.
-4. [P05](#p05-a-function-equation-may-need-to-be-exposed-before-substitution)
-   explains the two explicit steps needed by this proof.
-
-The proof machinery remains local to the `claim`; the successful statement
-exports its universal conclusion. No helper theorem merely restating the
-function definition is introduced.
-
-### R02. Choose the language form by mathematical role
-
-| Mathematical intention | Recommended form | Why |
-|---|---|---|
-| A named callable value given by a formula | `have fn ... = ...` | Later code needs to apply the function and use its return contract |
-| A condition on an object | `prop ...` | Names a mathematical proposition with a concrete definition |
-| A one-off derived fact requiring intermediate steps | `claim` | Proves and exports the goal while keeping helpers local |
-| A routine carrier consequence | State the membership directly | Use the existing carrier machinery without an unnecessary wrapper |
-| A division transformation whose cold goal misses | A local equality chain as in P04 | Connects the original expression to the usable identity |
-| A reusable mathematical result | A named `thm` interface | Worth naming when later developments need that result |
-
-These are recommendations about roles and proof organization, not a list of
-new parser restrictions. Distinguish a mathematical domain requirement from
-a source-style choice. For example, multiline `forall` is the recommended
-teaching form; the supported inline syntax is not made invalid by that choice.
-
-### R03. A declaration family over an arbitrary carrier
-
-**Mathematical role:** declaration family. **Form:** template with a formula-defined function.
-
-An identity map for each carrier set S. The set changes the declaration’s input and return carrier; later use specializes the family then calls the function.
-
-```litex
-template<S set>:
-    have fn identity(x S) S = x
-\identity<R>(2) = 2
-\identity<Z>(-3) = -3
-```
-
-The binder category set is not a writable universal set to use as a normal function input domain. An ordinary formula function over real inputs remains have fn, without a template.
-
-**Evidence:** `R03` in the current inventory record; the interface and immediate use both verify in strict mode.
-
-### R04. A relation and its selected value have different roles
-
-**Mathematical role:** relation versus callable value. **Form:** prop for the relation; have fn for the callable value.
-
-A reciprocal relation checks a supplied value and argument; a reciprocal function supplies a value that a caller can apply. The relation’s nonzero domain is encoded in its carrier rather than supplied later by convention.
-
-```litex
-prop is_reciprocal_of(value R, argument R*):
-    value = 1 / argument
-by def $is_reciprocal_of(1 / 2, 2)
-have fn reciprocal(x R*) R = 1 / x
-reciprocal(2) = 1 / 2
-```
-
-A proposition about a candidate output is not a replacement for a callable function. Use the relation when callers assert truth about supplied values, and the function when callers need reciprocal(x).
-
-**Evidence:** `R04` in the current inventory record; the interface and immediate use both verify in strict mode.
-
-### R05. A piecewise definition and a universal law
-
-**Mathematical role:** function definition and mathematical result. **Form:** have fn by cases, followed by a local claim.
-
-Define an absolute-value function from two disjoint exhaustive real cases. To prove its agreement with the native abs, use the active input binder and the same mathematical case split.
-
-```litex
-have fn absolute(x R) R by cases:
-    case x >= 0: x
-    case x < 0: -x
-claim:
-    ? forall x R:
-        absolute(x) = abs(x)
-    by cases:
-        ? absolute(x) = abs(x)
-        case x >= 0:
-            0 <= x
-            absolute(x) = x = abs(x)
-        case x < 0:
-            x <= 0
-            absolute(x) = -x = abs(x)
-```
-
-The guarded equations of the definition are already usable. In this comparison with native abs, the proof additionally states the weak sign facts consumed by the abs rule before the equality chains. These facts follow from the cases; they are not new mathematical hypotheses. Independent deletion controls identify the necessary bridges.
-
-**Evidence:** `R05` in the current inventory record; the interface and immediate use both verify in strict mode.
-
-## Project workflows
-
-### Modules and manifests (preview)
-
-> **Project modules:** there is no `submodule` and no `[hierarchy]`.
-> A maintained package is a single module. `[export]` lists only `.lit` files;
-> `[import]` and `[import std]` share one alias namespace within each manifest.
+## Execution and extraction
+
+After the mathematical interfaces and native rules, this chapter describes
+the executable path: `algo` supplies a checked implementation, `eval` checks
+and publishes an exact result, and extraction emits a supported Python/C
+program from explicitly selected source. The source proof and the target
+program have the boundaries stated below.
+
+#### Checked algorithm execution
+
+> **Preview:** the surface is `algo f(x R) R by cases:` or
+> `algo f(n N) N by induc n from 0:` (no separate `have fn` required).
+> Execution defines the function (same checks as `have fn … by cases` / `by induc`)
+> and stores the executable presentation.
+> `eval` first checks the source expression's well-definedness, including each
+> function argument domain and domain condition. It then substitutes
+> `known_closed_numeric_equal` representatives and
+> recursively evaluates: closed-numeric simplify, and plain-Identifier function
+> calls through a stored algo (case match → return expr → evaluate again).
+> Each executed algorithm step must also verify its defining function equation
+> at the normalized arguments. The exact computation and these checked equations
+> establish `expr = evaluated_object`; both sides pass WD before the equality is
+> stored and inferred in the current scope. A failure discards the statement's
+> temporary facts. Recursive execution keeps its depth/cycle limits and checks
+> each recorded equation independently. Normal output lists the stored equality;
+> Detailed output retains its FactId, WD, definition evidence and store result.
 >
-> - Tables / parse / `::` elaborate:
->   [`src/module_manager/README.md`](../src/module_manager/README.md)
-> - How `-r` / `-f` / `-e` / REPL mount and run:
->   [`src/run/README.md`](../src/run/README.md)
-> - Fixtures:
->   [`examples/module_manager/`](../examples/module_manager/)
+> Finite sums/products evaluate through checked function applications. Nested
+> aggregates share a total allowance of 1024 terms; bounds and values use exact
+> arithmetic. Named function equations and finite list/range sets are supported.
+> An unavailable enumeration or exhausted allowance fails. See
+> `examples/stmt_nodes/command/aggregate_eval.lit`.
+> Tracers: `examples/stmt_nodes/definition/def_algo.lit`,
+> `examples/stmt_nodes/command/eval.lit`.
+> Result-publication tracer: `examples/stmt_nodes/command/eval_store_result.lit`.
+>
+```litex
+algo nonzero_flag(x R) R by cases:
+    case x = 0: 0
+    case x != 0: 1
 
-A maintained project directory has one `litex.config`.
-
-```ini
-[import]
-Algebra = "../Algebra"
-
-[import std]
-basics # Alternatively: basics = basics (choose one spelling, not both)
-
-[export]
-chap1 = "./chapter01.lit"
-chap2 = "./chapter02.lit"
-chap3 = "./chapter03.lit"
+eval nonzero_flag(0) + 1
+nonzero_flag(0) + 1 = 1
 ```
 
-Under the Litex CLI:
+**Entry:** [S21](#s21-executable-functions-by-cases).
 
-| Command | Config | Behavior |
-|---------|--------|----------|
-| `-r <dir>` | required at `<dir>` | all imports, then all exports |
-| `-f <file>` | optional at `parent(file)` | listed → prefix through file; unlisted → full mount then file; missing → isolated |
-| `-e` / bare REPL | optional at cwd | full mount (or empty), then eval / REPL |
-
-Mount soft Failed becomes session `FailToImport`. Soft Failed on a `-f`
-**target** itself stays a normal file failure.
-
-Important rules:
-
-1. `[export]` is ordered and each entry names one `.lit` file. Exporting a
-   child directory or nested config node is not allowed.
-2. `[export]` is an explicit selection list, not a complete directory
-   inventory. Unlisted files and folders are sidecars: discovery does not
-   parse, execute, or expose them in the module namespace. Every declared
-   export path must exist and point to a `.lit` file.
-3. `[import] Alias = path` mounts another module directory.
-   `[import std]` accepts either a bare name `N` (meaning `N = N`) or
-   `Alias = StdName`; both mount `<std_root>/<StdName>` under `Alias`.
-   After resolution `[import]` and `[import std]` are the same kind of
-   import. Import aliases from both sections must be unique within that
-   `litex.config`; separate packages may reuse an alias for their own paths.
-   An export name may reuse an import spelling: `a::b` is always a
-   current export, `a::b::c` is an import path, and `a:::b` is explicit
-   single-export sugar for `a::<sole_export>::b`.
-4. Canonical names follow the mount alias and export name, for example
-   `Algebra::chap1::name` or `basics:::name` when `basics` has one export.
-
-Struct carriers accept these same paths: `&local::Pair`,
-`&Lib::facts::Tagged<R>` and, for an import with exactly one export,
-`&Lib:::Tagged<R>`. The full definition owner is retained for field types,
-function returns and nested struct fields. Missing paths, wrong arguments
-and tuples outside the chosen carrier are rejected. See the runnable
-[qualified struct fixture](../examples/module_manager/qualified_struct_views/README.md).
-
-Cross-module references always use canonical qualified names. Module aliases
-and symbols are separate, so a local symbol may also be named `A`; field
-selection such as `obj.b` remains in the field namespace. An export is
-unavailable while it is still loading, so an earlier file cannot cite a later
-export.
-
-An import alias is resolved using the importing package's manifest, then the
-normalized directory path selects the global module ID. For example, two
-packages may each declare `Common = "./dep"` and refer to different dependency
-directories. Same-path imports under different aliases share one module.
-The loader assigns distinct global display labels when local aliases repeat;
-these labels do not change source name resolution. See the runnable
-[cross-file identity fixture](../examples/module_manager/cross_file_identity/README.md).
-
-Project dependencies come from `litex.config` (`[import]` / `[import std]`),
-not from source-level `import` statements. Every `.lit` file rejects `import`;
-reproducible dependencies belong in the manifest. The interactive REPL runs
-Litex source blocks only; it does not add a separate terminal `import`
-command surface.
-
-```ini
-[hierarchy]
-module
-```
-
-```ini
-[hierarchy]
-submodule
-```
-
-```ini
-[export]
-Part2 = "./Part2"
-```
-
-```ini
-[import]
-basics = "../OtherBasics"
-
-[import std]
-basics = basics
-```
-
-These manifests are invalid under the current module design: `[hierarchy]` and
-`submodule` are removed, `[export]` cannot name a folder, and import aliases
-must be unique across `[import]` and `[import std]`.
-
-Project execution, persistent sessions and output are
-CLI contracts rather than language syntax. See the [CLI reference](cli.md) for
-installation, project-running examples, and the current command set.
 
 ### Extracting a proved numerical step to Python or C (experimental)
 
@@ -9869,7 +10526,8 @@ search is never counted as a proof of the opposite fact.
 The original [sample evidence](audits/reference-samples-2026-10-06.json) is a
 historical checkpoint. The [inventory and evidence](audits/reference-inventory-2026-10-06.json)
 records the expanded Reference edition before consolidation; the
-[current merge audit](audits/manual-merge-2026-10-06.json) owns this Manual revision. Object-property families have source-reviewed
+[merge audit](audits/manual-merge-2026-10-06.json) records consolidation; the
+[pipeline audit](audits/manual-pipeline-2026-10-06.json) records the subsequent organization and source-backed system map. Object-property families have source-reviewed
 conditions and executed representative cases. This is not an exhaustive list
 of every instantiated equality, every kernel rule ID or every imported theorem.
 
@@ -9953,3 +10611,23 @@ When code changes, update the relevant entry and affected examples together.
 The [merge audit](audits/manual-merge-2026-10-06.json) records how earlier Manual
 sections were retained, moved or replaced. Historical Reference evidence stays
 at its original audit paths; it is not silently relabelled as a fresh run.
+
+<a id="latex-conversion-preview"></a>
+
+## LaTeX conversion (preview)
+
+The parse-only command `litex -latex -lang zh -f example.lit` turns current
+Litex statements into mathematical LaTeX with localized prose. All ten CLI
+languages are supported. Add `-document` for a complete XeLaTeX article with
+a language-specific font setup; the default is an embeddable fragment.
+
+Conversion preserves the supplied mathematical statement and proof structure;
+it does not check truth, perform `eval`, or fill in missing proofs. Thus `1 = 2`
+can convert, and `eval 1 + 1` becomes a request to calculate rather than a computed
+equality. Explicit assumptions, axioms and sketches keep their labels. The JSON
+artifact has stable keys, a LaTeX `content` string and `verified: false`.
+
+Project exports retain manifest order. Dependency configs provide module names,
+without executing imported source. See [CLI conversion](cli.md#latex-conversion-preview)
+and the [compiler guide](../src/compile_to_latex/README.md) for the complete
+input, typography and error contracts.

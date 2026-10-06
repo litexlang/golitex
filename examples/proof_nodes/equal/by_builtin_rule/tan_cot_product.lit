@@ -1,0 +1,23 @@
+# Tracer: TanCotProduct with real inputs and the original partial-operation guards.
+# Before: legacy accepted; current equality search rejected this exact source.
+# forall x R:
+#     sin(x)!=0
+#     cos(x)!=0
+#     =>:
+#         tan(x)*cot(x)=1
+# Now: fixed identity leaf after complete parent WD; no premise search or fuel reset.
+forall x R:
+    sin(x)!=0
+    cos(x)!=0
+    =>:
+        tan(x)*cot(x)=1
+
+forall x R:
+    sin(x)!=0
+    cos(x)!=0
+    =>:
+        1=cot(x)*tan(x)
+
+# Boundary: omitted nonzero guards, poles, wrong signs or differing angles reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/tan_cot_product.lit
+# Tests: cargo test --release --offline --lib trig_quotient_relations_tests

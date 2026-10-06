@@ -1,3 +1,4 @@
+use super::verify_trig_interval_bound::TrigIntervalBoundSide;
 use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, LessEqualFact, LessFact,
 };
@@ -282,14 +283,12 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         })
         .into();
-        let lo_proof = self.verify_builtin_rule_premise(&lo, verify_state.clone())?;
-        if lo_proof.is_failed() {
-            return Ok(None);
-        }
-        let hi_proof = self.verify_builtin_rule_premise(&hi, verify_state)?;
-        if hi_proof.is_failed() {
-            return Ok(None);
-        }
+        let Some(lo_proof) = self.verify_trig_interval_bound(
+            &lo, TrigIntervalBoundSide::Lower, verify_state.clone(),
+        )? else { return Ok(None); };
+        let Some(hi_proof) = self.verify_trig_interval_bound(
+            &hi, TrigIntervalBoundSide::Upper, verify_state,
+        )? else { return Ok(None); };
         Ok(Some(vec![lo_proof, hi_proof]))
     }
 
@@ -315,14 +314,12 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         })
         .into();
-        let lo_proof = self.verify_builtin_rule_premise(&lo, verify_state.clone())?;
-        if lo_proof.is_failed() {
-            return Ok(None);
-        }
-        let hi_proof = self.verify_builtin_rule_premise(&hi, verify_state)?;
-        if hi_proof.is_failed() {
-            return Ok(None);
-        }
+        let Some(lo_proof) = self.verify_trig_interval_bound(
+            &lo, TrigIntervalBoundSide::Lower, verify_state.clone(),
+        )? else { return Ok(None); };
+        let Some(hi_proof) = self.verify_trig_interval_bound(
+            &hi, TrigIntervalBoundSide::Upper, verify_state,
+        )? else { return Ok(None); };
         Ok(Some(vec![lo_proof, hi_proof]))
     }
 }
