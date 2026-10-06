@@ -96,11 +96,12 @@ fn reconstruction_preserves_arity_order_and_subject_identity() {
 }
 
 #[test]
-fn tuple_projection_cites_stored_chain_and_keeps_wrong_value_unknown() {
+fn tuple_projection_cites_exact_published_value_and_keeps_wrong_value_unknown() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have a,b R");
     exec_ok(&mut rt, "have p cart(R,R) = (a,b)");
     exec_ok(&mut rt, "have q cart(R,R) = p");
+    exec_ok(&mut rt, "q = (a,b)");
     for goal in ["p(1) = a", "a = p(1)", "q(2) = b"] {
         let Known::TupleProjection(p) = known(&mut rt, goal) else {
             panic!("projection")
@@ -179,13 +180,16 @@ fn named_function_alias_is_not_a_special_cased_geometry_name() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn pair(x R) cart(R,R) = (x,x)");
     exec_ok(&mut rt, "have f fn(x R) cart(R,R) = pair");
+    exec_ok(&mut rt, "f = fn(x R) cart(R,R) {(x,x)}");
     exec_ok(&mut rt, "have a R");
     known(&mut rt, "f(a)(1) = a");
     known(&mut rt, "f(a) = (f(a)(1),f(a)(2))");
     exec_ok(&mut rt, "let untyped_alias = pair");
+    exec_ok(&mut rt, "untyped_alias = fn(x R) cart(R,R) {(x,x)}");
     known(&mut rt, "untyped_alias(a)(1) = a");
     exec_ok(&mut rt, "have abstract_pair fn(x R) cart(R,R)");
     exec_ok(&mut rt, "let abstract_alias = abstract_pair");
+    exec_ok(&mut rt, "abstract_alias $in fn(x R) cart(R,R)");
     known(
         &mut rt,
         "abstract_alias(a) = (abstract_alias(a)(1),abstract_alias(a)(2))",
@@ -303,17 +307,19 @@ fn run_examples_template_aliases_and_named_results_retain_tuple_value_paths() {
     exec_ok(&mut rt, "template<X set>:\n    have fn triple(a,b,c X) &Triple<X> = (a,b,c)");
     exec_ok(&mut rt, "let alias = \\triple<R>");
     exec_ok(&mut rt, "let second_alias = alias");
+    exec_ok(&mut rt, "second_alias = \\triple<R>");
     let Known::FnTupleValue(value) = known(&mut rt, "second_alias(4,5,6) = (4,5,6)") else { panic!("tuple value") };
-    assert_eq!(value.function.function_equal.path.len(), 2);
+    assert_eq!(value.function.function_equal.path.len(), 1);
     for (_, _, id) in &value.function.function_equal.path {
         assert!(rt.fact_by_id_in_stack(*id).is_some());
     }
     assert!(matches!(value.function.applicability, KnownFunctionTupleApplicability::TemplateDefinition { .. }));
     exec_ok(&mut rt, "let chosen = second_alias(1,2,3)");
     exec_ok(&mut rt, "have chosen_struct &Triple<R> = chosen");
+    exec_ok(&mut rt, "chosen_struct = second_alias(1,2,3)");
     // Truth lookup must not publish an intermediate chosen=(1,2,3) fact.
     let Known::FnTupleProjection(projection) = known(&mut rt, "chosen_struct(1) = 1") else { panic!("projection") };
-    assert_eq!(projection.subject_equal.path.len(), 2);
+    assert_eq!(projection.subject_equal.path.len(), 1);
     for (_, _, id) in &projection.subject_equal.path {
         assert!(rt.fact_by_id_in_stack(*id).is_some());
     }
@@ -334,6 +340,7 @@ fn template_tuple_aliases_keep_function_domains_and_header_guards() {
     exec_ok(&mut rt, "template<S set: $is_nonempty_set(S)>:\n    have fn positive_pair(x N: x > 0) cart(N,N) = (x,x)");
     exec_ok(&mut rt, "let alias = \\positive_pair<R>");
     exec_ok(&mut rt, "let second_alias = alias");
+    exec_ok(&mut rt, "second_alias = \\positive_pair<R>");
     known(&mut rt, "second_alias(2) = (2,2)");
     for wrong in ["second_alias(-1) = (-1,-1)", "second_alias(0) = (0,0)", "second_alias(2,3) = (2,3)", "\\positive_pair<{}>(2) = (2,2)", "\\positive_pair<R,1>(2) = (2,2)"] {
         assert!(verify(&mut rt, wrong, VerifyState::top_level()).is_failed(), "{wrong}");
@@ -349,7 +356,7 @@ fn template_tuple_aliases_keep_function_domains_and_header_guards() {
 fn template_tuple_output_keeps_alias_and_subject_citations() {
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
         let mut rt = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language });
-        for source in ["template<S set>:\n    have fn pair(x S) cart(S,S) = (x,x)", "let alias = \\pair<R>", "let value = alias(2)", "have typed cart(R,R) = value"] {
+        for source in ["template<S set>:\n    have fn pair(x S) cart(S,S) = (x,x)", "let alias = \\pair<R>", "let value = alias(2)", "have typed cart(R,R) = value", "typed = alias(2)"] {
             exec_ok(&mut rt, source);
         }
         let result = exec_ok(&mut rt, "typed(1) = 2");

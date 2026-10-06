@@ -8,4 +8,5 @@ thm alias:
     ? forall b &Box, x R:
         b.op(x) $in R
     let call = b.op
+    call $in fn(t R) R
     call(x) = b.op(x)

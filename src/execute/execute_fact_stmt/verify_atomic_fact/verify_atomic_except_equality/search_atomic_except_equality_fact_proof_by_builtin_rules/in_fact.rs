@@ -76,8 +76,8 @@ pub enum InFactSearchProofByBuiltinRule {
     // A finite constructor tree composes real terminal certificates using the
     // unchanged builtin premise ceiling, without recursively searching rules.
     RealArithmeticConstructorClosure(RealArithmeticConstructorClosureBuiltinRuleProof),
-    // Pow WD currently proves an integer exponent; its base must also be real.
-    RealIntegerPower(RealIntegerPowerBuiltinRuleProof),
+    // A checked real base and the enclosing supported power WD give a real result.
+    RealPower(RealPowerBuiltinRuleProof),
     // Negation, absolute value, addition, subtraction and multiplication of
     // checked integers stay in Z. Division requires a separate contract.
     IntegerArithmeticClosure(IntegerArithmeticClosureBuiltinRuleProof),
@@ -218,7 +218,7 @@ pub struct RealArithmeticClosureBuiltinRuleProof {}
 pub struct RealOperandArithmeticClosureBuiltinRuleProof {
     pub operand_proofs: Vec<VerifyFactResult>,
 }
-pub struct RealIntegerPowerBuiltinRuleProof {
+pub struct RealPowerBuiltinRuleProof {
     pub base_in_real_proof: VerifyFactResult,
 }
 pub struct ClosedExactScalarMembershipBuiltinRuleProof {
@@ -950,11 +950,11 @@ impl Runtime {
             operand_proofs.push(proof);
         }
         if matches!(fact.element, Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))) {
-            // Every supported Pow WD branch proves exponent in N or Z; the
-            // nonzero condition for negative powers is also in the parent WD.
+            // Every supported real-base Pow WD branch has a real result.
+            // Integer, positive-base and nonnegative-base guards are in parent WD.
             // This rule must not be used without that enclosing WD certificate.
-            return Ok(Some(InFactSearchProofByBuiltinRule::RealIntegerPower(
-                RealIntegerPowerBuiltinRuleProof {
+            return Ok(Some(InFactSearchProofByBuiltinRule::RealPower(
+                RealPowerBuiltinRuleProof {
                     base_in_real_proof: operand_proofs.remove(0),
                 },
             )));

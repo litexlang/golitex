@@ -416,7 +416,8 @@ impl Runtime {
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         // Closed Q+×Q also permits noninteger exponents, independently of
         // whether the exact result is rational. Example: 8^(1/3) and 2^(1/3).
-        // Existing domains: R×N, C×N, then C×Z×base≠0.
+        // Integer domains are retained before real powers: R+×R, then
+        // nonnegative R×R+. Example: x^(1/2) for x>0, and 0^t for t>0.
         // Example: `sin(x)^2` is WD from `sin(x) $in R` and `2 $in N`.
         let proof = self.verify_binary_obj_well_definedness_by_def(
             value.base.as_ref(),
@@ -443,6 +444,14 @@ impl Runtime {
         let reqs_z = self.try_pow_domain_nonzero_complex_integer(value, verify_state)?;
         if reqs_z.iter().all(|r| !r.is_failed()) {
             return Ok(self.with_requirements(proof, reqs_z));
+        }
+        let reqs_positive = self.try_pow_domain_positive_real(value, verify_state)?;
+        if reqs_positive.iter().all(|r| !r.is_failed()) {
+            return Ok(self.with_requirements(proof, reqs_positive));
+        }
+        let reqs_nonnegative = self.try_pow_domain_nonnegative_real_positive(value, verify_state)?;
+        if reqs_nonnegative.iter().all(|r| !r.is_failed()) {
+            return Ok(self.with_requirements(proof, reqs_nonnegative));
         }
         // No pow domain branch proved: keep failed requirements for collapse.
         Ok(self.with_requirements(proof, reqs_z))
@@ -953,5 +962,48 @@ impl Runtime {
             "pow base must be non-zero for integer exponent".to_string(),
         )?);
         Ok(reqs)
+    }
+
+    fn try_pow_domain_positive_real(
+        &mut self,
+        value: &Pow,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Vec<VerifyFactResult>> {
+        let base = self.require_obj_in_standard_set(
+            value.base.as_ref(), StandardSet::RPos, verify_state,
+            "real power base must belong to R+".to_string(),
+        )?;
+        let exponent = self.require_obj_in_standard_set(
+            value.exponent.as_ref(), StandardSet::R, verify_state,
+            "real power exponent must belong to R".to_string(),
+        )?;
+        Ok(vec![base, exponent])
+    }
+
+    fn try_pow_domain_nonnegative_real_positive(
+        &mut self,
+        value: &Pow,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Vec<VerifyFactResult>> {
+        let base = self.require_obj_in_standard_set(
+            value.base.as_ref(), StandardSet::R, verify_state,
+            "nonnegative power base must belong to R".to_string(),
+        )?;
+        let nonnegative_fact = LessEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: Obj::Literal(Literal::Number(Number { normalized_value: "0".into() })),
+            right: value.base.as_ref().clone(),
+            line_file: None,
+        };
+        let nonnegative = self.verify_required_atomic_fact(
+            nonnegative_fact.into(),
+            verify_state,
+            "power base must be nonnegative".to_string(),
+        )?;
+        let exponent = self.require_obj_in_standard_set(
+            value.exponent.as_ref(), StandardSet::RPos, verify_state,
+            "nonnegative-base power exponent must belong to R+".to_string(),
+        )?;
+        Ok(vec![base, nonnegative, exponent])
     }
 }

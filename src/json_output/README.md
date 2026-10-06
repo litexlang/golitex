@@ -803,7 +803,7 @@ a real earlier ln(1)=0 and the native order leaf; it is not a known-forall proof
 Independent certificate replay and Lean compilation are outside these gates.
 
 
-LnAsEulerLog and ExpAsEulerIntegerPower each own ten guarded language texts and a separate Detailed identity leaf. They consume no searched premise and fabricate no child; enclosing equality retains actual exp/ln/log/power WD. The [fixed-base record](../../examples/proof_nodes/experience/problem_notes/fixed-base-bridge-repair-2026-10-05.md) links actual typed owner gates and valid prior-forall citations. Full release/Lean/replay remains outside this local contract gate.
+LnAsEulerLog and ExpAsEulerPower each own ten guarded language texts and a separate Detailed identity leaf. They consume no searched premise and fabricate no child; enclosing equality retains actual exp/ln/log/power WD. The [fixed-base record](../../examples/proof_nodes/experience/problem_notes/fixed-base-bridge-repair-2026-10-05.md) links actual typed owner gates and valid prior-forall citations. Full release/Lean/replay remains outside this local contract gate.
 
 
 The four rounding bounds and TanQuotientDefinition, CotQuotientDefinition and
@@ -855,3 +855,15 @@ emptiness proof.
 AnonymousFn WD projects its return-bound choice explicitly. A checked ordinary body membership retains its prior JSON route; an empty complete domain uses return_bound_vacuous_empty_domain with the independent domain_empty certificate. Header, guards, return carrier and body WD remain separate children. Ten-language Runtime tests preserve the guard-exclusion forall/FactId source and mandatory body WD rather than emitting a fake body membership.
 
 The predicate-signature failure reason retired_builtin identifies a legacy shape predicate payload rejected by WD. It preserves the already-checked argument children and predicate name in all localized profiles; no unsupported predicate is published as a current builtin. Parser retirement remains a separate session_error boundary.
+
+
+LogProduct, LogQuotient, LogReciprocal and LogArgPower project their named mandatory argument proofs after `base_proof`. The selected LogAlgebraBaseProof is `greater_than_one` with `greater_than_one_proof`, `below_one` with `positive_proof` and `less_than_one_proof`, or `positive_nonunit` with `positive_proof` and `nonunit_proof`. Actual Runtime leaf fixtures retain ten localized Normal explanations and EN/ZH FactId citations; these four leaves no longer use a generic `proof_of_requirement_facts` array. [Acceptance evidence](../../examples/proof_nodes/experience/problem_notes/log-algebra-valid-base-acceptance-2026-10-06.md) retains inherited permissions and remaining WD cases.
+
+The real-power WD extension retains actual positive-base/real-exponent or
+nonnegative-base/positive-exponent requirements. The existing carrier leaf is
+now `RealPower` with unchanged `base_in_real_proof`; its parent keeps the
+selected WD domain. `ExpAsEulerPower` retains the two-field Detailed identity
+leaf and describes real arguments in all ten languages. Former
+`RealIntegerPower` and `ExpAsEulerIntegerPower` rule names are superseded; this
+changes those rule labels without changing their evidence field shapes. See
+[acceptance](../../examples/wd/experience/problem_notes/pow-real-domains-2026-10-06.md).

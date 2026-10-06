@@ -1,4 +1,4 @@
 # Must reject index 3 on a two-component function result.
 have fn pair(x R) cart(R,R) = (x,x)
 have a R
-pair(a)[3] = a
+pair(a)(3) = a

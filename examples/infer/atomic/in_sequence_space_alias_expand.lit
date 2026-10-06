@@ -11,6 +11,7 @@
 have Base set=finite_seq(Z,2)
 
 have Carrier set=Base
+Carrier=finite_seq(Z,2)
 
 have f Carrier
 
@@ -25,6 +26,7 @@ g(2) $in Z
 g(2) $in R
 
 let alias=f
+alias $in finite_seq(Z,2)
 
 alias $in finite_seq(R,2)
 

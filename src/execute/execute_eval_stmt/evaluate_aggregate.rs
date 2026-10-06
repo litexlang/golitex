@@ -6,7 +6,6 @@ use super::result::ExecEvalStmtFailed;
 use crate::ast::obj::{FnObj, FnObjHead, FunctionSpace, IteratedOperator, Literal, Number, Obj, SetFormer};
 use crate::execute::execute_by_stmt::proof_verify_state;
 use crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::rational_expression::exact_rational::EvalRational;
 use crate::rational_expression::helper::{add_objs, mul_objs};
@@ -249,10 +248,7 @@ fn enumerate_set(
     depth: usize,
     context: &mut ActiveAlgoCalls,
 ) -> RuntimeResult<Result<FiniteSetEnumerationResult, ExecEvalStmtFailed>> {
-    let members = equivalence_class_members_with_paths_in_adjacency(
-        &runtime.visible_equivalence_class_adjacency(),
-        set,
-    );
+    let members = runtime.exact_property_object_values(set);
     for (candidate, path) in members {
         let mut cites = Vec::new();
         let elements = match &candidate {

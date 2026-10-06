@@ -6,7 +6,6 @@ use crate::ast::obj::*;
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use super::VerifyState;
-use super::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub struct FiniteFunctionSignatureProof {
@@ -153,7 +152,7 @@ impl Runtime {
     }
 
     pub(crate) fn cart_definition_for_set(&self, set: &Obj) -> Option<Cart> {
-        equivalence_class_members_with_paths_in_adjacency(&self.visible_equivalence_class_adjacency(), set)
+        self.exact_property_object_values(set)
             .into_iter().find_map(|(value, _)| match value {
                 Obj::ProductShape(ProductShape::Cart(cart)) => Some(cart), _ => None,
             })

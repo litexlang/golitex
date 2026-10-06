@@ -185,9 +185,21 @@ fn illegal_domains_missing_guards_and_false_laws_remain_rejected() {
         "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x/y)=log(a,y)-log(a,x)\n",
         "forall a,x R+:\n    a<1\n    =>:\n        log(a,1/x)=log(a,x)\n",
         "forall a,x R+,n Z:\n    a<1\n    =>:\n        log(a,x^n)=(n+1)*log(a,x)\n",
-        "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x^y)=y*log(a,x)\n",
     ] {
         check(&mut runtime(OutputLanguage::English), code, false);
+    }
+}
+
+#[test]
+fn real_argument_power_uses_the_expanded_power_wd_domain() {
+    // Formerly rejected in Pow WD; the unchanged real power law is now legal.
+    check(&mut runtime(OutputLanguage::English),
+        "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x^y)=y*log(a,x)\n", true);
+    for guard in ["a<1", "1<a", "a!=1"] {
+        let code = format!("forall a,x R+,y R:\n    {guard}\n    =>:\n        log(a,x^y)=y*log(a,x)\n");
+        check(&mut runtime(OutputLanguage::English), &code, true);
+        let wrong = code.replace("y*log(a,x)", "(y+1)*log(a,x)");
+        check(&mut runtime(OutputLanguage::English), &wrong, false);
     }
 }
 

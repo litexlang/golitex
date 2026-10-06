@@ -1,6 +1,6 @@
 use crate::json_output::explain::{BuiltinRuleText, text::text};
 use crate::launch_command::OutputLanguage;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_fixed_base::{LnAsEulerLogProof, ExpAsEulerIntegerPowerProof};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_fixed_base::{LnAsEulerLogProof, ExpAsEulerPowerProof};
 
 impl LnAsEulerLogProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
@@ -76,62 +76,62 @@ impl LnAsEulerLogProof {
     }
 }
 
-impl ExpAsEulerIntegerPowerProof {
+impl ExpAsEulerPowerProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         text(
-            "Exponential as integer Euler power",
-            "Exponential as integer Euler power: n in Z, both sides well-defined => exp(n)=e^n",
+            "Exponential as Euler power",
+            "Exponential as Euler power: x in R, both sides well-defined => exp(x)=e^x",
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text(
-            "指数连接e底整数幂",
-            "指数连接e底整数幂: n in Z, both sides well-defined => exp(n)=e^n",
+            "指数连接e底幂",
+            "指数连接e底幂: x in R, both sides well-defined => exp(x)=e^x",
         )
     }
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         text(
-            "指數連接e底整數冪",
-            "指數連接e底整數冪: n in Z, both sides well-defined => exp(n)=e^n",
+            "指數連接e底冪",
+            "指數連接e底冪: x in R, both sides well-defined => exp(x)=e^x",
         )
     }
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Exponentielle comme puissance entière de e", "Exponentielle comme puissance entière de e: n in Z, both sides well-defined => exp(n)=e^n")
+        text("Exponentielle comme puissance de e", "Exponentielle comme puissance de e: x in R, both sides well-defined => exp(x)=e^x")
     }
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         text(
-            "Экспонента как целая степень e",
-            "Экспонента как целая степень e: n in Z, both sides well-defined => exp(n)=e^n",
+            "Экспонента как степень e",
+            "Экспонента как степень e: x in R, both sides well-defined => exp(x)=e^x",
         )
     }
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         text(
-            "Exponencial como potencia entera de e",
-            "Exponencial como potencia entera de e: n in Z, both sides well-defined => exp(n)=e^n",
+            "Exponencial como potencia de e",
+            "Exponencial como potencia de e: x in R, both sides well-defined => exp(x)=e^x",
         )
     }
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         text(
-            "الأس كقوة صحيحة للعدد e",
-            "الأس كقوة صحيحة للعدد e: n in Z, both sides well-defined => exp(n)=e^n",
+            "الأس كقوة للعدد e",
+            "الأس كقوة للعدد e: x in R, both sides well-defined => exp(x)=e^x",
         )
     }
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         text(
-            "指数関数とeの整数べき",
-            "指数関数とeの整数べき: n in Z, both sides well-defined => exp(n)=e^n",
+            "指数関数とeのべき",
+            "指数関数とeのべき: x in R, both sides well-defined => exp(x)=e^x",
         )
     }
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         text(
-            "지수함수와 e의 정수 거듭제곱",
-            "지수함수와 e의 정수 거듭제곱: n in Z, both sides well-defined => exp(n)=e^n",
+            "지수함수와 e의 거듭제곱",
+            "지수함수와 e의 거듭제곱: x in R, both sides well-defined => exp(x)=e^x",
         )
     }
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         text(
-            "Hàm mũ và lũy thừa nguyên của e",
-            "Hàm mũ và lũy thừa nguyên của e: n in Z, both sides well-defined => exp(n)=e^n",
+            "Hàm mũ và lũy thừa của e",
+            "Hàm mũ và lũy thừa của e: x in R, both sides well-defined => exp(x)=e^x",
         )
     }
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

@@ -1,4 +1,4 @@
-use super::by_native_fixed_base::{LnAsEulerLogProof, ExpAsEulerIntegerPowerProof};
+use super::by_native_fixed_base::{LnAsEulerLogProof, ExpAsEulerPowerProof};
 use super::by_inverse_trig::{
     ArccosCosRightInverseBuiltinRuleProof, ArccosExactNegOneBuiltinRuleProof,
     ArccosExactOneBuiltinRuleProof, ArccosExactZeroBuiltinRuleProof,
@@ -134,7 +134,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     CotQuotientDefinition(super::by_elementary_definitions::CotQuotientDefinitionProof),
     GcdEuclideanStep(super::by_elementary_definitions::GcdEuclideanStepProof),
     LnAsEulerLog(LnAsEulerLogProof),
-    ExpAsEulerIntegerPower(ExpAsEulerIntegerPowerProof),
+    ExpAsEulerPower(ExpAsEulerPowerProof),
     RangeSize(super::by_range_size::RangeSizeProof),
     ClosedRangeSize(super::by_range_size::ClosedRangeSizeProof),
     EuclideanRemainder(super::by_euclidean_remainder::EuclideanRemainderProof),

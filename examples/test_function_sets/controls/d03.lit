@@ -4,4 +4,5 @@
 have fn add(x R) fn(y R) R = fn(y R) R {x + y}
 add(2) = fn(y R) R {2 + y}
 have add_two fn(y R) R = add(2)
+add_two = fn(y R) R {2 + y}
 add_two(3) = 5

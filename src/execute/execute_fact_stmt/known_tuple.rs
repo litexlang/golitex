@@ -12,7 +12,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::helper::{
     set_bound_parameter_count, set_bound_params_to_arg_map,
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::runtime::{FactId, Runtime};
 
@@ -101,70 +100,31 @@ impl Runtime {
         &mut self,
         subject: &Obj,
     ) -> Option<KnownTupleShapeProof> {
-        // Prefer a carrier: it supplies coordinate types as well as dimension.
-        for (candidate, path) in self.known_tuple_object_peers(subject) {
-            for property in self.known_special_properties_of(&candidate) {
-                let SpecialProperty::Membership(membership) = property else {
-                    continue;
-                };
-                let Some((cart, carrier_equal)) = self.known_cart_carrier(&membership.set) else {
-                    continue;
-                };
-                return Some(KnownTupleShapeProof::CartesianMembership(
-                    KnownCartesianTupleProof {
-                        subject_equal: KnownEqualityPathProof::new(path.clone()),
-                        membership,
-                        carrier_equal,
-                        cart,
-                    },
-                ));
-            }
+        // Membership must be published on the exact subject. Only its directly
+        // indexed carrier definition may expose a cart constructor.
+        for property in self.known_special_properties_of(subject) {
+            let SpecialProperty::Membership(membership) = property else { continue; };
+            let Some((cart, carrier_equal)) = self.known_cart_carrier(&membership.set) else { continue; };
+            return Some(KnownTupleShapeProof::CartesianMembership(KnownCartesianTupleProof {
+                subject_equal: KnownEqualityPathProof::new(vec![]),
+                membership, carrier_equal, cart,
+            }));
         }
         if let Obj::FnObj(app) = subject {
-            let head = tuple_function_head(app);
-            for (source_head, path) in self.known_tuple_object_peers(&head) {
-                let mut source_app = app.clone();
-                source_app.head = Box::new(match source_head {
-                    Obj::Identifier(id) => FnObjHead::Identifier(id),
-                    Obj::InstantiatedTemplateObj(inst) => FnObjHead::InstantiatedTemplateObj(inst),
-                    Obj::StructAndFieldAccessObj(
-                        crate::ast::obj::StructAndFieldAccessObj::FieldAccess(access),
-                    ) => FnObjHead::FieldAccess(access),
-                    _ => continue,
-                });
-                for (signature, _) in
-                    self.collect_in_function_set_candidates(&tuple_function_head(&source_app))
-                {
-                    let Some(return_set) = self.applied_fn_set_return_set(&source_app, &signature)
-                    else {
-                        continue;
-                    };
-                    let Some((cart, carrier_equal)) = self.known_cart_carrier(&return_set) else {
-                        continue;
-                    };
-                    let membership = InFact {
-                        fact_id: self.global_ids.allocate_fact_id(),
-                        element: Obj::FnObj(source_app.clone()),
-                        set: return_set,
-                        line_file: None,
-                    };
-                    // Reuse the codomain reader's all-signatures guard; never claim an
-                    // arbitrary signature supplied the enclosing application's WD.
-                    let Some(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof)) =
-                        self.search_in_fact_proof_by_known_special_property(&membership)
-                    else {
-                        continue;
-                    };
-                    return Some(KnownTupleShapeProof::FunctionCodomain(
-                        KnownFunctionCartesianTupleProof {
-                            function_equal: KnownEqualityPathProof::new(path.clone()),
-                            membership,
-                            membership_proof: proof,
-                            carrier_equal,
-                            cart,
-                        },
-                    ));
-                }
+            for (signature, _) in self.collect_in_function_set_candidates(&tuple_function_head(app)) {
+                let Some(return_set) = self.applied_fn_set_return_set(app, &signature) else { continue; };
+                let Some((cart, carrier_equal)) = self.known_cart_carrier(&return_set) else { continue; };
+                let membership = InFact {
+                    fact_id: self.global_ids.allocate_fact_id(), element: subject.clone(),
+                    set: return_set, line_file: None,
+                };
+                let Some(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof)) =
+                    self.search_in_fact_proof_by_known_special_property(&membership)
+                else { continue; };
+                return Some(KnownTupleShapeProof::FunctionCodomain(KnownFunctionCartesianTupleProof {
+                    function_equal: KnownEqualityPathProof::new(vec![]),
+                    membership, membership_proof: proof, carrier_equal, cart,
+                }));
             }
         }
         self.known_literal_tuple_candidates(subject)
@@ -175,7 +135,7 @@ impl Runtime {
         &self,
         subject: &Obj,
     ) -> Vec<KnownTupleValueProof> {
-        self.known_tuple_object_peers(subject)
+        self.exact_property_object_values(subject)
             .into_iter()
             .filter_map(|(obj, path)| {
                 let Obj::ProductShape(ProductShape::Tuple(value)) = obj else {
@@ -200,7 +160,7 @@ impl Runtime {
         }
         let head = tuple_function_head(app);
         let args: Vec<Obj> = app.body[0].iter().map(|x| x.as_ref().clone()).collect();
-        for (candidate, path) in self.known_tuple_object_peers(&head) {
+        for (candidate, path) in self.exact_property_object_values(&head) {
             let (anon, template_instance) = match candidate {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => (anon, None),
                 Obj::InstantiatedTemplateObj(instance) => {
@@ -236,7 +196,7 @@ impl Runtime {
                     }
                     let candidate_obj = Obj::FunctionSpace(FunctionSpace::FnSet(signature));
                     let Some(proof) =
-                        self.lookup_known_obj_equality(&candidate_obj, &signature_obj)
+                        self.lookup_exact_property_obj_equality(&candidate_obj, &signature_obj)
                     else {
                         compatible = false;
                         break;
@@ -247,12 +207,12 @@ impl Runtime {
                     });
                 }
                 let mut template_matches = Vec::new();
-                for (peer, peer_path) in self.known_tuple_object_peers(&head) {
+                for (peer, peer_path) in self.exact_property_object_values(&head) {
                     let Obj::InstantiatedTemplateObj(instance) = peer else { continue; };
                     let Some(signature) = self.instantiated_template_function_signature(&instance) else { continue; };
                     if self.applied_fn_set_return_set(app, &signature).is_none() { continue; }
                     let candidate_obj = Obj::FunctionSpace(FunctionSpace::FnSet(signature));
-                    let Some(signature_match) = self.lookup_known_obj_equality(&candidate_obj, &signature_obj) else {
+                    let Some(signature_match) = self.lookup_exact_property_obj_equality(&candidate_obj, &signature_obj) else {
                         compatible = false;
                         break;
                     };
@@ -295,7 +255,7 @@ impl Runtime {
         subject: &Obj,
     ) -> Vec<(KnownEqualityPathProof, KnownFunctionTupleValueProof)> {
         let mut candidates = Vec::new();
-        for (peer, path) in self.known_tuple_object_peers(subject) {
+        for (peer, path) in self.exact_property_object_values(subject) {
             let Obj::FnObj(app) = peer else { continue; };
             if let Some(function) = self.lookup_known_function_tuple_value(&app) {
                 candidates.push((KnownEqualityPathProof::new(path), function));
@@ -305,7 +265,7 @@ impl Runtime {
     }
 
     fn known_cart_carrier(&self, carrier: &Obj) -> Option<(Cart, KnownEqualityPathProof)> {
-        self.known_tuple_object_peers(carrier)
+        self.exact_property_object_values(carrier)
             .into_iter()
             .find_map(|(obj, path)| {
                 let Obj::ProductShape(ProductShape::Cart(cart)) = obj else {
@@ -313,13 +273,6 @@ impl Runtime {
                 };
                 Some((cart, KnownEqualityPathProof::new(path)))
             })
-    }
-
-    fn known_tuple_object_peers(&self, subject: &Obj) -> Vec<(Obj, Vec<(Obj, Obj, FactId)>)> {
-        equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(),
-            subject,
-        )
     }
 }
 

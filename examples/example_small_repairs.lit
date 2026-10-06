@@ -81,11 +81,12 @@ eval finite_set_max({1, 2, 3})
 # legacy/E06-eval-min
 eval finite_set_min({1, 2, 3})
 
-# legacy/E07-eval-dimension
-eval tuple_dim((1, 2, 3))
+# legacy/E07 retired: tuple_dim has been removed; no replacement feature.
 
 # legacy/E08-eval-projection
-eval (1, 2, 3)[2]
+let sample = (1, 2, 3)
+sample(2)=2
+eval sample(2)
 
 # legacy/B34-floor-neg
 forall x R:

@@ -1,29 +1,21 @@
-# Tracer: callable aliases use stored function equalities.
-# Before (K001 rejected the last line in search_proof):
-# have fn f(x R) R = x + 1
-# let g = f
-# g(4) = 5
-# Now: no intermediate application equality is required.
+# Callable aliases consume exact published properties.
+# Before: let g=f and g(4)=5 used equivalent-object discovery.
+# Now: the author publishes the defining anonymous function on g and h.
 have fn f(x R) R = x + 1
 let g = f
+g = fn(x R) R {x + 1}
 g(4) = 5
-
 let h = g
+h = fn(x R) R {x + 1}
 h(4) = 5
-
-# A function qualification may come from a hypothesis, without a have-fn definition.
 forall callable set:
     callable $in fn(x R) R
     =>:
         callable(4) $in R
-
-# A stored equality also supplies a body, in either orientation.
-forall other set:
+forall other fn(x R) R:
     f = other
     =>:
+        other = fn(x R) R {x + 1}
         other(4) = 5
-
-# Boundary: membership alone does not supply a body/value; wrong arity or carrier rejects.
-# Default struct field views remain selected by definitions.
-# Evidence: target/release/litex -strict -f examples/proof_nodes/equal/by_object_definition/by_fn_application/callable_alias_special_property.lit
-# Negative and provenance gates: cargo test --release special_property_tests -- --nocapture
+# Membership alone supplies no body. Transitive function discovery rejects.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_object_definition/by_fn_application/callable_alias_special_property.lit

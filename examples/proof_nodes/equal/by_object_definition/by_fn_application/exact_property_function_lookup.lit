@@ -1,0 +1,54 @@
+# Tracer: function metadata comes from declarations and exact-object properties.
+# Before: equivalent-object discovery made this call implicit.
+# have fn step(x R) R = x + 1
+# let first = step
+# let second = first
+# second(3) = 4
+# Now: publish the needed body on the exact object, then use it.
+# Boundary: the commented call before publication fails WD; ordinary equality
+# can still prove and publish an endpoint. Membership alone supplies no value.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/equal/by_object_definition/by_fn_application/exact_property_function_lookup.lit
+# Rust: exact_property_lookup_tests checks rejection, citations and rollback.
+
+have fn step(x R) R = x + 1
+step(3) = 4
+let first = step
+let second = first
+second = fn(x R) R {x + 1}
+second(3) = 4
+
+template<a R>:
+    have fn shift(x R) R = x + a
+let shift_two = \shift<2>
+shift_two(3) = 5
+have fn wrapped_shift(x R) R = \shift<2>(x)
+wrapped_shift(3) = 5
+
+have Carrier set = finite_seq(R, 2)
+have carrier_member Carrier
+carrier_member(2) $in R
+let carrier_alias = carrier_member
+carrier_alias $in Carrier
+carrier_alias(2) $in R
+
+have Base set = finite_seq(R, 2)
+have SpaceAlias set = Base
+SpaceAlias = finite_seq(R, 2)
+have member SpaceAlias
+member(2) $in R
+
+let pair = (1, 2)
+let pair_alias = pair
+pair_alias = (1, 2)
+pair_alias(2) = 2
+
+# Finite-set enumeration also reads the exact published set value.
+have Enumerable set = {1, 2}
+let EnumerableAlias = Enumerable
+EnumerableAlias = {1, 2}
+eval finite_set_sum(EnumerableAlias, fn(x R) R {x})
+
+have a R
+let b = a
+let c = b
+a = c

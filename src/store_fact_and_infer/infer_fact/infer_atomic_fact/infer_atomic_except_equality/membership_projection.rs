@@ -123,16 +123,9 @@ impl Runtime {
         if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = set {
             return Some(builder.clone());
         }
-        let adjacency = self.visible_equivalence_class_adjacency();
-        let neighbors = adjacency.get(&set.ir())?;
-        for (_peer_key, equal_fact) in neighbors.iter() {
-            let peer = if equal_fact.left.ir() == set.ir() {
-                &equal_fact.right
-            } else {
-                &equal_fact.left
-            };
-            if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = peer {
-                return Some(builder.clone());
+        for (value, _) in self.exact_property_object_values(set) {
+            if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = value {
+                return Some(builder);
             }
         }
         None
@@ -142,16 +135,9 @@ impl Runtime {
         if let Obj::SetOperator(SetOperator::PowerSet(power)) = set {
             return Some(power.set.as_ref().clone());
         }
-        let adjacency = self.visible_equivalence_class_adjacency();
-        let neighbors = adjacency.get(&set.ir())?;
-        for (_peer_key, equal_fact) in neighbors.iter() {
-            let peer = if equal_fact.left.ir() == set.ir() {
-                &equal_fact.right
-            } else {
-                &equal_fact.left
-            };
-            if let Obj::SetOperator(SetOperator::PowerSet(power)) = peer {
-                return Some(power.set.as_ref().clone());
+        for (value, _) in self.exact_property_object_values(set) {
+            if let Obj::SetOperator(SetOperator::PowerSet(power)) = value {
+                return Some(*power.set);
             }
         }
         None

@@ -184,3 +184,13 @@ consumer of that same helper remains rejected in predicate-domain WD; the
 retains complete old-accepted authors, actual failure and acceptance boundary.
 Carrier success alone does not close the comparison issue or justify increasing
 shared search permissions.
+
+[Real power domains](pow_real_domains.lit) checks positive real bases with real
+exponents and nonnegative real bases with positive real exponents. Actual
+carrier and sign proofs remain in the selected power WD certificate. Natural
+and nonzero-integer complex powers, closed rational roots, and `0^0=1` retain
+their original behavior. Executable missing-guard, negative/complex noninteger,
+zero-negative, false-value, permission and rollback controls are in
+`tests/unit/execute/exact_rational_powers/tests.rs`.
+The [acceptance record](experience/problem_notes/pow-real-domains-2026-10-06.md)
+links the before receipts, persistent session, output checks and cold gates.

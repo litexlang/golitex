@@ -1,5 +1,16 @@
 # Obj regression corpus
 
+The 2026-10-06 tuple/cart source migration uses ordinary calls such as
+`pair(1)`, checked coordinate types and explicit intermediate equalities.
+The tuple, cart, identifier, list-set and struct-field files selected in the
+[source-only migration journal](../../plan/迁移的plan/proof_journals/tuple-cart-source-only-migration-2026-10-06.json)
+have fresh strict file receipts. Nested values are selected into a checked
+local name when the direct chained-call form lacks usable evidence.
+The old tuple/cart dimension, shape and construction-projection interfaces
+are retired. Their dedicated historical fixtures await collector retirement;
+they are not current must-pass language examples. This source-only batch does
+not change Rust, rebuild the verifier or certify the entire Obj corpus.
+
 The [2026-10-05 cross-Obj relation audit](obj_relations_audit_2026-10-05.md)
 checks 81 representative interactions and partitions the recorded 99-object
 inventory. It separates direct support, checked author routes, restricted

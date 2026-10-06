@@ -464,16 +464,18 @@ equivalence `a <= b <=> a < b + 1`.
 
 Function qualifications come from stored facts rather than the syntax used to
 introduce a name. Known `g $in fn(x R) R` permits a correctly typed call; a known
-function equality supplies its body. For example:
+equality indexed on `g` to an anonymous function supplies its body. For example:
 
 ```litex
 have fn f(x R) R = x + 1
 let g = f
+g = fn(t R) R {t + 1}
 g(4) = 5
 ```
 
-The last line follows the stored path `g = f = fn(x R) R {x + 1}` before
-checking `4 + 1 = 5`. Membership alone has no such body information. Unknown
+The explicit equality publishes the function body on `g`. The last line reads
+that exact property before checking `4 + 1 = 5`; it does not follow an alias
+chain. Membership alone has no such body information. Unknown
 bodies, invalid arguments, and failed local proof steps cannot establish a
 particular return value. Default struct field names still follow the view
 selected by a definition.
@@ -533,6 +535,24 @@ Once that global function-equality fact is stored, inference stores `f = g` in
 the ordinary equality class, so constructor congruence can also prove facts
 such as `power_set(f) = power_set(g)`. A mere pointwise forall on a proper
 subset of the domain does not trigger this global inference.
+
+Function metadata has a narrower lookup contract than ordinary equality
+proving. Signatures, bodies, return carriers and finite coordinates use
+checked declarations and properties indexed on the exact object. They do not
+search its equality class. For example:
+
+```litex
+have fn step(x R) R = x + 1
+let alias = step
+alias = fn(t R) R {t + 1}
+alias(3) = 4
+```
+
+The third line proves and publishes the body on `alias`; the last line reads
+that direct property. A signature membership publishes callability without
+publishing a numeric body. Template instances are read from their declarations.
+This avoids rebuilding the graph of all visible equalities for a metadata
+query; ordinary equality proofs can still establish explicit endpoints.
 
 A strict positive premise also proves a square root is nonzero:
 `x > 0 => sqrt(x) != 0`. Merely knowing `x >= 0` does not trigger that rule.
@@ -1861,8 +1881,26 @@ These use the central closed calculation and the same exact evaluator used by
 `eval`. The reduced exponent `p/q` requires exact `q`-th roots of the reduced
 base's numerator and denominator, followed by an integer power. Irrational
 results are not rounded: `let u=2^(1/3)` is well-defined, but `eval 2^(1/3)`
-declines. Nonpositive bases with noninteger exponents are outside this added
-domain. See the [rational-power tracer](../examples/proof_nodes/equal/by_builtin_rule/closed_rational_power_calculation.lit).
+declines. This exact evaluator still requires a positive base for noninteger
+exponents; the separate WD domain also admits zero with a positive real exponent.
+See the [rational-power tracer](../examples/proof_nodes/equal/by_builtin_rule/closed_rational_power_calculation.lit).
+
+### Can a symbolic positive real base have a real exponent?
+
+Yes. Power WD now accepts a positive real base and any real exponent, or a
+nonnegative real base and a positive real exponent:
+
+```litex
+forall a R+, t R:
+    a^t $in R
+forall x R:
+    exp(x) = e^x
+```
+
+Natural powers keep `0^0=1`. Zero to a negative power, negative bases with
+noninteger exponents and general complex exponents are rejected. A symbolic
+expression being well-defined does not make it exactly calculable or prove
+all its identities. See the [power WD tracer](../examples/wd/pow_real_domains.lit).
 
 ### Are fraction rounding, numeric radicals, complex parts and rational logs calculations or rules?
 

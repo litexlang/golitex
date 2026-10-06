@@ -9,7 +9,6 @@ use crate::runtime::{Runtime, RuntimeResult};
 use crate::execute::execute_fact_stmt::function_domain::function_domains_alpha_equal;
 use crate::execute::execute_fact_stmt::ObjWellDefinedProof;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{FnObjDomainFnSetEvidence, ObjWellDefinedProofByDef};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 
 use super::super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
@@ -126,9 +125,7 @@ impl Runtime {
                     // The actual parent application proof identifies the
                     // selected domain. Mere cached WD does not identify it.
                     let Some(checked_domain) = checked_application_domain(app_wd) else { return Ok(None); };
-                    let peers = equivalence_class_members_with_paths_in_adjacency(
-                        &self.visible_equivalence_class_adjacency(), &Obj::Identifier(head.clone()),
-                    );
+                    let peers = self.exact_property_object_values(&Obj::Identifier(head.clone()));
                     let Some((literal, path)) = peers.into_iter().find_map(|(peer, path)| {
                         let Obj::FunctionSpace(FunctionSpace::AnonymousFn(literal)) = peer else { return None; };
                         function_domains_alpha_equal(&literal.body, checked_domain).then_some((literal, path))

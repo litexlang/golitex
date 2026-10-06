@@ -1,7 +1,9 @@
-# Before: literal projection equality existed, but its numeric carrier could fail.
-# Now: prove the projection equality and the selected component membership.
+# Coordinate equality and numeric carriers use ordinary calls on the original values.
 # Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_strategy/literal_tuple_projection_membership.lit
-# Boundary: index 0, index beyond length, and wrong component carrier are rejected.
-(1, 2)[1] $in C
-(1, -2)[2] $in Z
-(1, 2)[1] + (3, 4)[1] = 1 + 3
+# Boundary: zero, out-of-domain calls and wrong coordinate carriers still reject.
+let p = (1,2)
+let q = (1,-2)
+let r = (3,4)
+p(1) $in C
+q(2) $in Z
+p(1) + r(1) = 1 + 3

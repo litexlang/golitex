@@ -144,14 +144,16 @@ target/release/litex -f examples/infer/atomic/in_index_cart.lit
 
 ## Object capabilities from facts
 
-`ExecEnv.special_properties` indexes actual `InFact` and `EqualFact` sources.
-Atomic storage writes it once; definition executors do not separately register
-function or sequence shapes. Querying a function signature may use a stored
-function membership or an equality to a literal function/signature, and WD may
-transport those sources through stored equality paths. Body unfolding retains
-its head-to-anonymous-function equality proof. A signature alone never supplies
-a concrete body. Default struct field views are separately marked by typed
-definition exits; an ordinary struct membership does not select a default view.
+`ExecEnv.special_properties` indexes actual `InFact` and `EqualFact` sources
+by exact object key. Structural readers use those local rows and declarations;
+they do not expand the subject's equality class. A literal anonymous-function
+equality supplies a body and its signature directly. Carrier inference reads
+only a directly indexed FnSet/seq/finite_seq definition, and stores its checked
+consequences through the existing infer interfaces. Chained carrier aliases
+need an explicit endpoint before the membership is introduced. Set-builder,
+power-set and subset projection use the same exact-property boundary.
+A signature alone never supplies a numeric body. Ordinary fact/equality
+proving can establish and publish the required membership or equality first.
 
 ## Dedicated builtin definition consequences
 

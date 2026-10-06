@@ -58,7 +58,7 @@ fn every_language_preserves_exact_function_domain_evidence_and_rejection() {
         for key in ["function_domain", "subject_equal", "target_signature"] {
             if language != OutputLanguage::English { assert_ne!(localize_key(key, language), key); }
         }
-        for code in ["have f finite_seq(Z,2)", "let alias=f", "alias $in finite_seq(R,2)"] {
+        for code in ["have f finite_seq(Z,2)", "let alias=f", "alias $in finite_seq(Z,2)", "alias $in finite_seq(R,2)"] {
             assert!(!execute(&mut rt, code).is_failed(), "{language:?}: {code}");
         }
         let result = execute(&mut rt, "alias(2) $in Z");

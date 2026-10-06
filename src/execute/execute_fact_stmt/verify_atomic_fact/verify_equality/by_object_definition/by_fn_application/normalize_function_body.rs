@@ -4,7 +4,6 @@
 use crate::ast::obj::{AnonymousFn, ArithmeticOperator, FnObj, FnObjHead, FunctionSpace, Obj};
 use crate::ast::stmt::TemplateDefEnum;
 use crate::execute::execute_fact_stmt::{ObjWellDefinedProof, VerifyObjWellDefinedResult, VerifyState};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof;
@@ -288,10 +287,7 @@ impl Runtime {
             FnObjHead::InstantiatedTemplateObj(inst) => Obj::InstantiatedTemplateObj(inst.clone()),
         };
         let mut candidates = Vec::new();
-        for (candidate, path) in equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(),
-            &head,
-        ) {
+        for (candidate, path) in self.exact_property_object_values(&head) {
             match candidate {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => candidates.push((
                     anon, FunctionBodySourceProof::KnownEquality(KnownEqualityPathProof::new(path)),

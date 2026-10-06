@@ -1,5 +1,6 @@
 # The declarations must succeed; the final application must fail WD.
 have Base set = finite_seq(R,2)
 have Carrier set = Base
+Carrier = finite_seq(R,2)
 have f Carrier
 f(3) $in R

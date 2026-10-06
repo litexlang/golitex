@@ -2,25 +2,25 @@
 # Before on frozen84d: definition WD failed at the real difference carrier.
 # prop real_difference_wd(f fn(p cart(R, R)) R, point cart(R, R)):
 #     forall x R:
-#         abs(f((x, point[2])) - f(point)) >= 0
-# Failure: f((x, point[2])) - f(point) $in R, search_proof inside abs WD.
+#         abs(f((x, point(2))) - f(point)) >= 0
+# Failure: f((x, point(2))) - f(point) $in R, search_proof inside abs WD.
 #
 # Now: function arguments are checked by enclosing WD; real constructor
 # terminals keep the inherited truth-search ceiling and signature citations.
 prop real_difference_wd(f fn(p cart(R, R)) R, point cart(R, R)):
     forall x R:
-        abs(f((x, point[2])) - f(point)) >= 0
+        abs(f((x, point(2))) - f(point)) >= 0
 
 forall f fn(p cart(R, R)) R, point cart(R, R), x R:
-    abs(f((x, point[2])) - f(point)) >= 0
+    abs(f((x, point(2))) - f(point)) >= 0
 
 # The original partial-delta definition keeps its nonzero quotient domain.
 prop real_coordinate_delta_controlled(f fn(p cart(R, R)) R, point cart(R, R), slope R, epsilon, delta R+):
     forall x R:
-        x != point[1]
-        abs(x - point[1]) < delta
+        x != point(1)
+        abs(x - point(1)) < delta
         =>:
-            abs((f((x, point[2])) - f(point)) / (x - point[1]) - slope) < epsilon
+            abs((f((x, point(2))) - f(point)) / (x - point(1)) - slope) < epsilon
 
 # Boundaries: complex-only returns, unchecked function guards, zero divisors
 # and false negative-abs conclusions are rejected by the focused Rust tests.

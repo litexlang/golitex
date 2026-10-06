@@ -24,7 +24,7 @@ fn exact_function_finite_values_support_named_calls_carriers_aliases_and_complet
     for code in [
         "have p cart(R,Z) = (1,2)\np(1)=1\np(2) $in Z",
         "have p cart(R,Z)\np(1) $in R\np(2) $in Z\np(2) $in R",
-        "have Carrier set=cart(R,Z)\nhave p Carrier=(1,2)\nhave q Carrier=p\nq(1)=1\nq(2) $in Z",
+        "have Carrier set=cart(R,Z)\nhave p Carrier=(1,2)\nhave q Carrier=p\nq=(1,2)\nq(1)=1\nq(2) $in Z",
         "(1,2) $in finite_seq(Z,2)\n(1,2) $in finite_seq(R,2)\nrelease thm fn_set_member((1,2),finite_seq(R,2))",
         "let p=(1,2)\np $in finite_seq(Z,2)\nrelease thm fn_set_member(p,finite_seq(R,2))",
         "let p=(1,1)\np(1)=1\np(2)=1\np $in finite_seq(Z,2)",
@@ -204,7 +204,7 @@ fn exact_function_membership_preserves_return_bounds_restrictions_and_aliases() 
         "have fn u(i1 closed_range(1,2)) Z = 0\nu $in finite_seq(Z,2)\nu $in finite_seq(R,2)\nu(1) $in Z\nu(1) $in R",
         "have fn u(i1 closed_range(1,2)) Z = 0\nrelease thm fn_set_member(u, finite_seq(R,2))\nby thm fn_set_member(u, fn(j closed_range(1,2)) R) => u $in fn(k closed_range(1,2)) R",
         "have fn z(x R: x>0) Z = 0\nz $in fn(y R: y>0) R\nrelease thm fn_set_member(z, fn(y R: y>0) R)",
-        "have F set = fn(k closed_range(1,2)) R\nhave fn z(x closed_range(1,2)) Z = 0\nhave q F = z\nq $in finite_seq(R,2)\nq(1)=0",
+        "have F set = fn(k closed_range(1,2)) R\nhave fn z(x closed_range(1,2)) Z = 0\nhave q F = z\nq = fn(x closed_range(1,2)) Z {0}\nq $in finite_seq(R,2)\nq(1)=0",
         "have fn empty_fn(x {}) R = 0\nrelease thm fn_set_member(empty_fn, finite_seq(R,0))",
         "have n N\nhave fn z(k closed_range(1,n)) Z = 0\nz $in finite_seq(Z,n)\nrelease thm fn_set_member(z, finite_seq(R,n))\nfinite_seq(R,n)=fn(j closed_range(1,n)) R",
         "have fn z(k N+: k<=2) Z = 0\nrelease thm fn_set_member(z, fn(j closed_range(1,2)) R)\nz $in finite_seq(R,2)",

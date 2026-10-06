@@ -29,15 +29,15 @@ fn fact_count(rt: &Runtime) -> usize {
 fn exact_function_sequence_space_aliases_and_return_applications_keep_checked_sources() {
     for source in [
         "have Carrier set=finite_seq(R,2)\nhave f Carrier\nf(1) $in R\nf(2) $in R",
-        "have Base set=finite_seq(Z,2)\nhave Carrier set=Base\nhave f Carrier\nhave g Carrier=f\ng(1) $in Z\ng(1) $in R\ng $in finite_seq(R,2)\ng(2) $in Z",
+        "have Base set=finite_seq(Z,2)\nhave Carrier set=Base\nCarrier=finite_seq(Z,2)\nhave f Carrier\nhave g Carrier=f\ng(1) $in Z\ng(1) $in R\ng $in finite_seq(R,2)\ng(2) $in Z",
         "have Carrier set=seq(Z)\nhave f Carrier\nf(1) $in Z\nf(100) $in R",
-        "have Base set=fn(k N+: k<=2) Z\nhave Carrier set=Base\nhave f Carrier\nf(1) $in Z\nf(2) $in Z",
+        "have Base set=fn(k N+: k<=2) Z\nhave Carrier set=Base\nCarrier=fn(k N+: k<=2) Z\nhave f Carrier\nf(1) $in Z\nf(2) $in Z",
         "have length N+\nhave Carrier set=finite_seq(R,length)\nhave f Carrier\nf(length) $in R",
         "have Carrier set=finite_seq(R,0)\nhave f Carrier\nf $in fn(k closed_range(1,0)) R",
         "have Carrier set=finite_seq(R,2)\nhave f Carrier\n$is_set(fn_range(f))\nf(1) $in fn_range(f)",
         "have fn mk(x R) finite_seq(R,2)=(x,x)\nmk(7)(1) $in R\nmk(7)(2) $in R",
         "have Carrier set=finite_seq(Z,2)\nhave fn mk(x R) Carrier=(2,2)\nmk(7)(1) $in Z\nmk(7)(2) $in R",
-        "have Base set=seq(R)\nhave Carrier set=Base\nhave fn mk(x R) Carrier=fn(k N+) R {x}\nmk(7)(10) $in R",
+        "have Base set=seq(R)\nhave Carrier set=Base\nCarrier=seq(R)\nhave fn mk(x R) Carrier=fn(k N+) R {x}\nmk(7)(10) $in R",
         "have Carrier set=fn(k N+: k<=2) R\nhave fn mk(x R) Carrier=fn(k N+: k<=2) R {x}\nmk(7)(2) $in R",
         "have fn mk(x R: x>0) finite_seq(R,2)=(x,x)\nmk(7)(2) $in R",
     ] {
@@ -92,7 +92,7 @@ fn exact_function_sequence_alias_controls_reject_wrong_domains_calls_and_publica
 #[test]
 fn exact_function_same_call_domain_evidence_preserves_stronger_returns_and_guards() {
     let mut rt = runtime();
-    assert!(rt.run_litex_code("have f finite_seq(Z,2)\nlet alias=f\nalias $in finite_seq(R,2)").unwrap().success);
+    assert!(rt.run_litex_code("have f finite_seq(Z,2)\nlet alias=f\nalias $in finite_seq(Z,2)\nalias $in finite_seq(R,2)").unwrap().success);
     let result = execute(&mut rt, "alias(2) $in Z");
     assert!(!result.is_failed());
     let detailed = project_stmt_detailed(&result, &rt).stringify();

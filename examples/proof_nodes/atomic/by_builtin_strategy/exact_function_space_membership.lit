@@ -13,6 +13,7 @@ zero $in finite_seq(R,2)
 have Alias set = finite_seq(R,2)
 
 have value Alias = zero
+value = fn(k closed_range(1,2)) Z {0}
 
 value(2)=0
 

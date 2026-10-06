@@ -4,7 +4,6 @@ use crate::ast::obj::{FnObjHead, FnSet, FunctionSpace, InstantiatedTemplateObj, 
 use super::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::proper_subsets_in_membership_proof_order;
 use super::result::AtomicExceptEqualityFactKnownProof;
 use crate::exec_env::SpecialProperty;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::runtime::{FactId, Runtime};
@@ -283,7 +282,7 @@ impl Runtime {
         // field type also applies in read-only nested WD, before explicit release.
         if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) = &fact.element {
             if let Some(declared_set) = self.resolve_field_access_field_type(access) {
-                if let Some(set_match) = self.lookup_known_obj_equality(&declared_set, &fact.set) {
+                if let Some(set_match) = self.lookup_exact_property_obj_equality(&declared_set, &fact.set) {
                     return Some(InFactSearchProofByKnownSpecialProperty::FieldInDeclaredSet(
                         FieldInDeclaredSetProof { declared_set, set_match },
                     ));
@@ -300,7 +299,7 @@ impl Runtime {
         if let Some(operation)=operation {
             let signature=self.resolve_callable_fn_set(operation)?;
             let carrier=*signature.ret_set.clone();
-            let carrier_match=self.lookup_known_obj_equality(&carrier,&fact.set)?;
+            let carrier_match=self.lookup_exact_property_obj_equality(&carrier,&fact.set)?;
             let operation_signature=if matches!(operation,Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))) {
                 FoldOperationSignatureProof::Literal(signature)
             } else {
@@ -319,7 +318,7 @@ impl Runtime {
                         let argument = application.body.last().unwrap()[0].as_ref();
                         if let Some(index) = literal_positive_usize(argument) {
                             if let Some(carrier) = cart.args.get(index - 1) {
-                                if let Some(carrier_equal) = self.lookup_known_obj_equality(carrier, &fact.set) {
+                                if let Some(carrier_equal) = self.lookup_exact_property_obj_equality(carrier, &fact.set) {
                                     return Some(InFactSearchProofByKnownSpecialProperty::TupleCoordinate(
                                         TupleCoordinateKnownProof { index, shape, carrier_equal: Box::new(carrier_equal) }));
                                 }
@@ -327,7 +326,7 @@ impl Runtime {
                         }
                         if !cart.args.is_empty() {
                             let carrier_equals: Option<Vec<_>> = cart.args.iter()
-                                .map(|carrier| self.lookup_known_obj_equality(carrier, &fact.set)).collect();
+                                .map(|carrier| self.lookup_exact_property_obj_equality(carrier, &fact.set)).collect();
                             if let Some(carrier_equals) = carrier_equals {
                                 return Some(InFactSearchProofByKnownSpecialProperty::HomogeneousTupleCoordinate(
                                     HomogeneousTupleCoordinateKnownProof { shape, carrier_equals }));
@@ -347,21 +346,19 @@ impl Runtime {
             return None;
         }
         let template_head = crate::execute::execute_fact_stmt::known_tuple::tuple_function_head(application);
-        let template_peers = equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(), &template_head,
-        );
+        let template_peers = self.exact_property_object_values(&template_head);
         for (peer, path) in &template_peers {
             let Obj::InstantiatedTemplateObj(instance) = peer else { continue; };
             let Some(signature) = self.instantiated_template_function_signature(instance) else { continue; };
             let Some(applied_return_set) = self.applied_fn_set_return_set(application, &signature) else { continue; };
-            let Some(return_set_match) = self.lookup_known_obj_equality(&applied_return_set, &fact.set) else { continue; };
+            let Some(return_set_match) = self.lookup_exact_property_obj_equality(&applied_return_set, &fact.set) else { continue; };
             let alternative_signature_matches = self.known_alternative_signature_returns(application, &template_head, &fact.set)?;
             let mut alternative_template_signature_matches = Vec::new();
             for (alternative, alternative_path) in &template_peers {
                 let Obj::InstantiatedTemplateObj(alternative) = alternative else { continue; };
                 let Some(signature) = self.instantiated_template_function_signature(alternative) else { continue; };
                 let Some(ret) = self.applied_fn_set_return_set(application, &signature) else { continue; };
-                let return_set_match = self.lookup_known_obj_equality(&ret, &fact.set)?;
+                let return_set_match = self.lookup_exact_property_obj_equality(&ret, &fact.set)?;
                 alternative_template_signature_matches.push(TemplateSignatureReturnMatchProof {
                     instance: alternative.clone(), function_equal: KnownEqualityPathProof::new(alternative_path.clone()), return_set_match,
                 });
@@ -379,7 +376,7 @@ impl Runtime {
                 self.resolve_field_access_field_type(access)
             {
                 if let Some(applied_return_set) = self.applied_fn_set_return_set(application, &signature) {
-                    if let Some(return_set_match) = self.lookup_known_obj_equality(&applied_return_set, &fact.set) {
+                    if let Some(return_set_match) = self.lookup_exact_property_obj_equality(&applied_return_set, &fact.set) {
                         let head = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access.clone()));
                         let alternative_signature_matches = self.known_alternative_signature_returns(application, &head, &fact.set)?;
                         return Some(InFactSearchProofByKnownSpecialProperty::FieldApplicationInDeclaredCodomain(
@@ -406,22 +403,20 @@ impl Runtime {
             // Example: fn(a,b R) R {a+b}(x,y) $in R, including nested calls.
             FnObjHead::AnonymousFnLiteral(anonymous) => {
                 let applied_return_set=self.applied_fn_set_return_set(application,&anonymous.body)?;
-                let return_set_match=self.lookup_known_obj_equality(&applied_return_set,&fact.set)?;
+                let return_set_match=self.lookup_exact_property_obj_equality(&applied_return_set,&fact.set)?;
                 return Some(InFactSearchProofByKnownSpecialProperty::AnonymousFnApplicationInCodomain(AnonymousFnApplicationInCodomainProof {
                     signature:anonymous.body.clone(),applied_return_set,return_set_match:Box::new(return_set_match),
                 }));
             },
         };
-        let properties: Vec<_> = equivalence_class_members_with_paths_in_adjacency(
-            &self.visible_equivalence_class_adjacency(), &head,
-        ).into_iter().flat_map(|(peer, _)| self.known_special_properties_of(&peer)).collect();
+        let properties = self.known_special_properties_of(&head);
         for property in properties {
             let Some(signature) = property.function_signature() else {
                 continue;
             };
             let definition_id = property.fact_id();
             let Some(subject) = property.function_subject() else { continue; };
-            let Some(function_path) = self.equivalence_class_path(&head, subject) else { continue; };
+            let Some(function_path) = self.exact_property_equality_path(&head, subject) else { continue; };
             if let Obj::FunctionSpace(FunctionSpace::FnRange(range)) = &fact.set {
                 if head.ir() != range.function.ir() || application.body.len() != 1 {
                     continue;
@@ -446,7 +441,7 @@ impl Runtime {
                     }
                     let candidate_obj = Obj::FunctionSpace(FunctionSpace::FnSet(candidate));
                     let Some(proof) =
-                        self.lookup_known_obj_equality(&candidate_obj, &signature_obj)
+                        self.lookup_exact_property_obj_equality(&candidate_obj, &signature_obj)
                     else {
                         return None;
                     };
@@ -468,7 +463,7 @@ impl Runtime {
             let Some(applied_return) = self.applied_fn_set_return_set(application, &signature) else {
                 continue;
             };
-            if self.lookup_known_obj_equality(&applied_return, &fact.set).is_none() {
+            if self.lookup_exact_property_obj_equality(&applied_return, &fact.set).is_none() {
                 continue;
             }
             // Cached WD cites the application, not its selected signature. All
@@ -481,7 +476,7 @@ impl Runtime {
                 let Some(ret) = self.applied_fn_set_return_set(application, &candidate) else {
                     continue;
                 };
-                if let Some(proof) = self.lookup_known_obj_equality(&ret, &fact.set) {
+                if let Some(proof) = self.lookup_exact_property_obj_equality(&ret, &fact.set) {
                     matches.push(SignatureCodomainUseProof::ReturnSetMatch(SignatureReturnMatchProof {
                         cite_signature_fact_id: id, return_set_match: proof,
                     }));
@@ -491,7 +486,7 @@ impl Runtime {
                         Some(crate::ast::fact::Fact::AtomicFact(AtomicFact::EqualFact(fact))) => SpecialProperty::Equality(fact.clone()),
                         _ => return None,
                     };
-                    let path = self.equivalence_class_path(&head, property.function_subject()?)?;
+                    let path = self.exact_property_equality_path(&head, property.function_subject()?)?;
                     matches.push(SignatureCodomainUseProof::SameCallDomains {
                         cite_signature_fact_id: id, function_equal: KnownEqualityPathProof::new(path), domains,
                     });
@@ -523,7 +518,7 @@ impl Runtime {
         let mut matches = Vec::new();
         for (candidate, id) in self.collect_in_function_set_candidates(head) {
             let Some(ret) = self.applied_fn_set_return_set(application, &candidate) else { continue; };
-            let return_set_match = self.lookup_known_obj_equality(&ret, target)?;
+            let return_set_match = self.lookup_exact_property_obj_equality(&ret, target)?;
             matches.push(SignatureReturnMatchProof { cite_signature_fact_id: id, return_set_match });
         }
         Some(matches)

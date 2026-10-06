@@ -10,4 +10,6 @@ have a,b R
 have gp cart(R,R) = (a,b)
 gp(1) = a
 have alias cart(R,R) = gp
+alias = (a,b)
+alias = (a,b)
 alias(2) = b

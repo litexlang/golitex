@@ -1,4 +1,4 @@
-# Obj WD: t[i] with i in N+ / is_tuple / i <= tuple_dim
-# Run: litex -f examples/proof_nodes/obj_wd/obj_at_index.lit
-
-let a = (1, 2)[1]
+# WD: an ordinary call uses the tuple's complete one-based domain.
+# Gate: target/release/litex -strict -f examples/proof_nodes/obj_wd/obj_at_index.lit
+let pair = (1,2)
+let a = pair(1)

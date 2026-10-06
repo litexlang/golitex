@@ -1,5 +1,29 @@
 # Statement execution
 
+## Exact-object structural metadata
+
+Function WD, body reduction, codomain reading, complete-domain selection,
+return-space reading, finite-coordinate metadata and eval finite-set enumeration
+consume declarations and
+exact-object `special_properties`. The shared read-only helpers in
+`execute_fact_stmt/helper.rs` inspect only the current object's indexed
+`Membership` / `Equality` facts. A direct equality supplies one endpoint and
+its FactId; the consumer never visits that endpoint's properties to extend an
+alias chain. Signature collection reads only the original object's properties. Carrier
+inference and set-builder/power-set/subset projection share this boundary.
+Default struct-view selection remains definition-owned and exact.
+
+Ordinary equality/fact proof search retains its equality graph. An explicit
+proved membership or body equality uses the existing store/index pipeline to
+publish metadata on the object that will be used later. No new Env state,
+property variant, implicit alias closure or inference cache is introduced.
+Existing equality-path evidence carries zero or one cited edge in these
+structural readers; that certificate does not imply a graph-search operation.
+
+Tracer: [exact_property_function_lookup.lit](../../examples/proof_nodes/equal/by_object_definition/by_fn_application/exact_property_function_lookup.lit).
+`exact_property_lookup_tests` retain transitive-discovery rejection, explicit
+publication/recovery, ordinary equality, wrong values/domains and rollback.
+
 ## Exact finite-function coordinates
 
 Cartesian and struct members use ordinary applications. Struct release stores
@@ -307,7 +331,7 @@ search stages or mutate facts/WD memory. The enclosing verify pipeline continues
 to own all WD evidence. See `execute_fact_stmt/README.md` and the maintained
 `examples/proof_nodes/atomic/direct_structural_membership.lit` tracer.
 
-`FnApplicationInStandardSuperset` is a read-only KnownSpecialProperty leaf for stored function signatures after application WD. It checks all fully applied standard return carriers against the intrinsic numeric inclusion relation, preserving each signature FactId and head equality path. It never searches domain premises or changes the WD cache. Nonstandard carriers and intrinsic template/field alternatives conservatively retain their existing producers. The dedicated tracer is `examples/proof_nodes/atomic/by_known_special_property/function_return_standard_superset.lit`.
+`FnApplicationInStandardSuperset` is a read-only KnownSpecialProperty leaf for stored function signatures after application WD. It checks all fully applied standard return carriers against the intrinsic numeric inclusion relation, preserving each exact-object signature FactId and direct equality certificate. It never searches domain premises or changes the WD cache. Nonstandard carriers and intrinsic template/field alternatives conservatively retain their existing producers. The dedicated tracer is `examples/proof_nodes/atomic/by_known_special_property/function_return_standard_superset.lit`.
 
 The existing `LessFromPosDifference` builtin leaf consumes a saved `0 < b - a`
 or `b - a > 0` after the enclosing comparison has checked real operands. It tries

@@ -15,7 +15,7 @@ have fn f(x R) R = x
 have fn g(x R) R = x
 f(g(a)) = f(g(b))
 have p cart(R,R)
-p = (p[1],p[2])
+p = (p(1),p(2))
 have fn bump(x Z) Z = x+1
 have fn wrapped(x Z) Z = bump(x)
 bump(3) = 4

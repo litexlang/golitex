@@ -79,19 +79,8 @@ impl Runtime {
         if matches!(set, Obj::SetFormer(SetFormer::SetBuilder(_))) {
             return true;
         }
-        let adjacency = self.visible_equivalence_class_adjacency();
-        let Some(neighbors) = adjacency.get(&set.ir()) else {
-            return false;
-        };
-        for (_peer_key, equal_fact) in neighbors.iter() {
-            let peer = if equal_fact.left.ir() == set.ir() {
-                &equal_fact.right
-            } else {
-                &equal_fact.left
-            };
-            if matches!(peer, Obj::SetFormer(SetFormer::SetBuilder(_))) {
-                return true;
-            }
+        for (value, _) in self.exact_property_object_values(set) {
+            if matches!(value, Obj::SetFormer(SetFormer::SetBuilder(_))) { return true; }
         }
         false
     }

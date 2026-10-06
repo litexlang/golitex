@@ -46,7 +46,7 @@ fn assert_no_retired_product_facts(rt: &Runtime) {
 #[test]
 fn finite_function_coordinates_stored_members_and_literal_aliases_need_no_shape_facts() {
     for source in [
-        "have p cart(R,Z)\np(1) $in R\np(2) $in Z\nlet alias=p\nalias(2) $in Z",
+        "have p cart(R,Z)\np(1) $in R\np(2) $in Z\nlet alias=p\nalias $in cart(R,Z)\nalias(2) $in Z",
         "let p=(1,2)\np(1)=1\np(2)=2\np $in finite_seq(Z,2)",
         "let p=tuple(7)\np(1)=7\np $in cart(Z)",
         "let p=()\np $in cart()\np={}",

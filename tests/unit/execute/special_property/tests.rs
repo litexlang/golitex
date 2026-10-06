@@ -27,11 +27,14 @@ fn run_examples_callable_alias_special_property() {
 }
 
 #[test]
-fn callable_alias_reduces_with_a_real_function_equality_path() {
+fn callable_alias_reduces_with_an_exact_published_function_equality() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn f(x R) R = x + 1");
     exec_ok(&mut rt, "let g = f");
+    exec_ok(&mut rt, "g = fn(x R) R {x + 1}");
     exec_ok(&mut rt, "let h = g");
+    assert!(exec(&mut rt, "h(4) = 5").is_failed());
+    exec_ok(&mut rt, "h = fn(x R) R {x + 1}");
     let Stmt::Fact(goal) = parse(&mut rt, "h(4) = 5") else {
         panic!("goal")
     };
@@ -58,7 +61,7 @@ fn callable_alias_reduces_with_a_real_function_equality_path() {
     else {
         panic!("signature source and transport")
     };
-    assert_eq!(function_equal.path.len(), 2);
+    assert!(function_equal.path.is_empty());
     assert!(rt.top_exec_env().facts.facts_by_id.contains_key(&fact_id));
     let EqualFactSearchedProof::ByObjectDefinition(
         EqualitySearchProofByObjectDefinition::ByFnApplication(
@@ -72,7 +75,7 @@ fn callable_alias_reduces_with_a_real_function_equality_path() {
     else { panic!("named function body expansion") };
     let crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodySourceProof::KnownEquality(path) = &expansion.function_body
     else { panic!("stored function equality") };
-    assert_eq!(path.path.len(), 3);
+    assert_eq!(path.path.len(), 1);
     for (from, to, id) in &path.path {
         let Fact::AtomicFact(AtomicFact::EqualFact(source)) =
             &rt.top_exec_env().facts.facts_by_id[id]
@@ -114,7 +117,7 @@ fn reversed_and_non_definition_equalities_supply_function_bodies() {
     for equality in ["f = g", "g = f"] {
         exec_ok(
             &mut rt,
-            &format!("forall g set:\n    {equality}\n    =>:\n        g(4) = 5"),
+            &format!("forall g fn(x R) R:\n    {equality}\n    =>:\n        g = fn(x R) R {{x + 1}}\n        g(4) = 5"),
         );
     }
 }
@@ -124,6 +127,7 @@ fn alias_call_checks_arity_carrier_and_value() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn f(x R) R = x + 1");
     exec_ok(&mut rt, "let g = f");
+    exec_ok(&mut rt, "g = fn(x R) R {x + 1}");
     for code in ["g(4, 5) = 5", "g({4}) = 5", "g(4) = 6"] {
         assert!(exec(&mut rt, code).is_failed(), "must reject {code}");
     }
@@ -135,6 +139,7 @@ fn property_rows_keep_the_source_fact_and_are_idempotent() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn f(x R) R = x + 1");
     exec_ok(&mut rt, "let g = f");
+    exec_ok(&mut rt, "g = fn(x R) R {x + 1}");
     let before = property_count(&rt);
     let sources: Vec<AtomicFact> = rt
         .top_exec_env()
@@ -175,6 +180,7 @@ fn a_failed_claim_does_not_commit_its_successful_equality_step() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn f(x R) R = x + 1");
     exec_ok(&mut rt, "let g = f");
+    exec_ok(&mut rt, "g = fn(x R) R {x + 1}");
     let before = (
         rt.top_exec_env().facts.facts_by_id.len(),
         property_count(&rt),

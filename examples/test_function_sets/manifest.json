@@ -198,8 +198,8 @@
       "expect": "accept",
       "phase": null,
       "file": "struct/s07.lit",
-      "statements": 7,
-      "setup_statements": 6
+      "statements": 8,
+      "setup_statements": 7
     },
     {
       "id": "S08",
@@ -358,8 +358,8 @@
       "expect": "accept",
       "phase": null,
       "file": "controls/d03.lit",
-      "statements": 4,
-      "setup_statements": 3
+      "statements": 5,
+      "setup_statements": 4
     },
     {
       "id": "D04",
@@ -408,8 +408,8 @@
       "expect": "accept",
       "phase": null,
       "file": "controls/d08.lit",
-      "statements": 8,
-      "setup_statements": 6
+      "statements": 9,
+      "setup_statements": 8
     },
     {
       "id": "D09",
@@ -713,8 +713,8 @@
       "expect": "accept",
       "phase": null,
       "file": "explicit_proofs/p02.lit",
-      "statements": 8,
-      "setup_statements": 6
+      "statements": 9,
+      "setup_statements": 8
     },
     {
       "id": "P03",
@@ -763,8 +763,8 @@
       "expect": "accept",
       "phase": null,
       "file": "explicit_proofs/p07.lit",
-      "statements": 7,
-      "setup_statements": 6
+      "statements": 8,
+      "setup_statements": 7
     },
     {
       "id": "P08",
@@ -793,8 +793,8 @@
       "expect": "reject",
       "phase": "search_proof",
       "file": "explicit_proofs/n23.lit",
-      "statements": 7,
-      "setup_statements": 6
+      "statements": 8,
+      "setup_statements": 7
     },
     {
       "id": "N24",

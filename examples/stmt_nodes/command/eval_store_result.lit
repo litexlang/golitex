@@ -27,8 +27,9 @@ eval a+1
 a+1=11
 eval (1+2,4+5)
 (1+2,4+5)=(3,9)
-eval (1,2,3)[2]
-(1,2,3)[2]=2
+let sample = (1,2,3)
+sample(2)=2
+eval sample(2)
 eval C_abs(1+i)
 C_abs(1+i)=sqrt(2)
 

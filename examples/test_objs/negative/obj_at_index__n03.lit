@@ -1,2 +1,3 @@
-# Must reject: obj_at_index N03
-let x = (1, 2)[1 / 2]
+# Reject a coordinate outside the complete one-based tuple domain.
+let pair = (1,2)
+let x = pair(1 / 2)
