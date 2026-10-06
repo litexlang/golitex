@@ -86,15 +86,20 @@ This exits 0. [Current `exec_eval_stmt`](../../src/execute/execute_eval_stmt/exe
 
 ## Documented semantics that may surprise users
 
-`by thm t(args) => fact` applies the theorem inside a child environment and asks the **ordinary atomic verifier** to prove `fact` there. Thus the following succeeds even though the target is independently provable and unrelated to `t`:
+At the time of this audit, `by thm t(args) => fact` applied the theorem inside a child environment and asked the **ordinary atomic verifier** to prove `fact` there. Thus the following succeeded even though the target was independently provable and unrelated to `t`:
 
+<!-- litex:skip-test -->
 ```litex
 thm irrelevant:
     ? 1 = 1
 by thm irrelevant => 2 = 2
 ```
 
-[Manual § Named interfaces](../Manual.md#named-interfaces-thm-axiom-release-thm-and-by-thm--fact) explicitly permits a target that is not a direct theorem conclusion. This is a provenance/interface choice, not a verifier bug under the documented rule. At the time of this audit, `-strict` intentionally still permitted named `axiom` and set-theoretic releases; the template bypass above was different because strict explicitly promised to reject `trust have`.
+The [Manual § Named interfaces](../Manual.md#named-interfaces-thm-axiom-release-thm-and-by-thm--fact) at that checkpoint explicitly permitted a target that was not a direct theorem conclusion. This was a provenance/interface choice under the then-documented rule. At the time of this audit, `-strict` intentionally still permitted named `axiom` and set-theoretic releases; the template bypass above was different because strict explicitly promised to reject `trust have`.
+
+Update, 2026-10-06: selected theorem calls now require a directly returned atomic
+conclusion. The historical example above is rejected; the Manual has been
+updated. See the [strict-selection tracer](../../examples/stmt_nodes/by/by_thm_strict_selection.lit).
 
 Update, 2026-10-05: strict mode now also rejects user `axiom` declarations.
 Named foundation releases remain allowed. See the [source-owned acceptance](../../examples/test_statements/experience/problem_notes/strict-user-axiom-2026-10-05.md).

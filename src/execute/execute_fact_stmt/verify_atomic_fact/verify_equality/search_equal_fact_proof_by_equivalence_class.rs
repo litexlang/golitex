@@ -1,9 +1,8 @@
-use super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
 use super::equivalence_class_graph::{
     equivalence_class_keys_in_adjacency, equivalence_class_members_with_paths_in_adjacency,
     equivalence_class_path_in_adjacency, EquivalenceClassAdjacency,
 };
-use super::result::{EqualityViaPeersProof, KnownEqualityPathProof, KnownEqualityAlphaEndpointsProof, PeerEqualitySuccess};
+use super::result::{EqualityViaPeersProof, KnownEqualityPathProof, PeerEqualitySuccess};
 use super::well_defined_result::VerifyEqualFactWellDefinedResult;
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::Obj;
@@ -64,7 +63,7 @@ impl Runtime {
                 .into(),
             ));
         }
-        Ok(search_alpha_endpoints(&adjacency, fact))
+        Ok(None)
     }
 
     // A bridge verifies WD and searches with the shared ceiling <= BuiltinRule.
@@ -115,61 +114,4 @@ impl Runtime {
         }
         adjacency
     }
-}
-
-pub(crate) fn search_alpha_endpoints(adjacency: &EquivalenceClassAdjacency, fact: &EqualFact) -> Option<EqualFactSearchedProofByEquivalenceClass> {
-    // Stored binder IDs can differ from a freshly parsed goal's IDs.
-    // Cite the existing equality and prove pure alpha identity on each side;
-    // never normalize the knowledge graph or perform definition rewriting.
-    for edges in adjacency.values() {
-        for (_, cited) in edges {
-        for reversed in [false, true] {
-            let (left, right) = if reversed { (&cited.right, &cited.left) }
-            else { (&cited.left, &cited.right) };
-            // Compare borrowed objects before allocating a candidate fact. Most
-            // stored edges have a different shape and cannot be alpha endpoints.
-            if !same_or_alpha_objects(&fact.left, left) || !same_or_alpha_objects(&fact.right, right) {
-                continue;
-            }
-            let mut endpoint = fact.clone();
-            endpoint.right = left.clone();
-            let Some(left_identity) = search_equal_fact_proof_by_they_are_the_same(&endpoint) else { continue; };
-            endpoint.left = fact.right.clone();
-            endpoint.right = right.clone();
-            let Some(right_identity) = search_equal_fact_proof_by_they_are_the_same(&endpoint) else { continue; };
-            return Some(EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(
-            KnownEqualityAlphaEndpointsProof { cited: cited.clone(), reversed, left_identity, right_identity }
-            ));
-        }
-        }
-    }
-    // Multi-edge version: the finite classes contain only stored objects.
-    // Compare their endpoints structurally, without WD or any proof-search call.
-    let left = equivalence_class_members_with_paths_in_adjacency(adjacency, &fact.left);
-    let right = equivalence_class_members_with_paths_in_adjacency(adjacency, &fact.right);
-    for (l, lpath) in &left {
-        for (r, rpath) in &right {
-            if lpath.is_empty() && rpath.is_empty() { continue; }
-            if !same_or_alpha_objects(l, r) { continue; }
-            let mut bridge = fact.clone();
-            bridge.left = l.clone();
-            bridge.right = r.clone();
-            let Some(identity) = search_equal_fact_proof_by_they_are_the_same(&bridge) else { continue; };
-            return Some(EqualFactSearchedProofByEquivalenceClass::AlphaPaths(
-                super::result::KnownEqualityAlphaPathsProof {
-                    left_path: KnownEqualityPathProof::new(lpath.clone()),
-                    left: l.clone(), right: r.clone(), identity,
-                    right_path: KnownEqualityPathProof::new(rpath.iter().rev()
-                        .map(|(from, to, id)| (to.clone(), from.clone(), *id)).collect()),
-                },
-            ));
-        }
-    }
-    None
-}
-
-fn same_or_alpha_objects(left: &Obj, right: &Obj) -> bool {
-    if std::mem::discriminant(left) != std::mem::discriminant(right) { return false; }
-    super::by_they_are_the_same::helper::compound_objs_alpha_equal(left, right)
-        || left.ir() == right.ir()
 }

@@ -1,0 +1,5 @@
+# A true calculation cannot replace the named theorem's returned conclusion.
+thm reflexive:
+    ? forall x R:
+        x = x
+by thm reflexive(7) => 2 + 3 = 5

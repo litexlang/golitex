@@ -59,3 +59,5 @@ pub mod trig_first_quadrant;
 pub mod order_negative_common_factor;
 
 pub mod signed_difference;
+
+pub mod trig_additional_interval_order;

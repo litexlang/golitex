@@ -237,7 +237,10 @@ forall x R:
         x != 0
 ```
 
-Keep `by thm name(args) => fact` when selecting one atomic consequence.
+Keep `by thm name(args) => fact` when selecting one directly returned atomic
+conclusion. The target must match that conclusion structurally (bound-variable
+renaming is allowed). To rewrite or combine results, release the theorem and
+write separate proof steps.
 Replacing it with `release thm` would change which conclusions enter the
 context. Neither spelling proves missing premises for you. See the
 [theorem-call contract](Manual.md#named-interfaces-thm-axiom-release-thm-and-by-thm---fact).

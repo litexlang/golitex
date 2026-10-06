@@ -25,4 +25,4 @@ axiom zero_sides_ax:
 release thm zero_sides_ax(2)
 0 + 2 = 2
 
-by thm zero_sides_ax(3) => 3 + 0 = 0 + 3
+by thm zero_sides_ax(3) => 3 + 0 = 3

@@ -18,14 +18,36 @@ needed for identity and peer comparison.
 4. Mathematical identities and calculation belong to `ByBuiltinRule` and retain
    the caller's builtin-entry permission.
 5. Stored equality also gives alternative objects on which those checks may work.
-   The later `ByEquivalenceClass` fallback handles alpha endpoints and
-   restricted comparison between members of the two endpoint classes.
+   The later `ByEquivalenceClass` fallback handles restricted comparison
+   between members of the two endpoint classes. It does not scan unrelated
+   graph endpoints for alpha identity.
 6. Every stored step needs its generating equality's `FactId`; every new step
    needs its own proof. A shared class handle is a search index, not evidence.
 7. These are search changes. `exec_stmt` still owns statement transactions, and
    the existing fact-statement pipeline stores and infers only after verification.
 
 ## Entry and search order
+
+The [geo CPU stage diagnosis](../../../../../examples/proof_nodes/experience/problem_notes/geo-stage-cost-2026-10-06.md)
+measured ordinary stored-fact argument matching repeatedly entering graph-level
+alpha endpoint scans. The user subsequently approved removing that implicit
+discovery capability: Direct now compares the submitted pair by exact IR or
+structural alpha, follows exact stored equality paths, and returns a miss.
+Forall candidate alias discovery also follows exact stored edges without
+alpha-anchoring unrelated classes. Nested binders in the submitted pair remain
+supported by the existing structural comparison; no Obj metadata field is added.
+
+Explicit `by thm ... => ...` selection can compare that invocation's returned
+endpoints by structural alpha, without scanning the graph. `release thm` is
+theorem instantiation, not an alpha-search switch; no new alpha strategy is
+introduced. The existing Strategy-level peer comparison retains its ceiling
+and can compare reachable class members locally. The new
+[tracer](../../../../../examples/proof_nodes/equal/by_they_are_the_same/local_alpha_without_graph_scan.lit)
+and regression sources are added but **not run**, as requested by the user.
+The [implementation note](../../../../../examples/proof_nodes/experience/problem_notes/geo-local-alpha-only-2026-10-06.md)
+records the reduced Direct capability and distinguishes historical diagnostic
+timings from this untested implementation.
+
 
 Known forall equality conclusions are compiled when recorded into the
 scope-owned `ForallEqualityIndex`. Its trie distinguishes nested leaf
@@ -50,7 +72,7 @@ outer WD, symmetry and statement transactions remain in force.
 verify_equal_fact(goal, state)
   -> WD left, then right with the same ceiling
   -> search_equal_fact_proof -> shared search_atomic_fact
-       0 identity/alpha, stored paths/facts
+       0 identity/pairwise structural alpha, exact stored paths/facts
        1 special properties and finite constructor descent (leaves 0)
        2 builtin rules (premises 1)
        3 strategies and searched peer bridges (premises 2)
@@ -81,9 +103,10 @@ structural alpha checker, which also handles nested binders; its old textual
 key only renamed the existential witnesses. Type and theorem-domain obligations
 retain the existing premise ceiling and are proved before returning evidence.
 
-There is no separate strategy search state or depth budget. A pure stored
-alpha-path citation belongs to level 0; a newly proved peer bridge belongs to
-level 3 and cannot reenter that stage.
+There is no separate strategy search state or depth budget. Exact stored paths
+and pairwise structural alpha belong to level 0. A newly proved peer bridge
+belongs to level 3 and cannot reenter that stage. Direct does not discover
+alpha bridges between separate stored classes.
 The [stored-equality priority tracer](../../../../../examples/proof_nodes/equal/by_equivalence_class/stored_equality_before_builtin.lit)
 releases the geo dot-symmetry theorem and reads its exact conclusion.
 

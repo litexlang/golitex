@@ -1,0 +1,6 @@
+# Selecting a combination of two returned conclusions is not direct selection.
+thm zero_sides:
+    ? forall x R:
+        x + 0 = x
+        0 + x = x
+by thm zero_sides(2) => 2 + 0 = 0 + 2

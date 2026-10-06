@@ -11,7 +11,7 @@ impl Runtime {
     // Cite a known non-equality atomic by proving each known_arg = goal_arg.
     //
     // Candidates: same prop name, polarity, and arity (no equality-class filter).
-    // Argument obligations use KnownFact: only identity/alpha and stored paths.
+    // Argument obligations use KnownFact: pairwise identity/alpha and exact stored paths.
     // Nested MatchingOneArgByOne is still available there (scheduled before rewrite).
     //
     // Example: known `a > 0`, `a = b`, goal `b > 0`.

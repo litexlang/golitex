@@ -1,0 +1,20 @@
+# Tracer: by thm selects a directly returned atomic conclusion.
+#
+# Before (incorrectly accepted):
+# thm reflexive:
+#     ? forall x R:
+#         x = x
+# by thm reflexive(7) => 2 + 3 = 5
+# Former behavior: ordinary calculation closed a target unrelated to reflexive(7).
+#
+# Now:
+thm reflexive:
+    ? forall x R:
+        x = x
+by thm reflexive(7) => 7 = 7
+# Current behavior: the selected proof cites this instance's returned equality.
+#
+# Boundary: unrelated true facts and combined/reversed/rewritten conclusions reject.
+# Negative and provenance gates: tests/unit/execute/by_thm_selection/tests.rs.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/by/by_thm_strict_selection.lit
+# Implementation: src/execute/execute_by_stmt/exec_by_thm_stmt.rs

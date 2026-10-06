@@ -31,10 +31,16 @@ Status: Direct increment complete; broader geo migration remains incomplete. Fin
 `plan/迁移的plan/proof_journals/verify-state-level-implementation.json`.
 
 `VerifyState` retains exactly `level` and `can_rewrite`. Level 0 is now Direct:
-stored identity/alpha/path/citation evidence first, closed exact calculation
+identity/pairwise structural alpha and exact stored path/citation evidence first, closed exact calculation
 second. `DirectAtomicFactSearchResult` explicitly distinguishes `ByKnownFact`,
 `ByClosedCalculation` and `NotFound`. Calculation evidence mirrors the atomic
 family and records equality values, comparison polarity, or membership value/set.
+
+On 2026-10-06 the user approved removing graph-wide alpha endpoint/path
+discovery from ordinary lookup and forall aliases. Pairwise nested alpha and
+existing Strategy-level local peer comparison remain. That change is implemented
+but untested at the user's request; see the equality README and local-alpha-only
+acceptance note. Historical validation below predates that change.
 
 The calculator is a free function without Runtime/State/search callbacks. It
 uses classified decimal arithmetic and exact rational/complex evaluation.

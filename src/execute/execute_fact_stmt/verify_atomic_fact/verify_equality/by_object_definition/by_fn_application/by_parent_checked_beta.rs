@@ -51,6 +51,12 @@ pub enum ParentCheckedBetaFunctionBody {
         receiver_function_body: Box<ParentCheckedBetaFunctionBody>,
         returned_function: AnonymousFn,
     },
+    ReturnedKnownFunctionApplication {
+        receiver_well_defined: Box<ObjWellDefinedProof>,
+        receiver_function_body: Box<ParentCheckedBetaFunctionBody>,
+        application_well_defined: Box<ObjWellDefinedProof>,
+        application_function_body: Box<ParentCheckedBetaFunctionBody>,
+    },
     AnonymousLiteral,
     KnownAnonymousFunction {
         function: AnonymousFn,
@@ -158,16 +164,39 @@ impl Runtime {
                 });
                 if let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(receiver_well_defined) =
                     self.verify_obj_well_definedness(&receiver, state)? {
-                    if let Some((receiver_function_body, Obj::FunctionSpace(FunctionSpace::AnonymousFn(returned_function)))) =
+                    if let Some((receiver_function_body, returned_value)) =
                         self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)? {
-                        let args: Vec<Obj> = app.body.last().unwrap().iter().map(|arg| arg.as_ref().clone()).collect();
-                        if args.len() == set_bound_parameter_count(&returned_function.body.set_bound_parameters) {
-                            let subst = set_bound_params_to_arg_map(&returned_function.body.set_bound_parameters, &args);
-                            if let Ok(expanded_body) = self.inst_obj(returned_function.equal_to.as_ref(), &subst) {
-                                return Ok(Some((ParentCheckedBetaFunctionBody::ReturnedAnonymousFunctionApplication {
+                        if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(returned_function)) = returned_value {
+                            let args: Vec<Obj> = app.body.last().unwrap().iter().map(|arg| arg.as_ref().clone()).collect();
+                            if args.len() == set_bound_parameter_count(&returned_function.body.set_bound_parameters) {
+                                let subst = set_bound_params_to_arg_map(&returned_function.body.set_bound_parameters, &args);
+                                if let Ok(expanded_body) = self.inst_obj(returned_function.equal_to.as_ref(), &subst) {
+                                    return Ok(Some((ParentCheckedBetaFunctionBody::ReturnedAnonymousFunctionApplication {
                                     receiver_well_defined: Box::new(receiver_well_defined),
                                     receiver_function_body: Box::new(receiver_function_body), returned_function,
-                                }, expanded_body)));
+                                    }, expanded_body)));
+                                }
+                            }
+                        } else if !matches!(&returned_value, Obj::FnObj(_)) {
+                            // A named/field/template value uses its existing
+                            // call verifier. This one-group application cannot
+                            // reenter the multi-group receiver branch; no alias
+                            // graph traversal or new search permission is added.
+                            let application = Obj::FnObj(crate::ast::obj::FnObj {
+                                head: Box::new(FnObjHead::from_obj(returned_value)),
+                                body: vec![app.body.last().unwrap().clone()],
+                            });
+                            if let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(application_well_defined) =
+                                self.verify_obj_well_definedness(&application, state)? {
+                                if let Some((application_function_body, expanded_body)) =
+                                    self.parent_checked_beta_body(&application, &application_well_defined, state)? {
+                                    return Ok(Some((ParentCheckedBetaFunctionBody::ReturnedKnownFunctionApplication {
+                                        receiver_well_defined: Box::new(receiver_well_defined),
+                                        receiver_function_body: Box::new(receiver_function_body),
+                                        application_well_defined: Box::new(application_well_defined),
+                                        application_function_body: Box::new(application_function_body),
+                                    }, expanded_body)));
+                                }
                             }
                         }
                     }

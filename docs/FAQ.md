@@ -599,13 +599,16 @@ write `release thm name(args)` for a bare call. Use `by thm` with `=>` when
 selecting one atomic consequence.
 
 When only one atomic consequence should escape, use the preview form
-`by thm name(args) => atomic_fact`. Litex applies the ordinary
-theorem in a temporary child context, checks the selected fact there, and then
-discards all other theorem conclusions. Only the selected fact is committed to
-the parent; its normal inferred consequences may still be stored. The selected
-fact must already be well-defined in the parent, and a compound target or proof
-body is rejected. The arrow remains required for this selected form; only the
-separate bare legacy alias omits it.
+`by thm name(args) => atomic_fact`. The target must match a directly returned
+atomic conclusion of that theorem instance, including explicit conjunction or
+adjacent-chain components. Structural identity and bound-variable renaming are
+allowed; independent computation, ambient facts, rewriting, equality reversal,
+and combining conclusions cannot replace the match. The proof cites that
+returned conclusion. Only the selected fact is committed to the parent; its
+normal inferred consequences may still be stored. The selected fact must be
+well-defined in the parent, and a compound target or proof body is rejected.
+To combine conclusions, use `release thm` and a separate proof step. The arrow
+remains required for selection; only the separate bare legacy alias omits it.
 Mathematical definitions similarly use explicit `by def A $subset B` and
 `by def $injective(A, B, f)` statements. New code should use this inline
 spelling; the older `by def:` plus one `? fact` goal remains accepted for
@@ -2088,3 +2091,37 @@ keeps the original logarithm premise. This does not permit negative or unknown
 bounds to imply positivity, and does not widen WD search permissions.
 
 A stored R-returning function can supply `f(a) $in C` at the known-property stage after its application domain has been checked. This is numeric carrier inclusion. The checker requires every candidate stored return signature to fit the target. Function-space membership additionally requires the complete input domain: a function defined on `union(S,{a})` cannot be published as a member of `fn(x S) R`. Construct `have fn restricted(x S) R = f(x)` and use that value for the smaller domain. Freshness remains a premise of finite-product insertion. Native template/field signatures retain their checked producers.
+
+
+### Which real trigonometric interval facts can be checked directly?
+
+The checker has fixed sign and monotonicity rules for the usual intervals.
+The following standalone snippet keeps the tangent denominators explicitly
+well-defined and uses the original angle bounds:
+
+```litex
+forall x R:
+    0<x
+    x<pi/2
+    =>:
+        0<sin(x)
+        0<cos(x)
+
+forall a,b R:
+    -pi/2<a
+    b<pi/2
+    a<b
+    cos(a)!=0
+    cos(b)!=0
+    =>:
+        tan(a)<tan(b)
+```
+
+Cosine reverses order on `[0,pi]`; tangent preserves order on
+`(-pi/2,pi/2)`; cotangent reverses order on `(0,pi)`; sine preserves weak as
+well as strict order on `[-pi/2,pi/2]`. Fixed endpoint spellings and reversed
+conditions cite the actual written facts. The chosen lower bound, upper bound
+and argument-order result remain visible in Detailed output. These are bounded
+interval checks, and partial-operation WD is checked first. A weak argument
+bound does not justify a strict image inequality, and poles remain invalid.
+See the [interval examples](../examples/proof_nodes/atomic/by_builtin_rule/trig_interval_monotonicity.lit).

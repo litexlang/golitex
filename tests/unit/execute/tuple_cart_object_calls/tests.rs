@@ -66,11 +66,15 @@ fn function_valued_coordinates_use_the_checked_returned_body_and_guards() {
         assert!(!result.is_failed(),"{source}");
         if source.starts_with("eval") {
             let detailed = crate::json_output::project_stmt_detailed(&result,&rt).stringify();
-            assert!(detailed.contains("returned_anonymous_function_application"),"{detailed}");
+            let expected = if source.contains("named_functions") { "returned_known_function_application" } else { "returned_anonymous_function_application" };
+            assert!(detailed.contains(expected),"{detailed}");
             assert!(detailed.contains("application_well_defined"),"{detailed}");
         }
     }
     for source in [
+        "named_functions(1)(0)=0",
+        "named_functions(1)(1/2)=0",
+        "release thm fn_set_member(z, finite_seq(R,2))",
         "functions(1)(0)=0",
         "functions(1)(1,2)=1",
         "(fn(x R) R {x},0)(1)(i)=i",

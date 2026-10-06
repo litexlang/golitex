@@ -72,6 +72,7 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | `witness/` | Exhibit witnesses | `witness exist … from …:` etc. |
 | `witness/witness_type_soundness.lit` | Check concrete witness and predicate argument types | `witness exist` / `witness $P(args)` |
 | `by/` | Named proof methods | `by cases:` / `by contra:` / … |
+| [by/by_thm_strict_selection.lit](by/by_thm_strict_selection.lit) | Direct theorem conclusion selection | `by thm ... => atomic` cites the returned conclusion; unrelated, rewritten, reversed and combined targets reject |
 | [by/by_contra_classified_goals.lit](by/by_contra_classified_goals.lit) | Classified compound contra targets | `exist` / `not exist`, `or`, QF `forall` / `not forall`; atomic `impossible` |
 | [by/by_contra_unique_existence.lit](by/by_contra_unique_existence.lit) | Unique-existence contra target | Existing forall/exists reverse assumption; distinct alternative witness |
 | [by/by_contra_forall_iff.lit](by/by_contra_forall_iff.lit) | Whole iff contra target | Existing QF equivalence failure and Exist counterexample |

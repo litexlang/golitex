@@ -167,43 +167,22 @@ fn known_path_keeps_oriented_fact_ids_and_needs_no_peer_search() {
 }
 
 #[test]
-fn stored_alpha_paths_are_available_at_level_zero_without_peer_search() {
+fn direct_lookup_does_not_discover_alpha_bridges_between_stored_classes() {
     let mut runtime = runtime();
     for code in [
-        "let a = fn(x R) R",
-        "let b = a",
-        "let c = fn(y R) R",
-        "let d = c",
+        "let a = fn(x R) R", "let b = a",
+        "let c = fn(y R) R", "let d = c",
     ] {
         exec_ok(&mut runtime, code);
     }
     let goal = equal(&mut runtime, "b = d");
     let before = store_sizes(&runtime);
-    let proof = runtime
-        .lookup_known_obj_equality(&goal.left, &goal.right)
-        .unwrap();
-    let EqualFactSearchedProof::ByEquivalenceClass(
-        EqualFactSearchedProofByEquivalenceClass::AlphaPaths(proof),
-    ) = proof
-    else {
-        panic!("finite alpha path")
-    };
-    assert_eq!(proof.left_path.path.len(), 2);
-    assert_eq!(proof.right_path.path.len(), 2);
-    check_path(&runtime, &proof.left_path, &goal.left, &proof.left);
-    check_path(&runtime, &proof.right_path, &proof.right, &goal.right);
-    assert!(matches!(
-        proof.identity,
-        TheyAreTheSameProof::SameFreeParamShape(_)
-    ));
-    assert_eq!(
-        store_sizes(&runtime),
-        before,
-        "search must not store bridge or WD"
-    );
-    assert!(runtime
-        .equivalence_class_path(&goal.left, &goal.right)
-        .is_none());
+    assert!(runtime.lookup_known_obj_equality(&goal.left, &goal.right).is_none());
+    assert!(runtime.search_equal_fact_proof(
+        &goal, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct),
+    ).unwrap().is_none());
+    assert_eq!(store_sizes(&runtime), before, "a miss must not publish facts or WD");
+    assert!(runtime.equivalence_class_path(&goal.left, &goal.right).is_none());
 }
 
 #[test]
@@ -304,27 +283,21 @@ fn peer_child_permissions_cannot_reenter_the_peer_stage() {
 }
 
 #[test]
-fn membership_cites_finite_alpha_endpoints_in_both_wd_and_truth() {
+fn membership_lookup_keeps_pairwise_alpha_without_graph_endpoint_search() {
     let mut runtime = runtime();
     exec_ok(&mut runtime, "let g = fn(x R) R");
     exec_ok(&mut runtime, "have fn f(t R) R = t");
-    let result = exec_ok(&mut runtime, "f $in g");
+    let Stmt::Fact(Fact::AtomicFact(aliased)) = parse(&mut runtime, "f $in g") else {
+        panic!("membership");
+    };
+    assert!(runtime.lookup_known_atomic_fact(&aliased).is_none());
+    let result = exec_ok(&mut runtime, "f $in fn(u R) R");
     let json = project_stmt_detailed(&result, &runtime).stringify();
-    for marker in [
-        "by_equivalence_class",
-        "alpha_endpoints",
-        "by_they_are_the_same",
-        "same_free_param_shape",
-        "fn_set",
-        "cite_fact_id",
-        "right_identity",
-        "well_defined",
-    ] {
+    for marker in ["by_they_are_the_same", "same_free_param_shape", "fn_set", "cite_fact_id"] {
         assert!(json.contains(marker), "missing {marker} in {json}");
     }
-    assert!(!json.contains("ByEqualToObjWithFreeParamsLookup"));
-    assert!(!json.contains("via_peers"));
-    assert!(exec(&mut runtime, "f $in fn(t R) N").is_failed());
+    assert!(!json.contains("alpha_endpoints") && !json.contains("alpha_paths"), "{json}");
+    assert!(exec(&mut runtime, "f $in fn(u R) N").is_failed());
 }
 
 #[test]
@@ -349,7 +322,7 @@ fn normal_identity_output_is_not_a_builtin_in_either_language() {
 }
 
 #[test]
-fn builtin_ceiling_keeps_identity_calculation_and_stored_alpha_paths() {
+fn builtin_ceiling_keeps_local_alpha_calculation_and_exact_stored_paths() {
     use crate::execute::execute_fact_stmt::VerifyStateLevel;
     for (code, expected) in [
         ("fn(x R) R = fn(y R) R", "identity"),
@@ -358,7 +331,7 @@ fn builtin_ceiling_keeps_identity_calculation_and_stored_alpha_paths() {
     ] {
         let mut runtime = runtime();
         exec_ok(&mut runtime, "let g = fn(x R) R");
-        exec_ok(&mut runtime, "let h = fn(y R) R");
+        exec_ok(&mut runtime, "let h = g");
         let goal = Fact::AtomicFact(AtomicFact::EqualFact(equal(&mut runtime, code)));
         let VerifyFactResult::Equality(result) = runtime
             .verify_fact(
@@ -558,8 +531,9 @@ fn compound_alpha_identity_preserves_ranges_bodies_and_free_ids_at_builtin_disab
 }
 
 #[test]
-fn stored_sum_equality_is_reused_with_alpha_renamed_endpoints() {
-    // This regression deliberately seeds an assumed equality in ordinary mode.
+fn explicit_theorem_selection_reuses_alpha_renamed_endpoints_without_graph_search() {
+    // The assumption is deliberately recorded in ordinary mode, then selected
+    // explicitly. Its real returned equality remains the certificate source.
     let mut rt = Runtime::new(LaunchCommand::Eval {
         code: String::new(), session: false, strict: false, language: OutputLanguage::English,
     });
@@ -567,30 +541,25 @@ fn stored_sum_equality_is_reused_with_alpha_renamed_endpoints() {
     exec_ok(&mut rt, "axiom stored:\n    ? forall u, v R:\n        sum(1, 2, fn(x Z) R {x + u}) = sum(1, 2, fn(y Z) R {y + v})");
     exec_ok(&mut rt, "release thm stored(a, b)");
     let goal = "sum(1, 2, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + b})";
-    let VerifyEqualityResult::Success(success) = verify(&mut rt, goal, VerifyState::top_level())
-    else {
-        panic!("stored alpha endpoints");
-    };
-    let EqualFactSearchedProof::ByEquivalenceClass(
-        EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(p),
-    ) = success.searched_proof
-    else {
-        panic!("must cite checked equality");
-    };
-    assert!(rt.fact_by_id_in_stack(p.cited.fact_id).is_some());
-    assert!(!verify(
-        &mut rt,
-        "sum(1, 2, fn(k Z) R {k + b}) = sum(1, 2, fn(t Z) R {t + a})",
-        VerifyState::top_level()
-    )
-    .is_failed());
+    let fact = equal(&mut rt, goal);
+    assert!(rt.lookup_known_obj_equality(&fact.left, &fact.right).is_none());
+    let result = exec_ok(&mut rt, &format!("by thm stored(a, b) => {goal}"));
+    let json = project_stmt_detailed(&result, &rt).stringify();
+    assert!(json.contains("alpha_endpoints") && json.contains("cite_fact_id"), "{json}");
     for goal in [
         "sum(1, 3, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + b})",
         "sum(1, 2, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + a + 1})",
+        "sum(1, 2, fn(k Z) R {k + b}) = sum(1, 2, fn(t Z) R {t + a})",
     ] {
-        assert!(
-            verify(&mut rt, goal, VerifyState::top_level()).is_failed(),
-            "{goal}"
-        );
+        assert!(exec(&mut rt, &format!("by thm stored(a, b) => {goal}")).is_failed(), "{goal}");
     }
+}
+
+#[test]
+fn run_examples_local_alpha_without_graph_scan() {
+    let mut rt = runtime();
+    let result = rt.run_litex_code(include_str!(
+        "../../../../examples/proof_nodes/equal/by_they_are_the_same/local_alpha_without_graph_scan.lit"
+    )).unwrap();
+    assert!(result.success && result.session_error.is_none());
 }

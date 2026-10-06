@@ -23,4 +23,4 @@ axiom ax_sides:
     ? forall x R:
         x + 0 = x
         0 + x = x
-by thm ax_sides(3) => 3 + 0 = 0 + 3
+by thm ax_sides(3) => 3 + 0 = 3

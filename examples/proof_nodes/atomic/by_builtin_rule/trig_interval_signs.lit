@@ -1,0 +1,36 @@
+# Focused gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/trig_interval_signs.lit
+# Before: the following bare source was rejected at truth search.
+# forall x R:
+#     -pi/2<x
+#     x<pi/2
+#     =>:
+#         0<cos(x)
+# Now: same source active, real operands and original partial-operation guards retained.
+
+forall x R:
+    -pi/2<x
+    x<pi/2
+    =>:
+        0<cos(x)
+
+forall x R:
+    -pi<x
+    x<0
+    =>:
+        sin(x)<0
+
+forall x R:
+    -pi/2<x
+    x<0
+    cos(x)!=0
+    =>:
+        tan(x)<0
+
+forall x R:
+    pi/2<x
+    x<pi
+    sin(x)!=0
+    =>:
+        cot(x)<0
+
+# Boundaries: wrong directions, missing bounds, weak-to-strict and poles execute as Rust negatives.

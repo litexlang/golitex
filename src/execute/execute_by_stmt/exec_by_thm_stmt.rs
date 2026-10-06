@@ -3,7 +3,7 @@ use super::result::{
     ExecByStmtResult, ExecByThmStmtFailed, ExecByThmStmtResult, ExecByThmStmtSuccess,
     ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseThmStmtSuccess,
 };
-use crate::ast::fact::{Fact, ForallFact};
+use crate::ast::fact::{atomic_fact_args_ref, atomic_fact_has_positive_polarity, AtomicFact, EqualFact, Fact, ForallFact};
 use crate::ast::obj::Obj;
 use crate::ast::stmt::{ByThmStmt, ReleaseThmStmt, TheoremCall, TheoremCallArguments};
 use crate::runtime::runtime_ids::IdentifierId;
@@ -111,10 +111,23 @@ pub fn exec_by_thm_stmt(
             Ok(proofs) => proofs,
             Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
         };
+        let mut direct_conclusions = Vec::new();
         for conclusion in &prepared.conclusions {
-            let _ = rt.store_fact_and_infer(conclusion, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            let stored = rt.store_fact_and_infer(conclusion, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            // Only the returned atoms and explicit package components are selectable.
+            // Inferred facts and ambient facts must not supply a selected target.
+            for (_, atomic) in stored.atomic_components() {
+                direct_conclusions.push(atomic);
+            }
         }
-        let selected_proof = verify_goal_fact(rt, &selected)?;
+        let Some(selected_proof) = verify_selected_theorem_conclusion(
+            rt, &stmt.selected_fact, &direct_conclusions,
+        )? else {
+            return Ok(Err(ExecByThmStmtFailed::NotReturned {
+                theorem: thm_name.clone(), fact: selected.clone(),
+                conclusions: prepared.conclusions.clone(),
+            }));
+        };
         if selected_proof.is_failed() {
             return Ok(Err(ExecByThmStmtFailed::Selected { theorem: thm_name.clone(), fact: selected.clone(), result: selected_proof }));
         }
@@ -332,3 +345,94 @@ fn verify_prepared_conclusions_wd(
     }
     Ok(Ok(proofs))
 }
+
+fn verify_selected_theorem_conclusion(
+    runtime: &mut Runtime,
+    selected: &AtomicFact,
+    conclusions: &[AtomicFact],
+) -> RuntimeResult<Option<crate::execute::execute_fact_stmt::VerifyFactResult>> {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
+        EqualFactSearchedProof,
+        EqualFactSearchedProofByEquivalenceClass,
+    };
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
+        equal_fact_result_from_success, equal_fact_result_from_wd_fail,
+        KnownEqualityAlphaEndpointsProof,
+    };
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::VerifyEqualFactWellDefinedResult;
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
+        atomic_except_equality_fact_result_from_success,
+        atomic_except_equality_fact_result_from_wd_fail,
+        AtomicExceptEqualityFactSearchProofByKnownAtomicFact,
+        AtomicExceptEqualityFactSearchedProof,
+    };
+    use crate::execute::execute_fact_stmt::VerifyAtomicFactWellDefinedResult;
+
+    let selected_args = atomic_fact_args_ref(selected);
+    for conclusion in conclusions {
+        if selected.prop_name() != conclusion.prop_name()
+            || atomic_fact_has_positive_polarity(selected) != atomic_fact_has_positive_polarity(conclusion)
+        {
+            continue;
+        }
+        let conclusion_args = atomic_fact_args_ref(conclusion);
+        if selected_args.len() != conclusion_args.len() {
+            continue;
+        }
+        let mut identities = Vec::new();
+        for (known, goal) in conclusion_args.iter().zip(&selected_args) {
+            let comparison = EqualFact {
+                fact_id: selected.fact_id(), left: (*known).clone(),
+                right: (*goal).clone(), line_file: None,
+            };
+            let Some(identity) = search_equal_fact_proof_by_they_are_the_same(&comparison) else {
+                break;
+            };
+            identities.push(identity);
+        }
+        if identities.len() != selected_args.len() {
+            continue;
+        }
+
+        if let (AtomicFact::EqualFact(goal), AtomicFact::EqualFact(cited)) = (selected, conclusion) {
+            let well_defined = match runtime.verify_equal_fact_well_definedness(goal, super::helper::proof_verify_state())? {
+                VerifyEqualFactWellDefinedResult::Success(proof) => proof,
+                VerifyEqualFactWellDefinedResult::Failed(reason) => {
+                    return Ok(Some(equal_fact_result_from_wd_fail(reason)));
+                }
+            };
+            let mut identities = identities.into_iter();
+            let proof = KnownEqualityAlphaEndpointsProof {
+                cited: cited.clone(), reversed: false,
+                left_identity: identities.next().expect("equality left identity"),
+                right_identity: identities.next().expect("equality right identity"),
+            };
+            return Ok(Some(equal_fact_result_from_success(
+                goal, well_defined,
+                EqualFactSearchedProof::ByEquivalenceClass(
+                    EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(proof),
+                ),
+            )));
+        }
+
+        let well_defined = match runtime.verify_atomic_fact_well_definedness(selected, super::helper::proof_verify_state())? {
+            VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
+            VerifyAtomicFactWellDefinedResult::Failed(reason) => {
+                return Ok(Some(atomic_except_equality_fact_result_from_wd_fail(reason)));
+            }
+        };
+        let proof = AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
+            cite_fact_id: conclusion.fact_id(),
+            why_parameters_of_known_fact_are_equal_to_givens: identities.into_iter().map(Into::into).collect(),
+        };
+        return Ok(Some(atomic_except_equality_fact_result_from_success(
+            selected, well_defined, AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof),
+        )));
+    }
+    Ok(None)
+}
+
+#[cfg(test)]
+#[path = "../../../tests/unit/execute/by_thm_selection/tests.rs"]
+mod by_thm_selection_tests;

@@ -468,7 +468,7 @@ fn bound_expression_and_numeric_structure_are_not_filtered_out() {
 }
 
 #[test]
-fn reached_binder_aliases_keep_direct_alpha_path_candidates() {
+fn unrelated_binder_aliases_do_not_supply_direct_forall_matches() {
     let mut rt = runtime();
     let result = rt.run_litex_code("have fn f(x R) R=x\nhave fn g(y R) R=y\nf=fn(x R) R {x}\ng=fn(y R) R {y}\nforall t R:\n    f(t)=t\n").unwrap();
     assert!(result.success && result.session_error.is_none());
@@ -500,10 +500,10 @@ fn reached_binder_aliases_keep_direct_alpha_path_candidates() {
             &forall.typed_parameters.ordered_param_ids()
         )
         .unwrap()
-        .is_some());
+        .is_none());
     assert!(
-        selected.contains(&cite),
-        "Direct alpha paths must remain retrievable"
+        !selected.contains(&cite),
+        "candidate discovery must not alpha-anchor unrelated stored classes"
     );
 }
 

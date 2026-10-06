@@ -1,7 +1,7 @@
 {
   "kind": "litex_kb_manifest",
-  "abi": "4",
-  "fingerprint": "97b4de5ecec209d0",
+  "abi": "8",
+  "fingerprint": "827c3363dff34ee4",
   "self_mod_id": 0,
   "mod_id_to_path": [
     [

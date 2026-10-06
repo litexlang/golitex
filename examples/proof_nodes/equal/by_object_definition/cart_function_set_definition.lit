@@ -20,6 +20,10 @@ forall A,B,T set:
 
 have D set = {p finite_seq(union(R,Z),2): p(1) $in R, p(2) $in Z}
 
+# Explicitly connect the definition and Cartesian carrier with the same
+# parsed intermediate; no whole-graph alpha transport is needed.
+D = {p finite_seq(union(R,Z),2): p(1) $in R, p(2) $in Z} = cart(R,Z)
+
 D=cart(R,Z)
 
 have value D = (1,2)

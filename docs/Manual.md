@@ -2644,11 +2644,11 @@ release thm zero_sides(2)
 
 **Public form:** `by thm name(arguments) => atomic_fact`.
 
-**Mathematical function.** Use a theorem instance to prove one requested atomic consequence.
+**Mathematical function.** Select one directly returned atomic conclusion of a theorem instance.
 
 **Before execution.** Arguments, domains and premises verify; the requested target is a supported single atomic fact.
 
-**Execution and result.** Check the selected fact in the theorem-instance context, then publish that selection with inference. The public effect differs from releasing all conclusions.
+**Execution and result.** Match the selected fact against the instance's directly returned atomic conclusions, retaining a citation to the matched conclusion. Publish only that selection with inference. Independently provable targets and combinations of conclusions are rejected.
 
 **Nearest boundary.** An existential, universal, conjunction or chain is not a selectable atomic target; release the complete result when that shape is needed.
 
@@ -2667,18 +2667,38 @@ by thm add_zero(2) => 2 + 0 = 2
 
 #### Atomic selection and the temporary call scope
 
-For `by thm name(args) => fact`, `fact` must already be well-defined in the
-parent context. Litex then applies
-the theorem with the existing `release thm` semantics in a temporary child
-environment, so all instantiated conclusions and their ordinary inferred
-consequences are available while the full atomic verifier checks `fact`. The
-child is discarded afterward. On success, only `fact` is committed as the
-parent seed and ordinary inference runs from that seed; on failure, the parent
-environment is unchanged. The target may be a positive or negative atomic fact
-and need not be a direct theorem conclusion, but compound, quantified,
-existential, disjunctive, conjunctive, and chain targets are not accepted. A
-selected call still requires `=> fact`; only the separate bare legacy alias
-omits the arrow.
+For `by thm name(args) => fact`, `fact` must be well-defined in the parent
+context and match a directly returned atomic conclusion of this theorem
+instance. Explicit conjunction components and adjacent chain components are
+selectable. Matching permits structural identity and renaming bound variables;
+it does not compute or rewrite arguments, reverse an equality, combine
+conclusions, or select facts produced by inference. A target already known in
+the parent must satisfy the same matching requirement.
+
+Litex checks argument types, premises and conclusion well-definedness in a
+temporary child environment. The selected proof cites the matched conclusion
+from this call, even when ordinary verification could prove the target without
+it. The child is discarded afterward. On success, only `fact` is committed as
+the parent seed and ordinary inference runs from that seed; on failure, the
+parent environment is unchanged. Positive and negative atomic conclusions are
+supported. Compound, quantified, existential, disjunctive, conjunctive, and
+chain targets are not accepted. The selected form requires `=> fact`; only
+the separate bare legacy alias omits the arrow.
+
+To combine several returned conclusions, release them explicitly and write a
+separate derivation:
+
+```litex
+thm zero_sides:
+    ? forall x R:
+        x + 0 = x
+        0 + x = x
+release thm zero_sides(2)
+2 + 0 = 0 + 2
+```
+
+`by thm zero_sides(2) => 2 + 0 = 0 + 2` is rejected because that equality is
+not directly returned. See the [strict-selection tracer](../examples/stmt_nodes/by/by_thm_strict_selection.lit).
 
 For a root `forall`, `release thm name(args)` stores all instantiated
 conclusions. For an ordinary theorem fact, `release thm name` cites the
@@ -10708,6 +10728,26 @@ The symbolic trigonometric interface recognizes the following exact families:
 | Symmetry and angles | Odd/even parity, double-angle and cofunction formulas, supported integral and half-integral multiples of `pi`, shifts by `pi` and `pi/2`, and period `2*pi` for sine/cosine or `pi` for tangent/cotangent when defined. |
 | Bounds and signs | `(-1) <= sin(x), cos(x) <= 1`, `3 < pi < 4`, and `0<x<pi => 0<sin(x)`. The sine endpoints are excluded. Other interval-sign shortcuts remain scoped migration candidates; tangent and cotangent require their nonzero denominators. |
 | Local order | `-pi/2<=a<b<=pi/2 => sin(a)<sin(b)`, including the sine interval endpoints. Other sine/cosine/tangent/cotangent weak or strict order shortcuts remain scoped migration candidates. |
+
+The native real interval rules also check cosine positivity on `(-pi/2,pi/2)`,
+sine negativity on `(-pi,0)`, tangent negativity on `(-pi/2,0)` and cotangent
+negativity on `(pi/2,pi)`. On `(0,pi/2)`, sine and cosine positivity have direct
+fixed-bound leaves. Sine increases on `[-pi/2,pi/2]`, cosine decreases on
+`[0,pi]`, tangent increases on `(-pi/2,pi/2)`, and cotangent decreases on
+`(0,pi)`, with both strict and weak argument order supported. A strict argument
+order may establish a weak image order; weak order cannot establish strict
+image order. Tangent/cotangent goals still need their ordinary denominator WD
+evidence; a monotonicity fact does not manufacture missing nonzero evidence
+before that WD check.
+
+Bounds and argument order are checked in that sequence at the caller's existing
+builtin-premise permission. Fixed reversed comparisons and the established
+negative-π endpoint spellings retain the actual selected child results.
+These rules perform fixed local checks, without recursively expanding trig
+expressions. See [interval signs](../examples/proof_nodes/atomic/by_builtin_rule/trig_interval_signs.lit),
+[interval monotonicity](../examples/proof_nodes/atomic/by_builtin_rule/trig_interval_monotonicity.lit),
+and [first-quadrant sine/cosine](../examples/proof_nodes/atomic/by_builtin_rule/trig_first_quadrant_sin_cos.lit).
+
 
 These are exact symbolic rules, not numerical approximation. Unlisted special
 angles, complex trigonometry, continuity, and analytic definitions need
