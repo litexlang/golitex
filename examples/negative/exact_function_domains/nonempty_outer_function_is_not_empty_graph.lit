@@ -1,0 +1,3 @@
+# A nonempty outer domain remains nonempty when every returned function is empty.
+have outer fn(x R) fn(k {}) R
+outer={}

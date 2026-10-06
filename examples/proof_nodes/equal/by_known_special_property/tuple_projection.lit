@@ -8,6 +8,6 @@
 # Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_known_special_property/tuple_projection.lit
 have a,b R
 have gp cart(R,R) = (a,b)
-gp[1] = a
+gp(1) = a
 have alias cart(R,R) = gp
-alias[2] = b
+alias(2) = b

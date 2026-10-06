@@ -23,9 +23,6 @@ impl Runtime {
             let Obj::ProductShape(ProductShape::Cart(cart)) = &*size.set else {
                 continue;
             };
-            if cart.args.is_empty() {
-                continue;
-            }
             let mut product = Obj::Literal(Literal::Number(Number::new("1".into())));
             for factor in &cart.args {
                 let size = Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(FiniteSetSize {

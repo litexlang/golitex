@@ -859,8 +859,13 @@ pub struct AnonymousFnObjWellDefinedProof {
     pub dom_fact_well_defined: Vec<FactWellDefinedProof>,
     pub ret_set_well_defined: Box<ObjWellDefinedProof>,
     pub body_well_defined: Box<ObjWellDefinedProof>,
-    pub body_in_ret_set: VerifyFactResult,
+    pub body_in_ret_set: AnonymousFnBodyInReturnSetProof,
     pub local_env: Box<ExecEnv>,
+}
+
+pub enum AnonymousFnBodyInReturnSetProof {
+    CheckedMembership(VerifyFactResult),
+    EmptyCompleteDomain(crate::execute::execute_fact_stmt::function_domain::FunctionDomainEmptyProof),
 }
 
 pub struct CartObjWellDefinedProof {
@@ -962,15 +967,16 @@ impl FiniteSetMinObjWellDefinedProof {
 pub struct FnRangeObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub function_domains: Vec<crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof>,
 }
 
 impl FnRangeObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+    pub fn from_checked_domains(
+        stages: ObjWellDefinedByDefCommonStages,
+        function_domains: Vec<crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof>,
+    ) -> Self {
         let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
-        Self {
-            child_obj_well_defined,
-            requirement_fact_verified,
-        }
+        Self { child_obj_well_defined, requirement_fact_verified, function_domains }
     }
 }
 

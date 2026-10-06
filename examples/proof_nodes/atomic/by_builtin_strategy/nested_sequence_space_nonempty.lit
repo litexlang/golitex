@@ -1,0 +1,21 @@
+# Tracer: seq/finite_seq reuse constructive nested return-space evidence.
+# Before on ABI6 binary 59c56489b2f7222f0d221cdf74134fb8501c3ab7b71888ca31530b822ec5205f:
+# $is_nonempty_set(seq(fn(k {}) {}))
+# $is_nonempty_set(finite_seq(fn(k {}) {},2))
+# Both true existence facts failed; the inner empty-domain space is nonempty.
+# Now each outer space has a constant function with that empty function value.
+# Boundary: nonempty inner input domain with empty return carrier is empty;
+# the outer finite sequence still rejects coordinate 3 at WD.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_strategy/nested_sequence_space_nonempty.lit
+
+$is_nonempty_set(seq(fn(k {}) {}))
+
+have sequence seq(fn(k {}) {})
+
+fn_range(sequence(1))={}
+
+$is_nonempty_set(finite_seq(fn(k {}) {},2))
+
+have finite_sequence finite_seq(fn(k {}) {},2)
+
+fn_range(finite_sequence(2))={}

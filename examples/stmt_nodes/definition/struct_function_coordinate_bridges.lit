@@ -1,0 +1,70 @@
+# Tracer: struct fields use exact finite-function coordinates.
+#
+# Before (old representation):
+# struct Pair:
+#     first R
+#     second Z
+# have p &Pair=(1/2,2)
+# p.first=p[1]
+# p.second=p[2]
+# Former behavior: release published tuple shape/dimension and indexed bridges.
+#
+# Now: ordinary applications preserve field order, dependent carriers and guards.
+# Guarded evaluation supplies the actual coordinate equality before its inner call.
+# Boundary: wrong fields/domains/guards and false values must not publish facts.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/stmt_nodes/definition/struct_function_coordinate_bridges.lit
+
+struct Pair:
+    first R
+    second Z
+
+have p &Pair=(1/2,2)
+
+p.first=p(1)
+
+p.second=p(2)
+
+p(2) $in Z
+
+forall value &Pair:
+    value.first=value(1)
+    value.second=value(2)
+    value(2) $in Z
+
+struct CarrierValue:
+    carrier power_set(R)
+    value carrier
+
+{0} $in power_set(R)
+
+0 $in {0}
+
+have item &CarrierValue=({0},0)
+
+item.value=item(2)
+
+item(2) $in item.carrier
+
+struct Guarded:
+    point R
+    call fn(x R:x=point) R
+
+have fn at_zero(x R:x=0) R=0
+
+have guarded &Guarded=(0,at_zero)
+
+guarded.call=guarded(2)
+
+guarded.point=guarded(1)=0
+guarded(2)(guarded.point)=0
+
+struct Wrapped:
+    inner &Pair
+    tag N
+
+have wrapped &Wrapped=((1/2,2),0)
+
+release struct def wrapped.inner
+
+wrapped.inner.second=wrapped.inner(2)
+

@@ -45,7 +45,6 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
         EqualitySearchProofByBuiltinRule::RangeSize(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("RangeSize")),("start_natural",project_verify_fact(&p.start_natural,runtime)),("end_natural",project_verify_fact(&p.end_natural,runtime)),("endpoint_order",project_verify_fact(&p.endpoint_order,runtime))]),
         EqualitySearchProofByBuiltinRule::ClosedRangeSize(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ClosedRangeSize")),("start_natural",project_verify_fact(&p.start_natural,runtime)),("end_natural",project_verify_fact(&p.end_natural,runtime)),("endpoint_order",project_verify_fact(&p.endpoint_order,runtime))]),
         EqualitySearchProofByBuiltinRule::FactorialDivisibility(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("FactorialDivisibility")),("earlier_natural",project_verify_fact(&p.earlier_natural,runtime)),("later_natural",project_verify_fact(&p.later_natural,runtime)),("order",project_verify_fact(&p.order,runtime))]),
-        EqualitySearchProofByBuiltinRule::CartReconstruction(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("CartReconstruction")),("cartesian",project_verify_fact(&p.cartesian,runtime)),("dimension",project_verify_fact(&p.dimension,runtime)),("factors",project_verify_facts(&p.factors,runtime))]),
         EqualitySearchProofByBuiltinRule::EuclideanRemainder(p) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("EuclideanRemainder")),("domains",project_verify_facts(&p.domains,runtime)),("remainder_bound",project_verify_fact(&p.remainder_bound,runtime)),("decomposition",super::searched::project_equal_searched(&p.decomposition,runtime))]),
 
         EqualitySearchProofByBuiltinRule::ReduceFirstStep(p) => object_for(runtime, vec![
@@ -1021,9 +1020,26 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
         },
         EqualitySearchProofByBuiltinRule::FnRangeOfConstantAnonymousFn(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("FnRangeOfConstantAnonymousFn"))];
-            let _ = p;
+            entries.push(("source", super::function_domain::project_source(&p.source, runtime)));
+            entries.push(("domain_comparison", super::function_domain::project_domain_nonempty(&p.domain_nonempty, runtime)));
             object_for(runtime, entries)
         },
+        EqualitySearchProofByBuiltinRule::FnRangeOfEmptyDomain(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("FnRangeOfEmptyDomain")),
+            ("source", super::function_domain::project_source(&p.source, runtime)),
+            ("domain_comparison", super::function_domain::project_domain_empty(&p.domain_empty, runtime)),
+        ]),
+        EqualitySearchProofByBuiltinRule::EmptyFunctionGraph(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("EmptyFunctionGraph")),
+            ("source", super::function_domain::project_source(&p.source, runtime)),
+            ("domain_comparison", super::function_domain::project_domain_empty(&p.domain_empty, runtime)),
+        ]),
+        EqualitySearchProofByBuiltinRule::EmptyDomainFunctionSpaceSingleton(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("EmptyDomainFunctionSpaceSingleton")),
+            ("return_space", string(p.source_space.readable_string())),
+            ("source_signature", string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.signature.clone())).readable_string())),
+            ("domain_comparison", super::function_domain::project_domain_empty(&p.domain_empty, runtime)),
+        ]),
         EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("SeqEqualsFnOnNPos"))];
             let _ = p;

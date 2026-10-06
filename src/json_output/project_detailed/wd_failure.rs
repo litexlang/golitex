@@ -162,6 +162,10 @@ pub(super) fn project_atomic_wd_failure(
                     ("reason", string("undefined_predicate")),
                     ("predicate", string(predicate.display_string())),
                 ]),
+                PredicateSignatureWellDefinedFailure::Retired { predicate } => fields.extend([
+                    ("reason", string("retired_builtin")),
+                    ("predicate", string(predicate.display_string())),
+                ]),
                 PredicateSignatureWellDefinedFailure::Arity {
                     predicate,
                     expected,

@@ -58,6 +58,17 @@ fn every_language_preserves_exact_function_domain_evidence_and_rejection() {
         for key in ["function_domain", "subject_equal", "target_signature"] {
             if language != OutputLanguage::English { assert_ne!(localize_key(key, language), key); }
         }
+        for code in ["have f finite_seq(Z,2)", "let alias=f", "alias $in finite_seq(R,2)"] {
+            assert!(!execute(&mut rt, code).is_failed(), "{language:?}: {code}");
+        }
+        let result = execute(&mut rt, "alias(2) $in Z");
+        assert!(!result.is_failed(), "{language:?}: stronger upper bound lost through alias");
+        let detailed = project_stmt_detailed(&result, &rt);
+        let domains = find_evidence_value(&detailed, &localize_key("domain_comparison", language)).unwrap();
+        assert!(!domains.as_array().unwrap().is_empty());
+        let layer = &domains.as_array().unwrap()[0];
+        assert!(field(layer, "source_signature", language).as_str().unwrap().contains("closed_range(1, 2)"));
+        assert!(field(layer, "target_signature", language).as_str().unwrap().contains("closed_range(1, 2)"));
     }
 }
 

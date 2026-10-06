@@ -1,0 +1,3 @@
+# A returned finite function keeps its complete domain.
+have fn mk(x R) finite_seq(R,2) = (x,x)
+mk(7)(3) $in R

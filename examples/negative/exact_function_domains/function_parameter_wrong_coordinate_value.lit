@@ -1,0 +1,3 @@
+have fn mk(x R) cart(R,Z) = (x,2)
+have fn first(p cart(R,Z)) R = p(1)
+first(mk(7)) = mk(7)(2)

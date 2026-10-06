@@ -94,11 +94,23 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
                 ("dom_fact_well_defined", JsonValue::Array(p.dom_fact_well_defined.iter().map(|f| project_fact_wd_proof(f, runtime)).collect())),
                 ("ret_set_well_defined", project_obj_wd_proof(&p.ret_set_well_defined, runtime)),
                 ("body_well_defined", project_obj_wd_proof(&p.body_well_defined, runtime)),
-                ("body_in_ret_set", super::verify::project_verify_fact(&p.body_in_ret_set, runtime)),
+                ("body_in_ret_set", match &p.body_in_ret_set {
+                    AnonymousFnBodyInReturnSetProof::CheckedMembership(proof) => super::verify::project_verify_fact(proof, runtime),
+                    AnonymousFnBodyInReturnSetProof::EmptyCompleteDomain(proof) => object_for(runtime, vec![
+                        ("type", string("return_bound_vacuous_empty_domain")),
+                        ("domain_empty", super::function_domain::project_domain_empty(proof, runtime)),
+                    ]),
+                }),
                             ];
             object_for(runtime, entries)
         },
-        ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnRange(p)) => project_common_by_def(obj, "FunctionSpace", "FnRange", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
+        ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnRange(p)) => object_for(runtime, vec![
+            ("type", string("by_def")), ("family", string("FunctionSpace")), ("kind", string("FnRange")),
+            ("obj", string(obj.readable_string())),
+            ("child_obj_well_defined", JsonValue::Array(p.child_obj_well_defined.iter().map(|proof| project_obj_wd_proof(proof, runtime)).collect())),
+            ("requirement_fact_verified", project_verify_facts(&p.requirement_fact_verified, runtime)),
+            ("source", JsonValue::Array(p.function_domains.iter().map(|proof| super::function_domain::project_source(proof, runtime)).collect())),
+        ]),
         ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(p)) => object_for(runtime, vec![
             ("type", string("by_def")), ("family", string("FunctionSpace")), ("kind", string("FnSet")),
             ("obj", string(obj.readable_string())),

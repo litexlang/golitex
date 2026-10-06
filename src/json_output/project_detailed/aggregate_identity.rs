@@ -11,14 +11,14 @@ pub(super) fn project_aggregate_identity(
         AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(p) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("FiniteSetProductMemberRemoval")),
             ("premises", super::store::project_verify_facts(&p.premises, runtime)),
-            ("pointwise", project_pointwise(&p.pointwise, runtime)),
+            ("pointwise", project_partition_callback(&p.pointwise, runtime)),
             ("factor_expansions", project_expansions(&p.factor_expansions, runtime)),
             ("factor_equal", super::verify::project_verify_fact(&p.factor_equal, runtime)),
         ]),
         AggregateIdentityBuiltinRuleProof::FiniteSetProductFreshInsertion(p) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("FiniteSetProductFreshInsertion")),
             ("premises", super::store::project_verify_facts(&p.premises, runtime)),
-            ("pointwise", project_pointwise(&p.pointwise, runtime)),
+            ("pointwise", project_partition_callback(&p.pointwise, runtime)),
             ("factor_expansions", project_expansions(&p.factor_expansions, runtime)),
             ("factor_equal", super::verify::project_verify_fact(&p.factor_equal, runtime)),
         ]),

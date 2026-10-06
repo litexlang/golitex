@@ -2,11 +2,11 @@
 
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact, GreaterEqualFact, GreaterFact,
-    InFact, InjectiveFact, IsCartFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact,
-    IsSetFact, IsTupleFact, LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact,
+    InFact, InjectiveFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact,
+    IsSetFact, LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact,
     NotCoprimeFact, NotDvdFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact,
-    NotInjectiveFact, NotIsCartFact, NotIsChoiceFunctionForFact, NotIsFiniteSetFact,
-    NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact, NotLessFact,
+    NotInjectiveFact, NotIsChoiceFunctionForFact, NotIsFiniteSetFact,
+    NotIsNonemptySetFact, NotIsSetFact, NotLessEqualFact, NotLessFact,
     NotNormalAtomicFact, NotPrimeFact, NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact,
     NotSupersetFact, NotSurjectiveFact, PrimeFact, ProperSubsetFact, ProperSupersetFact,
     SubsetFact, SupersetFact, SurjectiveFact,
@@ -189,40 +189,11 @@ impl Runtime {
                     }))
                 }
             }
-            IS_CART => {
-                one_arg(self, name, &args, &line_file)?;
-                let fact_id = self.global_ids.allocate_fact_id();
-                if positive {
-                    Ok(AtomicFact::IsCartFact(IsCartFact {
-                        fact_id,
-                        set: args[0].clone(),
-                        line_file: Some(line_file),
-                    }))
-                } else {
-                    Ok(AtomicFact::NotIsCartFact(NotIsCartFact {
-                        fact_id,
-                        set: args[0].clone(),
-                        line_file: Some(line_file),
-                    }))
-                }
-            }
-            IS_TUPLE => {
-                one_arg(self, name, &args, &line_file)?;
-                let fact_id = self.global_ids.allocate_fact_id();
-                if positive {
-                    Ok(AtomicFact::IsTupleFact(IsTupleFact {
-                        fact_id,
-                        set: args[0].clone(),
-                        line_file: Some(line_file),
-                    }))
-                } else {
-                    Ok(AtomicFact::NotIsTupleFact(NotIsTupleFact {
-                        fact_id,
-                        set: args[0].clone(),
-                        line_file: Some(line_file),
-                    }))
-                }
-            }
+            IS_CART | IS_TUPLE => Err(RuntimeParseError::new(
+                format!("`${name}` is removed; use ordinary set equality or exact finite_seq/cart membership"),
+                line_file.line,
+                diagnostic_path(self, &line_file),
+            ).into()),
             FN_EQ | FN_EQ_IN => {
                 return Err(RuntimeParseError::new(
                     format!(

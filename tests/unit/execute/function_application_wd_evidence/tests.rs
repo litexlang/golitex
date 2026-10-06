@@ -14,6 +14,7 @@ fn application_wd_does_not_return_ids_owned_only_by_a_discarded_candidate_scope(
         "have fn choose(a, b R) R = a\nlet value = choose(1 + 1, 1 + 1)\n",
         "let value = fn(a, b R) R {a}(1 + 1, 1 + 1)\n",
         "let cached = 1 + 1\nhave fn choose(a, b R) R = a\nlet value = choose(1 + 1, 1 + 1)\n",
+        "struct Guarded:\n    point R\n    call fn(x R:x=point) R\nhave fn at_zero(x R:x=0) R=0\nhave guarded &Guarded=(0,at_zero)\nlet value=guarded(2)(guarded.point)\n",
     ] {
         let mut rt = Runtime::new(LaunchCommand::Eval {
             code: String::new(),

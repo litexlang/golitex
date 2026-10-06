@@ -1,0 +1,57 @@
+# Before on frozen pre-repair binary: alias declarations succeeded, f(1) failed WD.
+# have Carrier set=finite_seq(R,2)
+# have f Carrier
+# f(1) $in R
+# Now: checked carrier equalities transport exact memberships and call signatures.
+# Stronger return bounds remain usable after adding an upper bound.
+# Out-of-range and callable-set controls are executable negatives in
+# examples/negative/exact_function_domains/manifest.json.
+# Gate: target/release/litex -strict -f examples/infer/atomic/in_sequence_space_alias_expand.lit
+
+have Base set=finite_seq(Z,2)
+
+have Carrier set=Base
+
+have f Carrier
+
+have g Carrier=f
+
+g(1) $in Z
+
+g $in finite_seq(R,2)
+
+g(2) $in Z
+
+g(2) $in R
+
+let alias=f
+
+alias $in finite_seq(R,2)
+
+alias(2) $in Z
+
+have SequenceCarrier set=seq(Z)
+
+have s SequenceCarrier
+
+s(100) $in Z
+
+s(100) $in R
+
+have length N+
+
+have LengthCarrier set=finite_seq(R,length)
+
+have h LengthCarrier
+
+h(length) $in R
+
+have EmptyCarrier set=finite_seq(R,0)
+
+have empty EmptyCarrier
+
+empty $in fn(k closed_range(1,0)) R
+
+$is_set(fn_range(h))
+
+h(length) $in fn_range(h)

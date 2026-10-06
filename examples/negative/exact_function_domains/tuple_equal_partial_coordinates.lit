@@ -1,0 +1,6 @@
+# Exact cart definition / complete tuple extensionality negative.
+# Positive partners: cart_function_set_definition and tuple_exact_function_extensionality.
+# Expected failure: premise; all setup must succeed.
+have first_left,first_right cart({0},R)
+first_left(1)=first_right(1)
+release thm tuple_equal_from_coordinates(first_left,first_right)

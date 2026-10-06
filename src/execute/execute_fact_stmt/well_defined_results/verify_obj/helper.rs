@@ -12,7 +12,37 @@ use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::{HashMap, HashSet};
 
+pub(super) struct CheckedFunctionPrefixSignatureProof {
+    pub signature: FnSet,
+    pub membership: VerifyFactResult,
+}
+
 impl Runtime {
+    // A common return upper bound may hide a function-valued coordinate.
+    // Consume an actual checked member of the strictly shorter call prefix;
+    // the caller has already checked all earlier arguments and guards.
+    pub(super) fn verify_stored_prefix_function_signature(
+        &mut self,
+        prefix: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<CheckedFunctionPrefixSignatureProof>> {
+        for (signature, _) in self.collect_in_function_set_candidates(prefix) {
+            let membership = crate::ast::fact::Fact::AtomicFact(crate::ast::fact::AtomicFact::InFact(
+                crate::ast::fact::InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: prefix.clone(),
+                    set: Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone())),
+                    line_file: None,
+                },
+            ));
+            let proof = self.verify_fact(&membership, verify_state)?;
+            if !proof.is_failed() {
+                return Ok(Some(CheckedFunctionPrefixSignatureProof { signature, membership: proof }));
+            }
+        }
+        Ok(None)
+    }
+
     pub(super) fn verify_objs_as_children(
         &mut self,
         objs: &[&Obj],

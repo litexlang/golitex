@@ -1,0 +1,37 @@
+# Tracer: cart membership publishes ordinary finite-function coordinates.
+#
+# Before (old inference):
+# have p cart(R,Z)
+# $is_tuple(p)
+# tuple_dim(p)=2
+# p[2] $in Z
+# Former behavior: Cartesian membership published shape/dimension/index facts.
+#
+# Now: zero/one/multiple coordinates, aliases and exact declared functions work.
+# Boundary: wrong length, wrong coordinate carrier and out-of-range calls reject.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/infer/atomic/cart_exact_function_coordinates.lit
+
+have empty cart()
+
+empty={}
+
+have singleton cart(Z)=tuple(7)
+
+singleton(1) $in Z
+
+have p cart(R,Z)=(1/2,2)
+
+p(1)=1/2
+
+p(2) $in Z
+
+let alias=p
+
+alias(2) $in Z
+
+have fn restricted(k closed_range(1,2)) Z=0
+
+restricted $in cart(R,Z)
+
+restricted(2) $in Z
+

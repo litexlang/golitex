@@ -59,7 +59,7 @@ pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtim
             ("success", bool_value(true)), ("kind", string("release_thm")), ("thm_name", string(s.thm_name.clone())),
             ("builtin", project_builtin_application(&s.builtin, rt)),
             ("type_proofs", super::store::project_verify_facts(&s.type_proofs, rt)),
-            ("function_domain", s.function_domain.as_ref().map(|p| super::function_domain::project_function_domain(p, rt)).unwrap_or(JsonValue::Null)),
+            ("function_domain", s.function_domain.as_ref().map(|p| project_builtin_function_domain(p, rt)).unwrap_or(JsonValue::Null)),
             ("dom_proofs", super::store::project_verify_facts(&s.dom_proofs, rt)),
             ("conclusions_wd", project_conclusions_wd(&s.conclusions_wd, rt)),
             ("stored", JsonValue::Array(s.stored.iter().map(|x| project_store_and_infer(x, rt)).collect())),
@@ -75,5 +75,20 @@ pub(in crate::json_output) fn project_def_thm_failure(failed: &crate::execute::E
         GoalWd(result) => object_for(rt, vec![("phase", string("goal_well_defined")), ("result", project_verify_fact_wd_result(result, rt))]),
         ProofBody(f) => object_for(rt, vec![("phase", string("proof_body")), ("index", JsonValue::Number(f.step_index as f64)), ("result", super::stmt::project_stmt_detailed(&f.result, rt))]),
         Conclusion { index, result } => object_for(rt, vec![("phase", string("conclusion")), ("index", JsonValue::Number(*index as f64)), ("result", project_verify_fact(result, rt))]),
+    }
+}
+
+pub(super) fn project_builtin_function_domain(
+    proof: &crate::execute::execute_by_stmt::BuiltinFunctionDomainProof,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_by_stmt::BuiltinFunctionDomainProof;
+    match proof {
+        BuiltinFunctionDomainProof::Membership(proof) => super::function_domain::project_function_domain(proof, rt),
+        BuiltinFunctionDomainProof::TupleEquality { left, right } => object_for(rt, vec![
+            ("type", string("tuple_exact_domains")),
+            ("left", super::function_domain::project_function_domain(left, rt)),
+            ("right", super::function_domain::project_function_domain(right, rt)),
+        ]),
     }
 }

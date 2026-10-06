@@ -70,6 +70,15 @@ fn checked_file(root: &Path, code: &str, expected: bool) {
         result.run.session_error
     );
     assert!(!format!("{:?}", result.run.session_error).contains("InternalBug"));
+    if !expected && result.run.session_error.is_none() && code.starts_with(MAIN) {
+        // Each caller appends exactly one outer statement. Every earlier
+        // result must succeed, so the expected rejection cannot hide a
+        // broken field or owner in MAIN.
+        let (tail, prefix) = result.run.statement_results.split_last().unwrap();
+        assert!(prefix.len() >= 12 && tail.is_failed());
+        assert!(prefix.iter().all(|stmt| !stmt.is_failed()),
+            "a failure in the shared prefix must not masquerade as the expected negative tail");
+    }
     if expected {
         assert!(result.run.session_error.is_none());
         assert!(
@@ -103,6 +112,8 @@ fn qualified_struct_views_reject_wrong_owner_carrier_field_and_arguments() {
         "have fractional &Other::facts::Pair = (1/2,3/2)\n",
         "have fractional &local::Pair = (1/2,3/2)\n",
         "item.first = 3/2\n",
+        "item(1) = 3/2\n",
+        "item(3) = 0\n",
         "item.third = 0\n",
         "have bad &Lib::facts::Tagged<{}> = (0,0)\n",
         "have bad &Lib::facts::Pair<R> = (1,2)\n",

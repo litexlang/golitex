@@ -1,0 +1,3 @@
+# Exact-domain boundary: successful setup, then the final statement must reject.
+1=1
+cart()={}

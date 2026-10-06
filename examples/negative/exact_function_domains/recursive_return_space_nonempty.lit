@@ -1,0 +1,8 @@
+# Boundary: a recursive carrier equation supplies no inhabitant.
+# A={} satisfies A=fn(k R) A; a nonempty-domain outer function into A need not exist.
+1=1
+
+forall Carrier set:
+    Carrier=fn(k R) Carrier
+    =>:
+        $is_nonempty_set(fn(x R) Carrier)

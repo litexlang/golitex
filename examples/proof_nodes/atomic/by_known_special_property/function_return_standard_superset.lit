@@ -6,6 +6,8 @@
 #         =>:
 #             finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R{f(x)})*f(a)
 # Now: all applicable stored return signatures must be contained in the target.
+# The finite-product callback is a real anonymous restriction, preserving f's
+# complete union domain and the original product equality.
 forall f fn(x R) R, x R:
     f(x) $in C
 forall f fn(x R) N+, x R:
@@ -17,7 +19,8 @@ claim:
         =>:
             finite_set_product(union(S,{a}),f) = finite_set_product(S,fn(x S)R{f(x)})*f(a)
     a $in union(S,{a})
-    release thm fn_set_member(f,fn(x S)R)
+    # Before: release thm fn_set_member(f,fn(x S)R) falsely narrowed the complete domain.
+    release thm fn_set_member(fn(x S)R{f(x)},fn(x S)R)
 # Boundary: narrowing, missing/invalid call domains, nonstandard return carriers
 # and conflicting candidate return signatures are not accepted by this leaf.
 # Evidence: target/release/litex -strict -f examples/proof_nodes/atomic/by_known_special_property/function_return_standard_superset.lit

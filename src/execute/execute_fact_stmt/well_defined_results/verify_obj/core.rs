@@ -617,7 +617,19 @@ impl Runtime {
                 // Every function-valued return uses its exact space contract;
                 // seq/finite_seq and set aliases preserve the call layers.
                 let Some((next_space, carrier)) = self.returned_function_signature(&next_ret)
-                else { return Ok(Err(proof)); };
+                else {
+                    // The declared return is an upper bound. A stored exact
+                    // function membership of the actual prefix can supply the
+                    // next layer, e.g. `record(2)` is a guarded function field.
+                    let mut prefix = value.clone();
+                    prefix.body.truncate(layer_index + 1);
+                    let Some(checked) = self.verify_stored_prefix_function_signature(
+                        &Obj::FnObj(prefix), verify_state,
+                    )? else { return Ok(Err(proof)); };
+                    proof.requirement_fact_verified.push(checked.membership);
+                    space = checked.signature;
+                    continue;
+                };
                 if carrier != next_ret {
                     let equality = AtomicFact::EqualFact(EqualFact {
                         fact_id: self.global_ids.allocate_fact_id(), left: next_ret,
@@ -658,13 +670,8 @@ impl Runtime {
                 ),
             });
         }
-        let is_anonymous_fn =
-            matches!(value.function.as_ref(), Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)));
-        if !is_anonymous_fn
-            && self
-                .collect_in_function_set_candidates(value.function.as_ref())
-                .is_empty()
-        {
+        let function_domains = self.complete_function_domains(value.function.as_ref(), verify_state)?;
+        if function_domains.is_empty() {
             return Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::FunctionSpace(
@@ -680,7 +687,7 @@ impl Runtime {
                 obj: root,
                 proof: ObjWellDefinedProofByDef::FunctionSpace(
                     FunctionSpaceObjWellDefinedProofByDef::FnRange(
-                        FnRangeObjWellDefinedProof::from_stages(stages),
+                        FnRangeObjWellDefinedProof::from_checked_domains(stages, function_domains),
                     ),
                 ),
             },

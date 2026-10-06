@@ -41,7 +41,7 @@ pub use result::{
     ExecByFnExtensionStmtResult, ExecByForStmtResult, ExecByInducStmtFailed, ExecByInducStmtResult, ExecByStmtResult,
     ExecByStrongInducStmtFailed, ExecByStrongInducStmtResult, ExecByThmStmtResult, ExecExpandRangeStmtResult,
     ExecReleaseAxiomOfChoiceStmtResult, ExecReleaseRegularityAxiomStmtResult,
-    BuiltinThmApplication, ExecByThmStmtFailed, ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseZornLemmaStmtResult,
+    BuiltinFunctionDomainProof, BuiltinThmApplication, ExecByThmStmtFailed, ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseZornLemmaStmtResult,
 };
 pub(crate) use exec_by_thm_stmt::{prepare_release_conclusions, PreparedRelease};
 pub(crate) use result::{ByContradictionClosingFailed, ExecByContraStmtFailed};

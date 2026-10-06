@@ -50,5 +50,267 @@
   {
     "file": "finite_function_wrong_length.lit",
     "expected_phase": "function_domain"
+  },
+  {
+    "file": "sequence_carrier_alias_out_of_range.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "sequence_return_out_of_range.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "sequence_space_alias_is_not_callable.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "empty_function_graph_nonempty.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "empty_function_graph_singleton_image.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "guarded_empty_function_graph_nonempty.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "recursive_return_space_nonempty.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "empty_nested_return_space_nonempty.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "nested_finite_sequence_return_out_of_range.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "zero_cart_is_not_empty.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "one_cart_wrong_length.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "one_cart_out_of_range.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "zero_cart_member_out_of_range.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "nonempty_outer_function_is_not_empty_graph.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "zero_cart_native_wrong_length.lit",
+    "expected_phase": "function_domain"
+  },
+  {
+    "file": "struct_function_coordinate_outer_out_of_range.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "struct_scalar_coordinate_not_callable.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "struct_function_coordinate_false_guard.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "struct_function_coordinate_wrong_argument.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "struct_function_coordinate_false_value.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "struct_coordinate_wrong_field.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "finite_product_wrong_restriction.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "finite_product_wrong_inserted_factor.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "finite_product_nonfresh_insertion.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "finite_product_missing_finiteness.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "finite_product_guard_omits_coordinate.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "finite_product_source_short_domain.lit",
+    "expected_phase": "function_domain"
+  },
+  {
+    "file": "cart_definition_missing_coordinate.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "cart_definition_wrong_factor_order.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "cart_definition_wrong_length.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "cart_definition_infinite_domain.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "cart_definition_diagonal_is_not_product.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "tuple_equal_wrong_complete_length.lit",
+    "expected_phase": "function_domain"
+  },
+  {
+    "file": "tuple_equal_wrong_last_value.lit",
+    "expected_phase": "premise"
+  },
+  {
+    "file": "tuple_equal_partial_coordinates.lit",
+    "expected_phase": "premise"
+  },
+  {
+    "file": "tuple_equal_infinite_short_domain.lit",
+    "expected_phase": "function_domain"
+  },
+  {
+    "file": "guard_empty_domain_missing_guard.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "guard_empty_domain_nonempty_input_space.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "guard_empty_domain_singleton_image.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "guard_empty_domain_wrong_direction.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "empty_constructor_false_body_membership.lit",
+    "expected_phase": "search_proof"
+  },
+  {
+    "file": "empty_constructor_out_of_range.lit",
+    "expected_phase": "well_defined"
+  },
+  {
+    "file": "empty_constructor_nonempty_invalid_return.lit",
+    "expected_phase": "have_fn_equal",
+    "expected_constructor_stage": "body_in_return_set"
+  },
+  {
+    "file": "empty_constructor_missing_guard_invalid_return.lit",
+    "expected_phase": "have_fn_equal",
+    "expected_constructor_stage": "body_in_return_set"
+  },
+  {
+    "file": "empty_constructor_guarded_undefined_division.lit",
+    "expected_phase": "have_fn_equal",
+    "expected_constructor_stage": "body"
+  },
+  {
+    "file": "empty_constructor_literal_undefined_division.lit",
+    "expected_phase": "have_fn_equal",
+    "expected_constructor_stage": "body"
+  },
+  {
+    "file": "retired_tuple_dimension.lit",
+    "expected_phase": "retired_syntax",
+    "expected_diagnostic": "tuple_dim is removed",
+    "expected_prefix_count": 1
+  },
+  {
+    "file": "retired_construction_projection.lit",
+    "expected_phase": "retired_syntax",
+    "expected_diagnostic": "proj is removed",
+    "expected_prefix_count": 1
+  },
+  {
+    "file": "retired_object_index.lit",
+    "expected_phase": "retired_syntax",
+    "expected_diagnostic": "object indexing with [] is removed",
+    "expected_prefix_count": 1
+  },
+  {
+    "file": "retired_nested_object_index.lit",
+    "expected_phase": "retired_syntax",
+    "expected_diagnostic": "object indexing with [] is removed",
+    "expected_prefix_count": 1
+  },
+  {
+    "file": "retired_tuple_predicate.lit",
+    "expected_phase": "retired_syntax",
+    "expected_diagnostic": "is_tuple` is removed",
+    "expected_prefix_count": 1
+  },
+  {
+    "file": "retired_negative_tuple_predicate.lit",
+    "expected_phase": "retired_syntax",
+    "expected_diagnostic": "is_tuple` is removed",
+    "expected_prefix_count": 1
+  },
+  {
+    "file": "retired_repeated_tuple_predicate.lit",
+    "expected_phase": "retired_syntax",
+    "expected_diagnostic": "is_tuple` is removed",
+    "expected_prefix_count": 1
+  },
+  {
+    "file": "retired_cart_predicate.lit",
+    "expected_phase": "retired_syntax",
+    "expected_diagnostic": "is_cart` is removed",
+    "expected_prefix_count": 1
+  },
+  {
+    "file": "retired_negative_cart_predicate.lit",
+    "expected_phase": "retired_syntax",
+    "expected_diagnostic": "is_cart` is removed",
+    "expected_prefix_count": 1
+  },
+  {
+    "file": "function_parameter_missing_inner_guard.lit",
+    "expected_phase": "well_defined",
+    "purpose": "Returned function parameter substitution retains complete domain, original call groups, guards and coordinate values."
+  },
+  {
+    "file": "function_parameter_wrong_complete_length.lit",
+    "expected_phase": "well_defined",
+    "purpose": "Returned function parameter substitution retains complete domain, original call groups, guards and coordinate values."
+  },
+  {
+    "file": "function_parameter_wrong_call_groups.lit",
+    "expected_phase": "well_defined",
+    "purpose": "Returned function parameter substitution retains complete domain, original call groups, guards and coordinate values."
+  },
+  {
+    "file": "function_parameter_wrong_coordinate_value.lit",
+    "expected_phase": "search_proof",
+    "purpose": "Returned function parameter substitution retains complete domain, original call groups, guards and coordinate values."
   }
 ]

@@ -70,13 +70,13 @@ fn direct_calculation_covers_polarities_and_fails_closed() {
     for code in [
         "1+1=3", "1/3>1/2", "not 1/3<1/2", "1/3 $in Z", "not 1 $in R",
         "i < 1", "i = 0", "1/0=1/0", "1/0 $in R", "not 1/0 $in R",
-        "(1,2)[3]=(1,2)[3]", "2^1000 = 3",
+        "(1,2)(3)=(1,2)(3)", "2^1000 = 3",
         "1/340282366920938463463374607431768211456 = 2/680564733841876926926749214863536422912",
     ] {
         let Fact::AtomicFact(goal) = fact(&mut rt, code) else { panic!("atomic") };
         assert!(calculate_closed_atomic_fact(&goal).is_none(), "{code}");
     }
-    for code in ["1/0=1/0", "(1,2)[3]=(1,2)[3]", "1+1=3", "i<1"] {
+    for code in ["1/0=1/0", "(1,2)(3)=(1,2)(3)", "1+1=3", "i<1"] {
         assert!(verify(&mut rt, code, VerifyState::new(VerifyStateLevel::Direct)).is_failed(), "{code}");
         let stmt = parse(&mut rt, code);
         let before = memory_sizes(&rt);
@@ -199,7 +199,7 @@ fn direct_cannot_reenter_property_and_raw_known_cannot_calculate() {
     exec_ok(&mut rt, "have p cart(R,R)");
     exec_ok(&mut rt, "have fn id(x R) R = x");
     exec_ok(&mut rt, "have a R");
-    for text in ["p = (p[1],p[2])", "id(a) $in R"] {
+    for text in ["p = (p(1),p(2))", "id(a) $in R"] {
         let goal = fact(&mut rt, text);
         let Fact::AtomicFact(atomic) = goal else {
             panic!("atomic")
@@ -233,7 +233,7 @@ fn stored_paths_remain_available_at_level_zero_and_keep_wd() {
     exec_ok(&mut rt, "have b R = a");
     exec_ok(&mut rt, "have c R = b");
     assert!(!verify(&mut rt, "c=1", VerifyState::new(Direct)).is_failed());
-    for bad in ["1/0=1/0", "(1,2)[3]=(1,2)[3]", "1+1=3"] {
+    for bad in ["1/0=1/0", "(1,2)(3)=(1,2)(3)", "1+1=3"] {
         assert!(
             verify(&mut rt, bad, VerifyState::top_level()).is_failed(),
             "{bad}"

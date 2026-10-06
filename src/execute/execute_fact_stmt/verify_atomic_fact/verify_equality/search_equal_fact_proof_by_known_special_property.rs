@@ -35,39 +35,27 @@ impl Runtime {
                     }
                 }
             }
-            if let Obj::ProductShape(ProductShape::ObjAtIndex(at)) = left {
-                let Some(index) = literal_positive_usize(at.index.as_ref()) else {
-                    continue;
-                };
-                for tuple in self.known_literal_tuple_candidates(at.obj.as_ref()) {
-                    let Some(component) = tuple.value.args.get(index - 1) else {
-                        continue;
-                    };
-                    let Some(equal) = self.lookup_known_obj_equality(component, right) else {
-                        continue;
-                    };
-                    return Ok(Some(
-                        EqualFactSearchProofByKnownSpecialProperty::TupleProjection(
-                            TupleProjectionKnownProof {
-                                reversed,
-                                index,
-                                tuple,
-                                component_equal: Box::new(equal),
-                            },
-                        ),
-                    ));
-                }
-                for (subject_equal, function) in self.known_function_tuple_candidates(at.obj.as_ref()) {
-                    if let Some(component) = function.value.args.get(index - 1) {
-                        if let Some(equal) = self.lookup_known_obj_equality(component, right) {
-                            return Ok(Some(
-                                EqualFactSearchProofByKnownSpecialProperty::FnTupleProjection(
-                                    FnTupleProjectionKnownProof {
-                                        reversed, index, subject_equal, function,
-                                        component_equal: Box::new(equal),
-                                    },
-                                ),
-                            ));
+            // A coordinate match is one option for an ordinary application.
+            // A non-coordinate call must still reach tuple-value beta and eta.
+            if let Obj::FnObj(application) = left {
+                if let Some(receiver) = self.finite_function_application_receiver(application) {
+                    if let Some(index) = literal_positive_usize(application.body.last().unwrap()[0].as_ref()) {
+                        for tuple in self.known_literal_tuple_candidates(&receiver) {
+                            let Some(component) = tuple.value.args.get(index - 1) else { continue; };
+                            let Some(equal) = self.lookup_known_obj_equality(component, right) else { continue; };
+                            return Ok(Some(EqualFactSearchProofByKnownSpecialProperty::TupleProjection(
+                                TupleProjectionKnownProof { reversed, index, tuple, component_equal: Box::new(equal) },
+                            )));
+                        }
+                        for (subject_equal, function) in self.known_function_tuple_candidates(&receiver) {
+                            if let Some(component) = function.value.args.get(index - 1) {
+                                if let Some(equal) = self.lookup_known_obj_equality(component, right) {
+                                    return Ok(Some(EqualFactSearchProofByKnownSpecialProperty::FnTupleProjection(
+                                        FnTupleProjectionKnownProof { reversed, index, subject_equal, function,
+                                            component_equal: Box::new(equal) },
+                                    )));
+                                }
+                            }
                         }
                     }
                 }
@@ -85,15 +73,18 @@ impl Runtime {
                     )));
                 }
             }
-            // Eta: a known n-tuple equals its n ordered projections.
-            // Example: p in cart(R,R) implies p = (p[1],p[2]).
+            // Eta: an exact finite function equals its n ordered calls.
+            // Cartesian membership now certifies the element's complete I_n
+            // domain; it does not recover a construction dimension of a set.
+            // Example: p in cart(R,R) implies p = (p(1),p(2)).
             let Obj::ProductShape(ProductShape::Tuple(tuple)) = right else {
                 continue;
             };
             // Reject other tuple spellings before consulting the environment.
             if !tuple.args.iter().enumerate().all(|(i, item)| {
-                matches!(item.as_ref(), Obj::ProductShape(ProductShape::ObjAtIndex(at))
-                    if literal_positive_usize(at.index.as_ref()) == Some(i + 1))
+                matches!(item.as_ref(), Obj::FnObj(call)
+                    if call.body.last().is_some_and(|args| args.len() == 1
+                        && literal_positive_usize(args[0].as_ref()) == Some(i + 1)))
             }) {
                 continue;
             }
@@ -105,10 +96,13 @@ impl Runtime {
             }
             let mut subjects = Vec::new();
             for item in &tuple.args {
-                let Obj::ProductShape(ProductShape::ObjAtIndex(at)) = item.as_ref() else {
+                let Obj::FnObj(call) = item.as_ref() else {
                     unreachable!()
                 };
-                let Some(equal) = self.lookup_known_obj_equality(at.obj.as_ref(), left) else {
+                let Some(receiver) = self.finite_function_application_receiver(call) else {
+                    break;
+                };
+                let Some(equal) = self.lookup_known_obj_equality(&receiver, left) else {
                     break;
                 };
                 subjects.push(equal);

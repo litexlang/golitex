@@ -21,5 +21,12 @@ For example, after the declared Lib import has loaded:
 
 ```litex
 have item &Lib::facts::Pair = (1/2, 3/2)
+item(1) = 1/2
 item.first = 1/2
 ```
+
+The new representation stores `item.first=item(1)`. The explicit coordinate
+equality lets the original field assertion use ordinary equality transitivity.
+The unmodified field-only block currently misses at `search_proof`; its receipt
+is retained in the tuple/cart implementation journal. The added steps do not
+change the struct owner, field order, carrier or original goals.

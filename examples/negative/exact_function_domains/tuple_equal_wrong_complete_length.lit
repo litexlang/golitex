@@ -1,0 +1,4 @@
+# Exact cart definition / complete tuple extensionality negative.
+# Positive partners: cart_function_set_definition and tuple_exact_function_extensionality.
+# Expected failure: function_domain; all setup must succeed.
+release thm tuple_equal_from_coordinates((1,2),(1,2,3))

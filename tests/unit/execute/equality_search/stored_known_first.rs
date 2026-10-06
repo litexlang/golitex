@@ -6,8 +6,8 @@ fn stored_equality_precedes_calculation_and_special_property_in_both_entries() {
     for (setup, code) in [
         (vec!["1 + 1 = 2"], "1 + 1 = 2"),
         (
-            vec!["have p cart(R,R)", "p = (p[1],p[2])"],
-            "p = (p[1],p[2])",
+            vec!["have p cart(R,R)", "p = (p(1),p(2))"],
+            "p = (p(1),p(2))",
         ),
     ] {
         let mut rt = runtime();
@@ -44,7 +44,7 @@ fn raw_known_equality_does_not_prove_a_new_structural_or_numeric_goal() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have p cart(R,R)");
     let before = store_sizes(&rt);
-    for code in ["p = (p[1],p[2])", "1 + 1 = 2", "1 + 1 = 3"] {
+    for code in ["p = (p(1),p(2))", "1 + 1 = 2", "1 + 1 = 3"] {
         let goal = equal(&mut rt, code);
         assert!(rt.lookup_known_obj_equality(&goal.left, &goal.right).is_none(), "{code}");
     }

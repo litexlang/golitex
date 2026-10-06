@@ -1,0 +1,6 @@
+# Exact cart definition / complete tuple extensionality negative.
+# Positive partners: cart_function_set_definition and tuple_exact_function_extensionality.
+# Expected failure: function_domain; all setup must succeed.
+have fn infinite_zero(k N+) R=0
+have fn finite_zero(k closed_range(1,2)) R=infinite_zero(k)
+release thm tuple_equal_from_coordinates(infinite_zero,finite_zero)

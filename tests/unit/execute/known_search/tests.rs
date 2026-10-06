@@ -15,7 +15,7 @@ fn stored_atomic_lookup_precedes_parameter_special_property_search() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have x, y R");
     exec_ok(&mut rt, "have p cart(R,R) = (x,y)");
-    let target = atomic(&mut rt, "p[1] $in R");
+    let target = atomic(&mut rt, "p(1) $in R");
     let before = memory_sizes(&rt);
     let proof = rt
         .search_atomic_except_equality_fact_proof_by_known(&target, builtin_disabled())
@@ -28,7 +28,7 @@ fn stored_atomic_lookup_precedes_parameter_special_property_search() {
     assert!(proof.why_parameters_of_known_fact_are_equal_to_givens.iter().all(|proof| {
         matches!(proof, EqualFactSearchedProof::ByTheyAreTheSame(_)
             | EqualFactSearchedProof::ByEquivalenceClass(_))
-    }), "stored candidate must win without a new tuple-projection proof");
+    }), "stored candidate must win without a new coordinate proof");
     assert!(rt.fact_by_id_in_stack(proof.cite_fact_id).is_some());
     assert_eq!(memory_sizes(&rt), before);
 }
@@ -179,16 +179,25 @@ fn invalid_domain_wrong_return_and_missing_definition_are_rejected() {
 }
 
 #[test]
-fn exact_property_lookup_does_not_borrow_an_alias_row() {
+fn exact_property_rows_stay_local_while_consumers_cite_alias_paths() {
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn id(x R) R = x");
     exec_ok(&mut rt, "have a R = 1");
     exec_ok(&mut rt, "let alias = id");
     exec_ok(&mut rt, "alias(a) = alias(a)");
     let target = atomic(&mut rt, "alias(a) $in R");
-    assert!(rt
-        .search_atomic_except_equality_fact_proof_by_known_special_property(&target)
-        .is_none());
+    let AtomicFact::InFact(fact) = &target else { panic!("membership") };
+    let crate::ast::obj::Obj::FnObj(application) = &fact.element else { panic!("application") };
+    let crate::ast::obj::FnObjHead::Identifier(head) = application.head.as_ref() else { panic!("head") };
+    let head = crate::ast::obj::Obj::Identifier(head.clone());
+    assert!(rt.known_special_properties_of(&head).iter().all(|property| property.function_signature().is_none()));
+    let before = memory_sizes(&rt);
+    let Some(super::search_atomic_except_equality_fact_proof_by_known_special_property::AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
+        super::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof),
+    )) = rt.search_atomic_except_equality_fact_proof_by_known_special_property(&target) else { panic!("checked alias source") };
+    assert!(!proof.function_equal.path.is_empty());
+    assert!(rt.known_special_properties_of(&head).iter().all(|property| property.function_signature().is_none()));
+    assert_eq!(memory_sizes(&rt), before);
 }
 
 #[test]
@@ -353,7 +362,7 @@ fn scoped_definitions_expire_when_their_environment_is_popped() {
 }
 
 #[test]
-fn bounded_codomain_fallback_retains_its_selected_signature_citation() {
+fn known_codomain_alias_retains_its_selected_signature_and_equality_citations() {
     let mut rt = runtime();
     for code in ["have fn id(x R) R = x", "let alias = id", "have a R"] {
         exec_ok(&mut rt, code);
@@ -361,7 +370,7 @@ fn bounded_codomain_fallback_retains_its_selected_signature_citation() {
     let target = atomic(&mut rt, "alias(a) $in R");
     assert!(rt
         .search_atomic_except_equality_fact_proof_by_known_special_property(&target)
-        .is_none());
+        .is_some());
     let result = rt
         .verify_fact(
             &Fact::AtomicFact(target),
@@ -374,15 +383,15 @@ fn bounded_codomain_fallback_retains_its_selected_signature_citation() {
     let VerifyAtomicExceptEqualityFactResult::Success(result) = *result else {
         panic!("codomain")
     };
-    use super::search_atomic_except_equality_fact_proof_by_builtin_strategy::AtomicExceptEqualityFactSearchProofByBuiltinStrategy;
-    let AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnApplicationInCodomain(proof),
+    use super::search_atomic_except_equality_fact_proof_by_known_special_property::{AtomicExceptEqualityFactSearchProofByKnownSpecialProperty, InFactSearchProofByKnownSpecialProperty};
+    let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof)),
     ) = result.searched_proof
     else {
-        panic!("bounded strategy")
+        panic!("checked alias source")
     };
     let signature = rt
-        .fact_by_id_in_stack(proof.cite_signature_fact_id)
+        .fact_by_id_in_stack(proof.cite_property_fact_id)
         .unwrap();
     // The unified index may cite either membership or the concrete function
     // equality. Check the cited subject and signature, not iteration order.
@@ -395,7 +404,8 @@ fn bounded_codomain_fallback_retains_its_selected_signature_citation() {
     assert!(rt.lookup_known_obj_equality(property.function_subject().unwrap(), &expected.element).is_some());
     let signature = crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(property.function_signature().unwrap()));
     assert!(rt.lookup_known_obj_equality(&signature, &expected.set).is_some());
-    assert!(!proof.proof_of_requirement_facts.is_empty());
+    assert!(!proof.signature_uses.is_empty());
+    assert!(!proof.function_equal.path.is_empty());
     let stmt_result = exec_ok(&mut rt, "alias(a) $in R");
     let json = project_stmt_detailed(&stmt_result, &rt).stringify();
     assert!(json.contains("cite_signature_fact_id"), "{json}");

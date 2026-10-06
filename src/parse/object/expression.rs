@@ -1,13 +1,13 @@
 use super::primary::{fn_obj_head_from_obj, parse_primary};
 use crate::ast::obj::{
     Add, ArithmeticOperator, Cart, ClosedRange, Div, Factorial, FieldAccess, FnObj, FnSet,
-    FunctionSpace, IntegerOperator, Intersect, Mod, Mul, Neg, Obj, ObjAtIndex, Pow, ProductShape,
+    FunctionSpace, IntegerOperator, Intersect, Mod, Mul, Neg, Obj, Pow, ProductShape,
     SetFormer, SetOperator, StructAndFieldAccessObj, Sub, Union,
 };
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::parse::keywords::{
     ADD, BANG, DIV, DOT, DOT_DOT_DOT, FN_ARROW, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW,
-    RIGHT_BRACKET, SUB, UNICODE_CART, UNICODE_INTERSECT, UNICODE_UNION,
+    SUB, UNICODE_CART, UNICODE_INTERSECT, UNICODE_UNION,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
@@ -181,19 +181,8 @@ fn parse_postfix(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     let mut left = parse_primary(rt, tb)?;
     left = parse_field_and_call_postfixes(rt, tb, left)?;
     left = parse_optional_factorial_bang(tb, left)?;
-    loop {
-        if tb.peek() != Some(LEFT_BRACKET) {
-            break;
-        }
-        tb.advance()?;
-        let index = parse_obj(rt, tb)?;
-        tb.expect(RIGHT_BRACKET)?;
-        left = Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex {
-            obj: Box::new(left),
-            index: Box::new(index),
-        }));
-        left = parse_field_and_call_postfixes(rt, tb, left)?;
-        left = parse_optional_factorial_bang(tb, left)?;
+    if tb.peek() == Some(LEFT_BRACKET) {
+        return Err(tb.parse_error("object indexing with [] is removed: use ordinary function application t(i); singleton tuples use tuple(a)"));
     }
     Ok(left)
 }

@@ -22,6 +22,7 @@ pub enum FailToVerifyAtomicFactWellDefinedResult {
 
 pub enum PredicateSignatureWellDefinedFailure {
     Undefined { predicate: AtomicName },
+    Retired { predicate: AtomicName },
     Arity { predicate: AtomicName, expected: usize, actual: usize },
 }
 

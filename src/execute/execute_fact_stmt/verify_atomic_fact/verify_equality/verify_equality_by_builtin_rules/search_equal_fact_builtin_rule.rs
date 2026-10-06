@@ -14,6 +14,15 @@ impl Runtime {
         if let Some(proof) = super::by_elementary_definitions::elementary_definition(fact) {
             return Ok(Some(proof));
         }
+        if let Some(proof) = self.search_fn_range_of_empty_domain(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::FnRangeOfEmptyDomain(proof)));
+        }
+        if let Some(proof) = self.search_empty_function_graph(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::EmptyFunctionGraph(proof)));
+        }
+        if let Some(proof) = self.search_empty_domain_function_space_singleton(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::EmptyDomainFunctionSpaceSingleton(proof)));
+        }
         if let Some(proof) = super::by_integer_range_builder::integer_range_builder(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::IntegerRangeBuilder(proof)));
         }
@@ -35,7 +44,6 @@ impl Runtime {
             return Ok(Some(EqualitySearchProofByBuiltinRule::LcmCommonMultiple(proof)));
         }
         if let Some(proof)=self.search_factorial_divisibility(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::FactorialDivisibility(proof))); }
-        if let Some(proof)=self.search_cart_reconstruction(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::CartReconstruction(proof))); }
         if let Some(proof) = self.search_cartesian_size(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::CartesianSize(proof)));
         }

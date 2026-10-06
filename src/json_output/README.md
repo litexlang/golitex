@@ -436,6 +436,15 @@ missing source, arity or failed inclusion stage. `by fn_extension` retains both
 complete-domain sources before its pointwise proof and reports the actual
 failed stage. Return upper bounds are not domain identity.
 
+Native tuple coordinate equality projects `function_domain` as
+`tuple_exact_domains`, retaining separate `left` and `right` complete-domain
+proofs before coordinate premises. Both `release thm` and selected `by thm`
+use this evidence; a domain mismatch fails before publishing equality.
+The Cartesian definition route projects `by_object_definition` with kind
+`cart_function_set_definition`, the full expanded set and its actual alpha
+match. It does not project the retired CartReconstruction leaf. Normal output
+uses the existing localized object-definition explanation.
+
 The whole-forall `empty_parameter_domain` route retains the checked empty
 carrier equality, scoped store and full goal WD. Its conclusions are not
 projected as independently published facts. New evidence keys are localized
@@ -542,11 +551,14 @@ the endpoints, adjacency, functions, operations and initial seed. It preserves
 left-fold order and permits an empty second segment; it does not require
 associativity or commutativity.
 
-`FiniteSetProductFreshInsertion` retains its freshness/set `premises`, scoped
-`pointwise` equality between the original and restricted callback, and the
+`FiniteSetProductFreshInsertion` retains its freshness/set `premises`, actual
+callback agreement under `pointwise`, and the
 `factor_expansions` and `factor_equal` proof for the inserted value. The scoped
-IR keeps its local environment; Detailed follows the existing aggregate
-projection convention and omits that environment. All six leaves have English
+agreement distinguishes same-function, literal-restriction, checked function
+equality and scoped pointwise proof. The enclosing equality WD owns the actual
+callback domains; a literal restriction never narrows the source function's
+membership. Scoped IR keeps its local environment; Detailed follows the existing
+aggregate projection convention and omits it. All six leaves have English
 and Chinese Normal explanations. Producer/consumer and permission checks are
 in `tests/unit/execute/legacy_next_capabilities/tests.rs`; the dedicated runnable
 tracers are indexed in `examples/proof_nodes/README.md`.
@@ -572,8 +584,8 @@ existing aggregate convention and omits it.
 real stored `cite_fact_id`, and `parameter_renamings`. It consumes an exact
 already checked whole proposition, including optional interval domain facts;
 it neither opens general forall search nor publishes global function equality.
-`FiniteSetProductMemberRemoval` records membership/set `premises`, restricted
-callback `pointwise` evidence and `factor_expansions` / `factor_equal` for the
+`FiniteSetProductMemberRemoval` records membership/set `premises`, the same
+callback agreement under `pointwise` and `factor_expansions` / `factor_equal` for the
 removed value. Zero factors remain valid. All six leaves have English/Chinese
 Normal explanations. The consumer regressions are in
 `tests/unit/execute/legacy_final_capabilities/tests.rs`.
@@ -728,6 +740,16 @@ removing 4,380 constructor ID arguments and 230 direct ID fields.
 
 Detailed `FnApplicationInStandardSuperset` evidence records `target_set` and `signature_returns`. Each return entry carries `source_set`, `cite_signature_fact_id`, and the actual `function_equal` path. This certifies numeric set inclusion; it does not manufacture a return-set equality proof. The enclosing fact result owns the application WD and domain evidence.
 
+Detailed `FnApplicationInCodomain` retains the selected signature citation and
+its actual `function_equal` path. Each alternative has either a checked
+`return_set_match` or `same_call_domains` evidence. The latter compares
+parameters and guards separately at every actual call layer and retains
+returned carrier equality paths; it allows different return upper bounds.
+The enclosing application WD still checks the actual arguments. A cached call
+through a broader signature does not establish a narrower signature's guard.
+The `source_signature`, `target_signature`, `domain_comparison` and path keys
+reuse the existing locale schema.
+
 Detailed `HomogeneousTupleCoordinate` evidence records `shape` and one `carrier_equals` proof per Cartesian factor. The shape includes its stored membership/signature and carrier/subject equality provenance. The enclosing fact WD owns index positivity and the upper bound; the leaf only reads stored shape/equality facts.
 
 Detailed `TupleIndexUpperBound` records `shape` and `source_bound`; the latter includes the stored inequality and its argument equality evidence. The read-only leaf transports a stored bound to the certified tuple dimension and retains both sources.
@@ -796,3 +818,40 @@ continues to summarize a whole forall with its compound proof label.
 
 
 Detailed LogStrictDecreasing and LogWeakDecreasing each retain nested `guards` with four mandatory actual producer fields: `base_positive_proof`, `base_lt_one_proof`, `left_arg_positive_proof`, `right_arg_positive_proof`, followed by actual `argument_order`. Reverse written guards/comparisons cite the actual known facts. Two typed leaves own ten guarded localized outputs; existing increasing log paths remain first. [Source evidence](../../examples/proof_nodes/experience/problem_notes/log-unit-interval-order-repair-2026-10-05.md) records actual English/Chinese citations and selected language/Detailed gates; shared search ceilings and independent replay are not broadened.
+
+
+FnRange WD and FnRangeOfEmptyDomain retain checked complete-domain sources.
+FnRangeOfConstantAnonymousFn now retains an inhabited-domain certificate,
+including actual argument memberships and guards. FunctionGraphNonemptyFromDomain
+and FunctionSpaceNonemptyFromEmptyDomain describe graph values and function
+spaces separately. Nested function-space existence keeps each return layer.
+Detailed projection retains these certificates; both image leaves own ten
+localized explanations and actual Runtime acceptance fixtures.
+
+Nested existence certificates retain checked return-carrier transports and
+each finite Cartesian factor. seq and finite_seq project their actual input
+signature and constructive return witness. Closed integer range membership
+projects the original range, exact scalar value and both endpoint values;
+it keeps the existing closed-calculation route and localized keys.
+
+
+CartMembership builtin and strategy evidence now retains the checked complete
+function-domain match followed by each coordinate requirement proof. It no
+longer substitutes an opaque shape/dimension marker for those children.
+EmptyFunctionGraph retains its complete source and empty-domain certificate;
+EmptyDomainFunctionSpaceSingleton retains the source space, exact signature
+and empty-domain certificate. Both equality leaves own ten localized texts
+and actual executed Runtime acceptance fixtures. Zero-factor Cartesian size
+retains an empty list of factor-finiteness obligations: the empty product is
+one, rather than an invented factor proof.
+
+Guarded empty input domains use `checked_guard_input_exclusion` in Detailed
+output. It retains the complete source signature, selected guard index and
+checked typed-forall proof, including its FactId citation and local WD evidence.
+The existing empty-carrier projection keeps its prior fields. Graph, image and
+function-space consumers share this certificate; a search miss is not an
+emptiness proof.
+
+AnonymousFn WD projects its return-bound choice explicitly. A checked ordinary body membership retains its prior JSON route; an empty complete domain uses return_bound_vacuous_empty_domain with the independent domain_empty certificate. Header, guards, return carrier and body WD remain separate children. Ten-language Runtime tests preserve the guard-exclusion forall/FactId source and mandatory body WD rather than emitting a fake body membership.
+
+The predicate-signature failure reason retired_builtin identifies a legacy shape predicate payload rejected by WD. It preserves the already-checked argument children and predicate name in all localized profiles; no unsupported predicate is published as a current builtin. Parser retirement remains a separate session_error boundary.

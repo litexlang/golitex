@@ -8,9 +8,9 @@ use crate::ast::obj::{
     InstantiatedTemplateObj, IntegerOperator, Intersect, IntervalObj, IntervalObjStruct,
     IteratedOperator, Lcm, ListSet, Literal, Ln, Log, Max, Min, Number, Obj,
     OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, Pi, PowerSet, Product,
-    ProductOfFiniteSet, ProductShape, Proj, Quot, Range, RealPart, Reduce, SeqSet, SetBuilder,
+    ProductOfFiniteSet, ProductShape, Quot, Range, RealPart, Reduce, SeqSet, SetBuilder,
     SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet, StructAndFieldAccessObj,
-    StructObj, Sum, SumOfFiniteSet, Tan, TrigOperator, Tuple, TupleDim, Union,
+    StructObj, Sum, SumOfFiniteSet, Tan, TrigOperator, Tuple, Union,
 };
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::parse::keywords::{
@@ -628,9 +628,6 @@ fn try_parse_keyword_primary(
         CART => {
             tb.advance()?;
             let args = parse_obj_list_paren(rt, tb)?;
-            if args.len() < 2 {
-                return Err(tb.parse_error("cart expects at least 2 arguments"));
-            }
             Ok(Some(Obj::ProductShape(ProductShape::Cart(Cart {
                 args: args.into_iter().map(Box::new).collect(),
             }))))
@@ -643,15 +640,8 @@ fn try_parse_keyword_primary(
             }))))
         }
         CART_DIM => Err(tb.parse_error("cart_dim is removed: a Cartesian set has no unique construction dimension")),
-        TUPLE_DIM => Ok(Some(parse_unary_keyword(rt, tb, TUPLE_DIM, |arg| {
-            Obj::ProductShape(ProductShape::TupleDim(TupleDim { arg: Box::new(arg) }))
-        })?)),
-        PROJ => Ok(Some(parse_binary_keyword(rt, tb, PROJ, |set, dim| {
-            Obj::ProductShape(ProductShape::Proj(Proj {
-                set: Box::new(set),
-                dim: Box::new(dim),
-            }))
-        })?)),
+        TUPLE_DIM => Err(tb.parse_error("tuple_dim is removed: use exact finite_seq membership and complete-domain evidence")),
+        PROJ => Err(tb.parse_error("proj is removed: Cartesian sets do not retain construction projections")),
         // Half-open integer interval [start, end).
         // Example: `range(1, 3)` is {1, 2}.
         RANGE => Ok(Some(parse_binary_keyword(rt, tb, RANGE, |start, end| {

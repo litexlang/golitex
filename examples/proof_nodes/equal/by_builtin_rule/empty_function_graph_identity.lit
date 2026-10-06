@@ -1,0 +1,23 @@
+# Tracer: an empty complete domain determines the empty function graph.
+# Before on ABI6 binary 94cf70a5c6089a680b71e424d1209a718c0fa5ef22560de5f552814febe21c7f:
+# ()={}
+# have fn empty_fn(k {}) R=0
+# empty_fn={}
+# The equalities failed search, although the complete domains were empty.
+# Now checked sources and actual empty-domain evidence prove the identities.
+# Boundary: nonempty outer/curry domains do not become empty graphs.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/empty_function_graph_identity.lit
+
+()={}
+
+fn(k {}) R {0}={}
+
+have fn empty_fn(k {}) R=0
+
+empty_fn={}
+
+let alias=empty_fn
+
+alias={}
+
+fn(x R,y {}) R {0}={}

@@ -1,5 +1,5 @@
 //! Checked beta steps and their selected mathematical function bodies.
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::{FunctionBodyNormalizationProof, FunctionBodySourceProof};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::{FunctionBodyExpansionProof, FunctionBodyNormalizationProof, FunctionBodySourceProof};
 use crate::ast::obj::{Obj, FunctionSpace};
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
@@ -72,7 +72,17 @@ pub(super) fn project_function_body_normalization(
                     proof
                         .expansions
                         .iter()
-                        .map(|step| {
+                        .map(|step| match step {
+                            FunctionBodyExpansionProof::FiniteCoordinate(step) => object_for(runtime, vec![
+                                ("type", string("finite_function_coordinate")),
+                                ("application", string(step.application.readable_string())),
+                                ("application_well_defined", project_obj_wd_proof(&step.application_well_defined, runtime)),
+                                ("source", super::function_domain::project_finite_function_source(&step.source, runtime)),
+                                ("index", string(step.index.to_string())),
+                                ("expanded_body", string(step.expanded_body.readable_string())),
+                                ("continued_body", string(step.continued_body.readable_string())),
+                            ]),
+                            FunctionBodyExpansionProof::Anonymous(step) => {
                             let function_body = match &step.function_body {
                                 FunctionBodySourceProof::KnownEquality(path) => object_for(
                                     runtime,
@@ -135,6 +145,7 @@ pub(super) fn project_function_body_normalization(
                                     ),
                                 ],
                             )
+                            }
                         })
                         .collect(),
                 ),

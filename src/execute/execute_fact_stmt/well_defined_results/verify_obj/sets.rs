@@ -1,5 +1,5 @@
 //! Set-construction object WD.
-//! Light legacy requirements: CartDim/Proj/TupleDim, ListSet pairwise !=,
+//! ListSet pairwise !=,
 //! FiniteSetSize/Max/Min, Interval/Ray in R, Index*/IndexCart `$is_set` +
 //! family `$in fn(...)` full type check. Union/PowerSet/Cart/Tuple stay children-only.
 
@@ -8,13 +8,13 @@ use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
 use crate::ast::fact::{
-    AtomicFact, InFact, IsCartFact, IsTupleFact, LessEqualFact, NotEqualFact,
+    AtomicFact, InFact, NotEqualFact,
 };
 use crate::ast::obj::{
-    FamilyIntersect, FamilyUnion, Cart, CartDim, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnSet,
+    FamilyIntersect, FamilyUnion, Cart, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnSet,
     FunctionSpace, IndexCart, IndexIntersect, IndexUnion, Intersect, IntervalObj, IntervalObjStruct,
-    ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, ProductShape, Proj, SetMinus, SetOperator,
-    StandardSet, Tuple, TupleDim, Union,
+    ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, ProductShape, SetMinus, SetOperator,
+    StandardSet, Tuple, Union,
 };
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -397,101 +397,6 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_boxed_objs_as_children(&value.args, verify_state)
-    }
-    // cart_dim(S): children, then `$is_cart(S)`.
-    // Example: `cart_dim(cart(R, R))` needs `$is_cart(cart(R, R))`.
-    pub(super) fn verify_cart_dim_obj_well_definedness_by_def(
-        &mut self,
-        value: &CartDim,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        let proof = self
-            .verify_unary_obj_well_definedness_by_def(value.set.as_ref(), verify_state.clone())?;
-        let is_cart = AtomicFact::IsCartFact(IsCartFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            set: value.set.as_ref().clone(),
-            line_file: None,
-        });
-        let req = self.verify_required_atomic_fact(
-            is_cart,
-            verify_state,
-            format!("set {} is not a cart", value.set.ir()),
-        )?;
-        Ok(self.with_requirements(proof, vec![req]))
-    }
-
-    // proj(S, i): children, then `i $in N+`, `$is_cart(S)`, `i <= cart_dim(S)`.
-    // Example: `proj(cart(R, R), 1)` is WD; `proj(R, 1)` fails `$is_cart`.
-    pub(super) fn verify_proj_obj_well_definedness_by_def(
-        &mut self,
-        value: &Proj,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        let proof = self.verify_binary_obj_well_definedness_by_def(
-            value.set.as_ref(),
-            value.dim.as_ref(),
-            verify_state.clone(),
-        )?;
-        let mut reqs = Vec::new();
-        reqs.push(self.require_obj_in_standard_set(
-            value.dim.as_ref(),
-            StandardSet::NPos,
-            verify_state.clone(),
-            format!(
-                "projection dimension {} is not a positive integer",
-                value.dim.ir()
-            ),
-        )?);
-        let is_cart = AtomicFact::IsCartFact(IsCartFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            set: value.set.as_ref().clone(),
-            line_file: None,
-        });
-        reqs.push(self.verify_required_atomic_fact(
-            is_cart,
-            verify_state.clone(),
-            format!("projection left side {} is not a cart", value.set.ir()),
-        )?);
-        let cart_dim: Obj = Obj::ProductShape(ProductShape::CartDim(CartDim {
-            set: value.set.clone(),
-        }));
-        let bounded = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: value.dim.as_ref().clone(),
-            right: cart_dim.clone(),
-            line_file: None,
-        });
-        reqs.push(self.verify_required_atomic_fact(
-            bounded,
-            verify_state,
-            format!("{} <= {} is unknown", value.dim.ir(), cart_dim.ir()),
-        )?);
-        Ok(self.with_requirements(proof, reqs))
-    }
-
-    // tuple_dim(t): children, then `$is_tuple(t)`.
-    // Example: `tuple_dim((1, 2))` needs `$is_tuple((1, 2))`.
-    pub(super) fn verify_tuple_dim_obj_well_definedness_by_def(
-        &mut self,
-        value: &TupleDim,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        let proof = self
-            .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
-        let is_tuple = AtomicFact::IsTupleFact(IsTupleFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            set: value.arg.as_ref().clone(),
-            line_file: None,
-        });
-        let req = self.verify_required_atomic_fact(
-            is_tuple,
-            verify_state,
-            format!(
-                "`$is_tuple({})` is unknown, `dim` object requires its argument to be a tuple",
-                value.arg.ir()
-            ),
-        )?;
-        Ok(self.with_requirements(proof, vec![req]))
     }
     pub(super) fn verify_tuple_obj_well_definedness_by_def(
         &mut self,

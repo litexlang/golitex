@@ -101,28 +101,3 @@ impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ver
         OutputLanguage::Vietnamese=>self.rule_name_and_message_vi(),
     }}
 }
-
-impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_cart_reconstruction::CartReconstructionProof {
-    pub fn rule_name_and_message_en(&self)->BuiltinRuleText { text("Cartesian reconstruction","Cartesian reconstruction: is_cart(K); dim(K)=n; proj(K,j)=Aj (j=1..n) => K=cart(A1,...,An)") }
-    pub fn rule_name_and_message_zh(&self)->BuiltinRuleText { text("笛卡尔积重建","笛卡尔积重建: is_cart(K); dim(K)=n; proj(K,j)=Aj (j=1..n) => K=cart(A1,...,An)") }
-    pub fn rule_name_and_message_zh_hant(&self)->BuiltinRuleText { text("笛卡兒積重建","笛卡兒積重建: is_cart(K); dim(K)=n; proj(K,j)=Aj (j=1..n) => K=cart(A1,...,An)") }
-    pub fn rule_name_and_message_fr(&self)->BuiltinRuleText { text("Reconstruction cartésienne","Reconstruction cartésienne: is_cart(K); dim(K)=n; proj(K,j)=Aj (j=1..n) => K=cart(A1,...,An)") }
-    pub fn rule_name_and_message_ru(&self)->BuiltinRuleText { text("Восстановление декартова произведения","Восстановление декартова произведения: is_cart(K); dim(K)=n; proj(K,j)=Aj (j=1..n) => K=cart(A1,...,An)") }
-    pub fn rule_name_and_message_es(&self)->BuiltinRuleText { text("Reconstrucción cartesiana","Reconstrucción cartesiana: is_cart(K); dim(K)=n; proj(K,j)=Aj (j=1..n) => K=cart(A1,...,An)") }
-    pub fn rule_name_and_message_ar(&self)->BuiltinRuleText { text("إعادة بناء الجداء الديكارتي","إعادة بناء الجداء الديكارتي: is_cart(K); dim(K)=n; proj(K,j)=Aj (j=1..n) => K=cart(A1,...,An)") }
-    pub fn rule_name_and_message_ja(&self)->BuiltinRuleText { text("直積の再構成","直積の再構成: is_cart(K); dim(K)=n; proj(K,j)=Aj (j=1..n) => K=cart(A1,...,An)") }
-    pub fn rule_name_and_message_ko(&self)->BuiltinRuleText { text("데카르트 곱 재구성","데카르트 곱 재구성: is_cart(K); dim(K)=n; proj(K,j)=Aj (j=1..n) => K=cart(A1,...,An)") }
-    pub fn rule_name_and_message_vi(&self)->BuiltinRuleText { text("Khôi phục tích Descartes","Khôi phục tích Descartes: is_cart(K); dim(K)=n; proj(K,j)=Aj (j=1..n) => K=cart(A1,...,An)") }
-    pub fn rule_name_and_message(&self,lang:OutputLanguage)->BuiltinRuleText { match lang {
-        OutputLanguage::English=>self.rule_name_and_message_en(),
-        OutputLanguage::Chinese=>self.rule_name_and_message_zh(),
-        OutputLanguage::ChineseTraditional=>self.rule_name_and_message_zh_hant(),
-        OutputLanguage::French=>self.rule_name_and_message_fr(),
-        OutputLanguage::Russian=>self.rule_name_and_message_ru(),
-        OutputLanguage::Spanish=>self.rule_name_and_message_es(),
-        OutputLanguage::Arabic=>self.rule_name_and_message_ar(),
-        OutputLanguage::Japanese=>self.rule_name_and_message_ja(),
-        OutputLanguage::Korean=>self.rule_name_and_message_ko(),
-        OutputLanguage::Vietnamese=>self.rule_name_and_message_vi(),
-    }}
-}

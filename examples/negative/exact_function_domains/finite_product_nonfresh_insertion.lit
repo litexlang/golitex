@@ -1,0 +1,5 @@
+# Negative control: finite product nonfresh insertion
+# Setup must pass; final target rejects at search_proof without stores/infers.
+have f fn(x union({1,2},{2})) R
+2 $in union({1,2},{2})
+finite_set_product(union({1,2},{2}),f) = finite_set_product({1,2},fn(x {1,2})R{f(x)})*f(2)

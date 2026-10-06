@@ -1,6 +1,6 @@
 use super::closed_calculation_proof::*;
 use crate::ast::fact::AtomicFact;
-use crate::ast::obj::{Number, Obj, StandardSet};
+use crate::ast::obj::{Literal, Number, Obj, SetFormer, StandardSet};
 use crate::rational_expression::closed_scalar_membership::{
     exact_complex_inhabits_standard_set, normalized_decimal_inhabits_standard_set,
 };
@@ -182,17 +182,41 @@ fn calculate_membership(
     set: &Obj,
     positive: bool,
 ) -> Option<ClosedMembershipCalculationProof> {
-    let Obj::StandardSet(set) = set else {
-        return None;
-    };
-    let (value, admitted) = calculate_scalar_membership(element, set)?;
-    if admitted != positive {
-        return None;
+    if let Obj::StandardSet(set) = set {
+        let (value, admitted) = calculate_scalar_membership(element, set)?;
+        return (admitted == positive).then(|| ClosedMembershipCalculationProof::StandardSet {
+            value, set: set.clone(),
+        });
     }
-    Some(ClosedMembershipCalculationProof {
-        value,
-        set: set.clone(),
+    let (start, end, half_open) = match set {
+        Obj::SetFormer(SetFormer::ClosedRange(range)) => (&range.start, &range.end, false),
+        Obj::SetFormer(SetFormer::Range(range)) => (&range.start, &range.end, true),
+        _ => return None,
+    };
+    let (start, start_integer) = calculate_scalar_membership(start, &StandardSet::Z)?;
+    let (end, end_integer) = calculate_scalar_membership(end, &StandardSet::Z)?;
+    if !start_integer || !end_integer { return None; }
+    let (value, value_integer) = calculate_scalar_membership(element, &StandardSet::Z)?;
+    let admitted = if value_integer {
+        let value_real = closed_scalar_real(&value)?;
+        let lower = value_real.compare(&closed_scalar_real(&start)?)?;
+        let upper = value_real.compare(&closed_scalar_real(&end)?)?;
+        lower != NumberCompareResult::Less && (upper == NumberCompareResult::Less
+            || (!half_open && upper == NumberCompareResult::Equal))
+    } else { false };
+    (admitted == positive).then(|| ClosedMembershipCalculationProof::IntegerRange {
+        value, set: set.clone(), start, end,
     })
+}
+
+fn closed_scalar_real(value: &ClosedScalarValue) -> Option<EvalRational> {
+    match value {
+        ClosedScalarValue::Decimal(normalized_value) => EvalRational::from_obj(
+            &Obj::Literal(Literal::Number(Number { normalized_value: normalized_value.clone() })),
+        ),
+        ClosedScalarValue::ExactComplex { real, imaginary } if imaginary.is_zero() => Some(real.clone()),
+        _ => None,
+    }
 }
 
 fn calculate_scalar_membership(

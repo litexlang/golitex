@@ -1,0 +1,37 @@
+# Before on frozen pre-repair binary: the maker declaration succeeded;
+# its finite_seq-valued result could not be called.
+# have fn mk(x R) finite_seq(R,2)=(x,x)
+# mk(7)(2) $in R
+# Now: each returned space supplies its exact next call layer, including
+# carrier aliases and guards. Scalars remain non-callable.
+# Gate: target/release/litex -strict -f examples/wd/sequence_return_application.lit
+
+have Carrier set=finite_seq(Z,2)
+
+have fn mk(x R) Carrier=(2,2)
+
+mk(7)(1) $in Z
+
+mk(7)(2) $in R
+
+have fn finite_maker(x R) finite_seq(R,2)=(x,x)
+
+finite_maker(7)(2) $in R
+
+have Base set=seq(R)
+
+have SequenceCarrier set=Base
+
+have fn sequence_maker(x R) SequenceCarrier=fn(k N+) R {x}
+
+sequence_maker(7)(10) $in R
+
+have GuardedCarrier set=fn(k N+: k<=2) R
+
+have fn guarded_maker(x R) GuardedCarrier=fn(k N+: k<=2) R {x}
+
+guarded_maker(7)(2) $in R
+
+have fn positive_maker(x R: x>0) finite_seq(R,2)=(x,x)
+
+positive_maker(7)(2) $in R

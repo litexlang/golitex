@@ -1,0 +1,4 @@
+# Negative control: finite product guard omits coordinate
+# Setup must pass; final target rejects at well_defined without stores/infers.
+have fn f(x R) R=x
+finite_set_product(union({0,1},{2}),f) = finite_set_product({0,1},fn(x {0,1}:x>0)R{f(x)})*f(2)

@@ -77,7 +77,7 @@ fn real_arithmetic_constructor_closure_uses_parent_wd_for_tuple_function_leaves(
     assert!(rt.run_litex_code(
         "have f fn(p cart(R, R)) R\nhave point cart(R, R)\nhave x R\n"
     ).unwrap().success);
-    let leaf = fact(&mut rt, "f((x, point[2])) $in R");
+    let leaf = fact(&mut rt, "f((x, point(2))) $in R");
     let Fact::AtomicFact(atomic_leaf @ AtomicFact::InFact(leaf_fact)) = &leaf else {
         panic!("function-return membership")
     };
@@ -94,7 +94,7 @@ fn real_arithmetic_constructor_closure_uses_parent_wd_for_tuple_function_leaves(
     };
     assert!(property.cite_property_fact_id().is_some());
     let signature_fact_id = property.cite_property_fact_id();
-    let goal = fact(&mut rt, "f((x, point[2])) - f(point) $in R");
+    let goal = fact(&mut rt, "f((x, point(2))) - f(point) $in R");
     let result = rt.verify_fact(&goal, VerifyState::new(BuiltinRule)).unwrap();
     assert!(!result.is_failed(), "R closure consumes parent WD, without replaying it below its ceiling");
     let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
@@ -130,11 +130,11 @@ fn real_arithmetic_constructor_closure_uses_parent_wd_for_tuple_function_leaves(
         panic!("terminal JSON")
     };
     assert!(object.get("well_defined").is_none(), "WD remains on the parent verification stage");
-    assert_eq!(object.get("fact"), Some(&crate::knowledge_base::JsonValue::String("f((x, point[2])) $in R".into())));
+    assert_eq!(object.get("fact"), Some(&crate::knowledge_base::JsonValue::String("f((x, point(2))) $in R".into())));
     assert!(object.get("searched_proof").unwrap().stringify().contains("cite_property_fact_id"));
     assert!(detail.stringify().contains("well_defined"), "parent WD evidence is retained");
     assert!(rt.run_litex_code(
-        "prop real_difference_wd(g fn(p cart(R, R)) R, q cart(R, R)):\n    forall y R:\n        abs(g((y, q[2])) - g(q)) >= 0\n"
+        "prop real_difference_wd(g fn(p cart(R, R)) R, q cart(R, R)):\n    forall y R:\n        abs(g((y, q(2))) - g(q)) >= 0\n"
     ).unwrap().success, "the original reduced prop WD must pass");
 }
 
@@ -204,7 +204,7 @@ fn real_arithmetic_constructor_closure_retains_permissions_tree_and_citations() 
     else {
         panic!("original function-return route")
     };
-    assert!(!codomain.signature_return_matches.is_empty());
+    assert!(!codomain.signature_uses.is_empty());
     let independent = fact(&mut rt, "f(x) $in R");
     let independent = rt
         .verify_fact(&independent, VerifyState::new(KnownSpecialProperty))
@@ -246,10 +246,10 @@ fn real_arithmetic_constructor_closure_rejects_wrong_carriers_and_domains() {
         "have fn f(x R) R = x\nforall x R:\n    f(x)^2 / 4 $in Q\n",
         "have fn f(x R) R = x\nf(0)^(-1) / 4 $in R\n",
         "have fn partial(x R: x > 0) R = x\npartial(0)^2 / 4 $in R\n",
-        "prop bad(f fn(p cart(R, R)) C, point cart(R, R)):\n    forall x R:\n        abs(f((x, point[2])) - f(point)) >= 0\n",
-        "prop bad(f fn(p cart(R, R): p[1] > 0) R, point cart(R, R)):\n    forall x R:\n        abs(f((x, point[2])) - f(point)) >= 0\n",
-        "prop bad(f fn(p cart(R, R)) R, point cart(R, R)):\n    forall x R:\n        abs((f((x, point[2])) - f(point)) / 0) >= 0\n",
-        "forall f fn(p cart(R, R)) R, point cart(R, R), x R:\n    abs(f((x, point[2])) - f(point)) < 0\n",
+        "prop bad(f fn(p cart(R, R)) C, point cart(R, R)):\n    forall x R:\n        abs(f((x, point(2))) - f(point)) >= 0\n",
+        "prop bad(f fn(p cart(R, R): p(1) > 0) R, point cart(R, R)):\n    forall x R:\n        abs(f((x, point(2))) - f(point)) >= 0\n",
+        "prop bad(f fn(p cart(R, R)) R, point cart(R, R)):\n    forall x R:\n        abs((f((x, point(2))) - f(point)) / 0) >= 0\n",
+        "forall f fn(p cart(R, R)) R, point cart(R, R), x R:\n    abs(f((x, point(2))) - f(point)) < 0\n",
     ] {
         let run = runtime().run_litex_code(code).unwrap();
         assert!(

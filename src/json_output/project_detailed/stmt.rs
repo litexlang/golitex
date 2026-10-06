@@ -1242,7 +1242,7 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
                     super::theorem::project_conclusions_wd(&s.conclusions_wd, runtime),
                 ),
                 ("type_proofs", project_verify_facts(&s.type_proofs, runtime)),
-                ("function_domain", s.function_domain.as_ref().map(|p| super::function_domain::project_function_domain(p, runtime)).unwrap_or(JsonValue::Null)),
+                ("function_domain", s.function_domain.as_ref().map(|p| super::theorem::project_builtin_function_domain(p, runtime)).unwrap_or(JsonValue::Null)),
                 ("dom_proofs", project_verify_facts(&s.dom_proofs, runtime)),
                 (
                     "selected_proof",

@@ -20,6 +20,23 @@
 
 ## Acceptance
 
+`atomic/cart_exact_function_coordinates.lit` and the migrated
+`atomic/in_cart_projection.lit` use ordinary applications after exact Cartesian
+membership. They cover zero/one/multiple coordinates, literal and carrier
+aliases, and an explicitly restricted function. Old tuple shape/dimension
+facts are not published. Struct field order and dependent/guarded fields are
+checked in `../stmt_nodes/definition/struct_function_coordinate_bridges.lit`;
+invalid fields, calls and guards have executable controls in the exact-domain
+negative manifest.
+
+`atomic/in_sequence_space_alias_expand.lit` checks exact finite-sequence and
+sequence memberships after carrier and object aliases, including symbolic
+length, zero length and multiple return upper bounds. The adjacent
+`in_equal_fn_set_expand.lit` uses `have f A` to construct a member of the
+function space; a value equal to the space itself is not callable.
+Executable out-of-range and callable-space controls are registered in
+`../negative/exact_function_domains/manifest.json`.
+
 Callable-field range and indexed-family consequences are covered by
 `atomic/field_fn_range.lit` and `atomic/field_indexed_family.lit`.
 `equal/nonzero_real_square.lit` checks positive membership transported from
@@ -49,7 +66,7 @@ Require exit code 0 and top-level JSON `success: true`.
 ## Layout
 
 ```text
-equal/    InferEqualityResult (PositiveRealPower, CartTupleShape, …)
+equal/    InferEqualityResult (PositiveRealPower, …)
 atomic/   InferAtomicExceptEqualityResult (InFact shape expose, subset, …)
 ```
 

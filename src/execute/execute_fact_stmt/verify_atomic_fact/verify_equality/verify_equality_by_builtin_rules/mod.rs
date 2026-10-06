@@ -1,7 +1,8 @@
 pub mod by_range_size;
+pub mod by_function_domain_image;
+pub mod by_empty_function_graph;
 pub mod by_euclidean_remainder;
 pub mod by_factorial_divisibility;
-pub mod by_cart_reconstruction;
 pub mod by_finite_set_product_reindex;
 pub mod by_finite_set_reduce_reindex;
 pub(in crate::execute::execute_fact_stmt::verify_atomic_fact) mod helper;

@@ -86,6 +86,18 @@ Blueprint](Litex_Blueprint.md). Focused interface comparisons belong in
 [Representative Lean–Litex Example
 Comparisons](Representative_Lean_Litex_Example_Comparisons.md).
 
+### Supported syntax and recommended source style
+
+This manual describes what Litex accepts. For new proofs and ordinary teaching
+examples, prefer `release thm name(args)` for calls without selection,
+multiline `forall`, and English/ASCII keywords and operators. Bare `by thm`,
+inline universals, and the documented Unicode aliases remain supported.
+Keep `by thm name(args) => fact` when selecting an atomic consequence; its
+context effect differs from an all-conclusions release. See the
+[learner recommendation table](Litex_Learner_Cheatsheet.md#supported-syntax-and-recommended-writing)
+for examples and reasons. These source-style preferences do not impose parser
+restrictions.
+
 ### Trust boundary
 
 Litex is not a replacement for Lean, Coq, or Isabelle. Its checker, builtin
@@ -411,9 +423,15 @@ Principal inverse domains and ranges:
 
 The expressions remain symbolic, while common exact identities verify:
 
-> **Migration example:** This retained block still fails at `search_proof` in the current checker; it is not a verified result.
+The original bracket-based migration sketch is retired:
 
-<!-- litex:skip-test -->
+```text
+have p2 &Point = (p[1], p[2])
+p2.x = p[1]
+```
+
+Use ordinary coordinates, then construct a definition-owned struct view:
+
 ```litex
 sin(0) = 0
 cos(0) = 1
@@ -520,16 +538,15 @@ then its separate `ByKnownSpecialProperty` step, then builtin rules. This
 order also applies inside strategy search. Re-reading a released equality
 cites its existing path before attempting rules with new premises; it still
 requires WD. See the [release-and-read tracer](../examples/proof_nodes/equal/by_equivalence_class/stored_equality_before_builtin.lit).
-Known Cartesian membership supplies ordered tuple
-reconstruction, `tuple_dim`, and projection WD; a stored tuple equality supplies
-its coordinates. For example, `have p cart(R,R) = (a,b)` permits `p[1] = a`
-without an intermediate projection equality. A tuple-returning function can
-be projected after application WD and one body substitution. This route checks
-the selected definition's signature, keeps source FactIds, and declines
-unsupported nested unfolding. It also runs in strategy and fixed-premise
-truth search without enabling general builtin search. Literal index bounds
-remain mandatory. See the
-[three runnable examples](../examples/proof_nodes/equal/by_known_special_property/).
+Known Cartesian membership supplies the complete finite domain and ordered
+coordinate carriers; a stored tuple equality supplies coordinate beta evidence.
+For example, `have p cart(R,R) = (a,b)` permits `p(1) = a` after application WD.
+Function-valued coordinates retain their own checked domains and guards on
+later calls. Stored equalities and selected definitions retain their source
+FactIds; a common return upper bound alone does not establish callability.
+Coordinate bounds remain mandatory. See the
+[coordinate tracer](../examples/infer/atomic/cart_exact_function_coordinates.lit)
+and [nested-call tracer](../examples/proof_nodes/equal/by_object_definition/by_fn_application/finite_function_coordinate_call.lit).
 
 ```litex
 have fn positive(x R) N+ = 1
@@ -956,6 +973,64 @@ release thm fn_set_member(z2, finite_seq(R,2))
 bounds while retaining that domain. `finite_seq(S,0)` has empty domain.
 Default membership and `release thm fn_set_member` check the same contract.
 
+A function-valued parameter can receive a returned function application.
+Substitution retains the existing argument groups and appends the parameter's
+call. The outer body can be unfolded while its argument remains symbolic:
+
+```litex
+have fn mk(x R) cart(R,Z) = (x,2)
+have fn first(p cart(R,Z)) R = p(1)
+first(mk(7)) = mk(7)(1)
+mk(7)(1) = 7
+```
+
+The [parameter-application tracer](../examples/proof_nodes/equal/by_object_definition/by_fn_application/function_value_parameter_application.lit)
+also checks a returned two-input function. Each input and domain condition
+still passes ordinary application WD; separate fixtures reject wrong call
+groups, complete lengths, guards and coordinate values.
+
+An anonymous or named function always checks its header, domain conditions,
+return carrier and body for well-definedness. Its return bound concerns only
+complete input assignments. A checked empty input domain makes that bound
+vacuous, including an empty return carrier; it does not prove that the body
+value itself belongs to the empty set. For a guarded domain, first provide
+the exclusion proof:
+
+```litex
+forall k R:
+    k<0
+    =>:
+        not k>0
+have fn empty_body(k R:k>0,k<0) {}=0
+empty_body={}
+()={}
+empty_body=()
+empty_body $in finite_seq({},0)
+```
+
+`0 $in {}` and `empty_body(1)=0` still fail. An undefined body such as `1/0`
+also fails WD even when the complete input domain is empty.
+
+> **Preview:** zero and one Cartesian factors use the same exact-domain
+> membership contract as larger products. `()` is the empty function graph,
+> `cart()` contains that one graph, and `cart(S)` contains one-coordinate
+> functions. `(a)` remains grouping; use `tuple(a)` for one coordinate.
+
+```litex
+() = {}
+cart() = {()}
+tuple(7) $in cart(Z)
+have p cart(Z) = tuple(7)
+p(1) = 7
+finite_set_size(cart()) = 1
+```
+
+`p(2)` is outside this member's complete domain and fails WD. A function
+space on an empty domain contains exactly the empty function even when its
+return carrier is empty; this does not make a nonempty outer curried domain
+empty. The complete tuple/cart syntax, definition-release and struct migration
+remain in progress; these boundary examples certify only the listed paths.
+
 Both `have fn f(x S) T = body` and `fn(x S) T {body}` must prove
 `body $in T` under the declared parameter types and domain conditions before
 the function is accepted. Returning a parameter still requires this proof:
@@ -1072,23 +1147,31 @@ available.
 
 ### Products, tuples, sequences, and matrices
 
-Cartesian products, tuples, and sequence carriers are supported. Tuples use
-parentheses; square brackets after an object select a coordinate.
+Tuples are finite functions. Cartesian products and sequence carriers are
+sets of functions with exact complete domains; their return carriers are upper
+bounds. Call a coordinate with `t(i)`.
 
 ```litex
 (1, 2) $in cart(R, Z)
-tuple_dim((1, 2)) = 2
-proj(cart(R, Z), 1) = R
-(1, 2)[1] = 1
+(1, 2) $in finite_seq(Z, 2)
+have pair cart(R, Z) = (1, 2)
+pair(1) = 1
+pair(2) = 2
 ```
 
 | Form | Meaning |
 |---|---|
-| `cart(A, B, ...)` | Cartesian product |
-| `cart_dim(c)`, `proj(c, i1)` | Product dimension and selected factor |
-| `(a, b, ...)`, `tuple_dim(t)`, `t[i1]` | Tuple, dimension, and coordinate |
-| `seq(S)`, `finite_seq(S, n)` | Sequence carriers represented as function spaces |
+| `cart(A, B, ...)` | Functions on `closed_range(1,n)` with each coordinate in its factor |
+| `(a, b, ...)`, `tuple(a)`, `()` | Finite function values; `(a)` alone is grouping |
+| `t(i)` | Application at an input in the complete domain |
+| `seq(S)`, `finite_seq(S, n)` | Functions on `N+` and `closed_range(1,n)` respectively |
 | `have fn f(index I) S = body` | Define indexed values on an explicit domain |
+
+Old `cart_dim`, `proj`, `tuple_dim`, shape predicates and coordinate brackets
+reject during parsing. A Cartesian set does not retain its constructor arity:
+`cart({},R)` and `cart({},R,Z)` are the same empty set. Membership in an
+ordinary function set also requires the complete domain to match; a function
+defined on all of `N+` does not belong to `finite_seq(R,2)`.
 
 The current parser rejects `[1, 2, 3]` and `[]` as sequence literals.
 `matrix(S, r, c)`, nested bracket matrix literals, and apostrophe matrix
@@ -1221,7 +1304,7 @@ for `S` when checking `a`.
 
 A structure must define at least two fields. It is represented by a tuple in
 definition order. If `Point` defines `x` and then `y`, opening a `Point` value
-`p` establishes `p.x = p[1]` and `p.y = p[2]`. The field-to-index relation
+`p` establishes `p.x = p(1)` and `p.y = p(2)`. The field-to-coordinate relation
 belongs to the struct definition; Litex does not guess it from field names.
 
 > **Preview:** a struct with fewer than two fields is a parse
@@ -1234,16 +1317,17 @@ The tuple representation is deliberately opaque outside two places:
 2. a successful `release struct def e` (or the automatic direct-binding case below)
    stores the public representation facts.
 
-A generic membership fact `e $in &Struct` does not itself store tuple shape,
-field carriers, field-to-index equalities, or struct laws.
+A generic membership fact `e $in &Struct` does not itself store field carriers,
+field-to-coordinate equalities, or struct laws.
 
 > **Preview:** `e $in &Struct` is proved by the
 > `StructObjMembership` builtin: check field carriers (literal tuple components
 > `$in Ti`, or else `e $in cart(T1,…,Tn)` via `CartMembership`) and each
 > instantiated `<=>:` law. Success is opaque membership only — still no
 > automatic property release. `CartMembership` itself proves
-> `(a1,…,an) $in cart(A1,…,An)` by coordinate memberships (and, for a
-> non-literal `e`, `$is_tuple(e)` plus `tuple_dim(e)=n`).
+> `e $in cart(A1,…,An)` by its accurate complete domain `closed_range(1,n)`
+> and every coordinate's factor membership. Checking a shorter call range,
+> a common return upper bound, or only some coordinates is insufficient.
 
 A successful `struct` definition also publishes its checked laws as universal
 facts over the original header parameters and an instance of that exact struct.
@@ -1272,12 +1356,16 @@ Before storing anything, the statement verifies the exact membership
 `e $in &Struct`. Failure is atomic: no partial tuple or field facts remain.
 For a struct with fields `a : A` and `b : B`, success releases:
 
-- `$is_tuple(e)`;
-- `tuple_dim(e) = 2`;
 - `e $in cart(A, B)`;
-- `e.a = e[1]` and `e.b = e[2]`;
+- `e.a = e(1)` and `e.b = e(2)`;
 - the instantiated field-carrier facts; and
 - the struct's instantiated `<=>:` facts.
+
+The Cartesian member carries the accurate complete domain. Opening publishes
+no tuple shape predicate, dimension or indexed-object fact. A function-valued
+field keeps its domain conditions; a checked equality endpoint may be needed
+to connect a field's value to the original coordinate before evaluating it.
+See [the struct-coordinate tracer](../examples/stmt_nodes/definition/struct_function_coordinate_bridges.lit).
 
 Repeating the same statement is
 idempotent. Opening is never recursive: `release struct def outer` does not also
@@ -1411,7 +1499,7 @@ by def:
 ```
 
 Struct header parameters and `<=>:` facts are not positional fields. Tuple
-calls likewise name entries explicitly, for example `f(t[1], t[2], t[3])`.
+calls likewise name entries explicitly, for example `f(t(1), t(2), t(3))`.
 Ordinary arity, membership, and function-domain checks apply to every written
 argument.
 
@@ -1482,8 +1570,11 @@ struct Point:
     y R
 
 have p cart(R, R) = (1, 2)
-have p2 &Point = (p[1], p[2])
-p2.x = p[1]
+p(1) = 1
+p(2) = 2
+have p2 &Point = (p(1), p(2))
+p2(1) = p(1)
+p2.x = p(1)
 ```
 
 Likewise, if `p &Point` later also belongs to `&ComplexPair`, `p.x` remains the
@@ -1715,11 +1806,10 @@ Every row also requires its subobjects to be well-defined.
 | `have by replacement_axiom: Img from prop P, set A` | `A` is a set and `P` is functional on `A` (uniqueness forall known). |
 | `index_cart(I, S, g)` | `I` and `S` are nonempty sets, and `g $in fn(alpha I) S`; factor nonemptiness is needed for nonemptiness. |
 | `fn(...) T` | Parameter domains, conditions, and return set `T` are well-defined. |
-| `fn(...) T {body}` | The function-space conditions hold, `body` is well-defined under them, and `body $in T` is provable there. |
+| `fn(...) T {body}` | The function-space conditions hold and `body` is well-defined under them. The pointwise return bound is proved by `body $in T` or an independently checked empty complete input domain. |
 | `f(args)` | `f` has a known function set and the arguments satisfy all domains. |
 | `fn_range(f)` | `f` has a known function set. |
-| Tuple or product projection | The product shape, dimension, and index are valid. |
-| Tuple or sequence access | The index lies in the defined bounds. |
+| Tuple or sequence application | Function evidence proves the complete domain, and the input lies in it. |
 | A finite sum or product | The index domain is suitable, the unary iterand is defined throughout it, and its defined return set is a subset of `C`. |
 | A real interval | Finite endpoints are real; reversed endpoints denote an empty interval rather than an ill-defined object. |
 | `&Struct<args>` or field access | The struct, arguments, field, and membership obligations check. |
@@ -1727,8 +1817,9 @@ Every row also requires its subobjects to be well-defined.
 
 After `fn(...) T {body}` has passed these checks, Litex can prove that it
 belongs to an alpha-equivalent `fn(...) T` directly from the matching
-signature. That membership rule relies on the already-checked obligation
-`body $in T`; signature matching does not bypass return-value checking.
+signature. That membership rule relies on the already-checked pointwise
+return bound; its empty-domain proof does not certify a standalone body
+membership. Signature matching does not bypass this check or body WD.
 
 ### Introducing an object is also checked
 
@@ -2007,9 +2098,15 @@ forall X nonempty_set, x, y X, z X:
         z = z
 ```
 
-A premise-free universal may use `forall x R => x = x`. With assumptions,
-use an indented block. The former one-line spelling
-`forall x R: x > 0 => x != 0` currently fails parsing at `=>`.
+A premise-free universal may use `forall x R => x = x`. The current parser
+also supports a one-line premise and conclusion separated by the outer arrow:
+
+```litex
+forall x R: x > 0 => x != 0
+```
+
+Prefer an indented block in newly authored proofs, so the premises and
+conclusions are easy to inspect and extend:
 
 ```litex
 forall x R:
@@ -2135,8 +2232,6 @@ f $in g
 | `$is_nonempty_set(A)` | `not $is_nonempty_set(A)` | Nonemptiness |
 | `$is_finite_set(A)` | `not $is_finite_set(A)` | Finiteness |
 | `x $in A` | `not x $in A` | Membership |
-| `$is_cart(c)` | `not $is_cart(c)` | Cartesian-product shape |
-| `$is_tuple(t)` | `not $is_tuple(t)` | Tuple shape |
 | `A $subset B` | `not A $subset B` | Subset relation |
 | `A $superset B` | `not A $superset B` | Superset relation |
 | `A $proper_subset B` | `not A $proper_subset B` | Proper subset relation |
@@ -3358,7 +3453,7 @@ forms share one row, such as the related object-introduction statements.
 | `obtain ... from exist ...` | The source existential is known; names, count, and dependent parameter types match. | Opaque witness names plus their type and direct body facts. |
 | `obtain ... from $P(args)` | `$P(args)` is known and its concrete definition has exactly one positive `exist`/`exist!` clause. | The same witness facts after checked definition projection. |
 | `have by fn_preimage: ...` | Known membership in `fn_range(f)` (or an image set introduced by `have by replacement_axiom`) and matching source shape. | Opaque preimage names and the application/relation witness facts. |
-| `have fn ... = ...` | Ordered parameter domains, return carrier, body membership, and side conditions. | A callable function, its signature, and checked defining equation. |
+| `have fn ... = ...` | Ordered parameter domains, return carrier, body WD, pointwise return bound, and side conditions. | A callable function, its signature, and checked defining equation. |
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
 | `have fn ... by induc` | Integer measure/lower bound and strictly decreasing in-domain recursive calls. | A callable recursive function and checked case equations. |
 | `have fn ... by exist!` | Preview: proved `forall … exist!` goal; FnSet well-defined. | `f $in FnSet`, property forall, uniqueness forall (no equality unfold); def-table + `release obj def`; `template` instance releases the same three facts. |
@@ -3478,6 +3573,10 @@ canonicalized during tokenization; infix set forms are lowered by the parser to
 the existing set-object and fact nodes. Stored facts, diagnostics, and verifier
 semantics continue to use canonical ASCII Litex syntax.
 
+For new proofs and ordinary documentation examples, prefer the English/ASCII
+column below. Unicode remains supported input; use it deliberately when the
+example teaches notation aliases or the author requests that style.
+
 | Unicode input | Canonical Litex syntax |
 |---|---|
 | `∀`, `∃`, `∃!` | `forall`, `exist`, `exist!` |
@@ -3577,7 +3676,7 @@ need no intermediate type assertions:
 have n N
 ((n+1)+1)+1 $in N
 have a,b cart(R,R)
-0 <= (b[1]-a[1])^2
+0 <= (b(1)-a(1))^2
 ```
 
 Its leaves cite stored memberships, calculate closed values, or read the fixed
@@ -4456,7 +4555,7 @@ its stated requirements before storing the conclusion:
 | `release thm sum_le_sum_from_pointwise(L, R)` | `L <= R` |
 | `release thm finite_set_sum_le_from_pointwise(L, R)` | `L <= R` |
 | `release thm finite_set_summand_le_sum(L, R)` | `L <= R` |
-| `release thm tuple_equal_from_coordinates(L, R)` | `L = R`; checks tuple shape, dimension equality, and every coordinate (explicit finite obligations when either peer is a literal tuple; otherwise the quantified coordinate requirement) |
+| `release thm tuple_equal_from_coordinates(L, R)` | `L = R`; first checks that BOTH complete domains are the same `closed_range(1,n)`, then every coordinate (fixed obligations for a literal peer, otherwise a forall over that whole domain). Return upper bounds may differ; short-domain views and omitted coordinates are insufficient. |
 | `release thm finite_set_sum_substitution(L, R)` | `L = R` |
 | `release thm sum_over_bijective_finite_set_enumerations(L, R)` | `L = R` |
 | `release thm rational_has_unique_reduced_fraction(q)` | `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}` |
@@ -5005,7 +5104,7 @@ forall a, b R+:
 > `reduce`/`sum`/`product` when `end < start`.
 > Equality identities wave 11 (preview): remaining Obj equalities —
 > union absorption / set-minus recovery from subset; empty from size 0;
-> `proj(cart(...), k)` / `(a,b)[k]`; finite-set size set-minus / union;
+> Ordinary finite-function coordinates; finite-set size set-minus / union;
 > `closed_range(a,a) = {a}`; single-term `sum`/`product`; reduce↔sum bridges;
 > `b^(log(b,x)) = x`.
 > Equality identities wave 12 (preview): `union(A, set_minus(B, A)) = union(A, B)`;
@@ -5367,8 +5466,8 @@ presentation.
 | Family and image operators | `family_union` uses a member-set witness; `index_union(I,X,A)` uses an index witness; `index_intersect(I,X,A)` uses ambient membership plus every indexed fiber; `replacement` uses its functional relation witness; `fn_range` uses a well-defined application. Stored membership exposes the corresponding existential or universal source described in the object section. |
 | Ranges and intervals | `range(a,b)` uses integer `a<=i<b`; `closed_range(a,b)` uses `a<=i<=b`. Real intervals require real membership plus their open/closed endpoint bounds. Half-infinite intervals impose only their displayed endpoint bound. |
 | Power sets and inclusions | `A $subset B` introduces `A $in power_set(B)`. A displayed set or builder belongs to a power set after its elements/base are contained. One directly known inclusion can lift an element into the target set. |
-| Products and indexed objects | Tuple membership checks every component against the corresponding Cartesian factor. General Cartesian membership checks a function into `family_union(S)` plus every indexed factor. Projection and index access inherit the selected carrier. |
-| Functions and structs | A known function signature or matching anonymous signature supplies function-set membership and the instantiated return carrier of applications. Struct membership checks the named carrier and instantiated equivalent facts. A set-valued function/template definition may be unfolded once for membership. |
+| Products and indexed objects | Tuple/cart membership checks the complete finite domain and every coordinate's factor. General Cartesian membership checks the complete indexed domain, a return bound in `family_union(S)`, and every indexed factor. Ordinary calls expose the selected carrier. |
+| Functions and structs | Function-set membership checks the complete domain, including guards and parameter groups, plus the return bound. A checked signature supplies the instantiated return carrier of a valid application. Struct membership checks the named carrier and instantiated equivalent facts. A set-valued function/template definition may be unfolded once for membership. |
 
 The type-predicate layer classifies set structure separately:
 
@@ -5377,7 +5476,6 @@ The type-predicate layer classifies set structure separately:
 | `$is_nonempty_set(S)` | Standard numeric sets; nonempty displays; every power set; ordered nonempty ranges; a union with a nonempty side; Cartesian/function/sequence sets with the required nonempty factors or codomain; an equal known-nonempty structural set. Positive finite cardinality can be proved to imply nonemptiness using explicit contradiction and cardinality equality steps in the [cardinality regression](../examples/_internal/regression/finite_set_cardinality.lit); direct automatic search currently fails. | Equality with `{}` and finite cardinality zero imply not nonempty. Nonemptiness is never inferred for an arbitrary defined `set`. |
 | `$is_finite_set(S)` | Displays, integer ranges, builders over finite bases, finite-domain function ranges, finite unions/intersections/differences/power sets, and Cartesian products of finite factors. | An infinite set minus a finite set remains infinite. No rule makes an arbitrary set finite from its use in another expression. |
 | Empty structure | Empty display; `closed_range(a,b)` when `b<a`; `range(a,b)` when `b<=a`; equality with `{}`; finite cardinality zero. | Ordered endpoints in the opposite direction establish the matching nonempty range. |
-| `$is_tuple` / `$is_cart` | Tuple syntax and known tuple objects; `cart(...)` and `cart_dim(...)` syntax. | A similarly printed ordinary set does not become a tuple or Cartesian object without the structural fact. |
 
 ```litex
 1 $in N+
@@ -5388,8 +5486,8 @@ R $subset C
 $is_set(power_set(Z))
 $is_nonempty_set(power_set(Z))
 $is_finite_set({1, 2})
-$is_tuple((1, 2))
-$is_cart(cart(R, Z))
+(1, 2) $in finite_seq(R, 2)
+$is_set(cart(R, Z))
 
 forall a, b Z:
     a <= b
@@ -5687,7 +5785,7 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 | Positive concrete or builtin predicate | Instantiated parameter-type and defining clauses. Proper inclusion exposes inclusion plus inequality; `$prime` exposes its lower bound and trial-divisor universal; `$coprime(a,b)` exposes `a != 0 or b != 0` and `gcd(a,b)=1`; `$dvd(x,y)` exposes `x % y = 0` and an integer multiple witness; mapping properties expose their exact definitions. Abstract predicates have no clauses to expose. |
 | Membership | Constructor-specific carrier, shape, bound, component, disjunction, or existential information listed below. |
 | Weak lower bound `b <= n` or `n >= b` | Stores `n $in N` when an integer certificate for `n` and a nonnegative certificate for `b` are available. These premise checks inherit the caller's ceiling and use at most KnownSpecialProperty; they do not invoke strategy or forall search. Weak bounds alone do not imply `N+` or nonzero. |
-| `$is_cart(C)` | The structural lower bound `2 <= cart_dim(C)`. Other positive/negative type predicates have no general inference branch. |
+| Cartesian membership | Exact finite input domain and the ordinary membership of each coordinate in its factor. No constructor dimension is inferred for the set. |
 | Subset or superset | One fresh universal membership consequence in the corresponding direction. A builder on the subset side skips this eager universal because builder membership already exposes its domain and filters. |
 | Proper inclusion | Through its builtin definition: ordinary inclusion and set inequality. |
 | Order against a resolved concrete bound | *(verify)* Selected sign spelling and mul-by-`(-1)` flip via `OrderSignFromPositive/NegativeLiteralBound` / `OrderFlipMulMinusOne` — not eager infer. |
@@ -5710,12 +5808,12 @@ have x R = 2
 x + 1 = 3
 
 have t cart(R, Z) = (1, 2)
-$is_tuple(t)
-tuple_dim(t) = 2
+t(1) = 1
+t(2) = 2
+t $in finite_seq(R, 2)
 
 have s set = cart(R, R)
-$is_cart(s)
-cart_dim(s) = 2
+(1, 2) $in s
 ```
 
 Typical consequences include:
@@ -5727,7 +5825,8 @@ Typical consequences include:
   `+ - * / ^ abs min max floor ceil sign`, integer-domain `% quot gcd lcm !`,
   and foldable `sqrt` / `log`) enables later numeric substitution;
 - supported simple linear equalities record a solved value;
-- equality to a tuple or product records its shape and dimension;
+- equality to a tuple or product is ordinary object equality; checked complete
+  function domains and coordinates remain usable through that equality;
 - equality to an anonymous function records the
   corresponding structural information;
 - a known concrete `prop` call may expose instantiated definition clauses.
@@ -5778,8 +5877,8 @@ i1 $in Z
 2 <= i1 < 6
 
 have u cart(R, Z)
-u[1] $in R
-u[2] $in Z
+u(1) $in R
+u(2) $in Z
 ```
 
 Main families are:

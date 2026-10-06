@@ -1,4 +1,4 @@
-# Before: the exact mathematical target failed proof search.
+# Before: constructor-shape reconstruction (retired syntax):
 # forall A,B,K set:
 #     $is_cart(K)
 #     cart_dim(K)=2
@@ -6,15 +6,17 @@
 #     proj(K,2)=B
 #     =>:
 #         K=cart(A,B)
+# Now: the same set equality target follows from K's COMPLETE member
+# characterization. This changes the premises to the new ordinary-set model;
+# coordinate images alone do not reconstruct a Cartesian product.
+# Evidence: current release -strict -f this file; thirteen_builtin_rules.
+# Boundary: omitting the second coordinate only supplies a larger set.
 
-# Now (verified in strict mode): same mathematical target and premises.
-forall A,B,K set:
-    $is_cart(K)
-    cart_dim(K)=2
-    proj(K,1)=A
-    proj(K,2)=B
-    =>:
-        K=cart(A,B)
 
-# Executable boundary controls: tests/unit/execute/thirteen_builtin_rules/tests.rs.
-# Gate: CARGO_TARGET_DIR=tmp/2026-10-04/thirteen-builtin-rules/target cargo run --release --offline --bin litex -- -strict -f examples/proof_nodes/equal/by_builtin_rule/cart_reconstruction.lit
+
+claim:
+    ? forall A,B,K set:
+        K = {p finite_seq(union(A,B),2): p(1) $in A, p(2) $in B}
+        =>:
+            K=cart(A,B)
+    cart(A,B) = {p finite_seq(union(A,B),2): p(1) $in A, p(2) $in B}

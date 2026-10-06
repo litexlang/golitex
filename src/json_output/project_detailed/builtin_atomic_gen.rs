@@ -1666,9 +1666,8 @@ pub(super) fn project_atomic_builtin_rule(
                 ("family", string("InFact")),
                 ("rule", string("CartMembership")),
             ];
-            let _ = &p.shape_and_dimension;
-            entries.push(("shape_and_dimension", string("<Option<CartMembershipShapeProof>>")));
-            entries.push(("coordinate_memberships", project_verify_facts(&p.coordinate_memberships, runtime)));
+            entries.push(("function_domain", super::function_domain::project_function_domain(&p.domain, runtime)));
+            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::PowerSetMembership(p)) => {

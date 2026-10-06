@@ -380,7 +380,7 @@ fact ::= forall | exist | exist! | not … | qf
 | `not` atomic | `not x > 0`, `not $P(a)` |
 
 Builtin `$` atoms with dedicated AST:  
-`=` `!=` `<` `>` `<=` `>=` `$in` `$subset` `$superset` `$is_set` `$is_nonempty_set` `$is_finite_set` `$is_cart` `$is_tuple`  
+`=` `!=` `<` `>` `<=` `>=` `$in` `$subset` `$superset` `$is_set` `$is_nonempty_set` `$is_finite_set`
 (and their `not …` forms). Other `$names` → normal atomic (e.g. `$proper_subset`); binary normal atomics may also be written infix (`A $proper_subset B`).
 
 Qualified props: `$Mod::name`, `$Mod:::name`, `$a::b::c` (prefix only, not infix).
@@ -468,16 +468,16 @@ Precedence low → high:
 | group / tuple | `(e)`, `(a, b)`, `()`, `tuple(a, b)` |
 | list set / builder | `{1, 2}`, `{}`, `{x R: x > 0}` |
 | ranges | `a...b`, `closed_range(a, b)`, `range(a, b)` |
-| cart | `A × B`, `cart(A, B)` (≥2) |
+| cart | `A × B`, `cart()`, `cart(A)`, `cart(A, B, ...)` |
 | unicode / keyword sets | `A ∪ B`, `A ∩ B`; `union` `intersect` `set_minus` `family_union` `family_intersect` `power_set` `index_union` `index_intersect` `index_cart` |
 | arith | `+ - * / % ^`, unary `-` (= AST `Neg`), `abs` `floor` `ceil` `sign` `min` `max` |
 | int | `gcd` `lcm` `quot` |
 | trig / explog | `sin cos tan cot arcsin arccos arctan arccot` ; `sqrt exp ln` ; `log(base, x)` |
-| dims / proj / finite | `cart_dim` `tuple_dim` `proj` ; `finite_set_size` `finite_set_max` `finite_set_min` `finite_set_product` |
+| finite | `finite_set_size` `finite_set_max` `finite_set_min` `finite_set_product` |
 | seq spaces | `seq(S)`, `finite_seq(S, n)` |
 | fn space | `fn(x A) B`, `fn(x A: x > 0) B`, `A -> B` (sugar, right-assoc) |
 | anonymous fn | `fn(x R) R {x + 1}` |
-| apply / index / field / bang | `f(a)`, `f(a)(b)`, `obj[i]`, `obj.field`, postfix `n!` (= `factorial(n)`) |
+| apply / field / bang | `f(a)`, `f(a)(b)`, `obj(i)`, `obj.field`, postfix `n!` (= `factorial(n)`) |
 | struct view | `&Point`, `&Pair<R>`, `&Lib::facts::Pair`, `&Lib:::Tagged<R>` |
 | template instance | `\Name<args>` (angles required) |
 | interval literals | `'[a,b]` `'(a,b)` `'[a,b)` `'(a,b]` ; rays `'(,a]` `'[a,)` … |
@@ -564,3 +564,5 @@ The configured acceptance fixture is
 [`qualified_struct_views`](../../examples/module_manager/qualified_struct_views/README.md);
 reserved-binding acceptance is
 [`reserved_object_bindings.lit`](../../examples/wd/reserved_object_bindings.lit).
+
+Tuple/cart shape predicates, dimensions, construction projections and postfix object brackets now reject explicitly during parsing. Keyword spellings stay reserved for retirement diagnostics. Ordinary named/returned function calls retain their parameter groups; quoted interval brackets and general indexed-family constructors remain available. The corresponding AST payload deletion and general object head are separately proposed in the tuple/cart plan.

@@ -545,12 +545,10 @@ fn set_minus_membership_infers_split() {
 #[test]
 fn cart_membership_infers_coordinate_membership() {
     let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "have u set").is_failed());
-    assert!(!exec_one(&mut runtime, "trust u $in cart(R, Z)").is_failed());
-    assert!(!exec_one(&mut runtime, "$is_tuple(u)").is_failed());
-    assert!(!exec_one(&mut runtime, "tuple_dim(u) = 2").is_failed());
-    assert!(!exec_one(&mut runtime, "u[1] $in R").is_failed());
-    assert!(!exec_one(&mut runtime, "u[2] $in Z").is_failed());
+    assert!(!exec_one(&mut runtime, "have u cart(R, Z)").is_failed());
+    assert!(!exec_one(&mut runtime, "u(1) $in R").is_failed());
+    assert!(!exec_one(&mut runtime, "u(2) $in Z").is_failed());
+    assert!(exec_one(&mut runtime, "u(3) $in R").is_failed());
 }
 
 #[test]
@@ -601,19 +599,19 @@ fn normal_atomic_param_type_projection() {
 }
 
 #[test]
-fn is_cart_trust_infers_dimension_lower_bound() {
+fn cart_alias_members_retain_exact_coordinates_without_construction_dimensions() {
     let mut runtime = runtime_with_file_env();
     assert!(
-        !exec_one(&mut runtime, "have s set").is_failed(),
+        !exec_one(&mut runtime, "have s set=cart(R,Z)").is_failed(),
         "introduce s"
     );
     assert!(
-        !exec_one(&mut runtime, "trust $is_cart(s)").is_failed(),
-        "trust is_cart"
+        !exec_one(&mut runtime, "have p s=(1,2)").is_failed(),
+        "construct a real member through the stored Cartesian equality"
     );
     assert!(
-        !exec_one(&mut runtime, "cart_dim(s) >= 2").is_failed(),
-        "is_cart infer must store cart_dim(s) >= 2"
+        !exec_one(&mut runtime, "p(2) $in Z").is_failed(),
+        "the element retains its exact domain and ordered factor types"
     );
 }
 
@@ -1363,29 +1361,29 @@ fn store_equality_indexes_closed_numeric_equal() {
 }
 
 #[test]
-fn store_equality_infers_cart_and_tuple_shape() {
-    // `s = cart(R, R)` ⇒ `$is_cart(s)` and `cart_dim(s) = 2`.
+fn stored_equalities_supply_cart_members_and_tuple_function_domains() {
+    // A set equality supplies the complete member contract, not its origin.
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have s set = cart(R, R)").is_failed());
     assert!(
-        !exec_one(&mut runtime, "$is_cart(s)").is_failed(),
-        "expected $is_cart(s) after equality to a literal cart"
+        !exec_one(&mut runtime, "have p s=(1,2)").is_failed(),
+        "stored Cartesian equality must supply the new member contract"
     );
     assert!(
-        !exec_one(&mut runtime, "cart_dim(s) = 2").is_failed(),
-        "expected cart_dim(s) = 2 after equality to cart(R, R)"
+        !exec_one(&mut runtime, "p(1)=1").is_failed(),
+        "member application must read its actual complete domain"
     );
 
-    // `t = (1, 2)` ⇒ `$is_tuple(t)` and `tuple_dim(t) = 2`.
+    // An ordinary object equality supplies the finite function value.
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have t set = (1, 2)").is_failed());
     assert!(
-        !exec_one(&mut runtime, "$is_tuple(t)").is_failed(),
-        "expected $is_tuple(t) after equality to a literal tuple"
+        !exec_one(&mut runtime, "t $in finite_seq(R,2)").is_failed(),
+        "tuple equality must supply the exact finite function membership"
     );
     assert!(
-        !exec_one(&mut runtime, "tuple_dim(t) = 2").is_failed(),
-        "expected tuple_dim(t) = 2 after equality to (1, 2)"
+        !exec_one(&mut runtime, "t(2)=2").is_failed(),
+        "tuple equality must supply the actual coordinate value"
     );
 }
 
@@ -1600,9 +1598,15 @@ fn fn_obj_application_requires_in_function_set() {
     assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
     assert!(!exec_one(&mut runtime, "f(a) = f(a)").is_failed());
 
-    // Curried FnSet signature registration.
+    // A FnSet alias is a set, so it cannot be applied.
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "let f = fn(p R) fn(q R) R").is_failed());
+    assert!(!exec_one(&mut runtime, "have u R = 2").is_failed());
+    assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
+    assert!(exec_one(&mut runtime, "f(u)(a) = f(u)(a)").is_failed());
+    // An actual member retains the curried function-value capability.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have f fn(p R) fn(q R) R").is_failed());
     assert!(!exec_one(&mut runtime, "have u R = 2").is_failed());
     assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
     assert!(!exec_one(&mut runtime, "f(u)(a) = f(u)(a)").is_failed());
@@ -3119,9 +3123,9 @@ fn prop_and_exist_body_assume_earlier_facts_for_later_wd() {
     // `line_through_points(a, b)`; `a != 0 or b != 0` licenses `line(...)`.
     let mut runtime = runtime_with_file_env();
     for code in [
-        "have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])",
-        "have fn det(u, v cart(R, R)) R = u[1] * v[2] - u[2] * v[1]",
-        "have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R): a * p[1] + b * p[2] + c = 0}",
+        "have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))",
+        "have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)",
+        "have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R): a * p(1) + b * p(2) + c = 0}",
         "have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}",
     ] {
         assert!(

@@ -37,6 +37,24 @@ impl Runtime {
                 VerifyObjWellDefinedResult::Success(proof) => succeeded_args.push(proof),
             }
         }
+        // Legacy payloads may survive only until their separately authorized
+        // AST deletion. They cannot borrow a cached/assumed shape fact as a
+        // current predicate signature.
+        let retired = match fact {
+            AtomicFact::IsTupleFact(_) | AtomicFact::NotIsTupleFact(_) => Some("is_tuple"),
+            AtomicFact::IsCartFact(_) | AtomicFact::NotIsCartFact(_) => Some("is_cart"),
+            _ => None,
+        };
+        if let Some(name) = retired {
+            return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                FailToVerifyAtomicFactWellDefinedResult::Predicate {
+                    well_defined_of_each_parameter: succeeded_args,
+                    reason: PredicateSignatureWellDefinedFailure::Retired {
+                        predicate: crate::ast::names::AtomicName::Plain { name: name.to_string() },
+                    },
+                },
+            ));
+        }
         // A checked goal may not borrow a declaration from its later proof
         // body. For example, `claim: ? $chosen(0)` must fail here if chosen
         // has not been declared, even if the body defines it locally.

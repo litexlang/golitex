@@ -78,7 +78,7 @@ fn tuple_coordinates_have_independent_proofs() {
     assert!(detailed.contains("by_closed_calculation"));
     check("(1+3,2+4)=(4,7)", false);
     check("(1+3,2+4)=(4,6,0)", false);
-    check("(1,2)[1]+(3,4)[1]=1+3", true);
+    check("(1,2)(1)+(3,4)(1)=1+3", true);
 }
 
 #[test]
@@ -166,16 +166,16 @@ fn full_add2_chain_and_projection_boundaries() {
     ] {
         assert!(detailed.contains(node), "{node}");
     }
-    let definition = "have fn add2(u,v cart(R,R)) cart(R,R)=(u[1]+v[1],u[2]+v[2])\n";
+    let definition = "have fn add2(u,v cart(R,R)) cart(R,R)=(u(1)+v(1),u(2)+v(2))\n";
     check(
         &format!("{definition}add2((1,2),(3,4))=(1+3,2+4)=(4,7)"),
         false,
     );
     check(&format!("{definition}add2((1,2,3),(3,4))=(4,6)"), false);
     for code in [
-        "(1,-2)[2] $in N",
-        "(1,2)[0]=1",
-        "(1,2)[3]=1",
+        "(1,-2)(2) $in N",
+        "(1,2)(0)=1",
+        "(1,2)(3)=1",
         "(1/0+1,2)=(1/0+1,2)",
         "1+2=1*2",
     ] {
@@ -197,7 +197,7 @@ fn local_strategies_respect_existing_depth_boundary() {
         .search_equal_fact_proof(&eq, depth)
         .unwrap()
         .is_some());
-    let eq = equal(&mut rt, "(1,2)[1]+(3,4)[1]=1+3");
+    let eq = equal(&mut rt, "(1,2)(1)+(3,4)(1)=1+3");
     assert!(rt
         .search_equal_fact_proof(&eq, depth.capped_at(VerifyStateLevel::Direct))
         .unwrap()

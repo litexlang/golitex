@@ -1,0 +1,4 @@
+# An empty COMPLETE input domain makes only the return bound vacuous.
+# This neighboring false return or undefined body must still reject.
+
+have fn invalid_literal(k {}) R=1/0

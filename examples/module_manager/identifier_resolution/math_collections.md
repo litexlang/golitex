@@ -10,3 +10,8 @@ The three `shift` functions are real functions with formulas `x`, `x + 1`, and
 `release obj def`. The caller checks applications with different results and
 builds a tuple containing two qualified objects. Undeclared export members
 have no object interface and must fail well-definedness.
+
+That tuple is a function with complete domain `closed_range(1,2)`. Its two
+exported coordinate declarations supply the real return bound after explicit
+definition publication; its first and second calls retain the root and
+imported owners. A third position and a length-three member claim are invalid.

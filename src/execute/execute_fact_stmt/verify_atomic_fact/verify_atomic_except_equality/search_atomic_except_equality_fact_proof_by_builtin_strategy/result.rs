@@ -123,7 +123,8 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     UnionNonemptyFromRight(UnionNonemptyFromRightStrategySingleStep),
     CartNonemptyFromAllFactors(CartNonemptyFromAllFactorsStrategySingleStep),
     FnSetNonemptyFromCodomain(FnSetNonemptyFromCodomainStrategySingleStep),
-    AnonymousFnNonemptyFromCodomain(AnonymousFnNonemptyFromCodomainStrategySingleStep),
+    FunctionGraphNonemptyFromDomain(FunctionGraphNonemptyFromDomainStrategySingleStep),
+    FunctionSpaceNonemptyFromEmptyDomain(FunctionSpaceNonemptyFromEmptyDomainStrategySingleStep),
     FiniteSeqSetNonemptyFromCodomain(FiniteSeqSetNonemptyFromCodomainStrategySingleStep),
     SeqSetNonemptyFromCodomain(SeqSetNonemptyFromCodomainStrategySingleStep),
 }
@@ -991,6 +992,7 @@ pub struct PositiveNaturalCarrierFiniteSetSizeStrategySingleStep {
 // Example:
 //   (1,2) $in cart(R,Z)
 pub struct CartMembershipStrategySingleStep {
+    pub domain: crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
@@ -1303,23 +1305,27 @@ pub struct CartNonemptyFromAllFactorsStrategySingleStep {
 }
 
 // Strategy: fn set nonempty
-// Mathematical property: codomain nonempty
+// Mathematical property: a nonempty return carrier permits a constant function.
 //
 // Example:
 //   $is_nonempty_set(fn(x R) R)
 pub struct FnSetNonemptyFromCodomainStrategySingleStep {
-    pub requirement_facts: Vec<Fact>,
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub signature: crate::ast::obj::FnSet,
+    pub codomain_nonempty: crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
 }
 
 // Strategy: anon fn nonempty
-// Mathematical property: codomain nonempty
+// Mathematical property: the effective input domain is inhabited.
 //
 // Example:
 //   $is_nonempty_set(fn(x R) R {x})
-pub struct AnonymousFnNonemptyFromCodomainStrategySingleStep {
-    pub requirement_facts: Vec<Fact>,
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+pub struct FunctionGraphNonemptyFromDomainStrategySingleStep {
+    pub source: crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
+    pub domain_nonempty: crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyProof,
+}
+
+pub struct FunctionSpaceNonemptyFromEmptyDomainStrategySingleStep {
+    pub domain_empty: crate::execute::execute_fact_stmt::function_domain::FunctionDomainEmptyProof,
 }
 
 // Strategy: finite seq nonempty
@@ -1328,8 +1334,8 @@ pub struct AnonymousFnNonemptyFromCodomainStrategySingleStep {
 // Example:
 //   $is_nonempty_set(finite_seq(R,2))
 pub struct FiniteSeqSetNonemptyFromCodomainStrategySingleStep {
-    pub requirement_facts: Vec<Fact>,
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub signature: crate::ast::obj::FnSet,
+    pub codomain_nonempty: crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
 }
 
 // Strategy: seq nonempty
@@ -1338,6 +1344,6 @@ pub struct FiniteSeqSetNonemptyFromCodomainStrategySingleStep {
 // Example:
 //   $is_nonempty_set(seq(R))
 pub struct SeqSetNonemptyFromCodomainStrategySingleStep {
-    pub requirement_facts: Vec<Fact>,
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub signature: crate::ast::obj::FnSet,
+    pub codomain_nonempty: crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
 }

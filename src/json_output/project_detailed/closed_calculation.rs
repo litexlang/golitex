@@ -120,7 +120,26 @@ pub(super) fn project_membership(
     proof: &ClosedMembershipCalculationProof,
     runtime: &Runtime,
 ) -> JsonValue {
-    let value = match &proof.value {
+    let (value, set, bounds) = match proof {
+        ClosedMembershipCalculationProof::StandardSet { value, set } =>
+            (value, Obj::StandardSet(set.clone()), None),
+        ClosedMembershipCalculationProof::IntegerRange { value, set, start, end } =>
+            (value, set.clone(), Some((start, end))),
+    };
+    let mut fields = vec![
+        ("type", string("by_closed_calculation")),
+        ("kind", string(kind)),
+        ("value", project_scalar(value, runtime)),
+        ("set", string(set.readable_string())),
+    ];
+    if let Some((start, end)) = bounds {
+        fields.push(("bounds", JsonValue::Array(vec![project_scalar(start, runtime), project_scalar(end, runtime)])));
+    }
+    object_for(runtime, fields)
+}
+
+fn project_scalar(value: &ClosedScalarValue, runtime: &Runtime) -> JsonValue {
+    match value {
         ClosedScalarValue::Decimal(normal) => object_for(
             runtime,
             vec![
@@ -136,17 +155,5 @@ pub(super) fn project_membership(
                 ("imaginary", string(imaginary.to_obj().readable_string())),
             ],
         ),
-    };
-    object_for(
-        runtime,
-        vec![
-            ("type", string("by_closed_calculation")),
-            ("kind", string(kind)),
-            ("value", value),
-            (
-                "set",
-                string(Obj::StandardSet(proof.set.clone()).readable_string()),
-            ),
-        ],
-    )
+    }
 }

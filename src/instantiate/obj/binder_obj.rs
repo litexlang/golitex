@@ -48,8 +48,24 @@ impl Runtime {
         f: &FnObj,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<Obj, InstError> {
-        let head = self.inst_fn_obj_head(f.head.as_ref(), param_to_arg_map)?;
-        let mut body = Vec::with_capacity(f.body.len());
+        let replacement_application = match f.head.as_ref() {
+            FnObjHead::Identifier(id) => {
+                match self.inst_identifier_obj(&Obj::Identifier(id.clone()), param_to_arg_map)? {
+                    Obj::FnObj(call) => Some(call),
+                    _ => None,
+                }
+            }
+            _ => None,
+        };
+        // Simultaneous substitution: p(x,y), p := F(a), becomes F(a)(x,y).
+        // The inserted prefix keeps its bindings; only the original args substitute.
+        let (head, mut body) = match replacement_application {
+            Some(call) => (call.head, call.body),
+            None => (
+                Box::new(self.inst_fn_obj_head(f.head.as_ref(), param_to_arg_map)?),
+                Vec::with_capacity(f.body.len()),
+            ),
+        };
         for group in &f.body {
             let mut new_group = Vec::with_capacity(group.len());
             for o in group {
@@ -58,7 +74,7 @@ impl Runtime {
             body.push(new_group);
         }
         Ok(Obj::FnObj(FnObj {
-            head: Box::new(head),
+            head,
             body,
         }))
     }

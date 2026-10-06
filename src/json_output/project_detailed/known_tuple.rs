@@ -155,26 +155,16 @@ pub(super) fn project_shape(shape: &KnownTupleShapeProof, runtime: &Runtime) -> 
                     string(p.membership_proof.cite_property_fact_id.to_string()),
                 ),
                 (
+                    "subject_equal",
+                    project_known_equality_path(&p.membership_proof.function_equal, runtime),
+                ),
+                (
                     "signature_matches",
                     JsonValue::Array(
                         p.membership_proof
-                            .signature_return_matches
+                            .signature_uses
                             .iter()
-                            .map(|m| {
-                                object_for(
-                                    runtime,
-                                    vec![
-                                        (
-                                            "cite_signature_fact_id",
-                                            string(m.cite_signature_fact_id.to_string()),
-                                        ),
-                                        (
-                                            "return_set_match",
-                                            project_equal_searched(&m.return_set_match, runtime),
-                                        ),
-                                    ],
-                                )
-                            })
+                            .map(|m| super::known_special_property::project_signature_codomain_use(m, runtime))
                             .collect(),
                     ),
                 ),

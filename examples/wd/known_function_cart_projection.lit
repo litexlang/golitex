@@ -4,11 +4,9 @@
 # Gate: target/release/litex -strict -f examples/wd/known_function_cart_projection.lit
 have plane set = cart(R,R)
 have p plane
-$is_tuple(p)
-tuple_dim(p) = 2
-p[1] $in R
+p $in finite_seq(R,2)
+p(1) $in R
 have fn pair(x R) cart(R,R) = (x,x)
 have a R
-$is_tuple(pair(a))
-tuple_dim(pair(a)) = 2
-pair(a)[1] $in R
+pair(a) $in finite_seq(R,2)
+pair(a)(1) $in R

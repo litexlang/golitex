@@ -1,7 +1,7 @@
 # Infer: InFact.FiniteSeqExpand
-# When: store `s $in finite_seq(R, n)`.
-# Infers: `s $in fn(i N+: i <= n) R` (callable).
-# Run: litex -f examples/infer/atomic/in_finite_seq_expand.lit
+# Before: s in finite_seq(R,n) expanded to a callable N+ signature with k<=n.
+# Now: the complete domain is closed_range(1,n), including n=0.
+# Gate: target/release/litex -strict -f examples/infer/atomic/in_finite_seq_expand.lit
 
-forall s finite_seq(R, 3):
+forall s finite_seq(R,3):
     s(1) $in R

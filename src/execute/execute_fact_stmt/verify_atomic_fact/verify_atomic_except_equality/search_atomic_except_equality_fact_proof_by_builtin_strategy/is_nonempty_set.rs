@@ -136,33 +136,34 @@ impl Runtime {
     ) -> RuntimeResult<Option<FnSetNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) = set else { return Ok(None); };
-        let lf = line_file(fact);
-        let requirements = vec![self.strategy_is_nonempty_set_fact(fn_set.ret_set.as_ref().clone(), lf)];
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, ctx)?
+        let Some(codomain_nonempty) = self.verify_nonempty_function_space_return(&fn_set.ret_set, ctx)?
         else { return Ok(None); };
         Ok(Some(FnSetNonemptyFromCodomainStrategySingleStep {
-            requirement_facts,
-            proof_of_requirement_facts,
+            signature: fn_set.clone(), codomain_nonempty,
         }))
     }
 
-    pub(super) fn search_anonymous_fn_nonempty_from_codomain_strategy(
+    pub(super) fn search_function_graph_nonempty_from_domain_strategy(
         &mut self,
         fact: &AtomicFact,
         ctx: VerifyState,
-    ) -> RuntimeResult<Option<AnonymousFnNonemptyFromCodomainStrategySingleStep>> {
+    ) -> RuntimeResult<Option<FunctionGraphNonemptyFromDomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
-        let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = set else { return Ok(None); };
-        let lf = line_file(fact);
-        let requirements = vec![self.strategy_is_nonempty_set_fact(anon.body.ret_set.as_ref().clone(), lf)];
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, ctx)?
-        else { return Ok(None); };
-        Ok(Some(AnonymousFnNonemptyFromCodomainStrategySingleStep {
-            requirement_facts,
-            proof_of_requirement_facts,
-        }))
+        for source in self.complete_function_domains(set, ctx)? {
+            if let Some(domain_nonempty) = self.verify_function_domain_nonempty(&source.signature, ctx)? {
+                return Ok(Some(FunctionGraphNonemptyFromDomainStrategySingleStep { source, domain_nonempty }));
+            }
+        }
+        Ok(None)
+    }
+
+    pub(super) fn search_function_space_nonempty_from_empty_domain_strategy(
+        &mut self, fact: &AtomicFact, ctx: VerifyState,
+    ) -> RuntimeResult<Option<FunctionSpaceNonemptyFromEmptyDomainStrategySingleStep>> {
+        let Some(space) = as_nonempty_set(fact) else { return Ok(None); };
+        let Some(signature) = self.function_space_signature(space) else { return Ok(None); };
+        let Some(domain_empty) = self.verify_function_domain_empty(&signature, ctx)? else { return Ok(None); };
+        Ok(Some(FunctionSpaceNonemptyFromEmptyDomainStrategySingleStep { domain_empty }))
     }
 
     pub(super) fn search_finite_seq_set_nonempty_from_codomain_strategy(
@@ -171,15 +172,12 @@ impl Runtime {
         ctx: VerifyState,
     ) -> RuntimeResult<Option<FiniteSeqSetNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
-        let Obj::SetFormer(SetFormer::FiniteSeqSet(seq)) = set else { return Ok(None); };
-        let lf = line_file(fact);
-        let requirements = vec![self.strategy_is_nonempty_set_fact(seq.set.as_ref().clone(), lf)];
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, ctx)?
+        let Obj::SetFormer(SetFormer::FiniteSeqSet(_)) = set else { return Ok(None); };
+        let Some(signature) = self.function_space_signature(set) else { return Ok(None); };
+        let Some(codomain_nonempty) = self.verify_nonempty_function_space_return(&signature.ret_set, ctx)?
         else { return Ok(None); };
         Ok(Some(FiniteSeqSetNonemptyFromCodomainStrategySingleStep {
-            requirement_facts,
-            proof_of_requirement_facts,
+            signature, codomain_nonempty,
         }))
     }
 
@@ -189,15 +187,12 @@ impl Runtime {
         ctx: VerifyState,
     ) -> RuntimeResult<Option<SeqSetNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
-        let Obj::SetFormer(SetFormer::SeqSet(seq)) = set else { return Ok(None); };
-        let lf = line_file(fact);
-        let requirements = vec![self.strategy_is_nonempty_set_fact(seq.set.as_ref().clone(), lf)];
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, ctx)?
+        let Obj::SetFormer(SetFormer::SeqSet(_)) = set else { return Ok(None); };
+        let Some(signature) = self.function_space_signature(set) else { return Ok(None); };
+        let Some(codomain_nonempty) = self.verify_nonempty_function_space_return(&signature.ret_set, ctx)?
         else { return Ok(None); };
         Ok(Some(SeqSetNonemptyFromCodomainStrategySingleStep {
-            requirement_facts,
-            proof_of_requirement_facts,
+            signature, codomain_nonempty,
         }))
     }
 }

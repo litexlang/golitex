@@ -68,7 +68,9 @@ fn callable_alias_reduces_with_a_real_function_equality_path() {
     else {
         panic!("function equality must own body reduction")
     };
-    let crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodySourceProof::KnownEquality(path) = &proof.normalization.expansions[0].function_body
+    let crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodyExpansionProof::Anonymous(expansion) = &proof.normalization.expansions[0]
+    else { panic!("named function body expansion") };
+    let crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodySourceProof::KnownEquality(path) = &expansion.function_body
     else { panic!("stored function equality") };
     assert_eq!(path.path.len(), 3);
     for (from, to, id) in &path.path {

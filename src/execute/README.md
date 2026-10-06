@@ -1,5 +1,38 @@
 # Statement execution
 
+## Exact finite-function coordinates
+
+Cartesian and struct members use ordinary applications. Struct release stores
+`p.first = p(1)` in definition order, field carriers and checked laws; it does
+not store tuple shape or dimension facts. General membership, equality and
+FactId storage and the `exec_stmt` transaction remain the owners of publication.
+
+For a nested call such as `p(2)(x)`, a common return upper bound may contain
+both scalar and function-valued coordinates. Application WD can consume a
+checked function membership of the actual shorter prefix `p(2)` after checking
+earlier arguments and guards. It retains that membership proof and checks the
+next layer at inherited permissions. A scalar prefix cannot become callable.
+
+The existing bounded function-body normalizer also consumes literal-coordinate
+beta evidence before reapplying remaining argument groups. Coordinate and
+anonymous-body expansion are separate result variants: both retain actual
+application WD, and the anonymous branch additionally checks its own guard.
+No AST, environment state, scope lifetime or search ceiling changes are needed.
+See [the struct coordinate tracer](../../examples/stmt_nodes/definition/struct_function_coordinate_bridges.lit) and
+[finite_function_coordinate_call.lit](../../examples/proof_nodes/equal/by_object_definition/by_fn_application/finite_function_coordinate_call.lit).
+
+Native tuple coordinate equality checks both complete one-based finite domains
+before its fixed-coordinate or full-domain forall premises. Return upper bounds
+do not identify function values; set-valued coordinates also use this route.
+The Cartesian object-definition owner matches the complete generated function
+set, including the exact domain and every factor clause. Cartesian reconstruction
+uses ordinary set equality and this definition, without constructor dimensions
+or coordinate images. See the
+[complete definition](../../examples/proof_nodes/equal/by_object_definition/cart_function_set_definition.lit)
+and [extensionality](../../examples/stmt_nodes/release_and_expand/tuple_exact_function_extensionality.lit)
+tracers. General literal application heads and the dedicated cart release
+statement remain separate pending interfaces.
+
 ## Checked eval result publication
 
 `eval expr` checks source WD, computes exactly, verifies every executed
@@ -304,8 +337,9 @@ Cart equality no longer infers construction dimensions on its opposite side:
 generating incompatible `cart_dim({})` facts. `cart_dim` is retired at parsing,
 WD and numeric evaluation, including calls with literal cart arguments. The
 remaining old AST types and the new tuple/cart application/release interfaces
-are still tracked in the tuple/cart implementation plan. KB ABI 5 invalidates
-previous checked products through the existing compatibility mechanism.
+are still tracked in the tuple/cart implementation plan. Current KB ABI 7
+invalidates previous checked products through the existing compatibility mechanism,
+including old shape/index inference products; this changes no storage layout.
 
 Finite product/unordered-fold bijective reindexing, finite-sum triangle and
 finite indexed union have dedicated leaf proof structs and exhaustive output
@@ -315,6 +349,12 @@ Its callback certificate mirrors same-function, literal-restriction, checked
 whole-function equality and retained scoped-pointwise routes; disjointness and
 part/domain equalities remain verified requirements.
 
+Finite-product fresh insertion and member removal consume the same callback
+agreement. Their source function keeps its complete domain; the restricted
+callback is a separate function value. The original freshness/membership,
+finite-set and inserted/removed factor checks remain. The persistent tracer is
+[finite_product_exact_restrictions.lit](../../examples/proof_nodes/equal/by_builtin_rule/finite_product_exact_restrictions.lit).
+
 The index-union leaf matches a whole checked forall source, retaining its
 FactId and alpha renamings rather than broadening forall instantiation search.
 All leaves inherit the caller's bounded premise state. Whole-fact WD precedes
@@ -322,6 +362,40 @@ truth search and owns numeric domains, actual callable signatures and fold
 laws. These changes add no AST or runtime-state representation.
 
 See [the source-owned acceptance record](../../examples/test_objs/experience/problem_notes/thirteen_builtin_rules_2026-10-05.md)
-and fifteen dedicated [proof-node tracers](../../examples/proof_nodes/README.md).
+and the original fifteen [proof-node capabilities](../../examples/proof_nodes/README.md).
+Cartesian reconstruction now consumes the complete set definition; its old
+constructor-shape leaf was removed, and its positive/negative and output/scope
+consumers remain in the same acceptance suite.
 The scoped consumer gates cover typed/Normal/Detailed and ten languages;
 repository-wide publication and independent Lean replay remain separate gates.
+
+Function graph nonemptiness consumes checked complete-domain sources and
+actual input/guard evidence. Empty-domain images use the same sources;
+constant singleton images also require an inhabited domain. FnRange WD now
+retains those sources for literal, named, aliased and returned functions.
+Function-space existence remains a separate constructive contract: empty
+domains allow empty return carriers, while nested return spaces retain each
+constant-function existence layer. `have f S` proves S itself nonempty.
+The acceptance tracer is
+`examples/proof_nodes/equal/by_builtin_rule/function_empty_domain_graph.lit`;
+`function_graph` tests retain false controls, rollback and localized output.
+
+Constructive return-space existence also consumes checked carrier equalities
+and finite Cartesian factors. The traversal uses a local canonical-ObjIR set
+to reject proof cycles; it owns no persistent cache or Env field. FnSet, seq
+and finite_seq retain the same nested existence certificates. Fully closed
+integer range membership is an exact calculation leaf with checked integer
+values and endpoints, so returned finite-function domains remain readable
+under the caller's inherited premise ceiling.
+
+`verify_function_domain_empty` distinguishes an empty used parameter carrier
+from a checked guard exclusion. The latter builds fresh typed input parameters,
+assumes every other original guard and verifies the selected atomic guard's
+negation under the caller's existing permissions. Its scoped forall result is
+retained as evidence; no guard is published to the parent. Empty graph, image,
+function-space and nonemptiness consumers read the same success certificate.
+Imported definitions retain the existing `release obj def` publication boundary.
+
+Anonymous-function construction checks complete-domain absence before introducing its own binders or assuming its guards. Header, guard, return-carrier and body WD still run. The return-bound stage retains either CheckedMembership or EmptyCompleteDomain evidence; an empty domain never publishes a standalone false body membership. The guarded-empty tracer covers named empty-return constructors and the negative manifest preserves nonempty return and undefined-body failures.
+
+Retired product operators fail at the object-WD entry before known WD memory is consulted. Their legacy by-definition WD producers have been removed. Legacy shape fact payloads fail at the predicate-signature stage before stored-fact/domain reuse; this keeps internal or stale payloads from bypassing parser retirement while their AST deletion awaits concrete approval. Ordinary coordinate beta, reconstruction and homogeneous carrier readers consume the actual member/equality/domain source and retain generic-call fallthrough.

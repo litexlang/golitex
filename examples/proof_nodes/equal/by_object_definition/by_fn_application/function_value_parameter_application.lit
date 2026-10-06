@@ -1,0 +1,18 @@
+# Tracer: a function-value parameter may be a returned function application.
+# Before (v11 rejected the exact body expansion):
+# have fn mk(x R) cart(R,Z) = (x,2)
+# have fn first(p cart(R,Z)) R = p(1)
+# first(mk(7)) = mk(7)(1)
+# Former result: search_proof; substitution discarded CannotUseAsFnHead.
+# Now: preserve the inserted application's groups and append the parameter call.
+have fn mk(x R) cart(R,Z) = (x,2)
+have fn first(p cart(R,Z)) R = p(1)
+first(mk(7)) = mk(7)(1)
+mk(7)(1) = 7
+
+have fn maker(seed R) fn(x,y R) R = fn(x,y R) R {seed+x+y}
+have fn apply_pair(f fn(x,y R) R,x,y R) R = f(x,y)
+apply_pair(maker(1),2,3) = maker(1)(2,3)
+maker(1)(2,3) = 6
+# Boundary: wrong groups, guards, complete domains and coordinate values reject.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/equal/by_object_definition/by_fn_application/function_value_parameter_application.lit

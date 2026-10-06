@@ -1,0 +1,4 @@
+# Checked carrier equalities supply a set, never a member of that set.
+have Base set = finite_seq(R,2)
+have Space set = Base
+Space(1) $in R

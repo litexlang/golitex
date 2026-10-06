@@ -10,7 +10,7 @@ use crate::ast::names::AtomicName;
 use crate::ast::obj::{
     Add, ArithmeticOperator, Cart, ComplexOperator, ExpLogOperator, FnObj, FnObjHead, FnSet,
     FunctionSpace, IntegerOperator, IntervalObj, IteratedOperator, Literal, Mul, Number, Obj,
-    ObjAtIndex, OneSideInfinityIntervalObj, ProductShape, SetFormer, SetOperator, StandardSet,
+    OneSideInfinityIntervalObj, ProductShape, SetFormer, SetOperator, StandardSet,
     StructAndFieldAccessObj, StructObj, TrigOperator, TupleDim,
 };
 use crate::ast::param::SetBoundParameterList;
@@ -122,9 +122,8 @@ pub enum InFactSearchProofByBuiltinRule {
     // Example: `1 $in {1, 2}`.
     ListSetElementMembership(ListSetElementMembershipBuiltinRuleProof),
     // Cartesian-product membership.
-    // Mathematical property: `e $in cart(A1,…,An)` (n≥2) from coordinate
-    // memberships (literal tuple directly; otherwise after `$is_tuple` and
-    // `tuple_dim(e)=n`).
+    // Mathematical property: complete domain I_n and every coordinate
+    // belongs to its corresponding factor, including n=0 and n=1.
     // Example: `(1, 2) $in cart(R, Z)`.
     CartMembership(CartMembershipBuiltinRuleProof),
     // Power-set membership from subset.
@@ -302,15 +301,10 @@ pub struct ListSetElementMembershipBuiltinRuleProof {
     pub equality_proof: VerifyFactResult,
 }
 
-// Coordinate `$in` factor proofs; optional shape/dim for non-literal elements.
+// Complete function domain, followed by the checked cart definition and every coordinate.
 pub struct CartMembershipBuiltinRuleProof {
-    pub shape_and_dimension: Option<CartMembershipShapeProof>,
-    pub coordinate_memberships: Vec<VerifyFactResult>,
-}
-
-pub struct CartMembershipShapeProof {
-    pub is_tuple: VerifyFactResult,
-    pub dimension: VerifyFactResult,
+    pub domain: crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 pub struct PowerSetMembershipBuiltinRuleProof {
@@ -1302,92 +1296,27 @@ impl Runtime {
         )))
     }
 
-    // Prove `e $in cart(A1,…,An)` (n≥2).
-    // Literal tuple: each `ai $in Ai`.
-    // Otherwise: `$is_tuple(e)`, `tuple_dim(e)=n`, and each `e[i] $in Ai`.
-    // Example: `(1, 2) $in cart(R, Z)`.
+    // cart membership means the exact finite input domain plus every factor.
+    // Checked function sources replace the old tuple-shape/dimension premises.
     fn cart_membership_proof(
         &mut self,
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
-        let Obj::ProductShape(ProductShape::Cart(cart)) = &fact.set else {
-            return Ok(None);
-        };
-        if cart.args.len() < 2 {
-            return Ok(None);
-        }
-
-        let (shape_and_dimension, coordinates): (Option<CartMembershipShapeProof>, Vec<Obj>) =
-            match &fact.element {
-                Obj::ProductShape(ProductShape::Tuple(tuple)) if tuple.args.len() == cart.args.len() => (
-                    None,
-                    tuple.args.iter().map(|a| a.as_ref().clone()).collect(),
-                ),
-                Obj::ProductShape(ProductShape::Tuple(_)) => return Ok(None),
-                _ => {
-                    let is_tuple_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact {
-                        fact_id: self.global_ids.allocate_fact_id(),
-                        set: fact.element.clone(),
-                        line_file: fact.line_file.clone(),
-                    }));
-                    let is_tuple = self.verify_builtin_rule_premise(&is_tuple_fact, verify_state.clone())?;
-                    if is_tuple.is_failed() {
-                        return Ok(None);
-                    }
-                    let dimension_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                        fact_id: self.global_ids.allocate_fact_id(),
-                        left: Obj::ProductShape(ProductShape::TupleDim(TupleDim {
-                            arg: Box::new(fact.element.clone()),
-                        })),
-                        right: Obj::Literal(Literal::Number(Number {
-                            normalized_value: cart.args.len().to_string(),
-                        })),
-                        line_file: fact.line_file.clone(),
-                    }));
-                    let dimension = self.verify_builtin_rule_premise(&dimension_fact, verify_state.clone())?;
-                    if dimension.is_failed() {
-                        return Ok(None);
-                    }
-                    let coordinates = (0..cart.args.len())
-                        .map(|index| {
-                            Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex {
-                                obj: Box::new(fact.element.clone()),
-                                index: Box::new(Obj::Literal(Literal::Number(Number {
-                                    normalized_value: (index + 1).to_string(),
-                                }))),
-                            }))
-                        })
-                        .collect();
-                    (
-                        Some(CartMembershipShapeProof {
-                            is_tuple,
-                            dimension,
-                        }),
-                        coordinates,
-                    )
-                }
-            };
-
-        let mut coordinate_memberships = Vec::with_capacity(cart.args.len());
-        for (coordinate, factor) in coordinates.iter().zip(cart.args.iter()) {
-            let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                element: coordinate.clone(),
-                set: factor.as_ref().clone(),
-                line_file: fact.line_file.clone(),
-            }));
-            let proof = self.verify_builtin_rule_premise(&membership, verify_state.clone())?;
-            if proof.is_failed() {
-                return Ok(None);
-            }
-            coordinate_memberships.push(proof);
+        let Obj::ProductShape(ProductShape::Cart(cart)) = &fact.set else { return Ok(None); };
+        let target = self.cart_function_signature(cart);
+        let Ok(domain) = self.verify_complete_function_domain(&fact.element, &target, verify_state)?
+        else { return Ok(None); };
+        let Ok(requirements) = self.cart_coordinate_membership_requirements(&fact.element, &fact.set)
+        else { return Ok(None); };
+        let mut proof_of_requirement_facts = Vec::new();
+        for requirement in requirements {
+            let proof = self.verify_builtin_rule_premise(&requirement, verify_state)?;
+            if proof.is_failed() { return Ok(None); }
+            proof_of_requirement_facts.push(proof);
         }
         Ok(Some(InFactSearchProofByBuiltinRule::CartMembership(
-            CartMembershipBuiltinRuleProof {
-                shape_and_dimension,
-                coordinate_memberships,
-            },
+            CartMembershipBuiltinRuleProof { domain, proof_of_requirement_facts },
         )))
     }
 
@@ -1414,16 +1343,18 @@ impl Runtime {
                 tuple.args.iter().map(|a| a.as_ref().clone()).collect()
             }
             Obj::ProductShape(ProductShape::Tuple(_)) => return Ok(None),
-            _ => (0..def.fields.len())
-                .map(|index| {
-                    Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex {
-                        obj: Box::new(fact.element.clone()),
-                        index: Box::new(Obj::Literal(Literal::Number(Number {
-                            normalized_value: (index + 1).to_string(),
-                        }))),
-                    }))
-                })
-                .collect(),
+            _ => {
+                let mut values = Vec::with_capacity(def.fields.len());
+                for index in 0..def.fields.len() {
+                    let Ok(value) = crate::execute::execute_fact_stmt::finite_function::finite_function_coordinate(
+                        &fact.element, index,
+                    ) else {
+                        return Ok(None);
+                    };
+                    values.push(value);
+                }
+                values
+            }
         };
         for (field, value) in def.fields.iter().zip(field_values.iter()) {
             subst.insert(field.binding.id, value.clone());

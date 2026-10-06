@@ -1,0 +1,10 @@
+# Boundary: correct setup followed by an invalid coordinate, call, guard or equality.
+# Gate: litex -strict -f examples/negative/exact_function_domains/struct_function_coordinate_false_guard.lit
+
+struct Guarded:
+    point R
+    call fn(x R:x=point) R
+have fn at_zero(x R:x=0) R=0
+have guarded &Guarded=(0,at_zero)
+guarded.point=guarded(1)=0
+guarded(2)(1)=0

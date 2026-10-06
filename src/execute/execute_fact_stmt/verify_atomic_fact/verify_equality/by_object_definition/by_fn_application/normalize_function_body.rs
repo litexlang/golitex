@@ -7,6 +7,8 @@ use crate::execute::execute_fact_stmt::{ObjWellDefinedProof, VerifyObjWellDefine
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::runtime::{Runtime, RuntimeResult};
+use crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof;
+use crate::execute::execute_fact_stmt::known_tuple::{KnownTupleShapeProof, literal_positive_usize, tuple_function_head};
 use super::super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
 
 const MAX_BODY_EXPANSIONS: usize = 64;
@@ -17,13 +19,27 @@ pub struct FunctionBodyNormalizationProof {
     pub expanded_body: Obj,
 }
 
-pub struct FunctionBodyExpansionProof {
+pub enum FunctionBodyExpansionProof {
+    Anonymous(AnonymousFunctionBodyExpansionProof),
+    FiniteCoordinate(FiniteCoordinateBodyExpansionProof),
+}
+
+pub struct AnonymousFunctionBodyExpansionProof {
     pub application: Obj,
     pub application_well_defined: ObjWellDefinedProof,
     pub function_body: FunctionBodySourceProof,
     // Check the selected body's own carrier and guard, even if its name also
     // has another callable signature. The literal WD retains its binder env.
     pub body_application_well_defined: ObjWellDefinedProof,
+    pub expanded_body: Obj,
+    pub continued_body: Obj,
+}
+
+pub struct FiniteCoordinateBodyExpansionProof {
+    pub application: Obj,
+    pub application_well_defined: ObjWellDefinedProof,
+    pub source: Box<FiniteFunctionSignatureProof>,
+    pub index: usize,
     pub expanded_body: Obj,
     pub continued_body: Obj,
 }
@@ -94,7 +110,7 @@ impl Runtime {
                         if expansions.len() >= MAX_BODY_EXPANSIONS {
                             return Ok(None);
                         }
-                        let body = step.expanded_body.clone();
+                        let body = step.expanded_body().clone();
                         expansions.push(step);
                         return Ok(Some(body));
                     }
@@ -135,13 +151,13 @@ impl Runtime {
                     return Ok(None);
                 }
                 let Some(continued_body) = append_function_argument_groups(
-                    &step.expanded_body,
+                    step.expanded_body(),
                     &normalized_call.body[1..],
                 ) else {
                     return Ok(None);
                 };
                 let mut step = step;
-                step.continued_body = continued_body.clone();
+                step.set_continued_body(continued_body.clone());
                 expansions.push(step);
                 active_heads.push(call.head.as_ref().clone());
                 let result = self.normalize_function_body_rec(
@@ -201,6 +217,26 @@ impl Runtime {
     ) -> RuntimeResult<Option<FunctionBodyExpansionProof>> {
         let application = Obj::FnObj(prefix.clone());
         let args: Vec<Obj> = prefix.body[0].iter().map(|a| a.as_ref().clone()).collect();
+        // A finite graph's coordinate is a beta step before any later call.
+        // Example: (f, 7)'s named value `p` gives p(1)(x) = f(x).
+        if args.len() == 1 {
+            if let Some(index) = literal_positive_usize(&args[0]) {
+                for source in self.finite_function_signatures(&tuple_function_head(prefix)) {
+                    let KnownTupleShapeProof::TupleEquality(value) = &source.source else { continue; };
+                    let Some(coordinate) = value.value.args.get(index - 1) else { continue; };
+                    let expanded_body = coordinate.as_ref().clone();
+                    if expected_body.is_some_and(|expected| expected != &expanded_body) { continue; }
+                    let application_well_defined = match self.verify_obj_well_definedness(&application, state)? {
+                        VerifyObjWellDefinedResult::Success(proof) => proof,
+                        VerifyObjWellDefinedResult::Failed { .. } => return Ok(None),
+                    };
+                    return Ok(Some(FunctionBodyExpansionProof::FiniteCoordinate(FiniteCoordinateBodyExpansionProof {
+                        application, application_well_defined, source: Box::new(source), index,
+                        continued_body: expanded_body.clone(), expanded_body,
+                    })));
+                }
+            }
+        }
         let candidates = self.function_body_candidates(prefix)?;
         for (anon, function_body) in candidates {
             if args.len() != set_bound_parameter_count(&anon.body.set_bound_parameters) {
@@ -227,14 +263,14 @@ impl Runtime {
                     VerifyObjWellDefinedResult::Success(p) => p,
                     VerifyObjWellDefinedResult::Failed { .. } => continue,
                 };
-            return Ok(Some(FunctionBodyExpansionProof {
+            return Ok(Some(FunctionBodyExpansionProof::Anonymous(AnonymousFunctionBodyExpansionProof {
                 application,
                 application_well_defined,
                 function_body,
                 body_application_well_defined,
                 continued_body: expanded_body.clone(),
                 expanded_body,
-            }));
+            })));
         }
         Ok(None)
     }
@@ -277,6 +313,22 @@ impl Runtime {
             }
         }
         Ok(candidates)
+    }
+}
+
+impl FunctionBodyExpansionProof {
+    fn expanded_body(&self) -> &Obj {
+        match self {
+            Self::Anonymous(proof) => &proof.expanded_body,
+            Self::FiniteCoordinate(proof) => &proof.expanded_body,
+        }
+    }
+
+    fn set_continued_body(&mut self, body: Obj) {
+        match self {
+            Self::Anonymous(proof) => proof.continued_body = body,
+            Self::FiniteCoordinate(proof) => proof.continued_body = body,
+        }
     }
 }
 

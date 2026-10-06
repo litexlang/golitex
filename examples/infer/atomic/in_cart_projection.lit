@@ -1,10 +1,15 @@
-# Infer: InFact.CartProjection
+# Infer: InFact.CartCoordinates
 # When: store `u $in cart(R, Z)`.
-# Infers: tuple shape + coordinate memberships.
-# Run: litex -f examples/infer/atomic/in_cart_projection.lit
+# Before: the seed also published shape, dimension and indexed coordinates.
+# forall u cart(R,Z):
+#     $is_tuple(u)
+#     tuple_dim(u)=2
+#     u[1] $in R
+#     u[2] $in Z
+# Now: only ordinary coordinate membership is needed.
+# Boundary: u(3) must fail WD; u(1) need not belong to Z.
+# Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/infer/atomic/in_cart_projection.lit
 
 forall u cart(R, Z):
-    $is_tuple(u)
-    tuple_dim(u) = 2
-    u[1] $in R
-    u[2] $in Z
+    u(1) $in R
+    u(2) $in Z
