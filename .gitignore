@@ -10,25 +10,6 @@
 
 # From former litex/.gitignore (paths now at root)
 binary/
-scripts/*
-!scripts/update_external_repos.sh
-!scripts/build_dataset_current_data.py
-!scripts/dataset_review_dashboard.html
-!scripts/legacy_std/
-!scripts/legacy_std/**
-!scripts/Analysis2/
-scripts/Analysis2/*
-!scripts/Analysis2/formalization_plan.md
-!scripts/Analysis2/todo.md
-!scripts/Analysis2/source_manifest.yaml
-!scripts/Analysis2/items/
-!scripts/Analysis2/items/**
-!scripts/Analysis2/unfinished/
-!scripts/Analysis2/unfinished/**
-!scripts/Analysis2/finished/
-!scripts/Analysis2/finished/**
-!scripts/Analysis2/experience/
-!scripts/Analysis2/experience/**
 examples/hidden
 
 # Editor / tooling
@@ -51,7 +32,6 @@ examples/testings/.order
 
 mathematics_in_litex/
 
-scripts/gsm8k-litex/
 .venv-mmqa/
 
 MATH-500-litex/
@@ -69,8 +49,6 @@ std/todo.md
 std/*/todo.md
 
 todo.md
-!scripts/legacy_std/todo.md
-!scripts/Analysis2/todo.md
 
 kernel_plan.md
 
@@ -78,7 +56,6 @@ example_cleanup_plan.md
 
 todo/
 
-/scripts
 
 # Independent local planning repository.
 /plan/
@@ -96,3 +73,8 @@ scratch/
 pptbuild
 
 pending_showcase
+
+# Local archive of the retired kernel; keep out of version control.
+
+# The entire root scripts workspace is local-only, with no publication exceptions.
+/scripts/
