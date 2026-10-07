@@ -1,4 +1,5 @@
 use crate::ast::fact::{AtomicFact, Fact, OrFact};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::ast::obj::Obj;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
@@ -258,6 +259,7 @@ pub struct AssumeNegatedOrBranchResult {
 
 pub struct OrFactSearchProofByKnownOrFact {
     pub cite_fact_id: FactId,
+    pub why_parameters_of_known_fact_are_equal_to_givens: Vec<EqualFactSearchedProof>,
 }
 
 pub fn or_fact_result_from_wd_fail(

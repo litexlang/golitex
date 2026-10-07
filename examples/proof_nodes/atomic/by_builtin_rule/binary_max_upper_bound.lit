@@ -1,0 +1,15 @@
+# Rule: MaxUpperBound
+# Before (rejected):
+# forall a,b R:
+#     a<=max(a,b)
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall a,b R:
+    a<=max(a,b)
+
+forall a,b R:
+    b<=max(a,b)
+
+# Boundary: Real operands; neither reverse nor strict operand bounds hold universally.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/binary_max_upper_bound.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

@@ -1,0 +1,19 @@
+# Rule: ComplexModulusCoordinates
+# Before (rejected):
+# forall z C:
+#     sqrt(re(z)^2+img(z)^2)=C_abs(z)
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall z C:
+    sqrt(re(z)^2+img(z)^2)=C_abs(z)
+
+forall z C:
+    C_abs(z)=sqrt(re(z)^2+img(z)^2)
+
+forall z C:
+    0<=re(z)^2+img(z)^2
+    C_abs(z)=sqrt(re(z)^2+img(z)^2)
+
+# Boundary: Principal nonnegative modulus; altered signs, powers and coordinate subjects reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/complex_modulus_coordinates_symbolic.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

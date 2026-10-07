@@ -174,6 +174,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     ArccosExactNegOne(ArccosExactNegOneBuiltinRuleProof),
     ArctanExactZero(ArctanExactZeroBuiltinRuleProof),
     ArccotExactZero(ArccotExactZeroBuiltinRuleProof),
+    NegativeIntegerPowerReciprocal(super::by_power_laws::NegativeIntegerPowerReciprocalBuiltinRuleProof),
     PowerProductSameBase(PowerProductSameBaseBuiltinRuleProof),
     PowerOfPower(PowerOfPowerBuiltinRuleProof),
     PowerOfProduct(PowerOfProductBuiltinRuleProof),

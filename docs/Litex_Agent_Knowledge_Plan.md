@@ -13,9 +13,11 @@ consume. A reference system should teach that progression through real code,
 including domains, scope, explicit proof steps, and assumptions. Its success
 must be measured on new tasks, rather than by the number of indexed files.
 
-This document specifies the proposed system and its rollout. The guide, index,
-generated navigation, and agent evaluation described below are future work.
-The current deliverable is this plan, with a checked representative example.
+This document specifies the reference system and its rollout. The initial
+[Agent Guide](AgentGuide.md) now teaches persistent Session context, failure
+interpretation and current-version verification, with a checked artificial
+example. The catalogue, generated navigation and agent evaluation remain
+future work; this guide does not complete those rollout phases.
 
 ## One task through the proposed system
 
@@ -99,14 +101,14 @@ role when referenced.
 
 ## Proposed deliverables
 
-The paths in this table are proposed, not implemented by this document.
+The initial guide and its AGENTS entry exist; the remaining paths and expansion are proposed.
 
 | Artifact | Responsibility |
 | --- | --- |
-| `docs/AgentGuide.md` | A one- or two-page entry explaining context growth, task routing, the current verification loop, and failure interpretation. |
+| [`docs/AgentGuide.md`](AgentGuide.md) | Implemented initial entry: context growth, persistent Session repair, current verification and focused reference routing. |
 | `docs/knowledge/index.json` | One maintained catalogue of task meanings, references, conditions, roles, and validation receipts. |
 | `docs/knowledge/README.md` | Browsable navigation generated from the catalogue. |
-| Short links from root README and AGENTS.md | Make the entry discoverable while retaining repository working agreements. |
+| Entry from root `AGENTS.md` | Implemented; retains repository working agreements and foregrounds the Session workflow. |
 
 Human readers may follow the learner-to-example-to-showcase-to-textbook path.
 Agents may select a task and load only its reference packet. Both paths use
@@ -297,3 +299,9 @@ The verifier binary SHA-256 was
 These focused checks concern the representative code and document references
 only. Implementing the catalogue, evaluating agents, and validating the
 remaining corpus are separate future acceptance steps.
+
+The initial Agent Guide's persistent-session example has separate
+[verification evidence](../tests/tooling/acceptance/agent-session-guide-2026-10-07.json).
+It checks context retention and failure boundaries, not the proposed catalogue
+or agent evaluation. That receipt identifies its isolated HEAD release build
+and the unrelated working-tree compilation limitation.

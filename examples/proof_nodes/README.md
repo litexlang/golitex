@@ -327,7 +327,10 @@ Equality BuiltinRule identities (Stage B wave 7):
 `subtraction_from_known_addition.lit`, `additive_inverse_from_sum.lit`.
 
 Known Or replay uses the existing structural alpha identity for nested object
-binders while retaining exact free identities, conditions and carriers. See
+binders while retaining exact free identities, conditions and carriers.
+Equality substitution retains an ordered equality proof for every argument,
+including the stored FactIds along transitive paths. See
+[`stored_equality_transport.lit`](or/by_known_or_fact/stored_equality_transport.lit) and
 [`set_builder_union_membership.lit`](or/by_known_or_fact/set_builder_union_membership.lit).
 Equality BuiltinRule identities (Stage B wave 9):
 set empties / commutative / idempotent; intersect-from-subset;
@@ -978,3 +981,10 @@ expansions and transported subtraction bounds). Focused tests preserve order
 citations, denominator guards, poles, incorrect formulas and failed-scope reuse.
 
 The factorial-as-product author tracer now reuses one checked identity-function object through induction, then verifies the original literal-function endpoint. Its induction result still needs explicit instantiation; the redundant echo after theorem release was removed. This preserves the current local alpha/equality policy and performs no global graph-endpoint scan. The relevant `common_obj_relations` consumer exercises that current author.
+
+
+## Local scalar builtin migrations
+
+The 2026-10-07 additions cover [integer reciprocal powers](equal/by_builtin_rule/power_negative_integer_reciprocal.lit), [symbolic complex modulus](equal/by_builtin_rule/complex_modulus_coordinates_symbolic.lit), complex quotient [real](equal/by_builtin_rule/complex_quotient_real_coordinates.lit) and [imaginary](equal/by_builtin_rule/complex_quotient_imaginary_coordinates.lit) coordinates, intrinsic [exponential](atomic/by_builtin_rule/exp_nonzero_intrinsic.lit) and [factorial](atomic/by_builtin_rule/factorial_nonzero_intrinsic.lit) nonzero values, sign bounds/reflection/weak order, and binary min/max bounds/weak order.
+
+Each property has its own strict runnable file and dedicated rule evidence. Monotonicity retains the actual argument orders; an unchanged argument carries structural identity evidence. Quotient WD retains the nonzero denominators. A guarded universal may need the existing source-order introduction when upfront WD cannot reuse the whole stored proposition. The `legacy_six_simple_bt_tests` regressions cover exact original sources, false and invalid-domain boundaries, inherited permissions, repeat/alpha reuse, failed publication, detailed premises, graph edges and all output locales. `run_examples_legacy_six_simple_bt_tracers` collects the 16 dedicated examples; it does not claim whole-corpus coverage.

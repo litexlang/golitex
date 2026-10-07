@@ -21,6 +21,10 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
+    ExpNonzero(ExpNonzeroProof),
+    FactorialNonzero(FactorialNonzeroProof),
+    SignNonzeroFromArgument(SignNonzeroFromArgumentProof),
+    SignNonzeroReflection(SignNonzeroReflectionProof),
     CosNonzeroOnFirstQuadrant(super::trig_first_quadrant::CosNonzeroOnFirstQuadrantProof),
     SinNonzeroOnFirstQuadrant(super::trig_first_quadrant::SinNonzeroOnFirstQuadrantProof),
     LcmNonzeroFromNonzeroOperands(super::common_relation_nonzero::LcmNonzeroFromNonzeroOperandsProof),
@@ -113,6 +117,26 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `x $in A` and `y $notin A` ⇒ `x != y`.
     // Example: trust `x $in A`; trust `y $notin A`; prove `x != y`.
     MembershipContradiction(MembershipContradictionBuiltinRuleProof),
+}
+// exp(x)>0 on R and factorial(n)>0 on N; parent fact WD owns those domains.
+// Examples: forall x R: exp(x)!=0; forall n N: factorial(n)!=0.
+pub struct ExpNonzeroProof;
+pub struct FactorialNonzeroProof;
+// sign(x)!=0 iff x!=0 on R; consume only the actual nonzero endpoint.
+pub struct SignNonzeroFromArgumentProof {
+    pub argument_nonzero: AtomicExceptEqualityFactKnownProof,
+}
+impl SignNonzeroFromArgumentProof {
+    pub fn new(argument_nonzero: AtomicExceptEqualityFactKnownProof) -> Self { Self { argument_nonzero } }
+}
+pub struct SignNonzeroReflectionProof {
+    pub real_proof: VerifyFactResult,
+    pub sign_nonzero: AtomicExceptEqualityFactKnownProof,
+}
+impl SignNonzeroReflectionProof {
+    pub fn new(real_proof: VerifyFactResult, sign_nonzero: AtomicExceptEqualityFactKnownProof) -> Self {
+        Self { real_proof, sign_nonzero }
+    }
 }
 
 pub struct InequalityFromDifferenceNonzeroBuiltinRuleProof {
@@ -325,6 +349,41 @@ impl Runtime {
         // Prove `a != b` from a known / already-proved `b != a` (no recursive flip).
         if let Some(proof) = self.try_not_equal_symmetry(fact) {
             return Ok(Some(proof));
+        }
+
+        for (value, zero) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            if !is_zero_obj(zero) { continue; }
+            match value {
+                Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ExpNonzero(ExpNonzeroProof)));
+                }
+                Obj::IntegerOperator(crate::ast::obj::IntegerOperator::Factorial(_)) => {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::FactorialNonzero(FactorialNonzeroProof)));
+                }
+                Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)) => {
+                    if let Some(argument_nonzero) = self.known_not_equal_proof(&sign.arg, zero)
+                        .or_else(|| self.known_not_equal_proof(zero, &sign.arg)) {
+                        return Ok(Some(NotEqualFactSearchProofByBuiltinRule::SignNonzeroFromArgument(
+                            SignNonzeroFromArgumentProof::new(argument_nonzero),
+                        )));
+                    }
+                }
+                _ => {}
+            }
+            let sign = Obj::ArithmeticOperator(ArithmeticOperator::Sign(crate::ast::obj::Sign { arg: Box::new(value.clone()) }));
+            if let Some(sign_nonzero) = self.known_not_equal_proof(&sign, zero)
+                .or_else(|| self.known_not_equal_proof(zero, &sign)) {
+                let domain: Fact = InFact {
+                    fact_id: self.global_ids.allocate_fact_id(), element: value.clone(),
+                    set: Obj::StandardSet(StandardSet::R), line_file: fact.line_file.clone(),
+                }.into();
+                let real_proof = self.verify_builtin_rule_premise(&domain, verify_state)?;
+                if !real_proof.is_failed() {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::SignNonzeroReflection(
+                        SignNonzeroReflectionProof::new(real_proof, sign_nonzero),
+                    )));
+                }
+            }
         }
 
         // Consume a checked nonzero difference/sum; never recursively prove it.

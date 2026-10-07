@@ -1,0 +1,23 @@
+# Rule: MaxWeakMonotone
+# Before (rejected):
+# forall a,b,c,d R:
+#     a<=c
+#     b<=d
+#     =>:
+#         max(a,b)<=max(c,d)
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall a,b,c,d R:
+    a<=c
+    b<=d
+    =>:
+        max(a,b)<=max(c,d)
+
+forall a,b,c R:
+    a<=b
+    =>:
+        max(c,a)<=max(c,b)
+
+# Boundary: Both argument orders must be checked, or that argument must be identical; one missing unequal argument order rejects.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/binary_max_weak_monotone.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

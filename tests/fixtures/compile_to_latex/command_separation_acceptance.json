@@ -1,0 +1,352 @@
+{
+  "date": "2026-10-07",
+  "impact": "L3 launch producer/consumer contract",
+  "user_authorization": "Separate executable extraction / LaTeX commands approved; local Runtime::new match/provenance adaptation explicitly approved on 2026-10-07.",
+  "architecture": {
+    "before": "main.rs run_latex_args interception; LaunchCommand::Extract for C/Python",
+    "after": [
+      "LaunchCommand::ExtractExecutableCode / ExtractInput -> run_extract_executable_code -> ExtractExecutableCodeResult",
+      "LaunchCommand::CompileToLatex / LatexInput -> run_compile_to_latex -> CompileToLatexResult"
+    ],
+    "latex_pipeline": "tokenize -> Runtime::parse -> AST rendering; no verification or execution"
+  },
+  "runtime_scope": "Only command names and existing CodeSource / RealOrVirtualPath input mapping; Runtime state fields and lifecycle unchanged.",
+  "tests": [
+    {
+      "command": "cargo test --release --lib launch_command_tests -- --nocapture",
+      "exit_code": 0,
+      "passed": 14
+    },
+    {
+      "command": "cargo test --release --lib latex_command_tests -- --nocapture",
+      "exit_code": 0,
+      "passed": 3
+    },
+    {
+      "command": "cargo test --release --lib compile_to_latex -- --nocapture",
+      "exit_code": 0,
+      "passed": 11
+    },
+    {
+      "command": "cargo test --release --lib internal_error_tests -- --nocapture",
+      "exit_code": 0,
+      "passed": 2
+    },
+    {
+      "command": "cargo test --release --test compile_to_latex_cli --test cli_feedback -- --nocapture",
+      "exit_code": 0,
+      "passed": 20
+    }
+  ],
+  "total_passed": 50,
+  "release_build": {
+    "command": "cargo build --release",
+    "exit_code": 0,
+    "binary_sha256": "97ea9ab12ad6d227ec19d01ee55128ee092b49347c5a45870a749194a7fdca6f"
+  },
+  "source_sha256": {
+    "src/launch_command.rs": "a674481de8a1b75b380433902096180b54158d278b0a9620ec19bf64f04f0eb9",
+    "src/runtime/runtime.rs": "c89f82c5c1224e55c331fb9861996dde3db99f7966fa274593217895846d5596",
+    "src/main.rs": "4e3dc724b16f79ad06451b428da038c416ed689387314e8d7dc98889d406f814",
+    "src/run/run_command.rs": "cd5e025ef24cb5caf7ed8a5b60638a38b700f00b0690517dd641c9328c4be6e3",
+    "src/run/run_command_outcome.rs": "51f128312c220ad75e109d4cbb8d2d511c1e77822a50d77032bb06c45081652a",
+    "src/run/run_compile_to_latex.rs": "ce7b681a6f21570b55062a3ccc91c2d21d4602de7c43467beaef7b8a7651dc98",
+    "src/run/run_extract_executable_code.rs": "fd3a01029d503c27d4d1aca4cb9041de43d5b13646690058640699cd6ba935fa",
+    "src/compile_to_latex/source.rs": "ed00c1e57b76caf0ed3235efda3cc10a6300217566ee245a3270723f4be5940e",
+    "src/json_output/emit.rs": "01da034dc17dd76c9da5098b403767fa728ac0357807495e276df30d3140b53e"
+  },
+  "baseline_sha256": "26c62626d51bf750259b442ef8c26b8f512249032094ac4c419fc93d7b3cabce",
+  "baseline_comparisons": [
+    {
+      "args": [
+        "-latex",
+        "-lang",
+        "en",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "76946471ff3aee800199f03b6c3f61d2223b4f287d95af9fedf350ad54b25c3e"
+    },
+    {
+      "args": [
+        "-latex",
+        "-document",
+        "-lang",
+        "en",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "3fdb7fef2b4c4fb57c94daaf51044554f2f41689816983d9ec776767bf3dfa76"
+    },
+    {
+      "args": [
+        "-latex",
+        "-lang",
+        "zh",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "916e6d3f971e183dfb6d291ab71dbec419e6c6d2f36581add9154b3cffe287d8"
+    },
+    {
+      "args": [
+        "-latex",
+        "-document",
+        "-lang",
+        "zh",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "3841068ce1a6b523b79955ac6c611ac173a958da43c972b089bfe4c0850b34eb"
+    },
+    {
+      "args": [
+        "-latex",
+        "-lang",
+        "zh-hant",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "f512947c2aaaab69309b1fe2a23709f8b399120ad34f006ef9b07cc162042e5c"
+    },
+    {
+      "args": [
+        "-latex",
+        "-document",
+        "-lang",
+        "zh-hant",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "0fe37ed3b212ca6af0feb2e5921099a202cad80e4617a211192c659e7777948b"
+    },
+    {
+      "args": [
+        "-latex",
+        "-lang",
+        "fr",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "0f311a3619e12a15c420416f102db56fd24ec1bc56c03cadb9e352e3e62d3805"
+    },
+    {
+      "args": [
+        "-latex",
+        "-document",
+        "-lang",
+        "fr",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "fdbe1607e36f42e5fad95f54cfd0eac4750a45c631f6a9dab67cedb7afd9883e"
+    },
+    {
+      "args": [
+        "-latex",
+        "-lang",
+        "ru",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "fac670c04ada442d15523163594ea97915018e4c253d5dcc875f27076f1f37af"
+    },
+    {
+      "args": [
+        "-latex",
+        "-document",
+        "-lang",
+        "ru",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "1cdfc8966eaa5f2ce66257f690d7bd708d13160a3abc339baa6b0ce43498eb9d"
+    },
+    {
+      "args": [
+        "-latex",
+        "-lang",
+        "es",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "bf9ad217f9a4a05b081fe5beedad9c53665d49f6e466fccb1c6b0f0d8652453b"
+    },
+    {
+      "args": [
+        "-latex",
+        "-document",
+        "-lang",
+        "es",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "87b6f4697722606f0c33ebe94ceee7e0e0a5757552b59ee412341df88054bfc6"
+    },
+    {
+      "args": [
+        "-latex",
+        "-lang",
+        "ar",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "e09aa5d0a3be6d1a713ceda3a71f0d1ea569f231ebc7ede21bafbfd6da26ee99"
+    },
+    {
+      "args": [
+        "-latex",
+        "-document",
+        "-lang",
+        "ar",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "cd976085add00957c0dc848398c9ba3d74779441d34b55a5d9ae97afd3cdb042"
+    },
+    {
+      "args": [
+        "-latex",
+        "-lang",
+        "ja",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "7703fcc78e93d1412a223eab5031453d3f15e29d769daca510da9f837027c543"
+    },
+    {
+      "args": [
+        "-latex",
+        "-document",
+        "-lang",
+        "ja",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "19a9251131489b190fadc9abda272e33a63408ffaaabf487700f060e20b5235a"
+    },
+    {
+      "args": [
+        "-latex",
+        "-lang",
+        "ko",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "4a8e70c1f4c0901a9555d911dd6d7798e27324294ef357d935b23b2216c2048e"
+    },
+    {
+      "args": [
+        "-latex",
+        "-document",
+        "-lang",
+        "ko",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "69cfb280cc7cca0d97d52a7f98d9985105d6a2d2c4546fc37171e111ea52292c"
+    },
+    {
+      "args": [
+        "-latex",
+        "-lang",
+        "vi",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "a0c6eec239ee9dee3b610b8146fc6dca21a99a476347ed8a06a4269a7f594268"
+    },
+    {
+      "args": [
+        "-latex",
+        "-document",
+        "-lang",
+        "vi",
+        "-f",
+        "examples/stmt_nodes/compile_to_latex/identity.lit"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "17a976f22ddc7367c5a18312d9c946b89223b4361a89bf8bbdd05af97836a54e"
+    },
+    {
+      "args": [
+        "-extractc",
+        "have a R = 1"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "924de0c6f5789444ab5113e78f13a3032a480d19ad7ff09734b95c4f89ebb648"
+    },
+    {
+      "args": [
+        "-extractpython",
+        "have a R = 1"
+      ],
+      "artifact_envelope_equal": true,
+      "content_sha256": "d964ff8cac6a399441c1d0a1da5f934fef7d39c6e917844fb436a3f949651c9c"
+    }
+  ],
+  "tracer": {
+    "path": "examples/stmt_nodes/compile_to_latex/identity.lit",
+    "verification_command": "target/release/litex -f examples/stmt_nodes/compile_to_latex/identity.lit",
+    "exit_code": 0,
+    "success": true,
+    "session_error": null
+  },
+  "boundary": [
+    {
+      "args": [
+        "-latex",
+        "-e",
+        "1 = 2"
+      ],
+      "exit_code": 0,
+      "artifact": "latex",
+      "success": true
+    },
+    {
+      "args": [
+        "-extractc",
+        "1 = 2"
+      ],
+      "exit_code": 1,
+      "artifact": "extracted_code",
+      "success": false
+    },
+    {
+      "args": [
+        "-extractpython",
+        "1 = 2"
+      ],
+      "exit_code": 1,
+      "artifact": "extracted_code",
+      "success": false
+    }
+  ],
+  "launch_errors": "Invalid or mixed launch flags: stderr, exit 2 via common parser. Selected source/config/conversion errors: artifact JSON, content null, exit 1.",
+  "unchanged_behavior": [
+    "All ten natural languages",
+    "Document/fragment selection and rendered content",
+    "Verified C/Python extraction",
+    "Parse-only dependency metadata and root export order"
+  ],
+  "skipped_gates": "No rendering changes; existing native typography acceptance is retained. No AST, verifier, proof, Lean, textbook or toolchain changes, so no broad gate selected."
+}

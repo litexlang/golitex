@@ -1,0 +1,12 @@
+# Rule: FactorialNonzero
+# Before (rejected):
+# forall n N:
+#     factorial(n)!=0
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall n N:
+    factorial(n)!=0
+
+# Boundary: The argument is natural, including zero; factorial on negative integers or arbitrary reals rejects.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/factorial_nonzero_intrinsic.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

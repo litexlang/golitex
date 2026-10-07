@@ -1,5 +1,12 @@
 # Repository working agreements
 
+## Start with the Agent Guide
+
+Read [docs/AgentGuide.md](docs/AgentGuide.md) before iterative Litex proof work.
+Its first rule is to keep one live Session after a normal statement failure;
+it includes a checked example and the exact restart/replay boundary. Apply the
+`golitex-repository-policy` skill for the full repository working policy.
+
 ## Local-only scripts workspace
 
 The entire `scripts/` directory directly under this repository root is local-only.

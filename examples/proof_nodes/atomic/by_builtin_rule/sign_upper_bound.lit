@@ -1,0 +1,12 @@
+# Rule: SignUpperBound
+# Before (rejected):
+# forall x R:
+#     sign(x)<=1
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall x R:
+    sign(x)<=1
+
+# Boundary: The argument is real; sign(x)<1 is not a universal bound.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/sign_upper_bound.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

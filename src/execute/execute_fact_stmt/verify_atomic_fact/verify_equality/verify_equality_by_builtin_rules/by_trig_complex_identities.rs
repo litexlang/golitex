@@ -9,6 +9,9 @@ use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum TrigComplexIdentityProof {
+    ComplexModulusCoordinates(ComplexModulusCoordinatesProof),
+    RealPartQuotient(RealPartQuotientProof),
+    ImaginaryPartQuotient(ImaginaryPartQuotientProof),
     TanCotProduct(super::by_trig_quotient_relations::TanCotProductBuiltinRuleProof),
     TanSquareReciprocalCosine(super::by_trig_quotient_relations::TanSquareReciprocalCosineBuiltinRuleProof),
     SinHalfPiShift(SinHalfPiShiftProof),
@@ -46,6 +49,13 @@ pub enum TrigComplexIdentityProof {
         domains: Vec<VerifyFactResult>,
     },
 }
+// Parent equality WD checks z in C and the principal-root radicand.
+// Example: C_abs(z)=sqrt(re(z)^2+img(z)^2).
+pub struct ComplexModulusCoordinatesProof;
+// Parent equality WD checks z/w and the squared-modulus denominator.
+// Example: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2.
+pub struct RealPartQuotientProof;
+pub struct ImaginaryPartQuotientProof;
 pub struct SinHalfPiShiftProof;
 pub struct CosHalfPiShiftProof;
 pub enum CosDoubleAngleForm {
@@ -79,6 +89,9 @@ impl CosHalfPiReflectionBuiltinRuleProof {
 impl TrigComplexIdentityProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::ComplexModulusCoordinates(_) => "ComplexModulusCoordinates",
+            Self::RealPartQuotient(_) => "RealPartQuotient",
+            Self::ImaginaryPartQuotient(_) => "ImaginaryPartQuotient",
             Self::TanCotProduct(_) => "TanCotProduct",
             Self::TanSquareReciprocalCosine(_) => "TanSquareReciprocalCosine",
             Self::SinHalfPiShift(_) => "SinHalfPiShift",
@@ -235,6 +248,15 @@ impl Runtime {
             // The complex modulus is multiplicative: |z*w|=|z|*|w|.
             // The complete equality WD checks both complex arguments.
             if let Obj::ComplexOperator(C::ComplexAbs(abs)) = left {
+                let radicand = Obj::ArithmeticOperator(A::Add(crate::ast::obj::Add {
+                    left: Box::new(square(part(&abs.arg, true))),
+                    right: Box::new(square(part(&abs.arg, false))),
+                }));
+                if let Obj::ExpLogOperator(crate::ast::obj::ExpLogOperator::Sqrt(root)) = right {
+                    if crate::rational_expression::objs_equal_by_rational_expression_evaluation(&root.arg, &radicand) {
+                        return Ok(Some(P::ComplexModulusCoordinates(ComplexModulusCoordinatesProof)));
+                    }
+                }
                 if let Obj::ArithmeticOperator(A::Mul(product)) = &*abs.arg {
                     let expected = mul(modulus(&product.left), modulus(&product.right));
                     if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
@@ -264,6 +286,22 @@ impl Runtime {
             // Coordinates are additive real-linear maps.
             for real in [true, false] {
                 if let Some(arg) = coordinate(left, real) {
+                    // Multiply z/w by the conjugate of w; the two coordinate
+                    // numerators differ by a sign. Never confuse re with img.
+                    if let Obj::ArithmeticOperator(A::Div(quotient)) = arg {
+                        let first = mul(part(&quotient.left, real), part(&quotient.right, true));
+                        let second = mul(part(&quotient.left, !real), part(&quotient.right, false));
+                        let numerator = if real {
+                            Obj::ArithmeticOperator(A::Add(crate::ast::obj::Add { left: Box::new(first), right: Box::new(second) }))
+                        } else { subtract(first, second) };
+                        let expected = Obj::ArithmeticOperator(A::Div(crate::ast::obj::Div {
+                            left: Box::new(numerator), right: Box::new(square(modulus(&quotient.right))),
+                        }));
+                        if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
+                            return Ok(Some(if real { P::RealPartQuotient(RealPartQuotientProof) }
+                                else { P::ImaginaryPartQuotient(ImaginaryPartQuotientProof) }));
+                        }
+                    }
                     // z^(n+1)=z^n*z gives the two coordinate recurrences.
                     if let Obj::ArithmeticOperator(A::Pow(power)) = arg {
                         if let Obj::ArithmeticOperator(A::Add(next)) = &*power.exponent {

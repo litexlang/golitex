@@ -10,6 +10,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 use crate::rational_expression::{exact_rational::EvalRational, NumberCompareResult};
 
 pub enum ScalarIdentityBuiltinRuleProof {
+    SignZeroReflection(SignZeroReflectionProof),
     FiniteSetMaxSelection(FiniteSetMaxSelectionBuiltinRuleProof),
     FiniteSetMinSelection(FiniteSetMinSelectionBuiltinRuleProof),
     AbsZeroArgument(AbsZeroArgumentBuiltinRuleProof),
@@ -20,6 +21,16 @@ pub enum ScalarIdentityBuiltinRuleProof {
     MinMaxAbsorption(MinMaxAbsorptionBuiltinRuleProof),
     MaxMinAbsorption(MaxMinAbsorptionBuiltinRuleProof),
     LcmZero(LcmZeroBuiltinRuleProof),
+}
+// sign(x)=0 implies x=0 for real x; retain the actual stored equality.
+pub struct SignZeroReflectionProof {
+    pub real_proof: VerifyFactResult,
+    pub premise_proof: Box<EqualFactSearchedProof>,
+}
+impl SignZeroReflectionProof {
+    pub fn new(real_proof: VerifyFactResult, premise_proof: EqualFactSearchedProof) -> Self {
+        Self { real_proof, premise_proof: Box::new(premise_proof) }
+    }
 }
 pub struct AbsZeroArgumentBuiltinRuleProof {
     pub premise_proof: Box<EqualFactSearchedProof>,
@@ -60,6 +71,7 @@ impl ExactExtremumComparison {
 impl ScalarIdentityBuiltinRuleProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::SignZeroReflection(_) => "SignZeroReflection",
             Self::FiniteSetMaxSelection(_) => "FiniteSetMaxSelection",
             Self::FiniteSetMinSelection(_) => "FiniteSetMinSelection",
             Self::AbsZeroArgument(_) => "AbsZeroArgument",
@@ -103,6 +115,13 @@ impl Runtime {
                 }
             }
             if is_zero(right) {
+                let sign = Obj::ArithmeticOperator(A::Sign(crate::ast::obj::Sign { arg: Box::new(left.clone()) }));
+                if let Some(premise_proof) = self.lookup_exact_property_obj_equality(&sign, right) {
+                    let real_proof = self.scalar_member(left, StandardSet::R, state)?;
+                    if !real_proof.is_failed() {
+                        return Ok(Some(P::SignZeroReflection(SignZeroReflectionProof::new(real_proof, premise_proof))));
+                    }
+                }
                 let abs = Obj::ArithmeticOperator(A::Abs(Abs {
                     arg: Box::new(left.clone()),
                 }));

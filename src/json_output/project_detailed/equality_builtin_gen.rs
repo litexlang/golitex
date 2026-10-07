@@ -93,6 +93,7 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof as P;
             let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
             match p {
+                P::ComplexModulusCoordinates(_) | P::RealPartQuotient(_) | P::ImaginaryPartQuotient(_) => {},
                 P::TanCotProduct(p) => entries.push(("angle", string(p.angle.readable_string()))),
                 P::TanSquareReciprocalCosine(p) => entries.push(("angle", string(p.angle.readable_string()))),
                 P::CosDoubleAngle(p) => {
@@ -151,6 +152,10 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
                     entries.push(("selected_index", JsonValue::Number(p.selected_index as f64)));
                     entries.push(("selected_member", string(p.selected_member.readable_string())));
                     entries.push(("comparisons", project_extremum_comparisons(&p.comparisons, runtime)));
+                },
+                P::SignZeroReflection(p) => {
+                    entries.push(("real_proof", project_verify_fact(&p.real_proof, runtime)));
+                    entries.push(("premise_proof", super::searched::project_equal_searched(&p.premise_proof, runtime)));
                 },
                 P::AbsZeroArgument(p) => {
                     entries.push(("premise_proof", super::searched::project_equal_searched(&p.premise_proof,runtime)));
@@ -267,6 +272,12 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             let _ = p;
             object_for(runtime, entries)
         },
+        EqualitySearchProofByBuiltinRule::NegativeIntegerPowerReciprocal(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("NegativeIntegerPowerReciprocal")),
+            ("base_numeric", project_verify_fact(&p.base_numeric, runtime)),
+            ("exponent_integer", project_verify_fact(&p.exponent_integer, runtime)),
+            ("base_nonzero", project_verify_fact(&p.base_nonzero, runtime)),
+        ]),
         EqualitySearchProofByBuiltinRule::PowerProductSameBase(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("PowerProductSameBase"))];
             entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));

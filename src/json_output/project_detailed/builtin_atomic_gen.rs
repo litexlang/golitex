@@ -17,6 +17,47 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::SignLowerBound(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("SignLowerBound")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::SignUpperBound(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("SignUpperBound")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::MinLowerBound(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("MinLowerBound")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::MaxUpperBound(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("MaxUpperBound")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::SignWeakMonotone(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("SignWeakMonotone")),
+            ("argument_order", project_sign_extremum_order_argument(&p.argument_order, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::MinWeakMonotone(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("MinWeakMonotone")),
+            ("left_order", project_sign_extremum_order_argument(&p.left_order, runtime)),
+            ("right_order", project_sign_extremum_order_argument(&p.right_order, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::MaxWeakMonotone(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("MaxWeakMonotone")),
+            ("left_order", project_sign_extremum_order_argument(&p.left_order, runtime)),
+            ("right_order", project_sign_extremum_order_argument(&p.right_order, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ExpNonzero(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("ExpNonzero")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::FactorialNonzero(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("FactorialNonzero")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SignNonzeroFromArgument(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("SignNonzeroFromArgument")),
+            ("argument_nonzero", super::searched::project_known_premise(&p.argument_nonzero, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SignNonzeroReflection(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("SignNonzeroReflection")),
+            ("real_proof", project_verify_fact(&p.real_proof, runtime)),
+            ("sign_nonzero", super::searched::project_known_premise(&p.sign_nonzero, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::CosPositiveOnOpenHalfPi(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("CosPositiveOnOpenHalfPi")), ("lower_bound", project_verify_fact(&p.lower_bound, runtime)), ("upper_bound", project_verify_fact(&p.upper_bound, runtime))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::SinNegativeOnOpenNegativePi(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("SinNegativeOnOpenNegativePi")), ("lower_bound", project_verify_fact(&p.lower_bound, runtime)), ("upper_bound", project_verify_fact(&p.upper_bound, runtime))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::TanNegativeOnOpenNegativeHalfPi(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("family", string("LessFact")), ("rule", string("TanNegativeOnOpenNegativeHalfPi")), ("lower_bound", project_verify_fact(&p.lower_bound, runtime)), ("upper_bound", project_verify_fact(&p.upper_bound, runtime))]),
@@ -2742,5 +2783,16 @@ fn project_nonnegative_sum_tree(tree: &br::greater_equal::NonnegativeSumTree, ru
             ("constructor", string("add")), ("left", project_nonnegative_sum_tree(left, runtime)),
             ("right", project_nonnegative_sum_tree(right, runtime)),
         ]),
+    }
+}
+
+fn project_sign_extremum_order_argument(
+    proof: &br::sign_extremum_order::WeakOrderArgumentProof, runtime: &Runtime,
+) -> JsonValue {
+    match proof {
+        br::sign_extremum_order::WeakOrderArgumentProof::SameArgument(argument) => object_for(runtime, vec![
+            ("type", string("same_argument")), ("argument", string(argument.readable_string())),
+        ]),
+        br::sign_extremum_order::WeakOrderArgumentProof::ByOrder(proof) => project_verify_fact(proof, runtime),
     }
 }

@@ -624,6 +624,11 @@ pub(super) fn project_or_searched(searched: &OrFactSearchedProof, runtime: &Runt
             if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
                 entries.push(("cite", string(fact.readable_string())));
             }
+            entries.push((
+                "why_parameters_of_known_fact_are_equal_to_givens",
+                JsonValue::Array(p.why_parameters_of_known_fact_are_equal_to_givens
+                    .iter().map(|proof| project_equal_searched(proof, runtime)).collect()),
+            ));
             object_for(runtime, entries)
         }
         OrFactSearchedProof::ByKnownForallFact(p) => project_known_forall(p, runtime),
