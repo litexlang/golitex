@@ -10574,7 +10574,9 @@ forall a, b R+:
 > and `u - v = 0` ⇒ `u = v` (`EqualFromKnownDifferenceZero`).
 > Equality power laws (preview): `a^m * a^n = a^(m+n)`, `(a^m)^n = a^(m*n)`,
 > `(a*b)^n = a^n * b^n` (complex bases with natural exponents, or nonzero
-> complex bases with integer exponents), and
+> complex bases with integer exponents). A first-power factor may be written
+> without `^1`: `a^(n+1) = a^n * a`, including either factor order and equality
+> direction. Also
 > `1/a = a^(-1)`, `a/b = a * b^(-1)` for nonzero denominators.
 > Equality identities wave 2 (preview): `1^a = 1` (`a` in `N`), `0^n = 0`
 > (`n` in `N+`); sqrt square / zero / one / of-square / product / quotient;
@@ -10984,6 +10986,15 @@ premises remain in `proof_of_requirement_facts`. Positive real bases also
 support cancellation from a stored `x^n = y^n` when `n $in Z` and `n != 0`,
 including symbolic `n`; both exponent guards are retained as requirements. See the
 [integer-power tracer](../examples/proof_nodes/equal/by_builtin_rule/integer_power_laws.lit).
+
+The exponent-addition matcher accepts a bare copy of the same base for an
+exponent of literal `1`, so `x^(n+1) = x^n * x` verifies directly for `x R, n N`
+and more generally for `x C, n N` or `x C*, n Z`. Factor order, addition order,
+and equality direction may be reversed. The base may itself be a compound
+expression, provided the complete equality is well-defined. The same original
+base and exponent requirements are retained by `PowerProductSameBase`; this
+does not add a rule for arbitrary real exponents. See the
+[first-power factor tracer](../examples/proof_nodes/equal/by_builtin_rule/power_product_same_base_unit_exponent.lit).
 
 
 

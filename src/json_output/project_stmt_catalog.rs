@@ -467,7 +467,7 @@ fn project_by(b: &ExecByStmtResult, runtime: &Runtime) -> JsonValue {
         ExecByStmtResult::Thm(r) => match r {
             ExecByThmStmtResult::Success(s) => success_from_store(
                 runtime,
-                format!("by thm {}", s.thm_name),
+                format!("by thm {}", s.call.name.local_name()),
                 "by_thm",
                 &s.stored,
             ),
@@ -534,7 +534,7 @@ fn project_release(r: &ExecReleaseAndExpandStmtResult, runtime: &Runtime) -> Jso
                 let (stores, infers) = flatten_store_nodes(runtime, &s.stored);
                 success_parts(
                     runtime,
-                    format!("release thm {}", s.thm_name),
+                    format!("release thm {}", s.call.name.local_name()),
                     "release_thm",
                     stores,
                     infers,

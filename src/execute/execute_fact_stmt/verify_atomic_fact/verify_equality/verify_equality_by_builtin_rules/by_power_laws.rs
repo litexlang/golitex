@@ -13,6 +13,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 // Builtin PowerProductSameBase: a^m * a^n = a^(m+n).
 // Mathematical property: product of powers with a common base adds exponents.
 // Example: with a C, m N, n N: a^m * a^n = a^(m + n).
+// A bare factor is its first power: a^n * a = a^(n + 1).
 pub struct PowerProductSameBaseBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
@@ -127,16 +128,21 @@ impl Runtime {
             (right_factor.as_ref(), left_factor.as_ref(), exp_right.as_ref(), exp_left.as_ref()),
         ];
         for (f1, f2, e1, e2) in candidates {
-            let Some((b1, exp1)) = match_pow(f1) else {
-                continue;
-            };
-            let Some((b2, exp2)) = match_pow(f2) else {
-                continue;
-            };
-            if b1.ir() != combined_base.as_ref().ir() || b2.ir() != combined_base.as_ref().ir() {
-                continue;
+            let mut factors_match = true;
+            for (factor, exponent) in [(f1, e1), (f2, e2)] {
+                if is_one_obj(exponent) && factor.ir() == combined_base.as_ref().ir() {
+                    continue;
+                }
+                let Some((base, power)) = match_pow(factor) else {
+                    factors_match = false;
+                    break;
+                };
+                if base.ir() != combined_base.as_ref().ir() || power.ir() != exponent.ir() {
+                    factors_match = false;
+                    break;
+                }
             }
-            if exp1.ir() != e1.ir() || exp2.ir() != e2.ir() {
+            if !factors_match {
                 continue;
             }
             let Some(proof_of_requirement_facts) = self.verify_power_law_complex_base_nat_exps(

@@ -1,8 +1,8 @@
 //! Run a repository root by `litex.config` (`-r`).
 
 use super::load_config::{load_config, resolve_std_root};
-use super::run_export_file::run_export_file;
-use super::run_import_module::{run_import_module, RunImportModuleOutcome};
+use super::run_export_file::run_export_file_with_graph;
+use super::run_import_module::{run_import_module_with_graph, RunImportModuleOutcome};
 use crate::launch_command::LaunchCommand;
 use crate::run::run_command_outcome::{RunFileResult, RunRepoResult, RunSessionError};
 use crate::run::run_repl::run_repl_loop;
@@ -12,6 +12,10 @@ use std::path::PathBuf;
 
 /// `-r <repository>`: load root config, run import modules, then root exports.
 pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
+    run_project_with_graph(command, None)
+}
+
+pub(crate) fn run_project_with_graph(command: LaunchCommand, mut graph: Option<&mut crate::graph::MathGraph>) -> RuntimeResult<RunRepoResult> {
     let LaunchCommand::Repository { path, session, .. } = &command else {
         panic!("run_project expects LaunchCommand::Repository");
     };
@@ -45,7 +49,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
     let mut file_results = Vec::new();
 
     for import in &root_config.imports {
-        match run_import_module(
+        match run_import_module_with_graph(
             &mut runtime,
             &import.path,
             &import.alias,
@@ -53,6 +57,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
             &mut done,
             &mut running,
             &mut file_results,
+            graph.as_deref_mut(),
         )? {
             RunImportModuleOutcome::Done => {}
             RunImportModuleOutcome::SessionError(session_error) => {
@@ -66,7 +71,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
         let is_last = export_file_id + 1 == export_count;
         let keep_env_open = session && is_last;
 
-        match run_export_file(
+        match run_export_file_with_graph(
             &mut runtime,
             &export.name,
             &export.path,
@@ -74,6 +79,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
             None,
             crate::runtime::CodeSource::RootExport { export_file_id },
             keep_env_open,
+            graph.as_deref_mut(),
         ) {
             Ok(file_result) => {
                 let failed = !file_result.run.success;

@@ -18,6 +18,14 @@ like run envelopes; the English schema applies with `-lang en`.
 
 ## Detail levels
 
+Successful `by thm` / `release thm` results retain their parsed `TheoremCall`
+subject, including owner-qualified name and arguments. Normal keeps its
+existing short-name/source-statement presentation. Detailed adds `call`:
+the name has `plain`, `export` or `module_export` identity, and the arguments
+distinguish a bare call (`null`) from parentheses (an array). This preserves
+two modules' same-named theorems for consumers such as mathematical graphs;
+the AST, verification, publication and search behavior are unchanged.
+
 ```rust
 pub enum OutputDetail {
     Compact,   // thin: success + statement (+ fail_reason)

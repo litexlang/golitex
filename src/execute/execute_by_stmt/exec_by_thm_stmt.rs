@@ -61,7 +61,7 @@ pub fn exec_release_thm_stmt(
     }
 
     Ok(ExecReleaseThmStmtResult::Success(ExecReleaseThmStmtSuccess {
-        thm_name,
+        call: stmt.call.clone(),
         builtin: prepared.builtin,
         type_proofs,
         function_domain,
@@ -152,7 +152,7 @@ pub fn exec_by_thm_stmt(
 
     Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(
         ExecByThmStmtSuccess {
-            thm_name,
+            call: stmt.call.clone(),
             builtin: prepared.builtin,
             type_proofs,
             function_domain,

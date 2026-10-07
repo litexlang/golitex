@@ -3,6 +3,7 @@ pub mod run_command;
 pub mod run_command_outcome;
 pub mod run_compile_to_latex;
 pub mod run_eval;
+pub mod run_graph;
 pub mod run_extract_executable_code;
 pub mod run_litex_code;
 pub mod run_repl;

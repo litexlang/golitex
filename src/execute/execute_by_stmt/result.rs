@@ -306,9 +306,10 @@ pub enum BuiltinFunctionDomainProof {
     },
 }
 
+// Subject: preserve the resolved callee/arguments beyond the invocation.
 // Stage order: type_proofs → complete domain → dom_proofs → WD → store.
 pub struct ExecReleaseThmStmtSuccess {
-    pub thm_name: String,
+    pub call: crate::ast::stmt::TheoremCall,
     pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
     pub function_domain: Option<BuiltinFunctionDomainProof>,
@@ -368,9 +369,10 @@ pub enum ExecByThmStmtResult {
     Failed(ExecByThmStmtFailed),
 }
 
+// Subject: preserve the resolved callee/arguments beyond the invocation.
 // Stage order: type_proofs → complete domain → dom_proofs → WD → selected → store.
 pub struct ExecByThmStmtSuccess {
-    pub thm_name: String,
+    pub call: crate::ast::stmt::TheoremCall,
     pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
     pub function_domain: Option<BuiltinFunctionDomainProof>,

@@ -68,6 +68,26 @@ fn batch(output: &Output, exit: i32, success: bool) -> JsonValue {
 }
 
 #[test]
+fn graph_batch_outputs_math_content_and_preserves_failure_exits() {
+    let dir = FixtureDir::new();
+    let code = "thm identity:\n    ? forall x R:\n        x = x\nby thm identity(2) => 2 = 2";
+    let json = batch(&dir.run(&["-graph", "-strict", "-e", code], None), 0, true);
+    assert_eq!(field(&json, "kind").as_str().unwrap(), "math_graph");
+    let nodes = field(&json, "nodes").as_array().unwrap();
+    assert!(nodes.iter().all(|node| ["definition", "thm", "fact"].contains(&field(node, "kind").as_str().unwrap())));
+    assert!(field(&json, "edges").as_array().unwrap().iter().any(|edge| field(edge, "kind").as_str().unwrap() == "theorem_instance"));
+    for args in [vec!["-graph", "-e", "1 / 0 = 0"], vec!["-graph", "-f", "missing.lit"], vec!["-graph", "-e", "have"]] {
+        let failed = batch(&dir.run(&args, None), 1, false);
+        assert_eq!(field(&failed, "kind").as_str().unwrap(), "math_graph");
+        assert!(!field(&failed, "diagnostics").as_array().unwrap().is_empty());
+    }
+    assert_eq!(dir.run(&["-graph", "-session", "-e", "1 = 1"], None).status.code(), Some(2));
+    // An operand with this spelling still reaches the source parser.
+    let ordinary = batch(&dir.run(&["-e", "-graph"], None), 1, false);
+    assert_eq!(field(&ordinary, "kind").as_str().unwrap(), "run");
+}
+
+#[test]
 fn negative_source_and_option_spellings_reach_the_source_parser() {
     let dir = FixtureDir::new();
     for command in ["-e", "-extractpython", "-extractc"] {

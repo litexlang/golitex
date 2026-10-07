@@ -62,7 +62,8 @@ pub(super) fn project_conclusions_wd(proofs: &[crate::execute::execute_fact_stmt
 pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtime) -> JsonValue {
     match result {
         ExecReleaseThmStmtResult::Success(s) => object_for(rt, vec![
-            ("success", bool_value(true)), ("kind", string("release_thm")), ("thm_name", string(s.thm_name.clone())),
+            ("success", bool_value(true)), ("kind", string("release_thm")), ("thm_name", string(s.call.name.local_name().to_string())),
+            ("call", project_theorem_call(&s.call, rt)),
             ("builtin", project_builtin_application(&s.builtin, rt)),
             ("type_proofs", super::store::project_verify_facts(&s.type_proofs, rt)),
             ("function_domain", s.function_domain.as_ref().map(|p| project_builtin_function_domain(p, rt)).unwrap_or(JsonValue::Null)),
@@ -72,6 +73,21 @@ pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtim
         ]),
         ExecReleaseThmStmtResult::Failed(f) => object_for(rt, vec![("success", bool_value(false)), ("kind", string("release_thm")), ("failure", project_release_thm_failure(f, rt))]),
     }
+}
+
+pub(super) fn project_theorem_call(call: &crate::ast::stmt::TheoremCall, rt: &Runtime) -> JsonValue {
+    use crate::ast::names::AtomicName;
+    use crate::ast::stmt::TheoremCallArguments;
+    let name = match &call.name {
+        AtomicName::Plain { name } => object_for(rt, vec![("type", string("plain")), ("name", string(name.clone()))]),
+        AtomicName::WithExportFileId { export_file_id, name } => object_for(rt, vec![("type", string("export")), ("export_file_id", JsonValue::Number(*export_file_id as f64)), ("name", string(name.clone()))]),
+        AtomicName::WithModAndExportFileId { global_mod_id, export_file_id, name } => object_for(rt, vec![("type", string("module_export")), ("global_mod_id", JsonValue::Number(*global_mod_id as f64)), ("export_file_id", JsonValue::Number(*export_file_id as f64)), ("name", string(name.clone()))]),
+    };
+    let arguments = match &call.arguments {
+        TheoremCallArguments::Bare => JsonValue::Null,
+        TheoremCallArguments::Parenthesized(args) => JsonValue::Array(args.iter().map(|obj| string(obj.readable_string())).collect()),
+    };
+    object_for(rt, vec![("name", name), ("arguments", arguments)])
 }
 
 pub(in crate::json_output) fn project_def_thm_failure(failed: &crate::execute::ExecDefThmStmtFailed, rt: &Runtime) -> JsonValue {

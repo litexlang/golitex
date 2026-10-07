@@ -1232,7 +1232,8 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
             vec![
                 ("success", bool_value(true)),
                 ("kind", string("by_thm")),
-                ("thm_name", string(s.thm_name.clone())),
+                ("thm_name", string(s.call.name.local_name().to_string())),
+                ("call", super::theorem::project_theorem_call(&s.call, runtime)),
                 (
                     "builtin",
                     super::theorem::project_builtin_application(&s.builtin, runtime),

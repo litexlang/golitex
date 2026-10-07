@@ -1,4 +1,4 @@
-//! Generated typed graph reference visitor. Run tools/generate_graph_walk.py.
+//! Generated typed graph reference visitor. Run src/graph/generate_walk.py.
 #![allow(unused_variables)]
 
 use super::math_graph::{MathGraph, GraphReference};
@@ -6,7 +6,6 @@ use crate::exec_env::ExecEnv;
 use crate::runtime::Runtime;
 
 pub(super) fn walk_and_fact(value: &crate::ast::fact::AndFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     for child1 in (&value.facts).iter() {
         walk_atomic_fact(child1, graph, runtime, locals, refs, outputs);
     }
@@ -144,57 +143,48 @@ pub(super) fn walk_atomic_fact(value: &crate::ast::fact::AtomicFact, graph: &mut
 }
 
 pub(super) fn walk_bijective_fact(value: &crate::ast::fact::BijectiveFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.domain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.codomain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.function, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_coprime_fact(value: &crate::ast::fact::CoprimeFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_dvd_fact(value: &crate::ast::fact::DvdFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_equal_fact(value: &crate::ast::fact::EqualFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_greater_equal_fact(value: &crate::ast::fact::GreaterEqualFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_greater_fact(value: &crate::ast::fact::GreaterFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_in_fact(value: &crate::ast::fact::InFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.element, graph, runtime, locals, refs, outputs);
     walk_obj(&value.set, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_injective_fact(value: &crate::ast::fact::InjectiveFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.domain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.codomain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.function, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_is_choice_function_for_fact(value: &crate::ast::fact::IsChoiceFunctionForFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.index, graph, runtime, locals, refs, outputs);
     walk_obj(&value.set, graph, runtime, locals, refs, outputs);
     walk_obj(&value.family, graph, runtime, locals, refs, outputs);
@@ -202,34 +192,28 @@ pub(super) fn walk_is_choice_function_for_fact(value: &crate::ast::fact::IsChoic
 }
 
 pub(super) fn walk_is_finite_set_fact(value: &crate::ast::fact::IsFiniteSetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.set, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_is_nonempty_set_fact(value: &crate::ast::fact::IsNonemptySetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.set, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_is_set_fact(value: &crate::ast::fact::IsSetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.set, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_less_equal_fact(value: &crate::ast::fact::LessEqualFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_less_fact(value: &crate::ast::fact::LessFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_normal_atomic_fact(value: &crate::ast::fact::NormalAtomicFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     graph.reference_name(&value.predicate, runtime, locals, refs, outputs);
     for child2 in (&value.body).iter() {
         walk_obj(child2, graph, runtime, locals, refs, outputs);
@@ -237,57 +221,48 @@ pub(super) fn walk_normal_atomic_fact(value: &crate::ast::fact::NormalAtomicFact
 }
 
 pub(super) fn walk_not_bijective_fact(value: &crate::ast::fact::NotBijectiveFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.domain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.codomain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.function, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_coprime_fact(value: &crate::ast::fact::NotCoprimeFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_dvd_fact(value: &crate::ast::fact::NotDvdFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_equal_fact(value: &crate::ast::fact::NotEqualFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_greater_equal_fact(value: &crate::ast::fact::NotGreaterEqualFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_greater_fact(value: &crate::ast::fact::NotGreaterFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_in_fact(value: &crate::ast::fact::NotInFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.element, graph, runtime, locals, refs, outputs);
     walk_obj(&value.set, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_injective_fact(value: &crate::ast::fact::NotInjectiveFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.domain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.codomain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.function, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_is_choice_function_for_fact(value: &crate::ast::fact::NotIsChoiceFunctionForFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.index, graph, runtime, locals, refs, outputs);
     walk_obj(&value.set, graph, runtime, locals, refs, outputs);
     walk_obj(&value.family, graph, runtime, locals, refs, outputs);
@@ -295,34 +270,28 @@ pub(super) fn walk_not_is_choice_function_for_fact(value: &crate::ast::fact::Not
 }
 
 pub(super) fn walk_not_is_finite_set_fact(value: &crate::ast::fact::NotIsFiniteSetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.set, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_is_nonempty_set_fact(value: &crate::ast::fact::NotIsNonemptySetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.set, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_is_set_fact(value: &crate::ast::fact::NotIsSetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.set, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_less_equal_fact(value: &crate::ast::fact::NotLessEqualFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_less_fact(value: &crate::ast::fact::NotLessFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_normal_atomic_fact(value: &crate::ast::fact::NotNormalAtomicFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     graph.reference_name(&value.predicate, runtime, locals, refs, outputs);
     for child3 in (&value.body).iter() {
         walk_obj(child3, graph, runtime, locals, refs, outputs);
@@ -330,79 +299,66 @@ pub(super) fn walk_not_normal_atomic_fact(value: &crate::ast::fact::NotNormalAto
 }
 
 pub(super) fn walk_not_prime_fact(value: &crate::ast::fact::NotPrimeFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.value, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_proper_subset_fact(value: &crate::ast::fact::NotProperSubsetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_proper_superset_fact(value: &crate::ast::fact::NotProperSupersetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_subset_fact(value: &crate::ast::fact::NotSubsetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_superset_fact(value: &crate::ast::fact::NotSupersetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_not_surjective_fact(value: &crate::ast::fact::NotSurjectiveFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.domain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.codomain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.function, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_prime_fact(value: &crate::ast::fact::PrimeFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.value, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_proper_subset_fact(value: &crate::ast::fact::ProperSubsetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_proper_superset_fact(value: &crate::ast::fact::ProperSupersetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_subset_fact(value: &crate::ast::fact::SubsetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_superset_fact(value: &crate::ast::fact::SupersetFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_surjective_fact(value: &crate::ast::fact::SurjectiveFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_obj(&value.domain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.codomain, graph, runtime, locals, refs, outputs);
     walk_obj(&value.function, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_chain_fact(value: &crate::ast::fact::ChainFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     for child4 in (&value.objs).iter() {
         walk_obj(child4, graph, runtime, locals, refs, outputs);
     }
@@ -426,7 +382,6 @@ pub(super) fn walk_exist_shaped_fact(value: &crate::ast::fact::ExistShapedFact, 
 }
 
 pub(super) fn walk_plain_exist_fact(value: &crate::ast::fact::PlainExistFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_typed_parameter_list(&value.typed_parameters, graph, runtime, locals, refs, outputs);
     for child6 in (&value.facts).iter() {
         walk_quantifier_free_fact(child6, graph, runtime, locals, refs, outputs);
@@ -495,7 +450,6 @@ pub(super) fn walk_exist_or_and_chain_atomic_fact(value: &crate::ast::fact::Exis
 }
 
 pub(super) fn walk_forall_fact(value: &crate::ast::fact::ForallFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_typed_parameter_list(&value.typed_parameters, graph, runtime, locals, refs, outputs);
     for child7 in (&value.dom_facts).iter() {
         walk_fact(child7, graph, runtime, locals, refs, outputs);
@@ -506,7 +460,6 @@ pub(super) fn walk_forall_fact(value: &crate::ast::fact::ForallFact, graph: &mut
 }
 
 pub(super) fn walk_forall_fact_with_iff(value: &crate::ast::fact::ForallFactWithIff, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_forall_fact(&value.forall_fact, graph, runtime, locals, refs, outputs);
     for child9 in (&value.iff_facts).iter() {
         walk_exist_or_and_chain_atomic_fact(child9, graph, runtime, locals, refs, outputs);
@@ -514,7 +467,6 @@ pub(super) fn walk_forall_fact_with_iff(value: &crate::ast::fact::ForallFactWith
 }
 
 pub(super) fn walk_not_forall_fact(value: &crate::ast::fact::NotForallFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     walk_typed_parameter_list(&value.typed_parameters, graph, runtime, locals, refs, outputs);
     for child10 in (&value.dom_facts).iter() {
         walk_quantifier_free_fact(child10, graph, runtime, locals, refs, outputs);
@@ -539,7 +491,6 @@ pub(super) fn walk_and_chain_atomic_fact(value: &crate::ast::fact::AndChainAtomi
 }
 
 pub(super) fn walk_or_fact(value: &crate::ast::fact::OrFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_fact(&value.fact_id, runtime, locals, refs, outputs);
     for child12 in (&value.facts).iter() {
         walk_and_chain_atomic_fact(child12, graph, runtime, locals, refs, outputs);
     }
@@ -841,7 +792,7 @@ pub(super) fn walk_index_union(value: &crate::ast::obj::IndexUnion, graph: &mut 
 }
 
 pub(super) fn walk_instantiated_template_obj(value: &crate::ast::obj::InstantiatedTemplateObj, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_name(&value.template_name, runtime, locals, refs, outputs);
+    graph.reference_template_name(&value.template_name, runtime, locals, refs, outputs);
     for child17 in (&value.args).iter() {
         walk_obj(child17, graph, runtime, locals, refs, outputs);
     }
@@ -1190,7 +1141,7 @@ pub(super) fn walk_struct_and_field_access_obj(value: &crate::ast::StructAndFiel
 }
 
 pub(super) fn walk_struct_obj(value: &crate::ast::obj::StructObj, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    graph.reference_name(&value.name, runtime, locals, refs, outputs);
+    graph.reference_struct_name(&value.name, runtime, locals, refs, outputs);
     for child20 in (&value.params).iter() {
         walk_obj(child20, graph, runtime, locals, refs, outputs);
     }
@@ -1321,6 +1272,10 @@ pub(super) fn walk_def_prop_stmt(value: &crate::ast::stmt::DefPropStmt, graph: &
     for child27 in (&value.iff_facts).iter() {
         walk_fact(child27, graph, runtime, locals, refs, outputs);
     }
+}
+
+pub(super) fn walk_def_strategy_stmt(value: &crate::ast::stmt::DefStrategyStmt, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    walk_forall_fact(&value.forall_fact, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_def_struct_stmt(value: &crate::ast::stmt::DefStructStmt, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
@@ -1765,41 +1720,29 @@ pub(super) fn walk_builtin_function_domain_proof(value: &crate::execute::execute
     }
 }
 
-pub(super) fn walk_builtin_thm_application(value: &crate::execute::execute_by_stmt::BuiltinThmApplication, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child44 in (&value.arguments).iter() {
-        walk_obj(child44, graph, runtime, locals, refs, outputs);
-    }
-    for child45 in (&value.requirements).iter() {
-        walk_fact(child45, graph, runtime, locals, refs, outputs);
-    }
-    for child46 in (&value.conclusions).iter() {
-        walk_fact(child46, graph, runtime, locals, refs, outputs);
-    }
-}
-
 pub(super) fn walk_by_cases_branch_closing_success(value: &crate::execute::execute_by_stmt::ByCasesBranchClosingSuccess, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     match value {
         crate::execute::execute_by_stmt::ByCasesBranchClosingSuccess::ThenFacts { checks: p0, conclusion_fact_ids: p1 } => {
-            for child47 in (p0).iter() {
-                walk_verify_fact_result(child47, graph, runtime, locals, refs, outputs);
+            for child44 in (p0).iter() {
+                walk_verify_fact_result(child44, graph, runtime, locals, refs, outputs);
             }
-            for child48 in (p1).iter() {
-                if let Some(child49) = (child48).as_ref() {
-                    graph.reference_fact(child49, runtime, locals, refs, outputs);
+            for child45 in (p1).iter() {
+                if let Some(child46) = (child45).as_ref() {
+                    graph.reference_fact(child46, runtime, locals, refs, outputs);
                 }
             }
         }
         crate::execute::execute_by_stmt::ByCasesBranchClosingSuccess::Impossible(p0) => {
             {
-                let payload50 = p0;
-                walk_fact(&payload50.impossible_fact, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload50.impossible, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload50.negated_impossible, graph, runtime, locals, refs, outputs);
-                if let Some(child51) = (&payload50.impossible_fact_id).as_ref() {
-                    graph.reference_fact(child51, runtime, locals, refs, outputs);
+                let payload47 = p0;
+                walk_fact(&payload47.impossible_fact, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload47.impossible, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload47.negated_impossible, graph, runtime, locals, refs, outputs);
+                if let Some(child48) = (&payload47.impossible_fact_id).as_ref() {
+                    graph.reference_fact(child48, runtime, locals, refs, outputs);
                 }
-                if let Some(child52) = (&payload50.negated_impossible_fact_id).as_ref() {
-                    graph.reference_fact(child52, runtime, locals, refs, outputs);
+                if let Some(child49) = (&payload47.negated_impossible_fact_id).as_ref() {
+                    graph.reference_fact(child49, runtime, locals, refs, outputs);
                 }
             }
         }
@@ -1823,34 +1766,34 @@ pub(super) fn walk_by_induc_case_success(value: &crate::execute::execute_by_stmt
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child53 in (&value.assumptions_stored).iter() {
-        graph.collect_store(child53, runtime, locals, refs, outputs);
+    for child50 in (&value.assumptions_stored).iter() {
+        graph.collect_store(child50, runtime, locals, refs, outputs);
     }
-    for child54 in (&value.proof_steps).iter() {
-        graph.collect_statement(child54, runtime, locals);
+    for child51 in (&value.proof_steps).iter() {
+        graph.collect_statement(child51, runtime, locals);
     }
-    for child55 in (&value.goals_verified).iter() {
-        walk_verify_fact_result(child55, graph, runtime, locals, refs, outputs);
+    for child52 in (&value.goals_verified).iter() {
+        walk_verify_fact_result(child52, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_enumerate_assignment_outcome(value: &crate::execute::execute_by_stmt::EnumerateAssignmentOutcome, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     match value {
         crate::execute::execute_by_stmt::EnumerateAssignmentOutcome::Skipped { premise_assumptions: p0, premise_index: p1, negated_premise: p2 } => {
-            for child56 in (p0).iter() {
-                graph.collect_assumption(child56, runtime, locals, refs, outputs);
+            for child53 in (p0).iter() {
+                graph.collect_assumption(child53, runtime, locals, refs, outputs);
             }
             walk_verify_fact_result(p2, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_by_stmt::EnumerateAssignmentOutcome::Proved { premise_assumptions: p0, proof_steps: p1, then_proofs: p2 } => {
-            for child57 in (p0).iter() {
-                graph.collect_assumption(child57, runtime, locals, refs, outputs);
+            for child54 in (p0).iter() {
+                graph.collect_assumption(child54, runtime, locals, refs, outputs);
             }
-            for child58 in (p1).iter() {
-                graph.collect_statement(child58, runtime, locals);
+            for child55 in (p1).iter() {
+                graph.collect_statement(child55, runtime, locals);
             }
-            for child59 in (p2).iter() {
-                walk_prove_and_store_then_fact_result(child59, graph, runtime, locals, refs, outputs);
+            for child56 in (p2).iter() {
+                walk_prove_and_store_then_fact_result(child56, graph, runtime, locals, refs, outputs);
             }
         }
     }
@@ -1861,8 +1804,8 @@ pub(super) fn walk_enumerate_assignment_success(value: &crate::execute::execute_
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
     walk_introduce_typed_parameters_result(&value.introduced_params, graph, runtime, locals, refs, outputs);
-    for child60 in (&value.binding_assumptions).iter() {
-        graph.collect_assumption(child60, runtime, locals, refs, outputs);
+    for child57 in (&value.binding_assumptions).iter() {
+        graph.collect_assumption(child57, runtime, locals, refs, outputs);
     }
     walk_enumerate_assignment_outcome(&value.outcome, graph, runtime, locals, refs, outputs);
 }
@@ -1871,32 +1814,32 @@ pub(super) fn walk_exec_by_cases_stmt_result(value: &crate::execute::execute_by_
     match value {
         crate::execute::execute_by_stmt::ExecByCasesStmtResult::Success(p0) => {
             {
-                let payload61 = p0;
-                for child62 in (&payload61.then_facts_wd).iter() {
-                    walk_verify_fact_well_defined_result(child62, graph, runtime, locals, refs, outputs);
+                let payload58 = p0;
+                for child59 in (&payload58.then_facts_wd).iter() {
+                    walk_verify_fact_well_defined_result(child59, graph, runtime, locals, refs, outputs);
                 }
-                walk_verify_fact_result(&payload61.coverage, graph, runtime, locals, refs, outputs);
-                for child63 in (&payload61.branches).iter() {
+                walk_verify_fact_result(&payload58.coverage, graph, runtime, locals, refs, outputs);
+                for child60 in (&payload58.branches).iter() {
                     {
-                        let payload64 = child63;
+                        let payload61 = child60;
                         let mut scope_envs = locals.to_vec();
-                        scope_envs.push(payload64.local_env.as_ref());
+                        scope_envs.push(payload61.local_env.as_ref());
                         let locals = scope_envs.as_slice();
-                        walk_and_chain_atomic_fact(&payload64.assumption, graph, runtime, locals, refs, outputs);
-                        graph.reference_fact(&payload64.assumption_fact_id, runtime, locals, refs, outputs);
-                        for child65 in (&payload64.assumption_components).iter() {
-                            graph.reference_fact(&(child65).0, runtime, locals, refs, outputs);
-                            walk_atomic_fact(&(child65).1, graph, runtime, locals, refs, outputs);
+                        walk_and_chain_atomic_fact(&payload61.assumption, graph, runtime, locals, refs, outputs);
+                        graph.reference_fact(&payload61.assumption_fact_id, runtime, locals, refs, outputs);
+                        for child62 in (&payload61.assumption_components).iter() {
+                            graph.reference_fact(&(child62).0, runtime, locals, refs, outputs);
+                            walk_atomic_fact(&(child62).1, graph, runtime, locals, refs, outputs);
                         }
-                        graph.collect_store(&payload64.assumptions_stored, runtime, locals, refs, outputs);
-                        for child66 in (&payload64.proof_steps).iter() {
-                            graph.collect_statement(child66, runtime, locals);
+                        graph.collect_store(&payload61.assumptions_stored, runtime, locals, refs, outputs);
+                        for child63 in (&payload61.proof_steps).iter() {
+                            graph.collect_statement(child63, runtime, locals);
                         }
-                        walk_by_cases_branch_closing_success(&payload64.closing, graph, runtime, locals, refs, outputs);
+                        walk_by_cases_branch_closing_success(&payload61.closing, graph, runtime, locals, refs, outputs);
                     }
                 }
-                for child67 in (&payload61.stored).iter() {
-                    graph.collect_store(child67, runtime, locals, refs, outputs);
+                for child64 in (&payload58.stored).iter() {
+                    graph.collect_store(child64, runtime, locals, refs, outputs);
                 }
             }
         }
@@ -1909,35 +1852,35 @@ pub(super) fn walk_exec_by_contra_stmt_result(value: &crate::execute::execute_by
     match value {
         crate::execute::execute_by_stmt::ExecByContraStmtResult::Success(p0) => {
             {
-                let payload68 = p0;
+                let payload65 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload68.local_env.as_ref());
+                scope_envs.push(payload65.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                walk_verify_fact_well_defined_result(&payload68.goal_wd, graph, runtime, locals, refs, outputs);
-                walk_fact(&payload68.goal, graph, runtime, locals, refs, outputs);
-                walk_fact(&payload68.reverse_assumption, graph, runtime, locals, refs, outputs);
-                graph.reference_fact(&payload68.reverse_assumption_fact_id, runtime, locals, refs, outputs);
-                for child69 in (&payload68.assumption_components).iter() {
-                    graph.reference_fact(&(child69).0, runtime, locals, refs, outputs);
-                    walk_atomic_fact(&(child69).1, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_well_defined_result(&payload65.goal_wd, graph, runtime, locals, refs, outputs);
+                walk_fact(&payload65.goal, graph, runtime, locals, refs, outputs);
+                walk_fact(&payload65.reverse_assumption, graph, runtime, locals, refs, outputs);
+                graph.reference_fact(&payload65.reverse_assumption_fact_id, runtime, locals, refs, outputs);
+                for child66 in (&payload65.assumption_components).iter() {
+                    graph.reference_fact(&(child66).0, runtime, locals, refs, outputs);
+                    walk_atomic_fact(&(child66).1, graph, runtime, locals, refs, outputs);
                 }
-                graph.collect_store(&payload68.negation_assumed, runtime, locals, refs, outputs);
-                for child70 in (&payload68.proof_steps).iter() {
-                    graph.collect_statement(child70, runtime, locals);
+                graph.collect_store(&payload65.negation_assumed, runtime, locals, refs, outputs);
+                for child67 in (&payload65.proof_steps).iter() {
+                    graph.collect_statement(child67, runtime, locals);
                 }
                 {
-                    let payload71 = &payload68.closing;
-                    walk_fact(&payload71.impossible_fact, graph, runtime, locals, refs, outputs);
-                    walk_verify_fact_result(&payload71.impossible, graph, runtime, locals, refs, outputs);
-                    walk_verify_fact_result(&payload71.negated_impossible, graph, runtime, locals, refs, outputs);
-                    if let Some(child72) = (&payload71.impossible_fact_id).as_ref() {
-                        graph.reference_fact(child72, runtime, locals, refs, outputs);
+                    let payload68 = &payload65.closing;
+                    walk_fact(&payload68.impossible_fact, graph, runtime, locals, refs, outputs);
+                    walk_verify_fact_result(&payload68.impossible, graph, runtime, locals, refs, outputs);
+                    walk_verify_fact_result(&payload68.negated_impossible, graph, runtime, locals, refs, outputs);
+                    if let Some(child69) = (&payload68.impossible_fact_id).as_ref() {
+                        graph.reference_fact(child69, runtime, locals, refs, outputs);
                     }
-                    if let Some(child73) = (&payload71.negated_impossible_fact_id).as_ref() {
-                        graph.reference_fact(child73, runtime, locals, refs, outputs);
+                    if let Some(child70) = (&payload68.negated_impossible_fact_id).as_ref() {
+                        graph.reference_fact(child70, runtime, locals, refs, outputs);
                     }
                 }
-                graph.collect_store(&payload68.stored, runtime, locals, refs, outputs);
+                graph.collect_store(&payload65.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecByContraStmtResult::Failed(_) => {
@@ -1949,13 +1892,13 @@ pub(super) fn walk_exec_by_def_stmt_result(value: &crate::execute::execute_by_st
     match value {
         crate::execute::execute_by_stmt::ExecByDefStmtResult::Success(p0) => {
             {
-                let payload74 = p0;
+                let payload71 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload74.local_env.as_ref());
+                scope_envs.push(payload71.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                walk_verify_fact_well_defined_result(&payload74.goal_wd, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload74.proof, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload74.stored, runtime, locals, refs, outputs);
+                walk_verify_fact_well_defined_result(&payload71.goal_wd, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload71.proof, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload71.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecByDefStmtResult::Failed(_) => {
@@ -1967,12 +1910,12 @@ pub(super) fn walk_exec_by_enumerate_finite_set_stmt_result(value: &crate::execu
     match value {
         crate::execute::execute_by_stmt::ExecByEnumerateFiniteSetStmtResult::Success(p0) => {
             {
-                let payload75 = p0;
-                walk_verify_fact_well_defined_result(&payload75.goal_wd, graph, runtime, locals, refs, outputs);
-                for child76 in (&payload75.assignments).iter() {
-                    walk_enumerate_assignment_success(child76, graph, runtime, locals, refs, outputs);
+                let payload72 = p0;
+                walk_verify_fact_well_defined_result(&payload72.goal_wd, graph, runtime, locals, refs, outputs);
+                for child73 in (&payload72.assignments).iter() {
+                    walk_enumerate_assignment_success(child73, graph, runtime, locals, refs, outputs);
                 }
-                graph.collect_store(&payload75.stored, runtime, locals, refs, outputs);
+                graph.collect_store(&payload72.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecByEnumerateFiniteSetStmtResult::Failed(_) => {
@@ -1984,17 +1927,17 @@ pub(super) fn walk_exec_by_extension_stmt_result(value: &crate::execute::execute
     match value {
         crate::execute::execute_by_stmt::ExecByExtensionStmtResult::Success(p0) => {
             {
-                let payload77 = p0;
+                let payload74 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload77.local_env.as_ref());
+                scope_envs.push(payload74.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                walk_verify_fact_well_defined_result(&payload77.goal_wd, graph, runtime, locals, refs, outputs);
-                for child78 in (&payload77.proof_steps).iter() {
-                    graph.collect_statement(child78, runtime, locals);
+                walk_verify_fact_well_defined_result(&payload74.goal_wd, graph, runtime, locals, refs, outputs);
+                for child75 in (&payload74.proof_steps).iter() {
+                    graph.collect_statement(child75, runtime, locals);
                 }
-                walk_verify_fact_result(&payload77.left_to_right, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload77.right_to_left, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload77.stored, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload74.left_to_right, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload74.right_to_left, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload74.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecByExtensionStmtResult::Failed(_) => {
@@ -2006,19 +1949,19 @@ pub(super) fn walk_exec_by_fn_extension_stmt_result(value: &crate::execute::exec
     match value {
         crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(p0) => {
             {
-                let payload79 = p0;
+                let payload76 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload79.local_env.as_ref());
+                scope_envs.push(payload76.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                walk_verify_fact_well_defined_result(&payload79.goal_wd, graph, runtime, locals, refs, outputs);
-                walk_complete_function_domain_proof(&payload79.right_domain, graph, runtime, locals, refs, outputs);
-                walk_function_domain_match_proof(&payload79.domain_match, graph, runtime, locals, refs, outputs);
-                walk_fn_set(&payload79.carrier, graph, runtime, locals, refs, outputs);
-                for child80 in (&payload79.proof_steps).iter() {
-                    graph.collect_statement(child80, runtime, locals);
+                walk_verify_fact_well_defined_result(&payload76.goal_wd, graph, runtime, locals, refs, outputs);
+                walk_complete_function_domain_proof(&payload76.right_domain, graph, runtime, locals, refs, outputs);
+                walk_function_domain_match_proof(&payload76.domain_match, graph, runtime, locals, refs, outputs);
+                walk_fn_set(&payload76.carrier, graph, runtime, locals, refs, outputs);
+                for child77 in (&payload76.proof_steps).iter() {
+                    graph.collect_statement(child77, runtime, locals);
                 }
-                walk_verify_fact_result(&payload79.pointwise_proof, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload79.stored, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload76.pointwise_proof, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload76.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Failed(_) => {
@@ -2030,12 +1973,12 @@ pub(super) fn walk_exec_by_for_stmt_result(value: &crate::execute::execute_by_st
     match value {
         crate::execute::execute_by_stmt::ExecByForStmtResult::Success(p0) => {
             {
-                let payload81 = p0;
-                walk_verify_fact_well_defined_result(&payload81.goal_wd, graph, runtime, locals, refs, outputs);
-                for child82 in (&payload81.assignments).iter() {
-                    walk_enumerate_assignment_success(child82, graph, runtime, locals, refs, outputs);
+                let payload78 = p0;
+                walk_verify_fact_well_defined_result(&payload78.goal_wd, graph, runtime, locals, refs, outputs);
+                for child79 in (&payload78.assignments).iter() {
+                    walk_enumerate_assignment_success(child79, graph, runtime, locals, refs, outputs);
                 }
-                graph.collect_store(&payload81.stored, runtime, locals, refs, outputs);
+                graph.collect_store(&payload78.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecByForStmtResult::Failed(_) => {
@@ -2047,17 +1990,17 @@ pub(super) fn walk_exec_by_induc_stmt_result(value: &crate::execute::execute_by_
     match value {
         crate::execute::execute_by_stmt::ExecByInducStmtResult::Success(p0) => {
             {
-                let payload83 = p0;
+                let payload80 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload83.goal_wd_env.as_ref());
+                scope_envs.push(payload80.goal_wd_env.as_ref());
                 let locals = scope_envs.as_slice();
-                walk_verify_fact_result(&payload83.from_in_z, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload83.goal_domain_stored, runtime, locals, refs, outputs);
-                for child84 in (&payload83.goals_wd).iter() {
-                    walk_verify_fact_well_defined_result(child84, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload80.from_in_z, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload80.goal_domain_stored, runtime, locals, refs, outputs);
+                for child81 in (&payload80.goals_wd).iter() {
+                    walk_verify_fact_well_defined_result(child81, graph, runtime, locals, refs, outputs);
                 }
-                walk_by_induc_body_success(&payload83.body, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload83.stored, runtime, locals, refs, outputs);
+                walk_by_induc_body_success(&payload80.body, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload80.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecByInducStmtResult::Failed(_) => {
@@ -2104,17 +2047,17 @@ pub(super) fn walk_exec_by_strong_induc_stmt_result(value: &crate::execute::exec
     match value {
         crate::execute::execute_by_stmt::ExecByStrongInducStmtResult::Success(p0) => {
             {
-                let payload85 = p0;
+                let payload82 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload85.goal_wd_env.as_ref());
+                scope_envs.push(payload82.goal_wd_env.as_ref());
                 let locals = scope_envs.as_slice();
-                walk_verify_fact_result(&payload85.from_in_z, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload85.goal_domain_stored, runtime, locals, refs, outputs);
-                for child86 in (&payload85.goals_wd).iter() {
-                    walk_verify_fact_well_defined_result(child86, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload82.from_in_z, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload82.goal_domain_stored, runtime, locals, refs, outputs);
+                for child83 in (&payload82.goals_wd).iter() {
+                    walk_verify_fact_well_defined_result(child83, graph, runtime, locals, refs, outputs);
                 }
-                walk_by_induc_body_success(&payload85.body, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload85.stored, runtime, locals, refs, outputs);
+                walk_by_induc_body_success(&payload82.body, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload82.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecByStrongInducStmtResult::Failed(_) => {
@@ -2126,27 +2069,28 @@ pub(super) fn walk_exec_by_thm_stmt_result(value: &crate::execute::execute_by_st
     match value {
         crate::execute::execute_by_stmt::ExecByThmStmtResult::Success(p0) => {
             {
-                let payload87 = p0;
+                let payload84 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload87.local_env.as_ref());
+                scope_envs.push(payload84.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                if let Some(child88) = (&payload87.builtin).as_ref() {
-                    walk_builtin_thm_application(child88, graph, runtime, locals, refs, outputs);
+                graph.reference_theorem_call(&payload84.call, runtime, locals, refs);
+                if let Some(child85) = (&payload84.builtin).as_ref() {
+                    graph.reference_builtin_theorem(child85, refs);
                 }
-                for child89 in (&payload87.type_proofs).iter() {
-                    walk_verify_fact_result(child89, graph, runtime, locals, refs, outputs);
+                for child86 in (&payload84.type_proofs).iter() {
+                    walk_verify_fact_result(child86, graph, runtime, locals, refs, outputs);
                 }
-                if let Some(child90) = (&payload87.function_domain).as_ref() {
-                    walk_builtin_function_domain_proof(child90, graph, runtime, locals, refs, outputs);
+                if let Some(child87) = (&payload84.function_domain).as_ref() {
+                    walk_builtin_function_domain_proof(child87, graph, runtime, locals, refs, outputs);
                 }
-                for child91 in (&payload87.dom_proofs).iter() {
-                    walk_verify_fact_result(child91, graph, runtime, locals, refs, outputs);
+                for child88 in (&payload84.dom_proofs).iter() {
+                    walk_verify_fact_result(child88, graph, runtime, locals, refs, outputs);
                 }
-                for child92 in (&payload87.conclusions_wd).iter() {
-                    walk_fact_well_defined_proof(child92, graph, runtime, locals, refs, outputs);
+                for child89 in (&payload84.conclusions_wd).iter() {
+                    walk_fact_well_defined_proof(child89, graph, runtime, locals, refs, outputs);
                 }
-                walk_verify_fact_result(&payload87.selected_proof, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload87.stored, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload84.selected_proof, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload84.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecByThmStmtResult::Failed(_) => {
@@ -2158,15 +2102,15 @@ pub(super) fn walk_exec_expand_range_stmt_result(value: &crate::execute::execute
     match value {
         crate::execute::execute_by_stmt::ExecExpandRangeStmtResult::Success(p0) => {
             {
-                let payload93 = p0;
+                let payload90 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload93.local_env.as_ref());
+                scope_envs.push(payload90.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                for child94 in (&payload93.values).iter() {
-                    walk_obj(child94, graph, runtime, locals, refs, outputs);
+                for child91 in (&payload90.values).iter() {
+                    walk_obj(child91, graph, runtime, locals, refs, outputs);
                 }
-                walk_verify_fact_result(&payload93.membership, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload93.stored, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload90.membership, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload90.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecExpandRangeStmtResult::Failed(_) => {
@@ -2178,18 +2122,18 @@ pub(super) fn walk_exec_release_axiom_of_choice_stmt_result(value: &crate::execu
     match value {
         crate::execute::execute_by_stmt::ExecReleaseAxiomOfChoiceStmtResult::Success(p0) => {
             {
-                let payload95 = p0;
+                let payload92 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload95.local_env.as_ref());
+                scope_envs.push(payload92.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                walk_verify_obj_well_defined_result(&payload95.family_wd, graph, runtime, locals, refs, outputs);
-                for child96 in (&payload95.proof_steps).iter() {
-                    graph.collect_statement(child96, runtime, locals);
+                walk_verify_obj_well_defined_result(&payload92.family_wd, graph, runtime, locals, refs, outputs);
+                for child93 in (&payload92.proof_steps).iter() {
+                    graph.collect_statement(child93, runtime, locals);
                 }
-                for child97 in (&payload95.obligations).iter() {
-                    walk_verify_fact_result(child97, graph, runtime, locals, refs, outputs);
+                for child94 in (&payload92.obligations).iter() {
+                    walk_verify_fact_result(child94, graph, runtime, locals, refs, outputs);
                 }
-                graph.collect_store(&payload95.stored, runtime, locals, refs, outputs);
+                graph.collect_store(&payload92.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecReleaseAxiomOfChoiceStmtResult::Failed(_) => {
@@ -2201,10 +2145,10 @@ pub(super) fn walk_exec_release_regularity_axiom_stmt_result(value: &crate::exec
     match value {
         crate::execute::execute_by_stmt::ExecReleaseRegularityAxiomStmtResult::Success(p0) => {
             {
-                let payload98 = p0;
-                walk_verify_obj_well_defined_result(&payload98.set_wd, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload98.nonempty, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload98.stored, runtime, locals, refs, outputs);
+                let payload95 = p0;
+                walk_verify_obj_well_defined_result(&payload95.set_wd, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload95.nonempty, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload95.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecReleaseRegularityAxiomStmtResult::Failed(_) => {
@@ -2216,27 +2160,28 @@ pub(super) fn walk_exec_release_thm_stmt_result(value: &crate::execute::execute_
     match value {
         crate::execute::execute_by_stmt::ExecReleaseThmStmtResult::Success(p0) => {
             {
-                let payload99 = p0;
+                let payload96 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload99.local_env.as_ref());
+                scope_envs.push(payload96.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                if let Some(child100) = (&payload99.builtin).as_ref() {
-                    walk_builtin_thm_application(child100, graph, runtime, locals, refs, outputs);
+                graph.reference_theorem_call(&payload96.call, runtime, locals, refs);
+                if let Some(child97) = (&payload96.builtin).as_ref() {
+                    graph.reference_builtin_theorem(child97, refs);
                 }
-                for child101 in (&payload99.type_proofs).iter() {
-                    walk_verify_fact_result(child101, graph, runtime, locals, refs, outputs);
+                for child98 in (&payload96.type_proofs).iter() {
+                    walk_verify_fact_result(child98, graph, runtime, locals, refs, outputs);
                 }
-                if let Some(child102) = (&payload99.function_domain).as_ref() {
-                    walk_builtin_function_domain_proof(child102, graph, runtime, locals, refs, outputs);
+                if let Some(child99) = (&payload96.function_domain).as_ref() {
+                    walk_builtin_function_domain_proof(child99, graph, runtime, locals, refs, outputs);
                 }
-                for child103 in (&payload99.dom_proofs).iter() {
-                    walk_verify_fact_result(child103, graph, runtime, locals, refs, outputs);
+                for child100 in (&payload96.dom_proofs).iter() {
+                    walk_verify_fact_result(child100, graph, runtime, locals, refs, outputs);
                 }
-                for child104 in (&payload99.conclusions_wd).iter() {
-                    walk_fact_well_defined_proof(child104, graph, runtime, locals, refs, outputs);
+                for child101 in (&payload96.conclusions_wd).iter() {
+                    walk_fact_well_defined_proof(child101, graph, runtime, locals, refs, outputs);
                 }
-                for child105 in (&payload99.stored).iter() {
-                    graph.collect_store(child105, runtime, locals, refs, outputs);
+                for child102 in (&payload96.stored).iter() {
+                    graph.collect_store(child102, runtime, locals, refs, outputs);
                 }
             }
         }
@@ -2249,18 +2194,18 @@ pub(super) fn walk_exec_release_zorn_lemma_stmt_result(value: &crate::execute::e
     match value {
         crate::execute::execute_by_stmt::ExecReleaseZornLemmaStmtResult::Success(p0) => {
             {
-                let payload106 = p0;
+                let payload103 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload106.local_env.as_ref());
+                scope_envs.push(payload103.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                walk_verify_obj_well_defined_result(&payload106.set_wd, graph, runtime, locals, refs, outputs);
-                for child107 in (&payload106.proof_steps).iter() {
-                    graph.collect_statement(child107, runtime, locals);
+                walk_verify_obj_well_defined_result(&payload103.set_wd, graph, runtime, locals, refs, outputs);
+                for child104 in (&payload103.proof_steps).iter() {
+                    graph.collect_statement(child104, runtime, locals);
                 }
-                for child108 in (&payload106.obligations).iter() {
-                    walk_verify_fact_result(child108, graph, runtime, locals, refs, outputs);
+                for child105 in (&payload103.obligations).iter() {
+                    walk_verify_fact_result(child105, graph, runtime, locals, refs, outputs);
                 }
-                graph.collect_store(&payload106.stored, runtime, locals, refs, outputs);
+                graph.collect_store(&payload103.stored, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_by_stmt::ExecReleaseZornLemmaStmtResult::Failed(_) => {
@@ -2313,12 +2258,12 @@ pub(super) fn walk_exec_def_prop_stmt_success_result(value: &crate::execute::Exe
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
     walk_def_prop_stmt(&value.statement, graph, runtime, locals, refs, outputs);
-    for child109 in (&value.param_type_well_defined).iter() {
-        walk_param_type_well_defined_proof(child109, graph, runtime, locals, refs, outputs);
+    for child106 in (&value.param_type_well_defined).iter() {
+        walk_param_type_well_defined_proof(child106, graph, runtime, locals, refs, outputs);
     }
-    walk_store_have_obj_and_infer_result(&value.defined_params, graph, runtime, locals, refs, outputs);
-    for child110 in (&value.iff_fact_well_defined).iter() {
-        walk_fact_well_defined_proof(child110, graph, runtime, locals, refs, outputs);
+    graph.collect_bound_parameters(&value.defined_params.stored_fact_ids, runtime, locals);
+    for child107 in (&value.iff_fact_well_defined).iter() {
+        walk_fact_well_defined_proof(child107, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -2337,11 +2282,11 @@ pub(super) fn walk_exec_def_strategy_stmt_success(value: &crate::execute::ExecDe
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
     walk_verify_fact_well_defined_result(&value.goal_wd, graph, runtime, locals, refs, outputs);
-    for child111 in (&value.proof_steps).iter() {
-        graph.collect_statement(child111, runtime, locals);
+    for child108 in (&value.proof_steps).iter() {
+        graph.collect_statement(child108, runtime, locals);
     }
-    for child112 in (&value.conclusion_proofs).iter() {
-        walk_verify_fact_result(child112, graph, runtime, locals, refs, outputs);
+    for child109 in (&value.conclusion_proofs).iter() {
+        walk_verify_fact_result(child109, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -2349,18 +2294,18 @@ pub(super) fn walk_exec_def_struct_field_scope_success_result(value: &crate::exe
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.field_local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child113 in (&value.fields).iter() {
+    for child110 in (&value.fields).iter() {
         {
-            let payload114 = child113;
-            walk_obj_well_defined_proof(&payload114.well_defined, graph, runtime, locals, refs, outputs);
-            walk_store_have_obj_and_infer_result(&payload114.defined, graph, runtime, locals, refs, outputs);
+            let payload111 = child110;
+            walk_obj_well_defined_proof(&payload111.well_defined, graph, runtime, locals, refs, outputs);
+            graph.collect_stored_ids(&(&payload111.defined).stored_fact_ids, runtime, locals, refs, outputs);
         }
     }
-    for child115 in (&value.equivalent_facts).iter() {
+    for child112 in (&value.equivalent_facts).iter() {
         {
-            let payload116 = child115;
-            walk_fact_well_defined_proof(&payload116.well_defined, graph, runtime, locals, refs, outputs);
-            walk_store_fact_result(&payload116.store, graph, runtime, locals, refs, outputs);
+            let payload113 = child112;
+            walk_fact_well_defined_proof(&payload113.well_defined, graph, runtime, locals, refs, outputs);
+            walk_store_fact_result(&payload113.store, graph, runtime, locals, refs, outputs);
         }
     }
 }
@@ -2380,18 +2325,18 @@ pub(super) fn walk_exec_def_struct_stmt_success_result(value: &crate::execute::E
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
     walk_def_struct_stmt(&value.statement, graph, runtime, locals, refs, outputs);
-    if let Some(child117) = (&value.introduced_params).as_ref() {
-        walk_introduce_typed_parameters_result(child117, graph, runtime, locals, refs, outputs);
+    if let Some(child114) = (&value.introduced_params).as_ref() {
+        walk_introduce_typed_parameters_result(child114, graph, runtime, locals, refs, outputs);
     }
-    for child118 in (&value.structure_domains).iter() {
-        walk_fact_well_defined_proof(child118, graph, runtime, locals, refs, outputs);
+    for child115 in (&value.structure_domains).iter() {
+        walk_fact_well_defined_proof(child115, graph, runtime, locals, refs, outputs);
     }
     walk_exec_def_struct_field_scope_success_result(&value.field_scope, graph, runtime, locals, refs, outputs);
-    for child119 in (&value.definition_facts).iter() {
+    for child116 in (&value.definition_facts).iter() {
         {
-            let payload120 = child119;
-            graph.reference_fact(&payload120.source_fact_id, runtime, locals, refs, outputs);
-            graph.collect_store(&payload120.store_and_infer, runtime, locals, refs, outputs);
+            let payload117 = child116;
+            graph.reference_fact(&payload117.source_fact_id, runtime, locals, refs, outputs);
+            graph.collect_store(&payload117.store_and_infer, runtime, locals, refs, outputs);
         }
     }
 }
@@ -2417,12 +2362,12 @@ pub(super) fn walk_exec_def_template_stmt_success_result(value: &crate::execute:
     let locals = scope_envs.as_slice();
     walk_def_template_stmt(&value.statement, graph, runtime, locals, refs, outputs);
     walk_introduce_typed_parameters_result(&value.introduced_params, graph, runtime, locals, refs, outputs);
-    for child121 in (&value.assumed_dom_facts).iter() {
-        walk_assumed_template_dom_fact_result(child121, graph, runtime, locals, refs, outputs);
+    for child118 in (&value.assumed_dom_facts).iter() {
+        walk_assumed_template_dom_fact_result(child118, graph, runtime, locals, refs, outputs);
     }
     walk_exec_template_def_body_result(&value.body, graph, runtime, locals, refs, outputs);
-    for child122 in (&value.definition_facts).iter() {
-        walk_store_template_definition_fact_result(child122, graph, runtime, locals, refs, outputs);
+    for child119 in (&value.definition_facts).iter() {
+        walk_store_template_definition_fact_result(child119, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -2484,11 +2429,11 @@ pub(super) fn walk_exec_def_thm_stmt_success(value: &crate::execute::ExecDefThmS
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
     walk_verify_fact_well_defined_result(&value.goal_wd, graph, runtime, locals, refs, outputs);
-    for child123 in (&value.proof_steps).iter() {
-        graph.collect_statement(child123, runtime, locals);
+    for child120 in (&value.proof_steps).iter() {
+        graph.collect_statement(child120, runtime, locals);
     }
-    for child124 in (&value.conclusion_proofs).iter() {
-        walk_verify_fact_result(child124, graph, runtime, locals, refs, outputs);
+    for child121 in (&value.conclusion_proofs).iter() {
+        walk_verify_fact_result(child121, graph, runtime, locals, refs, outputs);
     }
     graph.collect_store(&value.stored, runtime, locals, refs, outputs);
 }
@@ -2519,8 +2464,8 @@ pub(super) fn walk_aggregate_evaluation_result(value: &crate::execute::execute_e
 pub(super) fn walk_aggregate_range_bounds_result(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::AggregateRangeBoundsResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.start, graph, runtime, locals, refs, outputs);
     walk_obj(&value.end, graph, runtime, locals, refs, outputs);
-    for child125 in (&value.cited_equal_fact_ids).iter() {
-        graph.reference_fact(child125, runtime, locals, refs, outputs);
+    for child122 in (&value.cited_equal_fact_ids).iter() {
+        graph.reference_fact(child122, runtime, locals, refs, outputs);
     }
 }
 
@@ -2545,8 +2490,8 @@ pub(super) fn walk_aggregate_term_expansion(value: &crate::execute::execute_eval
 
 pub(super) fn walk_algo_application_evaluation_result(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::AlgoApplicationEvaluationResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.application, graph, runtime, locals, refs, outputs);
-    for child126 in (&value.normalized_arguments).iter() {
-        walk_obj(child126, graph, runtime, locals, refs, outputs);
+    for child123 in (&value.normalized_arguments).iter() {
+        walk_obj(child123, graph, runtime, locals, refs, outputs);
     }
     walk_obj(&value.return_expression, graph, runtime, locals, refs, outputs);
     walk_algo_definition_evidence(&value.definition_evidence, graph, runtime, locals, refs, outputs);
@@ -2571,19 +2516,19 @@ pub(super) fn walk_checked_beta_function_application_expansion_proof(value: &cra
 pub(super) fn walk_finite_set_enumeration_result(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::FiniteSetEnumerationResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_known_equality_path_proof(&value.set_equality, graph, runtime, locals, refs, outputs);
     walk_obj(&value.resolved_set, graph, runtime, locals, refs, outputs);
-    for child127 in (&value.cited_equal_fact_ids).iter() {
-        graph.reference_fact(child127, runtime, locals, refs, outputs);
+    for child124 in (&value.cited_equal_fact_ids).iter() {
+        graph.reference_fact(child124, runtime, locals, refs, outputs);
     }
-    for child128 in (&value.elements).iter() {
-        walk_obj(child128, graph, runtime, locals, refs, outputs);
+    for child125 in (&value.elements).iter() {
+        walk_obj(child125, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_product_evaluation_result(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::FiniteSetProductEvaluationResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.source, graph, runtime, locals, refs, outputs);
     walk_finite_set_enumeration_result(&value.enumeration, graph, runtime, locals, refs, outputs);
-    for child129 in (&value.terms).iter() {
-        walk_aggregate_term_evaluation_result(child129, graph, runtime, locals, refs, outputs);
+    for child126 in (&value.terms).iter() {
+        walk_aggregate_term_evaluation_result(child126, graph, runtime, locals, refs, outputs);
     }
     walk_obj(&value.value, graph, runtime, locals, refs, outputs);
 }
@@ -2592,8 +2537,8 @@ pub(super) fn walk_finite_set_reduce_evaluation_result(value: &crate::execute::e
     walk_obj(&value.source, graph, runtime, locals, refs, outputs);
     walk_finite_set_enumeration_result(&value.enumeration, graph, runtime, locals, refs, outputs);
     walk_obj(&value.seed, graph, runtime, locals, refs, outputs);
-    for child130 in (&value.terms).iter() {
-        walk_reduce_term_evaluation_result(child130, graph, runtime, locals, refs, outputs);
+    for child127 in (&value.terms).iter() {
+        walk_reduce_term_evaluation_result(child127, graph, runtime, locals, refs, outputs);
     }
     walk_obj(&value.value, graph, runtime, locals, refs, outputs);
 }
@@ -2601,8 +2546,8 @@ pub(super) fn walk_finite_set_reduce_evaluation_result(value: &crate::execute::e
 pub(super) fn walk_finite_set_sum_evaluation_result(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::FiniteSetSumEvaluationResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.source, graph, runtime, locals, refs, outputs);
     walk_finite_set_enumeration_result(&value.enumeration, graph, runtime, locals, refs, outputs);
-    for child131 in (&value.terms).iter() {
-        walk_aggregate_term_evaluation_result(child131, graph, runtime, locals, refs, outputs);
+    for child128 in (&value.terms).iter() {
+        walk_aggregate_term_evaluation_result(child128, graph, runtime, locals, refs, outputs);
     }
     walk_obj(&value.value, graph, runtime, locals, refs, outputs);
 }
@@ -2628,8 +2573,8 @@ pub(super) fn walk_function_application_expansion_proof(value: &crate::execute::
 pub(super) fn walk_range_product_evaluation_result(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::RangeProductEvaluationResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.source, graph, runtime, locals, refs, outputs);
     walk_aggregate_range_bounds_result(&value.bounds, graph, runtime, locals, refs, outputs);
-    for child132 in (&value.terms).iter() {
-        walk_aggregate_term_evaluation_result(child132, graph, runtime, locals, refs, outputs);
+    for child129 in (&value.terms).iter() {
+        walk_aggregate_term_evaluation_result(child129, graph, runtime, locals, refs, outputs);
     }
     walk_obj(&value.value, graph, runtime, locals, refs, outputs);
 }
@@ -2638,8 +2583,8 @@ pub(super) fn walk_range_reduce_evaluation_result(value: &crate::execute::execut
     walk_obj(&value.source, graph, runtime, locals, refs, outputs);
     walk_aggregate_range_bounds_result(&value.bounds, graph, runtime, locals, refs, outputs);
     walk_obj(&value.seed, graph, runtime, locals, refs, outputs);
-    for child133 in (&value.terms).iter() {
-        walk_reduce_term_evaluation_result(child133, graph, runtime, locals, refs, outputs);
+    for child130 in (&value.terms).iter() {
+        walk_reduce_term_evaluation_result(child130, graph, runtime, locals, refs, outputs);
     }
     walk_obj(&value.value, graph, runtime, locals, refs, outputs);
 }
@@ -2647,8 +2592,8 @@ pub(super) fn walk_range_reduce_evaluation_result(value: &crate::execute::execut
 pub(super) fn walk_range_sum_evaluation_result(value: &crate::execute::execute_eval_stmt::aggregate_evaluation_result::RangeSumEvaluationResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.source, graph, runtime, locals, refs, outputs);
     walk_aggregate_range_bounds_result(&value.bounds, graph, runtime, locals, refs, outputs);
-    for child134 in (&value.terms).iter() {
-        walk_aggregate_term_evaluation_result(child134, graph, runtime, locals, refs, outputs);
+    for child131 in (&value.terms).iter() {
+        walk_aggregate_term_evaluation_result(child131, graph, runtime, locals, refs, outputs);
     }
     walk_obj(&value.value, graph, runtime, locals, refs, outputs);
 }
@@ -2683,19 +2628,20 @@ pub(super) fn walk_exec_eval_stmt_success(value: &crate::execute::ExecEvalStmtSu
     walk_obj(&value.source_object, graph, runtime, locals, refs, outputs);
     walk_obj_well_defined_proof(&value.source_well_defined, graph, runtime, locals, refs, outputs);
     walk_obj(&value.rewritten_object, graph, runtime, locals, refs, outputs);
-    for child135 in (&value.cited_equal_fact_ids).iter() {
-        graph.reference_fact(child135, runtime, locals, refs, outputs);
+    for child132 in (&value.cited_equal_fact_ids).iter() {
+        graph.reference_fact(child132, runtime, locals, refs, outputs);
     }
     walk_obj(&value.evaluated_object, graph, runtime, locals, refs, outputs);
-    for child136 in (&value.aggregate_evaluations).iter() {
-        walk_aggregate_evaluation_result(child136, graph, runtime, locals, refs, outputs);
+    for child133 in (&value.aggregate_evaluations).iter() {
+        walk_aggregate_evaluation_result(child133, graph, runtime, locals, refs, outputs);
     }
-    for child137 in (&value.function_evaluations).iter() {
-        walk_function_application_evaluation_result(child137, graph, runtime, locals, refs, outputs);
+    for child134 in (&value.function_evaluations).iter() {
+        walk_function_application_evaluation_result(child134, graph, runtime, locals, refs, outputs);
     }
-    for child138 in (&value.algo_evaluations).iter() {
-        walk_algo_application_evaluation_result(child138, graph, runtime, locals, refs, outputs);
+    for child135 in (&value.algo_evaluations).iter() {
+        walk_algo_application_evaluation_result(child135, graph, runtime, locals, refs, outputs);
     }
+    graph.reference_fact(&(&value.evaluated_equal_fact).fact_id, runtime, locals, refs, outputs);
     walk_equal_fact(&value.evaluated_equal_fact, graph, runtime, locals, refs, outputs);
     walk_equal_fact_well_defined_proof(&value.evaluated_equal_well_defined, graph, runtime, locals, refs, outputs);
     graph.collect_store(&value.store_and_infer_result, runtime, locals, refs, outputs);
@@ -2726,6 +2672,7 @@ pub(super) fn walk_complete_function_domain_source_proof(value: &crate::execute:
             walk_known_equality_path_proof(p2, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::Membership { membership: p0, subject_equal: p1, carrier_equal: p2 } => {
+            graph.reference_fact(&(p0).fact_id, runtime, locals, refs, outputs);
             walk_in_fact(p0, graph, runtime, locals, refs, outputs);
             walk_known_equality_path_proof(p1, graph, runtime, locals, refs, outputs);
             walk_known_equality_path_proof(p2, graph, runtime, locals, refs, outputs);
@@ -2734,11 +2681,11 @@ pub(super) fn walk_complete_function_domain_source_proof(value: &crate::execute:
             walk_fn_obj(p0, graph, runtime, locals, refs, outputs);
             walk_known_equality_path_proof(p1, graph, runtime, locals, refs, outputs);
             walk_fn_obj_domain_fn_set_evidence(p2, graph, runtime, locals, refs, outputs);
-            for child139 in (p3).iter() {
-                walk_obj_well_defined_proof((child139).as_ref(), graph, runtime, locals, refs, outputs);
+            for child136 in (p3).iter() {
+                walk_obj_well_defined_proof((child136).as_ref(), graph, runtime, locals, refs, outputs);
             }
-            for child140 in (p4).iter() {
-                walk_verify_fact_result(child140, graph, runtime, locals, refs, outputs);
+            for child137 in (p4).iter() {
+                walk_verify_fact_result(child137, graph, runtime, locals, refs, outputs);
             }
             walk_obj(p5, graph, runtime, locals, refs, outputs);
             walk_known_equality_path_proof(p6, graph, runtime, locals, refs, outputs);
@@ -2747,16 +2694,16 @@ pub(super) fn walk_complete_function_domain_source_proof(value: &crate::execute:
 }
 
 pub(super) fn walk_function_call_domains_alpha_match_proof(value: &crate::execute::execute_fact_stmt::function_domain::FunctionCallDomainsAlphaMatchProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child141 in (&value.layers).iter() {
-        walk_function_call_layer_domains_alpha_match_proof(child141, graph, runtime, locals, refs, outputs);
+    for child138 in (&value.layers).iter() {
+        walk_function_call_layer_domains_alpha_match_proof(child138, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_function_call_layer_domains_alpha_match_proof(value: &crate::execute::execute_fact_stmt::function_domain::FunctionCallLayerDomainsAlphaMatchProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_fn_set(&value.selected, graph, runtime, locals, refs, outputs);
     walk_fn_set(&value.alternative, graph, runtime, locals, refs, outputs);
-    if let Some(child142) = (&value.return_carriers).as_ref() {
-        walk_function_call_return_carriers_proof(child142, graph, runtime, locals, refs, outputs);
+    if let Some(child139) = (&value.return_carriers).as_ref() {
+        walk_function_call_return_carriers_proof(child139, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -2836,19 +2783,19 @@ pub(super) fn walk_function_domain_match_proof(value: &crate::execute::execute_f
 pub(super) fn walk_function_domain_nonempty_evidence(value: &crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyEvidence, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     match value {
         crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyEvidence::ParameterCarriers(p0) => {
-            for child143 in (p0).iter() {
-                walk_verify_fact_result(child143, graph, runtime, locals, refs, outputs);
+            for child140 in (p0).iter() {
+                walk_verify_fact_result(child140, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyEvidence::ArgumentWitness { arguments: p0, memberships: p1, guards: p2 } => {
-            for child144 in (p0).iter() {
-                walk_obj(child144, graph, runtime, locals, refs, outputs);
+            for child141 in (p0).iter() {
+                walk_obj(child141, graph, runtime, locals, refs, outputs);
             }
-            for child145 in (p1).iter() {
-                walk_function_domain_argument_membership_proof(child145, graph, runtime, locals, refs, outputs);
+            for child142 in (p1).iter() {
+                walk_function_domain_argument_membership_proof(child142, graph, runtime, locals, refs, outputs);
             }
-            for child146 in (p2).iter() {
-                walk_verify_fact_result(child146, graph, runtime, locals, refs, outputs);
+            for child143 in (p2).iter() {
+                walk_verify_fact_result(child143, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyEvidence::ExistingWitness(p0) => {
@@ -2877,8 +2824,8 @@ pub(super) fn walk_function_space_nonempty_proof(value: &crate::execute::execute
         }
         crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof::FiniteCartesianProduct { cart: p0, factors_nonempty: p1 } => {
             walk_cart(p0, graph, runtime, locals, refs, outputs);
-            for child147 in (p1).iter() {
-                walk_function_space_nonempty_proof(child147, graph, runtime, locals, refs, outputs);
+            for child144 in (p1).iter() {
+                walk_function_space_nonempty_proof(child144, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof::ConstantFunction { signature: p0, return_nonempty: p1 } => {
@@ -2896,6 +2843,7 @@ pub(super) fn walk_known_cartesian_coordinate_tuple_proof(value: &crate::execute
 
 pub(super) fn walk_known_cartesian_tuple_proof(value: &crate::execute::execute_fact_stmt::known_tuple::KnownCartesianTupleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_known_equality_path_proof(&value.subject_equal, graph, runtime, locals, refs, outputs);
+    graph.reference_fact(&(&value.membership).fact_id, runtime, locals, refs, outputs);
     walk_in_fact(&value.membership, graph, runtime, locals, refs, outputs);
     walk_known_equality_path_proof(&value.carrier_equal, graph, runtime, locals, refs, outputs);
     walk_cart(&value.cart, graph, runtime, locals, refs, outputs);
@@ -2903,6 +2851,7 @@ pub(super) fn walk_known_cartesian_tuple_proof(value: &crate::execute::execute_f
 
 pub(super) fn walk_known_function_cartesian_tuple_proof(value: &crate::execute::execute_fact_stmt::known_tuple::KnownFunctionCartesianTupleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_known_equality_path_proof(&value.function_equal, graph, runtime, locals, refs, outputs);
+    graph.reference_fact(&(&value.membership).fact_id, runtime, locals, refs, outputs);
     walk_in_fact(&value.membership, graph, runtime, locals, refs, outputs);
     walk_fn_application_in_codomain_known_special_property_proof(&value.membership_proof, graph, runtime, locals, refs, outputs);
     walk_known_equality_path_proof(&value.carrier_equal, graph, runtime, locals, refs, outputs);
@@ -2914,21 +2863,21 @@ pub(super) fn walk_known_function_tuple_applicability(value: &crate::execute::ex
         crate::execute::execute_fact_stmt::known_tuple::KnownFunctionTupleApplicability::AnonymousLiteral => {
         }
         crate::execute::execute_fact_stmt::known_tuple::KnownFunctionTupleApplicability::AllSignaturesMatch { signatures: p0, template_signatures: p1 } => {
-            for child148 in (p0).iter() {
-                walk_signature_match_proof(child148, graph, runtime, locals, refs, outputs);
+            for child145 in (p0).iter() {
+                walk_signature_match_proof(child145, graph, runtime, locals, refs, outputs);
             }
-            for child149 in (p1).iter() {
-                walk_known_template_signature_match_proof(child149, graph, runtime, locals, refs, outputs);
+            for child146 in (p1).iter() {
+                walk_known_template_signature_match_proof(child146, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::known_tuple::KnownFunctionTupleApplicability::TemplateDefinition { instance: p0, signature: p1, alternative_signatures: p2, alternative_template_signatures: p3 } => {
             walk_instantiated_template_obj(p0, graph, runtime, locals, refs, outputs);
             walk_fn_set(p1, graph, runtime, locals, refs, outputs);
-            for child150 in (p2).iter() {
-                walk_signature_match_proof(child150, graph, runtime, locals, refs, outputs);
+            for child147 in (p2).iter() {
+                walk_signature_match_proof(child147, graph, runtime, locals, refs, outputs);
             }
-            for child151 in (p3).iter() {
-                walk_known_template_signature_match_proof(child151, graph, runtime, locals, refs, outputs);
+            for child148 in (p3).iter() {
+                walk_known_template_signature_match_proof(child148, graph, runtime, locals, refs, outputs);
             }
         }
     }
@@ -2987,13 +2936,13 @@ pub(super) fn walk_verify_and_fact_result(value: &crate::execute::execute_fact_s
     match value {
         crate::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactResult::Success(p0) => {
             {
-                let payload152 = p0;
-                walk_and_fact(&payload152.fact, graph, runtime, locals, refs, outputs);
-                for child153 in (&payload152.components).iter() {
-                    walk_verify_fact_result(child153, graph, runtime, locals, refs, outputs);
+                let payload149 = p0;
+                walk_and_fact(&payload149.fact, graph, runtime, locals, refs, outputs);
+                for child150 in (&payload149.components).iter() {
+                    walk_verify_fact_result(child150, graph, runtime, locals, refs, outputs);
                 }
-                if let Some(child154) = (&payload152.known_forall).as_ref() {
-                    walk_search_proof_by_known_forall_fact(child154, graph, runtime, locals, refs, outputs);
+                if let Some(child151) = (&payload149.known_forall).as_ref() {
+                    walk_search_proof_by_known_forall_fact(child151, graph, runtime, locals, refs, outputs);
                 }
             }
         }
@@ -3121,8 +3070,8 @@ pub(super) fn walk_structural_membership_reason(value: &crate::execute::execute_
 }
 
 pub(super) fn walk_fn_application_in_standard_superset_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_fn_standard_return::FnApplicationInStandardSupersetProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child155 in (&value.signature_returns).iter() {
-        walk_signature_standard_return_proof(child155, graph, runtime, locals, refs, outputs);
+    for child152 in (&value.signature_returns).iter() {
+        walk_signature_standard_return_proof(child152, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -3149,8 +3098,8 @@ pub(super) fn walk_atomic_except_equality_fact_search_proof_by_definition(value:
 
 pub(super) fn walk_atomic_except_equality_fact_search_proof_by_known_atomic_fact(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::AtomicExceptEqualityFactSearchProofByKnownAtomicFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.cite_fact_id, runtime, locals, refs, outputs);
-    for child156 in (&value.why_parameters_of_known_fact_are_equal_to_givens).iter() {
-        walk_equal_fact_searched_proof(child156, graph, runtime, locals, refs, outputs);
+    for child153 in (&value.why_parameters_of_known_fact_are_equal_to_givens).iter() {
+        walk_equal_fact_searched_proof(child153, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -3193,56 +3142,56 @@ pub(super) fn walk_atomic_except_equality_fact_searched_proof(value: &crate::exe
 }
 
 pub(super) fn walk_builtin_bijective_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinBijectiveDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child157 in (&value.requirement_facts).iter() {
-        walk_fact(child157, graph, runtime, locals, refs, outputs);
+    for child154 in (&value.requirement_facts).iter() {
+        walk_fact(child154, graph, runtime, locals, refs, outputs);
     }
-    for child158 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child158, graph, runtime, locals, refs, outputs);
+    for child155 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child155, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_builtin_coprime_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinCoprimeDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child159 in (&value.requirement_facts).iter() {
-        walk_fact(child159, graph, runtime, locals, refs, outputs);
+    for child156 in (&value.requirement_facts).iter() {
+        walk_fact(child156, graph, runtime, locals, refs, outputs);
     }
-    for child160 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child160, graph, runtime, locals, refs, outputs);
+    for child157 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child157, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_builtin_dvd_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinDvdDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child161 in (&value.requirement_facts).iter() {
-        walk_fact(child161, graph, runtime, locals, refs, outputs);
+    for child158 in (&value.requirement_facts).iter() {
+        walk_fact(child158, graph, runtime, locals, refs, outputs);
     }
-    for child162 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child162, graph, runtime, locals, refs, outputs);
+    for child159 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child159, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_builtin_injective_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinInjectiveDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child163 in (&value.requirement_facts).iter() {
-        walk_fact(child163, graph, runtime, locals, refs, outputs);
+    for child160 in (&value.requirement_facts).iter() {
+        walk_fact(child160, graph, runtime, locals, refs, outputs);
     }
-    for child164 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child164, graph, runtime, locals, refs, outputs);
+    for child161 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child161, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_builtin_is_choice_function_for_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinIsChoiceFunctionForDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child165 in (&value.requirement_facts).iter() {
-        walk_fact(child165, graph, runtime, locals, refs, outputs);
+    for child162 in (&value.requirement_facts).iter() {
+        walk_fact(child162, graph, runtime, locals, refs, outputs);
     }
-    for child166 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child166, graph, runtime, locals, refs, outputs);
+    for child163 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child163, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_builtin_prime_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinPrimeDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child167 in (&value.requirement_facts).iter() {
-        walk_fact(child167, graph, runtime, locals, refs, outputs);
+    for child164 in (&value.requirement_facts).iter() {
+        walk_fact(child164, graph, runtime, locals, refs, outputs);
     }
-    for child168 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child168, graph, runtime, locals, refs, outputs);
+    for child165 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child165, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -3285,66 +3234,66 @@ pub(super) fn walk_builtin_prop_definition_proof(value: &crate::execute::execute
 }
 
 pub(super) fn walk_builtin_proper_subset_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinProperSubsetDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child169 in (&value.requirement_facts).iter() {
-        walk_fact(child169, graph, runtime, locals, refs, outputs);
+    for child166 in (&value.requirement_facts).iter() {
+        walk_fact(child166, graph, runtime, locals, refs, outputs);
     }
-    for child170 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child170, graph, runtime, locals, refs, outputs);
+    for child167 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child167, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_builtin_proper_superset_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinProperSupersetDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child171 in (&value.requirement_facts).iter() {
-        walk_fact(child171, graph, runtime, locals, refs, outputs);
+    for child168 in (&value.requirement_facts).iter() {
+        walk_fact(child168, graph, runtime, locals, refs, outputs);
     }
-    for child172 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child172, graph, runtime, locals, refs, outputs);
+    for child169 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child169, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_builtin_subset_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinSubsetDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child173 in (&value.requirement_facts).iter() {
-        walk_fact(child173, graph, runtime, locals, refs, outputs);
+    for child170 in (&value.requirement_facts).iter() {
+        walk_fact(child170, graph, runtime, locals, refs, outputs);
     }
-    for child174 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child174, graph, runtime, locals, refs, outputs);
+    for child171 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child171, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_builtin_superset_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinSupersetDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child175 in (&value.requirement_facts).iter() {
-        walk_fact(child175, graph, runtime, locals, refs, outputs);
+    for child172 in (&value.requirement_facts).iter() {
+        walk_fact(child172, graph, runtime, locals, refs, outputs);
     }
-    for child176 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child176, graph, runtime, locals, refs, outputs);
+    for child173 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child173, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_builtin_surjective_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinSurjectiveDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child177 in (&value.requirement_facts).iter() {
-        walk_fact(child177, graph, runtime, locals, refs, outputs);
+    for child174 in (&value.requirement_facts).iter() {
+        walk_fact(child174, graph, runtime, locals, refs, outputs);
     }
-    for child178 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child178, graph, runtime, locals, refs, outputs);
+    for child175 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child175, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_search_proof_by_known_strategy(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownStrategy, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child179 in (&value.forall_parameters_match_what_args).iter() {
-        walk_obj(child179, graph, runtime, locals, refs, outputs);
+    for child176 in (&value.forall_parameters_match_what_args).iter() {
+        walk_obj(child176, graph, runtime, locals, refs, outputs);
     }
-    for child180 in (&value.arg_match_proofs).iter() {
-        walk_forall_conclusion_arg_match_proof(child180, graph, runtime, locals, refs, outputs);
+    for child177 in (&value.arg_match_proofs).iter() {
+        walk_forall_conclusion_arg_match_proof(child177, graph, runtime, locals, refs, outputs);
     }
     walk_prove_forall_instantiation_requirements_proof(&value.instantiation_requirements, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_user_defined_prop_definition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::UserDefinedPropDefinitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child181 in (&value.requirement_facts).iter() {
-        walk_fact(child181, graph, runtime, locals, refs, outputs);
+    for child178 in (&value.requirement_facts).iter() {
+        walk_fact(child178, graph, runtime, locals, refs, outputs);
     }
-    for child182 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child182, graph, runtime, locals, refs, outputs);
+    for child179 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child179, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -3388,24 +3337,24 @@ pub(super) fn walk_atomic_except_equality_fact_search_proof_by_builtin_rewrite(v
 
 pub(super) fn walk_atomic_except_equality_fact_search_proof_by_closed_numeric_equal_substitution(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_fact(&value.rewritten_fact, graph, runtime, locals, refs, outputs);
-    for child183 in (&value.cited_equal_fact_ids).iter() {
-        graph.reference_fact(child183, runtime, locals, refs, outputs);
+    for child180 in (&value.cited_equal_fact_ids).iter() {
+        graph.reference_fact(child180, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.proof_of_rewritten_fact, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_atomic_except_equality_fact_search_proof_by_fn_application_unfold_substitution(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_fact(&value.rewritten_fact, graph, runtime, locals, refs, outputs);
-    for child184 in (&value.unfold_equal_proofs).iter() {
-        walk_verify_fact_result(child184, graph, runtime, locals, refs, outputs);
+    for child181 in (&value.unfold_equal_proofs).iter() {
+        walk_verify_fact_result(child181, graph, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.proof_of_rewritten_fact, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_atomic_except_equality_fact_search_proof_by_known_equal_obj_substitution(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_fact(&value.rewritten_fact, graph, runtime, locals, refs, outputs);
-    for child185 in (&value.cited_equal_fact_ids).iter() {
-        graph.reference_fact(child185, runtime, locals, refs, outputs);
+    for child182 in (&value.cited_equal_fact_ids).iter() {
+        graph.reference_fact(child182, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.proof_of_rewritten_fact, graph, runtime, locals, refs, outputs);
 }
@@ -3485,15 +3434,15 @@ pub(super) fn walk_finite_index_union_proof(value: &crate::execute::execute_fact
     walk_finite_fibres_certificate(&value.fibres, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_add_left_congruence_strict_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::AddLeftCongruenceStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_add_left_congruence_strict_builtin_rule_proof_0(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::AddLeftCongruenceStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_verify_fact_result(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_add_right_congruence_strict_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::AddRightCongruenceStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_add_right_congruence_strict_builtin_rule_proof_0(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::AddRightCongruenceStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_verify_fact_result(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_from_known_less_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::FromKnownLessBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_from_known_less_builtin_rule_proof_0(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::FromKnownLessBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_atomic_except_equality_fact_known_proof(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
@@ -3527,19 +3476,19 @@ pub(super) fn walk_greater_fact_search_proof_by_builtin_rule(value: &crate::exec
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::ClosedNumericComparison(p0) => {
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::FromKnownLess(p0) => {
-            walk_from_known_less_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_from_known_less_builtin_rule_proof_0(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::AddRightCongruenceStrict(p0) => {
-            walk_add_right_congruence_strict_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_add_right_congruence_strict_builtin_rule_proof_0(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::AddLeftCongruenceStrict(p0) => {
-            walk_add_left_congruence_strict_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_add_left_congruence_strict_builtin_rule_proof_0(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::MulLeftPositiveMonotoneStrict(p0) => {
-            walk_mul_left_positive_monotone_strict_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_mul_left_positive_monotone_strict_builtin_rule_proof_0(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::MulRightPositiveMonotoneStrict(p0) => {
-            walk_mul_right_positive_monotone_strict_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_mul_right_positive_monotone_strict_builtin_rule_proof_0(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::FromPositiveRealMembership(p0) => {
             walk_from_positive_real_membership_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
@@ -3553,12 +3502,12 @@ pub(super) fn walk_greater_fact_search_proof_by_builtin_rule(value: &crate::exec
     }
 }
 
-pub(super) fn walk_mul_left_positive_monotone_strict_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::MulLeftPositiveMonotoneStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_mul_left_positive_monotone_strict_builtin_rule_proof_0(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::MulLeftPositiveMonotoneStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_verify_fact_result(&value.positive_factor_proof, graph, runtime, locals, refs, outputs);
     walk_verify_fact_result(&value.order_premise_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_mul_right_positive_monotone_strict_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::MulRightPositiveMonotoneStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_mul_right_positive_monotone_strict_builtin_rule_proof_0(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::MulRightPositiveMonotoneStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_verify_fact_result(&value.positive_factor_proof, graph, runtime, locals, refs, outputs);
     walk_verify_fact_result(&value.order_premise_proof, graph, runtime, locals, refs, outputs);
 }
@@ -3572,11 +3521,11 @@ pub(super) fn walk_finite_set_size_nonnegative_builtin_rule_proof(value: &crate:
     walk_verify_fact_result(&value.finite_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_from_known_greater_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::FromKnownGreaterBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_from_known_greater_builtin_rule_proof_0(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::FromKnownGreaterBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_atomic_except_equality_fact_known_proof(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_from_known_in_positive_natural_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::FromKnownInPositiveNaturalBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_from_known_in_positive_natural_builtin_rule_proof_0(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::FromKnownInPositiveNaturalBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_atomic_except_equality_fact_known_proof(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
@@ -3619,13 +3568,13 @@ pub(super) fn walk_greater_equal_fact_search_proof_by_builtin_rule(value: &crate
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(p0) => {
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::OrderReflexivity(p0) => {
-            walk_order_reflexivity_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_order_reflexivity_builtin_rule_proof_0(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FromKnownGreater(p0) => {
-            walk_from_known_greater_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_from_known_greater_builtin_rule_proof_0(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(p0) => {
-            walk_from_known_in_positive_natural_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_from_known_in_positive_natural_builtin_rule_proof_0(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::PredecessorNonNegFromAtLeastOne(p0) => {
             walk_predecessor_non_neg_from_at_least_one_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
@@ -3656,7 +3605,7 @@ pub(super) fn walk_nonnegative_sum_tree(value: &crate::execute::execute_fact_stm
     }
 }
 
-pub(super) fn walk_order_reflexivity_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::OrderReflexivityBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_order_reflexivity_builtin_rule_proof_0(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::OrderReflexivityBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.repeated_object, graph, runtime, locals, refs, outputs);
 }
 
@@ -3679,8 +3628,8 @@ pub(super) fn walk_anonymous_fn_application_in_fn_range_builtin_rule_proof(value
 
 pub(super) fn walk_cart_membership_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::CartMembershipBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_function_domain_match_proof(&value.domain, graph, runtime, locals, refs, outputs);
-    for child186 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child186, graph, runtime, locals, refs, outputs);
+    for child183 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child183, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -3705,8 +3654,8 @@ pub(super) fn walk_finite_set_min_member_builtin_rule_proof(value: &crate::execu
 pub(super) fn walk_finite_set_subset_membership_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::FiniteSetSubsetMembershipBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.source_set, graph, runtime, locals, refs, outputs);
     walk_verify_fact_result(&value.source_membership_proof, graph, runtime, locals, refs, outputs);
-    for child187 in (&value.member_in_proofs).iter() {
-        walk_verify_fact_result(child187, graph, runtime, locals, refs, outputs);
+    for child184 in (&value.member_in_proofs).iter() {
+        walk_verify_fact_result(child184, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -3843,8 +3792,8 @@ pub(super) fn walk_index_union_membership_from_index_builtin_rule_proof(value: &
 }
 
 pub(super) fn walk_integer_arithmetic_closure_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::IntegerArithmeticClosureBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child188 in (&value.operand_proofs).iter() {
-        walk_verify_fact_result(child188, graph, runtime, locals, refs, outputs);
+    for child185 in (&value.operand_proofs).iter() {
+        walk_verify_fact_result(child185, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -3909,8 +3858,8 @@ pub(super) fn walk_predecessor_in_natural_builtin_rule_proof(value: &crate::exec
 }
 
 pub(super) fn walk_real_operand_arithmetic_closure_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::RealOperandArithmeticClosureBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child189 in (&value.operand_proofs).iter() {
-        walk_verify_fact_result(child189, graph, runtime, locals, refs, outputs);
+    for child186 in (&value.operand_proofs).iter() {
+        walk_verify_fact_result(child186, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -3919,11 +3868,11 @@ pub(super) fn walk_real_power_builtin_rule_proof(value: &crate::execute::execute
 }
 
 pub(super) fn walk_set_builder_membership_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::SetBuilderMembershipBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child190 in (&value.requirement_facts).iter() {
-        walk_fact(child190, graph, runtime, locals, refs, outputs);
+    for child187 in (&value.requirement_facts).iter() {
+        walk_fact(child187, graph, runtime, locals, refs, outputs);
     }
-    for child191 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child191, graph, runtime, locals, refs, outputs);
+    for child188 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child188, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -3937,11 +3886,11 @@ pub(super) fn walk_standard_set_subset_membership_builtin_rule_proof(value: &cra
 }
 
 pub(super) fn walk_struct_obj_membership_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::StructObjMembershipBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child192 in (&value.carrier_obligations).iter() {
-        walk_verify_fact_result(child192, graph, runtime, locals, refs, outputs);
+    for child189 in (&value.carrier_obligations).iter() {
+        walk_verify_fact_result(child189, graph, runtime, locals, refs, outputs);
     }
-    for child193 in (&value.equivalent_fact_proofs).iter() {
-        walk_verify_fact_result(child193, graph, runtime, locals, refs, outputs);
+    for child190 in (&value.equivalent_fact_proofs).iter() {
+        walk_verify_fact_result(child190, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -4005,8 +3954,8 @@ pub(super) fn walk_real_arithmetic_constructor_tree(value: &crate::execute::exec
 }
 
 pub(super) fn walk_finite_seq_from_finite_codomain_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::FiniteSeqFromFiniteCodomainBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child194 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child194, graph, runtime, locals, refs, outputs);
+    for child191 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child191, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -4046,18 +3995,18 @@ pub(super) fn walk_surjective_image_of_finite_set_builtin_rule_proof(value: &cra
 }
 
 pub(super) fn walk_lcm_common_multiple_bound_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::lcm_order::LcmCommonMultipleBoundProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child195 in (&value.domains).iter() {
-        walk_verify_fact_result(child195, graph, runtime, locals, refs, outputs);
+    for child192 in (&value.domains).iter() {
+        walk_verify_fact_result(child192, graph, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.first_multiple, graph, runtime, locals, refs, outputs);
     walk_verify_fact_result(&value.second_multiple, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_add_left_congruence_strict_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::AddLeftCongruenceStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_add_left_congruence_strict_builtin_rule_proof_1(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::AddLeftCongruenceStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_verify_fact_result(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_add_right_congruence_strict_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::AddRightCongruenceStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_add_right_congruence_strict_builtin_rule_proof_1(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::AddRightCongruenceStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_verify_fact_result(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
@@ -4097,7 +4046,7 @@ pub(super) fn walk_finite_set_size_proper_subset_lt_builtin_rule_proof(value: &c
     walk_finite_proper_inclusion_proof(&value.inclusion_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_from_known_greater_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::FromKnownGreaterBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_from_known_greater_builtin_rule_proof_1(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::FromKnownGreaterBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_atomic_except_equality_fact_known_proof(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
@@ -4174,7 +4123,7 @@ pub(super) fn walk_less_fact_search_proof_by_builtin_rule(value: &crate::execute
             walk_factorial_strict_monotone_proof(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::FromKnownGreater(p0) => {
-            walk_from_known_greater_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_from_known_greater_builtin_rule_proof_1(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::FromKnownOrderComplement(p0) => {
             walk_from_known_order_complement_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
@@ -4271,16 +4220,16 @@ pub(super) fn walk_less_fact_search_proof_by_builtin_rule(value: &crate::execute
             walk_positive_even_gt_one_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::AddRightCongruenceStrict(p0) => {
-            walk_add_right_congruence_strict_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_add_right_congruence_strict_builtin_rule_proof_1(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::AddLeftCongruenceStrict(p0) => {
-            walk_add_left_congruence_strict_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_add_left_congruence_strict_builtin_rule_proof_1(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::MulLeftPositiveMonotoneStrict(p0) => {
-            walk_mul_left_positive_monotone_strict_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_mul_left_positive_monotone_strict_builtin_rule_proof_1(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::MulRightPositiveMonotoneStrict(p0) => {
-            walk_mul_right_positive_monotone_strict_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_mul_right_positive_monotone_strict_builtin_rule_proof_1(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::OrderSignFromPositiveLiteralBound(p0) => {
             walk_order_sign_from_positive_literal_bound_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
@@ -4330,12 +4279,12 @@ pub(super) fn walk_mod_remainder_strict_upper_bound_builtin_rule_proof(value: &c
     walk_verify_fact_result(&value.modulus_in_n_pos_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_mul_left_positive_monotone_strict_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::MulLeftPositiveMonotoneStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_mul_left_positive_monotone_strict_builtin_rule_proof_1(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::MulLeftPositiveMonotoneStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_verify_fact_result(&value.positive_factor_proof, graph, runtime, locals, refs, outputs);
     walk_verify_fact_result(&value.order_premise_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_mul_right_positive_monotone_strict_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::MulRightPositiveMonotoneStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_mul_right_positive_monotone_strict_builtin_rule_proof_1(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::MulRightPositiveMonotoneStrictBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_verify_fact_result(&value.positive_factor_proof, graph, runtime, locals, refs, outputs);
     walk_verify_fact_result(&value.order_premise_proof, graph, runtime, locals, refs, outputs);
 }
@@ -4487,11 +4436,11 @@ pub(super) fn walk_from_known_greater_equal_builtin_rule_proof(value: &crate::ex
     walk_atomic_except_equality_fact_known_proof(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_from_known_in_positive_natural_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::FromKnownInPositiveNaturalBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_from_known_in_positive_natural_builtin_rule_proof_1(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::FromKnownInPositiveNaturalBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_atomic_except_equality_fact_known_proof(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_from_known_less_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::FromKnownLessBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_from_known_less_builtin_rule_proof_1(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::FromKnownLessBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_atomic_except_equality_fact_known_proof(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
@@ -4597,10 +4546,10 @@ pub(super) fn walk_less_equal_fact_search_proof_by_builtin_rule(value: &crate::e
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(p0) => {
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(p0) => {
-            walk_order_reflexivity_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_order_reflexivity_builtin_rule_proof_1(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FromKnownLess(p0) => {
-            walk_from_known_less_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_from_known_less_builtin_rule_proof_1(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalLowerBound(p0) => {
         }
@@ -4678,7 +4627,7 @@ pub(super) fn walk_less_equal_fact_search_proof_by_builtin_rule(value: &crate::e
             walk_sqrt_monotone_nondecreasing_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(p0) => {
-            walk_from_known_in_positive_natural_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_from_known_in_positive_natural_builtin_rule_proof_1(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LogOrderPreservingWeak(p0) => {
             walk_log_order_preserving_weak_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
@@ -4836,7 +4785,7 @@ pub(super) fn walk_numeric_upper_bound_weaken_le_builtin_rule_proof(value: &crat
     graph.reference_fact(&value.cite_fact_id, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_order_reflexivity_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::OrderReflexivityBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_order_reflexivity_builtin_rule_proof_1(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::OrderReflexivityBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.repeated_object, graph, runtime, locals, refs, outputs);
 }
 
@@ -4930,8 +4879,8 @@ pub(super) fn walk_diff_nonzero_from_inequality_builtin_rule_proof(value: &crate
 }
 
 pub(super) fn walk_div_nonzero_from_factors_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::DivNonzeroFromFactorsBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child196 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child196, graph, runtime, locals, refs, outputs);
+    for child193 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child193, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -5063,8 +5012,8 @@ pub(super) fn walk_not_equal_symmetry_builtin_rule_proof(value: &crate::execute:
 }
 
 pub(super) fn walk_pow_nonzero_from_base_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::PowNonzeroFromBaseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child197 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child197, graph, runtime, locals, refs, outputs);
+    for child194 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child194, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -5082,19 +5031,19 @@ pub(super) fn walk_sqrt_nonzero_from_positive_arg_builtin_rule_proof(value: &cra
 }
 
 pub(super) fn walk_square_sum_nonzero_from_component_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::SquareSumNonzeroFromComponentBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child198 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child198, graph, runtime, locals, refs, outputs);
+    for child195 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child195, graph, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.component_nonzero_proof, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_zero_from_nat_and_one_le_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::ZeroFromNatAndOneLeBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child199 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child199, graph, runtime, locals, refs, outputs);
+    for child196 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child196, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_from_known_less_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_greater::FromKnownLessBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_from_known_less_builtin_rule_proof_2(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_greater::FromKnownLessBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_atomic_except_equality_fact_known_proof(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
@@ -5106,7 +5055,7 @@ pub(super) fn walk_not_greater_fact_search_proof_by_builtin_rule(value: &crate::
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_greater::NotGreaterFactSearchProofByBuiltinRule::ClosedNumericComparison(p0) => {
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_greater::NotGreaterFactSearchProofByBuiltinRule::FromKnownLess(p0) => {
-            walk_from_known_less_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_from_known_less_builtin_rule_proof_2(p0, graph, runtime, locals, refs, outputs);
         }
     }
 }
@@ -5122,8 +5071,8 @@ pub(super) fn walk_not_greater_equal_fact_search_proof_by_builtin_rule(value: &c
 }
 
 pub(super) fn walk_list_set_exhaustive_disequality_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::ListSetExhaustiveDisequalityBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child200 in (&value.disequality_proofs).iter() {
-        walk_verify_fact_result(child200, graph, runtime, locals, refs, outputs);
+    for child197 in (&value.disequality_proofs).iter() {
+        walk_verify_fact_result(child197, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -5202,7 +5151,7 @@ pub(super) fn walk_set_minus_infinite_of_infinite_finite_builtin_rule_proof(valu
     walk_verify_fact_result(&value.right_finite_proof, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_from_known_greater_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_less::FromKnownGreaterBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_from_known_greater_builtin_rule_proof_2(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_less::FromKnownGreaterBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_atomic_except_equality_fact_known_proof(&value.premise_proof, graph, runtime, locals, refs, outputs);
 }
 
@@ -5214,7 +5163,7 @@ pub(super) fn walk_not_less_fact_search_proof_by_builtin_rule(value: &crate::exe
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_less::NotLessFactSearchProofByBuiltinRule::ClosedNumericComparison(p0) => {
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_less::NotLessFactSearchProofByBuiltinRule::FromKnownGreater(p0) => {
-            walk_from_known_greater_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
+            walk_from_known_greater_builtin_rule_proof_2(p0, graph, runtime, locals, refs, outputs);
         }
     }
 }
@@ -5255,8 +5204,8 @@ pub(super) fn walk_not_superset_fact_search_proof_by_builtin_rule(value: &crate:
 
 pub(super) fn walk_from_known_order_complement_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_complement::FromKnownOrderComplementBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_atomic_except_equality_fact_known_proof(&value.premise_proof, graph, runtime, locals, refs, outputs);
-    for child201 in (&value.real_carrier_proofs).iter() {
-        walk_verify_fact_result(child201, graph, runtime, locals, refs, outputs);
+    for child198 in (&value.real_carrier_proofs).iter() {
+        walk_verify_fact_result(child198, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -5472,8 +5421,8 @@ pub(super) fn walk_atomic_except_equality_fact_search_proof_by_builtin_rule(valu
 }
 
 pub(super) fn walk_integer_range_subset_numeric_carrier_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::IntegerRangeSubsetNumericCarrierBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child202 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child202, graph, runtime, locals, refs, outputs);
+    for child199 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child199, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -5486,14 +5435,14 @@ pub(super) fn walk_intersect_subset_from_right_upper_bound_builtin_rule_proof(va
 }
 
 pub(super) fn walk_list_set_subset_from_members_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::ListSetSubsetFromMembersBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child203 in (&value.member_in_proofs).iter() {
-        walk_verify_fact_result(child203, graph, runtime, locals, refs, outputs);
+    for child200 in (&value.member_in_proofs).iter() {
+        walk_verify_fact_result(child200, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_subset_cart_componentwise_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetCartComponentwiseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child204 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child204, graph, runtime, locals, refs, outputs);
+    for child201 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child201, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -5569,8 +5518,8 @@ pub(super) fn walk_union_subset_from_both_operands_builtin_rule_proof(value: &cr
 }
 
 pub(super) fn walk_union_subset_from_componentwise_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::UnionSubsetFromComponentwiseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child205 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child205, graph, runtime, locals, refs, outputs);
+    for child202 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child202, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -5688,128 +5637,128 @@ pub(super) fn walk_sin_strict_monotone_on_half_pi_proof(value: &crate::execute::
 }
 
 pub(super) fn walk_abs_vs_square_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AbsVsSquareLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child206 in (&value.requirement_facts).iter() {
-        walk_fact(child206, graph, runtime, locals, refs, outputs);
+    for child203 in (&value.requirement_facts).iter() {
+        walk_fact(child203, graph, runtime, locals, refs, outputs);
     }
-    for child207 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child207, graph, runtime, locals, refs, outputs);
+    for child204 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child204, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_abs_vs_square_less_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AbsVsSquareLessStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child208 in (&value.requirement_facts).iter() {
-        walk_fact(child208, graph, runtime, locals, refs, outputs);
+    for child205 in (&value.requirement_facts).iter() {
+        walk_fact(child205, graph, runtime, locals, refs, outputs);
     }
-    for child209 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child209, graph, runtime, locals, refs, outputs);
+    for child206 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child206, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_componentwise_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddComponentwiseLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child210 in (&value.requirement_facts).iter() {
-        walk_fact(child210, graph, runtime, locals, refs, outputs);
+    for child207 in (&value.requirement_facts).iter() {
+        walk_fact(child207, graph, runtime, locals, refs, outputs);
     }
-    for child211 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child211, graph, runtime, locals, refs, outputs);
+    for child208 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child208, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_componentwise_strict_left_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddComponentwiseStrictLeftStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child212 in (&value.requirement_facts).iter() {
-        walk_fact(child212, graph, runtime, locals, refs, outputs);
+    for child209 in (&value.requirement_facts).iter() {
+        walk_fact(child209, graph, runtime, locals, refs, outputs);
     }
-    for child213 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child213, graph, runtime, locals, refs, outputs);
+    for child210 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child210, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_componentwise_strict_right_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddComponentwiseStrictRightStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child214 in (&value.requirement_facts).iter() {
-        walk_fact(child214, graph, runtime, locals, refs, outputs);
+    for child211 in (&value.requirement_facts).iter() {
+        walk_fact(child211, graph, runtime, locals, refs, outputs);
     }
-    for child215 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child215, graph, runtime, locals, refs, outputs);
+    for child212 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child212, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_crossed_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddCrossedLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child216 in (&value.requirement_facts).iter() {
-        walk_fact(child216, graph, runtime, locals, refs, outputs);
+    for child213 in (&value.requirement_facts).iter() {
+        walk_fact(child213, graph, runtime, locals, refs, outputs);
     }
-    for child217 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child217, graph, runtime, locals, refs, outputs);
+    for child214 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child214, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_left_nonpositive_shift_left_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddLeftNonpositiveShiftLeftStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child218 in (&value.requirement_facts).iter() {
-        walk_fact(child218, graph, runtime, locals, refs, outputs);
+    for child215 in (&value.requirement_facts).iter() {
+        walk_fact(child215, graph, runtime, locals, refs, outputs);
     }
-    for child219 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child219, graph, runtime, locals, refs, outputs);
+    for child216 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child216, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_left_nonpositive_shift_right_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddLeftNonpositiveShiftRightStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child220 in (&value.requirement_facts).iter() {
-        walk_fact(child220, graph, runtime, locals, refs, outputs);
+    for child217 in (&value.requirement_facts).iter() {
+        walk_fact(child217, graph, runtime, locals, refs, outputs);
     }
-    for child221 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child221, graph, runtime, locals, refs, outputs);
+    for child218 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child218, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_right_nonnegative_shift_left_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddRightNonnegativeShiftLeftStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child222 in (&value.requirement_facts).iter() {
-        walk_fact(child222, graph, runtime, locals, refs, outputs);
+    for child219 in (&value.requirement_facts).iter() {
+        walk_fact(child219, graph, runtime, locals, refs, outputs);
     }
-    for child223 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child223, graph, runtime, locals, refs, outputs);
+    for child220 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child220, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_right_nonnegative_shift_right_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddRightNonnegativeShiftRightStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child224 in (&value.requirement_facts).iter() {
-        walk_fact(child224, graph, runtime, locals, refs, outputs);
+    for child221 in (&value.requirement_facts).iter() {
+        walk_fact(child221, graph, runtime, locals, refs, outputs);
     }
-    for child225 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child225, graph, runtime, locals, refs, outputs);
+    for child222 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child222, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_right_strict_shift_left_strict_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddRightStrictShiftLeftStrictStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child226 in (&value.requirement_facts).iter() {
-        walk_fact(child226, graph, runtime, locals, refs, outputs);
+    for child223 in (&value.requirement_facts).iter() {
+        walk_fact(child223, graph, runtime, locals, refs, outputs);
     }
-    for child227 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child227, graph, runtime, locals, refs, outputs);
+    for child224 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child224, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_right_strict_shift_left_weak_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddRightStrictShiftLeftWeakStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child228 in (&value.requirement_facts).iter() {
-        walk_fact(child228, graph, runtime, locals, refs, outputs);
+    for child225 in (&value.requirement_facts).iter() {
+        walk_fact(child225, graph, runtime, locals, refs, outputs);
     }
-    for child229 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child229, graph, runtime, locals, refs, outputs);
+    for child226 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child226, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_right_strict_shift_right_strict_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddRightStrictShiftRightStrictStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child230 in (&value.requirement_facts).iter() {
-        walk_fact(child230, graph, runtime, locals, refs, outputs);
+    for child227 in (&value.requirement_facts).iter() {
+        walk_fact(child227, graph, runtime, locals, refs, outputs);
     }
-    for child231 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child231, graph, runtime, locals, refs, outputs);
+    for child228 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child228, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_right_strict_shift_right_weak_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AddRightStrictShiftRightWeakStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child232 in (&value.requirement_facts).iter() {
-        walk_fact(child232, graph, runtime, locals, refs, outputs);
+    for child229 in (&value.requirement_facts).iter() {
+        walk_fact(child229, graph, runtime, locals, refs, outputs);
     }
-    for child233 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child233, graph, runtime, locals, refs, outputs);
+    for child230 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child230, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -6185,130 +6134,130 @@ pub(super) fn walk_atomic_except_equality_fact_search_proof_by_builtin_strategy(
 }
 
 pub(super) fn walk_cart_finite_from_factors_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::CartFiniteFromFactorsStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child234 in (&value.requirement_facts).iter() {
-        walk_fact(child234, graph, runtime, locals, refs, outputs);
+    for child231 in (&value.requirement_facts).iter() {
+        walk_fact(child231, graph, runtime, locals, refs, outputs);
     }
-    for child235 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child235, graph, runtime, locals, refs, outputs);
+    for child232 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child232, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_cart_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::CartMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_function_domain_match_proof(&value.domain, graph, runtime, locals, refs, outputs);
-    for child236 in (&value.requirement_facts).iter() {
-        walk_fact(child236, graph, runtime, locals, refs, outputs);
+    for child233 in (&value.requirement_facts).iter() {
+        walk_fact(child233, graph, runtime, locals, refs, outputs);
     }
-    for child237 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child237, graph, runtime, locals, refs, outputs);
+    for child234 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child234, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_cart_nonempty_from_all_factors_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::CartNonemptyFromAllFactorsStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child238 in (&value.requirement_facts).iter() {
-        walk_fact(child238, graph, runtime, locals, refs, outputs);
+    for child235 in (&value.requirement_facts).iter() {
+        walk_fact(child235, graph, runtime, locals, refs, outputs);
     }
-    for child239 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child239, graph, runtime, locals, refs, outputs);
+    for child236 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child236, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_closed_range_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::ClosedRangeMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child240 in (&value.requirement_facts).iter() {
-        walk_fact(child240, graph, runtime, locals, refs, outputs);
+    for child237 in (&value.requirement_facts).iter() {
+        walk_fact(child237, graph, runtime, locals, refs, outputs);
     }
-    for child241 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child241, graph, runtime, locals, refs, outputs);
+    for child238 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child238, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_closed_range_nonempty_from_endpoint_order_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::ClosedRangeNonemptyFromEndpointOrderStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child242 in (&value.requirement_facts).iter() {
-        walk_fact(child242, graph, runtime, locals, refs, outputs);
+    for child239 in (&value.requirement_facts).iter() {
+        walk_fact(child239, graph, runtime, locals, refs, outputs);
     }
-    for child243 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child243, graph, runtime, locals, refs, outputs);
+    for child240 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child240, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_common_nonnegative_factor_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::CommonNonnegativeFactorLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child244 in (&value.requirement_facts).iter() {
-        walk_fact(child244, graph, runtime, locals, refs, outputs);
+    for child241 in (&value.requirement_facts).iter() {
+        walk_fact(child241, graph, runtime, locals, refs, outputs);
     }
-    for child245 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child245, graph, runtime, locals, refs, outputs);
+    for child242 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child242, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_common_positive_factor_less_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::CommonPositiveFactorLessStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child246 in (&value.requirement_facts).iter() {
-        walk_fact(child246, graph, runtime, locals, refs, outputs);
+    for child243 in (&value.requirement_facts).iter() {
+        walk_fact(child243, graph, runtime, locals, refs, outputs);
     }
-    for child247 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child247, graph, runtime, locals, refs, outputs);
+    for child244 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child244, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_div_shared_negative_denom_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::DivSharedNegativeDenomLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child248 in (&value.requirement_facts).iter() {
-        walk_fact(child248, graph, runtime, locals, refs, outputs);
+    for child245 in (&value.requirement_facts).iter() {
+        walk_fact(child245, graph, runtime, locals, refs, outputs);
     }
-    for child249 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child249, graph, runtime, locals, refs, outputs);
+    for child246 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child246, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_div_shared_negative_denom_less_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::DivSharedNegativeDenomLessStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child250 in (&value.requirement_facts).iter() {
-        walk_fact(child250, graph, runtime, locals, refs, outputs);
+    for child247 in (&value.requirement_facts).iter() {
+        walk_fact(child247, graph, runtime, locals, refs, outputs);
     }
-    for child251 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child251, graph, runtime, locals, refs, outputs);
+    for child248 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child248, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_div_shared_positive_denom_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::DivSharedPositiveDenomLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child252 in (&value.requirement_facts).iter() {
-        walk_fact(child252, graph, runtime, locals, refs, outputs);
+    for child249 in (&value.requirement_facts).iter() {
+        walk_fact(child249, graph, runtime, locals, refs, outputs);
     }
-    for child253 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child253, graph, runtime, locals, refs, outputs);
+    for child250 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child250, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_div_shared_positive_denom_less_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::DivSharedPositiveDenomLessStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child254 in (&value.requirement_facts).iter() {
-        walk_fact(child254, graph, runtime, locals, refs, outputs);
+    for child251 in (&value.requirement_facts).iter() {
+        walk_fact(child251, graph, runtime, locals, refs, outputs);
     }
-    for child255 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child255, graph, runtime, locals, refs, outputs);
+    for child252 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child252, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_field_arithmetic_carrier_closure_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FieldArithmeticCarrierClosureStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child256 in (&value.requirement_facts).iter() {
-        walk_fact(child256, graph, runtime, locals, refs, outputs);
+    for child253 in (&value.requirement_facts).iter() {
+        walk_fact(child253, graph, runtime, locals, refs, outputs);
     }
-    for child257 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child257, graph, runtime, locals, refs, outputs);
+    for child254 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child254, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_extremum_source_in_carrier_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FiniteExtremumSourceInCarrierStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child258 in (&value.requirement_facts).iter() {
-        walk_fact(child258, graph, runtime, locals, refs, outputs);
+    for child255 in (&value.requirement_facts).iter() {
+        walk_fact(child255, graph, runtime, locals, refs, outputs);
     }
-    for child259 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child259, graph, runtime, locals, refs, outputs);
+    for child256 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child256, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_function_application_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FiniteFunctionApplicationMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_finite_function_signature_proof(&value.source, graph, runtime, locals, refs, outputs);
-    for child260 in (&value.requirement_facts).iter() {
-        walk_fact(child260, graph, runtime, locals, refs, outputs);
+    for child257 in (&value.requirement_facts).iter() {
+        walk_fact(child257, graph, runtime, locals, refs, outputs);
     }
-    for child261 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child261, graph, runtime, locals, refs, outputs);
+    for child258 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child258, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -6318,66 +6267,66 @@ pub(super) fn walk_finite_seq_set_nonempty_from_codomain_strategy_single_step(va
 }
 
 pub(super) fn walk_finite_set_max_constructor_parts_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FiniteSetMaxConstructorPartsLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child262 in (&value.requirement_facts).iter() {
-        walk_fact(child262, graph, runtime, locals, refs, outputs);
+    for child259 in (&value.requirement_facts).iter() {
+        walk_fact(child259, graph, runtime, locals, refs, outputs);
     }
-    for child263 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child263, graph, runtime, locals, refs, outputs);
+    for child260 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child260, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_max_list_members_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FiniteSetMaxListMembersLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child264 in (&value.requirement_facts).iter() {
-        walk_fact(child264, graph, runtime, locals, refs, outputs);
+    for child261 in (&value.requirement_facts).iter() {
+        walk_fact(child261, graph, runtime, locals, refs, outputs);
     }
-    for child265 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child265, graph, runtime, locals, refs, outputs);
+    for child262 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child262, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_min_constructor_parts_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FiniteSetMinConstructorPartsLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child266 in (&value.requirement_facts).iter() {
-        walk_fact(child266, graph, runtime, locals, refs, outputs);
+    for child263 in (&value.requirement_facts).iter() {
+        walk_fact(child263, graph, runtime, locals, refs, outputs);
     }
-    for child267 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child267, graph, runtime, locals, refs, outputs);
+    for child264 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child264, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_min_list_members_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FiniteSetMinListMembersLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child268 in (&value.requirement_facts).iter() {
-        walk_fact(child268, graph, runtime, locals, refs, outputs);
+    for child265 in (&value.requirement_facts).iter() {
+        walk_fact(child265, graph, runtime, locals, refs, outputs);
     }
-    for child269 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child269, graph, runtime, locals, refs, outputs);
+    for child266 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child266, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_size_in_numeric_carrier_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FiniteSetSizeInNumericCarrierStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child270 in (&value.requirement_facts).iter() {
-        walk_fact(child270, graph, runtime, locals, refs, outputs);
+    for child267 in (&value.requirement_facts).iter() {
+        walk_fact(child267, graph, runtime, locals, refs, outputs);
     }
-    for child271 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child271, graph, runtime, locals, refs, outputs);
+    for child268 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child268, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_fn_application_in_codomain_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FnApplicationInCodomainStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.cite_signature_fact_id, runtime, locals, refs, outputs);
-    for child272 in (&value.requirement_facts).iter() {
-        walk_fact(child272, graph, runtime, locals, refs, outputs);
+    for child269 in (&value.requirement_facts).iter() {
+        walk_fact(child269, graph, runtime, locals, refs, outputs);
     }
-    for child273 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child273, graph, runtime, locals, refs, outputs);
+    for child270 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child270, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_fn_range_finite_from_domain_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FnRangeFiniteFromDomainStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child274 in (&value.requirement_facts).iter() {
-        walk_fact(child274, graph, runtime, locals, refs, outputs);
+    for child271 in (&value.requirement_facts).iter() {
+        walk_fact(child271, graph, runtime, locals, refs, outputs);
     }
-    for child275 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child275, graph, runtime, locals, refs, outputs);
+    for child272 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child272, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -6393,11 +6342,11 @@ pub(super) fn walk_function_graph_nonempty_from_domain_strategy_single_step(valu
 
 pub(super) fn walk_function_set_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FunctionSetMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_function_domain_match_proof(&value.domain, graph, runtime, locals, refs, outputs);
-    for child276 in (&value.requirement_facts).iter() {
-        walk_fact(child276, graph, runtime, locals, refs, outputs);
+    for child273 in (&value.requirement_facts).iter() {
+        walk_fact(child273, graph, runtime, locals, refs, outputs);
     }
-    for child277 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child277, graph, runtime, locals, refs, outputs);
+    for child274 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child274, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -6406,515 +6355,515 @@ pub(super) fn walk_function_space_nonempty_from_empty_domain_strategy_single_ste
 }
 
 pub(super) fn walk_integer_arithmetic_carrier_closure_abs_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntegerArithmeticCarrierClosureAbsStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child278 in (&value.requirement_facts).iter() {
-        walk_fact(child278, graph, runtime, locals, refs, outputs);
+    for child275 in (&value.requirement_facts).iter() {
+        walk_fact(child275, graph, runtime, locals, refs, outputs);
     }
-    for child279 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child279, graph, runtime, locals, refs, outputs);
+    for child276 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child276, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_integer_arithmetic_carrier_closure_add_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntegerArithmeticCarrierClosureAddStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child280 in (&value.requirement_facts).iter() {
-        walk_fact(child280, graph, runtime, locals, refs, outputs);
+    for child277 in (&value.requirement_facts).iter() {
+        walk_fact(child277, graph, runtime, locals, refs, outputs);
     }
-    for child281 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child281, graph, runtime, locals, refs, outputs);
+    for child278 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child278, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_integer_arithmetic_carrier_closure_mod_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntegerArithmeticCarrierClosureModStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child282 in (&value.requirement_facts).iter() {
-        walk_fact(child282, graph, runtime, locals, refs, outputs);
+    for child279 in (&value.requirement_facts).iter() {
+        walk_fact(child279, graph, runtime, locals, refs, outputs);
     }
-    for child283 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child283, graph, runtime, locals, refs, outputs);
+    for child280 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child280, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_integer_arithmetic_carrier_closure_mul_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntegerArithmeticCarrierClosureMulStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child284 in (&value.requirement_facts).iter() {
-        walk_fact(child284, graph, runtime, locals, refs, outputs);
+    for child281 in (&value.requirement_facts).iter() {
+        walk_fact(child281, graph, runtime, locals, refs, outputs);
     }
-    for child285 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child285, graph, runtime, locals, refs, outputs);
+    for child282 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child282, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_integer_arithmetic_carrier_closure_pow_nat_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntegerArithmeticCarrierClosurePowNatStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child286 in (&value.requirement_facts).iter() {
-        walk_fact(child286, graph, runtime, locals, refs, outputs);
+    for child283 in (&value.requirement_facts).iter() {
+        walk_fact(child283, graph, runtime, locals, refs, outputs);
     }
-    for child287 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child287, graph, runtime, locals, refs, outputs);
+    for child284 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child284, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_integer_arithmetic_carrier_closure_sub_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntegerArithmeticCarrierClosureSubStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child288 in (&value.requirement_facts).iter() {
-        walk_fact(child288, graph, runtime, locals, refs, outputs);
+    for child285 in (&value.requirement_facts).iter() {
+        walk_fact(child285, graph, runtime, locals, refs, outputs);
     }
-    for child289 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child289, graph, runtime, locals, refs, outputs);
+    for child286 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child286, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_intersect_finite_from_both_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntersectFiniteFromBothStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child290 in (&value.requirement_facts).iter() {
-        walk_fact(child290, graph, runtime, locals, refs, outputs);
+    for child287 in (&value.requirement_facts).iter() {
+        walk_fact(child287, graph, runtime, locals, refs, outputs);
     }
-    for child291 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child291, graph, runtime, locals, refs, outputs);
+    for child288 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child288, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_intersect_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntersectMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child292 in (&value.requirement_facts).iter() {
-        walk_fact(child292, graph, runtime, locals, refs, outputs);
+    for child289 in (&value.requirement_facts).iter() {
+        walk_fact(child289, graph, runtime, locals, refs, outputs);
     }
-    for child293 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child293, graph, runtime, locals, refs, outputs);
+    for child290 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child290, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_intersect_subset_from_left_operand_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntersectSubsetFromLeftOperandStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child294 in (&value.requirement_facts).iter() {
-        walk_fact(child294, graph, runtime, locals, refs, outputs);
+    for child291 in (&value.requirement_facts).iter() {
+        walk_fact(child291, graph, runtime, locals, refs, outputs);
     }
-    for child295 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child295, graph, runtime, locals, refs, outputs);
+    for child292 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child292, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_intersect_subset_from_right_operand_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntersectSubsetFromRightOperandStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child296 in (&value.requirement_facts).iter() {
-        walk_fact(child296, graph, runtime, locals, refs, outputs);
+    for child293 in (&value.requirement_facts).iter() {
+        walk_fact(child293, graph, runtime, locals, refs, outputs);
     }
-    for child297 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child297, graph, runtime, locals, refs, outputs);
+    for child294 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child294, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_interval_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntervalMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child298 in (&value.requirement_facts).iter() {
-        walk_fact(child298, graph, runtime, locals, refs, outputs);
+    for child295 in (&value.requirement_facts).iter() {
+        walk_fact(child295, graph, runtime, locals, refs, outputs);
     }
-    for child299 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child299, graph, runtime, locals, refs, outputs);
+    for child296 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child296, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_interval_nonempty_from_endpoint_order_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::IntervalNonemptyFromEndpointOrderStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child300 in (&value.requirement_facts).iter() {
-        walk_fact(child300, graph, runtime, locals, refs, outputs);
+    for child297 in (&value.requirement_facts).iter() {
+        walk_fact(child297, graph, runtime, locals, refs, outputs);
     }
-    for child301 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child301, graph, runtime, locals, refs, outputs);
+    for child298 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child298, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_list_set_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::ListSetMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child302 in (&value.requirement_facts).iter() {
-        walk_fact(child302, graph, runtime, locals, refs, outputs);
+    for child299 in (&value.requirement_facts).iter() {
+        walk_fact(child299, graph, runtime, locals, refs, outputs);
     }
-    for child303 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child303, graph, runtime, locals, refs, outputs);
+    for child300 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child300, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_list_set_non_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::ListSetNonMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child304 in (&value.requirement_facts).iter() {
-        walk_fact(child304, graph, runtime, locals, refs, outputs);
+    for child301 in (&value.requirement_facts).iter() {
+        walk_fact(child301, graph, runtime, locals, refs, outputs);
     }
-    for child305 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child305, graph, runtime, locals, refs, outputs);
+    for child302 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child302, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_list_set_subset_from_members_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::ListSetSubsetFromMembersStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child306 in (&value.requirement_facts).iter() {
-        walk_fact(child306, graph, runtime, locals, refs, outputs);
+    for child303 in (&value.requirement_facts).iter() {
+        walk_fact(child303, graph, runtime, locals, refs, outputs);
     }
-    for child307 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child307, graph, runtime, locals, refs, outputs);
+    for child304 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child304, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_mul_componentwise_less_equal_aligned_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::MulComponentwiseLessEqualAlignedStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child308 in (&value.requirement_facts).iter() {
-        walk_fact(child308, graph, runtime, locals, refs, outputs);
+    for child305 in (&value.requirement_facts).iter() {
+        walk_fact(child305, graph, runtime, locals, refs, outputs);
     }
-    for child309 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child309, graph, runtime, locals, refs, outputs);
+    for child306 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child306, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_mul_componentwise_less_equal_crossed_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::MulComponentwiseLessEqualCrossedStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child310 in (&value.requirement_facts).iter() {
-        walk_fact(child310, graph, runtime, locals, refs, outputs);
+    for child307 in (&value.requirement_facts).iter() {
+        walk_fact(child307, graph, runtime, locals, refs, outputs);
     }
-    for child311 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child311, graph, runtime, locals, refs, outputs);
+    for child308 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child308, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_mul_scale_factor_one_or_less_left_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::MulScaleFactorOneOrLessLeftStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child312 in (&value.requirement_facts).iter() {
-        walk_fact(child312, graph, runtime, locals, refs, outputs);
+    for child309 in (&value.requirement_facts).iter() {
+        walk_fact(child309, graph, runtime, locals, refs, outputs);
     }
-    for child313 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child313, graph, runtime, locals, refs, outputs);
+    for child310 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child310, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_mul_scale_factor_one_or_more_right_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::MulScaleFactorOneOrMoreRightStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child314 in (&value.requirement_facts).iter() {
-        walk_fact(child314, graph, runtime, locals, refs, outputs);
+    for child311 in (&value.requirement_facts).iter() {
+        walk_fact(child311, graph, runtime, locals, refs, outputs);
     }
-    for child315 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child315, graph, runtime, locals, refs, outputs);
+    for child312 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child312, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_natural_arithmetic_carrier_closure_abs_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::NaturalArithmeticCarrierClosureAbsStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child316 in (&value.requirement_facts).iter() {
-        walk_fact(child316, graph, runtime, locals, refs, outputs);
+    for child313 in (&value.requirement_facts).iter() {
+        walk_fact(child313, graph, runtime, locals, refs, outputs);
     }
-    for child317 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child317, graph, runtime, locals, refs, outputs);
+    for child314 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child314, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_natural_arithmetic_carrier_closure_add_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::NaturalArithmeticCarrierClosureAddStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child318 in (&value.requirement_facts).iter() {
-        walk_fact(child318, graph, runtime, locals, refs, outputs);
+    for child315 in (&value.requirement_facts).iter() {
+        walk_fact(child315, graph, runtime, locals, refs, outputs);
     }
-    for child319 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child319, graph, runtime, locals, refs, outputs);
+    for child316 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child316, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_natural_arithmetic_carrier_closure_mul_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::NaturalArithmeticCarrierClosureMulStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child320 in (&value.requirement_facts).iter() {
-        walk_fact(child320, graph, runtime, locals, refs, outputs);
+    for child317 in (&value.requirement_facts).iter() {
+        walk_fact(child317, graph, runtime, locals, refs, outputs);
     }
-    for child321 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child321, graph, runtime, locals, refs, outputs);
+    for child318 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child318, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_natural_arithmetic_carrier_closure_pow_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::NaturalArithmeticCarrierClosurePowStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child322 in (&value.requirement_facts).iter() {
-        walk_fact(child322, graph, runtime, locals, refs, outputs);
+    for child319 in (&value.requirement_facts).iter() {
+        walk_fact(child319, graph, runtime, locals, refs, outputs);
     }
-    for child323 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child323, graph, runtime, locals, refs, outputs);
+    for child320 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child320, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_natural_arithmetic_carrier_closure_sub_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::NaturalArithmeticCarrierClosureSubStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child324 in (&value.requirement_facts).iter() {
-        walk_fact(child324, graph, runtime, locals, refs, outputs);
+    for child321 in (&value.requirement_facts).iter() {
+        walk_fact(child321, graph, runtime, locals, refs, outputs);
     }
-    for child325 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child325, graph, runtime, locals, refs, outputs);
+    for child322 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child322, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_nonnegative_sum_is_nonnegative_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::NonnegativeSumIsNonnegativeStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child326 in (&value.requirement_facts).iter() {
-        walk_fact(child326, graph, runtime, locals, refs, outputs);
+    for child323 in (&value.requirement_facts).iter() {
+        walk_fact(child323, graph, runtime, locals, refs, outputs);
     }
-    for child327 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child327, graph, runtime, locals, refs, outputs);
+    for child324 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child324, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_nonzero_product_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::NonzeroProductStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child328 in (&value.requirement_facts).iter() {
-        walk_fact(child328, graph, runtime, locals, refs, outputs);
+    for child325 in (&value.requirement_facts).iter() {
+        walk_fact(child325, graph, runtime, locals, refs, outputs);
     }
-    for child329 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child329, graph, runtime, locals, refs, outputs);
+    for child326 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child326, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_pos_add_pos_is_pos_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PosAddPosIsPosStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child330 in (&value.requirement_facts).iter() {
-        walk_fact(child330, graph, runtime, locals, refs, outputs);
+    for child327 in (&value.requirement_facts).iter() {
+        walk_fact(child327, graph, runtime, locals, refs, outputs);
     }
-    for child331 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child331, graph, runtime, locals, refs, outputs);
+    for child328 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child328, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_positive_natural_carrier_abs_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PositiveNaturalCarrierAbsStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child332 in (&value.requirement_facts).iter() {
-        walk_fact(child332, graph, runtime, locals, refs, outputs);
+    for child329 in (&value.requirement_facts).iter() {
+        walk_fact(child329, graph, runtime, locals, refs, outputs);
     }
-    for child333 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child333, graph, runtime, locals, refs, outputs);
+    for child330 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child330, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_positive_natural_carrier_add_left_pos_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PositiveNaturalCarrierAddLeftPosStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child334 in (&value.requirement_facts).iter() {
-        walk_fact(child334, graph, runtime, locals, refs, outputs);
+    for child331 in (&value.requirement_facts).iter() {
+        walk_fact(child331, graph, runtime, locals, refs, outputs);
     }
-    for child335 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child335, graph, runtime, locals, refs, outputs);
+    for child332 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child332, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_positive_natural_carrier_add_right_pos_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PositiveNaturalCarrierAddRightPosStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child336 in (&value.requirement_facts).iter() {
-        walk_fact(child336, graph, runtime, locals, refs, outputs);
+    for child333 in (&value.requirement_facts).iter() {
+        walk_fact(child333, graph, runtime, locals, refs, outputs);
     }
-    for child337 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child337, graph, runtime, locals, refs, outputs);
+    for child334 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child334, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_positive_natural_carrier_finite_set_size_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PositiveNaturalCarrierFiniteSetSizeStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child338 in (&value.requirement_facts).iter() {
-        walk_fact(child338, graph, runtime, locals, refs, outputs);
+    for child335 in (&value.requirement_facts).iter() {
+        walk_fact(child335, graph, runtime, locals, refs, outputs);
     }
-    for child339 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child339, graph, runtime, locals, refs, outputs);
+    for child336 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child336, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_positive_natural_carrier_mul_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PositiveNaturalCarrierMulStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child340 in (&value.requirement_facts).iter() {
-        walk_fact(child340, graph, runtime, locals, refs, outputs);
+    for child337 in (&value.requirement_facts).iter() {
+        walk_fact(child337, graph, runtime, locals, refs, outputs);
     }
-    for child341 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child341, graph, runtime, locals, refs, outputs);
+    for child338 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child338, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_positive_natural_carrier_pow_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PositiveNaturalCarrierPowStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child342 in (&value.requirement_facts).iter() {
-        walk_fact(child342, graph, runtime, locals, refs, outputs);
+    for child339 in (&value.requirement_facts).iter() {
+        walk_fact(child339, graph, runtime, locals, refs, outputs);
     }
-    for child343 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child343, graph, runtime, locals, refs, outputs);
+    for child340 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child340, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_pow_shared_exponent_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PowSharedExponentLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child344 in (&value.requirement_facts).iter() {
-        walk_fact(child344, graph, runtime, locals, refs, outputs);
+    for child341 in (&value.requirement_facts).iter() {
+        walk_fact(child341, graph, runtime, locals, refs, outputs);
     }
-    for child345 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child345, graph, runtime, locals, refs, outputs);
+    for child342 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child342, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_pow_shared_exponent_less_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PowSharedExponentLessStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child346 in (&value.requirement_facts).iter() {
-        walk_fact(child346, graph, runtime, locals, refs, outputs);
+    for child343 in (&value.requirement_facts).iter() {
+        walk_fact(child343, graph, runtime, locals, refs, outputs);
     }
-    for child347 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child347, graph, runtime, locals, refs, outputs);
+    for child344 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child344, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_power_set_finite_from_base_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PowerSetFiniteFromBaseStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child348 in (&value.requirement_facts).iter() {
-        walk_fact(child348, graph, runtime, locals, refs, outputs);
+    for child345 in (&value.requirement_facts).iter() {
+        walk_fact(child345, graph, runtime, locals, refs, outputs);
     }
-    for child349 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child349, graph, runtime, locals, refs, outputs);
+    for child346 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child346, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_power_set_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::PowerSetMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child350 in (&value.requirement_facts).iter() {
-        walk_fact(child350, graph, runtime, locals, refs, outputs);
+    for child347 in (&value.requirement_facts).iter() {
+        walk_fact(child347, graph, runtime, locals, refs, outputs);
     }
-    for child351 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child351, graph, runtime, locals, refs, outputs);
+    for child348 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child348, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_product_nonnegative_both_nonneg_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::ProductNonnegativeBothNonnegStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child352 in (&value.requirement_facts).iter() {
-        walk_fact(child352, graph, runtime, locals, refs, outputs);
+    for child349 in (&value.requirement_facts).iter() {
+        walk_fact(child349, graph, runtime, locals, refs, outputs);
     }
-    for child353 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child353, graph, runtime, locals, refs, outputs);
+    for child350 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child350, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_product_nonnegative_both_nonpos_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::ProductNonnegativeBothNonposStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child354 in (&value.requirement_facts).iter() {
-        walk_fact(child354, graph, runtime, locals, refs, outputs);
+    for child351 in (&value.requirement_facts).iter() {
+        walk_fact(child351, graph, runtime, locals, refs, outputs);
     }
-    for child355 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child355, graph, runtime, locals, refs, outputs);
+    for child352 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child352, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_product_positive_both_neg_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::ProductPositiveBothNegStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child356 in (&value.requirement_facts).iter() {
-        walk_fact(child356, graph, runtime, locals, refs, outputs);
+    for child353 in (&value.requirement_facts).iter() {
+        walk_fact(child353, graph, runtime, locals, refs, outputs);
     }
-    for child357 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child357, graph, runtime, locals, refs, outputs);
+    for child354 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child354, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_product_positive_both_pos_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::ProductPositiveBothPosStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child358 in (&value.requirement_facts).iter() {
-        walk_fact(child358, graph, runtime, locals, refs, outputs);
+    for child355 in (&value.requirement_facts).iter() {
+        walk_fact(child355, graph, runtime, locals, refs, outputs);
     }
-    for child359 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child359, graph, runtime, locals, refs, outputs);
+    for child356 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child356, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_quotient_positive_same_sign_neg_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::QuotientPositiveSameSignNegStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child360 in (&value.requirement_facts).iter() {
-        walk_fact(child360, graph, runtime, locals, refs, outputs);
+    for child357 in (&value.requirement_facts).iter() {
+        walk_fact(child357, graph, runtime, locals, refs, outputs);
     }
-    for child361 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child361, graph, runtime, locals, refs, outputs);
+    for child358 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child358, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_quotient_positive_same_sign_pos_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::QuotientPositiveSameSignPosStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child362 in (&value.requirement_facts).iter() {
-        walk_fact(child362, graph, runtime, locals, refs, outputs);
+    for child359 in (&value.requirement_facts).iter() {
+        walk_fact(child359, graph, runtime, locals, refs, outputs);
     }
-    for child363 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child363, graph, runtime, locals, refs, outputs);
+    for child360 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child360, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_range_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RangeMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child364 in (&value.requirement_facts).iter() {
-        walk_fact(child364, graph, runtime, locals, refs, outputs);
+    for child361 in (&value.requirement_facts).iter() {
+        walk_fact(child361, graph, runtime, locals, refs, outputs);
     }
-    for child365 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child365, graph, runtime, locals, refs, outputs);
+    for child362 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child362, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_range_nonempty_from_endpoint_order_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RangeNonemptyFromEndpointOrderStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child366 in (&value.requirement_facts).iter() {
-        walk_fact(child366, graph, runtime, locals, refs, outputs);
+    for child363 in (&value.requirement_facts).iter() {
+        walk_fact(child363, graph, runtime, locals, refs, outputs);
     }
-    for child367 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child367, graph, runtime, locals, refs, outputs);
+    for child364 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child364, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_rational_arithmetic_carrier_closure_abs_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RationalArithmeticCarrierClosureAbsStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child368 in (&value.requirement_facts).iter() {
-        walk_fact(child368, graph, runtime, locals, refs, outputs);
+    for child365 in (&value.requirement_facts).iter() {
+        walk_fact(child365, graph, runtime, locals, refs, outputs);
     }
-    for child369 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child369, graph, runtime, locals, refs, outputs);
+    for child366 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child366, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_rational_arithmetic_carrier_closure_add_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RationalArithmeticCarrierClosureAddStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child370 in (&value.requirement_facts).iter() {
-        walk_fact(child370, graph, runtime, locals, refs, outputs);
+    for child367 in (&value.requirement_facts).iter() {
+        walk_fact(child367, graph, runtime, locals, refs, outputs);
     }
-    for child371 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child371, graph, runtime, locals, refs, outputs);
+    for child368 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child368, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_rational_arithmetic_carrier_closure_div_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RationalArithmeticCarrierClosureDivStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child372 in (&value.requirement_facts).iter() {
-        walk_fact(child372, graph, runtime, locals, refs, outputs);
+    for child369 in (&value.requirement_facts).iter() {
+        walk_fact(child369, graph, runtime, locals, refs, outputs);
     }
-    for child373 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child373, graph, runtime, locals, refs, outputs);
+    for child370 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child370, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_rational_arithmetic_carrier_closure_mul_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RationalArithmeticCarrierClosureMulStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child374 in (&value.requirement_facts).iter() {
-        walk_fact(child374, graph, runtime, locals, refs, outputs);
+    for child371 in (&value.requirement_facts).iter() {
+        walk_fact(child371, graph, runtime, locals, refs, outputs);
     }
-    for child375 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child375, graph, runtime, locals, refs, outputs);
+    for child372 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child372, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_rational_arithmetic_carrier_closure_pow_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RationalArithmeticCarrierClosurePowStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child376 in (&value.requirement_facts).iter() {
-        walk_fact(child376, graph, runtime, locals, refs, outputs);
+    for child373 in (&value.requirement_facts).iter() {
+        walk_fact(child373, graph, runtime, locals, refs, outputs);
     }
-    for child377 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child377, graph, runtime, locals, refs, outputs);
+    for child374 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child374, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_rational_arithmetic_carrier_closure_sub_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RationalArithmeticCarrierClosureSubStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child378 in (&value.requirement_facts).iter() {
-        walk_fact(child378, graph, runtime, locals, refs, outputs);
+    for child375 in (&value.requirement_facts).iter() {
+        walk_fact(child375, graph, runtime, locals, refs, outputs);
     }
-    for child379 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child379, graph, runtime, locals, refs, outputs);
+    for child376 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child376, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_real_arithmetic_carrier_closure_add_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RealArithmeticCarrierClosureAddStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child380 in (&value.requirement_facts).iter() {
-        walk_fact(child380, graph, runtime, locals, refs, outputs);
+    for child377 in (&value.requirement_facts).iter() {
+        walk_fact(child377, graph, runtime, locals, refs, outputs);
     }
-    for child381 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child381, graph, runtime, locals, refs, outputs);
+    for child378 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child378, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_real_arithmetic_carrier_closure_div_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RealArithmeticCarrierClosureDivStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child382 in (&value.requirement_facts).iter() {
-        walk_fact(child382, graph, runtime, locals, refs, outputs);
+    for child379 in (&value.requirement_facts).iter() {
+        walk_fact(child379, graph, runtime, locals, refs, outputs);
     }
-    for child383 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child383, graph, runtime, locals, refs, outputs);
+    for child380 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child380, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_real_arithmetic_carrier_closure_mul_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RealArithmeticCarrierClosureMulStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child384 in (&value.requirement_facts).iter() {
-        walk_fact(child384, graph, runtime, locals, refs, outputs);
+    for child381 in (&value.requirement_facts).iter() {
+        walk_fact(child381, graph, runtime, locals, refs, outputs);
     }
-    for child385 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child385, graph, runtime, locals, refs, outputs);
+    for child382 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child382, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_real_arithmetic_carrier_closure_pow_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RealArithmeticCarrierClosurePowStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child386 in (&value.requirement_facts).iter() {
-        walk_fact(child386, graph, runtime, locals, refs, outputs);
+    for child383 in (&value.requirement_facts).iter() {
+        walk_fact(child383, graph, runtime, locals, refs, outputs);
     }
-    for child387 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child387, graph, runtime, locals, refs, outputs);
+    for child384 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child384, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_real_arithmetic_carrier_closure_sub_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RealArithmeticCarrierClosureSubStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child388 in (&value.requirement_facts).iter() {
-        walk_fact(child388, graph, runtime, locals, refs, outputs);
+    for child385 in (&value.requirement_facts).iter() {
+        walk_fact(child385, graph, runtime, locals, refs, outputs);
     }
-    for child389 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child389, graph, runtime, locals, refs, outputs);
+    for child386 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child386, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_refined_numeric_carrier_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::RefinedNumericCarrierStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child390 in (&value.requirement_facts).iter() {
-        walk_fact(child390, graph, runtime, locals, refs, outputs);
+    for child387 in (&value.requirement_facts).iter() {
+        walk_fact(child387, graph, runtime, locals, refs, outputs);
     }
-    for child391 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child391, graph, runtime, locals, refs, outputs);
+    for child388 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child388, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -6924,218 +6873,218 @@ pub(super) fn walk_seq_set_nonempty_from_codomain_strategy_single_step(value: &c
 }
 
 pub(super) fn walk_set_builder_finite_from_param_set_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SetBuilderFiniteFromParamSetStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child392 in (&value.requirement_facts).iter() {
-        walk_fact(child392, graph, runtime, locals, refs, outputs);
+    for child389 in (&value.requirement_facts).iter() {
+        walk_fact(child389, graph, runtime, locals, refs, outputs);
     }
-    for child393 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child393, graph, runtime, locals, refs, outputs);
+    for child390 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child390, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_set_builder_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SetBuilderMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child394 in (&value.requirement_facts).iter() {
-        walk_fact(child394, graph, runtime, locals, refs, outputs);
+    for child391 in (&value.requirement_facts).iter() {
+        walk_fact(child391, graph, runtime, locals, refs, outputs);
     }
-    for child395 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child395, graph, runtime, locals, refs, outputs);
+    for child392 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child392, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_set_minus_finite_from_left_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SetMinusFiniteFromLeftStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child396 in (&value.requirement_facts).iter() {
-        walk_fact(child396, graph, runtime, locals, refs, outputs);
+    for child393 in (&value.requirement_facts).iter() {
+        walk_fact(child393, graph, runtime, locals, refs, outputs);
     }
-    for child397 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child397, graph, runtime, locals, refs, outputs);
+    for child394 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child394, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_set_minus_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SetMinusMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child398 in (&value.requirement_facts).iter() {
-        walk_fact(child398, graph, runtime, locals, refs, outputs);
+    for child395 in (&value.requirement_facts).iter() {
+        walk_fact(child395, graph, runtime, locals, refs, outputs);
     }
-    for child399 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child399, graph, runtime, locals, refs, outputs);
+    for child396 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child396, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_set_minus_subset_from_left_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SetMinusSubsetFromLeftStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child400 in (&value.requirement_facts).iter() {
-        walk_fact(child400, graph, runtime, locals, refs, outputs);
+    for child397 in (&value.requirement_facts).iter() {
+        walk_fact(child397, graph, runtime, locals, refs, outputs);
     }
-    for child401 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child401, graph, runtime, locals, refs, outputs);
+    for child398 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child398, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_standard_set_subset_membership_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::StandardSetSubsetMembershipStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child402 in (&value.requirement_facts).iter() {
-        walk_fact(child402, graph, runtime, locals, refs, outputs);
+    for child399 in (&value.requirement_facts).iter() {
+        walk_fact(child399, graph, runtime, locals, refs, outputs);
     }
-    for child403 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child403, graph, runtime, locals, refs, outputs);
+    for child400 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child400, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_strict_additive_left_strict_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::StrictAdditiveLeftStrictStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child404 in (&value.requirement_facts).iter() {
-        walk_fact(child404, graph, runtime, locals, refs, outputs);
+    for child401 in (&value.requirement_facts).iter() {
+        walk_fact(child401, graph, runtime, locals, refs, outputs);
     }
-    for child405 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child405, graph, runtime, locals, refs, outputs);
+    for child402 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child402, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_strict_additive_right_strict_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::StrictAdditiveRightStrictStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child406 in (&value.requirement_facts).iter() {
-        walk_fact(child406, graph, runtime, locals, refs, outputs);
+    for child403 in (&value.requirement_facts).iter() {
+        walk_fact(child403, graph, runtime, locals, refs, outputs);
     }
-    for child407 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child407, graph, runtime, locals, refs, outputs);
+    for child404 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child404, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sub_nonnegative_from_zero_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SubNonnegativeFromZeroStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child408 in (&value.requirement_facts).iter() {
-        walk_fact(child408, graph, runtime, locals, refs, outputs);
+    for child405 in (&value.requirement_facts).iter() {
+        walk_fact(child405, graph, runtime, locals, refs, outputs);
     }
-    for child409 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child409, graph, runtime, locals, refs, outputs);
+    for child406 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child406, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sub_nonpositive_to_zero_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SubNonpositiveToZeroStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child410 in (&value.requirement_facts).iter() {
-        walk_fact(child410, graph, runtime, locals, refs, outputs);
+    for child407 in (&value.requirement_facts).iter() {
+        walk_fact(child407, graph, runtime, locals, refs, outputs);
     }
-    for child411 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child411, graph, runtime, locals, refs, outputs);
+    for child408 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child408, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sub_positive_from_zero_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SubPositiveFromZeroStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child412 in (&value.requirement_facts).iter() {
-        walk_fact(child412, graph, runtime, locals, refs, outputs);
+    for child409 in (&value.requirement_facts).iter() {
+        walk_fact(child409, graph, runtime, locals, refs, outputs);
     }
-    for child413 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child413, graph, runtime, locals, refs, outputs);
+    for child410 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child410, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sub_positive_to_zero_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SubPositiveToZeroStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child414 in (&value.requirement_facts).iter() {
-        walk_fact(child414, graph, runtime, locals, refs, outputs);
+    for child411 in (&value.requirement_facts).iter() {
+        walk_fact(child411, graph, runtime, locals, refs, outputs);
     }
-    for child415 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child415, graph, runtime, locals, refs, outputs);
+    for child412 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child412, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sub_shared_minuend_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SubSharedMinuendLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child416 in (&value.requirement_facts).iter() {
-        walk_fact(child416, graph, runtime, locals, refs, outputs);
+    for child413 in (&value.requirement_facts).iter() {
+        walk_fact(child413, graph, runtime, locals, refs, outputs);
     }
-    for child417 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child417, graph, runtime, locals, refs, outputs);
+    for child414 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child414, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sub_shared_minuend_less_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SubSharedMinuendLessStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child418 in (&value.requirement_facts).iter() {
-        walk_fact(child418, graph, runtime, locals, refs, outputs);
+    for child415 in (&value.requirement_facts).iter() {
+        walk_fact(child415, graph, runtime, locals, refs, outputs);
     }
-    for child419 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child419, graph, runtime, locals, refs, outputs);
+    for child416 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child416, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sub_shared_subtrahend_less_equal_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SubSharedSubtrahendLessEqualStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child420 in (&value.requirement_facts).iter() {
-        walk_fact(child420, graph, runtime, locals, refs, outputs);
+    for child417 in (&value.requirement_facts).iter() {
+        walk_fact(child417, graph, runtime, locals, refs, outputs);
     }
-    for child421 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child421, graph, runtime, locals, refs, outputs);
+    for child418 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child418, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sub_shared_subtrahend_less_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SubSharedSubtrahendLessStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child422 in (&value.requirement_facts).iter() {
-        walk_fact(child422, graph, runtime, locals, refs, outputs);
+    for child419 in (&value.requirement_facts).iter() {
+        walk_fact(child419, graph, runtime, locals, refs, outputs);
     }
-    for child423 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child423, graph, runtime, locals, refs, outputs);
+    for child420 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child420, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_subset_of_finite_set_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SubsetOfFiniteSetStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child424 in (&value.requirement_facts).iter() {
-        walk_fact(child424, graph, runtime, locals, refs, outputs);
+    for child421 in (&value.requirement_facts).iter() {
+        walk_fact(child421, graph, runtime, locals, refs, outputs);
     }
-    for child425 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child425, graph, runtime, locals, refs, outputs);
+    for child422 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child422, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_subset_of_intersect_from_both_bounds_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::SubsetOfIntersectFromBothBoundsStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child426 in (&value.requirement_facts).iter() {
-        walk_fact(child426, graph, runtime, locals, refs, outputs);
+    for child423 in (&value.requirement_facts).iter() {
+        walk_fact(child423, graph, runtime, locals, refs, outputs);
     }
-    for child427 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child427, graph, runtime, locals, refs, outputs);
+    for child424 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child424, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_union_finite_from_both_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::UnionFiniteFromBothStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child428 in (&value.requirement_facts).iter() {
-        walk_fact(child428, graph, runtime, locals, refs, outputs);
+    for child425 in (&value.requirement_facts).iter() {
+        walk_fact(child425, graph, runtime, locals, refs, outputs);
     }
-    for child429 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child429, graph, runtime, locals, refs, outputs);
+    for child426 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child426, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_union_membership_from_left_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::UnionMembershipFromLeftStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child430 in (&value.requirement_facts).iter() {
-        walk_fact(child430, graph, runtime, locals, refs, outputs);
+    for child427 in (&value.requirement_facts).iter() {
+        walk_fact(child427, graph, runtime, locals, refs, outputs);
     }
-    for child431 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child431, graph, runtime, locals, refs, outputs);
+    for child428 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child428, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_union_membership_from_right_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::UnionMembershipFromRightStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child432 in (&value.requirement_facts).iter() {
-        walk_fact(child432, graph, runtime, locals, refs, outputs);
+    for child429 in (&value.requirement_facts).iter() {
+        walk_fact(child429, graph, runtime, locals, refs, outputs);
     }
-    for child433 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child433, graph, runtime, locals, refs, outputs);
+    for child430 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child430, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_union_nonempty_from_left_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::UnionNonemptyFromLeftStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child434 in (&value.requirement_facts).iter() {
-        walk_fact(child434, graph, runtime, locals, refs, outputs);
+    for child431 in (&value.requirement_facts).iter() {
+        walk_fact(child431, graph, runtime, locals, refs, outputs);
     }
-    for child435 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child435, graph, runtime, locals, refs, outputs);
+    for child432 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child432, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_union_nonempty_from_right_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::UnionNonemptyFromRightStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child436 in (&value.requirement_facts).iter() {
-        walk_fact(child436, graph, runtime, locals, refs, outputs);
+    for child433 in (&value.requirement_facts).iter() {
+        walk_fact(child433, graph, runtime, locals, refs, outputs);
     }
-    for child437 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child437, graph, runtime, locals, refs, outputs);
+    for child434 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child434, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_union_subset_from_both_operands_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::UnionSubsetFromBothOperandsStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child438 in (&value.requirement_facts).iter() {
-        walk_fact(child438, graph, runtime, locals, refs, outputs);
+    for child435 in (&value.requirement_facts).iter() {
+        walk_fact(child435, graph, runtime, locals, refs, outputs);
     }
-    for child439 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child439, graph, runtime, locals, refs, outputs);
+    for child436 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child436, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -7178,8 +7127,8 @@ pub(super) fn walk_field_application_in_declared_codomain_proof(value: &crate::e
     walk_fn_set(&value.declared_signature, graph, runtime, locals, refs, outputs);
     walk_obj(&value.applied_return_set, graph, runtime, locals, refs, outputs);
     walk_equal_fact_searched_proof(&value.return_set_match, graph, runtime, locals, refs, outputs);
-    for child440 in (&value.alternative_signature_matches).iter() {
-        walk_signature_return_match_proof(child440, graph, runtime, locals, refs, outputs);
+    for child437 in (&value.alternative_signature_matches).iter() {
+        walk_signature_return_match_proof(child437, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -7191,16 +7140,16 @@ pub(super) fn walk_field_in_declared_set_proof(value: &crate::execute::execute_f
 pub(super) fn walk_fn_application_in_codomain_known_special_property_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::FnApplicationInCodomainKnownSpecialPropertyProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.cite_property_fact_id, runtime, locals, refs, outputs);
     walk_known_equality_path_proof(&value.function_equal, graph, runtime, locals, refs, outputs);
-    for child441 in (&value.signature_uses).iter() {
-        walk_signature_codomain_use_proof(child441, graph, runtime, locals, refs, outputs);
+    for child438 in (&value.signature_uses).iter() {
+        walk_signature_codomain_use_proof(child438, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_fn_application_in_fn_range_known_special_property_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::FnApplicationInFnRangeKnownSpecialPropertyProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.cite_property_fact_id, runtime, locals, refs, outputs);
     walk_known_equality_path_proof(&value.function_equal, graph, runtime, locals, refs, outputs);
-    for child442 in (&value.signature_matches).iter() {
-        walk_signature_match_proof(child442, graph, runtime, locals, refs, outputs);
+    for child439 in (&value.signature_matches).iter() {
+        walk_signature_match_proof(child439, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -7223,8 +7172,8 @@ pub(super) fn walk_fold_operation_signature_proof(value: &crate::execute::execut
 
 pub(super) fn walk_homogeneous_tuple_coordinate_known_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::HomogeneousTupleCoordinateKnownProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_known_tuple_shape_proof(&value.shape, graph, runtime, locals, refs, outputs);
-    for child443 in (&value.carrier_equals).iter() {
-        walk_equal_fact_searched_proof(child443, graph, runtime, locals, refs, outputs);
+    for child440 in (&value.carrier_equals).iter() {
+        walk_equal_fact_searched_proof(child440, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -7299,11 +7248,11 @@ pub(super) fn walk_template_application_in_declared_codomain_proof(value: &crate
     walk_fn_set(&value.declared_signature, graph, runtime, locals, refs, outputs);
     walk_obj(&value.applied_return_set, graph, runtime, locals, refs, outputs);
     walk_equal_fact_searched_proof(&value.return_set_match, graph, runtime, locals, refs, outputs);
-    for child444 in (&value.alternative_signature_matches).iter() {
-        walk_signature_return_match_proof(child444, graph, runtime, locals, refs, outputs);
+    for child441 in (&value.alternative_signature_matches).iter() {
+        walk_signature_return_match_proof(child441, graph, runtime, locals, refs, outputs);
     }
-    for child445 in (&value.alternative_template_signature_matches).iter() {
-        walk_template_signature_return_match_proof(child445, graph, runtime, locals, refs, outputs);
+    for child442 in (&value.alternative_template_signature_matches).iter() {
+        walk_template_signature_return_match_proof(child442, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -7321,8 +7270,8 @@ pub(super) fn walk_tuple_coordinate_known_proof(value: &crate::execute::execute_
 pub(super) fn walk_closed_numeric_equal_substitution_builtin_rewrite_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_rewrite_result::ClosedNumericEqualSubstitutionBuiltinRewriteProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.rewritten_left, graph, runtime, locals, refs, outputs);
     walk_obj(&value.rewritten_right, graph, runtime, locals, refs, outputs);
-    for child446 in (&value.cited_equal_fact_ids).iter() {
-        graph.reference_fact(child446, runtime, locals, refs, outputs);
+    for child443 in (&value.cited_equal_fact_ids).iter() {
+        graph.reference_fact(child443, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.residual_equal, graph, runtime, locals, refs, outputs);
 }
@@ -7336,29 +7285,29 @@ pub(super) fn walk_equality_search_proof_by_builtin_rewrite(value: &crate::execu
 }
 
 pub(super) fn walk_arithmetic_congruence_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::ArithmeticCongruenceStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child447 in (&value.requirement_facts).iter() {
-        walk_fact(child447, graph, runtime, locals, refs, outputs);
+    for child444 in (&value.requirement_facts).iter() {
+        walk_fact(child444, graph, runtime, locals, refs, outputs);
     }
-    for child448 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child448, graph, runtime, locals, refs, outputs);
+    for child445 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child445, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_complex_with_nonzero_premises_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::ComplexWithNonzeroPremisesStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child449 in (&value.requirement_facts).iter() {
-        walk_fact(child449, graph, runtime, locals, refs, outputs);
+    for child446 in (&value.requirement_facts).iter() {
+        walk_fact(child446, graph, runtime, locals, refs, outputs);
     }
-    for child450 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child450, graph, runtime, locals, refs, outputs);
+    for child447 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child447, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_cos_zero_integer_offset_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::CosZeroIntegerOffsetStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child451 in (&value.requirement_facts).iter() {
-        walk_fact(child451, graph, runtime, locals, refs, outputs);
+    for child448 in (&value.requirement_facts).iter() {
+        walk_fact(child448, graph, runtime, locals, refs, outputs);
     }
-    for child452 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child452, graph, runtime, locals, refs, outputs);
+    for child449 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child449, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -7392,47 +7341,47 @@ pub(super) fn walk_equality_search_proof_by_builtin_strategy(value: &crate::exec
 }
 
 pub(super) fn walk_extremum_equality_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::ExtremumEqualityStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child453 in (&value.requirement_facts).iter() {
-        walk_fact(child453, graph, runtime, locals, refs, outputs);
+    for child450 in (&value.requirement_facts).iter() {
+        walk_fact(child450, graph, runtime, locals, refs, outputs);
     }
-    for child454 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child454, graph, runtime, locals, refs, outputs);
+    for child451 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child451, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_product_pointwise_equality_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::FiniteSetProductPointwiseEqualityStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child455 in (&value.requirement_facts).iter() {
-        walk_fact(child455, graph, runtime, locals, refs, outputs);
+    for child452 in (&value.requirement_facts).iter() {
+        walk_fact(child452, graph, runtime, locals, refs, outputs);
     }
-    for child456 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child456, graph, runtime, locals, refs, outputs);
+    for child453 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child453, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_mod_congruence_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::ModCongruenceStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child457 in (&value.requirement_facts).iter() {
-        walk_fact(child457, graph, runtime, locals, refs, outputs);
+    for child454 in (&value.requirement_facts).iter() {
+        walk_fact(child454, graph, runtime, locals, refs, outputs);
     }
-    for child458 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child458, graph, runtime, locals, refs, outputs);
+    for child455 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child455, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_rational_with_nonzero_premises_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::RationalWithNonzeroPremisesStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child459 in (&value.requirement_facts).iter() {
-        walk_fact(child459, graph, runtime, locals, refs, outputs);
+    for child456 in (&value.requirement_facts).iter() {
+        walk_fact(child456, graph, runtime, locals, refs, outputs);
     }
-    for child460 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child460, graph, runtime, locals, refs, outputs);
+    for child457 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child457, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_tuple_component_equality_strategy_single_step(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::TupleComponentEqualityStrategySingleStep, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child461 in (&value.requirement_facts).iter() {
-        walk_fact(child461, graph, runtime, locals, refs, outputs);
+    for child458 in (&value.requirement_facts).iter() {
+        walk_fact(child458, graph, runtime, locals, refs, outputs);
     }
-    for child462 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child462, graph, runtime, locals, refs, outputs);
+    for child459 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child459, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -7507,6 +7456,7 @@ pub(super) fn walk_parent_checked_beta_function_body(value: &crate::execute::exe
 pub(super) fn walk_parent_checked_beta_one_side_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaOneSideProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_parent_checked_beta_function_body(&value.function_body, graph, runtime, locals, refs, outputs);
     walk_obj(&value.expanded_body, graph, runtime, locals, refs, outputs);
+    graph.reference_fact(&(&value.residual_equal).fact_id, runtime, locals, refs, outputs);
     walk_equal_fact(&value.residual_equal, graph, runtime, locals, refs, outputs);
     walk_equal_fact_searched_proof((&value.residual_proof).as_ref(), graph, runtime, locals, refs, outputs);
 }
@@ -7516,6 +7466,7 @@ pub(super) fn walk_parent_checked_beta_two_sides_proof(value: &crate::execute::e
     walk_obj(&value.left_expanded_body, graph, runtime, locals, refs, outputs);
     walk_parent_checked_beta_function_body(&value.right_function_body, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right_expanded_body, graph, runtime, locals, refs, outputs);
+    graph.reference_fact(&(&value.residual_equal).fact_id, runtime, locals, refs, outputs);
     walk_equal_fact(&value.residual_equal, graph, runtime, locals, refs, outputs);
     walk_equal_fact_searched_proof((&value.residual_proof).as_ref(), graph, runtime, locals, refs, outputs);
 }
@@ -7549,8 +7500,8 @@ pub(super) fn walk_function_body_expansion_proof(value: &crate::execute::execute
 }
 
 pub(super) fn walk_function_body_normalization_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodyNormalizationProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child463 in (&value.expansions).iter() {
-        walk_function_body_expansion_proof(child463, graph, runtime, locals, refs, outputs);
+    for child460 in (&value.expansions).iter() {
+        walk_function_body_expansion_proof(child460, graph, runtime, locals, refs, outputs);
     }
     walk_obj(&value.expanded_body, graph, runtime, locals, refs, outputs);
 }
@@ -7722,6 +7673,7 @@ pub(super) fn walk_equal_fact_searched_proof_by_equivalence_class(value: &crate:
 }
 
 pub(super) fn walk_equal_fact_searched_proof_by_known_forall_via_symmetry(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProofByKnownForallViaSymmetry, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    graph.reference_fact(&(&value.reversed_equal).fact_id, runtime, locals, refs, outputs);
     walk_equal_fact(&value.reversed_equal, graph, runtime, locals, refs, outputs);
     walk_search_proof_by_known_forall_fact(&value.known_forall, graph, runtime, locals, refs, outputs);
 }
@@ -7746,8 +7698,8 @@ pub(super) fn walk_forall_conclusion_arg_match_proof(value: &crate::execute::exe
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof::ByStructure { pattern: p0, goal_arg: p1, child_matches: p2 } => {
             walk_obj(p0, graph, runtime, locals, refs, outputs);
             walk_obj(p1, graph, runtime, locals, refs, outputs);
-            for child464 in (p2).iter() {
-                walk_forall_conclusion_arg_match_proof(child464, graph, runtime, locals, refs, outputs);
+            for child461 in (p2).iter() {
+                walk_forall_conclusion_arg_match_proof(child461, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ForallConclusionArgMatchProof::NonParamEqual { pattern: p0, pattern_after_subst: p1, goal_arg: p2, equal: p3 } => {
@@ -7766,6 +7718,7 @@ pub(super) fn walk_forall_param_type_requirement_proof(value: &crate::execute::e
 }
 
 pub(super) fn walk_known_equality_alpha_endpoints_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityAlphaEndpointsProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    graph.reference_fact(&(&value.cited).fact_id, runtime, locals, refs, outputs);
     walk_equal_fact(&value.cited, graph, runtime, locals, refs, outputs);
 }
 
@@ -7777,10 +7730,10 @@ pub(super) fn walk_known_equality_alpha_paths_proof(value: &crate::execute::exec
 }
 
 pub(super) fn walk_known_equality_path_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child465 in (&value.path).iter() {
-        walk_obj(&(child465).0, graph, runtime, locals, refs, outputs);
-        walk_obj(&(child465).1, graph, runtime, locals, refs, outputs);
-        graph.reference_fact(&(child465).2, runtime, locals, refs, outputs);
+    for child462 in (&value.path).iter() {
+        walk_obj(&(child462).0, graph, runtime, locals, refs, outputs);
+        walk_obj(&(child462).1, graph, runtime, locals, refs, outputs);
+        graph.reference_fact(&(child462).2, runtime, locals, refs, outputs);
     }
 }
 
@@ -7791,24 +7744,24 @@ pub(super) fn walk_peer_equality_success(value: &crate::execute::execute_fact_st
 }
 
 pub(super) fn walk_prove_forall_instantiation_requirements_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ProveForallInstantiationRequirementsProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child466 in (&value.param_type_requirements).iter() {
-        walk_forall_param_type_requirement_proof(child466, graph, runtime, locals, refs, outputs);
+    for child463 in (&value.param_type_requirements).iter() {
+        walk_forall_param_type_requirement_proof(child463, graph, runtime, locals, refs, outputs);
     }
-    for child467 in (&value.dom_facts).iter() {
-        walk_fact(child467, graph, runtime, locals, refs, outputs);
+    for child464 in (&value.dom_facts).iter() {
+        walk_fact(child464, graph, runtime, locals, refs, outputs);
     }
-    for child468 in (&value.proof_of_dom_facts).iter() {
-        walk_verify_fact_result(child468, graph, runtime, locals, refs, outputs);
+    for child465 in (&value.proof_of_dom_facts).iter() {
+        walk_verify_fact_result(child465, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_search_proof_by_known_forall_fact(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_forall_conclusion_cite(&value.cite, graph, runtime, locals, refs, outputs);
-    for child469 in (&value.forall_parameters_match_what_args).iter() {
-        walk_obj(child469, graph, runtime, locals, refs, outputs);
+    for child466 in (&value.forall_parameters_match_what_args).iter() {
+        walk_obj(child466, graph, runtime, locals, refs, outputs);
     }
-    for child470 in (&value.arg_match_proofs).iter() {
-        walk_forall_conclusion_arg_match_proof(child470, graph, runtime, locals, refs, outputs);
+    for child467 in (&value.arg_match_proofs).iter() {
+        walk_forall_conclusion_arg_match_proof(child467, graph, runtime, locals, refs, outputs);
     }
     walk_prove_forall_instantiation_requirements_proof(&value.instantiation_requirements, graph, runtime, locals, refs, outputs);
 }
@@ -7898,14 +7851,14 @@ pub(super) fn walk_tuple_projection_known_proof(value: &crate::execute::execute_
 
 pub(super) fn walk_tuple_reconstruction_known_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_proof_by_known_special_property::TupleReconstructionKnownProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_known_tuple_shape_proof(&value.shape, graph, runtime, locals, refs, outputs);
-    for child471 in (&value.subjects).iter() {
-        walk_equal_fact_searched_proof(child471, graph, runtime, locals, refs, outputs);
+    for child468 in (&value.subjects).iter() {
+        walk_equal_fact_searched_proof(child468, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_equal_fact_searched_proof_by_matching_one_arg_by_one(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProofByMatchingOneArgByOne, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child472 in (&value.corresponding_arg_equal_proofs).iter() {
-        walk_verify_fact_result(child472, graph, runtime, locals, refs, outputs);
+    for child469 in (&value.corresponding_arg_equal_proofs).iter() {
+        walk_verify_fact_result(child469, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -7993,11 +7946,11 @@ pub(super) fn walk_aggregate_pointwise_proof(value: &crate::execute::execute_fac
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child473 in (&value.assumptions).iter() {
-        walk_fact(child473, graph, runtime, locals, refs, outputs);
+    for child470 in (&value.assumptions).iter() {
+        walk_fact(child470, graph, runtime, locals, refs, outputs);
     }
-    for child474 in (&value.function_expansions).iter() {
-        walk_anon_fn_application_body_proof(child474, graph, runtime, locals, refs, outputs);
+    for child471 in (&value.function_expansions).iter() {
+        walk_anon_fn_application_body_proof(child471, graph, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.equality, graph, runtime, locals, refs, outputs);
 }
@@ -8024,66 +7977,66 @@ pub(super) fn walk_finite_partition_equal_functions_proof(value: &crate::execute
 pub(super) fn walk_finite_set_product_constant_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetProductConstantBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_anon_fn_application_body_proof(&value.function_expansion, graph, runtime, locals, refs, outputs);
     walk_obj(&value.constant, graph, runtime, locals, refs, outputs);
-    if let Some(child475) = (&value.exponent_equal).as_ref() {
-        walk_verify_fact_result(child475, graph, runtime, locals, refs, outputs);
+    if let Some(child472) = (&value.exponent_equal).as_ref() {
+        walk_verify_fact_result(child472, graph, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.residual_equal, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_finite_set_product_disjoint_union_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetProductDisjointUnionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child476 in (&value.premises).iter() {
-        walk_verify_fact_result(child476, graph, runtime, locals, refs, outputs);
+    for child473 in (&value.premises).iter() {
+        walk_verify_fact_result(child473, graph, runtime, locals, refs, outputs);
     }
-    for child477 in (&value.callbacks).iter() {
-        walk_finite_partition_callback_agreement_proof(child477, graph, runtime, locals, refs, outputs);
+    for child474 in (&value.callbacks).iter() {
+        walk_finite_partition_callback_agreement_proof(child474, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_product_fresh_insertion_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetProductFreshInsertionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child478 in (&value.premises).iter() {
-        walk_verify_fact_result(child478, graph, runtime, locals, refs, outputs);
+    for child475 in (&value.premises).iter() {
+        walk_verify_fact_result(child475, graph, runtime, locals, refs, outputs);
     }
     walk_finite_partition_callback_agreement_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
-    for child479 in (&value.factor_expansions).iter() {
-        walk_anon_fn_application_body_proof(child479, graph, runtime, locals, refs, outputs);
+    for child476 in (&value.factor_expansions).iter() {
+        walk_anon_fn_application_body_proof(child476, graph, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.factor_equal, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_finite_set_product_member_removal_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetProductMemberRemovalProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child480 in (&value.premises).iter() {
-        walk_verify_fact_result(child480, graph, runtime, locals, refs, outputs);
+    for child477 in (&value.premises).iter() {
+        walk_verify_fact_result(child477, graph, runtime, locals, refs, outputs);
     }
     walk_finite_partition_callback_agreement_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
-    for child481 in (&value.factor_expansions).iter() {
-        walk_anon_fn_application_body_proof(child481, graph, runtime, locals, refs, outputs);
+    for child478 in (&value.factor_expansions).iter() {
+        walk_anon_fn_application_body_proof(child478, graph, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.factor_equal, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_finite_set_product_multiply_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetProductMultiplyBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child482 in (&value.premises).iter() {
-        walk_verify_fact_result(child482, graph, runtime, locals, refs, outputs);
+    for child479 in (&value.premises).iter() {
+        walk_verify_fact_result(child479, graph, runtime, locals, refs, outputs);
     }
     walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_finite_set_product_pointwise_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetProductPointwiseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child483 in (&value.premises).iter() {
-        walk_verify_fact_result(child483, graph, runtime, locals, refs, outputs);
+    for child480 in (&value.premises).iter() {
+        walk_verify_fact_result(child480, graph, runtime, locals, refs, outputs);
     }
     walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_finite_set_product_range_bridge_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetProductRangeBridgeBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child484 in (&value.premises).iter() {
-        walk_verify_fact_result(child484, graph, runtime, locals, refs, outputs);
+    for child481 in (&value.premises).iter() {
+        walk_verify_fact_result(child481, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_sum_add_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetSumAddBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child485 in (&value.premises).iter() {
-        walk_verify_fact_result(child485, graph, runtime, locals, refs, outputs);
+    for child482 in (&value.premises).iter() {
+        walk_verify_fact_result(child482, graph, runtime, locals, refs, outputs);
     }
     walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
@@ -8095,37 +8048,37 @@ pub(super) fn walk_finite_set_sum_constant_builtin_rule_proof(value: &crate::exe
 }
 
 pub(super) fn walk_finite_set_sum_disjoint_union_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetSumDisjointUnionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child486 in (&value.premises).iter() {
-        walk_verify_fact_result(child486, graph, runtime, locals, refs, outputs);
+    for child483 in (&value.premises).iter() {
+        walk_verify_fact_result(child483, graph, runtime, locals, refs, outputs);
     }
-    for child487 in (&value.callbacks).iter() {
-        walk_finite_partition_callback_agreement_proof(child487, graph, runtime, locals, refs, outputs);
+    for child484 in (&value.callbacks).iter() {
+        walk_finite_partition_callback_agreement_proof(child484, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_sum_pointwise_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetSumPointwiseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child488 in (&value.premises).iter() {
-        walk_verify_fact_result(child488, graph, runtime, locals, refs, outputs);
+    for child485 in (&value.premises).iter() {
+        walk_verify_fact_result(child485, graph, runtime, locals, refs, outputs);
     }
     walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_finite_set_sum_range_bridge_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetSumRangeBridgeBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child489 in (&value.premises).iter() {
-        walk_verify_fact_result(child489, graph, runtime, locals, refs, outputs);
+    for child486 in (&value.premises).iter() {
+        walk_verify_fact_result(child486, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_sum_scalar_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetSumScalarBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child490 in (&value.premises).iter() {
-        walk_verify_fact_result(child490, graph, runtime, locals, refs, outputs);
+    for child487 in (&value.premises).iter() {
+        walk_verify_fact_result(child487, graph, runtime, locals, refs, outputs);
     }
     walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_finite_set_sum_subtract_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::FiniteSetSumSubtractBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child491 in (&value.premises).iter() {
-        walk_verify_fact_result(child491, graph, runtime, locals, refs, outputs);
+    for child488 in (&value.premises).iter() {
+        walk_verify_fact_result(child488, graph, runtime, locals, refs, outputs);
     }
     walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
@@ -8133,35 +8086,35 @@ pub(super) fn walk_finite_set_sum_subtract_builtin_rule_proof(value: &crate::exe
 pub(super) fn walk_range_product_constant_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeProductConstantBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_anon_fn_application_body_proof(&value.function_expansion, graph, runtime, locals, refs, outputs);
     walk_obj(&value.constant, graph, runtime, locals, refs, outputs);
-    if let Some(child492) = (&value.exponent_equal).as_ref() {
-        walk_verify_fact_result(child492, graph, runtime, locals, refs, outputs);
+    if let Some(child489) = (&value.exponent_equal).as_ref() {
+        walk_verify_fact_result(child489, graph, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.residual_equal, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_range_product_partition_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeProductPartitionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child493 in (&value.premises).iter() {
-        walk_verify_fact_result(child493, graph, runtime, locals, refs, outputs);
+    for child490 in (&value.premises).iter() {
+        walk_verify_fact_result(child490, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_range_product_pointwise_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeProductPointwiseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child494 in (&value.premises).iter() {
-        walk_verify_fact_result(child494, graph, runtime, locals, refs, outputs);
+    for child491 in (&value.premises).iter() {
+        walk_verify_fact_result(child491, graph, runtime, locals, refs, outputs);
     }
     walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_range_product_reindex_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeProductReindexBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child495 in (&value.premises).iter() {
-        walk_verify_fact_result(child495, graph, runtime, locals, refs, outputs);
+    for child492 in (&value.premises).iter() {
+        walk_verify_fact_result(child492, graph, runtime, locals, refs, outputs);
     }
     walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_range_sum_add_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeSumAddBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child496 in (&value.premises).iter() {
-        walk_verify_fact_result(child496, graph, runtime, locals, refs, outputs);
+    for child493 in (&value.premises).iter() {
+        walk_verify_fact_result(child493, graph, runtime, locals, refs, outputs);
     }
     walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
@@ -8173,75 +8126,75 @@ pub(super) fn walk_range_sum_constant_builtin_rule_proof(value: &crate::execute:
 }
 
 pub(super) fn walk_range_sum_partition_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeSumPartitionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child497 in (&value.premises).iter() {
-        walk_verify_fact_result(child497, graph, runtime, locals, refs, outputs);
+    for child494 in (&value.premises).iter() {
+        walk_verify_fact_result(child494, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_range_sum_pointwise_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeSumPointwiseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child495 in (&value.premises).iter() {
+        walk_verify_fact_result(child495, graph, runtime, locals, refs, outputs);
+    }
+    walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
+}
+
+pub(super) fn walk_range_sum_reindex_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeSumReindexBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child496 in (&value.premises).iter() {
+        walk_verify_fact_result(child496, graph, runtime, locals, refs, outputs);
+    }
+    walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
+}
+
+pub(super) fn walk_range_sum_scalar_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeSumScalarBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child497 in (&value.premises).iter() {
+        walk_verify_fact_result(child497, graph, runtime, locals, refs, outputs);
+    }
+    walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
+}
+
+pub(super) fn walk_range_sum_subtract_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeSumSubtractBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child498 in (&value.premises).iter() {
         walk_verify_fact_result(child498, graph, runtime, locals, refs, outputs);
     }
     walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
 
-pub(super) fn walk_range_sum_reindex_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeSumReindexBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child499 in (&value.premises).iter() {
-        walk_verify_fact_result(child499, graph, runtime, locals, refs, outputs);
-    }
-    walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
-}
-
-pub(super) fn walk_range_sum_scalar_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeSumScalarBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child500 in (&value.premises).iter() {
-        walk_verify_fact_result(child500, graph, runtime, locals, refs, outputs);
-    }
-    walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
-}
-
-pub(super) fn walk_range_sum_subtract_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::aggregate_identity_builtin_rule_proof::RangeSumSubtractBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child501 in (&value.premises).iter() {
-        walk_verify_fact_result(child501, graph, runtime, locals, refs, outputs);
-    }
-    walk_aggregate_pointwise_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
-}
-
 pub(super) fn walk_cartesian_size_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_cartesian_size::CartesianSizeProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child502 in (&value.factor_finiteness).iter() {
-        walk_verify_fact_result(child502, graph, runtime, locals, refs, outputs);
+    for child499 in (&value.factor_finiteness).iter() {
+        walk_verify_fact_result(child499, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_elementary_arithmetic_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     match value {
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof::ModNegation { requirements: p0 } => {
-            for child503 in (p0).iter() {
-                walk_verify_fact_result(child503, graph, runtime, locals, refs, outputs);
+            for child500 in (p0).iter() {
+                walk_verify_fact_result(child500, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof::ModNaturalPower { requirements: p0 } => {
-            for child504 in (p0).iter() {
-                walk_verify_fact_result(child504, graph, runtime, locals, refs, outputs);
+            for child501 in (p0).iter() {
+                walk_verify_fact_result(child501, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof::AbsEvenPower => {
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof::PositivePowerZero { premise: p0, requirements: p1 } => {
             walk_equal_fact_searched_proof((p0).as_ref(), graph, runtime, locals, refs, outputs);
-            for child505 in (p1).iter() {
-                walk_verify_fact_result(child505, graph, runtime, locals, refs, outputs);
+            for child502 in (p1).iter() {
+                walk_verify_fact_result(child502, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof::PositivePowerCancellation { premise: p0, requirements: p1 } => {
             walk_equal_fact_searched_proof((p0).as_ref(), graph, runtime, locals, refs, outputs);
-            for child506 in (p1).iter() {
-                walk_verify_fact_result(child506, graph, runtime, locals, refs, outputs);
+            for child503 in (p1).iter() {
+                walk_verify_fact_result(child503, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof::SqrtKnownSquare { premise: p0, requirements: p1 } => {
             walk_equal_fact_searched_proof((p0).as_ref(), graph, runtime, locals, refs, outputs);
-            for child507 in (p1).iter() {
-                walk_verify_fact_result(child507, graph, runtime, locals, refs, outputs);
+            for child504 in (p1).iter() {
+                walk_verify_fact_result(child504, graph, runtime, locals, refs, outputs);
             }
         }
     }
@@ -8263,86 +8216,86 @@ pub(super) fn walk_equal_from_known_difference_zero_builtin_rule_proof(value: &c
 }
 
 pub(super) fn walk_product_empty_range_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave10::ProductEmptyRangeBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child505 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child505, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_reduce_empty_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave10::ReduceEmptyBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child506 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child506, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_sum_empty_range_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave10::SumEmptyRangeBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child507 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child507, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_empty_set_from_size_zero_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::EmptySetFromSizeZeroBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child508 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child508, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_reduce_empty_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave10::ReduceEmptyBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_pow_of_log_inverse_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::PowOfLogInverseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child509 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child509, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_sum_empty_range_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave10::SumEmptyRangeBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_product_single_term_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::ProductSingleTermBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child510 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child510, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_empty_set_from_size_zero_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::EmptySetFromSizeZeroBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_set_minus_recovers_subset_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::SetMinusRecoversSubsetBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child511 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child511, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_pow_of_log_inverse_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::PowOfLogInverseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_sum_single_term_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::SumSingleTermBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child512 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child512, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_product_single_term_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::ProductSingleTermBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_union_absorption_from_subset_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::UnionAbsorptionFromSubsetBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child513 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child513, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_set_minus_recovers_subset_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::SetMinusRecoversSubsetBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_finite_set_product_list_expansion_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::FiniteSetProductListExpansionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child514 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child514, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_sum_single_term_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::SumSingleTermBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_finite_set_sum_list_expansion_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::FiniteSetSumListExpansionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child515 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child515, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_union_absorption_from_subset_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave11::UnionAbsorptionFromSubsetBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_mod_nested_divisible_absorption_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::ModNestedDivisibleAbsorptionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child516 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child516, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_finite_set_product_list_expansion_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::FiniteSetProductListExpansionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_product_split_last_term_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::ProductSplitLastTermBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child517 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child517, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_finite_set_sum_list_expansion_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::FiniteSetSumListExpansionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_sum_split_last_term_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::SumSplitLastTermBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child518 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child518, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_mod_nested_divisible_absorption_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::ModNestedDivisibleAbsorptionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child519 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child519, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_product_split_last_term_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::ProductSplitLastTermBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child520 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child520, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_sum_split_last_term_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave12::SumSplitLastTermBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child521 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child521, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8352,14 +8305,14 @@ pub(super) fn walk_fn_range_of_constant_anonymous_fn_builtin_rule_proof(value: &
 }
 
 pub(super) fn walk_img_of_real_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave13::ImgOfRealBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child522 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child522, graph, runtime, locals, refs, outputs);
+    for child519 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child519, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_re_of_real_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave13::ReOfRealBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child523 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child523, graph, runtime, locals, refs, outputs);
+    for child520 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child520, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8371,8 +8324,8 @@ pub(super) fn walk_log_base_power_builtin_rule_proof(value: &crate::execute::exe
 }
 
 pub(super) fn walk_reduce_single_term_with_add_zero_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave14::ReduceSingleTermWithAddZeroBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child524 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child524, graph, runtime, locals, refs, outputs);
+    for child521 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child521, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8382,8 +8335,8 @@ pub(super) fn walk_log_arg_power_builtin_rule_proof(value: &crate::execute::exec
 }
 
 pub(super) fn walk_log_base_self_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::LogBaseSelfBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child525 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child525, graph, runtime, locals, refs, outputs);
+    for child522 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child522, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8394,14 +8347,14 @@ pub(super) fn walk_log_change_of_base_builtin_rule_proof(value: &crate::execute:
 }
 
 pub(super) fn walk_log_of_one_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::LogOfOneBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child526 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child526, graph, runtime, locals, refs, outputs);
+    for child523 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child523, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_log_of_power_same_base_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::LogOfPowerSameBaseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child527 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child527, graph, runtime, locals, refs, outputs);
+    for child524 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child524, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8423,170 +8376,170 @@ pub(super) fn walk_log_reciprocal_builtin_rule_proof(value: &crate::execute::exe
 }
 
 pub(super) fn walk_mod_compatible_smaller_modulus_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::ModCompatibleSmallerModulusBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child525 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child525, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_nested_same_mod_absorption_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::NestedSameModAbsorptionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child526 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child526, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_one_mod_at_least_two_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::OneModAtLeastTwoBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child527 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child527, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_sqrt_of_square_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::SqrtOfSquareBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child528 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child528, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_nested_same_mod_absorption_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::NestedSameModAbsorptionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_sqrt_product_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::SqrtProductBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child529 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child529, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_one_mod_at_least_two_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::OneModAtLeastTwoBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_sqrt_quotient_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::SqrtQuotientBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child530 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child530, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_sqrt_of_square_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::SqrtOfSquareBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_sqrt_square_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::SqrtSquareBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child531 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child531, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_sqrt_product_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::SqrtProductBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_zero_mod_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::ZeroModBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child532 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child532, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_sqrt_quotient_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::SqrtQuotientBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_zero_to_pos_nat_power_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::ZeroToPosNatPowerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child533 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child533, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_sqrt_square_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::SqrtSquareBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_ceil_of_integer_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave3::CeilOfIntegerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child534 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child534, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_zero_mod_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::ZeroModBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_exp_of_ln_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave3::ExpOfLnBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child535 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child535, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_zero_to_pos_nat_power_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::ZeroToPosNatPowerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_floor_of_integer_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave3::FloorOfIntegerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child536 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child536, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_ceil_of_integer_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave3::CeilOfIntegerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_mod_self_zero_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave3::ModSelfZeroBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child537 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child537, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_exp_of_ln_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave3::ExpOfLnBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_ceil_of_floor_of_integer_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave4::CeilOfFloorOfIntegerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child538 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child538, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_floor_of_integer_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave3::FloorOfIntegerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_floor_of_ceil_of_integer_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave4::FloorOfCeilOfIntegerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child539 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child539, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_mod_self_zero_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave3::ModSelfZeroBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_factorial_successor_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave5::FactorialSuccessorBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child540 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child540, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_ceil_of_floor_of_integer_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave4::CeilOfFloorOfIntegerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_gcd_left_zero_abs_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave5::GcdLeftZeroAbsBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child541 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child541, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_floor_of_ceil_of_integer_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave4::FloorOfCeilOfIntegerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_gcd_right_zero_abs_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave5::GcdRightZeroAbsBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child542 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child542, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_factorial_successor_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave5::FactorialSuccessorBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_quot_self_one_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave5::QuotSelfOneBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child543 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child543, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_gcd_left_zero_abs_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave5::GcdLeftZeroAbsBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_abs_nonneg_equals_self_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::AbsNonnegEqualsSelfBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child544 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child544, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_gcd_right_zero_abs_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave5::GcdRightZeroAbsBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_abs_nonpos_equals_negation_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::AbsNonposEqualsNegationBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child545 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child545, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_quot_self_one_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave5::QuotSelfOneBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_max_left_when_less_equal_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::MaxLeftWhenLessEqualBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child546 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child546, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_abs_nonneg_equals_self_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::AbsNonnegEqualsSelfBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_max_right_when_less_equal_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::MaxRightWhenLessEqualBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child547 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child547, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_abs_nonpos_equals_negation_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::AbsNonposEqualsNegationBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_min_left_when_less_equal_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::MinLeftWhenLessEqualBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child548 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child548, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_max_left_when_less_equal_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::MaxLeftWhenLessEqualBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_min_right_when_less_equal_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::MinRightWhenLessEqualBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child549 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child549, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_max_right_when_less_equal_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::MaxRightWhenLessEqualBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_sign_of_negative_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::SignOfNegativeBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child550 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child550, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_min_left_when_less_equal_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::MinLeftWhenLessEqualBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_sign_of_positive_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::SignOfPositiveBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child551 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child551, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_min_right_when_less_equal_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::MinRightWhenLessEqualBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_diff_zero_from_equal_operands_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave7::DiffZeroFromEqualOperandsBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child552 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child552, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_sign_of_negative_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::SignOfNegativeBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child553 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child553, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_sign_of_positive_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave6::SignOfPositiveBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child554 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child554, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_diff_zero_from_equal_operands_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave7::DiffZeroFromEqualOperandsBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child555 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child555, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8596,44 +8549,44 @@ pub(super) fn walk_equality_from_two_sided_weak_order_builtin_rule_proof(value: 
 }
 
 pub(super) fn walk_subtraction_from_known_addition_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave7::SubtractionFromKnownAdditionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child553 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child553, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_zero_product_cancel_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave7::ZeroProductCancelBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child554 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child554, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_square_sum_component_zero_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave8::SquareSumComponentZeroBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child555 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child555, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_empty_set_from_not_nonempty_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave9::EmptySetFromNotNonemptyBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child556 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child556, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_zero_product_cancel_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave7::ZeroProductCancelBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_intersect_from_subset_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave9::IntersectFromSubsetBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child557 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child557, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_square_sum_component_zero_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave8::SquareSumComponentZeroBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_power_set_finite_set_size_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave9::PowerSetFiniteSetSizeBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child558 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child558, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_empty_set_from_not_nonempty_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave9::EmptySetFromNotNonemptyBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child559 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child559, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_intersect_from_subset_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave9::IntersectFromSubsetBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child560 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child560, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_power_set_finite_set_size_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave9::PowerSetFiniteSetSizeBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child561 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child561, graph, runtime, locals, refs, outputs);
-    }
-}
-
 pub(super) fn walk_euclidean_remainder_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_euclidean_remainder::EuclideanRemainderProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child562 in (&value.domains).iter() {
-        walk_verify_fact_result(child562, graph, runtime, locals, refs, outputs);
+    for child559 in (&value.domains).iter() {
+        walk_verify_fact_result(child559, graph, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.remainder_bound, graph, runtime, locals, refs, outputs);
     walk_equal_fact_searched_proof((&value.decomposition).as_ref(), graph, runtime, locals, refs, outputs);
@@ -8690,26 +8643,26 @@ pub(super) fn walk_lcm_common_multiple_proof(value: &crate::execute::execute_fac
 }
 
 pub(super) fn walk_arccos_cos_right_inverse_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_inverse_trig::ArccosCosRightInverseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child563 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child563, graph, runtime, locals, refs, outputs);
+    for child560 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child560, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_arccot_cot_right_inverse_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_inverse_trig::ArccotCotRightInverseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child564 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child564, graph, runtime, locals, refs, outputs);
+    for child561 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child561, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_arcsin_sin_right_inverse_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_inverse_trig::ArcsinSinRightInverseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child565 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child565, graph, runtime, locals, refs, outputs);
+    for child562 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child562, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_arctan_tan_right_inverse_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_inverse_trig::ArctanTanRightInverseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child566 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child566, graph, runtime, locals, refs, outputs);
+    for child563 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child563, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8722,46 +8675,46 @@ pub(super) fn walk_numeric_complex_modulus_builtin_rule_proof(value: &crate::exe
 
 pub(super) fn walk_periodic_trig_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_periodic_trig::PeriodicTrigBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.coefficient, graph, runtime, locals, refs, outputs);
-    for child567 in (&value.integer_requirements).iter() {
-        walk_verify_fact_result(child567, graph, runtime, locals, refs, outputs);
+    for child564 in (&value.integer_requirements).iter() {
+        walk_verify_fact_result(child564, graph, runtime, locals, refs, outputs);
     }
     walk_obj(&value.value, graph, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_periodic_trig_nonzero_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_periodic_trig::PeriodicTrigNonzeroBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.coefficient, graph, runtime, locals, refs, outputs);
-    for child568 in (&value.integer_requirements).iter() {
-        walk_verify_fact_result(child568, graph, runtime, locals, refs, outputs);
+    for child565 in (&value.integer_requirements).iter() {
+        walk_verify_fact_result(child565, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_power_of_power_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_power_laws::PowerOfPowerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child566 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child566, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_power_of_product_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_power_laws::PowerOfProductBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child567 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child567, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_power_product_same_base_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_power_laws::PowerProductSameBaseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    for child568 in (&value.proof_of_requirement_facts).iter() {
+        walk_verify_fact_result(child568, graph, runtime, locals, refs, outputs);
+    }
+}
+
+pub(super) fn walk_quotient_as_mul_neg_one_power_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_power_laws::QuotientAsMulNegOnePowerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child569 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child569, graph, runtime, locals, refs, outputs);
     }
 }
 
-pub(super) fn walk_power_of_product_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_power_laws::PowerOfProductBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+pub(super) fn walk_reciprocal_as_neg_one_power_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_power_laws::ReciprocalAsNegOnePowerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child570 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child570, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_power_product_same_base_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_power_laws::PowerProductSameBaseBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child571 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child571, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_quotient_as_mul_neg_one_power_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_power_laws::QuotientAsMulNegOnePowerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child572 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child572, graph, runtime, locals, refs, outputs);
-    }
-}
-
-pub(super) fn walk_reciprocal_as_neg_one_power_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_power_laws::ReciprocalAsNegOnePowerBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child573 in (&value.proof_of_requirement_facts).iter() {
-        walk_verify_fact_result(child573, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8779,8 +8732,8 @@ pub(super) fn walk_range_size_proof(value: &crate::execute::execute_fact_stmt::v
 
 pub(super) fn walk_reduce_first_step_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_reduce_first_step::ReduceFirstStepProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_reduce_nonempty_proof(&value.nonempty, graph, runtime, locals, refs, outputs);
-    for child574 in (&value.matches).iter() {
-        walk_reduce_object_match_proof(child574, graph, runtime, locals, refs, outputs);
+    for child571 in (&value.matches).iter() {
+        walk_reduce_object_match_proof(child571, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8791,11 +8744,11 @@ pub(super) fn walk_reduce_last_step_proof(value: &crate::execute::execute_fact_s
 }
 
 pub(super) fn walk_reduce_partition_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_reduce_partition::ReducePartitionProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child575 in (&value.bounds).iter() {
-        walk_verify_fact_result(child575, graph, runtime, locals, refs, outputs);
+    for child572 in (&value.bounds).iter() {
+        walk_verify_fact_result(child572, graph, runtime, locals, refs, outputs);
     }
-    for child576 in (&value.matches).iter() {
-        walk_verify_fact_result(child576, graph, runtime, locals, refs, outputs);
+    for child573 in (&value.matches).iter() {
+        walk_verify_fact_result(child573, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8805,8 +8758,8 @@ pub(super) fn walk_reduce_pointwise_certificate(value: &crate::execute::execute_
 }
 
 pub(super) fn walk_reduce_pointwise_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_reduce_pointwise::ReducePointwiseProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child577 in (&value.matches).iter() {
-        walk_reduce_object_match_proof(child577, graph, runtime, locals, refs, outputs);
+    for child574 in (&value.matches).iter() {
+        walk_reduce_object_match_proof(child574, graph, runtime, locals, refs, outputs);
     }
     walk_reduce_pointwise_certificate(&value.certificate, graph, runtime, locals, refs, outputs);
 }
@@ -8816,14 +8769,14 @@ pub(super) fn walk_reduce_translation_proof(value: &crate::execute::execute_fact
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
     walk_obj(&value.shift, graph, runtime, locals, refs, outputs);
-    for child578 in (&value.matches).iter() {
-        walk_reduce_object_match_proof(child578, graph, runtime, locals, refs, outputs);
+    for child575 in (&value.matches).iter() {
+        walk_reduce_object_match_proof(child575, graph, runtime, locals, refs, outputs);
     }
-    for child579 in (&value.assumptions).iter() {
-        walk_fact(child579, graph, runtime, locals, refs, outputs);
+    for child576 in (&value.assumptions).iter() {
+        walk_fact(child576, graph, runtime, locals, refs, outputs);
     }
-    for child580 in (&value.function_expansions).iter() {
-        walk_anon_fn_application_body_proof(child580, graph, runtime, locals, refs, outputs);
+    for child577 in (&value.function_expansions).iter() {
+        walk_anon_fn_application_body_proof(child577, graph, runtime, locals, refs, outputs);
     }
     walk_reduce_object_match_proof(&value.pointwise, graph, runtime, locals, refs, outputs);
 }
@@ -8845,15 +8798,15 @@ pub(super) fn walk_exact_extremum_comparison(value: &crate::execute::execute_fac
 
 pub(super) fn walk_finite_set_max_selection_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_identities::FiniteSetMaxSelectionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.selected_member, graph, runtime, locals, refs, outputs);
-    for child581 in (&value.comparisons).iter() {
-        walk_exact_extremum_comparison(child581, graph, runtime, locals, refs, outputs);
+    for child578 in (&value.comparisons).iter() {
+        walk_exact_extremum_comparison(child578, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_min_selection_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_identities::FiniteSetMinSelectionBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.selected_member, graph, runtime, locals, refs, outputs);
-    for child582 in (&value.comparisons).iter() {
-        walk_exact_extremum_comparison(child582, graph, runtime, locals, refs, outputs);
+    for child579 in (&value.comparisons).iter() {
+        walk_exact_extremum_comparison(child579, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -8915,14 +8868,14 @@ pub(super) fn walk_trig_complex_identity_proof(value: &crate::execute::execute_f
     match value {
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::TanCotProduct(p0) => {
             {
-                let payload583 = p0;
-                walk_obj(&payload583.angle, graph, runtime, locals, refs, outputs);
+                let payload580 = p0;
+                walk_obj(&payload580.angle, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::TanSquareReciprocalCosine(p0) => {
             {
-                let payload584 = p0;
-                walk_obj(&payload584.angle, graph, runtime, locals, refs, outputs);
+                let payload581 = p0;
+                walk_obj(&payload581.angle, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::SinHalfPiShift(p0) => {
@@ -8986,8 +8939,8 @@ pub(super) fn walk_trig_complex_identity_proof(value: &crate::execute::execute_f
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::ComplexCoordinatesEqual { real: p0, imaginary: p1, domains: p2 } => {
             walk_equal_fact_searched_proof((p0).as_ref(), graph, runtime, locals, refs, outputs);
             walk_equal_fact_searched_proof((p1).as_ref(), graph, runtime, locals, refs, outputs);
-            for child585 in (p2).iter() {
-                walk_verify_fact_result(child585, graph, runtime, locals, refs, outputs);
+            for child582 in (p2).iter() {
+                walk_verify_fact_result(child582, graph, runtime, locals, refs, outputs);
             }
         }
     }
@@ -9039,8 +8992,8 @@ pub(super) fn walk_reduce_object_match_method(value: &crate::execute::execute_fa
             walk_equal_fact_searched_proof((p0).as_ref(), graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::reduce_rule_helper::ReduceObjectMatchMethod::ApplicationArguments(p0) => {
-            for child586 in (p0).iter() {
-                walk_reduce_object_match_proof(child586, graph, runtime, locals, refs, outputs);
+            for child583 in (p0).iter() {
+                walk_reduce_object_match_proof(child583, graph, runtime, locals, refs, outputs);
             }
         }
     }
@@ -9600,17 +9553,17 @@ pub(super) fn walk_aggregate_calculation_builtin_rule_proof(value: &crate::execu
     walk_obj(&value.left_value, graph, runtime, locals, refs, outputs);
     walk_obj(&value.rewritten_right, graph, runtime, locals, refs, outputs);
     walk_obj(&value.right_value, graph, runtime, locals, refs, outputs);
-    for child587 in (&value.cited_equal_fact_ids).iter() {
-        graph.reference_fact(child587, runtime, locals, refs, outputs);
+    for child584 in (&value.cited_equal_fact_ids).iter() {
+        graph.reference_fact(child584, runtime, locals, refs, outputs);
     }
-    for child588 in (&value.aggregate_evaluations).iter() {
-        walk_aggregate_evaluation_result(child588, graph, runtime, locals, refs, outputs);
+    for child585 in (&value.aggregate_evaluations).iter() {
+        walk_aggregate_evaluation_result(child585, graph, runtime, locals, refs, outputs);
     }
-    for child589 in (&value.function_evaluations).iter() {
-        walk_function_application_evaluation_result(child589, graph, runtime, locals, refs, outputs);
+    for child586 in (&value.function_evaluations).iter() {
+        walk_function_application_evaluation_result(child586, graph, runtime, locals, refs, outputs);
     }
-    for child590 in (&value.algo_evaluations).iter() {
-        walk_algo_application_evaluation_result(child590, graph, runtime, locals, refs, outputs);
+    for child587 in (&value.algo_evaluations).iter() {
+        walk_algo_application_evaluation_result(child587, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -9620,8 +9573,8 @@ pub(super) fn walk_equal_fact_well_defined_proof(value: &crate::execute::execute
 }
 
 pub(super) fn walk_atomic_fact_well_defined_proof(value: &crate::execute::execute_fact_stmt::AtomicFactWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child591 in (&value.well_defined_of_each_parameter).iter() {
-        walk_obj_well_defined_proof(child591, graph, runtime, locals, refs, outputs);
+    for child588 in (&value.well_defined_of_each_parameter).iter() {
+        walk_obj_well_defined_proof(child588, graph, runtime, locals, refs, outputs);
     }
     walk_predicate_signature_well_defined_proof(&value.predicate_signature, graph, runtime, locals, refs, outputs);
     walk_predicate_domain_proof(&value.predicate_domain, graph, runtime, locals, refs, outputs);
@@ -9633,8 +9586,8 @@ pub(super) fn walk_predicate_domain_proof(value: &crate::execute::execute_fact_s
             walk_atomic_except_equality_fact_search_proof_by_known_atomic_fact(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByRequirements(p0) => {
-            for child592 in (p0).iter() {
-                walk_predicate_domain_well_defined_proof(child592, graph, runtime, locals, refs, outputs);
+            for child589 in (p0).iter() {
+                walk_predicate_domain_well_defined_proof(child589, graph, runtime, locals, refs, outputs);
             }
         }
     }
@@ -9662,13 +9615,13 @@ pub(super) fn walk_verify_chain_fact_result(value: &crate::execute::execute_fact
     match value {
         crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult::Success(p0) => {
             {
-                let payload593 = p0;
-                walk_chain_fact(&payload593.fact, graph, runtime, locals, refs, outputs);
-                for child594 in (&payload593.adjacent).iter() {
-                    walk_verify_fact_result(child594, graph, runtime, locals, refs, outputs);
+                let payload590 = p0;
+                walk_chain_fact(&payload590.fact, graph, runtime, locals, refs, outputs);
+                for child591 in (&payload590.adjacent).iter() {
+                    walk_verify_fact_result(child591, graph, runtime, locals, refs, outputs);
                 }
-                if let Some(child595) = (&payload593.known_forall).as_ref() {
-                    walk_search_proof_by_known_forall_fact(child595, graph, runtime, locals, refs, outputs);
+                if let Some(child592) = (&payload590.known_forall).as_ref() {
+                    walk_search_proof_by_known_forall_fact(child592, graph, runtime, locals, refs, outputs);
                 }
             }
         }
@@ -9681,71 +9634,71 @@ pub(super) fn walk_exist_shaped_fact_search_proof_by_builtin_rule(value: &crate:
     match value {
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::BijectivePreimage(p0) => {
             {
-                let payload596 = p0;
-                walk_atomic_except_equality_fact_known_proof(&payload596.certificate, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload596.target_membership, graph, runtime, locals, refs, outputs);
+                let payload593 = p0;
+                walk_atomic_except_equality_fact_known_proof(&payload593.certificate, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload593.target_membership, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::RealLineComparisonWitness(p0) => {
             {
-                let payload597 = p0;
-                for child598 in (&payload597.requirement_facts).iter() {
-                    walk_fact(child598, graph, runtime, locals, refs, outputs);
+                let payload594 = p0;
+                for child595 in (&payload594.requirement_facts).iter() {
+                    walk_fact(child595, graph, runtime, locals, refs, outputs);
                 }
-                for child599 in (&payload597.proof_of_requirement_facts).iter() {
-                    walk_verify_fact_result(child599, graph, runtime, locals, refs, outputs);
+                for child596 in (&payload594.proof_of_requirement_facts).iter() {
+                    walk_verify_fact_result(child596, graph, runtime, locals, refs, outputs);
                 }
             }
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::EqualityWitnessFromMembership(p0) => {
             {
-                let payload600 = p0;
-                walk_verify_fact_result(&payload600.membership_proof, graph, runtime, locals, refs, outputs);
+                let payload597 = p0;
+                walk_verify_fact_result(&payload597.membership_proof, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::NonemptySetMemberWitness(p0) => {
             {
-                let payload601 = p0;
-                walk_verify_fact_result(&payload601.nonempty_proof, graph, runtime, locals, refs, outputs);
+                let payload598 = p0;
+                walk_verify_fact_result(&payload598.nonempty_proof, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::RationalPositiveDenominator(p0) => {
             {
-                let payload602 = p0;
-                walk_verify_fact_result(&payload602.rational_membership_proof, graph, runtime, locals, refs, outputs);
+                let payload599 = p0;
+                walk_verify_fact_result(&payload599.rational_membership_proof, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::RationalIntegerRatio(p0) => {
             {
-                let payload603 = p0;
-                walk_verify_fact_result(&payload603.rational_membership_proof, graph, runtime, locals, refs, outputs);
+                let payload600 = p0;
+                walk_verify_fact_result(&payload600.rational_membership_proof, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::IntegerMultipleFromZeroRemainder(p0) => {
             {
-                let payload604 = p0;
-                for child605 in (&payload604.requirement_facts).iter() {
-                    walk_fact(child605, graph, runtime, locals, refs, outputs);
+                let payload601 = p0;
+                for child602 in (&payload601.requirement_facts).iter() {
+                    walk_fact(child602, graph, runtime, locals, refs, outputs);
                 }
-                for child606 in (&payload604.proof_of_requirement_facts).iter() {
-                    walk_verify_fact_result(child606, graph, runtime, locals, refs, outputs);
+                for child603 in (&payload601.proof_of_requirement_facts).iter() {
+                    walk_verify_fact_result(child603, graph, runtime, locals, refs, outputs);
                 }
             }
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::ArchimedeanReciprocal(p0) => {
             {
-                let payload607 = p0;
-                walk_verify_fact_result(&payload607.positive_bound_proof, graph, runtime, locals, refs, outputs);
+                let payload604 = p0;
+                walk_verify_fact_result(&payload604.positive_bound_proof, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::RealDensityMidpoint(p0) => {
             {
-                let payload608 = p0;
-                for child609 in (&payload608.requirement_facts).iter() {
-                    walk_fact(child609, graph, runtime, locals, refs, outputs);
+                let payload605 = p0;
+                for child606 in (&payload605.requirement_facts).iter() {
+                    walk_fact(child606, graph, runtime, locals, refs, outputs);
                 }
-                for child610 in (&payload608.proof_of_requirement_facts).iter() {
-                    walk_verify_fact_result(child610, graph, runtime, locals, refs, outputs);
+                for child607 in (&payload605.proof_of_requirement_facts).iter() {
+                    walk_verify_fact_result(child607, graph, runtime, locals, refs, outputs);
                 }
             }
         }
@@ -9759,8 +9712,8 @@ pub(super) fn walk_exist_shaped_fact_searched_proof(value: &crate::execute::exec
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof::ByKnownExistShapedFact(p0) => {
             {
-                let payload611 = p0;
-                graph.reference_fact(&payload611.cite_fact_id, runtime, locals, refs, outputs);
+                let payload608 = p0;
+                graph.reference_fact(&payload608.cite_fact_id, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof::ByKnownForallFact(p0) => {
@@ -9803,10 +9756,10 @@ pub(super) fn walk_verify_not_exist_fact_result(value: &crate::execute::execute_
     match value {
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::VerifyNotExistFactResult::Success(p0) => {
             {
-                let payload612 = p0;
-                walk_exist_shaped_fact(&payload612.fact, graph, runtime, locals, refs, outputs);
-                walk_exist_shaped_fact_well_defined_proof(&payload612.well_defined_proof, graph, runtime, locals, refs, outputs);
-                walk_exist_shaped_fact_searched_proof(&payload612.searched_proof, graph, runtime, locals, refs, outputs);
+                let payload609 = p0;
+                walk_exist_shaped_fact(&payload609.fact, graph, runtime, locals, refs, outputs);
+                walk_exist_shaped_fact_well_defined_proof(&payload609.well_defined_proof, graph, runtime, locals, refs, outputs);
+                walk_exist_shaped_fact_searched_proof(&payload609.searched_proof, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::VerifyNotExistFactResult::Failed(_) => {
@@ -9834,11 +9787,11 @@ pub(super) fn walk_exist_shaped_fact_well_defined_proof(value: &crate::execute::
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child613 in (&value.param_type_well_defined).iter() {
-        walk_param_type_well_defined_proof(child613, graph, runtime, locals, refs, outputs);
+    for child610 in (&value.param_type_well_defined).iter() {
+        walk_param_type_well_defined_proof(child610, graph, runtime, locals, refs, outputs);
     }
-    for child614 in (&value.body).iter() {
-        walk_fact_well_defined_proof(child614, graph, runtime, locals, refs, outputs);
+    for child611 in (&value.body).iter() {
+        walk_fact_well_defined_proof(child611, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -9894,17 +9847,17 @@ pub(super) fn walk_verify_forall_fact_proof(value: &crate::execute::execute_fact
     match value {
         crate::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactProof::ByLocalIntroduction(p0) => {
             {
-                let payload615 = p0;
+                let payload612 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload615.local_env.as_ref());
+                scope_envs.push(payload612.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                walk_forall_fact(&payload615.fact, graph, runtime, locals, refs, outputs);
-                walk_introduce_typed_parameters_result(&payload615.introduced_params, graph, runtime, locals, refs, outputs);
-                for child616 in (&payload615.assumed_dom_facts).iter() {
-                    graph.collect_assumption(child616, runtime, locals, refs, outputs);
+                walk_forall_fact(&payload612.fact, graph, runtime, locals, refs, outputs);
+                walk_introduce_typed_parameters_result(&payload612.introduced_params, graph, runtime, locals, refs, outputs);
+                for child613 in (&payload612.assumed_dom_facts).iter() {
+                    graph.collect_assumption(child613, runtime, locals, refs, outputs);
                 }
-                for child617 in (&payload615.proved_then_facts).iter() {
-                    walk_prove_and_store_then_fact_result(child617, graph, runtime, locals, refs, outputs);
+                for child614 in (&payload612.proved_then_facts).iter() {
+                    walk_prove_and_store_then_fact_result(child614, graph, runtime, locals, refs, outputs);
                 }
             }
         }
@@ -9937,19 +9890,19 @@ pub(super) fn walk_forall_fact_well_defined_proof(value: &crate::execute::execut
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child618 in (&value.param_type_well_defined).iter() {
-        walk_param_type_well_defined_proof(child618, graph, runtime, locals, refs, outputs);
+    for child615 in (&value.param_type_well_defined).iter() {
+        walk_param_type_well_defined_proof(child615, graph, runtime, locals, refs, outputs);
     }
-    if let Some(child619) = (&value.auto_opened_struct_layers).as_ref() {
-        for child620 in (child619).iter() {
-            walk_release_one_struct_layer_proof(child620, graph, runtime, locals, refs, outputs);
+    if let Some(child616) = (&value.auto_opened_struct_layers).as_ref() {
+        for child617 in (child616).iter() {
+            walk_release_one_struct_layer_proof(child617, graph, runtime, locals, refs, outputs);
         }
     }
-    for child621 in (&value.dom).iter() {
-        walk_fact_well_defined_proof(child621, graph, runtime, locals, refs, outputs);
+    for child618 in (&value.dom).iter() {
+        walk_fact_well_defined_proof(child618, graph, runtime, locals, refs, outputs);
     }
-    for child622 in (&value.then).iter() {
-        walk_fact_well_defined_proof(child622, graph, runtime, locals, refs, outputs);
+    for child619 in (&value.then).iter() {
+        walk_fact_well_defined_proof(child619, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -9973,17 +9926,17 @@ pub(super) fn walk_forall_fact_with_iff_well_defined_proof(value: &crate::execut
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child623 in (&value.param_type_well_defined).iter() {
-        walk_param_type_well_defined_proof(child623, graph, runtime, locals, refs, outputs);
+    for child620 in (&value.param_type_well_defined).iter() {
+        walk_param_type_well_defined_proof(child620, graph, runtime, locals, refs, outputs);
     }
-    for child624 in (&value.dom).iter() {
-        walk_fact_well_defined_proof(child624, graph, runtime, locals, refs, outputs);
+    for child621 in (&value.dom).iter() {
+        walk_fact_well_defined_proof(child621, graph, runtime, locals, refs, outputs);
     }
-    for child625 in (&value.then).iter() {
-        walk_fact_well_defined_proof(child625, graph, runtime, locals, refs, outputs);
+    for child622 in (&value.then).iter() {
+        walk_fact_well_defined_proof(child622, graph, runtime, locals, refs, outputs);
     }
-    for child626 in (&value.iff).iter() {
-        walk_fact_well_defined_proof(child626, graph, runtime, locals, refs, outputs);
+    for child623 in (&value.iff).iter() {
+        walk_fact_well_defined_proof(child623, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10007,14 +9960,14 @@ pub(super) fn walk_not_forall_fact_well_defined_proof(value: &crate::execute::ex
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child627 in (&value.param_type_well_defined).iter() {
-        walk_param_type_well_defined_proof(child627, graph, runtime, locals, refs, outputs);
+    for child624 in (&value.param_type_well_defined).iter() {
+        walk_param_type_well_defined_proof(child624, graph, runtime, locals, refs, outputs);
     }
-    for child628 in (&value.dom).iter() {
-        walk_fact_well_defined_proof(child628, graph, runtime, locals, refs, outputs);
+    for child625 in (&value.dom).iter() {
+        walk_fact_well_defined_proof(child625, graph, runtime, locals, refs, outputs);
     }
-    for child629 in (&value.then).iter() {
-        walk_fact_well_defined_proof(child629, graph, runtime, locals, refs, outputs);
+    for child626 in (&value.then).iter() {
+        walk_fact_well_defined_proof(child626, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10058,113 +10011,113 @@ pub(super) fn walk_or_fact_search_proof_by_builtin_rule(value: &crate::execute::
         }
         crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::NaturalZeroOrAtLeastOne(p0) => {
             {
-                let payload630 = p0;
-                walk_obj(&payload630.n, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload630.n_in_n, graph, runtime, locals, refs, outputs);
+                let payload627 = p0;
+                walk_obj(&payload627.n, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload627.n_in_n, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::ComplementaryAtomic(p0) => {
             {
-                let payload631 = p0;
-                walk_atomic_fact(&payload631.left, graph, runtime, locals, refs, outputs);
-                walk_atomic_fact(&payload631.right, graph, runtime, locals, refs, outputs);
+                let payload628 = p0;
+                walk_atomic_fact(&payload628.left, graph, runtime, locals, refs, outputs);
+                walk_atomic_fact(&payload628.right, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::AbsSignSplit(p0) => {
             {
-                let payload632 = p0;
-                walk_obj(&payload632.arg, graph, runtime, locals, refs, outputs);
+                let payload629 = p0;
+                walk_obj(&payload629.arg, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::ZeroProductSplit(p0) => {
+            {
+                let payload630 = p0;
+                walk_obj(&payload630.left, graph, runtime, locals, refs, outputs);
+                walk_obj(&payload630.right, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload630.left_in_r, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload630.right_in_r, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload630.product_zero, graph, runtime, locals, refs, outputs);
+            }
+        }
+        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::LessOrGreaterEqual(p0) => {
+            {
+                let payload631 = p0;
+                walk_obj(&payload631.left, graph, runtime, locals, refs, outputs);
+                walk_obj(&payload631.right, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload631.left_in_r, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload631.right_in_r, graph, runtime, locals, refs, outputs);
+            }
+        }
+        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::GreaterOrLessEqual(p0) => {
+            {
+                let payload632 = p0;
+                walk_obj(&payload632.left, graph, runtime, locals, refs, outputs);
+                walk_obj(&payload632.right, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload632.left_in_r, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload632.right_in_r, graph, runtime, locals, refs, outputs);
+            }
+        }
+        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::WeakOrderLeOrGe(p0) => {
             {
                 let payload633 = p0;
                 walk_obj(&payload633.left, graph, runtime, locals, refs, outputs);
                 walk_obj(&payload633.right, graph, runtime, locals, refs, outputs);
                 walk_verify_fact_result(&payload633.left_in_r, graph, runtime, locals, refs, outputs);
                 walk_verify_fact_result(&payload633.right_in_r, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload633.product_zero, graph, runtime, locals, refs, outputs);
-            }
-        }
-        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::LessOrGreaterEqual(p0) => {
-            {
-                let payload634 = p0;
-                walk_obj(&payload634.left, graph, runtime, locals, refs, outputs);
-                walk_obj(&payload634.right, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload634.left_in_r, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload634.right_in_r, graph, runtime, locals, refs, outputs);
-            }
-        }
-        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::GreaterOrLessEqual(p0) => {
-            {
-                let payload635 = p0;
-                walk_obj(&payload635.left, graph, runtime, locals, refs, outputs);
-                walk_obj(&payload635.right, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload635.left_in_r, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload635.right_in_r, graph, runtime, locals, refs, outputs);
-            }
-        }
-        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::WeakOrderLeOrGe(p0) => {
-            {
-                let payload636 = p0;
-                walk_obj(&payload636.left, graph, runtime, locals, refs, outputs);
-                walk_obj(&payload636.right, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload636.left_in_r, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload636.right_in_r, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::EqualityPlusStrictCoversWeak(p0) => {
             {
-                let payload637 = p0;
-                walk_obj(&payload637.left, graph, runtime, locals, refs, outputs);
-                walk_obj(&payload637.right, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload637.weak_bound, graph, runtime, locals, refs, outputs);
+                let payload634 = p0;
+                walk_obj(&payload634.left, graph, runtime, locals, refs, outputs);
+                walk_obj(&payload634.right, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload634.weak_bound, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::CompleteResidues(p0) => {
             {
-                let payload638 = p0;
-                walk_obj(&payload638.subject, graph, runtime, locals, refs, outputs);
-                walk_obj(&payload638.modulus, graph, runtime, locals, refs, outputs);
+                let payload635 = p0;
+                walk_obj(&payload635.subject, graph, runtime, locals, refs, outputs);
+                walk_obj(&payload635.modulus, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::IntegerSuccessorTail(p0) => {
+            {
+                let payload636 = p0;
+                walk_obj(&payload636.subject, graph, runtime, locals, refs, outputs);
+                walk_obj(&payload636.base, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload636.subject_in_z, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload636.base_in_z, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload636.subject_ge_base, graph, runtime, locals, refs, outputs);
+            }
+        }
+        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::SquareSumComponentNonzero(p0) => {
+            {
+                let payload637 = p0;
+                walk_obj(&payload637.left, graph, runtime, locals, refs, outputs);
+                walk_obj(&payload637.right, graph, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload637.square_sum_nonzero, graph, runtime, locals, refs, outputs);
+            }
+        }
+        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::ClassicalImplication(p0) => {
+            {
+                let payload638 = p0;
+                let mut scope_envs = locals.to_vec();
+                scope_envs.push(payload638.local_env.as_ref());
+                let locals = scope_envs.as_slice();
+                walk_fact(&payload638.assumed_premise, graph, runtime, locals, refs, outputs);
+                walk_fact_well_defined_proof(&payload638.assumed_well_defined, graph, runtime, locals, refs, outputs);
+                graph.collect_store(&payload638.assumed_store_and_infer, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload638.conclusion_proof, graph, runtime, locals, refs, outputs);
+            }
+        }
+        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::IntegerDiscreteSplit(p0) => {
             {
                 let payload639 = p0;
                 walk_obj(&payload639.subject, graph, runtime, locals, refs, outputs);
                 walk_obj(&payload639.base, graph, runtime, locals, refs, outputs);
                 walk_verify_fact_result(&payload639.subject_in_z, graph, runtime, locals, refs, outputs);
                 walk_verify_fact_result(&payload639.base_in_z, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload639.subject_ge_base, graph, runtime, locals, refs, outputs);
-            }
-        }
-        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::SquareSumComponentNonzero(p0) => {
-            {
-                let payload640 = p0;
-                walk_obj(&payload640.left, graph, runtime, locals, refs, outputs);
-                walk_obj(&payload640.right, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload640.square_sum_nonzero, graph, runtime, locals, refs, outputs);
-            }
-        }
-        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::ClassicalImplication(p0) => {
-            {
-                let payload641 = p0;
-                let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload641.local_env.as_ref());
-                let locals = scope_envs.as_slice();
-                walk_fact(&payload641.assumed_premise, graph, runtime, locals, refs, outputs);
-                walk_fact_well_defined_proof(&payload641.assumed_well_defined, graph, runtime, locals, refs, outputs);
-                graph.collect_store(&payload641.assumed_store_and_infer, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload641.conclusion_proof, graph, runtime, locals, refs, outputs);
-            }
-        }
-        crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::IntegerDiscreteSplit(p0) => {
-            {
-                let payload642 = p0;
-                walk_obj(&payload642.subject, graph, runtime, locals, refs, outputs);
-                walk_obj(&payload642.base, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload642.subject_in_z, graph, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload642.base_in_z, graph, runtime, locals, refs, outputs);
             }
         }
     }
@@ -10178,8 +10131,8 @@ pub(super) fn walk_or_fact_search_proof_by_selected_branch(value: &crate::execut
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child643 in (&value.assumed_negated_branches).iter() {
-        walk_assume_negated_or_branch_result(child643, graph, runtime, locals, refs, outputs);
+    for child640 in (&value.assumed_negated_branches).iter() {
+        walk_assume_negated_or_branch_result(child640, graph, runtime, locals, refs, outputs);
     }
     walk_verify_fact_result(&value.selected_branch, graph, runtime, locals, refs, outputs);
 }
@@ -10218,8 +10171,8 @@ pub(super) fn walk_verify_or_fact_success(value: &crate::execute::execute_fact_s
 }
 
 pub(super) fn walk_or_fact_well_defined_proof(value: &crate::execute::execute_fact_stmt::OrFactWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child644 in (&value.branches).iter() {
-        walk_fact_well_defined_proof(child644, graph, runtime, locals, refs, outputs);
+    for child641 in (&value.branches).iter() {
+        walk_fact_well_defined_proof(child641, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10246,20 +10199,20 @@ pub(super) fn walk_verify_obj_well_defined_result(value: &crate::execute::execut
 }
 
 pub(super) fn walk_abs_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AbsObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child645 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child645).as_ref(), graph, runtime, locals, refs, outputs);
+    for child642 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child642).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child646 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child646, graph, runtime, locals, refs, outputs);
+    for child643 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child643, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_add_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AddObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child647 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child647).as_ref(), graph, runtime, locals, refs, outputs);
+    for child644 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child644).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child648 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child648, graph, runtime, locals, refs, outputs);
+    for child645 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child645, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10278,11 +10231,11 @@ pub(super) fn walk_anonymous_fn_obj_well_defined_proof(value: &crate::execute::e
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child649 in (&value.param_type_well_defined).iter() {
-        walk_obj_well_defined_proof((child649).as_ref(), graph, runtime, locals, refs, outputs);
+    for child646 in (&value.param_type_well_defined).iter() {
+        walk_obj_well_defined_proof((child646).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child650 in (&value.dom_fact_well_defined).iter() {
-        walk_fact_well_defined_proof(child650, graph, runtime, locals, refs, outputs);
+    for child647 in (&value.dom_fact_well_defined).iter() {
+        walk_fact_well_defined_proof(child647, graph, runtime, locals, refs, outputs);
     }
     walk_obj_well_defined_proof((&value.ret_set_well_defined).as_ref(), graph, runtime, locals, refs, outputs);
     walk_obj_well_defined_proof((&value.body_well_defined).as_ref(), graph, runtime, locals, refs, outputs);
@@ -10290,38 +10243,38 @@ pub(super) fn walk_anonymous_fn_obj_well_defined_proof(value: &crate::execute::e
 }
 
 pub(super) fn walk_arccos_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArccosObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child651 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child651).as_ref(), graph, runtime, locals, refs, outputs);
+    for child648 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child648).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child652 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child652, graph, runtime, locals, refs, outputs);
+    for child649 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child649, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_arccot_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArccotObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child653 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child653).as_ref(), graph, runtime, locals, refs, outputs);
+    for child650 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child650).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child654 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child654, graph, runtime, locals, refs, outputs);
+    for child651 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child651, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_arcsin_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArcsinObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child655 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child655).as_ref(), graph, runtime, locals, refs, outputs);
+    for child652 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child652).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child656 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child656, graph, runtime, locals, refs, outputs);
+    for child653 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child653, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_arctan_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ArctanObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child657 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child657).as_ref(), graph, runtime, locals, refs, outputs);
+    for child654 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child654).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child658 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child658, graph, runtime, locals, refs, outputs);
+    for child655 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child655, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10367,38 +10320,38 @@ pub(super) fn walk_arithmetic_operator_obj_well_defined_proof_by_def(value: &cra
 }
 
 pub(super) fn walk_cart_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CartObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child659 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child659).as_ref(), graph, runtime, locals, refs, outputs);
+    for child656 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child656).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child660 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child660, graph, runtime, locals, refs, outputs);
+    for child657 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child657, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_ceil_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CeilObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child661 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child661).as_ref(), graph, runtime, locals, refs, outputs);
+    for child658 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child658).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child662 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child662, graph, runtime, locals, refs, outputs);
+    for child659 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child659, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_closed_range_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ClosedRangeObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child663 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child663).as_ref(), graph, runtime, locals, refs, outputs);
+    for child660 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child660).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child664 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child664, graph, runtime, locals, refs, outputs);
+    for child661 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child661, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_complex_abs_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexAbsObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child665 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child665).as_ref(), graph, runtime, locals, refs, outputs);
+    for child662 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child662).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child666 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child666, graph, runtime, locals, refs, outputs);
+    for child663 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child663, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10417,29 +10370,29 @@ pub(super) fn walk_complex_operator_obj_well_defined_proof_by_def(value: &crate:
 }
 
 pub(super) fn walk_cos_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CosObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child667 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child667).as_ref(), graph, runtime, locals, refs, outputs);
+    for child664 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child664).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child668 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child668, graph, runtime, locals, refs, outputs);
+    for child665 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child665, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_cot_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::CotObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child669 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child669).as_ref(), graph, runtime, locals, refs, outputs);
+    for child666 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child666).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child670 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child670, graph, runtime, locals, refs, outputs);
+    for child667 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child667, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_div_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DivObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child671 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child671).as_ref(), graph, runtime, locals, refs, outputs);
+    for child668 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child668).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child672 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child672, graph, runtime, locals, refs, outputs);
+    for child669 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child669, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10461,92 +10414,92 @@ pub(super) fn walk_exp_log_operator_obj_well_defined_proof_by_def(value: &crate:
 }
 
 pub(super) fn walk_exp_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child673 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child673).as_ref(), graph, runtime, locals, refs, outputs);
+    for child670 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child670).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child674 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child674, graph, runtime, locals, refs, outputs);
+    for child671 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child671, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_factorial_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FactorialObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child675 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child675).as_ref(), graph, runtime, locals, refs, outputs);
+    for child672 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child672).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child676 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child676, graph, runtime, locals, refs, outputs);
+    for child673 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child673, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_family_intersect_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FamilyIntersectObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child677 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child677).as_ref(), graph, runtime, locals, refs, outputs);
+    for child674 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child674).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child678 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child678, graph, runtime, locals, refs, outputs);
+    for child675 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child675, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_family_union_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FamilyUnionObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child679 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child679).as_ref(), graph, runtime, locals, refs, outputs);
+    for child676 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child676).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child680 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child680, graph, runtime, locals, refs, outputs);
+    for child677 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child677, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_field_access_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FieldAccessObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child681 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child681).as_ref(), graph, runtime, locals, refs, outputs);
+    for child678 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child678).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child682 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child682, graph, runtime, locals, refs, outputs);
+    for child679 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child679, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_seq_set_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSeqSetObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child683 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child683).as_ref(), graph, runtime, locals, refs, outputs);
+    for child680 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child680).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child684 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child684, graph, runtime, locals, refs, outputs);
+    for child681 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child681, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_max_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetMaxObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child685 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child685).as_ref(), graph, runtime, locals, refs, outputs);
+    for child682 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child682).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child686 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child686, graph, runtime, locals, refs, outputs);
+    for child683 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child683, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_min_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetMinObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child687 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child687).as_ref(), graph, runtime, locals, refs, outputs);
+    for child684 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child684).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child688 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child688, graph, runtime, locals, refs, outputs);
+    for child685 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child685, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_reduce_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetReduceObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child689 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child689).as_ref(), graph, runtime, locals, refs, outputs);
+    for child686 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child686).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child690 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child690, graph, runtime, locals, refs, outputs);
+    for child687 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child687, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_finite_set_size_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetSizeObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child691 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child691).as_ref(), graph, runtime, locals, refs, outputs);
+    for child688 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child688).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child692 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child692, graph, runtime, locals, refs, outputs);
+    for child689 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child689, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10565,11 +10518,11 @@ pub(super) fn walk_finite_set_stat_obj_well_defined_proof_by_def(value: &crate::
 }
 
 pub(super) fn walk_floor_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FloorObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child693 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child693).as_ref(), graph, runtime, locals, refs, outputs);
+    for child690 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child690).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child694 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child694, graph, runtime, locals, refs, outputs);
+    for child691 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child691, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10594,26 +10547,26 @@ pub(super) fn walk_fn_obj_domain_fn_set_evidence(value: &crate::execute::execute
 }
 
 pub(super) fn walk_fn_obj_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    if let Some(child695) = (&value.domain_fn_set).as_ref() {
-        walk_fn_obj_domain_fn_set_evidence(child695, graph, runtime, locals, refs, outputs);
+    if let Some(child692) = (&value.domain_fn_set).as_ref() {
+        walk_fn_obj_domain_fn_set_evidence(child692, graph, runtime, locals, refs, outputs);
     }
-    for child696 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child696).as_ref(), graph, runtime, locals, refs, outputs);
+    for child693 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child693).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child697 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child697, graph, runtime, locals, refs, outputs);
+    for child694 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child694, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_fn_range_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnRangeObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child698 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child698).as_ref(), graph, runtime, locals, refs, outputs);
+    for child695 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child695).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child699 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child699, graph, runtime, locals, refs, outputs);
+    for child696 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child696, graph, runtime, locals, refs, outputs);
     }
-    for child700 in (&value.function_domains).iter() {
-        walk_complete_function_domain_proof(child700, graph, runtime, locals, refs, outputs);
+    for child697 in (&value.function_domains).iter() {
+        walk_complete_function_domain_proof(child697, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10621,11 +10574,11 @@ pub(super) fn walk_fn_set_obj_well_defined_proof(value: &crate::execute::execute
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child701 in (&value.param_type_well_defined).iter() {
-        walk_obj_well_defined_proof((child701).as_ref(), graph, runtime, locals, refs, outputs);
+    for child698 in (&value.param_type_well_defined).iter() {
+        walk_obj_well_defined_proof((child698).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child702 in (&value.dom_fact_well_defined).iter() {
-        walk_fact_well_defined_proof(child702, graph, runtime, locals, refs, outputs);
+    for child699 in (&value.dom_fact_well_defined).iter() {
+        walk_fact_well_defined_proof(child699, graph, runtime, locals, refs, outputs);
     }
     walk_obj_well_defined_proof((&value.ret_set_well_defined).as_ref(), graph, runtime, locals, refs, outputs);
 }
@@ -10645,56 +10598,56 @@ pub(super) fn walk_function_space_obj_well_defined_proof_by_def(value: &crate::e
 }
 
 pub(super) fn walk_gcd_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::GcdObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child703 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child703).as_ref(), graph, runtime, locals, refs, outputs);
+    for child700 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child700).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child704 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child704, graph, runtime, locals, refs, outputs);
+    for child701 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child701, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_imaginary_part_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ImaginaryPartObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child705 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child705).as_ref(), graph, runtime, locals, refs, outputs);
+    for child702 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child702).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child706 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child706, graph, runtime, locals, refs, outputs);
+    for child703 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child703, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_index_cart_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexCartObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child707 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child707).as_ref(), graph, runtime, locals, refs, outputs);
+    for child704 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child704).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child708 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child708, graph, runtime, locals, refs, outputs);
+    for child705 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child705, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_index_intersect_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexIntersectObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child709 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child709).as_ref(), graph, runtime, locals, refs, outputs);
+    for child706 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child706).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child710 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child710, graph, runtime, locals, refs, outputs);
+    for child707 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child707, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_index_union_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IndexUnionObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child711 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child711).as_ref(), graph, runtime, locals, refs, outputs);
+    for child708 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child708).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child712 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child712, graph, runtime, locals, refs, outputs);
+    for child709 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child709, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_instantiated_template_obj_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::InstantiatedTemplateObjObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child713 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child713).as_ref(), graph, runtime, locals, refs, outputs);
+    for child710 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child710).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child714 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child714, graph, runtime, locals, refs, outputs);
+    for child711 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child711, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10719,20 +10672,20 @@ pub(super) fn walk_integer_operator_obj_well_defined_proof_by_def(value: &crate:
 }
 
 pub(super) fn walk_intersect_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntersectObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child715 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child715).as_ref(), graph, runtime, locals, refs, outputs);
+    for child712 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child712).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child716 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child716, graph, runtime, locals, refs, outputs);
+    for child713 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child713, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_interval_obj_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntervalObjObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child717 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child717).as_ref(), graph, runtime, locals, refs, outputs);
+    for child714 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child714).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child718 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child718, graph, runtime, locals, refs, outputs);
+    for child715 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child715, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10760,83 +10713,83 @@ pub(super) fn walk_iterated_operator_obj_well_defined_proof_by_def(value: &crate
 }
 
 pub(super) fn walk_lcm_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LcmObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child719 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child719).as_ref(), graph, runtime, locals, refs, outputs);
+    for child716 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child716).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child720 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child720, graph, runtime, locals, refs, outputs);
+    for child717 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child717, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_list_set_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ListSetObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child721 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child721).as_ref(), graph, runtime, locals, refs, outputs);
+    for child718 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child718).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child722 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child722, graph, runtime, locals, refs, outputs);
+    for child719 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child719, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_ln_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LnObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child723 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child723).as_ref(), graph, runtime, locals, refs, outputs);
+    for child720 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child720).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child724 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child724, graph, runtime, locals, refs, outputs);
+    for child721 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child721, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_log_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LogObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child725 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child725).as_ref(), graph, runtime, locals, refs, outputs);
+    for child722 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child722).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child726 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child726, graph, runtime, locals, refs, outputs);
+    for child723 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child723, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_max_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MaxObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child727 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child727).as_ref(), graph, runtime, locals, refs, outputs);
+    for child724 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child724).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child728 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child728, graph, runtime, locals, refs, outputs);
+    for child725 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child725, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_min_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MinObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child729 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child729).as_ref(), graph, runtime, locals, refs, outputs);
+    for child726 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child726).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child730 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child730, graph, runtime, locals, refs, outputs);
+    for child727 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child727, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_mod_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ModObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child731 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child731).as_ref(), graph, runtime, locals, refs, outputs);
+    for child728 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child728).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child732 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child732, graph, runtime, locals, refs, outputs);
+    for child729 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child729, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_mul_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MulObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child733 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child733).as_ref(), graph, runtime, locals, refs, outputs);
+    for child730 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child730).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child734 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child734, graph, runtime, locals, refs, outputs);
+    for child731 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child731, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_neg_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::NegObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child735 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child735).as_ref(), graph, runtime, locals, refs, outputs);
+    for child732 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child732).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child736 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child736, graph, runtime, locals, refs, outputs);
+    for child733 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child733, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10894,47 +10847,47 @@ pub(super) fn walk_obj_well_defined_proof_by_def(value: &crate::execute::execute
 }
 
 pub(super) fn walk_one_side_infinity_interval_obj_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::OneSideInfinityIntervalObjObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child737 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child737).as_ref(), graph, runtime, locals, refs, outputs);
+    for child734 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child734).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child738 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child738, graph, runtime, locals, refs, outputs);
+    for child735 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child735, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_pow_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PowObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child739 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child739).as_ref(), graph, runtime, locals, refs, outputs);
+    for child736 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child736).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child740 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child740, graph, runtime, locals, refs, outputs);
+    for child737 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child737, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_power_set_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::PowerSetObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child741 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child741).as_ref(), graph, runtime, locals, refs, outputs);
+    for child738 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child738).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child742 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child742, graph, runtime, locals, refs, outputs);
+    for child739 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child739, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_product_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child743 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child743).as_ref(), graph, runtime, locals, refs, outputs);
+    for child740 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child740).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child744 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child744, graph, runtime, locals, refs, outputs);
+    for child741 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child741, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_product_of_finite_set_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductOfFiniteSetObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child745 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child745).as_ref(), graph, runtime, locals, refs, outputs);
+    for child742 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child742).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child746 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child746, graph, runtime, locals, refs, outputs);
+    for child743 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child743, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10950,47 +10903,47 @@ pub(super) fn walk_product_shape_obj_well_defined_proof_by_def(value: &crate::ex
 }
 
 pub(super) fn walk_quot_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::QuotObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child747 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child747).as_ref(), graph, runtime, locals, refs, outputs);
+    for child744 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child744).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child748 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child748, graph, runtime, locals, refs, outputs);
+    for child745 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child745, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_range_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::RangeObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child749 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child749).as_ref(), graph, runtime, locals, refs, outputs);
+    for child746 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child746).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child750 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child750, graph, runtime, locals, refs, outputs);
+    for child747 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child747, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_real_part_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::RealPartObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child751 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child751).as_ref(), graph, runtime, locals, refs, outputs);
+    for child748 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child748).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child752 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child752, graph, runtime, locals, refs, outputs);
+    for child749 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child749, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_reduce_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ReduceObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child753 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child753).as_ref(), graph, runtime, locals, refs, outputs);
+    for child750 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child750).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child754 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child754, graph, runtime, locals, refs, outputs);
+    for child751 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child751, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_seq_set_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SeqSetObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child755 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child755).as_ref(), graph, runtime, locals, refs, outputs);
+    for child752 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child752).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child756 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child756, graph, runtime, locals, refs, outputs);
+    for child753 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child753, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -10999,8 +10952,8 @@ pub(super) fn walk_set_builder_obj_well_defined_proof(value: &crate::execute::ex
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
     walk_obj_well_defined_proof((&value.param_set_well_defined).as_ref(), graph, runtime, locals, refs, outputs);
-    for child757 in (&value.fact_well_defined).iter() {
-        walk_fact_well_defined_proof(child757, graph, runtime, locals, refs, outputs);
+    for child754 in (&value.fact_well_defined).iter() {
+        walk_fact_well_defined_proof(child754, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -11034,11 +10987,11 @@ pub(super) fn walk_set_former_obj_well_defined_proof_by_def(value: &crate::execu
 }
 
 pub(super) fn walk_set_minus_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetMinusObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child758 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child758).as_ref(), graph, runtime, locals, refs, outputs);
+    for child755 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child755).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child759 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child759, graph, runtime, locals, refs, outputs);
+    for child756 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child756, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -11075,38 +11028,38 @@ pub(super) fn walk_set_operator_obj_well_defined_proof_by_def(value: &crate::exe
 }
 
 pub(super) fn walk_sign_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SignObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child760 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child760).as_ref(), graph, runtime, locals, refs, outputs);
+    for child757 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child757).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child761 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child761, graph, runtime, locals, refs, outputs);
+    for child758 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child758, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sin_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SinObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child762 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child762).as_ref(), graph, runtime, locals, refs, outputs);
+    for child759 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child759).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child763 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child763, graph, runtime, locals, refs, outputs);
+    for child760 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child760, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sqrt_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SqrtObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child764 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child764).as_ref(), graph, runtime, locals, refs, outputs);
+    for child761 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child761).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child765 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child765, graph, runtime, locals, refs, outputs);
+    for child762 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child762, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_struct_obj_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructObjObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child766 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child766).as_ref(), graph, runtime, locals, refs, outputs);
+    for child763 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child763).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child767 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child767, graph, runtime, locals, refs, outputs);
+    for child764 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child764, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -11122,38 +11075,38 @@ pub(super) fn walk_structish_obj_well_defined_proof_by_def(value: &crate::execut
 }
 
 pub(super) fn walk_sub_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SubObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child768 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child768).as_ref(), graph, runtime, locals, refs, outputs);
+    for child765 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child765).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child769 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child769, graph, runtime, locals, refs, outputs);
+    for child766 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child766, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sum_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child770 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child770).as_ref(), graph, runtime, locals, refs, outputs);
+    for child767 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child767).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child771 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child771, graph, runtime, locals, refs, outputs);
+    for child768 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child768, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_sum_of_finite_set_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SumOfFiniteSetObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child772 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child772).as_ref(), graph, runtime, locals, refs, outputs);
+    for child769 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child769).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child773 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child773, graph, runtime, locals, refs, outputs);
+    for child770 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child770, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_tan_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TanObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child774 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child774).as_ref(), graph, runtime, locals, refs, outputs);
+    for child771 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child771).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child775 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child775, graph, runtime, locals, refs, outputs);
+    for child772 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child772, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -11187,20 +11140,20 @@ pub(super) fn walk_trig_operator_obj_well_defined_proof_by_def(value: &crate::ex
 }
 
 pub(super) fn walk_tuple_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TupleObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child776 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child776).as_ref(), graph, runtime, locals, refs, outputs);
+    for child773 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child773).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child777 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child777, graph, runtime, locals, refs, outputs);
+    for child774 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child774, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_union_obj_well_defined_proof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::UnionObjWellDefinedProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child778 in (&value.child_obj_well_defined).iter() {
-        walk_obj_well_defined_proof((child778).as_ref(), graph, runtime, locals, refs, outputs);
+    for child775 in (&value.child_obj_well_defined).iter() {
+        walk_obj_well_defined_proof((child775).as_ref(), graph, runtime, locals, refs, outputs);
     }
-    for child779 in (&value.requirement_fact_verified).iter() {
-        walk_verify_fact_result(child779, graph, runtime, locals, refs, outputs);
+    for child776 in (&value.requirement_fact_verified).iter() {
+        walk_verify_fact_result(child776, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -11213,13 +11166,13 @@ pub(super) fn walk_fact_well_defined_proof(value: &crate::execute::execute_fact_
             walk_atomic_fact_well_defined_proof(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::FactWellDefinedProof::AndFact { components: p0 } => {
-            for child780 in (p0).iter() {
-                walk_atomic_fact_well_defined_proof(child780, graph, runtime, locals, refs, outputs);
+            for child777 in (p0).iter() {
+                walk_atomic_fact_well_defined_proof(child777, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::FactWellDefinedProof::ChainFact { adjacent: p0 } => {
-            for child781 in (p0).iter() {
-                walk_atomic_fact_well_defined_proof(child781, graph, runtime, locals, refs, outputs);
+            for child778 in (p0).iter() {
+                walk_atomic_fact_well_defined_proof(child778, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_fact_stmt::FactWellDefinedProof::OrFact(p0) => {
@@ -11263,7 +11216,7 @@ pub(super) fn walk_exec_have_by_fn_preimage_stmt_result(value: &crate::execute::
 pub(super) fn walk_exec_have_by_fn_preimage_stmt_success_result(value: &crate::execute::ExecHaveByFnPreimageStmtSuccessResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_have_by_preimage_stmt(&value.statement, graph, runtime, locals, refs, outputs);
     walk_verify_fact_result(&value.source_membership, graph, runtime, locals, refs, outputs);
-    walk_store_have_obj_and_infer_result(&value.store_and_infer_result, graph, runtime, locals, refs, outputs);
+    graph.collect_stored_ids(&(&value.store_and_infer_result).stored_fact_ids, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_exec_have_by_replacement_axiom_stmt_result(value: &crate::execute::ExecHaveByReplacementAxiomStmtResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
@@ -11279,8 +11232,8 @@ pub(super) fn walk_exec_have_by_replacement_axiom_stmt_result(value: &crate::exe
 pub(super) fn walk_exec_have_by_replacement_axiom_stmt_success_result(value: &crate::execute::ExecHaveByReplacementAxiomStmtSuccessResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_have_by_replacement_axiom_stmt(&value.statement, graph, runtime, locals, refs, outputs);
     walk_verify_obj_well_defined_result(&value.source_wd, graph, runtime, locals, refs, outputs);
-    for child782 in (&value.stored_fact_ids).iter() {
-        graph.reference_fact(child782, runtime, locals, refs, outputs);
+    for child779 in (&value.stored_fact_ids).iter() {
+        graph.reference_fact(child779, runtime, locals, refs, outputs);
     }
 }
 
@@ -11301,9 +11254,7 @@ pub(super) fn walk_exec_have_fn_by_forall_exist_unique_stmt_success_result(value
     graph.reference_fact(&value.membership_fact_id, runtime, locals, refs, outputs);
     graph.reference_fact(&value.property_forall_fact_id, runtime, locals, refs, outputs);
     graph.reference_fact(&value.uniqueness_forall_fact_id, runtime, locals, refs, outputs);
-    for child783 in (&value.stored_fact_ids).iter() {
-        graph.reference_fact(child783, runtime, locals, refs, outputs);
-    }
+    graph.collect_stored_ids(&value.stored_fact_ids, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_exec_have_fn_by_induc_stmt_result(value: &crate::execute::ExecHaveFnByInducStmtResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
@@ -11343,24 +11294,24 @@ pub(super) fn walk_induc_case_body_success(value: &crate::execute::InducCaseBody
 
 pub(super) fn walk_induc_case_list_success(value: &crate::execute::InducCaseListSuccess, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_verify_fact_result(&value.coverage, graph, runtime, locals, refs, outputs);
-    for child784 in (&value.disjoint).iter() {
+    for child780 in (&value.disjoint).iter() {
         {
-            let payload785 = child784;
+            let payload781 = child780;
             let mut scope_envs = locals.to_vec();
-            scope_envs.push(payload785.local_env.as_ref());
+            scope_envs.push(payload781.local_env.as_ref());
             let locals = scope_envs.as_slice();
-            graph.collect_store(&payload785.assumption_stored, runtime, locals, refs, outputs);
-            walk_verify_fact_result(&payload785.negated_component, graph, runtime, locals, refs, outputs);
+            graph.collect_store(&payload781.assumption_stored, runtime, locals, refs, outputs);
+            walk_verify_fact_result(&payload781.negated_component, graph, runtime, locals, refs, outputs);
         }
     }
-    for child786 in (&value.cases).iter() {
+    for child782 in (&value.cases).iter() {
         {
-            let payload787 = child786;
+            let payload783 = child782;
             let mut scope_envs = locals.to_vec();
-            scope_envs.push(payload787.local_env.as_ref());
+            scope_envs.push(payload783.local_env.as_ref());
             let locals = scope_envs.as_slice();
-            graph.collect_store(&payload787.assumption_stored, runtime, locals, refs, outputs);
-            walk_induc_case_body_success(&payload787.body, graph, runtime, locals, refs, outputs);
+            graph.collect_store(&payload783.assumption_stored, runtime, locals, refs, outputs);
+            walk_induc_case_body_success(&payload783.body, graph, runtime, locals, refs, outputs);
         }
     }
 }
@@ -11379,20 +11330,20 @@ pub(super) fn walk_exec_have_fn_equal_case_by_case_stmt_success_result(value: &c
     walk_have_fn_equal_case_by_case_stmt(&value.statement, graph, runtime, locals, refs, outputs);
     walk_verify_obj_well_defined_result(&value.fn_set_well_defined, graph, runtime, locals, refs, outputs);
     {
-        let payload788 = &value.coverage;
+        let payload784 = &value.coverage;
         let mut scope_envs = locals.to_vec();
-        scope_envs.push(payload788.local_env.as_ref());
+        scope_envs.push(payload784.local_env.as_ref());
         let locals = scope_envs.as_slice();
-        walk_verify_fact_result(&payload788.coverage_check, graph, runtime, locals, refs, outputs);
+        walk_verify_fact_result(&payload784.coverage_check, graph, runtime, locals, refs, outputs);
     }
-    for child789 in (&value.case_return_checks).iter() {
+    for child785 in (&value.case_return_checks).iter() {
         {
-            let payload790 = child789;
+            let payload786 = child785;
             let mut scope_envs = locals.to_vec();
-            scope_envs.push(payload790.local_env.as_ref());
+            scope_envs.push(payload786.local_env.as_ref());
             let locals = scope_envs.as_slice();
-            walk_verify_obj_well_defined_result(&payload790.body_well_defined, graph, runtime, locals, refs, outputs);
-            walk_verify_fact_result(&payload790.body_in_ret_set, graph, runtime, locals, refs, outputs);
+            walk_verify_obj_well_defined_result(&payload786.body_well_defined, graph, runtime, locals, refs, outputs);
+            walk_verify_fact_result(&payload786.body_in_ret_set, graph, runtime, locals, refs, outputs);
         }
     }
     walk_store_have_fn_case_by_case_and_infer_result(&value.store_and_infer_result, graph, runtime, locals, refs, outputs);
@@ -11400,12 +11351,10 @@ pub(super) fn walk_exec_have_fn_equal_case_by_case_stmt_success_result(value: &c
 
 pub(super) fn walk_store_have_fn_case_by_case_and_infer_result(value: &crate::execute::StoreHaveFnCaseByCaseAndInferResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.membership_fact_id, runtime, locals, refs, outputs);
-    for child791 in (&value.case_defining_fact_ids).iter() {
-        graph.reference_fact(child791, runtime, locals, refs, outputs);
+    for child787 in (&value.case_defining_fact_ids).iter() {
+        graph.reference_fact(child787, runtime, locals, refs, outputs);
     }
-    for child792 in (&value.stored_fact_ids).iter() {
-        graph.reference_fact(child792, runtime, locals, refs, outputs);
-    }
+    graph.collect_stored_ids(&value.stored_fact_ids, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_exec_have_fn_equal_stmt_result(value: &crate::execute::ExecHaveFnEqualStmtResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
@@ -11428,9 +11377,7 @@ pub(super) fn walk_exec_have_fn_equal_stmt_success_result(value: &crate::execute
 pub(super) fn walk_store_have_fn_equal_and_infer_result(value: &crate::execute::StoreHaveFnEqualAndInferResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.membership_fact_id, runtime, locals, refs, outputs);
     graph.reference_fact(&value.defining_equal_fact_id, runtime, locals, refs, outputs);
-    for child793 in (&value.stored_fact_ids).iter() {
-        graph.reference_fact(child793, runtime, locals, refs, outputs);
-    }
+    graph.collect_stored_ids(&value.stored_fact_ids, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_exec_have_obj_by_exist_facts_stmt_result(value: &crate::execute::ExecHaveObjByExistFactsStmtResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
@@ -11446,7 +11393,7 @@ pub(super) fn walk_exec_have_obj_by_exist_facts_stmt_result(value: &crate::execu
 pub(super) fn walk_exec_have_obj_by_exist_facts_stmt_success_result(value: &crate::execute::ExecHaveObjByExistFactsStmtSuccessResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_have_obj_by_exist_facts_stmt(&value.statement, graph, runtime, locals, refs, outputs);
     walk_verify_plain_exist_fact_success(&value.verify_exist, graph, runtime, locals, refs, outputs);
-    walk_store_have_obj_and_infer_result(&value.store_and_infer_result, graph, runtime, locals, refs, outputs);
+    graph.collect_stored_ids(&(&value.store_and_infer_result).stored_fact_ids, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_exec_have_obj_equal_stmt_result(value: &crate::execute::ExecHaveObjEqualStmtResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
@@ -11465,16 +11412,16 @@ pub(super) fn walk_exec_have_obj_equal_stmt_success_result(value: &crate::execut
     let locals = scope_envs.as_slice();
     walk_have_obj_equal_stmt(&value.statement, graph, runtime, locals, refs, outputs);
     walk_introduce_typed_parameters_result(&value.type_preflight, graph, runtime, locals, refs, outputs);
-    for child794 in (&value.equal_to_well_defined).iter() {
-        walk_verify_obj_well_defined_result(child794, graph, runtime, locals, refs, outputs);
+    for child788 in (&value.equal_to_well_defined).iter() {
+        walk_verify_obj_well_defined_result(child788, graph, runtime, locals, refs, outputs);
     }
-    for child795 in (&value.membership_checks).iter() {
-        walk_verify_fact_result(child795, graph, runtime, locals, refs, outputs);
+    for child789 in (&value.membership_checks).iter() {
+        walk_verify_fact_result(child789, graph, runtime, locals, refs, outputs);
     }
-    walk_store_have_obj_and_infer_result(&value.store_and_infer_result, graph, runtime, locals, refs, outputs);
-    if let Some(child796) = (&value.auto_opened_struct_layers).as_ref() {
-        for child797 in (child796).iter() {
-            walk_release_one_struct_layer_proof(child797, graph, runtime, locals, refs, outputs);
+    graph.collect_stored_ids(&(&value.store_and_infer_result).stored_fact_ids, runtime, locals, refs, outputs);
+    if let Some(child790) = (&value.auto_opened_struct_layers).as_ref() {
+        for child791 in (child790).iter() {
+            walk_release_one_struct_layer_proof(child791, graph, runtime, locals, refs, outputs);
         }
     }
 }
@@ -11491,25 +11438,19 @@ pub(super) fn walk_exec_have_obj_in_nonempty_set_stmt_result(value: &crate::exec
 
 pub(super) fn walk_exec_have_obj_in_nonempty_set_stmt_success_result(value: &crate::execute::ExecHaveObjInNonemptySetStmtSuccessResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_have_obj_in_nonempty_set_or_param_type_stmt(&value.statement, graph, runtime, locals, refs, outputs);
-    for child798 in (&value.groups).iter() {
+    for child792 in (&value.groups).iter() {
         {
-            let payload799 = child798;
-            walk_param_type_well_defined_proof(&payload799.param_type_well_defined, graph, runtime, locals, refs, outputs);
-            walk_param_type_fact_check_result(&payload799.nonempty_check, graph, runtime, locals, refs, outputs);
-            walk_store_have_obj_and_infer_result(&payload799.defined_params, graph, runtime, locals, refs, outputs);
+            let payload793 = child792;
+            walk_param_type_well_defined_proof(&payload793.param_type_well_defined, graph, runtime, locals, refs, outputs);
+            walk_param_type_fact_check_result(&payload793.nonempty_check, graph, runtime, locals, refs, outputs);
+            graph.collect_bound_parameters(&payload793.defined_params.stored_fact_ids, runtime, locals);
         }
     }
-    walk_store_have_obj_and_infer_result(&value.store_and_infer_result, graph, runtime, locals, refs, outputs);
-    if let Some(child800) = (&value.auto_opened_struct_layers).as_ref() {
-        for child801 in (child800).iter() {
-            walk_release_one_struct_layer_proof(child801, graph, runtime, locals, refs, outputs);
+    graph.collect_stored_ids(&(&value.store_and_infer_result).stored_fact_ids, runtime, locals, refs, outputs);
+    if let Some(child794) = (&value.auto_opened_struct_layers).as_ref() {
+        for child795 in (child794).iter() {
+            walk_release_one_struct_layer_proof(child795, graph, runtime, locals, refs, outputs);
         }
-    }
-}
-
-pub(super) fn walk_store_have_obj_and_infer_result(value: &crate::execute::StoreHaveObjAndInferResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child802 in (&value.stored_fact_ids).iter() {
-        graph.reference_fact(child802, runtime, locals, refs, outputs);
     }
 }
 
@@ -11526,9 +11467,7 @@ pub(super) fn walk_exec_let_obj_stmt_result(value: &crate::execute::ExecLetObjSt
 pub(super) fn walk_exec_let_obj_stmt_success_result(value: &crate::execute::ExecLetObjStmtSuccessResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_let_obj_stmt(&value.statement, graph, runtime, locals, refs, outputs);
     walk_verify_obj_well_defined_result(&value.value_well_defined, graph, runtime, locals, refs, outputs);
-    for child803 in (&value.stored_fact_ids).iter() {
-        graph.reference_fact(child803, runtime, locals, refs, outputs);
-    }
+    graph.collect_stored_ids(&value.stored_fact_ids, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_exec_obtain_obj_from_atomic_fact_stmt_result(value: &crate::execute::ExecObtainObjFromAtomicFactStmtResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
@@ -11545,7 +11484,7 @@ pub(super) fn walk_exec_obtain_obj_from_atomic_fact_stmt_success_result(value: &
     walk_obtain_obj_from_atomic_fact(&value.statement, graph, runtime, locals, refs, outputs);
     walk_verify_fact_result(&value.verify_atomic, graph, runtime, locals, refs, outputs);
     walk_exist_shaped_fact(&value.projected_exist, graph, runtime, locals, refs, outputs);
-    walk_store_have_obj_and_infer_result(&value.store_and_infer_result, graph, runtime, locals, refs, outputs);
+    graph.collect_stored_ids(&(&value.store_and_infer_result).stored_fact_ids, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_exec_obtain_obj_from_exist_fact_stmt_result(value: &crate::execute::ExecObtainObjFromExistFactStmtResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
@@ -11561,7 +11500,7 @@ pub(super) fn walk_exec_obtain_obj_from_exist_fact_stmt_result(value: &crate::ex
 pub(super) fn walk_exec_obtain_obj_from_exist_fact_stmt_success_result(value: &crate::execute::ExecObtainObjFromExistFactStmtSuccessResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obtain_obj_from_exist_fact(&value.statement, graph, runtime, locals, refs, outputs);
     walk_obtain_exist_verify_success(&value.verify_exist, graph, runtime, locals, refs, outputs);
-    walk_store_have_obj_and_infer_result(&value.store_and_infer_result, graph, runtime, locals, refs, outputs);
+    graph.collect_stored_ids(&(&value.store_and_infer_result).stored_fact_ids, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_obtain_exist_verify_success(value: &crate::execute::ObtainExistVerifySuccess, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
@@ -11590,11 +11529,11 @@ pub(super) fn walk_exec_claim_stmt_success(value: &crate::execute::execute_proof
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
     walk_verify_fact_well_defined_result(&value.goal_wd, graph, runtime, locals, refs, outputs);
-    for child804 in (&value.proof_steps).iter() {
-        graph.collect_statement(child804, runtime, locals);
+    for child796 in (&value.proof_steps).iter() {
+        graph.collect_statement(child796, runtime, locals);
     }
-    for child805 in (&value.conclusion_proofs).iter() {
-        walk_verify_fact_result(child805, graph, runtime, locals, refs, outputs);
+    for child797 in (&value.conclusion_proofs).iter() {
+        walk_verify_fact_result(child797, graph, runtime, locals, refs, outputs);
     }
     graph.collect_store(&value.stored, runtime, locals, refs, outputs);
 }
@@ -11624,8 +11563,8 @@ pub(super) fn walk_exec_sketch_stmt_success(value: &crate::execute::execute_proo
     let mut scope_envs = locals.to_vec();
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
-    for child806 in (&value.proof_steps).iter() {
-        graph.collect_statement(child806, runtime, locals);
+    for child798 in (&value.proof_steps).iter() {
+        graph.collect_statement(child798, runtime, locals);
     }
 }
 
@@ -11633,12 +11572,12 @@ pub(super) fn walk_exec_register_reflexive_prop_stmt_result(value: &crate::execu
     match value {
         crate::execute::execute_register_stmt::ExecRegisterReflexivePropStmtResult::Success(p0) => {
             {
-                let payload807 = p0;
+                let payload799 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload807.local_env.as_ref());
+                scope_envs.push(payload799.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                graph.reference_name(&payload807.prop, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload807.forall_proof, graph, runtime, locals, refs, outputs);
+                graph.reference_name(&payload799.prop, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload799.forall_proof, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_register_stmt::ExecRegisterReflexivePropStmtResult::Failed(_) => {
@@ -11664,12 +11603,12 @@ pub(super) fn walk_exec_register_symmetric_prop_stmt_result(value: &crate::execu
     match value {
         crate::execute::execute_register_stmt::ExecRegisterSymmetricPropStmtResult::Success(p0) => {
             {
-                let payload808 = p0;
+                let payload800 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload808.local_env.as_ref());
+                scope_envs.push(payload800.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                graph.reference_name(&payload808.prop, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload808.forall_proof, graph, runtime, locals, refs, outputs);
+                graph.reference_name(&payload800.prop, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload800.forall_proof, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_register_stmt::ExecRegisterSymmetricPropStmtResult::Failed(_) => {
@@ -11681,12 +11620,12 @@ pub(super) fn walk_exec_register_transitive_prop_stmt_result(value: &crate::exec
     match value {
         crate::execute::execute_register_stmt::ExecRegisterTransitivePropStmtResult::Success(p0) => {
             {
-                let payload809 = p0;
+                let payload801 = p0;
                 let mut scope_envs = locals.to_vec();
-                scope_envs.push(payload809.local_env.as_ref());
+                scope_envs.push(payload801.local_env.as_ref());
                 let locals = scope_envs.as_slice();
-                graph.reference_name(&payload809.prop, runtime, locals, refs, outputs);
-                walk_verify_fact_result(&payload809.forall_proof, graph, runtime, locals, refs, outputs);
+                graph.reference_name(&payload801.prop, runtime, locals, refs, outputs);
+                walk_verify_fact_result(&payload801.forall_proof, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_register_stmt::ExecRegisterTransitivePropStmtResult::Failed(_) => {
@@ -11724,8 +11663,8 @@ pub(super) fn walk_exec_release_obj_def_stmt_success(value: &crate::execute::exe
     walk_release_obj_def_stmt(&value.statement, graph, runtime, locals, refs, outputs);
     walk_stored_identifier_definition(&value.looked_up, graph, runtime, locals, refs, outputs);
     walk_release_obj_def_by_kind(&value.released, graph, runtime, locals, refs, outputs);
-    for child810 in (&value.store_and_infer).iter() {
-        graph.collect_store(child810, runtime, locals, refs, outputs);
+    for child802 in (&value.store_and_infer).iter() {
+        graph.collect_store(child802, runtime, locals, refs, outputs);
     }
 }
 
@@ -11743,14 +11682,14 @@ pub(super) fn walk_release_obj_def_by_kind(value: &crate::execute::execute_relea
         }
         crate::execute::execute_release_obj_def_stmt::ReleaseObjDefByKind::HaveObjByExistFacts { type_fact: p0, body_facts: p1 } => {
             walk_fact(p0, graph, runtime, locals, refs, outputs);
-            for child811 in (p1).iter() {
-                walk_fact(child811, graph, runtime, locals, refs, outputs);
+            for child803 in (p1).iter() {
+                walk_fact(child803, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_release_obj_def_stmt::ReleaseObjDefByKind::TrustHave { type_fact: p0, body_facts: p1 } => {
             walk_fact(p0, graph, runtime, locals, refs, outputs);
-            for child812 in (p1).iter() {
-                walk_fact(child812, graph, runtime, locals, refs, outputs);
+            for child804 in (p1).iter() {
+                walk_fact(child804, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_release_obj_def_stmt::ReleaseObjDefByKind::HaveByReplacementAxiom { type_fact: p0, intro: p1, elim: p2 } => {
@@ -11764,8 +11703,8 @@ pub(super) fn walk_release_obj_def_by_kind(value: &crate::execute::execute_relea
         }
         crate::execute::execute_release_obj_def_stmt::ReleaseObjDefByKind::HaveFnEqualCaseByCase { membership: p0, case_foralls: p1 } => {
             walk_fact(p0, graph, runtime, locals, refs, outputs);
-            for child813 in (p1).iter() {
-                walk_fact(child813, graph, runtime, locals, refs, outputs);
+            for child805 in (p1).iter() {
+                walk_fact(child805, graph, runtime, locals, refs, outputs);
             }
         }
         crate::execute::execute_release_obj_def_stmt::ReleaseObjDefByKind::HaveFnByForallExistUnique { membership: p0, property_forall: p1, uniqueness_forall: p2 } => {
@@ -11775,8 +11714,8 @@ pub(super) fn walk_release_obj_def_by_kind(value: &crate::execute::execute_relea
         }
         crate::execute::execute_release_obj_def_stmt::ReleaseObjDefByKind::HaveFnByInduc { membership: p0, case_foralls: p1 } => {
             walk_fact(p0, graph, runtime, locals, refs, outputs);
-            for child814 in (p1).iter() {
-                walk_fact(child814, graph, runtime, locals, refs, outputs);
+            for child806 in (p1).iter() {
+                walk_fact(child806, graph, runtime, locals, refs, outputs);
             }
         }
     }
@@ -11811,20 +11750,20 @@ pub(super) fn walk_exec_trust_have_stmt_result(value: &crate::execute::ExecTrust
 
 pub(super) fn walk_exec_trust_have_stmt_success_result(value: &crate::execute::ExecTrustHaveStmtSuccessResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_trust_have_stmt(&value.statement, graph, runtime, locals, refs, outputs);
-    for child815 in (&value.param_type_well_defined).iter() {
-        walk_param_type_well_defined_proof(child815, graph, runtime, locals, refs, outputs);
+    for child807 in (&value.param_type_well_defined).iter() {
+        walk_param_type_well_defined_proof(child807, graph, runtime, locals, refs, outputs);
     }
-    walk_store_have_obj_and_infer_result(&value.defined_param_store_and_infer, graph, runtime, locals, refs, outputs);
-    if let Some(child816) = (&value.auto_opened_struct_layers).as_ref() {
-        for child817 in (child816).iter() {
-            walk_release_one_struct_layer_proof(child817, graph, runtime, locals, refs, outputs);
+    graph.collect_stored_ids(&(&value.defined_param_store_and_infer).stored_fact_ids, runtime, locals, refs, outputs);
+    if let Some(child808) = (&value.auto_opened_struct_layers).as_ref() {
+        for child809 in (child808).iter() {
+            walk_release_one_struct_layer_proof(child809, graph, runtime, locals, refs, outputs);
         }
     }
-    for child818 in (&value.body_facts_well_defined).iter() {
-        walk_fact_well_defined_proof(child818, graph, runtime, locals, refs, outputs);
+    for child810 in (&value.body_facts_well_defined).iter() {
+        walk_fact_well_defined_proof(child810, graph, runtime, locals, refs, outputs);
     }
-    for child819 in (&value.body_store_and_infer_results).iter() {
-        graph.collect_store(child819, runtime, locals, refs, outputs);
+    for child811 in (&value.body_store_and_infer_results).iter() {
+        graph.collect_store(child811, runtime, locals, refs, outputs);
     }
 }
 
@@ -11840,11 +11779,11 @@ pub(super) fn walk_exec_trust_stmt_result(value: &crate::execute::ExecTrustStmtR
 
 pub(super) fn walk_exec_trust_stmt_success_result(value: &crate::execute::ExecTrustStmtSuccessResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_trust_stmt(&value.statement, graph, runtime, locals, refs, outputs);
-    for child820 in (&value.facts_well_defined).iter() {
-        walk_fact_well_defined_proof(child820, graph, runtime, locals, refs, outputs);
+    for child812 in (&value.facts_well_defined).iter() {
+        walk_fact_well_defined_proof(child812, graph, runtime, locals, refs, outputs);
     }
-    for child821 in (&value.store_and_infer_results).iter() {
-        graph.collect_store(child821, runtime, locals, refs, outputs);
+    for child813 in (&value.store_and_infer_results).iter() {
+        graph.collect_store(child813, runtime, locals, refs, outputs);
     }
 }
 
@@ -11874,13 +11813,13 @@ pub(super) fn walk_exec_witness_atomic_fact_stmt_success_result(value: &crate::e
     scope_envs.push(value.local_env.as_ref());
     let locals = scope_envs.as_slice();
     walk_witness_atomic_fact(&value.statement, graph, runtime, locals, refs, outputs);
-    for child822 in (&value.prop_argument_type_checks).iter() {
-        walk_verify_fact_result(child822, graph, runtime, locals, refs, outputs);
+    for child814 in (&value.prop_argument_type_checks).iter() {
+        walk_verify_fact_result(child814, graph, runtime, locals, refs, outputs);
     }
     walk_exist_shaped_fact(&value.projected_exist, graph, runtime, locals, refs, outputs);
     walk_witness_exist_ambient_success(&value.ambient, graph, runtime, locals, refs, outputs);
-    for child823 in (&value.proof_steps).iter() {
-        graph.collect_statement(child823, runtime, locals);
+    for child815 in (&value.proof_steps).iter() {
+        graph.collect_statement(child815, runtime, locals);
     }
     walk_witness_exist_obligation_success(&value.obligations, graph, runtime, locals, refs, outputs);
     graph.collect_store(&value.store_and_infer_result, runtime, locals, refs, outputs);
@@ -11902,8 +11841,8 @@ pub(super) fn walk_exec_witness_exist_fact_stmt_success_result(value: &crate::ex
     let locals = scope_envs.as_slice();
     walk_witness_exist_fact(&value.statement, graph, runtime, locals, refs, outputs);
     walk_witness_exist_ambient_success(&value.ambient, graph, runtime, locals, refs, outputs);
-    for child824 in (&value.proof_steps).iter() {
-        graph.collect_statement(child824, runtime, locals);
+    for child816 in (&value.proof_steps).iter() {
+        graph.collect_statement(child816, runtime, locals);
     }
     walk_witness_exist_obligation_success(&value.obligations, graph, runtime, locals, refs, outputs);
     graph.collect_store(&value.store_and_infer_result, runtime, locals, refs, outputs);
@@ -11925,20 +11864,20 @@ pub(super) fn walk_exec_witness_stmt_result(value: &crate::execute::ExecWitnessS
 
 pub(super) fn walk_witness_exist_ambient_success(value: &crate::execute::WitnessExistAmbientSuccess, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_fact_well_defined_proof(&value.exist_fact_well_defined, graph, runtime, locals, refs, outputs);
-    for child825 in (&value.witness_obj_well_defined).iter() {
-        walk_verify_obj_well_defined_result(child825, graph, runtime, locals, refs, outputs);
+    for child817 in (&value.witness_obj_well_defined).iter() {
+        walk_verify_obj_well_defined_result(child817, graph, runtime, locals, refs, outputs);
     }
-    for child826 in (&value.witness_type_checks).iter() {
-        walk_verify_fact_result(child826, graph, runtime, locals, refs, outputs);
+    for child818 in (&value.witness_type_checks).iter() {
+        walk_verify_fact_result(child818, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_witness_exist_obligation_success(value: &crate::execute::WitnessExistObligationSuccess, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child827 in (&value.body_checks).iter() {
-        walk_verify_fact_result(child827, graph, runtime, locals, refs, outputs);
+    for child819 in (&value.body_checks).iter() {
+        walk_verify_fact_result(child819, graph, runtime, locals, refs, outputs);
     }
-    if let Some(child828) = (&value.uniqueness_check).as_ref() {
-        walk_verify_fact_result(child828, graph, runtime, locals, refs, outputs);
+    if let Some(child820) = (&value.uniqueness_check).as_ref() {
+        walk_verify_fact_result(child820, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -11959,21 +11898,21 @@ pub(super) fn walk_exec_witness_nonempty_set_stmt_success_result(value: &crate::
     walk_witness_nonempty_set(&value.statement, graph, runtime, locals, refs, outputs);
     walk_verify_obj_well_defined_result(&value.obj_well_defined, graph, runtime, locals, refs, outputs);
     walk_verify_obj_well_defined_result(&value.set_well_defined, graph, runtime, locals, refs, outputs);
-    for child829 in (&value.proof_steps).iter() {
-        graph.collect_statement(child829, runtime, locals);
+    for child821 in (&value.proof_steps).iter() {
+        graph.collect_statement(child821, runtime, locals);
     }
     walk_verify_fact_result(&value.membership_check, graph, runtime, locals, refs, outputs);
     graph.collect_store(&value.store_and_infer_result, runtime, locals, refs, outputs);
 }
 
 pub(super) fn walk_introduce_typed_parameters_result(value: &crate::execute::IntroduceTypedParametersResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child830 in (&value.param_type_well_defined).iter() {
-        walk_param_type_well_defined_proof(child830, graph, runtime, locals, refs, outputs);
+    for child822 in (&value.param_type_well_defined).iter() {
+        walk_param_type_well_defined_proof(child822, graph, runtime, locals, refs, outputs);
     }
-    walk_store_have_obj_and_infer_result(&value.defined_params, graph, runtime, locals, refs, outputs);
-    if let Some(child831) = (&value.auto_opened_struct_layers).as_ref() {
-        for child832 in (child831).iter() {
-            walk_release_one_struct_layer_proof(child832, graph, runtime, locals, refs, outputs);
+    graph.collect_bound_parameters(&value.defined_params.stored_fact_ids, runtime, locals);
+    if let Some(child823) = (&value.auto_opened_struct_layers).as_ref() {
+        for child824 in (child823).iter() {
+            walk_release_one_struct_layer_proof(child824, graph, runtime, locals, refs, outputs);
         }
     }
 }
@@ -11981,8 +11920,8 @@ pub(super) fn walk_introduce_typed_parameters_result(value: &crate::execute::Int
 pub(super) fn walk_release_one_struct_layer_proof(value: &crate::execute::ReleaseOneStructLayerProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     walk_obj(&value.obj, graph, runtime, locals, refs, outputs);
     walk_struct_obj(&value.struct_obj, graph, runtime, locals, refs, outputs);
-    for child833 in (&value.store_and_infer).iter() {
-        graph.collect_store(child833, runtime, locals, refs, outputs);
+    for child825 in (&value.store_and_infer).iter() {
+        graph.collect_store(child825, runtime, locals, refs, outputs);
     }
 }
 
@@ -12080,8 +12019,8 @@ pub(super) fn walk_infer_atomic_except_equality_result(value: &crate::store_fact
 
 pub(super) fn walk_infer_bijective_definition_result(value: &crate::store_fact_and_infer::InferBijectiveDefinitionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.source_fact_id, runtime, locals, refs, outputs);
-    for child834 in (&value.derived).iter() {
-        graph.collect_store(child834, runtime, locals, refs, outputs);
+    for child826 in (&value.derived).iter() {
+        graph.collect_store(child826, runtime, locals, refs, outputs);
     }
 }
 
@@ -12119,46 +12058,46 @@ pub(super) fn walk_infer_builtin_definition_result(value: &crate::store_fact_and
 
 pub(super) fn walk_infer_choice_function_definition_result(value: &crate::store_fact_and_infer::InferChoiceFunctionDefinitionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.source_fact_id, runtime, locals, refs, outputs);
-    for child835 in (&value.derived).iter() {
-        graph.collect_store(child835, runtime, locals, refs, outputs);
+    for child827 in (&value.derived).iter() {
+        graph.collect_store(child827, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_coprime_definition_result(value: &crate::store_fact_and_infer::InferCoprimeDefinitionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.source_fact_id, runtime, locals, refs, outputs);
-    for child836 in (&value.derived).iter() {
-        graph.collect_store(child836, runtime, locals, refs, outputs);
+    for child828 in (&value.derived).iter() {
+        graph.collect_store(child828, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_dvd_definition_result(value: &crate::store_fact_and_infer::InferDvdDefinitionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.source_fact_id, runtime, locals, refs, outputs);
-    for child837 in (&value.derived).iter() {
-        graph.collect_store(child837, runtime, locals, refs, outputs);
+    for child829 in (&value.derived).iter() {
+        graph.collect_store(child829, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_expand_definition_result(value: &crate::store_fact_and_infer::InferExpandDefinitionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child838 in (&value.derived).iter() {
-        graph.collect_store(child838, runtime, locals, refs, outputs);
+    for child830 in (&value.derived).iter() {
+        graph.collect_store(child830, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_in_fact_cart_coordinates_result(value: &crate::store_fact_and_infer::InferInFactCartCoordinatesResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child839 in (&value.derived).iter() {
-        graph.collect_store(child839, runtime, locals, refs, outputs);
+    for child831 in (&value.derived).iter() {
+        graph.collect_store(child831, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_in_fact_closed_range_result(value: &crate::store_fact_and_infer::InferInFactClosedRangeResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child840 in (&value.derived).iter() {
-        graph.collect_store(child840, runtime, locals, refs, outputs);
+    for child832 in (&value.derived).iter() {
+        graph.collect_store(child832, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_in_fact_equal_fn_set_expand_result(value: &crate::store_fact_and_infer::InferInFactEqualFnSetExpandResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child841 in (&value.transports).iter() {
-        walk_infer_in_fact_equal_fn_set_transport(child841, graph, runtime, locals, refs, outputs);
+    for child833 in (&value.transports).iter() {
+        walk_infer_in_fact_equal_fn_set_transport(child833, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -12177,32 +12116,32 @@ pub(super) fn walk_infer_in_fact_finite_seq_expand_result(value: &crate::store_f
 }
 
 pub(super) fn walk_infer_in_fact_fn_range_result(value: &crate::store_fact_and_infer::InferInFactFnRangeResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child842 in (&value.derived).iter() {
-        graph.collect_store(child842, runtime, locals, refs, outputs);
+    for child834 in (&value.derived).iter() {
+        graph.collect_store(child834, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_in_fact_index_cart_result(value: &crate::store_fact_and_infer::InferInFactIndexCartResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child843 in (&value.derived).iter() {
-        graph.collect_store(child843, runtime, locals, refs, outputs);
+    for child835 in (&value.derived).iter() {
+        graph.collect_store(child835, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_in_fact_index_intersect_result(value: &crate::store_fact_and_infer::InferInFactIndexIntersectResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child844 in (&value.derived).iter() {
-        graph.collect_store(child844, runtime, locals, refs, outputs);
+    for child836 in (&value.derived).iter() {
+        graph.collect_store(child836, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_in_fact_index_union_result(value: &crate::store_fact_and_infer::InferInFactIndexUnionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child845 in (&value.derived).iter() {
-        graph.collect_store(child845, runtime, locals, refs, outputs);
+    for child837 in (&value.derived).iter() {
+        graph.collect_store(child837, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_in_fact_intersect_both_result(value: &crate::store_fact_and_infer::InferInFactIntersectBothResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child846 in (&value.derived).iter() {
-        graph.collect_store(child846, runtime, locals, refs, outputs);
+    for child838 in (&value.derived).iter() {
+        graph.collect_store(child838, runtime, locals, refs, outputs);
     }
 }
 
@@ -12215,20 +12154,20 @@ pub(super) fn walk_infer_in_fact_list_set_singleton_equal_result(value: &crate::
 }
 
 pub(super) fn walk_infer_in_fact_one_side_real_interval_result(value: &crate::store_fact_and_infer::InferInFactOneSideRealIntervalResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child847 in (&value.derived).iter() {
-        graph.collect_store(child847, runtime, locals, refs, outputs);
+    for child839 in (&value.derived).iter() {
+        graph.collect_store(child839, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_in_fact_range_result(value: &crate::store_fact_and_infer::InferInFactRangeResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child848 in (&value.derived).iter() {
-        graph.collect_store(child848, runtime, locals, refs, outputs);
+    for child840 in (&value.derived).iter() {
+        graph.collect_store(child840, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_in_fact_real_interval_result(value: &crate::store_fact_and_infer::InferInFactRealIntervalResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child849 in (&value.derived).iter() {
-        graph.collect_store(child849, runtime, locals, refs, outputs);
+    for child841 in (&value.derived).iter() {
+        graph.collect_store(child841, runtime, locals, refs, outputs);
     }
 }
 
@@ -12237,14 +12176,14 @@ pub(super) fn walk_infer_in_fact_seq_expand_result(value: &crate::store_fact_and
 }
 
 pub(super) fn walk_infer_in_fact_set_minus_split_result(value: &crate::store_fact_and_infer::InferInFactSetMinusSplitResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child850 in (&value.derived).iter() {
-        graph.collect_store(child850, runtime, locals, refs, outputs);
+    for child842 in (&value.derived).iter() {
+        graph.collect_store(child842, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_in_fact_signed_standard_set_sign_result(value: &crate::store_fact_and_infer::InferInFactSignedStandardSetSignResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child851 in (&value.derived).iter() {
-        graph.collect_store(child851, runtime, locals, refs, outputs);
+    for child843 in (&value.derived).iter() {
+        graph.collect_store(child843, runtime, locals, refs, outputs);
     }
 }
 
@@ -12254,14 +12193,14 @@ pub(super) fn walk_infer_in_fact_union_or_result(value: &crate::store_fact_and_i
 
 pub(super) fn walk_infer_injective_definition_result(value: &crate::store_fact_and_infer::InferInjectiveDefinitionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.source_fact_id, runtime, locals, refs, outputs);
-    for child852 in (&value.derived).iter() {
-        graph.collect_store(child852, runtime, locals, refs, outputs);
+    for child844 in (&value.derived).iter() {
+        graph.collect_store(child844, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_normal_atomic_param_types_projected_result(value: &crate::store_fact_and_infer::InferNormalAtomicParamTypesProjectedResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child853 in (&value.derived).iter() {
-        graph.collect_store(child853, runtime, locals, refs, outputs);
+    for child845 in (&value.derived).iter() {
+        graph.collect_store(child845, runtime, locals, refs, outputs);
     }
 }
 
@@ -12271,28 +12210,28 @@ pub(super) fn walk_infer_power_set_membership_projection_result(value: &crate::s
 
 pub(super) fn walk_infer_prime_definition_result(value: &crate::store_fact_and_infer::InferPrimeDefinitionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.source_fact_id, runtime, locals, refs, outputs);
-    for child854 in (&value.derived).iter() {
-        graph.collect_store(child854, runtime, locals, refs, outputs);
+    for child846 in (&value.derived).iter() {
+        graph.collect_store(child846, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_proper_subset_definition_result(value: &crate::store_fact_and_infer::InferProperSubsetDefinitionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.source_fact_id, runtime, locals, refs, outputs);
-    for child855 in (&value.derived).iter() {
-        graph.collect_store(child855, runtime, locals, refs, outputs);
+    for child847 in (&value.derived).iter() {
+        graph.collect_store(child847, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_proper_superset_definition_result(value: &crate::store_fact_and_infer::InferProperSupersetDefinitionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.source_fact_id, runtime, locals, refs, outputs);
-    for child856 in (&value.derived).iter() {
-        graph.collect_store(child856, runtime, locals, refs, outputs);
+    for child848 in (&value.derived).iter() {
+        graph.collect_store(child848, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_set_builder_membership_projection_result(value: &crate::store_fact_and_infer::InferSetBuilderMembershipProjectionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child857 in (&value.derived).iter() {
-        graph.collect_store(child857, runtime, locals, refs, outputs);
+    for child849 in (&value.derived).iter() {
+        graph.collect_store(child849, runtime, locals, refs, outputs);
     }
 }
 
@@ -12318,8 +12257,8 @@ pub(super) fn walk_infer_superset_elementwise_membership_result(value: &crate::s
 
 pub(super) fn walk_infer_surjective_definition_result(value: &crate::store_fact_and_infer::InferSurjectiveDefinitionResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.source_fact_id, runtime, locals, refs, outputs);
-    for child858 in (&value.derived).iter() {
-        graph.collect_store(child858, runtime, locals, refs, outputs);
+    for child850 in (&value.derived).iter() {
+        graph.collect_store(child850, runtime, locals, refs, outputs);
     }
 }
 
@@ -12333,21 +12272,21 @@ pub(super) fn walk_infer_weak_integer_lower_bound_in_n_result(value: &crate::sto
 pub(super) fn walk_infer_atomic_fact_result(value: &crate::store_fact_and_infer::InferAtomicFactResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     match value {
         crate::store_fact_and_infer::InferAtomicFactResult::EqualFact(p0) => {
-            for child859 in (p0).iter() {
-                walk_infer_equality_result(child859, graph, runtime, locals, refs, outputs);
+            for child851 in (p0).iter() {
+                walk_infer_equality_result(child851, graph, runtime, locals, refs, outputs);
             }
         }
         crate::store_fact_and_infer::InferAtomicFactResult::ExceptEquality(p0) => {
-            for child860 in (p0).iter() {
-                walk_infer_atomic_except_equality_result(child860, graph, runtime, locals, refs, outputs);
+            for child852 in (p0).iter() {
+                walk_infer_atomic_except_equality_result(child852, graph, runtime, locals, refs, outputs);
             }
         }
     }
 }
 
 pub(super) fn walk_infer_equal_fact_positive_real_power_result(value: &crate::store_fact_and_infer::InferEqualFactPositiveRealPowerResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child861 in (&value.derived).iter() {
-        graph.collect_store(child861, runtime, locals, refs, outputs);
+    for child853 in (&value.derived).iter() {
+        graph.collect_store(child853, runtime, locals, refs, outputs);
     }
 }
 
@@ -12372,17 +12311,17 @@ pub(super) fn walk_chain_transitive_cite(value: &crate::store_fact_and_infer::Ch
 }
 
 pub(super) fn walk_infer_and_fact_result(value: &crate::store_fact_and_infer::InferAndFactResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child862 in (&value.components).iter() {
-        walk_infer_atomic_fact_result(child862, graph, runtime, locals, refs, outputs);
+    for child854 in (&value.components).iter() {
+        walk_infer_atomic_fact_result(child854, graph, runtime, locals, refs, outputs);
     }
 }
 
 pub(super) fn walk_infer_chain_fact_result(value: &crate::store_fact_and_infer::InferChainFactResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
-    for child863 in (&value.adjacent_infers).iter() {
-        walk_infer_atomic_fact_result(child863, graph, runtime, locals, refs, outputs);
+    for child855 in (&value.adjacent_infers).iter() {
+        walk_infer_atomic_fact_result(child855, graph, runtime, locals, refs, outputs);
     }
-    for child864 in (&value.transitive_closures).iter() {
-        walk_infer_chain_transitive_closure_result(child864, graph, runtime, locals, refs, outputs);
+    for child856 in (&value.transitive_closures).iter() {
+        walk_infer_chain_transitive_closure_result(child856, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -12470,8 +12409,8 @@ pub(super) fn walk_store_and_component_result(value: &crate::store_fact_and_infe
 pub(super) fn walk_store_and_fact_result(value: &crate::store_fact_and_infer::StoreAndFactResult, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.whole_fact_id, runtime, locals, refs, outputs);
     walk_and_fact(&value.fact, graph, runtime, locals, refs, outputs);
-    for child865 in (&value.components).iter() {
-        walk_store_and_component_result(child865, graph, runtime, locals, refs, outputs);
+    for child857 in (&value.components).iter() {
+        walk_store_and_component_result(child857, graph, runtime, locals, refs, outputs);
     }
 }
 
@@ -12488,8 +12427,8 @@ pub(super) fn walk_store_chain_adjacent_result(value: &crate::store_fact_and_inf
 pub(super) fn walk_store_chain_fact_store_part(value: &crate::store_fact_and_infer::StoreChainFactStorePart, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     graph.reference_fact(&value.whole_fact_id, runtime, locals, refs, outputs);
     walk_chain_fact(&value.fact, graph, runtime, locals, refs, outputs);
-    for child866 in (&value.adjacent).iter() {
-        walk_store_chain_adjacent_result(child866, graph, runtime, locals, refs, outputs);
+    for child858 in (&value.adjacent).iter() {
+        walk_store_chain_adjacent_result(child858, graph, runtime, locals, refs, outputs);
     }
 }
 

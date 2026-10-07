@@ -115,6 +115,90 @@ fn natural_power_laws_cover_existing_domains_and_keep_evidence() {
         check(code, false);
     }
 }
+
+#[test]
+fn run_examples_power_product_same_base_unit_exponent_directions_and_domains() {
+    for (base_carrier, exponent_carrier) in [("R", "N"), ("C", "N"), ("C*", "Z")] {
+        for goal in [
+            "x^(n + 1) = x^n * x",
+            "x^(n + 1) = x * x^n",
+            "x^(1 + n) = x^n * x",
+            "x^(1 + n) = x * x^n",
+            "x^n * x = x^(n + 1)",
+            "x * x^n = x^(n + 1)",
+            "x^n * x = x^(1 + n)",
+            "x * x^n = x^(1 + n)",
+        ] {
+            let detailed = check(
+                &format!("forall x {base_carrier}, n {exponent_carrier}:\n    {goal}\n"),
+                true,
+            );
+            assert!(detailed.contains("PowerProductSameBase"), "{goal}\n{detailed}");
+        }
+    }
+    // The bare base may itself be a power or another compound expression.
+    check("forall x C, n N:\n    (x^2)^(n + 1) = (x^2)^n * x^2\n", true);
+    check("forall x, y C, n N:\n    (x + y)^(n + 1) = (x + y)^n * (x + y)\n", true);
+    check("forall x C:\n    x^(1 + 1) = x * x\n", true);
+    check("forall n N:\n    0^(n + 1) = 0^n * 0\n", true);
+    check("0^(0 + 1) = 0^0 * 0\n", true);
+    check("forall x R, n N:\n    x^(n + 1) = x^n * x^1 = x^n * x\n", true);
+    for source in [
+        include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/power_product_same_base_unit_exponent.lit"),
+        include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/natural_power_laws.lit"),
+        include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/integer_power_laws.lit"),
+    ] {
+        check(source, true);
+    }
+}
+
+#[test]
+fn power_product_same_base_unit_exponent_retains_actual_requirements() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
+        EqualFactSearchedProof, EqualitySearchProofByBuiltinRule, VerifyEqualityResult,
+    };
+    use crate::execute::execute_fact_stmt::VerifyFactResult;
+    use crate::execute::{ExecFactStmtResult, ExecStmtResult};
+
+    for (base_carrier, exponent_carrier, requirement_count) in [("C", "N", 3), ("C*", "Z", 4)] {
+        let mut rt = runtime();
+        let code = format!("have x {base_carrier}\nhave n {exponent_carrier}\nx^(n + 1) = x^n * x\n");
+        let run = rt.run_litex_code(&code).unwrap();
+        assert!(run.success, "{code}");
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = run.statement_results.last().unwrap() else {
+            panic!("successful equality statement");
+        };
+        let VerifyFactResult::Equality(result) = &statement.verify_result else {
+            panic!("equality verification");
+        };
+        let VerifyEqualityResult::Success(proof) = &**result else {
+            panic!("successful equality proof");
+        };
+        let EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::PowerProductSameBase(rule)) = &proof.searched_proof else {
+            panic!("actual common-base power rule");
+        };
+        assert_eq!(rule.proof_of_requirement_facts.len(), requirement_count);
+        assert!(rule.proof_of_requirement_facts.iter().all(|proof| !proof.is_failed()));
+    }
+}
+
+#[test]
+fn power_product_same_base_unit_exponent_rejects_false_and_undefined_goals() {
+    for code in [
+        "forall x, y C, n N:\n    x^(n + 1) = x^n * y\n",
+        "forall x C, n N:\n    x^(n + 2) = x^n * x\n",
+        "forall x C, n N:\n    x^(n + 1) = x^n + x\n",
+        "forall x C, m, n N:\n    x^(n + 1) = x^m * x\n",
+        "forall x C, n Z:\n    x^(n + 1) = x^n * x\n",
+        "forall n Z:\n    0^(n + 1) = 0^n * 0\n",
+        "forall x R, n N:\n    (1/x)^(n + 1) = (1/x)^n * (1/x)\n",
+        // Real exponents remain outside this integer/natural power matcher.
+        "forall x R+, n R:\n    x^(n + 1) = x^n * x\n",
+    ] {
+        check(code, false);
+    }
+}
+
 #[test]
 fn integer_power_laws_require_nonzero_bases_and_integer_exponents() {
     let detailed = check(
