@@ -12,6 +12,13 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    SignLowerBound(super::sign_extremum_order::SignLowerBoundProof),
+    SignUpperBound(super::sign_extremum_order::SignUpperBoundProof),
+    SignWeakMonotone(super::sign_extremum_order::SignWeakMonotoneProof),
+    MinLowerBound(super::sign_extremum_order::MinLowerBoundProof),
+    MaxUpperBound(super::sign_extremum_order::MaxUpperBoundProof),
+    MinWeakMonotone(super::sign_extremum_order::MinWeakMonotoneProof),
+    MaxWeakMonotone(super::sign_extremum_order::MaxWeakMonotoneProof),
     SinWeakIncreasingOnClosedHalfPi(super::trig_additional_interval_order::SinWeakIncreasingOnClosedHalfPiProof),
     CosWeakDecreasingOnClosedPi(super::trig_additional_interval_order::CosWeakDecreasingOnClosedPiProof),
     TanWeakIncreasingOnOpenHalfPi(super::trig_additional_interval_order::TanWeakIncreasingOnOpenHalfPiProof),
@@ -523,6 +530,10 @@ impl Runtime {
             return Ok(Some(proof));
         }
         if let Some(proof) = self.abs_le_implies_neg_upper_proof(fact) {
+            return Ok(Some(proof));
+        }
+
+        if let Some(proof) = self.search_sign_extremum_weak_order(fact, verify_state)? {
             return Ok(Some(proof));
         }
 

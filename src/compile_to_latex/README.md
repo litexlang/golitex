@@ -149,3 +149,8 @@ python3 tests/compile_to_latex_xelatex.py --output-dir tmp/2026-10-06/compile-to
 ```
 
 The dated [acceptance report](../../tests/fixtures/compile_to_latex/acceptance.json) records the focused gates, binary checksum, typography results and environment limits. The [Chinese example document](../../examples/stmt_nodes/compile_to_latex/identity.zh.tex) and [rendered example](../../examples/stmt_nodes/compile_to_latex/identity.zh.pdf) show the primary tracer.
+
+The [command separation acceptance](../../tests/fixtures/compile_to_latex/command_separation_acceptance.json)
+records the 2026-10-07 parser, dispatcher, Runtime provenance and real CLI
+checks: 50 focused release tests passed, and all 22 saved artifact envelopes
+(ten locales in both fragment/document forms, plus C/Python) remained identical.

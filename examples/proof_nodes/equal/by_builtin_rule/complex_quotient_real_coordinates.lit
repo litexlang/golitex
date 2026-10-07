@@ -1,0 +1,21 @@
+# Rule: RealPartQuotient
+# Before (rejected):
+# forall z C,w C*:
+#     C_abs(w)!=0
+#     C_abs(w)^2!=0
+#     (re(z)*re(w)+img(z)*img(w))/C_abs(w)^2=re(z/w)
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall z C,w C*:
+    C_abs(w)!=0
+    C_abs(w)^2!=0
+    (re(z)*re(w)+img(z)*img(w))/C_abs(w)^2=re(z/w)
+
+forall z C,w C*:
+    C_abs(w)!=0
+    C_abs(w)^2!=0
+    re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2
+
+# Boundary: Whole-fact WD still checks both division denominators; altered coordinate signs and zero denominators reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/complex_quotient_real_coordinates.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

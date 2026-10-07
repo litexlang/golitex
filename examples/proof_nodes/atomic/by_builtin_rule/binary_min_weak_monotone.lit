@@ -1,0 +1,23 @@
+# Rule: MinWeakMonotone
+# Before (rejected):
+# forall a,b,c,d R:
+#     a<=c
+#     b<=d
+#     =>:
+#         min(a,b)<=min(c,d)
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall a,b,c,d R:
+    a<=c
+    b<=d
+    =>:
+        min(a,b)<=min(c,d)
+
+forall a,b,c R:
+    a<=b
+    =>:
+        min(a,c)<=min(b,c)
+
+# Boundary: Both argument orders must be checked, or that argument must be identical; one missing unequal argument order rejects.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/binary_min_weak_monotone.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

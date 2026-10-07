@@ -56,23 +56,20 @@ impl Runtime {
         // Reuse the entire proved proposition before projecting conclusions.
         // An unused binder is renamed positionally; it is never given a value.
         if let Some((cite_fact_id, parameter_renamings)) = self.match_known_forall_source(fact) {
-            let well_defined =
-                match self.verify_forall_fact_well_definedness(fact, verify_state.clone())? {
-                    VerifyForallFactWellDefinedResult::Success(proof) => proof,
-                    VerifyForallFactWellDefinedResult::Failed(reason) => {
-                        return Ok(forall_fact_result_from_wd_fail(reason));
-                    }
-                };
-            return Ok(VerifyFactResult::ForallFact(Box::new(
-                VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(
-                    VerifyKnownForallFactProof {
-                        fact: fact.clone(),
-                        well_defined,
-                        cite_fact_id,
-                        parameter_renamings,
-                    },
-                )),
-            )));
+            if let VerifyForallFactWellDefinedResult::Success(well_defined) =
+                self.verify_forall_fact_well_definedness(fact, verify_state)? {
+                return Ok(VerifyFactResult::ForallFact(Box::new(
+                    VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(
+                        VerifyKnownForallFactProof {
+                            fact: fact.clone(), well_defined, cite_fact_id, parameter_renamings,
+                        },
+                    )),
+                )));
+            }
+            // A later conclusion can depend on an earlier proved conclusion
+            // for WD. Example: |w|!=0, |w|^2!=0, then the quotient formula.
+            // If upfront WD cannot reuse the theorem, verify in source order
+            // below with the original state; never assume unproved conclusions.
         }
         // An empty parameter carrier means there are no input assignments.
         // Prove emptiness with bounded evidence, then check the entire goal's

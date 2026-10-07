@@ -1,0 +1,21 @@
+# Rule: ImaginaryPartQuotient
+# Before (rejected):
+# forall u C,v C*:
+#     C_abs(v)!=0
+#     C_abs(v)^2!=0
+#     img(u/v)=(img(u)*re(v)-re(u)*img(v))/C_abs(v)^2
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall u C,v C*:
+    C_abs(v)!=0
+    C_abs(v)^2!=0
+    img(u/v)=(img(u)*re(v)-re(u)*img(v))/C_abs(v)^2
+
+forall z C,w C*:
+    C_abs(w)!=0
+    C_abs(w)^2!=0
+    img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2
+
+# Boundary: Whole-fact WD still checks both division denominators; the imaginary numerator has subtraction, not addition.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/complex_quotient_imaginary_coordinates.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

@@ -1,0 +1,16 @@
+# Rule: SignNonzeroReflection
+# Before (rejected):
+# forall x R:
+#     sign(x)!=0
+#     =>:
+#         x!=0
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall x R:
+    sign(x)!=0
+    =>:
+        x!=0
+
+# Boundary: Requires the checked sign(x)!=0 premise; no claim that x equals 1 or -1.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/sign_nonzero_reflection.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

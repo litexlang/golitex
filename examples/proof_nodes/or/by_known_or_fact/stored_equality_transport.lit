@@ -1,0 +1,27 @@
+# Node: or.ByKnownOrFact with stored equality transport
+#
+# Before:
+# forall a, b, c R:
+#     a = b
+#     b = c
+#     a > 0 or a < 0
+#     =>:
+#         c > 0 or c < 0
+# Former behavior: this verified, but Known Or retained only the source Or
+# FactId; argument matching omitted the generating equality citations.
+#
+# Now: the same proof retains an equality certificate for each argument.
+# Both occurrences of c cite the a = b, b = c path; zero uses identity.
+forall a, b, c R:
+    a = b
+    b = c
+    a > 0 or a < 0
+    =>:
+        c > 0 or c < 0
+
+# Boundary: an unrelated argument or changed branch condition cannot reuse
+# the stored Or. Nested alpha identity preserves free owners and carriers.
+# Evidence: target/release/litex -strict -f examples/proof_nodes/or/by_known_or_fact/stored_equality_transport.lit
+# Producer/boundary tests: known_or_nested_binders_tests
+# Consumers: detailed_known_or_preserves_each_argument_equality_path and
+# graph_known_or_transport_keeps_both_equality_dependencies.

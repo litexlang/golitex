@@ -1,0 +1,22 @@
+{
+  "source": "examples/proof_nodes/or/by_known_or_fact/stored_equality_transport.lit",
+  "scope": "Known Or equality-substitution certificates",
+  "attempts": [
+    {
+      "code": "forall a, b, c R:\n    a = b\n    b = c\n    a > 0 or a < 0\n    =>:\n        c > 0 or c < 0\n",
+      "accepted": true,
+      "command": "target/release/litex -strict -session -e '1 = 1'",
+      "evidence": "The complete block returned REPL success.",
+      "compatibility": "Current CLI has no -before/-compact/-runner and current AST has no try statement; one supported persistent REPL was used."
+    }
+  ],
+  "verification": {
+    "build": {"command": "cargo build --release", "exit_code": 0},
+    "known_or": {"command": "cargo test --release --lib known_or -- --nocapture", "passed": 7, "failed": 0},
+    "detailed_json": {"command": "cargo test --release --lib json_output::project_detailed_tests -- --nocapture", "passed": 10, "failed": 0},
+    "dependency_graph": {"command": "cargo test --release --lib graph::tests -- --nocapture", "passed": 12, "failed": 0},
+    "visitor_freshness": {"command": "python3 src/graph/generate_walk.py --check", "exit_code": 0},
+    "example": {"command": "target/release/litex -strict -f examples/proof_nodes/or/by_known_or_fact/stored_equality_transport.lit", "exit_code": 0, "success": true},
+    "boundary": "Missing equality, altered branch shape, free-identifier/carrier/condition changes and out-of-scope equality cannot supply Known Or transport."
+  }
+}

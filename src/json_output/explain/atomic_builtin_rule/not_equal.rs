@@ -29,6 +29,10 @@ use crate::json_output::explain::text::text;
 impl NotEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpNonzero(_) => text("Exponential is nonzero", "x in R: exp(x)>0 => exp(x)!=0"),
+            Self::FactorialNonzero(_) => text("Factorial is nonzero", "n in N: factorial(n)>0 => factorial(n)!=0"),
+            Self::SignNonzeroFromArgument(_) => text("Nonzero sign from argument", "x in R, x!=0 => sign(x)!=0"),
+            Self::SignNonzeroReflection(_) => text("Nonzero sign reflection", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_en(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_en(),
             Self::PeriodicTrigNonzero(_) => text(
@@ -94,6 +98,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpNonzero(_) => text("指数函数非零", "x in R: exp(x)>0 => exp(x)!=0"),
+            Self::FactorialNonzero(_) => text("阶乘非零", "n in N: factorial(n)>0 => factorial(n)!=0"),
+            Self::SignNonzeroFromArgument(_) => text("非零参数的 sign 非零", "x in R, x!=0 => sign(x)!=0"),
+            Self::SignNonzeroReflection(_) => text("sign 的非零反射", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
             Self::PeriodicTrigNonzero(_) => text(
@@ -159,6 +167,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpNonzero(_) => text("指數函數非零", "x in R: exp(x)>0 => exp(x)!=0"),
+            Self::FactorialNonzero(_) => text("階乘非零", "n in N: factorial(n)>0 => factorial(n)!=0"),
+            Self::SignNonzeroFromArgument(_) => text("非零參數的 sign 非零", "x in R, x!=0 => sign(x)!=0"),
+            Self::SignNonzeroReflection(_) => text("sign 的非零反射", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
             Self::PeriodicTrigNonzero(_) => text(
@@ -224,6 +236,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpNonzero(_) => text("Exponentielle non nulle", "x in R: exp(x)>0 => exp(x)!=0"),
+            Self::FactorialNonzero(_) => text("Factorielle non nulle", "n in N: factorial(n)>0 => factorial(n)!=0"),
+            Self::SignNonzeroFromArgument(_) => text("Signe non nul de l’argument", "x in R, x!=0 => sign(x)!=0"),
+            Self::SignNonzeroReflection(_) => text("Réflexion du signe non nul", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_fr(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_fr(),
             Self::PeriodicTrigNonzero(_) => text("Valeur trigonométrique périodique non nulle", "Le coefficient exact de pi et les termes entiers vérifiés excluent les zéros du sinus ou cosinus"),
@@ -262,6 +278,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpNonzero(_) => text("Экспонента не равна нулю", "x in R: exp(x)>0 => exp(x)!=0"),
+            Self::FactorialNonzero(_) => text("Факториал не равен нулю", "n in N: factorial(n)>0 => factorial(n)!=0"),
+            Self::SignNonzeroFromArgument(_) => text("Ненулевой знак аргумента", "x in R, x!=0 => sign(x)!=0"),
+            Self::SignNonzeroReflection(_) => text("Отражение ненулевого знака", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ru(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ru(),
             Self::PeriodicTrigNonzero(_) => text("Ненулевое периодическое тригонометрическое значение", "Точный коэффициент pi и проверенные целочисленные члены исключают нули синуса или косинуса"),
@@ -300,6 +320,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpNonzero(_) => text("Exponencial no nula", "x in R: exp(x)>0 => exp(x)!=0"),
+            Self::FactorialNonzero(_) => text("Factorial no nulo", "n in N: factorial(n)>0 => factorial(n)!=0"),
+            Self::SignNonzeroFromArgument(_) => text("Signo no nulo del argumento", "x in R, x!=0 => sign(x)!=0"),
+            Self::SignNonzeroReflection(_) => text("Reflexión del signo no nulo", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_es(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_es(),
             Self::PeriodicTrigNonzero(_) => text("Valor trigonométrico periódico no nulo", "El coeficiente exacto de pi y los términos enteros comprobados excluyen ceros de seno o coseno"),
@@ -338,6 +362,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpNonzero(_) => text("الدالة الأسية غير صفرية", "x in R: exp(x)>0 => exp(x)!=0"),
+            Self::FactorialNonzero(_) => text("المضروب غير صفري", "n in N: factorial(n)>0 => factorial(n)!=0"),
+            Self::SignNonzeroFromArgument(_) => text("إشارة وسيط غير صفري", "x in R, x!=0 => sign(x)!=0"),
+            Self::SignNonzeroReflection(_) => text("انعكاس الإشارة غير الصفرية", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
             Self::PeriodicTrigNonzero(_) => text(
@@ -403,6 +431,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpNonzero(_) => text("指数関数はゼロでない", "x in R: exp(x)>0 => exp(x)!=0"),
+            Self::FactorialNonzero(_) => text("階乗はゼロでない", "n in N: factorial(n)>0 => factorial(n)!=0"),
+            Self::SignNonzeroFromArgument(_) => text("引数がゼロでなければ符号もゼロでない", "x in R, x!=0 => sign(x)!=0"),
+            Self::SignNonzeroReflection(_) => text("符号がゼロでなければ引数もゼロでない", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
             Self::PeriodicTrigNonzero(_) => text(
@@ -468,6 +500,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpNonzero(_) => text("지수 함수는 영이 아님", "x in R: exp(x)>0 => exp(x)!=0"),
+            Self::FactorialNonzero(_) => text("팩토리얼은 영이 아님", "n in N: factorial(n)>0 => factorial(n)!=0"),
+            Self::SignNonzeroFromArgument(_) => text("영이 아닌 인수의 부호", "x in R, x!=0 => sign(x)!=0"),
+            Self::SignNonzeroReflection(_) => text("영이 아닌 부호의 반영", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
             Self::PeriodicTrigNonzero(_) => text(
@@ -533,6 +569,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::ExpNonzero(_) => text("Hàm mũ khác không", "x in R: exp(x)>0 => exp(x)!=0"),
+            Self::FactorialNonzero(_) => text("Giai thừa khác không", "n in N: factorial(n)>0 => factorial(n)!=0"),
+            Self::SignNonzeroFromArgument(_) => text("Dấu của đối số khác không", "x in R, x!=0 => sign(x)!=0"),
+            Self::SignNonzeroReflection(_) => text("Phản ánh dấu khác không", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_vi(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_vi(),
             Self::PeriodicTrigNonzero(_) => text("Giá trị lượng giác tuần hoàn khác không", "Hệ số pi chính xác và các hạng nguyên đã kiểm tra loại trừ điểm không của sin hoặc cos"),

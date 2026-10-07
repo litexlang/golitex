@@ -22,6 +22,7 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "Negative integer power reciprocal".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_en(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_en(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_en(),
@@ -249,6 +250,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "负整数幂的倒数".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_zh(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_zh(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_zh(),
@@ -476,6 +478,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "負整數冪的倒數".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_zh_hant(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_zh_hant(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_zh_hant(),
@@ -703,6 +706,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "Inverse de puissance entière".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_fr(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_fr(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_fr(),
@@ -930,6 +934,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "Обратная целая степень".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_ru(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_ru(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_ru(),
@@ -1157,6 +1162,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "Recíproco de potencia entera".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_es(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_es(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_es(),
@@ -1384,6 +1390,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "مقلوب القوة الصحيحة".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_ar(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_ar(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_ar(),
@@ -1611,6 +1618,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "整数べきの逆数".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_ja(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_ja(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_ja(),
@@ -1838,6 +1846,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "정수 거듭제곱의 역수".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_ko(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_ko(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_ko(),
@@ -2065,6 +2074,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "Nghịch đảo lũy thừa nguyên".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_vi(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_vi(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_vi(),

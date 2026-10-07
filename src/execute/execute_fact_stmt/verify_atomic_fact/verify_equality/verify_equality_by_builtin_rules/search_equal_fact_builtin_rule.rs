@@ -235,6 +235,7 @@ fn map_power_law_proof(
 ) -> EqualitySearchProofByBuiltinRule {
     use super::by_power_laws::PowerLawEqualityBuiltinRuleProof as P;
     match proof {
+        P::NegativeIntegerPowerReciprocal(p) => EqualitySearchProofByBuiltinRule::NegativeIntegerPowerReciprocal(p),
         P::PowerProductSameBase(p) => EqualitySearchProofByBuiltinRule::PowerProductSameBase(p),
         P::PowerOfPower(p) => EqualitySearchProofByBuiltinRule::PowerOfPower(p),
         P::PowerOfProduct(p) => EqualitySearchProofByBuiltinRule::PowerOfProduct(p),

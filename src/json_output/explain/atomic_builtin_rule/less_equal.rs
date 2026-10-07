@@ -72,6 +72,13 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::SignLowerBound(_) => text("Lower bound of sign", "x in R: -1<=sign(x)"),
+            Self::SignUpperBound(_) => text("Upper bound of sign", "x in R: sign(x)<=1"),
+            Self::SignWeakMonotone(_) => text("Weak monotonicity of sign", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::MinLowerBound(_) => text("Minimum below an operand", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
+            Self::MaxUpperBound(_) => text("Maximum above an operand", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinWeakMonotone(_) => text("Weak monotonicity of minimum", "a<=c, b<=d => min(a,b)<=min(c,d)"),
+            Self::MaxWeakMonotone(_) => text("Weak monotonicity of maximum", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_en(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_en(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_en(),
@@ -166,6 +173,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::SignLowerBound(_) => text("sign 的下界", "x in R: -1<=sign(x)"),
+            Self::SignUpperBound(_) => text("sign 的上界", "x in R: sign(x)<=1"),
+            Self::SignWeakMonotone(_) => text("sign 的弱保序", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::MinLowerBound(_) => text("min 的基本下界", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
+            Self::MaxUpperBound(_) => text("max 的基本上界", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinWeakMonotone(_) => text("min 的弱单调", "a<=c, b<=d => min(a,b)<=min(c,d)"),
+            Self::MaxWeakMonotone(_) => text("max 的弱单调", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_zh(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_zh(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_zh(),
@@ -266,6 +280,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::SignLowerBound(_) => text("sign 的下界", "x in R: -1<=sign(x)"),
+            Self::SignUpperBound(_) => text("sign 的上界", "x in R: sign(x)<=1"),
+            Self::SignWeakMonotone(_) => text("sign 的弱保序", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::MinLowerBound(_) => text("min 的基本下界", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
+            Self::MaxUpperBound(_) => text("max 的基本上界", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinWeakMonotone(_) => text("min 的弱單調", "a<=c, b<=d => min(a,b)<=min(c,d)"),
+            Self::MaxWeakMonotone(_) => text("max 的弱單調", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_zh_hant(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_zh_hant(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_zh_hant(),
@@ -366,6 +387,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::SignLowerBound(_) => text("Borne inférieure du signe", "x in R: -1<=sign(x)"),
+            Self::SignUpperBound(_) => text("Borne supérieure du signe", "x in R: sign(x)<=1"),
+            Self::SignWeakMonotone(_) => text("Monotonie faible du signe", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::MinLowerBound(_) => text("Minimum inférieur à un opérande", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
+            Self::MaxUpperBound(_) => text("Maximum supérieur à un opérande", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinWeakMonotone(_) => text("Monotonie faible du minimum", "a<=c, b<=d => min(a,b)<=min(c,d)"),
+            Self::MaxWeakMonotone(_) => text("Monotonie faible du maximum", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_fr(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_fr(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_fr(),
@@ -460,6 +488,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::SignLowerBound(_) => text("Нижняя граница знака", "x in R: -1<=sign(x)"),
+            Self::SignUpperBound(_) => text("Верхняя граница знака", "x in R: sign(x)<=1"),
+            Self::SignWeakMonotone(_) => text("Неубывание знака", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::MinLowerBound(_) => text("Минимум не больше операнда", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
+            Self::MaxUpperBound(_) => text("Максимум не меньше операнда", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinWeakMonotone(_) => text("Неубывание минимума", "a<=c, b<=d => min(a,b)<=min(c,d)"),
+            Self::MaxWeakMonotone(_) => text("Неубывание максимума", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ru(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_ru(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ru(),
@@ -554,6 +589,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::SignLowerBound(_) => text("Cota inferior del signo", "x in R: -1<=sign(x)"),
+            Self::SignUpperBound(_) => text("Cota superior del signo", "x in R: sign(x)<=1"),
+            Self::SignWeakMonotone(_) => text("Monotonía débil del signo", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::MinLowerBound(_) => text("Mínimo menor que un operando", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
+            Self::MaxUpperBound(_) => text("Máximo mayor que un operando", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinWeakMonotone(_) => text("Monotonía débil del mínimo", "a<=c, b<=d => min(a,b)<=min(c,d)"),
+            Self::MaxWeakMonotone(_) => text("Monotonía débil del máximo", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_es(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_es(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_es(),
@@ -648,6 +690,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::SignLowerBound(_) => text("الحد الأدنى للإشارة", "x in R: -1<=sign(x)"),
+            Self::SignUpperBound(_) => text("الحد الأعلى للإشارة", "x in R: sign(x)<=1"),
+            Self::SignWeakMonotone(_) => text("الرتابة الضعيفة للإشارة", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::MinLowerBound(_) => text("الحد الأدنى لا يتجاوز المعامل", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
+            Self::MaxUpperBound(_) => text("الحد الأعلى لا يقل عن المعامل", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinWeakMonotone(_) => text("الرتابة الضعيفة للحد الأدنى", "a<=c, b<=d => min(a,b)<=min(c,d)"),
+            Self::MaxWeakMonotone(_) => text("الرتابة الضعيفة للحد الأعلى", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ar(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_ar(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ar(),
@@ -748,6 +797,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::SignLowerBound(_) => text("符号の下界", "x in R: -1<=sign(x)"),
+            Self::SignUpperBound(_) => text("符号の上界", "x in R: sign(x)<=1"),
+            Self::SignWeakMonotone(_) => text("符号の単調性", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::MinLowerBound(_) => text("最小値は各引数以下", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
+            Self::MaxUpperBound(_) => text("最大値は各引数以上", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinWeakMonotone(_) => text("最小値の単調性", "a<=c, b<=d => min(a,b)<=min(c,d)"),
+            Self::MaxWeakMonotone(_) => text("最大値の単調性", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ja(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_ja(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ja(),
@@ -848,6 +904,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::SignLowerBound(_) => text("부호의 하한", "x in R: -1<=sign(x)"),
+            Self::SignUpperBound(_) => text("부호의 상한", "x in R: sign(x)<=1"),
+            Self::SignWeakMonotone(_) => text("부호의 단조성", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::MinLowerBound(_) => text("최솟값은 각 인수 이하", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
+            Self::MaxUpperBound(_) => text("최댓값은 각 인수 이상", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinWeakMonotone(_) => text("최솟값의 단조성", "a<=c, b<=d => min(a,b)<=min(c,d)"),
+            Self::MaxWeakMonotone(_) => text("최댓값의 단조성", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ko(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_ko(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ko(),
@@ -948,6 +1011,13 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::SignLowerBound(_) => text("Cận dưới của dấu", "x in R: -1<=sign(x)"),
+            Self::SignUpperBound(_) => text("Cận trên của dấu", "x in R: sign(x)<=1"),
+            Self::SignWeakMonotone(_) => text("Tính đơn điệu yếu của dấu", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::MinLowerBound(_) => text("Giá trị nhỏ nhất không vượt đối số", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
+            Self::MaxUpperBound(_) => text("Giá trị lớn nhất không nhỏ hơn đối số", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinWeakMonotone(_) => text("Tính đơn điệu yếu của giá trị nhỏ nhất", "a<=c, b<=d => min(a,b)<=min(c,d)"),
+            Self::MaxWeakMonotone(_) => text("Tính đơn điệu yếu của giá trị lớn nhất", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_vi(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_vi(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_vi(),

@@ -1,0 +1,15 @@
+# Rule: MinLowerBound
+# Before (rejected):
+# forall a,b R:
+#     min(a,b)<=a
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall a,b R:
+    min(a,b)<=a
+
+forall a,b R:
+    min(a,b)<=b
+
+# Boundary: Real operands; neither reverse nor strict operand bounds hold universally.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/binary_min_lower_bound.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

@@ -39,6 +39,19 @@ pub struct ReciprocalAsNegOnePowerBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
+// For a nonzero complex base and integer n, a^(-n)=1/(a^n).
+// Example: a C, n N+, a!=0 => a^(-n)=1/(a^n).
+pub struct NegativeIntegerPowerReciprocalBuiltinRuleProof {
+    pub base_numeric: VerifyFactResult,
+    pub exponent_integer: VerifyFactResult,
+    pub base_nonzero: VerifyFactResult,
+}
+impl NegativeIntegerPowerReciprocalBuiltinRuleProof {
+    pub fn new(base_numeric: VerifyFactResult, exponent_integer: VerifyFactResult, base_nonzero: VerifyFactResult) -> Self {
+        Self { base_numeric, exponent_integer, base_nonzero }
+    }
+}
+
 // Builtin QuotientAsMulNegOnePower: a / b = a * b^(-1).
 // Mathematical property: quotient is multiplication by the reciprocal.
 // Example: with a R, b R*: a / b = a * b^(-1).
@@ -47,6 +60,7 @@ pub struct QuotientAsMulNegOnePowerBuiltinRuleProof {
 }
 
 pub enum PowerLawEqualityBuiltinRuleProof {
+    NegativeIntegerPowerReciprocal(NegativeIntegerPowerReciprocalBuiltinRuleProof),
     PowerProductSameBase(PowerProductSameBaseBuiltinRuleProof),
     PowerOfPower(PowerOfPowerBuiltinRuleProof),
     PowerOfProduct(PowerOfProductBuiltinRuleProof),
@@ -62,6 +76,9 @@ impl Runtime {
     ) -> RuntimeResult<Option<PowerLawEqualityBuiltinRuleProof>> {
         let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            if let Some(proof) = self.try_negative_integer_power_reciprocal(left, right, child)? {
+                return Ok(Some(PowerLawEqualityBuiltinRuleProof::NegativeIntegerPowerReciprocal(proof)));
+            }
             if let Some(proof) =
                 self.try_power_product_same_base(left, right, child.clone())?
             {
@@ -91,6 +108,26 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    fn try_negative_integer_power_reciprocal(
+        &mut self, left: &Obj, right: &Obj, state: VerifyState,
+    ) -> RuntimeResult<Option<NegativeIntegerPowerReciprocalBuiltinRuleProof>> {
+        let Some((base, negative_exponent)) = match_pow(left) else { return Ok(None); };
+        let Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) = right else { return Ok(None); };
+        if !is_one_obj(&div.left) { return Ok(None); }
+        let Some((other_base, exponent)) = match_pow(&div.right) else { return Ok(None); };
+        let negated = Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg { arg: Box::new(exponent.clone()) }));
+        if base.ir() != other_base.ir()
+            || !crate::rational_expression::objs_equal_by_rational_expression_evaluation(negative_exponent, &negated) {
+            return Ok(None);
+        }
+        let Some(base_numeric) = self.verify_power_law_numeric_base(base, state)? else { return Ok(None); };
+        let exponent_integer = self.verify_in_standard_set(exponent, StandardSet::Z, state)?;
+        if exponent_integer.is_failed() { return Ok(None); }
+        let base_nonzero = self.verify_nonzero(base, state)?;
+        if base_nonzero.is_failed() { return Ok(None); }
+        Ok(Some(NegativeIntegerPowerReciprocalBuiltinRuleProof::new(base_numeric, exponent_integer, base_nonzero)))
     }
 
     fn try_power_product_same_base(

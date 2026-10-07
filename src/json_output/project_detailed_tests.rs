@@ -92,6 +92,35 @@ fn detailed_fact_success_chinese_keys() {
 }
 
 #[test]
+fn detailed_known_or_preserves_each_argument_equality_path() {
+    let mut rt = runtime_en();
+    // Unit premises keep both branches unknown while testing stored-Or reuse.
+    assert!(rt.run_litex_code(
+        "have a, b, c R\ntrust a > 0 or a < 0\ntrust a = b\ntrust b = c"
+    ).unwrap().success);
+    let result = exec_one(&mut rt, "c > 0 or c < 0");
+    assert!(!result.is_failed());
+    let json = project_stmt_detailed(&result, &rt);
+    let searched = obj_field(obj_field(&json, "verify"), "searched_proof");
+    assert_eq!(obj_field(searched, "type").as_str().ok(), Some("by_known_or"));
+    let equalities = obj_field(searched, "why_parameters_of_known_fact_are_equal_to_givens")
+        .as_array().unwrap();
+    assert_eq!(equalities.len(), 4);
+    for index in [0, 2] {
+        assert_eq!(obj_field(&equalities[index], "kind").as_str().ok(), Some("known_path"));
+        let path = obj_field(&equalities[index], "path").as_array().unwrap();
+        assert_eq!(path.len(), 2);
+        for (edge, expected) in path.iter().zip(["a = b", "b = c"]) {
+            assert_eq!(obj_field(edge, "cite").as_str().ok(), Some(expected));
+            assert!(!obj_field(edge, "cite_fact_id").as_str().unwrap().is_empty());
+        }
+    }
+    for index in [1, 3] {
+        assert_eq!(obj_field(&equalities[index], "kind").as_str().ok(), Some("same_ir"));
+    }
+}
+
+#[test]
 fn detailed_run_envelope_detail_and_language() {
     let mut runtime = runtime_zh();
     let stmt = exec_one(&mut runtime, "1 = 1");

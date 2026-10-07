@@ -57,6 +57,20 @@ fn graph_known_equality_dependency_preserves_the_real_source() {
 }
 
 #[test]
+fn graph_known_or_transport_keeps_both_equality_dependencies() {
+    let graph = make_graph(
+        "have a, b, c R\ntrust a > 0 or a < 0\ntrust a = b\ntrust b = c\nc > 0 or c < 0",
+        false, OutputLanguage::English,
+    );
+    let goal = graph.nodes.iter().find(|n| n.label == "c > 0 or c < 0").unwrap();
+    for label in ["a > 0 or a < 0", "a = b", "b = c"] {
+        let premise = graph.nodes.iter().find(|n| n.label == label).unwrap();
+        assert!(graph.edges.iter().any(|e| e.from == premise.id && e.to == goal.id
+            && e.kind == "depends_on"), "missing {label}");
+    }
+}
+
+#[test]
 fn graph_forall_assumptions_remain_local() {
     let graph = make_graph("forall n N:\n    n = 16\n    =>:\n        $prime(n + 1)", true, OutputLanguage::English);
     let premise = graph.nodes.iter().find(|n| n.label == "n = 16").unwrap();

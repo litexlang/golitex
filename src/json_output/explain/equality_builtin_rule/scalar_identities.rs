@@ -6,6 +6,7 @@ use crate::launch_command::OutputLanguage;
 impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_identities::ScalarIdentityBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SignZeroReflection(_) => ("Zero sign reflection", "x in R: sign(x)=0 => x=0"),
 Self::FiniteSetMaxSelection(_) => ("Exact finite-set maximum", "Select an original rational member and certify every member is no greater"),
 Self::FiniteSetMinSelection(_) => ("Exact finite-set minimum", "Select an original rational member and certify every member is no smaller"),
 Self::AbsZeroArgument(_) => ("Zero absolute value", "A real number whose absolute value is zero equals zero"),
@@ -22,6 +23,7 @@ Self::LcmZero(_) => ("Zero argument of lcm", "The least common multiple is zero 
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SignZeroReflection(_) => ("sign 的零反射", "x in R: sign(x)=0 => x=0"),
 Self::FiniteSetMaxSelection(_) => ("有限集合最大值精确选取", "选取原有理数成员并证明每个成员不大于它"),
 Self::FiniteSetMinSelection(_) => ("有限集合最小值精确选取", "选取原有理数成员并证明每个成员不小于它"),
 Self::AbsZeroArgument(_) => ("绝对值为零", "实数的绝对值为零时，该实数等于零"),
@@ -38,6 +40,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SignZeroReflection(_) => ("sign 的零反射", "x in R: sign(x)=0 => x=0"),
             Self::FiniteSetMaxSelection(_) => ("有限集合最大值精確選取", "選取原有理數成員並證明每個成員不大於它"),
             Self::FiniteSetMinSelection(_) => ("有限集合最小值精確選取", "選取原有理數成員並證明每個成員不小於它"),
             Self::AbsZeroArgument(_) => ("絕對值為零", "實數的絕對值為零時，該實數等於零"),
@@ -54,6 +57,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SignZeroReflection(_) => ("Réflexion du signe nul", "x in R: sign(x)=0 => x=0"),
             Self::FiniteSetMaxSelection(_) => ("Maximum exact d'un ensemble fini", "Choisir un membre rationnel original et certifier qu'aucun membre n'est plus grand"),
             Self::FiniteSetMinSelection(_) => ("Minimum exact d'un ensemble fini", "Choisir un membre rationnel original et certifier qu'aucun membre n'est plus petit"),
             Self::AbsZeroArgument(_) => ("Valeur absolue nulle", "Un réel de valeur absolue nulle est égal à zéro"),
@@ -70,6 +74,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SignZeroReflection(_) => ("Отражение нулевого знака", "x in R: sign(x)=0 => x=0"),
             Self::FiniteSetMaxSelection(_) => ("Точный максимум конечного множества", "Выбрать исходный рациональный элемент и подтвердить, что ни один элемент не больше"),
             Self::FiniteSetMinSelection(_) => ("Точный минимум конечного множества", "Выбрать исходный рациональный элемент и подтвердить, что ни один элемент не меньше"),
             Self::AbsZeroArgument(_) => ("Нулевой модуль", "Вещественное число с нулевым модулем равно нулю"),
@@ -86,6 +91,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SignZeroReflection(_) => ("Reflexión del signo cero", "x in R: sign(x)=0 => x=0"),
             Self::FiniteSetMaxSelection(_) => ("Máximo exacto de conjunto finito", "Elegir un miembro racional original y certificar que ningún miembro es mayor"),
             Self::FiniteSetMinSelection(_) => ("Mínimo exacto de conjunto finito", "Elegir un miembro racional original y certificar que ningún miembro es menor"),
             Self::AbsZeroArgument(_) => ("Valor absoluto cero", "Un número real de valor absoluto cero es igual a cero"),
@@ -102,6 +108,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SignZeroReflection(_) => ("انعكاس الإشارة الصفرية", "x in R: sign(x)=0 => x=0"),
             Self::FiniteSetMaxSelection(_) => ("قيمة عظمى دقيقة لمجموعة منتهية", "اختيار عنصر نسبي أصلي وإثبات أن كل عنصر لا يزيد عليه"),
             Self::FiniteSetMinSelection(_) => ("قيمة صغرى دقيقة لمجموعة منتهية", "اختيار عنصر نسبي أصلي وإثبات أن كل عنصر لا يقل عنه"),
             Self::AbsZeroArgument(_) => ("قيمة مطلقة صفرية", "العدد الحقيقي ذو القيمة المطلقة الصفرية يساوي صفرًا"),
@@ -118,6 +125,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SignZeroReflection(_) => ("符号がゼロなら引数もゼロ", "x in R: sign(x)=0 => x=0"),
             Self::FiniteSetMaxSelection(_) => ("有限集合の正確な最大値", "元の有理数の要素を選び、すべての要素がそれ以下であることを証明します"),
             Self::FiniteSetMinSelection(_) => ("有限集合の正確な最小値", "元の有理数の要素を選び、すべての要素がそれ以上であることを証明します"),
             Self::AbsZeroArgument(_) => ("絶対値がゼロ", "絶対値がゼロである実数はゼロです"),
@@ -134,6 +142,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SignZeroReflection(_) => ("영인 부호의 반영", "x in R: sign(x)=0 => x=0"),
             Self::FiniteSetMaxSelection(_) => ("유한 집합의 정확한 최댓값", "원래의 유리수 원소를 선택하고 모든 원소가 그보다 크지 않음을 인증합니다"),
             Self::FiniteSetMinSelection(_) => ("유한 집합의 정확한 최솟값", "원래의 유리수 원소를 선택하고 모든 원소가 그보다 작지 않음을 인증합니다"),
             Self::AbsZeroArgument(_) => ("절댓값이 0", "절댓값이 0인 실수는 0입니다"),
@@ -150,6 +159,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SignZeroReflection(_) => ("Phản ánh dấu bằng không", "x in R: sign(x)=0 => x=0"),
             Self::FiniteSetMaxSelection(_) => ("Giá trị lớn nhất chính xác của tập hữu hạn", "Chọn phần tử hữu tỉ gốc và chứng nhận mọi phần tử không lớn hơn nó"),
             Self::FiniteSetMinSelection(_) => ("Giá trị nhỏ nhất chính xác của tập hữu hạn", "Chọn phần tử hữu tỉ gốc và chứng nhận mọi phần tử không nhỏ hơn nó"),
             Self::AbsZeroArgument(_) => ("Giá trị tuyệt đối bằng không", "Số thực có giá trị tuyệt đối bằng không thì bằng không"),
@@ -183,6 +193,9 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::ComplexModulusCoordinates(_) => ("Complex modulus coordinates", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
+            Self::RealPartQuotient(_) => ("Real part of a quotient", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
+            Self::ImaginaryPartQuotient(_) => ("Imaginary part of a quotient", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
             Self::TanCotProduct(_) => ("Tangent-cotangent product", "For real x with sin(x) and cos(x) nonzero: tan(x)*cot(x)=1"),
             Self::TanSquareReciprocalCosine(_) => ("Tangent square identity", "For real x with cos(x) nonzero: 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("Cosine double angle", "For checked real x: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
@@ -204,6 +217,9 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::ComplexModulusCoordinates(_) => ("复数模的坐标公式", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
+            Self::RealPartQuotient(_) => ("复数商的实部", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
+            Self::ImaginaryPartQuotient(_) => ("复数商的虚部", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
             Self::TanCotProduct(_) => ("正切余切乘积", "实数 x 的 sin(x)、cos(x) 非零时：tan(x)*cot(x)=1"),
             Self::TanSquareReciprocalCosine(_) => ("正切平方恒等式", "实数 x 的 cos(x) 非零时：1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("余弦倍角公式", "经验证的实数 x 满足：cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
@@ -225,6 +241,9 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::ComplexModulusCoordinates(_) => ("複數模的座標公式", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
+            Self::RealPartQuotient(_) => ("複數商的實部", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
+            Self::ImaginaryPartQuotient(_) => ("複數商的虛部", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
             Self::TanCotProduct(_) => ("正切餘切乘積", "實數 x 的 sin(x)、cos(x) 非零時：tan(x)*cot(x)=1"),
             Self::TanSquareReciprocalCosine(_) => ("正切平方恆等式", "實數 x 的 cos(x) 非零時：1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("餘弦倍角公式", "經驗證的實數 x 滿足：cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
@@ -246,6 +265,9 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::ComplexModulusCoordinates(_) => ("Coordonnées du module complexe", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
+            Self::RealPartQuotient(_) => ("Partie réelle du quotient", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
+            Self::ImaginaryPartQuotient(_) => ("Partie imaginaire du quotient", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
             Self::TanCotProduct(_) => ("Produit tangente-cotangente", "Pour x réel, sin(x) et cos(x) non nuls : tan(x)*cot(x)=1"),
             Self::TanSquareReciprocalCosine(_) => ("Identité du carré de la tangente", "Pour x réel avec cos(x) non nul : 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("Angle double du cosinus", "Pour x réel vérifié : cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
@@ -267,6 +289,9 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::ComplexModulusCoordinates(_) => ("Координаты модуля комплексного числа", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
+            Self::RealPartQuotient(_) => ("Действительная часть частного", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
+            Self::ImaginaryPartQuotient(_) => ("Мнимая часть частного", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
             Self::TanCotProduct(_) => ("Произведение тангенса и котангенса", "Для вещественного x при ненулевых sin(x) и cos(x): tan(x)*cot(x)=1"),
             Self::TanSquareReciprocalCosine(_) => ("Квадрат тангенса", "Для вещественного x при ненулевом cos(x): 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("Двойной угол косинуса", "Для проверенного вещественного x: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
@@ -288,6 +313,9 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::ComplexModulusCoordinates(_) => ("Coordenadas del módulo complejo", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
+            Self::RealPartQuotient(_) => ("Parte real de un cociente", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
+            Self::ImaginaryPartQuotient(_) => ("Parte imaginaria de un cociente", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
             Self::TanCotProduct(_) => ("Producto tangente-cotangente", "Para x real con sin(x) y cos(x) distintos de cero: tan(x)*cot(x)=1"),
             Self::TanSquareReciprocalCosine(_) => ("Identidad del cuadrado de la tangente", "Para x real con cos(x) distinto de cero: 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("Ángulo doble del coseno", "Para x real comprobado: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
@@ -309,6 +337,9 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::ComplexModulusCoordinates(_) => ("إحداثيات معيار العدد المركب", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
+            Self::RealPartQuotient(_) => ("الجزء الحقيقي للقسمة", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
+            Self::ImaginaryPartQuotient(_) => ("الجزء التخيلي للقسمة", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
             Self::TanCotProduct(_) => ("حاصل ضرب الظل وظل التمام", "للعدد الحقيقي x عندما sin(x) وcos(x) غير صفريين: tan(x)*cot(x)=1"),
             Self::TanSquareReciprocalCosine(_) => ("متطابقة مربع الظل", "للعدد الحقيقي x عندما cos(x) غير صفري: 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("الزاوية المضاعفة لجيب التمام", "للعدد الحقيقي x المتحقق منه: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
@@ -330,6 +361,9 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::ComplexModulusCoordinates(_) => ("複素数の絶対値の座標式", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
+            Self::RealPartQuotient(_) => ("複素数の商の実部", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
+            Self::ImaginaryPartQuotient(_) => ("複素数の商の虚部", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
             Self::TanCotProduct(_) => ("正接と余接の積", "実数 x で sin(x) と cos(x) が非零なら tan(x)*cot(x)=1"),
             Self::TanSquareReciprocalCosine(_) => ("正接の平方恒等式", "実数 x で cos(x) が非零なら 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("余弦の倍角公式", "検証済みの実数 x について: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
@@ -351,6 +385,9 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::ComplexModulusCoordinates(_) => ("복소수 절댓값의 좌표식", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
+            Self::RealPartQuotient(_) => ("복소수 몫의 실수부", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
+            Self::ImaginaryPartQuotient(_) => ("복소수 몫의 허수부", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
             Self::TanCotProduct(_) => ("탄젠트와 코탄젠트의 곱", "실수 x에서 sin(x), cos(x)가 0이 아니면 tan(x)*cot(x)=1"),
             Self::TanSquareReciprocalCosine(_) => ("탄젠트 제곱 항등식", "실수 x에서 cos(x)가 0이 아니면 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("코사인 배각 공식", "검증된 실수 x에 대해: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),
@@ -372,6 +409,9 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::ComplexModulusCoordinates(_) => ("Tọa độ môđun số phức", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
+            Self::RealPartQuotient(_) => ("Phần thực của thương", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
+            Self::ImaginaryPartQuotient(_) => ("Phần ảo của thương", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
             Self::TanCotProduct(_) => ("Tích tang và côtang", "Với x thực, sin(x) và cos(x) khác 0: tan(x)*cot(x)=1"),
             Self::TanSquareReciprocalCosine(_) => ("Đẳng thức bình phương tang", "Với x thực, cos(x) khác 0: 1+tan(x)^2=1/cos(x)^2"),
             Self::CosDoubleAngle(_) => ("Góc kép của cos", "Với x thực đã kiểm tra: cos(2*x)=cos(x)^2-sin(x)^2=1-2*sin(x)^2=2*cos(x)^2-1"),

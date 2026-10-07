@@ -1,4 +1,5 @@
 pub mod exp_ln_order;
+pub mod sign_extremum_order;
 pub mod log_unit_interval_order;
 mod helper;
 pub mod factorial_order;

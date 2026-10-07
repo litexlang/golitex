@@ -1,0 +1,34 @@
+# Rule: NegativeIntegerPowerReciprocal
+# Before (rejected):
+# forall a C,n N+:
+#     a!=0
+#     =>:
+#         a^(-n)=1/(a^n)
+# Former behavior: strict run success=false, phase search_proof.
+# Now (verified directly):
+forall a C,n N+:
+    a!=0
+    =>:
+        a^(-n)=1/(a^n)
+
+forall a C:
+    a!=0
+    =>:
+        a^(-2)=1/(a^2)
+
+forall a C:
+    a!=0
+    =>:
+        1/(a^2)=a^(-2)
+
+forall a C,n N+:
+    a!=0
+    =>:
+        a^(0-n)=1/(a^n)
+
+forall a C*,n Z:
+    a^(-n)=1/(a^n)
+
+# Boundary: Nonzero complex bases and integer exponents only; missing guards and mismatched bases/exponents reject.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/power_negative_integer_reciprocal.lit
+# Regression: tests/unit/execute/legacy_six_simple_bt/tests.rs

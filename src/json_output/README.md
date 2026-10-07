@@ -145,9 +145,12 @@ shape name for alpha evidence. A single `by_equivalence_class` route has either
 `kind: known_path` with generating-edge citations, or `kind: via_peers` with
 `left_path`, `bridge`, and `right_path`. The bridge includes its equality,
 well-definedness proof, and restricted searched proof. No class handle replaces
-a FactId citation. Known-atomic Detailed output includes
+a FactId citation. Known-atomic and Known Or Detailed output include
 `why_parameters_of_known_fact_are_equal_to_givens`, exposing these equality
-subproofs for membership and other parameter transports. See the
+subproofs in argument order for membership and other parameter transports.
+Known Or preserves its stored branch shape and uses identity/alpha or visible
+stored equality paths for each argument; it does not start broader truth search.
+See the
 [equality result tree](../execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md).
 
 ## Induction evidence and failures
@@ -940,3 +943,6 @@ and strictness instead of relabeling a strict source as a weak premise. Parent
 WD remains a separate result; tangent/cotangent nonzero citations appear there.
 The source/citation and Normal/Detailed/ten-language producer contract is
 `trig_additional_interval_order_tests`.
+
+
+The local scalar migration rules retain dedicated IDs for negative integer reciprocal powers, symbolic complex modulus/quotient coordinates, intrinsic exp/factorial nonzero values, sign and binary extrema. `NegativeIntegerPowerReciprocal` exposes `base_numeric`, `exponent_integer`, and `base_nonzero`. Sign reflection retains its actual equality/nonzero citation and real-domain evidence. Weak monotonicity exposes each argument order; a fixed argument is `same_argument`, while an unequal pair projects its actual checked order. Intrinsic formula/nonzero leaves rely on the enclosing fact's WD certificate, rather than fabricating premise citations. The focused `legacy_six_simple_bt_tests` producer/consumer gate checks these fields and the graph's two extremum-order dependency edges.
