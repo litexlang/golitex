@@ -48,6 +48,7 @@ pub(crate) use result::{ByContradictionClosingFailed, ExecByContraStmtFailed};
 // Existing failure IR consumed by the crate's Normal/Detailed JSON projection.
 pub(crate) use result::{ByCasesBranchFailed, ExecByCasesStmtFailed, ExecByExtensionStmtFailed};
 pub(crate) use result::ExecByFnExtensionStmtFailed;
+pub(crate) use result::ByCasesBranchClosingSuccess;
 pub(crate) use helper::{
     proof_verify_state, store_goal_fact, verify_goal_fact,
 };

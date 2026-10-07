@@ -1,0 +1,731 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-07",
+  "target": "docs/Litex_Learner_Cheatsheet.md",
+  "scope": "all rewritten cheatsheet Litex fences and static references; no corpus or agent evaluation claim",
+  "source_revision": "49112c27ff45731dbdbde7b6ceef833376bfdb83",
+  "verifier_version": "Litex 1.0.0-beta",
+  "verifier_sha256": "b2b4da58c1d3490af948fcb66862b16a100001b1a6b2e07f432aa3105d5adb61",
+  "before_sha256": "9180a0890927e2c5197be0b923d9d1240c452011cffb06f088ffe9776fb02d67",
+  "before_lines": 816,
+  "after_sha256": "2815f039ad352ecdad7a1ff769e4f6e1caf79781434060648c92f0a9f1602374",
+  "after_lines": 391,
+  "positive_count": 11,
+  "negative_count": 3,
+  "fences": [
+    {
+      "fence_index": 0,
+      "line": 25,
+      "role": "positive",
+      "source_sha256": "49567374c8203dca87633619b2729075200f40f74e66c819abd0dc600fccb74c",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true,
+        true,
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "have x R = 2\nx + 1 = 3\nx^2 = 4"
+    },
+    {
+      "fence_index": 1,
+      "line": 63,
+      "role": "positive",
+      "source_sha256": "882b1ce1b3e718dae1a71300fbbde31221be4d9b139d566240d0cc9dac43f1f0",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true,
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "prop is_above_two(t R):\n    t > 2\nby def $is_above_two(3)"
+    },
+    {
+      "fence_index": 2,
+      "line": 86,
+      "role": "positive",
+      "source_sha256": "a736e5c43a22bd11ec50095ddc105b0435dc78090f48d576e34f0db7ab33e682",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "forall x R:\n    x > 0\n    =>:\n        x != 0"
+    },
+    {
+      "fence_index": 3,
+      "line": 107,
+      "role": "positive",
+      "source_sha256": "8243f436d4d5db641a4cadc9db878366419be2780162b1b91ca987cc43f91f5c",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "have fn reciprocal(x R: x != 0) R = 1 / x\nthm reciprocal_product:\n    ? forall x R:\n        x != 0\n        =>:\n            reciprocal(x) * x = 1\n    reciprocal(x) = 1 / x\n    reciprocal(x) * x = (1 / x) * x = 1\n\nrelease thm reciprocal_product(2)\nreciprocal(2) * 4 = (reciprocal(2) * 2) * 2 = 1 * 2 = 2"
+    },
+    {
+      "fence_index": 4,
+      "line": 145,
+      "role": "positive",
+      "source_sha256": "848d9d161be4f0719a3c8454beb4438c21f367978175eedb9c86dc4099eb5665",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true,
+        true,
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "witness exist w R st {w^2 = 4} from 2\nobtain root from exist w R st {w^2 = 4}\nroot^2 = 4"
+    },
+    {
+      "fence_index": 5,
+      "line": 158,
+      "role": "positive",
+      "source_sha256": "c8acc3c352b1878b97eeabf9a7c5b596ecbf5de38504d41340f3caeeee3d0758",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "claim:\n    ? forall x R:\n        exist y R st {y = x + 1}\n    witness exist y R st {y = x + 1} from x + 1"
+    },
+    {
+      "fence_index": 6,
+      "line": 169,
+      "role": "positive",
+      "source_sha256": "c36c61591a4e46c89d2cc4d7bed282aa65bd98097bb6a2609acfef63db6aa92c",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "witness exist! w R st {w = 2} from 2"
+    },
+    {
+      "fence_index": 7,
+      "line": 200,
+      "role": "positive",
+      "source_sha256": "e37d54536d6ac31704a17cff7f9097d9fc748d433982a55d08a2ae1e107acf52",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "by enumerate finite_set:\n    ? forall x {1, 2}:\n        x > 0"
+    },
+    {
+      "fence_index": 8,
+      "line": 209,
+      "role": "positive",
+      "source_sha256": "c020796b41cabf4c01cb5f13661425077ba732ea0d00358a6b2021b861a39065",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "claim:\n    ? forall n N:\n        2^n >= n + 1\n    by induc n from 0:\n        ? 2^n >= n + 1\n        ? from n = 0:\n            2^n = 1 = n + 1\n        ? induc:\n            2^(n + 1) = 2^n * 2^1 = 2^n * 2\n            2^n * 2 >= (n + 1) * 2\n            (n + 1) * 2 = (n + 1) + (n + 1) >= (n + 1) + 1\n            2^(n + 1) = 2^n * 2 >= (n + 1) * 2 >= (n + 1) + 1"
+    },
+    {
+      "fence_index": 9,
+      "line": 234,
+      "role": "expected_rejection",
+      "source_sha256": "54d420d21975cc6affd9da70ca4e732b82d8ed428daf2934e89ea9ff199e7fac",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "failed_phase": "search_proof",
+        "statement_success": [
+          true,
+          false
+        ]
+      },
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "statement_success": [
+        true,
+        false
+      ],
+      "failed_phases": [
+        "search_proof"
+      ],
+      "session_error": null,
+      "matches": true,
+      "source": "have x R\nx = 0"
+    },
+    {
+      "fence_index": 10,
+      "line": 242,
+      "role": "positive",
+      "source_sha256": "5690ac29744e87ad0d4c0067c49d9f081d84f92b0855373f966f43bb3246faea",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true,
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "have x R = 0\nx + 1 = 1"
+    },
+    {
+      "fence_index": 11,
+      "line": 252,
+      "role": "expected_rejection",
+      "source_sha256": "e55447f0062d12c209d6a10b57f285ce634bf0b070290ac50d25013f2ce88ee1",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "failed_phase": "have_fn_equal",
+        "statement_success": [
+          false
+        ]
+      },
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "statement_success": [
+        false
+      ],
+      "failed_phases": [
+        "have_fn_equal"
+      ],
+      "session_error": null,
+      "matches": true,
+      "source": "have fn reciprocal(x R) R = 1 / x"
+    },
+    {
+      "fence_index": 12,
+      "line": 266,
+      "role": "expected_rejection",
+      "source_sha256": "de738e58b8cda013f8c53963657ffe11e7d68eea1f59fcfc75852d066329a09c",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "session_error_contains": "parse_error: undefined name `witness` at line 2"
+      },
+      "exit_code": 1,
+      "kind": "run",
+      "success": false,
+      "statement_success": [],
+      "failed_phases": [],
+      "session_error": "parse_error: undefined name `witness` at line 2 in <repo>/tmp/2026-10-07/learner-cheatsheet-redesign/block-12.lit",
+      "matches": true,
+      "source": "forall x R:\n    witness exist y R st {y = x + 1} from x + 1"
+    },
+    {
+      "fence_index": 13,
+      "line": 308,
+      "role": "positive",
+      "source_sha256": "d9e440d98a89ddfe6ba9c96cb1453d2aea76fb9262f08803739468f0375e6fc0",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "<exact extracted fence>"
+      ],
+      "expect": {
+        "success": true
+      },
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "statement_success": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failed_phases": [],
+      "session_error": null,
+      "matches": true,
+      "source": "struct Point:\n    x R\n    y R\nhave p &Point = (1, 2)\nrelease struct def p\np.x = p(1) = 1\np.y = p(2) = 2"
+    }
+  ],
+  "all_fences_match": true,
+  "links": [
+    {
+      "target": "setup.md",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md",
+      "status": "resolved"
+    },
+    {
+      "target": "cli.md",
+      "status": "resolved"
+    },
+    {
+      "target": "#choose-a-statement",
+      "status": "resolved"
+    },
+    {
+      "target": "#write-facts-and-hypotheses",
+      "status": "resolved"
+    },
+    {
+      "target": "#definition--theorem--use",
+      "status": "resolved"
+    },
+    {
+      "target": "#existence-and-scope",
+      "status": "resolved"
+    },
+    {
+      "target": "#proof-actions",
+      "status": "resolved"
+    },
+    {
+      "target": "#common-places-to-get-stuck",
+      "status": "resolved"
+    },
+    {
+      "target": "#objects-and-domains",
+      "status": "resolved"
+    },
+    {
+      "target": "#run-and-read-feedback",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#r02-choose-the-language-form-by-mathematical-role",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#factual-statements",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#r01-define-and-use-a-reciprocal-function",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#p05-a-function-equation-may-need-to-be-exposed-before-substitution",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#theorem-fact-shapes-and-call-spelling",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s35-existential-witnesses",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s36-unique-existential-witnesses",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s33-local-claims",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s47-explicit-definition-folding",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s25-publish-theorem-conclusions",
+      "status": "resolved"
+    },
+    {
+      "target": "#existence-and-scope",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s39-proof-by-exhaustive-cases",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s40-proof-by-contradiction",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s41-finite-set-enumeration",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s44-finite-range-iteration",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s42-ordinary-induction",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s43-strong-induction",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s45-set-extensionality",
+      "status": "resolved"
+    },
+    {
+      "target": "#definition--theorem--use",
+      "status": "resolved"
+    },
+    {
+      "target": "#existence-and-scope",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#pitfalls-and-missing-proof-steps",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s01-expression-defined-functions",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s16-structured-carriers",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#s17-parameterized-declaration-families",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#unicode-mathematical-input-aliases-preview",
+      "status": "resolved"
+    },
+    {
+      "target": "cli.md#statement-outcomes",
+      "status": "resolved"
+    },
+    {
+      "target": "Manual.md#trust-and-strict-mode",
+      "status": "resolved"
+    },
+    {
+      "target": "../examples/README.md",
+      "status": "resolved"
+    },
+    {
+      "target": "../showcases/math_concepts_in_litex/README.md",
+      "status": "resolved"
+    },
+    {
+      "target": "audits/learner-cheatsheet-redesign-2026-10-07.json",
+      "status": "resolved"
+    }
+  ],
+  "incoming_anchors": [
+    {
+      "source": "docs/Manual.md",
+      "anchor": "supported-syntax-and-recommended-writing",
+      "status": "preserved"
+    },
+    {
+      "source": "docs/Manual.md",
+      "anchor": "6-small-proofs-write-the-route-only-when-needed",
+      "status": "preserved"
+    },
+    {
+      "source": "docs/FAQ.md",
+      "anchor": "supported-syntax-and-recommended-writing",
+      "status": "preserved"
+    },
+    {
+      "source": "docs/FAQ.md",
+      "anchor": "common-places-to-get-stuck",
+      "status": "preserved"
+    }
+  ],
+  "json_blocks": 1,
+  "proof_iteration": {
+    "schema_version": 1,
+    "session_command": [
+      "target/release/litex",
+      "-lang",
+      "en",
+      "-strict"
+    ],
+    "scope": "documentation authoring; normal REPL blocks with rollback under current parser, which has no try statement",
+    "attempts": [
+      {
+        "stage": "initial independent batch",
+        "source": "have fn reciprocal(x R: x != 0) R = 1 / x\nthm reciprocal_product:\n    ? forall x R:\n        x != 0\n        =>:\n            reciprocal(x) * x = 1\n    reciprocal(x) = 1 / x\n    reciprocal(x) * x = (1 / x) * x = 1\n\nrelease thm reciprocal_product(2)\nreciprocal(2) * 4 = 2\n",
+        "observation": {
+          "fence_index": 3,
+          "line": 107,
+          "role": "positive",
+          "source_sha256": "bf0a3a494d62dd42a6bc558a6a9ca0c87e85c38b1b31e9483b2efef5da9faeac",
+          "command": [
+            "target/release/litex",
+            "-lang",
+            "en",
+            "-strict",
+            "-f",
+            "<exact extracted fence>"
+          ],
+          "expect": {
+            "success": true
+          },
+          "exit_code": 1,
+          "kind": "run",
+          "success": false,
+          "statement_success": [
+            true,
+            true,
+            true,
+            false
+          ],
+          "failed_phases": [
+            "search_proof"
+          ],
+          "session_error": null,
+          "matches": false
+        },
+        "earliest_stop": "search_proof at reciprocal(2) * 4 = 2"
+      },
+      {
+        "stage": "initial independent batch",
+        "source": "claim:\n    ? forall n N:\n        2^n >= n + 1\n    by induc n from 0:\n        ? 2^n >= n + 1\n        ? from n = 0:\n            2^n = 1 = n + 1\n        ? induc:\n            2^(n + 1) = 2^n * 2\n            2^n * 2 >= (n + 1) * 2\n            (n + 1) * 2 = (n + 1) + (n + 1) >= (n + 1) + 1\n            2^(n + 1) = 2^n * 2 >= (n + 1) * 2 >= (n + 1) + 1\n",
+        "observation": {
+          "fence_index": 8,
+          "line": 209,
+          "role": "positive",
+          "source_sha256": "3b61e4f18c785eaacf145b57009cb9da6e78bf273fadac2496da0db9a671bab2",
+          "command": [
+            "target/release/litex",
+            "-lang",
+            "en",
+            "-strict",
+            "-f",
+            "<exact extracted fence>"
+          ],
+          "expect": {
+            "success": true
+          },
+          "exit_code": 1,
+          "kind": "run",
+          "success": false,
+          "statement_success": [
+            false
+          ],
+          "failed_phases": [
+            "claim"
+          ],
+          "session_error": null,
+          "matches": false
+        },
+        "earliest_stop": "claim -> by_induc successor proof body -> search_proof at 2^(n+1) = 2^n * 2"
+      }
+    ],
+    "accepted_session_blocks": [
+      {
+        "source": "have fn reciprocal(x R: x != 0) R = 1 / x",
+        "feedback": "success"
+      },
+      {
+        "source": "thm reciprocal_product:\n    ? forall x R:\n        x != 0\n        =>:\n            reciprocal(x) * x = 1\n    reciprocal(x) = 1 / x\n    reciprocal(x) * x = (1 / x) * x = 1",
+        "feedback": "success"
+      },
+      {
+        "source": "release thm reciprocal_product(2)",
+        "feedback": "success"
+      },
+      {
+        "source": "reciprocal(2) * 4 = (reciprocal(2) * 2) * 2 = 1 * 2 = 2",
+        "feedback": "success"
+      },
+      {
+        "source": "claim:\n    ? forall n N:\n        2^n >= n + 1\n    by induc n from 0:\n        ? 2^n >= n + 1\n        ? from n = 0:\n            2^n = 1 = n + 1\n        ? induc:\n            2^(n + 1) = 2^n * 2^1 = 2^n * 2\n            2^n * 2 >= (n + 1) * 2\n            (n + 1) * 2 = (n + 1) + (n + 1) >= (n + 1) + 1\n            2^(n + 1) = 2^n * 2 >= (n + 1) * 2 >= (n + 1) + 1",
+        "feedback": "success"
+      }
+    ]
+  },
+  "validated_source_state": "uncommitted documentation revision; Rust source unchanged",
+  "build_gate": {
+    "command": [
+      "cargo",
+      "build",
+      "--release"
+    ],
+    "status": "passed",
+    "reuse": "current-source release build from the preceding document task in the same session"
+  },
+  "editorial_changes": [
+    "task navigation and decision tables",
+    "guarded reciprocal theorem and explicit use chain",
+    "active induction binder with checked exponent bridge",
+    "independent witness and scope examples",
+    "expected rejection cards",
+    "ordinary learning path contains no trust example",
+    "advanced interfaces delegated to canonical Manual contracts",
+    "existing Manual and FAQ anchors preserved"
+  ]
+}
