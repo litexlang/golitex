@@ -1,232 +1,87 @@
 # Litex Learner Cheatsheet
 
-> A first-contact guide for learning the Litex way of writing mathematics.
-> Follow this page from top to bottom once, then keep it beside your editor.
-> For the complete language contract, read the [Manual](Manual.md). For
-> runnable source files, browse the [examples directory](../examples/README.md).
+Choose the next declaration, proof step, or repair from this page. Litex checks
+statements in source order; accepted objects and facts become context for later
+statements. Every runnable block below is self-contained.
 
-<!-- Learner spine: object → fact → statement → verifier output → context growth → proof routes → repair → reusable mathematical world. -->
+For installation use [setup](setup.md). The [Manual](Manual.md) owns the exact
+language contracts; [CLI](cli.md) owns commands and output.
 
-## The one idea to remember
+## Find your next move
 
-Litex is read from top to bottom. You write the mathematical objects and facts
-that should hold. The verifier checks each statement in the current context,
-reports the route or the first stopping point, and makes accepted information
-available to later statements.
+| I need to… | Start here |
+| --- | --- |
+| Introduce a value, function, or condition | [Choose a statement](#choose-a-statement) |
+| State hypotheses and a conclusion | [Write facts and hypotheses](#write-facts-and-hypotheses) |
+| Define something and prove a law about it | [Definition → theorem → use](#definition--theorem--use) |
+| Give or extract a witness | [Existence and scope](#existence-and-scope) |
+| Choose a proof method | [Proof actions](#proof-actions) |
+| Understand a failed statement | [Common places to get stuck](#common-places-to-get-stuck) |
+| Look up number sets, indices, or structures | [Objects and domains](#objects-and-domains) |
+| Run a file and inspect its result | [Run and read feedback](#run-and-read-feedback) |
 
-The practical loop is:
-
-```text
-identify objects
-    → state the next fact
-    → choose the statement form
-    → run Litex
-    → read the output
-    → continue from committed context or repair the local stop
-```
-
-Keep these four words separate:
-
-| Word | Meaning | Examples |
-|---|---|---|
-| **Object** | A mathematical value or expression | <code>x</code>, <code>R</code>, <code>{1, 2}</code>, <code>x + 1</code>, <code>fn(t R) R</code> |
-| **Fact** | A proposition about objects | <code>x = 2</code>, <code>x $in R</code>, <code>$prime(n)</code> |
-| **Statement** | A line or block that introduces, defines, or checks facts | <code>have</code>, a bare fact, <code>prop</code>, <code>claim</code>, <code>thm</code> |
-| **Output** | The verifier's evidence, context effects, or stopping point | proof route, stored fact, soft miss (`success: false`), session error |
-
-The most useful authoring question is not “which tactic should I use?” It is:
-
-> What fact should be true next, given the objects and facts already in the
-> context?
-
-## 1. First run: check one fact
-
-Install Litex or use the online playground. The smallest useful local run is:
-
-```bash
-litex -e '1 + 1 = 2'
-```
-
-The command returns Normal JSON. A successful run has a small envelope like this
-(fields inside <code>statement_results</code> are shown only as a readable
-excerpt):
-
-```json
-{
-  "kind": "run",
-  "success": true,
-  "detail": "normal",
-  "session_error": null,
-  "statement_results": [
-    {
-      "success": true,
-      "statement": "1 + 1 = 2",
-      "proof_method": { "type": "builtin_rule", "rule_name": "Calculation", "message": "Both sides evaluate to the same number" },
-      "stores": ["1 + 1 = 2"],
-      "infers": []
-    }
-  ]
-}
-```
-
-Read the result in this order:
-
-1. Did the whole run succeed (<code>success</code>) and did each statement succeed
-   (<code>success</code>)?
-2. Why was it accepted (<code>proof_method</code>)?
-3. What was actually added to the context (<code>stores</code>, <code>infers</code>)?
-4. If it stopped, what is <code>why_failed.phase</code> and <code>why_failed.goal</code>?
-   Soft misses stay inside <code>statement_results</code>; only
-   <code>session_error</code> is a hard stop.
-
-The output is part of the working method, not an after-the-fact log. It tells
-you what the next legal/useful statement can build on.
-
-## 2. A fact grows the context
-
-The simplest useful file is a sequence of statements:
+## The working model
 
 ```litex
 have x R = 2
-
 x + 1 = 3
 x^2 = 4
 ```
 
-Read the first line as one statement with two effects: it introduces the object
-<code>x</code>, records its carrier <code>x $in R</code>, and records the value fact
-<code>x = 2</code>. The next two lines are ordinary fact statements. They are
-checked from the current context and become available after they succeed.
+`have` introduces the real object and its value. Each following fact is checked
+and, on success, becomes available to the next statement.
 
-Names may depend on earlier names. Write an equality chain to expose the
-definition and the calculation:
+| Category | Example | Job |
+| --- | --- | --- |
+| Object | `x`, `R`, `{1, 2}`, `x + 1` | A mathematical value or expression. |
+| Fact | `x = 2`, `x $in R`, `$P(x)` | A proposition about objects. |
+| Statement | `have`, `prop`, a bare fact, `claim` | Introduce, define, or check information. |
+| Feedback | `success`, `proof_method`, `stores`, `why_failed` | Explain the outcome and usable context. |
 
-```litex
-have x R = 2
-have y R = x + 1
+Before writing a line, identify its objects, their domains, and the exact fact
+needed next. Inspect existing builtin and module interfaces before declaring a
+new mathematical concept.
 
-y = x + 1 = 3
-y^2 = 9
-x + y = 5
-```
+## Choose a statement
 
-After both adjacent equalities pass, the chain also stores `y = 3`.
-The next two facts can use that endpoint without a separate `y = 3` statement.
+The forms below are schematic; `S`, `T`, `value`, and `goal` stand for your
+actual objects and facts.
 
-This is Litex's default bottom-up direction: establish a useful fact, keep it,
-and use the stronger context to establish the next fact. You may still write a
-local proof block when a result needs several steps; the surrounding source
-remains a readable sequence of mathematical facts.
+| Later code needs | Form | What it contributes |
+| --- | --- | --- |
+| An arbitrary member | `have x S` | A name and membership; requires nonemptiness. |
+| A value with a declared carrier | `have x S = value` | Checks `value $in S`; records membership and equality. |
+| A name for an expression | `let name = value` | An equality alias, not mutable assignment. |
+| A callable value | `have fn f(x S) T = body` | A function with its domain, output carrier, and equation. |
+| A named mathematical condition | `prop P(x S): facts` | A definition; assert an instance as `$P(a)`. |
+| A local derivation | `claim: ? goal` | Proves and exports its goal; helpers stay local. |
+| A named reusable result | `thm name: ? goal` | Proves the fact and gives it a citation interface. |
 
-## 3. Choosing the right object statement
-
-Use the smallest statement that gives later code the interface it needs.
-
-| Later code needs | Write | What it contributes |
-|---|---|---|
-| An arbitrary object in a nonempty set | <code>have x S</code> | A name and the fact <code>x $in S</code> |
-| A named object with a known value | <code>have x S = value</code> | A typed object, its carrier, and <code>x = value</code> |
-| A transparent local abbreviation | <code>let name = value</code> | A name that reduces to an already well-defined value |
-| A callable value | <code>have fn f(x S) T = body</code> | A function and its domain/return contract |
-| A concrete reusable property | <code>prop P(x S): ...</code> | A definition usable through <code>by def $P(...)</code> |
-| A short local derivation | <code>claim:</code> with <code>? goal</code> | One fact proved in a local proof context |
-| A reusable mathematical result | <code>thm name: ...</code> | A named theorem and a stored universal fact |
-| An explicit assumption | <code>trust fact</code> | Trust debt, not a completed proof |
-
-Examples:
+A condition and a value have different uses. This definition establishes the
+particular instance by checking its body:
 
 ```litex
-have x R
-x $in R
-
-have a R = 1
-a $in R
-a = 1
-
-have fn shift(t R) R = t + 1
-shift(2) = 3
+prop is_above_two(t R):
+    t > 2
+by def $is_above_two(3)
 ```
 
-Use <code>let</code> when the name is only a local abbreviation:
+Declaring `prop` alone proves no instances. `abstract_prop` supplies only a
+signature. If the next line needs `f(x)`, define a callable function rather
+than encoding that value as a predicate. See [R02](Manual.md#r02-choose-the-language-form-by-mathematical-role).
 
-```litex
-have fn shift(t R) R = t + 1
-let alias = shift
-have successor fn(t R) R = alias
+## Write facts and hypotheses
 
-successor(2) = shift(2) = 3
-fn_range(successor) = fn_range(shift)
-```
+| Mathematical shape | Form |
+| --- | --- |
+| Equality, order, membership | `a = b`, `a <= b`, `a $in S` |
+| A named property | `$P(a)` |
+| A chain of adjacent facts | `a = b = c`, `a <= b < c` |
+| Conjunction or alternatives | `$P(a) and $Q(a)`, `$P(a) or $Q(a)` |
+| Existence / unique existence | `exist x S st {facts}`, `exist! x S st {facts}` |
+| Universal result | `forall x S:` with indented facts |
 
-Do not use a predicate to encode a value that later code must call. If later
-code writes <code>f(x)</code>, introduce a <code>have fn</code> interface. If later
-code must assert <code>$P(x)</code>, introduce a <code>prop</code>.
-
-## 4. Writing fact shapes
-
-Start with the mathematical shape, then use the corresponding Litex spelling.
-
-| Mathematical shape | Common spelling |
-|---|---|
-| Equality or membership | <code>a = b</code>, <code>a $in A</code> |
-| Named predicate | <code>$P(a)</code> |
-| Equality/order chain | <code>a &lt;= b = c &lt; d</code> |
-| Conjunction | <code>atomic and atomic</code> |
-| Disjunction | <code>branch or branch</code> |
-| Existence | <code>exist x S st {facts}</code> |
-| Unique existence | <code>exist! x S st {facts}</code> |
-| Universal fact | <code>forall x S:</code> with indented assumptions and <code>=&gt;:</code> conclusions |
-| Negated quantifier | <code>not exist ...</code>, <code>not forall ...</code> |
-
-<code>and</code> is a flat conjunction of facts. <code>or</code> joins completed
-branches. These are not a general recursively nested Boolean language. Keep
-quantified parameters in one <code>forall</code> header:
-
-```litex
-forall x, y R:
-    0 <= x
-    0 <= y
-    =>:
-        0 <= x + y
-```
-
-Do not put a second <code>forall</code> inside the conclusion when it can be
-declared in the header as <code>forall x, y R</code>.
-
-Parenthesize negative powers so the intended syntax tree is visible. The
-following block is notation guidance, not a complete fact to run by itself:
-
-<!-- litex:skip-test -->
-```litex
-have t R = 2
-
--(t^2) = -4     # opposite of the square
-(-t)^2 = 4      # square of the negative value
-2^(-1)           # a negative exponent
-```
-
-The canonical forms are <code>-(t^2)</code>, <code>(-t)^2</code>, and
-<code>t^(-1)</code>. Do not rely on a reader remembering parser precedence.
-
-### Supported syntax and recommended writing
-
-Litex accepts several spellings of the same operation. A recommendation helps
-readers recognize the proof's structure; it does not make the alternative
-invalid. Use these defaults in new proofs and ordinary tutorial examples:
-
-| Supported spelling | Recommended writing | Why |
-|---|---|---|
-| Bare `by thm name(args)` | `release thm name(args)` | Makes releasing all instantiated conclusions explicit. |
-| `forall x R: x > 0 => x != 0` | An indented `forall` block | Separates assumptions from conclusions and leaves room for more facts. |
-| Documented Unicode aliases, such as `∀ x ℝ` and `x ∈ ℝ` | `forall x R` and `x $in R` | Matches canonical output and is easy to type, search, and copy. |
-
-For example, this supported inline fact:
-
-```litex
-forall x R: x > 0 => x != 0
-```
-
-is usually clearer as:
+In a conditional universal, hypotheses precede `=>:` and conclusions follow it:
 
 ```litex
 forall x R:
@@ -235,289 +90,145 @@ forall x R:
         x != 0
 ```
 
-Keep `by thm name(args) => fact` when selecting one directly returned atomic
-conclusion. The target must match that conclusion structurally (bound-variable
-renaming is allowed). To rewrite or combine results, release the theorem and
-write separate proof steps.
-Replacing it with `release thm` would change which conclusions enter the
-context. Neither spelling proves missing premises for you. See the
-[theorem-call contract](Manual.md#named-interfaces-thm-axiom-release-thm-and-by-thm---fact).
+Without the arrow, all listed facts are conclusions. A premise-free universal
+lists its conclusions directly. `forall` binders and premises are local; they
+do not introduce global objects or global assumptions.
 
-Other useful defaults are about making the mathematical move visible:
+A bare `forall` body contains facts. Commands such as `witness`, `by def`, and
+`release thm` belong in a proof body. Use one header for universal conclusion
+parameters; consult the [fact contracts](Manual.md#factual-statements) before
+nesting quantifiers. Flat `and`/`or` forms are not an arbitrary Boolean grammar.
 
-| Situation | Prefer | Reason or boundary |
-|---|---|---|
-| No assumptions in a universal | Conclusions directly under `forall x R:` | Universal iff requires its own left-side block. |
-| Concrete definition folding | `by def $P(args)` | Add a proof body for a real intermediate derivation. |
-| A witness whose body already checks | `witness exist x R st {x = 2} from 2` | Add a body for reasoning or a useful teaching step. |
-| A theorem result already released | Continue with the next mathematical step | Retain an explicit consequence when it helps the reader follow that step. |
-| Negative powers | `-(x^2)`, `(-x)^2`, `x^(-1)` | Parentheses expose the intended expression. |
+## Definition → theorem → use
 
-The [Unicode alias reference](Manual.md#unicode-mathematical-input-aliases-preview)
-lists supported symbols. In particular, `×` means Cartesian product;
-write `*` for numerical multiplication. `⊂` means proper subset, while `⊆`
-means non-strict subset.
-
-## 5. Definitions create vocabulary
-
-### Functions
-
-Function definitions state the domain, return set, and expression:
-
-Parameter domains and the return set use the enclosing scope and cannot refer
-to that function's own parameters. Domain conditions and the body can:
-<code>fn(x R: x > 0) R {x + 1}</code> is valid, while
-<code>fn(x R) {x}</code> and <code>fn(S power_set(R), x S) R</code> are rejected
-during parsing. Put a more precise output membership property in a separate
-fact. Ordinary quantified parameter dependencies remain available.
+The reciprocal's nonzero condition belongs to its callable domain. The named
+theorem uses its active goal binder and exposes the defining equation:
 
 ```litex
-have fn square_plus_one(t R) R = t^2 + 1
+have fn reciprocal(x R: x != 0) R = 1 / x
+thm reciprocal_product:
+    ? forall x R:
+        x != 0
+        =>:
+            reciprocal(x) * x = 1
+    reciprocal(x) = 1 / x
+    reciprocal(x) * x = (1 / x) * x = 1
 
-square_plus_one(3) = 10
-square_plus_one(0) = 1
-
-forall x R:
-    square_plus_one(x) = x^2 + 1
+release thm reciprocal_product(2)
+reciprocal(2) * 4 = (reciprocal(2) * 2) * 2 = 1 * 2 = 2
 ```
 
-### Concrete properties
+Read this as a domain contract, a proved universal law, an explicit instance,
+and a subsequent calculation. The theorem's `x` is local; use it directly in
+the proof body. Every theorem call still checks its arguments and premises.
 
-Explicit <code>by def</code> must unfold a supported concrete or builtin
-predicate definition; its clauses may use ordinary verification. A true raw
-comparison or SetBuilder membership is checked by writing the fact directly.
+| Citation | Effect |
+| --- | --- |
+| `release thm name(args)` | Instantiate a root `forall` theorem and publish all conclusions. |
+| `by thm name(args) => fact` | Select one directly returned atomic conclusion, without rewriting it. |
+| `release thm name` | Cite a named non-`forall` theorem fact. |
 
-A <code>prop</code> gives a mathematical property a name. Use <code>by def</code>
-when you want to fold the definition at a concrete argument:
+A zero-parameter root `forall` still uses `name()`. Selection cannot target a
+chain, conjunction, existential, or universal fact; release the result and use
+explicit subsequent steps. Avoid repeating an already published conclusion
+unless it performs a necessary representation change.
+
+See [R01](Manual.md#r01-define-and-use-a-reciprocal-function),
+[P05](Manual.md#p05-a-function-equation-may-need-to-be-exposed-before-substitution),
+and the [theorem-call contract](Manual.md#theorem-fact-shapes-and-call-spelling).
+
+## Existence and scope
+
+To prove existence, give a satisfying witness. To use an existence fact that
+verifies, extract a fresh name with `obtain`:
 
 ```litex
-prop is_unit_distance_from_two(t R):
-    abs(t - 2) = 1
-
-by def $is_unit_distance_from_two(3)
+witness exist w R st {w^2 = 4} from 2
+obtain root from exist w R st {w^2 = 4}
+root^2 = 4
 ```
 
-<code>prop</code> defines the shape of <code>$P(...)</code>; it does not introduce a
-value or a callable function. <code>abstract_prop</code> is an external interface:
-it supplies no defining facts and therefore needs assumptions or theorems before
-an instance can be used.
+`obtain` checks its source; it cannot invent an unproved witness. The binder
+`w` is local to the existential. The new name `root` belongs to the surrounding
+scope. Add a witness proof body when it performs real intermediate reasoning.
 
-### Sets and membership
-
-Litex has one mathematical object universe. Number sets, functions, tuples,
-and user-defined sets are objects; membership is a fact about an object:
-
-```litex
-0 $in N
-1 $in R
-1 $in {1, 2, 3}
-{1, 2} $subset {1, 2, 3}
-```
-
-The standard sets are <code>N</code>, <code>Z</code>, <code>Q</code>, <code>R</code>,
-and <code>C</code>, with common subsets such as <code>N+</code>, <code>R-</code>,
-and <code>C*</code>. A set builder is bounded by an existing set:
-
-```litex
-release thm set_builder_member(1, {x R: x > 0})
-```
-
-The carrier is part of the proof obligation. Before using a compound object,
-make sure its domain, index bounds, and denominator conditions are known.
-
-## 6. Small proofs: write the route only when needed
-
-Try the target directly. Use a proof action when the target's shape needs one
-explicit construction or control structure.
-
-| Goal shape | First route | Mental model |
-|---|---|---|
-| Direct arithmetic, equality, membership, or known consequence | State the fact | Let the verifier match the current context |
-| Concrete positive definition | <code>by def $P(args)</code> | Fold a named definition |
-| A named ordinary theorem fact | <code>release thm name</code> | Cite its stored fact |
-| A universal theorem | <code>release thm name(args)</code> | Instantiate its parameters |
-| One theorem consequence | <code>by thm name(args) =&gt; fact</code> | Select only the needed result |
-| Existential target | <code>witness ... from ...</code> | Supply the witness and prove its body |
-| Known existential | <code>obtain ... from ...</code> | Open its witness in a local context |
-| Exhaustive alternatives | <code>by cases</code> | Prove every available branch |
-| Contradiction-shaped goal | <code>by contra</code> | Assume the opposite and finish with <code>impossible</code> |
-| Bounded finite/universal goal | <code>by for</code> or <code>by enumerate ...</code> | Iterate a displayed finite set or concrete integer range; <code>cart(...)</code> is unsupported |
-| Inductive invariant | <code>by induc</code> or <code>by strong_induc</code> | Give base and step cases |
-| Set equality | <code>by extension</code> | Prove both membership directions |
-
-`by contra` accepts existing classified opposites for atomic facts,
-`exist` / `not exist` / `exist!`, `and` / `or` / chains, and `forall`,
-`not forall` or forall-iff with quantifier-free bodies and premises.
-Its `impossible` tail accepts those same Fact families, including multiline
-forall/iff facts; both the complete fact and its classified opposite must
-verify in the local scope.
-
-Conditional enumeration uses its premises in each local assignment. Nested
-proof methods and binder names are allowed in proof bodies; helpers stay local.
-`eval expr` checks the expression's mathematical domains before computing.
-A successful exact evaluation stores `expr = result` in the current scope;
-Normal JSON lists this equality in `stores`. For example:
-
-```litex
-algo flag(x R) N by cases:
-    case x = 0: 0
-    case x != 0: 1
-eval sum(0, 3, flag)
-sum(0, 3, flag) = 3
-```
-
-Each executed algorithm equation is checked before publication. An invalid
-expression or exhausted computation budget stores no result equality.
-Strict mode rejects `trust have` inside templates as well as ordinary trust.
-
-Templates publish their body definition facts under their parameters and
-conditions. Instance properties can be used directly:
-
-```litex
-template<S nonempty_set>:
-    have member S
-\member<R> $in R
-```
-
-This uses the stored `forall S nonempty_set: \member<S> $in S`. A conditional
-header or function case keeps its premises; selection does not assert uniqueness.
-
-### Local claims
-
-Use <code>claim</code> when a few local facts make one result clear:
+In “for every `x`, there is a `y`”, choose the witness inside the active `x`
+scope. A claim activates its goal's binders and exports the completed goal:
 
 ```litex
 claim:
     ? forall x R:
-        x = 2
-        =>:
-            (x + 1)^2 = 9
-    x + 1 = 3
-    (x + 1)^2 = 9
+        exist y R st {y = x + 1}
+    witness exist y R st {y = x + 1} from x + 1
 ```
 
-The <code>?</code> line is the target. The indented lines below it are the local
-proof spine. Once the claim succeeds, the target fact is available outside the
-block.
-
-### Witnesses and obtain
-
-An existential proof gives its witness explicitly:
+The claim does not export a global `x` or `y`. Unique existence additionally
+requires uniqueness: `2` is a witness for `w^2 = 4`, but `-2` is another one.
+A genuinely unique specification can be checked directly:
 
 ```litex
-witness exist x R st {x^2 = 4} from 2:
-    2^2 = 4
-
-obtain root from exist x R st {x^2 = 4}
-root $in R
-root^2 = 4
+witness exist! w R st {w = 2} from 2
 ```
 
-The source existential must already be known before <code>obtain</code> can open it.
+See [witnesses](Manual.md#s35-existential-witnesses),
+[unique witnesses](Manual.md#s36-unique-existential-witnesses), and
+[local claims](Manual.md#s33-local-claims).
 
-### Theorem reuse
+<a id="6-small-proofs-write-the-route-only-when-needed"></a>
 
-Name a result when it has a real second consumer:
+## Proof actions
+
+State a direct target first when ordinary verification can establish it. For a
+proof needing an explicit mathematical move, choose the corresponding action.
+The entries below are abbreviated forms, not complete runnable programs.
+
+| Needed move | Action | Contract/example |
+| --- | --- | --- |
+| Use a positive concrete definition | `by def $P(args)` | [S47](Manual.md#s47-explicit-definition-folding) |
+| Cite a named result | `release thm` / selected `by thm` | [S25–S26](Manual.md#s25-publish-theorem-conclusions) |
+| Supply / extract a witness | `witness` / `obtain` | [Existence](#existence-and-scope) |
+| Prove a common result in exhaustive branches | `by cases:` | [S39](Manual.md#s39-proof-by-exhaustive-cases) |
+| Derive a contradiction from the classified opposite | `by contra:` ending in `impossible` | [S40](Manual.md#s40-proof-by-contradiction) |
+| Check a displayed finite set | `by enumerate finite_set:` | [S41](Manual.md#s41-finite-set-enumeration) |
+| Iterate a concrete integer range | `by for:` | [S44](Manual.md#s44-finite-range-iteration) |
+| Prove a natural-number invariant | `by induc n from lower:` | [S42](Manual.md#s42-ordinary-induction) |
+| Use all earlier induction cases | `by strong_induc n from lower:` | [S43](Manual.md#s43-strong-induction) |
+| Prove set / function equality | `by extension` / `by fn_extension` | [S45–S46](Manual.md#s45-set-extensionality) |
+
+Finite enumeration checks each permitted assignment and its local premises:
 
 ```litex
-thm add_zero_right:
-    ? forall x R:
-        x + 0 = x
-
-release thm add_zero_right(2)
-(2 + 0) + 1 = 3
+by enumerate finite_set:
+    ? forall x {1, 2}:
+        x > 0
 ```
 
-Root-<code>forall</code> theorem calls require parentheses, including `name()`
-for a parameterless universal. A named ordinary
-theorem fact uses its bare name. Do not repeat an identical theorem result as an
-extra echo.
-
-### A short induction example
-
-Induction is explicit when the invariant is not a direct builtin fact:
-
-The target's WD may use the integer lower bound. Local proof actions such as
-`have`, `let`, and `by def` are checked separately in the base and step scopes:
-
-```litex
-have fn f(x N) N = x
-by induc n from 0:
-    ? f(n) = f(n)
-    n $in N
-    have a N = 0
-```
-
-The base has no induction hypothesis; its local objects do not escape.
+An induction supplies a base and successor step. The induction hypothesis is
+available only in the step; proof helpers remain inside their case:
 
 ```litex
 claim:
     ? forall n N:
-        2 ^ n >= n + 1
-    by induc k from 0:
-        ? 2 ^ k >= k + 1
-        ? from k = 0:
-            2^k = 1 = k+1
+        2^n >= n + 1
+    by induc n from 0:
+        ? 2^n >= n + 1
+        ? from n = 0:
+            2^n = 1 = n + 1
         ? induc:
-            k $in N
-            2^(k+1) = 2^k * 2^1 = 2^k * 2
-            2^k * 2 >= (k+1)*2
-            (k+1)*2 = (k+1)+(k+1) >= (k+1)+1
-            2^(k+1) = 2^k * 2 >= (k+1)*2 = (k+1)+(k+1) >= (k+1)+1
+            2^(n + 1) = 2^n * 2^1 = 2^n * 2
+            2^n * 2 >= (n + 1) * 2
+            (n + 1) * 2 = (n + 1) + (n + 1) >= (n + 1) + 1
+            2^(n + 1) = 2^n * 2 >= (n + 1) * 2 >= (n + 1) + 1
 ```
 
-Keep induction in a claim or theorem. A bare universal fact is for stating a
-conclusion; proof-control commands belong in a proof block.
+## Common places to get stuck
 
-## 7. One complete mathematical thread
+Read the earliest stopping phase before changing the proof. These rejected
+blocks are intentional boundary examples and are excluded from positive tests.
 
-This small divisibility development shows how a definition, witnesses, a
-reusable theorem, and ordinary fact reuse fit together:
+### An arbitrary member has no chosen value
 
-```litex
-prop divides_by(d, n Z):
-    exist k Z st {n = d * k}
-
-thm divisibility_is_transitive:
-    ? forall a, b, c Z:
-        $divides_by(a, b)
-        $divides_by(b, c)
-        =>:
-            $divides_by(a, c)
-    obtain k from $divides_by(a, b)
-    obtain m from $divides_by(b, c)
-    c = b * m = (a * k) * m = a * (k * m)
-    witness $divides_by(a, c) from k * m:
-        c = a * (k * m)
-
-witness $divides_by(3, 12) from 4:
-    12 = 3 * 4
-witness $divides_by(12, 60) from 5:
-    60 = 12 * 5
-by thm divisibility_is_transitive(3, 12, 60) => $divides_by(3, 60)
-```
-
-The source writes the mathematical facts: divisibility is an existential,
-transitivity multiplies its witnesses, and the concrete instances have
-witnesses <code>4</code> and <code>5</code>. The verifier checks each local
-connection and stores the accepted facts. The theorem call is an explicit
-citation because the author wants to select that reusable interface.
-
-## 8. Read output as a repair interface
-
-When a statement stops, classify the earliest phase before changing the
-mathematics.
-
-| Output/phase | Meaning | Next move |
-|---|---|---|
-| Parse / CLI hard error | The source or command is not accepted | Fix indentation, delimiters, binders, or the command line |
-| Name/type problem | An identifier, arity, callable interface, or carrier is wrong | Check spelling, imports, argument count, and exact domain |
-| Well-definedness soft miss | An object is not legal yet | Prove membership, bounds, nonzero divisors, or a typed construction |
-| Search soft miss | The fact is meaningful but current evidence is insufficient | Add the smallest equality, membership fact, theorem call, or witness |
-| Later use fails | The earlier statement stored a different interface than expected | Inspect <code>stores</code>/<code>infers</code>; distinguish an object, fact, predicate, and function |
-| <code>trust</code> or <code>axiom</code> appears | The route includes an explicit assumption | Mark the assumption; strict mode rejects executed <code>trust</code>, <code>trust have</code>, and user <code>axiom</code> |
-
-A soft miss is not a proof that the proposition is false:
+**Expected search miss (`search_proof`):**
 
 <!-- litex:skip-test -->
 ```litex
@@ -525,292 +236,156 @@ have x R
 x = 0
 ```
 
-The context only says that <code>x</code> is real. It does not say which real
-number <code>x</code> is, so <code>x = 0</code> normally soft-fails with
-<code>why_failed.phase: search_proof</code>.
-
-For a run containing a soft-failed statement, top-level <code>success</code> is
-<code>false</code>, but the failed statement remains in
-<code>statement_results</code> with <code>success: false</code>. Read
-<code>why_failed</code> rather than treating the envelope alone as the
-mathematical explanation.
-
-### Common places to get stuck
-
-**A universal fact is not a command block.** Its body lists facts. When the
-proof needs a theorem call, a witness, or another proof action, use a local
-claim. This rejected shape puts a command in the fact list:
-
-```text
-forall x R:
-    witness exist y R st {y = x} from x
-```
-
-The proof command belongs beside the claim's goal, where the goal binder `x`
-is already active:
+The declaration establishes real membership, not `x = 0` or `x != 0`. If the
+intended object is zero, introduce that value explicitly:
 
 ```litex
-claim:
-    ? forall x R:
-        exist y R st {y = x}
-    witness exist y R st {y = x} from x
+have x R = 0
+x + 1 = 1
 ```
 
-**A definition does not prove an instance.** Declaring a predicate gives its
-meaning. To establish a particular instance, prove the defining condition:
+### An expression must be meaningful on its whole domain
 
+**Expected function-body failure (`have_fn_equal`):**
+
+<!-- litex:skip-test -->
 ```litex
-prop is_positive(x R):
-    x > 0
-
-2 > 0
-by def $is_positive(2)
+have fn reciprocal(x R) R = 1 / x
 ```
 
-If later code needs to apply a value as `f(x)`, use a function declaration
-such as `have fn f(x R) R = x + 1`. A `prop` supplies a property interface.
+The domain includes zero. For the partial reciprocal, use the guarded
+[definition above](#definition--theorem--use). A function with a value at zero
+needs a definition specifying it. The same check applies to argument carriers
+and index bounds; preserve the intended mathematical domain during repair.
 
-**Check the expression's domain before its value.** This rejected example
-does not establish that the divisor is nonzero:
+### A fact list cannot execute a proof command
 
-```text
-forall x R:
-    x / x = 1
-```
+**Expected parse error:**
 
-For the theorem about nonzero reals, put the justified condition in the
-statement:
-
+<!-- litex:skip-test -->
 ```litex
 forall x R:
-    x != 0
-    =>:
-        x / x = 1
+    witness exist y R st {y = x + 1} from x + 1
 ```
 
-The same principle applies to a function's argument domain and a sequence's
-index bounds. Adding `x != 0` changes the theorem's domain; it is appropriate
-only when that is the intended mathematical statement.
+Use the [claim form](#existence-and-scope), whose proof body can execute the
+command with the goal binder active.
 
-| Symptom | What to check |
-|---|---|
-| `x` is unknown after `forall x R:` | The binder is local. Introduce a separate object with `have` if later code needs one. |
-| A local witness disappears after `claim` | The claim exports its goal; local names stay in its proof scope. |
-| `obtain` fails | Establish the existential source first, or supply a witness when proving existence. |
-| `exist!` fails despite a valid witness | Unique existence also requires a proof of uniqueness. |
-| A nested `forall` is rejected | Put universal conclusion parameters in one header; for a quantified existential/set-builder condition, define a concrete `prop`. |
-| A theorem call spelling fails | Root `forall` uses `name(args)`/`name()`; an ordinary theorem fact uses `name`. Selection uses `by thm ... => atomic_fact`. |
+| When later code stops | Inspect next |
+| --- | --- |
+| A function application fails WD | Its exact input carrier and guards; a known value equation does not waive them. |
+| A larger equality misses | Expose the changed subterm or defining equation, then connect the outer expression. |
+| `$P(a)` is unproved | Establish the definition's clauses; declaring `prop` supplied vocabulary only. |
+| `exist!` fails | Check uniqueness as well as the witness body. |
+| A name disappears after a proof | The goal is exported; its local binders and helpers are not. |
+| A theorem selection fails | Match a returned atomic conclusion structurally; rewrite in a separate step. |
 
-Read the first reported phase before changing the proof. A search miss means
-the current route did not establish the fact. `trust` assumes it and leaves
-visible proof debt; it does not repair that route.
+See the [pitfall cards](Manual.md#pitfalls-and-missing-proof-steps) for checked
+rejections and their nearest repairs. A search miss does not refute a fact and
+does not by itself establish a kernel bug. `trust` assumes a fact; it leaves
+proof debt rather than repairing a verification route.
 
-### Three high-value repair patterns
+## Objects and domains
 
-**Carrier first.** If an application is not well-defined, establish the exact
-argument carrier before unfolding it:
+| Object family | Useful forms and boundaries |
+| --- | --- |
+| Number sets | `N`, `Z`, `Q`, `R`, `C`; `N` includes zero, `N+` is positive. |
+| Signed/nonzero sets | For example `R+`, `R-`, `R*`, `C*`; use documented spellings. |
+| Sets | `{1, 2}`, `{x R: x > 0}`, `union(A, B)`, `power_set(S)`; a builder is bounded by its carrier. |
+| Membership and inclusion | `x $in S`, `A $subset B`; inclusion and equality have different obligations. |
+| Functions | `fn(x R) R`, guarded domains, `fn_range(f)`; carriers and guards constrain each call. |
+| Tuples/sequences | `(a, b)`, `cart(R, R)`, `seq(S)`; tuple and sequence indices start at 1. |
+| Exact computation | `eval expression` checks domains and publishes the verified source/result equality. |
 
-```litex
-have fn p_affine(x R) R = 2 * x - 5
+Function parameter carriers and the return carrier use the enclosing scope;
+they cannot refer to that signature's own parameters. Guards and the body can.
+For example, `fn(x R: x > 0) R {x + 1}` has a guard-dependent domain. Do not
+infer arbitrary dependent function signatures from ordinary `forall` binder
+dependencies. See [S01](Manual.md#s01-expression-defined-functions).
 
-forall y R:
-    (y + 5) / 2 $in R
-    p_affine((y + 5) / 2) = 2 * ((y + 5) / 2) - 5 = y
-```
-
-**Inside out.** If one compound equality soft-fails, expose the smallest
-changed subterm, then lift it through the outer expression:
-
-```litex
-have fn f_add3(x R) R = x + 3
-have fn g_times2(y R) R = 2 * y
-have fn composite(x R) R = g_times2(f_add3(x))
-
-claim:
-    ? forall x R:
-        composite(x) = 2 * x + 6
-    f_add3(x) = x + 3
-    g_times2(f_add3(x)) = 2 * f_add3(x)
-    composite(x) = g_times2(f_add3(x)) = 2 * f_add3(x) = 2 * (x + 3) = 2 * x + 6
-```
-
-**Phase first.** If the parser rejects the proof surface, repair the statement
-shape before changing the mathematical argument. A current proof surface is:
-
-```litex
-claim:
-    ? forall x R:
-        x = 2
-        =>:
-            (x + 1)^2 = 9
-    x + 1 = 3
-    (x + 1)^2 = 9
-```
-
-Do not keep a bridge fact merely because it makes the proof look safer. Delete
-one class of echoes at a time and restore only the first bridge whose removal
-causes the real consumer to fail.
-
-## 9. Sets, functions, and structures
-
-### Functions and images
-
-```litex
-have fn shift(x R) R = x + 1
-
-shift(2) $in fn_range(shift)
-by def fn_range(shift) $subset R
-```
-
-When later code must call a value, keep its function interface visible. A
-set-shaped value that happens to have an implementation is not automatically a
-callable function.
-
-### Finite domains and cases
-
-Finite enumeration is bounded, not arbitrary quantifier automation:
-
-```litex
-have x Z
-trust x $in range(1, 3)
-expand: x $in range(1, 3)
-# stores: x = 1 or x = 2
-```
-
-Use <code>by cases</code> when an exhaustive disjunction is already available:
-
-```litex
-by cases:
-    ? 1 = 1
-    case 1 = 1
-    case 1 != 1:
-        impossible 1 = 1
-```
-
-### Structures
-
-A <code>struct</code> creates a reusable carrier and field vocabulary:
+A struct is useful when a mathematical structure must be a value with fields:
 
 ```litex
 struct Point:
     x R
     y R
-
 have p &Point = (1, 2)
 release struct def p
 p.x = p(1) = 1
 p.y = p(2) = 2
 ```
 
-Direct symbols introduced in a struct carrier can open one definition-owned
-layer automatically. A later generic membership fact does not select field
-names; use <code>release struct def</code> or the explicit struct theorem when that
-interface is needed.
+Use [structs](Manual.md#s16-structured-carriers) and
+[templates](Manual.md#s17-parameterized-declaration-families) for the exact construction
+and law contracts. Existing builtin concepts need no local redefinition.
 
-### A reusable domain interface
+## Supported syntax and recommended writing
 
-Structures and templates let a project build a small mathematical world:
+| Supported spelling | Recommended for new ordinary examples |
+| --- | --- |
+| Bare `by thm name(args)` | `release thm name(args)` for an unselected call. |
+| Inline `forall x R: x > 0 => x != 0` | Multiline `forall` with visible hypotheses and conclusions. |
+| Documented Unicode aliases | ASCII keywords and operators for typing, searching, and diagnostics. |
 
-```litex
-struct Group<s nonempty_set>:
-    mul fn(x, y s) s
-    one s
-    inv fn(x s) s
-    <=>:
-        forall x, y, z s:
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-        forall x s:
-            mul(x, one) = x
-            mul(one, x) = x
-            mul(inv(x), x) = one
-```
+These are preferences, not parser restrictions. Keep `by thm ... => fact` for
+selection. `×` denotes Cartesian product; numerical multiplication is `*`.
+`⊂` is proper subset, while `⊆` is non-strict subset. Check the
+[alias reference](Manual.md#unicode-mathematical-input-aliases-preview).
 
-The structure is a vocabulary and a law interface. It is not a claim that every
-later theorem is automatic; later facts still need to match the declared fields
-and laws.
+Write `-(x^2)` for the negative of a square, `(-x)^2` for the square of a
+negative value, and `x^(-1)` for a negative exponent. Prefer a direct
+`by def $P(args)` and a bodyless witness when their obligations already verify.
+Keep intermediate facts when they perform an actual derivation or necessary
+bridge.
 
-## 10. Run, inspect, and promote
-
-### Useful commands
+## Run and read feedback
 
 ```bash
-# One expression
-litex -e '1 + 1 = 2'
-
-# One file; project mode when its direct parent has litex.config
-litex -f path/to/file.lit
-
-# Full configured project, including its exports
-litex -r path/to/project
-
-# Reject explicit trust during a complete audit
-litex -strict -r path/to/project
-
-# After a successful file run, keep the Runtime and continue in the REPL
-litex -session -f path/to/file.lit
+litex -lang en -e '1 + 1 = 2'
+litex -lang en -strict -f path/to/file.lit
+litex -lang en -strict -r path/to/project
 ```
 
-Batch commands (`-e` / `-f` / `-r`) return one Normal JSON document. The REPL
-prints short status lines. For automation, inspect top-level <code>success</code>,
-each statement's <code>success</code>, and <code>session_error</code>; do not
-infer success from nested evidence text alone.
+In a source checkout, build with `cargo build --release` and use
+`target/release/litex`. `-f` mounts its direct parent's `litex.config` when
+present and runs the configured prefix through that file; otherwise it runs
+the file alone. `-r` checks a complete configured project.
 
-### A practical authoring checklist
+Use `litex` for the REPL or `litex -session -f path/to/file.lit` to continue a
+successful file run. End an indented REPL block with a blank line. Session
+output contains interactive text; use a separate batch command for a final
+JSON check.
 
-Before each new line or block, ask:
+For machine readers, use `-lang en`. Require exit 0 and these fields in the
+batch envelope (other fields omitted here):
 
-- Which objects does this statement use or introduce?
-- What exact fact should hold between them?
-- Is this a bare fact, an object definition, a predicate, a local claim, or a
-  reusable theorem?
-- Can the target be stated directly before I choose a proof action?
-- After running it, what did the output prove, store, infer, or reject?
-- If it stopped, is the earliest problem parse, name/type, well-definedness, or
-  verification?
-- Am I adding a real mathematical bridge, or only copying the endpoint as an
-  echo?
-
-### Trust and scope
-
-Litex is an experimental language in beta. A successful check is relative to
-the checker, its builtin and inference rules, imported facts, and any explicit
-trusted inputs. <code>trust</code>, <code>trust have</code>, and <code>axiom</code>
-are visible assumptions. Strict mode rejects executed <code>trust</code>,
-<code>trust have</code>, and user <code>axiom</code>, including nested proofs
-and dependencies. Pure <code>abstract_prop</code> signatures and named
-foundation releases remain allowed. Strict imports re-execute source exports
-instead of replaying cached environments. The current Cargo build has no Lean compiler entrypoint; see
-the [CLI boundary](cli.md#lean-compiler-boundary).
-
-### Where to go next
-
-- Read the [Manual](Manual.md) for exact syntax, well-definedness, proof
-  boundaries, output contracts, inference, modules, and compiler coverage.
-- Prefer the phase acceptance tree under [examples/](../examples/)
-  (`proof_nodes/`, `stmt_nodes/`, `wd/`, `module_manager/`, …).
-
-For writing defaults and supported alternatives, keep the
-[recommendation table](#supported-syntax-and-recommended-writing) beside the
-language reference.
-
-The learner's central habit is simple: write the next mathematical fact, read
-the verifier's evidence, and let only accepted context drive the next line.
-
-
-### Native named builtins and complex calculation
-
-```litex
-forall x R:
-    x > 0
-    =>:
-        x > 0
-release thm set_builder_member(1, {x R: x > 0})
-release thm subset_of_finite_set_is_finite({1}, {1, 2})
-i * i = -1
-(1 + i) * (1 - i) = 2
+```json
+{
+  "kind": "run",
+  "success": true,
+  "session_error": null
+}
 ```
 
-`release thm` checks premises before storing conclusions. `by thm NAME(args)
-=> FACT` selects one atomic consequence; compound and chain targets are
-rejected. Existential conclusions use `release thm`. Indexed operators require
-a nonempty index, including named families.
+| Outcome | Next action |
+| --- | --- |
+| Success | Inspect `proof_method`, `stores`, and `infers` when deciding what to reuse. |
+| Statement `success: false` | Read `why_failed.phase` and `why_failed.goal`; the failed statement adds no successful facts. Earlier accepted statements remain usable. |
+| Non-null `session_error` | Read the hard error; the current run/session stops. |
+
+A soft-failed statement makes the overall batch fail even if later statements
+succeed. Do not infer success from nested evidence text or treat a failed
+assertion as its negation. See [CLI outcomes](cli.md#statement-outcomes).
+
+`-strict` rejects executed user `trust`, `trust have`, and `axiom`, including
+dependencies. Abstract predicate signatures and named foundation releases
+remain allowed. Verification still depends on the checker, builtin/inference
+rules, and loaded mathematics; report explicit assumptions and unresolved
+proof debt accurately. See the [trust contract](Manual.md#trust-and-strict-mode).
+
+For larger developments, follow the relevant module's `README.md` and
+`math_collections.md`, then consult [examples](../examples/README.md) and
+[math showcases](../showcases/math_concepts_in_litex/README.md).
+
+Verification of this revision is recorded in the
+[focused audit](audits/learner-cheatsheet-redesign-2026-10-07.json).
