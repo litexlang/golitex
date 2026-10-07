@@ -1,8 +1,8 @@
 //! Project-aware `-f`: optional `litex.config` mount, then the target file.
 
 use super::load_config::{load_config_or_empty, resolve_std_root};
-use super::run_export_file::run_export_file;
-use super::run_import_module::{run_import_module, RunImportModuleOutcome};
+use super::run_export_file::run_export_file_with_graph;
+use super::run_import_module::{run_import_module_with_graph, RunImportModuleOutcome};
 use crate::launch_command::LaunchCommand;
 use crate::module_manager::LitexConfigExport;
 use crate::run::run_command_outcome::{RunFileResult, RunLitexCodeResult, RunSessionError};
@@ -19,6 +19,10 @@ use std::path::{Path, PathBuf};
 /// - target not in `[export]` → all imports + all exports, then target as extra file
 /// - mount soft fail → `FailToImport`; target soft fail → normal file failure
 pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResult> {
+    run_file_with_config_with_graph(command, None)
+}
+
+pub(crate) fn run_file_with_config_with_graph(command: LaunchCommand, mut graph: Option<&mut crate::graph::MathGraph>) -> RuntimeResult<RunFileResult> {
     let LaunchCommand::File { path, session, .. } = &command else {
         panic!("run_file_with_config expects LaunchCommand::File");
     };
@@ -42,7 +46,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
     let config = load_config_or_empty(&module_dir, &std_root)?;
 
     if config.imports.is_empty() && config.exports.is_empty() {
-        return run_file_isolated(command, path, session);
+        return run_file_isolated(command, path, session, graph);
     }
 
     let export_index = find_export_index(&config.exports, &path);
@@ -58,7 +62,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
     let mut mount_files = Vec::new();
 
     for import in &config.imports {
-        match run_import_module(
+        match run_import_module_with_graph(
             &mut runtime,
             &import.path,
             &import.alias,
@@ -66,6 +70,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
             &mut done,
             &mut running,
             &mut mount_files,
+            graph.as_deref_mut(),
         )? {
             RunImportModuleOutcome::Done => {}
             RunImportModuleOutcome::SessionError(session_error) => {
@@ -83,7 +88,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
         let is_target = export_index == Some(export_file_id);
         let keep_env_open = session && is_target;
 
-        match run_export_file(
+        match run_export_file_with_graph(
             &mut runtime,
             &export.name,
             &export.path,
@@ -91,6 +96,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
             None,
             crate::runtime::CodeSource::RootExport { export_file_id },
             keep_env_open,
+            graph.as_deref_mut(),
         ) {
             Ok(mut file_result) => {
                 if !file_result.run.success {
@@ -136,7 +142,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
     // Target is not in [export]: run it as an extra file after full mount.
     let export_name = export_name_for_path(&path);
     let export_file_id = config.exports.len();
-    match run_export_file(
+    match run_export_file_with_graph(
         &mut runtime,
         &export_name,
         &path,
@@ -144,7 +150,8 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
         None,
         crate::runtime::CodeSource::StandaloneFile,
         session,
-    ) {
+        graph.as_deref_mut(),
+        ) {
         Ok(mut file_result) => {
             if !file_result.run.success {
                 return Ok(file_result_with_json(&runtime, path, file_result.run));
@@ -172,6 +179,7 @@ fn run_file_isolated(
     command: LaunchCommand,
     path: PathBuf,
     session: bool,
+    graph: Option<&mut crate::graph::MathGraph>,
 ) -> RuntimeResult<RunFileResult> {
     let source = fs::read_to_string(&path).map_err(|error| RuntimeError::Io {
         path: path.clone(),
@@ -187,6 +195,7 @@ fn run_file_isolated(
         }
     };
     code_result.attach_normal_json(&runtime, "file", Some(path.as_path()));
+    if let Some(graph) = graph { graph.collect_run(&code_result, &runtime, &path.display().to_string()); }
 
     if !code_result.success {
         runtime.abort_file();

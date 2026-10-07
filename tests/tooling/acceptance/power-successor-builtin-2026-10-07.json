@@ -1,0 +1,159 @@
+{
+  "task": "power-successor-builtin",
+  "date": "2026-10-07",
+  "rule": "PowerProductSameBase",
+  "baseline": {
+    "source": "forall x R, n N:\n    x^(n + 1) = x^n * x\n",
+    "command": [
+      "target/release/litex",
+      "-strict",
+      "-f",
+      "tmp/2026-10-07/power-successor-builtin/before.lit"
+    ],
+    "exit_code": 1,
+    "result": {
+      "kind": "run",
+      "success": false,
+      "target": "file",
+      "path": "tmp/2026-10-07/power-successor-builtin/before.lit",
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": false,
+          "statement": "forall x R, n N:\n    x ^ (n + 1) = x ^ n * x",
+          "why_failed": {
+            "phase": "search_proof",
+            "goal": "forall x R, n N:\n    x ^ (n + 1) = x ^ n * x"
+          },
+          "stores": [],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "binary_sha256": "b2b4da58c1d3490af948fcb66862b16a100001b1a6b2e07f432aa3105d5adb61"
+  },
+  "after": {
+    "source": "forall x R, n N:\n    x^(n + 1) = x^n * x\n",
+    "command": [
+      "target/release/litex",
+      "-strict",
+      "-e",
+      "forall x R, n N:\n    x^(n + 1) = x^n * x\n"
+    ],
+    "exit_code": 0,
+    "result": {
+      "kind": "run",
+      "success": true,
+      "target": "eval",
+      "path": null,
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "forall x R, n N:\n    x ^ (n + 1) = x ^ n * x",
+          "proof_method": {
+            "type": "compound_fact",
+            "rule_name": "Universal",
+            "message": "Verified as a forall fact (details omitted in Normal)"
+          },
+          "stores": [
+            "forall x R, n N:\n    x ^ (n + 1) = x ^ n * x"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    },
+    "binary_sha256": "701fbf33b4ef36cdf25f00a59f6aaf118ee7db0d4823b564a77f6efe2c17373e"
+  },
+  "gates": [
+    {
+      "command": [
+        "target/release/litex",
+        "-strict",
+        "-f",
+        "examples/proof_nodes/equal/by_builtin_rule/power_product_same_base_unit_exponent.lit"
+      ],
+      "exit_code": 0,
+      "success": true,
+      "statement_count": 5
+    },
+    {
+      "command": [
+        "target/release/litex",
+        "-strict",
+        "-f",
+        "examples/proof_nodes/equal/by_builtin_rule/natural_power_laws.lit"
+      ],
+      "exit_code": 0,
+      "success": true,
+      "statement_count": 7
+    },
+    {
+      "command": [
+        "target/release/litex",
+        "-strict",
+        "-f",
+        "examples/proof_nodes/equal/by_builtin_rule/integer_power_laws.lit"
+      ],
+      "exit_code": 0,
+      "success": true,
+      "statement_count": 3
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--release",
+        "--lib",
+        "power_product_same_base_unit_exponent",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::showcase_local_rules_tests::power_product_same_base_unit_exponent_retains_actual_requirements",
+        "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::showcase_local_rules_tests::power_product_same_base_unit_exponent_rejects_false_and_undefined_goals",
+        "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::showcase_local_rules_tests::run_examples_power_product_same_base_unit_exponent_directions_and_domains"
+      ],
+      "log": "tmp/2026-10-07/power-successor-builtin/tests.log"
+    }
+  ],
+  "scope": {
+    "impact": "L1 leaf factor matching",
+    "domains": [
+      "C x N",
+      "C* x Z"
+    ],
+    "unit_exponent": "literal 1 with an identical base factor",
+    "positive_cold_direction_domain_cases": 24,
+    "negative_cases": 8,
+    "actual_requirement_counts": {
+      "natural": 3,
+      "integer_nonzero": 4
+    },
+    "shared_contract_changes": [],
+    "excluded": [
+      "global search",
+      "AST/Env/Runtime state",
+      "real-exponent power laws",
+      "compiler support",
+      "whole-corpus gates"
+    ]
+  },
+  "artifacts": {
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_power_laws.rs": "c88aace4294ca951d8a8527415151c1fcf16c46a76ccca4b15d8a891a14f0612",
+    "tests/unit/execute/showcase_local_rules/tests.rs": "0c2f75c4a3639acd4e0762e157e359b0dbb9c1fd589fd06c4edfa554bc017b5d",
+    "examples/proof_nodes/equal/by_builtin_rule/power_product_same_base_unit_exponent.lit": "5c9fe247453e7cb7d3f54a42a0a565038c7170d1ae67f159091b1f0b0c35c464",
+    "docs/Manual.md": "e45efd62d3dfed00679cca4fd012f1dc41b232639f841290cfbd7178bb1c6ffe"
+  },
+  "compatibility_notes": [
+    "Current CLI uses strict Normal run success/exit checks; historical runner/before/try recipes are unavailable.",
+    "The new example is embedded in the focused run_examples-named Rust regression and also checked with the strict CLI; no whole examples collector coverage is claimed."
+  ]
+}

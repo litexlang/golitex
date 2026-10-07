@@ -34,3 +34,7 @@ pub use run_export_file::run_export_file;
 pub use run_file_with_config::run_file_with_config;
 pub use run_import_module::{run_import_module, RunImportModuleOutcome};
 pub use run_project::run_project;
+
+pub(crate) use mount_cwd_config::mount_cwd_config_with_graph;
+pub(crate) use run_file_with_config::run_file_with_config_with_graph;
+pub(crate) use run_project::run_project_with_graph;

@@ -57,6 +57,12 @@ translation, this multilingual explanatory copy became feasible; the language
 setting changes the feedback, not the mathematical statement being checked.
 See the [CLI language options](docs/cli.md#basic-shape).
 
+**Mathematical relationship graphs (preview).** `litex -graph -f example.lit`
+maps definitions, theorems and accepted facts to their dependencies. Theorem
+calls appear as relationships rather than separate execution nodes. Open the
+JSON in the [local graph viewer](docs/assets/math_graph_viewer.html), or create
+a standalone HTML view using the [graph guide](src/graph/README.md).
+
 **LaTeX export (preview).** `litex -latex -document -lang zh -f example.lit`
 compiles parsed source into mathematical LaTeX with prose in any of the ten
 CLI languages. It preserves definitions and explicit proof steps without

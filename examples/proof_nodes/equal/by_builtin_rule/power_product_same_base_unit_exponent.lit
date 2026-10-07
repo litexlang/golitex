@@ -1,0 +1,30 @@
+# Node: equal.ByBuiltinRule.PowerProductSameBase (first-power factors).
+#
+# Before (rejected):
+# forall x R, n N:
+#     x^(n + 1) = x^n * x
+# Former behavior: search_proof failed; an explicit x^1 intermediate was needed.
+#
+# Now (verified directly):
+forall x R, n N:
+    x^(n + 1) = x^n * x
+    x * x^n = x^(1 + n)
+
+forall x C, n N:
+    x^(n + 1) = x^n * x
+
+forall x C*, n Z:
+    x^(n + 1) = x^n * x
+
+forall x C, n N:
+    (x^2)^(n + 1) = (x^2)^n * x^2
+
+# Natural powers include zero bases, using the existing convention 0^0 = 1.
+forall n N:
+    0^(n + 1) = 0^n * 0
+
+# Boundary: false factors/exponents, unguarded integer powers of zero, and
+# undefined compound bases are rejected by power_product_same_base_unit_exponent tests.
+# Arbitrary real exponents remain outside this rule.
+# Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/power_product_same_base_unit_exponent.lit
+# Owner: src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_power_laws.rs
